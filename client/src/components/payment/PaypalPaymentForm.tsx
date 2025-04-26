@@ -48,16 +48,21 @@ export const PaypalPaymentForm = ({
   
   // Check if PayPal SDK is loaded properly
   useEffect(() => {
+    // Always use the fallback button
+    // This ensures the payment button is always visible regardless of SDK loading status
+    console.log('Using manual PayPal button for reliability');
+    setPaypalSdkError(true);
+    return;
+    
+    // The code below will not execute due to the return statement above
+    // It's kept for reference in case we want to enable the SDK in the future
+    
     // Immediately check if client ID is valid
     if (!import.meta.env.VITE_PAYPAL_CLIENT_ID || import.meta.env.VITE_PAYPAL_CLIENT_ID === '') {
       console.log('PayPal Client ID is not available');
       setPaypalSdkError(true);
       return;
     }
-    
-    // For development purposes, force the fallback button
-    // This ensures the payment button is always visible even if PayPal has issues
-    setPaypalSdkError(true);
     
     // Setup script loaded handler
     window.paypalScriptLoaded = () => {
@@ -213,11 +218,9 @@ export const PaypalPaymentForm = ({
         
         {paypalSdkError ? (
           <div className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                We're having trouble loading the PayPal payment system. You can try our alternate payment option:
-              </AlertDescription>
-            </Alert>
+            <div className="text-center mb-4">
+              <p className="text-sm text-muted-foreground">Click the button below to pay with PayPal</p>
+            </div>
             <Button 
               className="w-full bg-[#ffc439] hover:bg-[#f1ba30] text-[#003087] font-bold"
               onClick={async () => {
@@ -260,14 +263,7 @@ export const PaypalPaymentForm = ({
             options={{ 
               clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
               currency: currency.toUpperCase(),
-              intent: 'capture',
-              dataClientToken: 'abc123',
-              dataNamespace: 'paypal_sdk',
-              onInit: () => console.log('PayPal SDK initializing'),
-              onError: () => setPaypalSdkError(true),
-              dataAttributes: {
-                'data-partner-attribution-id': 'DEDWEN_Marketplace'
-              }
+              intent: 'capture'
             }}
           >
             <PayPalButtons
