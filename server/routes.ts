@@ -568,6 +568,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Wallet transfers route
+  app.post("/api/transfers", isAuthenticated, async (req, res) => {
+    try {
+      const senderId = (req.user as any).id;
+      const { recipientUsername, amount, description } = req.body;
+      
+      if (!recipientUsername) {
+        return res.status(400).json({ message: "Recipient username is required" });
+      }
+      
+      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive number" });
+      }
+      
+      // Get sender's wallet
+      const senderWallet = await storage.getWalletByUserId(senderId);
+      if (!senderWallet) {
+        return res.status(404).json({ message: "Sender's wallet not found" });
+      }
+      
+      // Check if sender has enough funds
+      if (senderWallet.balance < Number(amount)) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+      
+      // Get recipient by username
+      const recipient = await storage.getUserByUsername(recipientUsername);
+      if (!recipient) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      // Get or create recipient's wallet
+      let recipientWallet = await storage.getWalletByUserId(recipient.id);
+      if (!recipientWallet) {
+        // Create a wallet for the recipient if they don't have one
+        recipientWallet = await storage.createWallet({
+          userId: recipient.id,
+          balance: 0,
+          currency: "USD",
+          isActive: true
+        });
+      }
+      
+      // Create a transaction for the sender (transfer_out)
+      const senderTransaction = await storage.createTransaction({
+        type: "transfer_out",
+        amount: Number(amount),
+        walletId: senderWallet.id,
+        description: description || `Transfer to ${recipientUsername}`,
+        status: "completed"
+      });
+      
+      // Create a transaction for the recipient (transfer_in)
+      const recipientTransaction = await storage.createTransaction({
+        type: "transfer_in",
+        amount: Number(amount),
+        walletId: recipientWallet.id,
+        description: description || `Transfer from ${(req.user as any).username}`,
+        status: "completed"
+      });
+      
+      // Update wallet balances
+      await storage.updateWalletBalance(senderWallet.id, senderWallet.balance - Number(amount));
+      await storage.updateWalletBalance(recipientWallet.id, recipientWallet.balance + Number(amount));
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Transfer completed successfully",
+        transaction: senderTransaction
+      });
+    } catch (error) {
+      console.error("Transfer error:", error);
+      res.status(500).json({ message: "Failed to process transfer" });
+    }
+  });
+  
   // Set up WebSocket server for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
