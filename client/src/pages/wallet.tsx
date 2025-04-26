@@ -42,7 +42,7 @@ import {
   BriefcaseIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Redirect } from 'wouter';
+import { Redirect, Link } from 'wouter';
 import { 
   supportedCurrencies, 
   currencySymbols, 
@@ -465,6 +465,17 @@ export default function WalletPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('wallet.currency')}</p>
                   <p className="text-md">{wallet.currency}</p>
+                </div>
+                <div className="mt-4">
+                  <Link href="/spending-analytics">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                    >
+                      <PieChartIcon className="h-4 w-4 mr-2" />
+                      {t('wallet.spending_analytics')}
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
