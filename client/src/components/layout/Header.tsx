@@ -9,8 +9,7 @@ import { LanguageSelector } from "../lang";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useMessaging } from "@/hooks/use-messaging";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
-import SocialMessaging from "@/components/messaging/SocialMessaging";
+import SocialNav from "@/components/social/SocialNav";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -110,20 +109,8 @@ export default function Header() {
           >
             <i className="ri-store-3-line mr-1"></i> Marketplace
           </button>
-          {/* Social button with integrated messaging */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary relative">
-                <i className="ri-group-line mr-1"></i> Social
-                {messageData && messageData.count > 0 && (
-                  <Badge className="absolute top-1 right-1/4 w-4 h-4 p-0 flex items-center justify-center">
-                    {messageData.count}
-                  </Badge>
-                )}
-              </button>
-            </SheetTrigger>
-            <SocialMessaging />
-          </Sheet>
+          {/* Social button with integrated navigation and messaging */}
+          <SocialNav />
         </div>
       </div>
 
