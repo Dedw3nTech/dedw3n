@@ -5,6 +5,8 @@ import UserMenu from "../ui/user-menu";
 import SearchOverlay from "../ui/search-overlay";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
+import { LanguageSelector } from "../lang";
+import { useTranslation } from "react-i18next";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -38,6 +40,8 @@ export default function Header() {
     setLocation(newView === "marketplace" ? "/" : "/social");
   };
 
+  const { t } = useTranslation();
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -45,7 +49,7 @@ export default function Header() {
           <div className="flex items-center space-x-2">
             <i className="ri-store-2-line text-primary text-2xl"></i>
             <Link href="/">
-              <h1 className="text-xl font-bold text-gray-800 cursor-pointer">SocialMarket</h1>
+              <h1 className="text-xl font-bold text-gray-800 cursor-pointer">{t('app.name')}</h1>
             </Link>
           </div>
 
@@ -53,7 +57,7 @@ export default function Header() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search products or posts..."
+                placeholder={t('products.search')}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <i className="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
@@ -63,8 +67,10 @@ export default function Header() {
               href="/upload-product" 
               className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition"
             >
-              <i className="ri-add-line mr-1"></i> Sell
+              <i className="ri-add-line mr-1"></i> {t('vendor.add_product')}
             </Link>
+            
+            <LanguageSelector minimal className="hidden lg:flex" />
           </div>
 
           <div className="flex items-center space-x-4">
