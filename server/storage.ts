@@ -676,17 +676,18 @@ export class MemStorage implements IStorage {
     const byCategoryIncome: Record<string, number> = {};
     
     transactions.forEach(transaction => {
-      // Skip transactions that aren't completed
-      if (transaction.status !== 'completed') return;
+      // Only process transactions that have a status and it's completed
+      // If status is undefined (for backward compatibility), still process it
+      if (transaction.status && transaction.status !== 'completed') return;
       
-      if (transaction.type === 'deposit' || transaction.type === 'refund') {
+      if (transaction.type === 'deposit' || transaction.type === 'refund' || transaction.type === 'transfer_in') {
         totalIncome += transaction.amount;
         
         if (!byCategoryIncome[transaction.category]) {
           byCategoryIncome[transaction.category] = 0;
         }
         byCategoryIncome[transaction.category] += transaction.amount;
-      } else if (transaction.type === 'withdrawal' || transaction.type === 'payment') {
+      } else if (transaction.type === 'withdrawal' || transaction.type === 'payment' || transaction.type === 'transfer_out') {
         totalExpense += transaction.amount;
         
         if (!byCategoryExpense[transaction.category]) {
