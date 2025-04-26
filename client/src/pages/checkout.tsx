@@ -4,14 +4,22 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery } from '@tanstack/react-query';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
+import { WalletPaymentForm } from '@/components/payment/WalletPaymentForm';
 import ShippingOptions from '@/components/shipping/ShippingOptions';
 import { AddressForm } from '@/components/shipping/AddressForm';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CreditCard, Wallet } from 'lucide-react';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
 
 // Initialize Stripe with publishable key (will be available only when keys are set up)
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 

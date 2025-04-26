@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Loader2, Wallet } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { formatPrice } from '@/lib/utils';
+import { formatCurrency } from '@/lib/currencyConverter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -108,11 +108,11 @@ export const WalletPaymentForm = ({
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Your Balance:</span>
-          <span className="font-bold">{formatPrice(walletBalance, walletCurrency)}</span>
+          <span className="font-bold">{formatCurrency(walletBalance, walletCurrency)}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Order Total:</span>
-          <span className="font-bold">{formatPrice(amount, 'GBP')}</span>
+          <span className="font-bold">{formatCurrency(amount, 'GBP')}</span>
         </div>
         {insufficientFunds && (
           <Alert variant="destructive">
