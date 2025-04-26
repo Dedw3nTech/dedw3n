@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
+import { registerShippingRoutes } from "./shipping";
 import { seedDatabase } from "./seed";
 import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
 import { z } from "zod";
@@ -34,6 +35,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register payment routes
   registerPaymentRoutes(app);
+  
+  // Register shipping routes
+  registerShippingRoutes(app);
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
