@@ -126,12 +126,19 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Follows model
-export const follows = pgTable("follows", {
+// User connections model
+export const connections = pgTable("connections", {
   id: serial("id").primaryKey(),
-  followerId: integer("follower_id").notNull().references(() => users.id),
-  followingId: integer("following_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  connectedUserId: integer("connected_user_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 20 }).notNull().default("connected"), // pending, connected, rejected, blocked
+  initiatedBy: integer("initiated_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueConnection: unique().on(table.userId, table.connectedUserId),
+  };
 });
 
 // Cart model
@@ -446,6 +453,12 @@ export const insertCreatorEarningSchema = createInsertSchema(creatorEarnings)
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true, updatedAt: true });
+  
+export const insertConnectionSchema = createInsertSchema(connections)
+  .omit({ id: true, status: true, createdAt: true, updatedAt: true });
+  
+export const insertLikeSchema = createInsertSchema(likes)
+  .omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -517,3 +530,9 @@ export type InsertCreatorEarning = z.infer<typeof insertCreatorEarningSchema>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type Connection = typeof connections.$inferSelect;
+export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+
+export type Like = typeof likes.$inferSelect;
+export type InsertLike = z.infer<typeof insertLikeSchema>;

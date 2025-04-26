@@ -167,7 +167,9 @@ export default function ConnectionsCard({
 
   // Check if a user is connected to the current user
   const isConnected = (userId: number) => {
-    return currentUser?.connections?.some((connection: any) => connection.id === userId);
+    // This will be implemented when the user schema includes connections
+    // For now, we'll check against the fetched connections
+    return connections?.some((connection: any) => connection.id === userId);
   };
 
   return (
