@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -144,18 +144,28 @@ const TopProductItem = ({ product, index }: { product: TopProduct; index: number
 
 // Top Buyer Item Component
 const TopBuyerItem = ({ buyer, index }: { buyer: TopBuyer; index: number }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg">
       <div className="font-bold text-lg text-muted-foreground w-6 text-center">
         {index + 1}
       </div>
-      <Avatar className="h-10 w-10">
-        <AvatarFallback>
-          {buyer.user.name.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Link href={`/members/${buyer.user.id}`}>
+        <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-1 transition-all">
+          <AvatarFallback>
+            {buyer.user.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium line-clamp-1">{buyer.user.name}</h4>
+        <div className="flex items-center">
+          <h4 className="font-medium line-clamp-1">{buyer.user.name}</h4>
+          <Link href={`/members/${buyer.user.id}`} className="ml-2 text-xs text-muted-foreground hover:text-primary">
+            <User className="h-3 w-3 inline mr-1" />
+            {t('members.view_profile')}
+          </Link>
+        </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <ShoppingBag className="h-3 w-3" />
           <span>{buyer.orderCount} orders</span>
@@ -273,14 +283,22 @@ export default function VendorDetailPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
-                  <AvatarFallback>
-                    <Store className="h-6 w-6" />
-                  </AvatarFallback>
-                </Avatar>
+                <Link href={`/members/${vendor.userId}`}>
+                  <Avatar className="h-16 w-16 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+                    <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
+                    <AvatarFallback>
+                      <Store className="h-6 w-6" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
-                  <CardTitle className="text-2xl">{vendor.storeName}</CardTitle>
+                  <div className="flex items-center">
+                    <CardTitle className="text-2xl">{vendor.storeName}</CardTitle>
+                    <Link href={`/members/${vendor.userId}`} className="ml-2 text-sm text-muted-foreground hover:text-primary">
+                      <User className="h-4 w-4 inline mr-1" />
+                      {t('vendors.view_profile')}
+                    </Link>
+                  </div>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">
