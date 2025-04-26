@@ -479,8 +479,16 @@ export class MemStorage implements IStorage {
   }
 
   async listCartItems(userId: number): Promise<Cart[]> {
-    return Array.from(this.carts.values())
+    const cartItems = Array.from(this.carts.values())
       .filter(item => item.userId === userId);
+    
+    // Add product details to each cart item
+    for (const item of cartItems) {
+      const product = await this.getProduct(item.productId);
+      (item as any).product = product;
+    }
+    
+    return cartItems;
   }
 
   async countCartItems(userId: number): Promise<number> {

@@ -45,6 +45,9 @@ export default function Checkout() {
           return sum + (item.product?.price || 0) * item.quantity;
         }, 0);
         
+        console.log('Cart items:', items);
+        console.log('Calculated total:', total);
+        
         setOrderTotal(total);
         
         if (items.length === 0) {
@@ -53,11 +56,22 @@ export default function Checkout() {
           return;
         }
         
+        // Validate total
+        if (total <= 0) {
+          setError('Total amount must be greater than 0');
+          setLoading(false);
+          return;
+        }
+
         // Create a payment intent
         if (stripePromise) {
           try {
+            // Ensure total is at least $0.50 (50 cents) as Stripe has a minimum charge amount
+            const minAmount = Math.max(total, 0.5);
+            console.log('Amount being sent to Stripe:', minAmount);
+            
             const response = await apiRequest('POST', '/api/payments/create-intent', {
-              amount: total,
+              amount: minAmount,
               currency: 'usd',
               metadata: {
                 userId: user.id,
@@ -69,9 +83,11 @@ export default function Checkout() {
             });
             
             const data = await response.json();
+            console.log('Payment intent created:', data);
             setClientSecret(data.clientSecret);
           } catch (err: any) {
-            setError(`Could not initialize payment: ${err.message}`);
+            console.error('Error creating payment intent:', err);
+            setError(`Could not initialize payment: ${err.status || ''} ${err.message || 'Unknown error'}`);
           }
         } else {
           setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
