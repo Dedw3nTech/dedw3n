@@ -51,7 +51,7 @@ function Router() {
       <Route path="/spending-analytics" component={SpendingAnalytics} />
       <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/vendors" component={VendorsPage} />
-      <Route path="/vendors/:id" component={VendorDetailPage} />
+      <Route path="/vendor/:id" component={VendorDetailPage} />
       <Route component={NotFound} />
     </Switch>
   );

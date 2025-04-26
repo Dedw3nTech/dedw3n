@@ -125,6 +125,12 @@ export default function Header() {
             <i className="ri-group-line mr-1"></i> {t('nav.social')}
           </button>
           <button
+            onClick={() => setLocation("/vendors")}
+            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
+          >
+            <i className="ri-store-3-line mr-1"></i> {t('vendors.all_vendors')}
+          </button>
+          <button
             onClick={() => setLocation("/members")}
             className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
           >
