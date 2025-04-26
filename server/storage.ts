@@ -363,6 +363,11 @@ export class MemStorage implements IStorage {
   private notificationIdCounter: number;
   private reviewIdCounter: number;
   private followIdCounter: number;
+  private videoIdCounter: number;
+  private videoEngagementIdCounter: number;
+  private videoAnalyticsIdCounter: number;
+  private videoPlaylistIdCounter: number;
+  private playlistItemIdCounter: number;
   private cartIdCounter: number;
   private walletIdCounter: number;
   private transactionIdCounter: number;
@@ -381,12 +386,7 @@ export class MemStorage implements IStorage {
   private creatorEarningIdCounter: number;
   private subscriptionIdCounter: number;
   
-  // Video-related counters
-  private videoIdCounter: number;
-  private videoEngagementIdCounter: number;
-  private videoAnalyticsIdCounter: number;
-  private videoPlaylistIdCounter: number;
-  private playlistItemIdCounter: number;
+  // Video-related counters (already defined above)
 
   constructor() {
     this.users = new Map();
@@ -2417,6 +2417,296 @@ export class MemStorage implements IStorage {
     message.isRead = true;
     this.messages.set(id, message);
     return message;
+  }
+
+  // Video operations
+  async createVideo(video: InsertVideo): Promise<Video> {
+    const id = this.videoIdCounter++;
+    const newVideo = {
+      ...video,
+      id,
+      views: 0,
+      likes: 0,
+      shares: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.videos.set(id, newVideo);
+    return newVideo;
+  }
+
+  async getVideo(id: number): Promise<Video | undefined> {
+    return this.videos.get(id);
+  }
+
+  async updateVideo(id: number, updates: Partial<Video>): Promise<Video | undefined> {
+    const video = await this.getVideo(id);
+    if (!video) return undefined;
+
+    const updatedVideo = {
+      ...video,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.videos.set(id, updatedVideo);
+    return updatedVideo;
+  }
+
+  async deleteVideo(id: number): Promise<boolean> {
+    const exists = this.videos.has(id);
+    if (!exists) return false;
+
+    this.videos.delete(id);
+    
+    // Also delete related engagements and analytics
+    [...this.videoEngagements.values()]
+      .filter(engagement => engagement.videoId === id)
+      .forEach(engagement => this.videoEngagements.delete(engagement.id));
+
+    [...this.videoAnalytics.values()]
+      .filter(analytics => analytics.videoId === id)
+      .forEach(analytics => this.videoAnalytics.delete(analytics.id));
+
+    // Remove from playlists
+    [...this.playlistItems.values()]
+      .filter(item => item.videoId === id)
+      .forEach(item => this.playlistItems.delete(item.id));
+
+    return true;
+  }
+
+  async listVideos(filter?: Record<string, any>): Promise<Video[]> {
+    let videos = [...this.videos.values()];
+    
+    if (filter) {
+      if (filter.userId) {
+        videos = videos.filter(v => v.userId === filter.userId);
+      }
+      
+      if (filter.videoType) {
+        const videoTypes = Array.isArray(filter.videoType) ? filter.videoType : [filter.videoType];
+        videos = videos.filter(v => videoTypes.includes(v.videoType));
+      }
+
+      if (filter.isPublished) {
+        videos = videos.filter(v => v.status === 'published');
+      }
+
+      if (filter.tags && filter.tags.length > 0) {
+        videos = videos.filter(v => {
+          if (!v.tags) return false;
+          return filter.tags.some((tag: string) => v.tags?.includes(tag));
+        });
+      }
+    }
+    
+    // Sort by creation date (newest first)
+    videos.sort((a, b) => {
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    });
+    
+    return videos;
+  }
+  
+  async getTrendingVideos(limit: number = 10): Promise<Video[]> {
+    const videos = [...this.videos.values()]
+      .filter(v => v.status === 'published')
+      // Sort by engagement (views + likes + shares) in descending order
+      .sort((a, b) => {
+        const engagementA = (a.views || 0) + (a.likes || 0) + (a.shares || 0);
+        const engagementB = (b.views || 0) + (b.likes || 0) + (b.shares || 0);
+        return engagementB - engagementA;
+      });
+    
+    return videos.slice(0, limit);
+  }
+  
+  async getUserVideos(userId: number): Promise<Video[]> {
+    return [...this.videos.values()]
+      .filter(v => v.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+  
+  async getVideosByType(type: string): Promise<Video[]> {
+    return [...this.videos.values()]
+      .filter(v => v.videoType === type && v.status === 'published')
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+  
+  // Video engagements
+  async createVideoEngagement(engagement: InsertVideoEngagement): Promise<VideoEngagement> {
+    const id = this.videoEngagementIdCounter++;
+    const newEngagement = {
+      ...engagement,
+      id,
+      createdAt: new Date()
+    };
+    this.videoEngagements.set(id, newEngagement);
+    
+    // Update video stats based on engagement type
+    const video = await this.getVideo(engagement.videoId);
+    if (video) {
+      if (engagement.type === 'view') {
+        await this.updateVideo(video.id, { views: (video.views || 0) + 1 });
+      } else if (engagement.type === 'like') {
+        await this.updateVideo(video.id, { likes: (video.likes || 0) + 1 });
+      } else if (engagement.type === 'share') {
+        await this.updateVideo(video.id, { shares: (video.shares || 0) + 1 });
+      }
+    }
+    
+    return newEngagement;
+  }
+  
+  async getVideoEngagements(videoId: number, type?: string): Promise<VideoEngagement[]> {
+    let engagements = [...this.videoEngagements.values()]
+      .filter(e => e.videoId === videoId);
+    
+    if (type) {
+      engagements = engagements.filter(e => e.type === type);
+    }
+    
+    return engagements;
+  }
+  
+  async getUserVideoEngagements(userId: number, type?: string): Promise<VideoEngagement[]> {
+    let engagements = [...this.videoEngagements.values()]
+      .filter(e => e.userId === userId);
+    
+    if (type) {
+      engagements = engagements.filter(e => e.type === type);
+    }
+    
+    return engagements;
+  }
+  
+  // Video analytics
+  async getVideoAnalytics(videoId: number): Promise<VideoAnalytics | undefined> {
+    return [...this.videoAnalytics.values()]
+      .find(a => a.videoId === videoId);
+  }
+  
+  async updateVideoAnalytics(videoId: number, data: Partial<VideoAnalytics>): Promise<VideoAnalytics> {
+    let analytics = await this.getVideoAnalytics(videoId);
+    
+    if (!analytics) {
+      // Create new analytics if it doesn't exist
+      const id = this.videoAnalyticsIdCounter++;
+      analytics = {
+        id,
+        videoId,
+        totalViews: 0,
+        uniqueViewers: 0,
+        averageWatchTime: 0,
+        completionRate: 0,
+        engagementRate: 0,
+        demographics: {},
+        viewsByCountry: {},
+        updatedAt: new Date()
+      };
+      this.videoAnalytics.set(id, analytics);
+    }
+    
+    const updatedAnalytics = {
+      ...analytics,
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    this.videoAnalytics.set(analytics.id, updatedAnalytics);
+    return updatedAnalytics;
+  }
+  
+  // Playlist operations
+  async createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> {
+    const id = this.videoPlaylistIdCounter++;
+    const newPlaylist = {
+      ...playlist,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.videoPlaylists.set(id, newPlaylist);
+    return newPlaylist;
+  }
+  
+  async getPlaylist(id: number): Promise<VideoPlaylist | undefined> {
+    return this.videoPlaylists.get(id);
+  }
+  
+  async updatePlaylist(id: number, updates: Partial<VideoPlaylist>): Promise<VideoPlaylist | undefined> {
+    const playlist = await this.getPlaylist(id);
+    if (!playlist) return undefined;
+    
+    const updatedPlaylist = {
+      ...playlist,
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.videoPlaylists.set(id, updatedPlaylist);
+    return updatedPlaylist;
+  }
+  
+  async deletePlaylist(id: number): Promise<boolean> {
+    const exists = this.videoPlaylists.has(id);
+    if (!exists) return false;
+    
+    this.videoPlaylists.delete(id);
+    
+    // Remove all playlist items
+    [...this.playlistItems.values()]
+      .filter(item => item.playlistId === id)
+      .forEach(item => this.playlistItems.delete(item.id));
+    
+    return true;
+  }
+  
+  async getUserPlaylists(userId: number): Promise<VideoPlaylist[]> {
+    return [...this.videoPlaylists.values()]
+      .filter(p => p.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+  
+  // Playlist item operations
+  async addToPlaylist(item: InsertPlaylistItem): Promise<PlaylistItem> {
+    const id = this.playlistItemIdCounter++;
+    const newItem = {
+      ...item,
+      id,
+      createdAt: new Date()
+    };
+    this.playlistItems.set(id, newItem);
+    return newItem;
+  }
+  
+  async removeFromPlaylist(playlistId: number, videoId: number): Promise<boolean> {
+    const item = [...this.playlistItems.values()]
+      .find(i => i.playlistId === playlistId && i.videoId === videoId);
+    
+    if (!item) return false;
+    
+    this.playlistItems.delete(item.id);
+    return true;
+  }
+  
+  async getPlaylistItems(playlistId: number): Promise<PlaylistItem[]> {
+    return [...this.playlistItems.values()]
+      .filter(i => i.playlistId === playlistId)
+      .sort((a, b) => a.position - b.position);
   }
 }
 

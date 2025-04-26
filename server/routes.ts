@@ -15,7 +15,8 @@ import {
   insertTransactionSchema, insertCommunitySchema, insertCommunityMemberSchema,
   insertMembershipTierSchema, insertMembershipSchema, insertEventSchema,
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
-  insertCreatorEarningSchema, insertSubscriptionSchema
+  insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
+  insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -275,6 +276,389 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Group chat and room-based messaging will be implemented in a future update
   // For now, we're focusing on direct user-to-user messaging
+  
+  // Video-related routes
+  
+  // Create a new video
+  app.post("/api/videos", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const validatedData = insertVideoSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const video = await storage.createVideo(validatedData);
+      res.status(201).json(video);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create video" });
+    }
+  });
+  
+  // Get all videos with optional filtering
+  app.get("/api/videos", async (req, res) => {
+    try {
+      const filter: Record<string, any> = {};
+      
+      // Parse query parameters for filtering
+      if (req.query.userId) {
+        filter.userId = parseInt(req.query.userId as string);
+      }
+      
+      if (req.query.videoType) {
+        filter.videoType = req.query.videoType;
+      }
+      
+      if (req.query.isPublished) {
+        filter.isPublished = req.query.isPublished === 'true';
+      }
+      
+      if (req.query.tags) {
+        filter.tags = (req.query.tags as string).split(',');
+      }
+      
+      const videos = await storage.listVideos(filter);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list videos" });
+    }
+  });
+  
+  // Get a specific video by ID
+  app.get("/api/videos/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const video = await storage.getVideo(id);
+      
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      res.json(video);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get video" });
+    }
+  });
+  
+  // Update a video
+  app.patch("/api/videos/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.id);
+      
+      // Verify video exists and belongs to the user
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      if (video.userId !== userId) {
+        return res.status(403).json({ message: "You can only update your own videos" });
+      }
+      
+      const updatedVideo = await storage.updateVideo(videoId, req.body);
+      res.json(updatedVideo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update video" });
+    }
+  });
+  
+  // Delete a video
+  app.delete("/api/videos/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.id);
+      
+      // Verify video exists and belongs to the user
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      if (video.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own videos" });
+      }
+      
+      await storage.deleteVideo(videoId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete video" });
+    }
+  });
+  
+  // Get trending videos
+  app.get("/api/videos/trending", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const videos = await storage.getTrendingVideos(limit);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get trending videos" });
+    }
+  });
+  
+  // Get user's videos
+  app.get("/api/users/:userId/videos", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const videos = await storage.getUserVideos(userId);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user videos" });
+    }
+  });
+  
+  // Get videos by type
+  app.get("/api/videos/type/:type", async (req, res) => {
+    try {
+      const type = req.params.type;
+      const videos = await storage.getVideosByType(type);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get videos by type" });
+    }
+  });
+  
+  // Create a video engagement (view, like, share, comment)
+  app.post("/api/videos/:videoId/engagements", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      const validatedData = insertVideoEngagementSchema.parse({
+        ...req.body,
+        userId,
+        videoId,
+      });
+      
+      const engagement = await storage.createVideoEngagement(validatedData);
+      res.status(201).json(engagement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create video engagement" });
+    }
+  });
+  
+  // Get video engagements
+  app.get("/api/videos/:videoId/engagements", async (req, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      const type = req.query.type as string | undefined;
+      
+      const engagements = await storage.getVideoEngagements(videoId, type);
+      res.json(engagements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get video engagements" });
+    }
+  });
+  
+  // Playlist routes
+  
+  // Create a playlist
+  app.post("/api/playlists", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const validatedData = insertVideoPlaylistSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const playlist = await storage.createPlaylist(validatedData);
+      res.status(201).json(playlist);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create playlist" });
+    }
+  });
+  
+  // Get a specific playlist
+  app.get("/api/playlists/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const playlist = await storage.getPlaylist(id);
+      
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      res.json(playlist);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get playlist" });
+    }
+  });
+  
+  // Update a playlist
+  app.patch("/api/playlists/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const playlistId = parseInt(req.params.id);
+      
+      // Verify playlist exists and belongs to the user
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "You can only update your own playlists" });
+      }
+      
+      const updatedPlaylist = await storage.updatePlaylist(playlistId, req.body);
+      res.json(updatedPlaylist);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update playlist" });
+    }
+  });
+  
+  // Delete a playlist
+  app.delete("/api/playlists/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const playlistId = parseInt(req.params.id);
+      
+      // Verify playlist exists and belongs to the user
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own playlists" });
+      }
+      
+      await storage.deletePlaylist(playlistId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete playlist" });
+    }
+  });
+  
+  // Get user's playlists
+  app.get("/api/users/:userId/playlists", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const playlists = await storage.getUserPlaylists(userId);
+      res.json(playlists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user playlists" });
+    }
+  });
+  
+  // Add video to playlist
+  app.post("/api/playlists/:playlistId/videos", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const playlistId = parseInt(req.params.playlistId);
+      
+      // Verify playlist exists and belongs to the user
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "You can only modify your own playlists" });
+      }
+      
+      const videoId = req.body.videoId;
+      if (!videoId) {
+        return res.status(400).json({ message: "Video ID is required" });
+      }
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Get the existing items to determine the position
+      const playlistItems = await storage.getPlaylistItems(playlistId);
+      const position = playlistItems.length > 0 ? 
+        Math.max(...playlistItems.map(item => item.position)) + 1 : 
+        0;
+      
+      const validatedData = insertPlaylistItemSchema.parse({
+        playlistId,
+        videoId,
+        position,
+      });
+      
+      const item = await storage.addToPlaylist(validatedData);
+      
+      // Update the playlist's video count
+      await storage.updatePlaylist(playlistId, {
+        videoCount: (playlist.videoCount || 0) + 1
+      });
+      
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add video to playlist" });
+    }
+  });
+  
+  // Remove video from playlist
+  app.delete("/api/playlists/:playlistId/videos/:videoId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const playlistId = parseInt(req.params.playlistId);
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify playlist exists and belongs to the user
+      const playlist = await storage.getPlaylist(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: "Playlist not found" });
+      }
+      
+      if (playlist.userId !== userId) {
+        return res.status(403).json({ message: "You can only modify your own playlists" });
+      }
+      
+      const success = await storage.removeFromPlaylist(playlistId, videoId);
+      
+      if (success && playlist.videoCount !== null && playlist.videoCount > 0) {
+        // Update the playlist's video count
+        await storage.updatePlaylist(playlistId, {
+          videoCount: playlist.videoCount - 1
+        });
+      }
+      
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove video from playlist" });
+    }
+  });
+  
+  // Get playlist items
+  app.get("/api/playlists/:playlistId/videos", async (req, res) => {
+    try {
+      const playlistId = parseInt(req.params.playlistId);
+      const playlistItems = await storage.getPlaylistItems(playlistId);
+      res.json(playlistItems);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get playlist items" });
+    }
+  });
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
