@@ -10,7 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Star, ShoppingCart, RefreshCw } from 'lucide-react';
+import { 
+  Loader2, 
+  Star, 
+  ShoppingCart, 
+  RefreshCw, 
+  Share2, 
+  Facebook, 
+  Twitter, 
+  Mail, 
+  Link as LinkIcon,
+  MessageCircle
+} from 'lucide-react';
 import { 
   supportedCurrencies, 
   formatCurrency, 
@@ -25,6 +36,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function ProductDetail() {
   const [, setLocation] = useLocation();
@@ -448,6 +465,53 @@ export default function ProductDetail() {
           <TabsTrigger value="reviews">
             Reviews ({reviews.length})
           </TabsTrigger>
+          
+          <div className="ml-auto flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="px-2">
+                  <Share2 className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+                }}>
+                  <Facebook className="h-4 w-4 mr-2 text-blue-600" />
+                  Share on Facebook
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(product.name)}`, '_blank');
+                }}>
+                  <Twitter className="h-4 w-4 mr-2 text-blue-400" />
+                  Share on Twitter
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.href}`)}`, '_blank');
+                }}>
+                  <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                  Share via Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({
+                    title: "Link Copied",
+                    description: "Product link copied to clipboard",
+                  });
+                }}>
+                  <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
+                  Copy Link
+                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem onClick={() => setLocation(`/messages?share=${productId}`)}>
+                    <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                    Share with User
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </TabsList>
         <TabsContent value="description">
           <div className="prose max-w-none">
