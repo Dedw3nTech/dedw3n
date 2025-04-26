@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { registerPaymentRoutes } from "./payment";
 import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -20,6 +21,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register API Routes
   // All routes should be prefixed with /api
   // Authentication routes are handled by auth.ts
+  
+  // Register payment routes
+  registerPaymentRoutes(app);
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
