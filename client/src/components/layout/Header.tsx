@@ -115,10 +115,10 @@ export default function Header() {
             <i className="ri-store-3-line mr-1"></i> Marketplace
           </button>
           <button
-            onClick={() => setLocation("/explore")}
+            onClick={() => setLocation("/wall")}
             className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
           >
-            <i className="ri-compass-3-line mr-1"></i> Social & Explore
+            <i className="ri-group-line mr-1"></i> Social
           </button>
         </div>
       </div>
