@@ -21,8 +21,10 @@ import {
   Loader2, Send, User, MoreVertical, ArrowLeft, PlusCircle, 
   Paperclip, Image, Video as VideoIcon, FileText, 
   MessageCircle, TrendingUp, Play, Heart, Share2, 
-  Clock, Film, Home, Compass, UserCircle
+  Clock, Film, Home, Compass, UserCircle, ShoppingBag
 } from 'lucide-react';
+import ProductSearch from './ProductSearch';
+import ProductMessage from './ProductMessage';
 import defaultAvatar from '@assets/WHITE BG DEDWEN LOGO (320 x 132 px) (128 x 56 px).png';
 
 export default function SocialMessaging() {
@@ -84,6 +86,17 @@ export default function SocialMessaging() {
     username: string;
     email: string;
     avatar: string | null;
+  }
+  
+  // Product type
+  interface Product {
+    id: number;
+    name: string;
+    price: number;
+    discountPrice?: number | null;
+    imageUrl: string;
+    vendorId: number;
+    vendorName?: string;
   }
 
   // Fetch conversations
@@ -154,6 +167,29 @@ export default function SocialMessaging() {
     // For now, we'll just simulate attaching a sample image
     setAttachmentUrl('https://example.com/sample.jpg');
     setAttachmentType(type);
+  };
+  
+  const handleProductSelect = (product: Product) => {
+    if (activeChat === null) return;
+    
+    // Format a message with product details
+    const productInfo = JSON.stringify({
+      type: 'product',
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      imageUrl: product.imageUrl,
+      vendorId: product.vendorId,
+      vendorName: product.vendorName
+    });
+    
+    sendMessage(
+      activeChat, 
+      `Check out this product: ${product.name}`, 
+      product.imageUrl,
+      'application/product'
+    );
   };
 
   const renderConversationsList = () => (
@@ -396,6 +432,8 @@ export default function SocialMessaging() {
             >
               <Paperclip size={18} />
             </button>
+            {/* Product Search Button */}
+            <ProductSearch onSelect={handleProductSelect} />
           </div>
           
           <Input
