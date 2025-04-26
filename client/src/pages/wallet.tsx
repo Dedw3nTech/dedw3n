@@ -720,6 +720,181 @@ export default function WalletPage() {
                   </form>
                 </TabsContent>
 
+                <TabsContent value="categories">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">{t('wallet.transactions_by_category')}</h3>
+                    
+                    {categoriesLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : categoriesError || !categorizedTransactions || Object.keys(categorizedTransactions).length === 0 ? (
+                      <div className="text-center py-6 text-muted-foreground">
+                        {t('wallet.no_categorized_transactions')}
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {Object.entries(categorizedTransactions).map(([category, categoryTransactions]) => (
+                          <div key={category} className="border rounded-lg overflow-hidden">
+                            <div className="flex items-center justify-between p-3 bg-muted">
+                              <div className="flex items-center">
+                                <div className="mr-3 p-2 bg-white rounded-full">
+                                  {getCategoryIcon(category)}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium capitalize">{category}</h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    {categoryTransactions.length} {t('wallet.transactions')}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge variant="outline" className={getCategoryColor(category)}>
+                                {category}
+                              </Badge>
+                            </div>
+                            
+                            <div className="divide-y">
+                              {categoryTransactions.slice(0, 3).map(transaction => (
+                                <div key={transaction.id} className="p-3 flex items-center justify-between">
+                                  <div>
+                                    <p className="font-medium">{transaction.description || transaction.type}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {transaction.createdAt 
+                                        ? format(new Date(transaction.createdAt), 'MMM dd, yyyy • HH:mm')
+                                        : ''}
+                                    </p>
+                                    <div className="mt-1 flex items-center">
+                                      <Badge variant="secondary" className="text-xs mr-2">
+                                        {transaction.paymentMethod}
+                                      </Badge>
+                                      {transaction.type && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {transaction.type}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className={`font-bold ${getTransactionColor(transaction.type)}`}>
+                                    {formatAmount(transaction.type, transaction.amount)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {categoryTransactions.length > 3 && (
+                              <div className="p-2 bg-muted">
+                                <Button variant="ghost" size="sm" className="w-full text-xs">
+                                  {t('wallet.view_all_in_category', { category })}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="stats">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">{t('wallet.financial_statistics')}</h3>
+                    
+                    {statsLoading ? (
+                      <div className="flex justify-center p-4">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : statsError || !transactionStats ? (
+                      <div className="text-center py-6 text-muted-foreground">
+                        {t('wallet.no_statistics')}
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Summary cards */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <Card>
+                            <CardContent className="pt-6">
+                              <div className="text-center">
+                                <p className="text-sm font-medium text-muted-foreground">{t('wallet.total_income')}</p>
+                                <p className="text-2xl font-bold text-green-600">
+                                  {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                                  {transactionStats.totalIncome.toFixed(2)}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="pt-6">
+                              <div className="text-center">
+                                <p className="text-sm font-medium text-muted-foreground">{t('wallet.total_expense')}</p>
+                                <p className="text-2xl font-bold text-red-500">
+                                  {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                                  {transactionStats.totalExpense.toFixed(2)}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                        
+                        {/* Category breakdowns */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium">{t('wallet.expense_by_category')}</h4>
+                          
+                          {Object.keys(transactionStats.byCategoryExpense).length === 0 ? (
+                            <p className="text-sm text-muted-foreground">{t('wallet.no_expense_data')}</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {Object.entries(transactionStats.byCategoryExpense)
+                                .sort(([, amountA], [, amountB]) => amountB - amountA)
+                                .map(([category, amount]) => (
+                                  <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center">
+                                      <div className="mr-3 p-2 bg-gray-100 rounded-full">
+                                        {getCategoryIcon(category)}
+                                      </div>
+                                      <span className="font-medium capitalize">{category}</span>
+                                    </div>
+                                    <Badge variant="outline" className={getCategoryColor(category)}>
+                                      {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                                      {amount.toFixed(2)}
+                                    </Badge>
+                                  </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h4 className="font-medium">{t('wallet.income_by_category')}</h4>
+                          
+                          {Object.keys(transactionStats.byCategoryIncome).length === 0 ? (
+                            <p className="text-sm text-muted-foreground">{t('wallet.no_income_data')}</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {Object.entries(transactionStats.byCategoryIncome)
+                                .sort(([, amountA], [, amountB]) => amountB - amountA)
+                                .map(([category, amount]) => (
+                                  <div key={category} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center">
+                                      <div className="mr-3 p-2 bg-gray-100 rounded-full">
+                                        {getCategoryIcon(category)}
+                                      </div>
+                                      <span className="font-medium capitalize">{category}</span>
+                                    </div>
+                                    <Badge variant="outline" className={getCategoryColor(category)}>
+                                      {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                                      {amount.toFixed(2)}
+                                    </Badge>
+                                  </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
                 <TabsContent value="convert">
                   <div className="space-y-6">
                     <div className="space-y-2">
