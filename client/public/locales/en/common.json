@@ -3,6 +3,33 @@
     "name": "Global Marketplace",
     "slogan": "Connect. Shop. Thrive."
   },
+  "wallet": {
+    "my_wallet": "My Wallet",
+    "balance": "Balance",
+    "transactions": "Transactions",
+    "transfer": "Transfer",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "history": "Transaction History",
+    "currency": "Currency",
+    "categories": "Categories",
+    "stats": "Statistics",
+    "income": "Income",
+    "expense": "Expense",
+    "date": "Date",
+    "amount": "Amount",
+    "type": "Type",
+    "category": "Category",
+    "description": "Description",
+    "payment_method": "Payment Method",
+    "filters": "Filters",
+    "filter_by_date": "Filter by Date",
+    "filter_by_category": "Filter by Category",
+    "filter_by_type": "Filter by Type",
+    "total_income": "Total Income",
+    "total_expense": "Total Expense",
+    "balance_change": "Balance Change"
+  },
   "members": {
     "directory": "Member Directory",
     "search": "Search members...",
@@ -214,5 +241,25 @@
     "pending": "({{count}} pending actions)",
     "syncing": "Syncing {{count}} pending actions...",
     "back_online": "You are back online"
+  },
+  "vendor": {
+    "dashboard": "Vendor Dashboard",
+    "products": "My Products",
+    "orders": "Orders",
+    "earnings": "Earnings",
+    "settings": "Vendor Settings",
+    "add_product": "Add Product",
+    "edit_product": "Edit Product",
+    "sales_overview": "Sales Overview",
+    "store_profile": "Store Profile"
+  },
+  "account": {
+    "profile": "My Profile",
+    "orders": "My Orders",
+    "addresses": "My Addresses",
+    "payment_methods": "Payment Methods",
+    "settings": "Account Settings",
+    "become_vendor": "Become a Vendor",
+    "vendor_dashboard": "Vendor Dashboard"
   }
 }
