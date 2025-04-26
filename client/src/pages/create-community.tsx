@@ -4,39 +4,45 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ChevronLeft } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Loader2, ChevronLeft, Globe, Lock, Eye } from "lucide-react";
 
 const formSchema = z.object({
-  name: z.string().min(3, "Community name must be at least 3 characters").max(100),
-  description: z.string().min(10, "Description must be at least 10 characters").max(500),
+  name: z.string()
+    .min(3, "Community name must be at least 3 characters")
+    .max(100, "Community name must be less than 100 characters"),
+  description: z.string()
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must be less than 500 characters"),
   visibility: z.enum(["public", "private", "secret"], {
     required_error: "Please select a visibility option",
   }),
   rules: z.string().optional(),
-  topics: z.string().transform((val) => 
-    val.split(",").map(t => t.trim()).filter(Boolean)
-  ).optional(),
+  topics: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export default function CreateCommunityPage() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setLocation] = useLocation();
 
   // Redirect if not logged in
   if (!user) {
+    toast({
+      title: "Authentication required",
+      description: "Please log in to create a community",
+      variant: "destructive",
+    });
     setLocation("/auth");
     return null;
   }
@@ -54,51 +60,66 @@ export default function CreateCommunityPage() {
 
   const createCommunityMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/communities", data);
+      // Transform topics from comma-separated string to array
+      const formattedData = {
+        ...data,
+        topics: data.topics ? data.topics.split(",").map(t => t.trim()).filter(Boolean) : undefined,
+        ownerId: user.id,
+      };
+
+      const response = await apiRequest(
+        "POST",
+        "/api/communities",
+        formattedData
+      );
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to create community");
       }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "Community created",
-        description: "Your community has been created successfully.",
+        title: "Success",
+        description: "Community created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/communities"] });
-      setLocation("/communities");
+      setLocation(`/communities/${data.id}`);
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create community",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to create community",
         variant: "destructive",
       });
-      setIsSubmitting(false);
     },
   });
 
   const onSubmit = (data: FormData) => {
-    setIsSubmitting(true);
     createCommunityMutation.mutate(data);
   };
 
   return (
     <div className="container max-w-3xl mx-auto py-8">
-      <Button 
-        variant="ghost" 
-        onClick={() => setLocation("/communities")} 
-        className="mb-4"
-      >
-        <ChevronLeft className="h-4 w-4 mr-2" /> Back to Communities
-      </Button>
-      
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => setLocation("/communities")}
+          className="mr-2"
+        >
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">Create a New Community</h1>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Create a New Community</CardTitle>
+          <CardTitle>Community Details</CardTitle>
           <CardDescription>
-            Start a community to connect with people who share your interests
+            Create a community where people can connect and share ideas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,12 +130,12 @@ export default function CreateCommunityPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Community Name</FormLabel>
+                    <FormLabel>Community Name*</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter a name for your community" {...field} />
                     </FormControl>
                     <FormDescription>
-                      This is how your community will appear to others.
+                      Choose a unique name that represents your community's purpose
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -126,16 +147,16 @@ export default function CreateCommunityPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Description*</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe what your community is about" 
-                        className="min-h-[120px]" 
-                        {...field} 
+                        placeholder="Describe what your community is about"
+                        className="min-h-[120px]"
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      A clear description helps people understand what your community is about.
+                      Provide a clear description to help people understand what your community is about
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -146,26 +167,58 @@ export default function CreateCommunityPage() {
                 control={form.control}
                 name="visibility"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Visibility</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select visibility" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="public">Public - Anyone can find and join</SelectItem>
-                        <SelectItem value="private">Private - Visible but requires approval to join</SelectItem>
-                        <SelectItem value="secret">Secret - Hidden and requires invitation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Controls who can see and join your community.
-                    </FormDescription>
+                  <FormItem className="space-y-3">
+                    <FormLabel>Visibility*</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-2"
+                      >
+                        <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <RadioGroupItem value="public" />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <Globe className="h-4 w-4 mr-2 text-primary" />
+                              <FormLabel className="font-medium cursor-pointer">Public</FormLabel>
+                            </div>
+                            <FormDescription>
+                              Anyone can find and join your community
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                        <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <RadioGroupItem value="private" />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <Lock className="h-4 w-4 mr-2 text-primary" />
+                              <FormLabel className="font-medium cursor-pointer">Private</FormLabel>
+                            </div>
+                            <FormDescription>
+                              Anyone can find your community, but members must be approved
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                        <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <RadioGroupItem value="secret" />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <Eye className="h-4 w-4 mr-2 text-primary" />
+                              <FormLabel className="font-medium cursor-pointer">Secret</FormLabel>
+                            </div>
+                            <FormDescription>
+                              Only visible to invited members
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -176,15 +229,15 @@ export default function CreateCommunityPage() {
                 name="topics"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Topics (Optional)</FormLabel>
+                    <FormLabel>Topics</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="finance, technology, education" 
-                        {...field} 
+                        placeholder="finance, technology, education, art"
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Add topics related to your community, separated by commas.
+                      Add topics related to your community, separated by commas
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -196,36 +249,35 @@ export default function CreateCommunityPage() {
                 name="rules"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Community Rules (Optional)</FormLabel>
+                    <FormLabel>Community Rules</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="List the rules for your community" 
-                        className="min-h-[120px]" 
-                        {...field} 
+                        placeholder="Community guidelines and rules"
+                        className="min-h-[150px]"
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Clear rules help maintain a positive community environment.
+                      Establish rules to ensure a positive community environment
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Community"
-                )}
-              </Button>
+              <CardFooter className="flex justify-end px-0 pt-4">
+                <Button
+                  type="submit"
+                  disabled={createCommunityMutation.isPending}
+                  className="ml-auto"
+                >
+                  {createCommunityMutation.isPending ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...</>
+                  ) : (
+                    "Create Community"
+                  )}
+                </Button>
+              </CardFooter>
             </form>
           </Form>
         </CardContent>
