@@ -46,9 +46,9 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [recipient, setRecipient] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
-  // Start with USD as a default target currency, will be updated when wallet data is available
-  const [targetCurrency, setTargetCurrency] = useState('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  // Start with EUR as a default target currency, will be updated when wallet data is available
+  const [targetCurrency, setTargetCurrency] = useState('EUR');
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
   
@@ -97,7 +97,7 @@ export default function WalletPage() {
 
   // Create wallet mutation
   const createWalletMutation = useMutation({
-    mutationFn: async (currency: string = 'USD') => {
+    mutationFn: async (currency: string = 'GBP') => {
       const res = await apiRequest('POST', '/api/wallets', {
         balance: 0,
         currency,
@@ -310,9 +310,9 @@ export default function WalletPage() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>{t('wallet.available_currencies')}</SelectLabel>
-                      <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
                       <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
                       <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                      <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
                       <SelectItem value="CNY">CNY - Chinese Yuan (¥)</SelectItem>
                       <SelectItem value="INR">INR - Indian Rupee (₹)</SelectItem>
                       <SelectItem value="BRL">BRL - Brazilian Real (R$)</SelectItem>
