@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle } from "lucide-react";
+import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -208,15 +208,6 @@ export default function Home() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {user && (
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    setLocation(`/messages?share=${product.id}`);
-                  }}>
-                    <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                    Share with User
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   const productUrl = `${window.location.origin}/product/${product.id}`;
@@ -229,6 +220,32 @@ export default function Home() {
                   <Share2 className="h-4 w-4 mr-2 text-gray-600" />
                   Copy Link
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  const productUrl = `${window.location.origin}/product/${product.id}`;
+                  window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${productUrl}`)}`, '_blank');
+                }}>
+                  <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                  Share via Email
+                </DropdownMenuItem>
+                {user && (
+                  <>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setLocation(`/messages?share=${product.id}`);
+                    }}>
+                      <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                      Share in Messages
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setLocation(`/members?share=${product.id}`);
+                    }}>
+                      <Users className="h-4 w-4 mr-2 text-blue-600" />
+                      Share with Member
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="outline" size="sm" onClick={(e) => {

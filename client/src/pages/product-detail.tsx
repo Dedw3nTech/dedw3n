@@ -16,11 +16,10 @@ import {
   ShoppingCart, 
   RefreshCw, 
   Share2, 
-  Facebook, 
-  Twitter, 
   Mail, 
   Link as LinkIcon,
-  MessageCircle
+  MessageCircle,
+  Users
 } from 'lucide-react';
 import { 
   supportedCurrencies, 
@@ -476,18 +475,6 @@ export default function ProductDetail() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => {
-                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
-                }}>
-                  <Facebook className="h-4 w-4 mr-2 text-blue-600" />
-                  Share on Facebook
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(product.name)}`, '_blank');
-                }}>
-                  <Twitter className="h-4 w-4 mr-2 text-blue-400" />
-                  Share on Twitter
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
                   window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.href}`)}`, '_blank');
                 }}>
                   <Mail className="h-4 w-4 mr-2 text-gray-600" />
@@ -504,10 +491,16 @@ export default function ProductDetail() {
                   Copy Link
                 </DropdownMenuItem>
                 {user && (
-                  <DropdownMenuItem onClick={() => setLocation(`/messages?share=${productId}`)}>
-                    <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                    Share with User
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => setLocation(`/messages?share=${productId}`)}>
+                      <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                      Share in Messages
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLocation(`/members?share=${productId}`)}>
+                      <Users className="h-4 w-4 mr-2 text-blue-600" />
+                      Share with Member
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
