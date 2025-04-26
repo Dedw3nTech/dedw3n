@@ -113,13 +113,13 @@ export default function Checkout() {
         // Include shipping cost in the total
         const totalWithShipping = orderTotal + shippingCost;
         
-        // Ensure total is at least $0.50 (50 cents) as Stripe has a minimum charge amount
-        const minAmount = Math.max(totalWithShipping, 0.5);
+        // Ensure total is at least £0.30 (30 pence) as Stripe has a minimum charge amount
+        const minAmount = Math.max(totalWithShipping, 0.3);
         console.log('Amount being sent to Stripe (with shipping):', minAmount);
         
         const response = await apiRequest('POST', '/api/payments/create-intent', {
           amount: minAmount,
-          currency: 'usd',
+          currency: 'gbp',
           metadata: {
             userId: user.id,
             items: JSON.stringify(cartItems.map((item: any) => ({

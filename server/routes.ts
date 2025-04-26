@@ -500,6 +500,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertWalletSchema.parse({
         ...req.body,
         userId,
+        // Set default wallet currency to GBP if not provided
+        currency: req.body.currency || 'GBP',
+        // Set default balance to 0 if not provided
+        balance: req.body.balance || 0,
+        // Set wallet to active by default
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true,
       });
       
       const wallet = await storage.createWallet(validatedData);
@@ -606,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientWallet = await storage.createWallet({
           userId: recipient.id,
           balance: 0,
-          currency: "USD",
+          currency: "GBP", // Use GBP as default currency
           isActive: true
         });
       }
