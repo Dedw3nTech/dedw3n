@@ -25,11 +25,14 @@ export interface TopProduct {
   revenue: number;
 }
 
-type RevenuePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type RevenuePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export function useVendorAnalytics(vendorId: number) {
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Determine if the queries should be enabled
+  const isEnabled = !!vendorId && !!user && !!user.isVendor;
 
   // Total Sales
   const {
@@ -38,7 +41,7 @@ export function useVendorAnalytics(vendorId: number) {
     error: totalSalesError
   } = useQuery<{ totalSales: number }>({
     queryKey: [`/api/vendors/${vendorId}/analytics/total-sales`],
-    enabled: !!vendorId && !!user && user.isVendor,
+    enabled: isEnabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -50,7 +53,7 @@ export function useVendorAnalytics(vendorId: number) {
     error: orderStatsError
   } = useQuery<OrderStats>({
     queryKey: [`/api/vendors/${vendorId}/analytics/order-stats`],
-    enabled: !!vendorId && !!user && user.isVendor,
+    enabled: isEnabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -59,7 +62,7 @@ export function useVendorAnalytics(vendorId: number) {
   const getRevenueData = (period: RevenuePeriod = 'monthly') => {
     return useQuery<Record<string, number>>({
       queryKey: [`/api/vendors/${vendorId}/analytics/revenue`, period],
-      enabled: !!vendorId && !!user && user.isVendor,
+      enabled: isEnabled,
       staleTime: 5 * 60 * 1000,
       gcTime: 10 * 60 * 1000,
     });
@@ -72,7 +75,7 @@ export function useVendorAnalytics(vendorId: number) {
     error: topProductsError
   } = useQuery<TopProduct[]>({
     queryKey: [`/api/vendors/${vendorId}/analytics/top-products`],
-    enabled: !!vendorId && !!user && user.isVendor,
+    enabled: isEnabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -84,7 +87,7 @@ export function useVendorAnalytics(vendorId: number) {
     error: profitLossError
   } = useQuery<ProfitLoss>({
     queryKey: [`/api/vendors/${vendorId}/analytics/profit-loss`],
-    enabled: !!vendorId && !!user && user.isVendor,
+    enabled: isEnabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

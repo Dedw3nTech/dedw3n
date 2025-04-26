@@ -1,16 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useVendorAnalytics, TopProduct, RevenuePeriod } from '@/hooks/use-vendor-analytics';
+import { useVendorAnalytics, RevenuePeriod } from '@/hooks/use-vendor-analytics';
 import { Redirect } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '@/lib/currencyConverter';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, LineChart, PieChart } from 'recharts';
-import { CircleDollarSign, Package, ShoppingCart, TrendingUp, BarChart2, PieChart as PieChartIcon } from 'lucide-react';
+import { CircleDollarSign, Package, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
-import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line, ResponsiveContainer, Pie, Cell } from 'recharts';
+import { 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  Line, 
+  ResponsiveContainer, 
+  Pie, 
+  Cell,
+  LineChart,
+  PieChart,
+  BarChart 
+} from 'recharts';
 
 export default function VendorAnalytics() {
   const { t } = useTranslation();
@@ -91,8 +103,8 @@ export default function VendorAnalytics() {
                 <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
-                <p className="text-xs text-muted-foreground">{t('vendor.total_revenue')}</p>
+                <div className="text-2xl font-bold">{formatCurrency(totalSales, "GBP")}</div>
+                <p className="text-xs text-muted-foreground">{t('vendor.total_revenue', {})}</p>
               </CardContent>
             </Card>
             
