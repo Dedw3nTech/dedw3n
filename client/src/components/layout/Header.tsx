@@ -109,32 +109,16 @@ export default function Header() {
 
         <div className="flex border-b border-gray-200 -mb-px">
           <button
-            className={`flex-1 py-4 text-center font-medium text-sm focus:outline-none ${
-              view === "marketplace" ? "border-b-2 border-primary text-primary" : "text-gray-600"
-            }`}
-            onClick={() => handleViewChange("marketplace")}
-          >
-            <i className="ri-store-2-line mr-1"></i> {t('nav.products')}
-          </button>
-          <button
-            className={`flex-1 py-4 text-center font-medium text-sm focus:outline-none ${
-              view === "social" ? "border-b-2 border-primary text-primary" : "text-gray-600"
-            }`}
-            onClick={() => handleViewChange("social")}
-          >
-            <i className="ri-group-line mr-1"></i> {t('nav.social')}
-          </button>
-          <button
             onClick={() => setLocation("/products")}
             className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
           >
-            <i className="ri-shopping-bag-3-line mr-1"></i> Marketplace
+            <i className="ri-store-3-line mr-1"></i> Marketplace
           </button>
           <button
             onClick={() => setLocation("/explore")}
             className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
           >
-            <i className="ri-compass-3-line mr-1"></i> Social
+            <i className="ri-compass-3-line mr-1"></i> Explore
           </button>
         </div>
       </div>
