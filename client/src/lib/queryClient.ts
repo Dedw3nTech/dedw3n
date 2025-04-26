@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { offlineFetch, useOfflineStore } from "./offline";
+import { offlineAwareFetch, useOfflineStore, cacheResponse } from "./offline";
 
 async function throwIfResNotOk(res: Response) {
   // Special handling for offline mode
@@ -20,7 +20,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   // Use our offline-aware fetch implementation
-  const res = await offlineFetch(url, {
+  const res = await offlineAwareFetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -38,7 +38,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     // Use our offline-aware fetch implementation
-    const res = await offlineFetch(queryKey[0] as string, {
+    const res = await offlineAwareFetch(queryKey[0] as string, {
       credentials: "include",
     });
 
@@ -73,6 +73,16 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
+    
+    // Cache successful GET responses for offline use
+    if (useOfflineStore.getState().isOnline && 
+        typeof queryKey[0] === 'string' && 
+        res.status === 200) {
+      const data = await res.clone().json();
+      cacheResponse(queryKey[0] as string, data);
+      return data;
+    }
+    
     return await res.json();
   };
 
