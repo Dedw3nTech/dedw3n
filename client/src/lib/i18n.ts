@@ -7,7 +7,11 @@ import Backend from 'i18next-http-backend';
 export const languages = [
   { code: 'en', name: 'English' },
   { code: 'fr', name: 'Français' },
-  { code: 'pt', name: 'Português' }
+  { code: 'pt', name: 'Português' },
+  { code: 'zh', name: '中文' },    // Mandarin
+  { code: 'hi', name: 'हिन्दी' },  // Hindi
+  { code: 'ar', name: 'العربية' }, // Arabic
+  { code: 'es', name: 'Español' }  // Spanish
 ];
 
 i18n
@@ -33,7 +37,7 @@ i18n
     },
     ns: 'common',
     defaultNS: 'common',
-    supportedLngs: ['en', 'fr', 'pt'],
+    supportedLngs: ['en', 'fr', 'pt', 'zh', 'hi', 'ar', 'es'],
   });
 
 export default i18n;
