@@ -49,13 +49,21 @@ export const getQueryFn: <T>(options: {
     // If we're offline and have a 503 status, try to return cached data
     if (res.status === 503 && !useOfflineStore.getState().isOnline) {
       try {
-        const data = await res.json();
+        const data = await res.json() as { error?: string };
         if (data.error === 'Currently offline') {
-          // Return null or empty data structure based on the URL path
-          // This is a simple approach - in a more complex app you might want to 
-          // differentiate between different API endpoints
-          if (queryKey[0].toString().includes('/api/products')) {
+          // Return appropriate empty data structure based on the endpoint
+          const endpoint = Array.isArray(queryKey) && queryKey.length > 0 
+            ? String(queryKey[0]) 
+            : '';
+          
+          if (endpoint.includes('/api/products')) {
             return [];
+          } else if (endpoint.includes('/api/categories')) {
+            return [];
+          } else if (endpoint.includes('/api/cart')) {
+            return { count: 0 };
+          } else if (endpoint.includes('/api/messages')) {
+            return { count: 0 };
           }
           return null;
         }

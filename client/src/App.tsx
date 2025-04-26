@@ -19,6 +19,7 @@ import PaymentSuccess from "@/pages/payment-success";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
+import OfflineSimulator from "@/components/utils/OfflineSimulator";
 
 // Import new page components
 import Products from "@/pages/products";
@@ -65,6 +66,7 @@ function App() {
               <Footer />
               <MobileNavigation />
               <OfflineIndicator />
+              {import.meta.env.DEV && <OfflineSimulator />}
             </div>
             <Toaster />
           </ViewProvider>

@@ -233,5 +233,14 @@
     "more": "More",
     "all": "All",
     "none": "None"
+  },
+  "offline": {
+    "status": "You are currently offline",
+    "pending": "({{count}} pending actions)",
+    "syncing": "Syncing {{count}} pending actions...",
+    "back_online": "You are back online",
+    "save_for_later": "Saved for when you're back online",
+    "limited_functionality": "Limited functionality available while offline",
+    "view_saved": "View saved content"
   }
 }
