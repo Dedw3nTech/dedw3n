@@ -10,6 +10,17 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   MessageSquare,
   ThumbsUp,
@@ -26,6 +37,11 @@ import {
   VolumeX,
   Maximize,
   Film,
+  ShoppingBag,
+  Tag,
+  DollarSign,
+  Users,
+  Truck,
 } from "lucide-react";
 
 // Type for the post object
@@ -48,6 +64,18 @@ interface Post {
   duration?: number;
   views?: number;
   videoType?: 'standard' | 'short' | 'story' | 'live';
+  // Commerce-related properties
+  productId?: number | null;
+  product?: {
+    id: number;
+    name: string;
+    price: number;
+    discountPrice?: number | null;
+    imageUrl: string;
+    vendorId: number;
+    vendorName?: string;
+  } | null;
+  isShoppable?: boolean;
   likes: number;
   comments: number;
   shares: number;
@@ -248,6 +276,40 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to delete post",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Add to cart mutation
+  const addToCartMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await apiRequest(
+        "POST",
+        "/api/cart",
+        { productId, quantity: 1 }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add product to cart");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Added to cart",
+        description: "Product added to your cart successfully",
+      });
+      
+      // Invalidate cart data
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add product to cart",
         variant: "destructive",
       });
     },
@@ -606,6 +668,113 @@ export default function PostCard({
                 #{tag}
               </Badge>
             ))}
+          </div>
+        )}
+        
+        {/* Product card for embedded commerce */}
+        {post.product && (
+          <div className="border rounded-lg p-3 mb-4 bg-muted/30 hover:bg-muted/50 transition duration-200">
+            <div className="flex gap-3">
+              <div 
+                className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0 cursor-pointer" 
+                onClick={() => setLocation(`/product/${post.product!.id}`)}
+              >
+                <img 
+                  src={post.product.imageUrl} 
+                  alt={post.product.name} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 
+                      className="font-medium text-base hover:underline cursor-pointer"
+                      onClick={() => setLocation(`/product/${post.product!.id}`)}
+                    >
+                      {post.product.name}
+                    </h4>
+                    {post.product.vendorName && (
+                      <p className="text-xs text-muted-foreground flex items-center mt-1">
+                        <Users className="h-3 w-3 mr-1" />
+                        {post.product.vendorName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-1">
+                      {post.product.discountPrice !== null && (
+                        <span className="text-sm line-through text-muted-foreground">
+                          £{post.product.price.toFixed(2)}
+                        </span>
+                      )}
+                      <span className="font-semibold text-primary">
+                        £{(post.product.discountPrice ?? post.product.price).toFixed(2)}
+                      </span>
+                    </div>
+                    {post.product.discountPrice !== null && (
+                      <Badge className="bg-green-500 hover:bg-green-600 mt-1">
+                        {Math.round((1 - post.product.discountPrice / post.product.price) * 100)}% OFF
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex mt-3 gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => {
+                            if (!currentUser) {
+                              toast({
+                                title: "Authentication required",
+                                description: "Please log in to add items to cart",
+                                variant: "destructive",
+                              });
+                              setLocation("/auth");
+                              return;
+                            }
+                            
+                            addToCartMutation.mutate(post.product!.id);
+                          }}
+                          disabled={addToCartMutation.isPending}
+                        >
+                          {addToCartMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          ) : (
+                            <ShoppingBag className="h-4 w-4 mr-1" />
+                          )}
+                          Shop Now
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Add to your cart</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => setLocation(`/product/${post.product!.id}`)}
+                        >
+                          <Maximize className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>View product details</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
