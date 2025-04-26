@@ -243,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Post routes
+  // Enhanced post routes for limitless content
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
@@ -254,6 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const post = await storage.createPost(validatedData);
+      
+      // Increment user's post count if needed
+      
       res.status(201).json(post);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -263,13 +266,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if the post belongs to the user
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You can only update your own posts" });
+      }
+      
+      const validatedData = insertPostSchema.partial().parse(req.body);
+      
+      const updatedPost = await storage.updatePost(postId, validatedData);
+      res.json(updatedPost);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
   app.get("/api/posts", async (req, res) => {
     try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      const posts = await storage.listPosts(userId);
+      // Extract query parameters for advanced filtering
+      const options: {
+        userId?: number;
+        contentType?: string | string[];
+        isPromoted?: boolean;
+        tags?: string[];
+        limit?: number;
+        offset?: number;
+      } = {};
+      
+      if (req.query.userId) {
+        options.userId = parseInt(req.query.userId as string);
+      }
+      
+      if (req.query.contentType) {
+        options.contentType = req.query.contentType as string;
+      }
+      
+      if (req.query.isPromoted !== undefined) {
+        options.isPromoted = req.query.isPromoted === 'true';
+      }
+      
+      if (req.query.tags) {
+        options.tags = (req.query.tags as string).split(',');
+      }
+      
+      if (req.query.limit) {
+        options.limit = parseInt(req.query.limit as string);
+      }
+      
+      if (req.query.offset) {
+        options.offset = parseInt(req.query.offset as string);
+      }
+      
+      const posts = await storage.listPosts(options);
       res.json(posts);
     } catch (error) {
       res.status(500).json({ message: "Failed to list posts" });
+    }
+  });
+  
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Increment view count
+      await storage.incrementPostView(postId);
+      
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get post" });
+    }
+  });
+  
+  app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if the post belongs to the user
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own posts" });
+      }
+      
+      await storage.deletePost(postId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+  
+  // Promotion management endpoints
+  app.post("/api/posts/:id/promote", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if the post belongs to the user
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You can only promote your own posts" });
+      }
+      
+      // Get promotion end date from request or default to 7 days from now
+      const endDateString = req.body.endDate;
+      let endDate: Date;
+      
+      if (endDateString) {
+        endDate = new Date(endDateString);
+      } else {
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() + 7); // Default: 7 days from now
+      }
+      
+      const promotedPost = await storage.promotePost(postId, endDate);
+      res.json(promotedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to promote post" });
+    }
+  });
+  
+  app.post("/api/posts/:id/unpromote", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if the post belongs to the user
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You can only unpromote your own posts" });
+      }
+      
+      const unpromotedPost = await storage.unpromotePost(postId);
+      res.json(unpromotedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to unpromote post" });
     }
   });
 

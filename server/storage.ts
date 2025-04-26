@@ -50,9 +50,20 @@ export interface IStorage {
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
   createPost(post: InsertPost): Promise<Post>;
-  updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number }): Promise<Post>;
+  updatePost(id: number, postData: Partial<InsertPost>): Promise<Post>;
+  updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number; views?: number }): Promise<Post>;
   deletePost(id: number): Promise<boolean>;
-  listPosts(userId?: number): Promise<Post[]>;
+  listPosts(options?: {
+    userId?: number;
+    contentType?: string | string[];
+    isPromoted?: boolean;
+    tags?: string[];
+    limit?: number;
+    offset?: number;
+  }): Promise<Post[]>;
+  incrementPostView(id: number): Promise<Post>;
+  promotePost(id: number, endDate: Date): Promise<Post>;
+  unpromotePost(id: number): Promise<Post>;
 
   // Comment operations
   getComment(id: number): Promise<Comment | undefined>;
@@ -389,20 +400,46 @@ export class MemStorage implements IStorage {
       likes: 0,
       comments: 0,
       shares: 0,
+      views: 0,
+      tags: post.tags || [],
+      contentType: post.contentType || "text",
+      isPromoted: post.isPromoted || false,
+      isPublished: post.isPublished ?? true,
+      title: post.title || null,
+      videoUrl: post.videoUrl || null,
+      imageUrl: post.imageUrl || null,
+      promotionEndDate: post.promotionEndDate || null,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.posts.set(id, newPost);
     return newPost;
   }
 
-  async updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number }): Promise<Post> {
+  async updatePost(id: number, postData: Partial<InsertPost>): Promise<Post> {
+    const post = this.posts.get(id);
+    if (!post) throw new Error(`Post with id ${id} not found`);
+
+    const updatedPost = {
+      ...post,
+      ...postData,
+      updatedAt: new Date(),
+    };
+
+    this.posts.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number; views?: number }): Promise<Post> {
     const post = this.posts.get(id);
     if (!post) throw new Error(`Post with id ${id} not found`);
 
     if (stats.likes !== undefined) post.likes = stats.likes;
     if (stats.comments !== undefined) post.comments = stats.comments;
     if (stats.shares !== undefined) post.shares = stats.shares;
+    if (stats.views !== undefined) post.views = stats.views;
 
+    post.updatedAt = new Date();
     this.posts.set(id, post);
     return post;
   }
@@ -411,17 +448,88 @@ export class MemStorage implements IStorage {
     return this.posts.delete(id);
   }
 
-  async listPosts(userId?: number): Promise<Post[]> {
+  async listPosts(options?: {
+    userId?: number;
+    contentType?: string | string[];
+    isPromoted?: boolean;
+    tags?: string[];
+    limit?: number;
+    offset?: number;
+  }): Promise<Post[]> {
     let posts = Array.from(this.posts.values());
     
-    if (userId) {
-      posts = posts.filter(post => post.userId === userId);
+    if (options?.userId) {
+      posts = posts.filter(post => post.userId === options.userId);
+    }
+    
+    if (options?.contentType) {
+      const contentTypes = Array.isArray(options.contentType) 
+        ? options.contentType 
+        : [options.contentType];
+      posts = posts.filter(post => contentTypes.includes(post.contentType));
+    }
+    
+    if (options?.isPromoted !== undefined) {
+      posts = posts.filter(post => post.isPromoted === options.isPromoted);
+    }
+
+    if (options?.tags && options.tags.length > 0) {
+      posts = posts.filter(post => {
+        if (!post.tags) return false;
+        return options.tags!.some(tag => post.tags.includes(tag));
+      });
+    }
+    
+    // Filter out unpublished posts (except when specifically querying for them)
+    if (options?.isPromoted === undefined) {
+      posts = posts.filter(post => post.isPublished);
     }
     
     // Sort by most recent first
-    posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    posts.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+    
+    // Apply pagination if limit is specified
+    if (options?.limit) {
+      const offset = options.offset || 0;
+      posts = posts.slice(offset, offset + options.limit);
+    }
     
     return posts;
+  }
+  
+  async incrementPostView(id: number): Promise<Post> {
+    const post = this.posts.get(id);
+    if (!post) throw new Error(`Post with id ${id} not found`);
+    
+    post.views = (post.views || 0) + 1;
+    post.updatedAt = new Date();
+    this.posts.set(id, post);
+    return post;
+  }
+  
+  async promotePost(id: number, endDate: Date): Promise<Post> {
+    const post = this.posts.get(id);
+    if (!post) throw new Error(`Post with id ${id} not found`);
+    
+    post.isPromoted = true;
+    post.promotionEndDate = endDate;
+    post.updatedAt = new Date();
+    this.posts.set(id, post);
+    return post;
+  }
+  
+  async unpromotePost(id: number): Promise<Post> {
+    const post = this.posts.get(id);
+    if (!post) throw new Error(`Post with id ${id} not found`);
+    
+    post.isPromoted = false;
+    post.promotionEndDate = null;
+    post.updatedAt = new Date();
+    this.posts.set(id, post);
+    return post;
   }
 
   // Comment operations

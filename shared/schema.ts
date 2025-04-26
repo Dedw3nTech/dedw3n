@@ -53,12 +53,21 @@ export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   content: text("content").notNull(),
+  title: text("title"),
+  contentType: varchar("content_type", { length: 20 }).notNull().default("text"), // text, image, video, article, advertisement
   imageUrl: text("image_url"),
+  videoUrl: text("video_url"),
   productId: integer("product_id").references(() => products.id),
   likes: integer("likes").default(0),
   comments: integer("comments").default(0),
   shares: integer("shares").default(0),
+  views: integer("views").default(0),
+  tags: text("tags").array(), // Array of tags for better content discovery
+  isPromoted: boolean("is_promoted").default(false), // For advertisements
+  promotionEndDate: timestamp("promotion_end_date"), // For advertisements
+  isPublished: boolean("is_published").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Comment model
@@ -195,7 +204,15 @@ export const insertProductSchema = createInsertSchema(products)
   .omit({ id: true, createdAt: true });
 
 export const insertPostSchema = createInsertSchema(posts)
-  .omit({ id: true, likes: true, comments: true, shares: true, createdAt: true });
+  .omit({ 
+    id: true, 
+    likes: true, 
+    comments: true, 
+    shares: true, 
+    views: true, 
+    createdAt: true, 
+    updatedAt: true 
+  });
 
 export const insertCommentSchema = createInsertSchema(comments)
   .omit({ id: true, createdAt: true });
