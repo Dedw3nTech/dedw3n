@@ -521,9 +521,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const savedMessage = await storage.createMessage({
               senderId: parseInt(userId),
               receiverId: message.receiverId,
-              content: message.content,
-              isRead: false,
-              createdAt: new Date()
+              content: message.content
+              // isRead field removed as it's not in the schema
             });
             
             // Forward message to recipient if online
