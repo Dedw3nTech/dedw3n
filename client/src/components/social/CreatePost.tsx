@@ -98,16 +98,13 @@ export default function CreatePost({
 
   // Create/Edit post mutation
   const postMutation = useMutation({
-    mutationFn: async (postData: FormData) => {
+    mutationFn: async (postData: any) => {
       const url = editingPost
         ? `/api/posts/${editingPost.id}`
         : "/api/posts";
       
-      const method = editingPost ? "PATCH" : "POST";
-      const response = await fetch(url, {
-        method,
-        body: postData,
-      });
+      const method = editingPost ? "PUT" : "POST";
+      const response = await apiRequest(method, url, postData);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -231,7 +228,17 @@ export default function CreatePost({
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleSubmit = () => {
+  // Function to convert File to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleSubmit = async () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -261,7 +268,7 @@ export default function CreatePost({
       return;
     }
     
-    if (contentType === 'visual' && !imageFile) {
+    if (contentType === 'visual' && !imageFile && !imagePreview) {
       toast({
         title: "Image required",
         description: "Please upload an image for your visual post",
@@ -270,7 +277,7 @@ export default function CreatePost({
       return;
     }
     
-    if (contentType === 'video' && !videoFile) {
+    if (contentType === 'video' && !videoFile && !videoPreview) {
       toast({
         title: "Video required", 
         description: "Please upload a video for your video post",
@@ -288,44 +295,64 @@ export default function CreatePost({
       return;
     }
     
-    // Create FormData to handle files
-    const formData = new FormData();
-    formData.append("content", content);
-    formData.append("contentType", contentType);
+    // Create post data object to send as JSON
+    const postData: any = {
+      content,
+      contentType,
+    };
     
     if (title.trim()) {
-      formData.append("title", title);
+      postData.title = title;
     }
     
     if (tags.length > 0) {
-      // Server expects tags as a JSON string array
-      formData.append("tags", JSON.stringify(tags));
+      postData.tags = tags;
     }
     
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
-    
-    if (videoFile) {
-      formData.append("video", videoFile);
+    // Handle media files
+    try {
+      if (imageFile) {
+        const base64Image = await fileToBase64(imageFile);
+        postData.imageUrl = base64Image;
+      } else if (imagePreview && !imageFile) {
+        // Use existing image URL if editing post
+        postData.imageUrl = imagePreview;
+      }
+      
+      if (videoFile) {
+        const base64Video = await fileToBase64(videoFile);
+        postData.videoUrl = base64Video;
+      } else if (videoPreview && !videoFile) {
+        // Use existing video URL if editing post
+        postData.videoUrl = videoPreview;
+      }
+    } catch (error) {
+      toast({
+        title: "File upload error",
+        description: "There was a problem processing your media files",
+        variant: "destructive",
+      });
+      return;
     }
     
     if (linkUrl.trim()) {
-      formData.append("linkUrl", linkUrl);
+      postData.linkUrl = linkUrl;
     }
     
     // Add promotion status for advertisements
     if (contentType === 'advertisement') {
-      formData.append("isPromoted", isPromoted.toString());
+      postData.isPromoted = isPromoted;
     }
     
     // Add community ID if posting to community
     if (postToVisibility === "community" && selectedCommunityId) {
-      formData.append("communityId", selectedCommunityId.toString());
+      postData.communityId = selectedCommunityId;
     }
     
+    console.log("Sending post data:", postData);
+    
     // Submit post
-    postMutation.mutate(formData);
+    postMutation.mutate(postData);
   };
 
   if (!user) {

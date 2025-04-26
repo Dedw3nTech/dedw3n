@@ -250,12 +250,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced post routes for limitless content with file uploads
+  // Enhanced post routes with direct JSON data for content and file uploads
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       
-      // Create a post data object from form fields
+      // Create a post data object from the JSON request
       const postData: any = {
         userId,
         content: req.body.content,
@@ -265,39 +265,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add optional fields if they exist
       if (req.body.title) postData.title = req.body.title;
       if (req.body.communityId) postData.communityId = parseInt(req.body.communityId);
-      if (req.body.tags) {
-        try {
-          postData.tags = JSON.parse(req.body.tags);
-        } catch (e) {
-          // If tags parsing fails, just use an empty array
-          postData.tags = [];
+      
+      // Handle tags array directly
+      if (req.body.tags && Array.isArray(req.body.tags)) {
+        postData.tags = req.body.tags;
+      }
+      
+      // Handle media URLs
+      if (req.body.imageUrl) {
+        // Check if it's a base64 image
+        if (req.body.imageUrl.startsWith('data:image')) {
+          // Convert base64 to URL by storing it as an asset
+          // This is a simplified approach - in production you would save to cloud storage
+          const base64Data = req.body.imageUrl.split(',')[1];
+          const filename = `image_${Date.now()}.png`;
+          
+          // Create uploads directory if it doesn't exist
+          if (!fs.existsSync('./public/uploads')) {
+            fs.mkdirSync('./public/uploads', { recursive: true });
+          }
+          if (!fs.existsSync('./public/uploads/images')) {
+            fs.mkdirSync('./public/uploads/images', { recursive: true });
+          }
+          
+          // Save the file
+          fs.writeFileSync(`./public/uploads/images/${filename}`, base64Data, 'base64');
+          
+          // Set the image URL to the saved file
+          postData.imageUrl = `/uploads/images/${filename}`;
+        } else {
+          // Use existing URL (for post editing)
+          postData.imageUrl = req.body.imageUrl;
+        }
+      }
+      
+      // Handle video URLs
+      if (req.body.videoUrl) {
+        // Check if it's a base64 video
+        if (req.body.videoUrl.startsWith('data:video')) {
+          // Convert base64 to URL by storing it as an asset
+          const base64Data = req.body.videoUrl.split(',')[1];
+          const filename = `video_${Date.now()}.mp4`;
+          
+          // Create uploads directory if it doesn't exist
+          if (!fs.existsSync('./public/uploads')) {
+            fs.mkdirSync('./public/uploads', { recursive: true });
+          }
+          if (!fs.existsSync('./public/uploads/videos')) {
+            fs.mkdirSync('./public/uploads/videos', { recursive: true });
+          }
+          
+          // Save the file
+          fs.writeFileSync(`./public/uploads/videos/${filename}`, base64Data, 'base64');
+          
+          // Set the video URL to the saved file
+          postData.videoUrl = `/uploads/videos/${filename}`;
+        } else {
+          // Use existing URL (for post editing)
+          postData.videoUrl = req.body.videoUrl;
         }
       }
       
       if (req.body.linkUrl) postData.linkUrl = req.body.linkUrl;
-      if (req.body.isPromoted) postData.isPromoted = req.body.isPromoted === 'true';
-      
-      // Handle image upload if present
-      if (req.files && req.files.image) {
-        const imageFile = req.files.image as any;
-        // Generate a unique filename
-        const filename = `${Date.now()}_${imageFile.name}`;
-        // Move the file to the uploads directory
-        await imageFile.mv(`./public/uploads/images/${filename}`);
-        // Set the image URL
-        postData.imageUrl = `/uploads/images/${filename}`;
-      }
-      
-      // Handle video upload if present
-      if (req.files && req.files.video) {
-        const videoFile = req.files.video as any;
-        // Generate a unique filename
-        const filename = `${Date.now()}_${videoFile.name}`;
-        // Move the file to the uploads directory
-        await videoFile.mv(`./public/uploads/videos/${filename}`);
-        // Set the video URL
-        postData.videoUrl = `/uploads/videos/${filename}`;
-      }
+      if (req.body.isPromoted !== undefined) postData.isPromoted = req.body.isPromoted;
       
       console.log("Creating post with data:", postData);
       
