@@ -45,9 +45,10 @@ async function seedDatabase() {
         userId: 1,
         storeName: 'Admin Store',
         description: 'The official store of the marketplace',
-        rating: 4.9,
-        ratingCount: 120,
       });
+      
+      // Update the vendor rating separately
+      adminVendor = await storage.updateVendorRating(adminVendor.id, 4.9);
       console.log(`Vendor account created with ID: ${adminVendor.id}`);
     }
 

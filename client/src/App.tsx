@@ -21,6 +21,7 @@ import MobileNavigation from "@/components/layout/MobileNavigation";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
 import AddProduct from "@/pages/add-product";
+import UploadProduct from "@/pages/upload-product";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/products" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/add-product" component={AddProduct} />
+      <Route path="/upload-product" component={UploadProduct} />
       <Route component={NotFound} />
     </Switch>
   );

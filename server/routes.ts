@@ -3,12 +3,16 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
+import { seedDatabase } from "./seed";
 import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication with passport
   setupAuth(app);
+
+  // Seed the database with initial data
+  await seedDatabase();
 
   // Backward compatibility for client-side code
   app.post("/api/register", (req, res) => res.redirect(307, "/api/auth/register"));
