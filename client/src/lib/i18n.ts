@@ -29,10 +29,11 @@ i18n
       caches: ['localStorage'],
     },
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      loadPath: './locales/{{lng}}/{{ns}}.json',
     },
     ns: 'common',
     defaultNS: 'common',
+    supportedLngs: ['en', 'fr', 'pt'],
   });
 
 export default i18n;

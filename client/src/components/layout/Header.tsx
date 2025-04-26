@@ -112,7 +112,7 @@ export default function Header() {
             }`}
             onClick={() => handleViewChange("marketplace")}
           >
-            <i className="ri-store-2-line mr-1"></i> Marketplace
+            <i className="ri-store-2-line mr-1"></i> {t('nav.products')}
           </button>
           <button
             className={`flex-1 py-4 text-center font-medium text-sm focus:outline-none ${
@@ -120,7 +120,7 @@ export default function Header() {
             }`}
             onClick={() => handleViewChange("social")}
           >
-            <i className="ri-group-line mr-1"></i> Social
+            <i className="ri-group-line mr-1"></i> {t('nav.social')}
           </button>
         </div>
       </div>

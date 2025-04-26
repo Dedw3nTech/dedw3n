@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { languages } from '@/lib/i18n';
 import {
@@ -5,49 +6,73 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from '@/lib/utils';
+  SelectValue
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
 
 interface LanguageSelectorProps {
-  className?: string;
   minimal?: boolean;
+  className?: string;
 }
 
-export function LanguageSelector({ className, minimal = false }: LanguageSelectorProps) {
+export const LanguageSelector = ({ minimal = false, className = '' }: LanguageSelectorProps) => {
   const { i18n, t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleLanguageChange = (value: string) => {
-    i18n.changeLanguage(value);
+  const currentLanguage = languages.find(lng => lng.code === i18n.language) || languages[0];
+
+  const handleLanguageChange = (language: string) => {
+    i18n.changeLanguage(language);
+    setIsOpen(false);
   };
 
-  return (
-    <div className={cn("flex items-center gap-2", className)}>
-      {!minimal && <span className="text-sm">{t('nav.language')}:</span>}
-      <Select 
-        defaultValue={i18n.language} 
-        onValueChange={handleLanguageChange}
-      >
-        <SelectTrigger className={cn(
-          "w-[130px] h-9", 
-          minimal && "w-[80px] border-none bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-0"
-        )}>
-          <SelectValue placeholder="Select Language">
-            <div className="flex items-center gap-2">
-              {minimal && <Globe className="h-4 w-4" />}
-              {languages.find(lang => lang.code === i18n.language)?.name || 'English'}
-            </div>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
+  if (minimal) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`${className} flex items-center space-x-1 px-2`}
+          >
+            <Globe className="h-4 w-4" />
+            <span>{currentLanguage.code.toUpperCase()}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
           {languages.map((language) => (
-            <SelectItem key={language.code} value={language.code}>
+            <DropdownMenuItem 
+              key={language.code}
+              className={i18n.language === language.code ? 'bg-muted' : ''}
+              onClick={() => handleLanguageChange(language.code)}
+            >
               {language.name}
-            </SelectItem>
+            </DropdownMenuItem>
           ))}
-        </SelectContent>
-      </Select>
-    </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  return (
+    <Select onValueChange={handleLanguageChange} defaultValue={i18n.language}>
+      <SelectTrigger className={`w-[140px] ${className}`}>
+        <SelectValue placeholder={t('nav.language')} />
+      </SelectTrigger>
+      <SelectContent>
+        {languages.map((language) => (
+          <SelectItem key={language.code} value={language.code}>
+            {language.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
-}
+};
