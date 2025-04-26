@@ -9,6 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTranslation } from 'react-i18next';
 import { ChevronUpIcon, ChevronDownIcon, RefreshCwIcon, ArrowRightIcon, PlusIcon, WalletIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -22,6 +31,17 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [recipient, setRecipient] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  
+  // Currency symbols for formatting
+  const currencySymbols = {
+    USD: '$',
+    GBP: '£',
+    EUR: '€',
+    CNY: '¥',
+    INR: '₹',
+    BRL: 'R$'
+  };
   
   // Redirect if not logged in
   if (!user) {
@@ -50,10 +70,10 @@ export default function WalletPage() {
 
   // Create wallet mutation
   const createWalletMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (currency: string = 'USD') => {
       const res = await apiRequest('POST', '/api/wallets', {
         balance: 0,
-        currency: 'USD',
+        currency,
         isActive: true
       });
       return await res.json();
@@ -130,7 +150,7 @@ export default function WalletPage() {
   });
 
   const handleCreateWallet = () => {
-    createWalletMutation.mutate();
+    createWalletMutation.mutate(selectedCurrency);
   };
 
   const handleTransaction = (type: string) => (e: React.FormEvent) => {
@@ -225,7 +245,10 @@ export default function WalletPage() {
       prefix = '+';
     }
     
-    return `${prefix}$${amount.toFixed(2)}`;
+    // Use the wallet's currency symbol for formatting
+    const currencySymbol = wallet?.currency ? currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$' : '$';
+    
+    return `${prefix}${currencySymbol}${amount.toFixed(2)}`;
   };
 
   // Loading state
