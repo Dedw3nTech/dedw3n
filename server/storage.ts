@@ -4,6 +4,7 @@ import {
   wallets, transactions, orders, orderItems, communities,
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
+  videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -15,7 +16,9 @@ import {
   type Membership, type InsertMembership, type Event, type InsertEvent,
   type EventRegistration, type InsertEventRegistration, type Poll, type InsertPoll,
   type PollVote, type InsertPollVote, type CreatorEarning, type InsertCreatorEarning,
-  type Subscription, type InsertSubscription
+  type Subscription, type InsertSubscription, type Video, type InsertVideo,
+  type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
+  type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -260,6 +263,24 @@ export interface IStorage {
   getPopularTags(limit?: number): Promise<{ name: string; count: number }[]>;
   getPopularCommunities(limit?: number): Promise<Community[]>;
   getFeaturedProducts(limit?: number): Promise<Product[]>;
+  
+  // Video operations
+  createVideo(video: InsertVideo): Promise<Video>;
+  getVideo(id: number): Promise<Video | undefined>;
+  updateVideo(id: number, videoData: Partial<Video>): Promise<Video | undefined>;
+  listVideos(options?: { userId?: number, videoType?: string, limit?: number }): Promise<Video[]>;
+  getVideosByUser(userId: number, videoType?: string): Promise<Video[]>;
+  getTrendingVideos(limit?: number): Promise<Video[]>;
+  getVideoEngagements(videoId: number): Promise<VideoEngagement[]>;
+  createVideoEngagement(engagement: InsertVideoEngagement): Promise<VideoEngagement>;
+  updateVideoAnalytics(videoId: number, data: Partial<VideoAnalytics>): Promise<VideoAnalytics>;
+  getVideoAnalytics(videoId: number): Promise<VideoAnalytics | undefined>;
+  createVideoPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist>;
+  getVideoPlaylist(id: number): Promise<VideoPlaylist | undefined>;
+  getPlaylistVideos(playlistId: number): Promise<Video[]>;
+  addVideoToPlaylist(playlistId: number, videoId: number, position: number): Promise<PlaylistItem>;
+  removeVideoFromPlaylist(playlistId: number, videoId: number): Promise<void>;
+  getUserPlaylists(userId: number): Promise<VideoPlaylist[]>;
   getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
 }
 
@@ -292,6 +313,13 @@ export class MemStorage implements IStorage {
   private pollVotes: Map<number, PollVote>;
   private creatorEarnings: Map<number, CreatorEarning>;
   private subscriptions: Map<number, Subscription>;
+  
+  // Video-related maps
+  private videos: Map<number, Video>;
+  private videoEngagements: Map<number, VideoEngagement>;
+  private videoAnalytics: Map<number, VideoAnalytics>;
+  private videoPlaylists: Map<number, VideoPlaylist>;
+  private playlistItems: Map<number, PlaylistItem>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -321,6 +349,13 @@ export class MemStorage implements IStorage {
   private pollVoteIdCounter: number;
   private creatorEarningIdCounter: number;
   private subscriptionIdCounter: number;
+  
+  // Video-related counters
+  private videoIdCounter: number;
+  private videoEngagementIdCounter: number;
+  private videoAnalyticsIdCounter: number;
+  private videoPlaylistIdCounter: number;
+  private playlistItemIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -351,6 +386,13 @@ export class MemStorage implements IStorage {
     this.pollVotes = new Map();
     this.creatorEarnings = new Map();
     this.subscriptions = new Map();
+    
+    // Initialize video-related maps
+    this.videos = new Map();
+    this.videoEngagements = new Map();
+    this.videoAnalytics = new Map();
+    this.videoPlaylists = new Map();
+    this.playlistItems = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
@@ -380,6 +422,13 @@ export class MemStorage implements IStorage {
     this.pollVoteIdCounter = 1;
     this.creatorEarningIdCounter = 1;
     this.subscriptionIdCounter = 1;
+    
+    // Initialize video-related counters
+    this.videoIdCounter = 1;
+    this.videoEngagementIdCounter = 1;
+    this.videoAnalyticsIdCounter = 1;
+    this.videoPlaylistIdCounter = 1;
+    this.playlistItemIdCounter = 1;
 
     this.initDefaultData();
   }
