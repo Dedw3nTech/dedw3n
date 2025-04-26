@@ -118,7 +118,7 @@ export default function Header() {
             onClick={() => setLocation("/explore")}
             className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
           >
-            <i className="ri-compass-3-line mr-1"></i> Explore
+            <i className="ri-compass-3-line mr-1"></i> Social & Explore
           </button>
         </div>
       </div>
