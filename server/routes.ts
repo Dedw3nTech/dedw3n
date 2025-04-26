@@ -6,6 +6,7 @@ import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
+import { registerMobileMoneyRoutes } from "./mobile-money";
 import { seedDatabase } from "./seed";
 import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
@@ -43,6 +44,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register shipping routes
   registerShippingRoutes(app);
+  
+  // Register mobile money payment routes
+  registerMobileMoneyRoutes(app);
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {

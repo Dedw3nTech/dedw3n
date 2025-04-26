@@ -12,9 +12,10 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
 import { WalletPaymentForm } from '@/components/payment/WalletPaymentForm';
 import { PaypalPaymentForm } from '@/components/payment/PaypalPaymentForm';
+import MobileMoneyForm from '@/components/payment/MobileMoneyForm';
 import ShippingOptions from '@/components/shipping/ShippingOptions';
 import { AddressForm } from '@/components/shipping/AddressForm';
-import { Loader2, CreditCard, Wallet, CreditCardIcon } from 'lucide-react';
+import { Loader2, CreditCard, Wallet, CreditCardIcon, Phone } from 'lucide-react';
 import {
   Tabs,
   TabsList,
