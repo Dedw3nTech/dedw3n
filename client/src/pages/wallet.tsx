@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -26,7 +27,19 @@ import {
   ArrowRightIcon, 
   PlusIcon, 
   WalletIcon,
-  ArrowUpDownIcon
+  ArrowUpDownIcon,
+  PieChartIcon,
+  TagIcon,
+  CreditCardIcon,
+  ReceiptIcon,
+  BanknoteIcon,
+  ShoppingCartIcon,
+  HomeIcon,
+  WifiIcon,
+  CarIcon,
+  HeartIcon,
+  GraduationCapIcon,
+  BriefcaseIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Redirect } from 'wouter';
@@ -92,6 +105,31 @@ export default function WalletPage() {
     isError: transactionsError 
   } = useQuery<Transaction[]>({
     queryKey: ['/api/transactions'],
+    enabled: !!wallet,
+  });
+  
+  // Fetch transactions categorized by category
+  const {
+    data: categorizedTransactions,
+    isLoading: categoriesLoading,
+    isError: categoriesError
+  } = useQuery<Record<string, Transaction[]>>({
+    queryKey: ['/api/transactions/categories'],
+    enabled: !!wallet,
+  });
+  
+  // Fetch transaction statistics
+  const {
+    data: transactionStats,
+    isLoading: statsLoading,
+    isError: statsError
+  } = useQuery<{
+    totalIncome: number;
+    totalExpense: number;
+    byCategoryExpense: Record<string, number>;
+    byCategoryIncome: Record<string, number>;
+  }>({
+    queryKey: ['/api/transactions/stats'],
     enabled: !!wallet,
   });
 
@@ -277,6 +315,62 @@ export default function WalletPage() {
     
     return `${prefix}${currencySymbol}${amount.toFixed(2)}`;
   };
+  
+  // Get category icon based on category name
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'salary':
+      case 'income':
+        return <BriefcaseIcon className="h-4 w-4 text-green-500" />;
+      case 'shopping':
+        return <ShoppingCartIcon className="h-4 w-4 text-blue-500" />;
+      case 'bills':
+      case 'utilities':
+        return <ReceiptIcon className="h-4 w-4 text-red-500" />;
+      case 'entertainment':
+        return <HeartIcon className="h-4 w-4 text-purple-500" />;
+      case 'transport':
+      case 'travel':
+        return <CarIcon className="h-4 w-4 text-amber-500" />;
+      case 'education':
+        return <GraduationCapIcon className="h-4 w-4 text-indigo-500" />;
+      case 'housing':
+      case 'rent':
+        return <HomeIcon className="h-4 w-4 text-emerald-500" />;
+      case 'services':
+        return <WifiIcon className="h-4 w-4 text-cyan-500" />;
+      default:
+        return <TagIcon className="h-4 w-4 text-gray-500" />;
+    }
+  };
+  
+  // Get category color based on category name
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'salary':
+      case 'income':
+        return 'bg-green-100 text-green-800';
+      case 'shopping':
+        return 'bg-blue-100 text-blue-800';
+      case 'bills':
+      case 'utilities':
+        return 'bg-red-100 text-red-800';
+      case 'entertainment':
+        return 'bg-purple-100 text-purple-800';
+      case 'transport':
+      case 'travel':
+        return 'bg-amber-100 text-amber-800';
+      case 'education':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'housing':
+      case 'rent':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'services':
+        return 'bg-cyan-100 text-cyan-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   // Loading state
   if (walletLoading) {
@@ -382,12 +476,25 @@ export default function WalletPage() {
           <Card>
             <CardHeader>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="w-full">
-                  <TabsTrigger value="overview" className="flex-1">{t('wallet.overview')}</TabsTrigger>
-                  <TabsTrigger value="deposit" className="flex-1">{t('wallet.deposit')}</TabsTrigger>
-                  <TabsTrigger value="withdraw" className="flex-1">{t('wallet.withdraw')}</TabsTrigger>
-                  <TabsTrigger value="transfer" className="flex-1">{t('wallet.transfer')}</TabsTrigger>
-                  <TabsTrigger value="convert" className="flex-1">
+                <TabsList className="grid grid-cols-3 w-full mb-2">
+                  <TabsTrigger value="overview">
+                    <WalletIcon className="h-4 w-4 mr-1" />
+                    {t('wallet.overview')}
+                  </TabsTrigger>
+                  <TabsTrigger value="categories">
+                    <TagIcon className="h-4 w-4 mr-1" />
+                    {t('wallet.categories')}
+                  </TabsTrigger>
+                  <TabsTrigger value="stats">
+                    <PieChartIcon className="h-4 w-4 mr-1" />
+                    {t('wallet.statistics')}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsList className="grid grid-cols-4 w-full">
+                  <TabsTrigger value="deposit">{t('wallet.deposit')}</TabsTrigger>
+                  <TabsTrigger value="withdraw">{t('wallet.withdraw')}</TabsTrigger>
+                  <TabsTrigger value="transfer">{t('wallet.transfer')}</TabsTrigger>
+                  <TabsTrigger value="convert">
                     <ArrowUpDownIcon className="h-4 w-4 mr-1" />
                     {t('wallet.convert')}
                   </TabsTrigger>
