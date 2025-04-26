@@ -13,12 +13,17 @@ import {
   Image as ImageIcon,
   Video,
   Tag,
-  Link,
+  Link as LinkIcon,
+  FileText,
   Smile,
   Users,
   Loader2,
   X,
   ChevronDown,
+  MessageSquarePlus,
+  PenLine,
+  Book,
+  Megaphone
 } from "lucide-react";
 import {
   Popover,
@@ -35,12 +40,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface CreatePostProps {
   communityId?: number;
   editingPost?: any;
   onSuccess?: () => void;
 }
+
+type ContentType = 'standard' | 'article' | 'visual' | 'video' | 'advertisement';
 
 export default function CreatePost({
   communityId,
@@ -51,6 +64,7 @@ export default function CreatePost({
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   
   const [content, setContent] = useState(editingPost?.content || "");
   const [title, setTitle] = useState(editingPost?.title || "");
@@ -65,6 +79,9 @@ export default function CreatePost({
   const [selectedCommunityId, setSelectedCommunityId] = useState<number | null>(
     editingPost?.communityId || communityId || null
   );
+  const [contentType, setContentType] = useState<ContentType>(editingPost?.contentType || 'standard');
+  const [linkUrl, setLinkUrl] = useState(editingPost?.linkUrl || "");
+  const [isPromoted, setIsPromoted] = useState(editingPost?.isPromoted || false);
 
   // Fetch communities that the user is a member of
   const { data: userCommunities, isLoading: isLoadingCommunities } = useQuery({
@@ -225,6 +242,16 @@ export default function CreatePost({
       return;
     }
     
+    // Validate based on content type
+    if (contentType === 'article' && !title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please add a title to your article",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!content.trim()) {
       toast({
         title: "Post content required",
@@ -234,9 +261,37 @@ export default function CreatePost({
       return;
     }
     
+    if (contentType === 'visual' && !imageFile) {
+      toast({
+        title: "Image required",
+        description: "Please upload an image for your visual post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (contentType === 'video' && !videoFile) {
+      toast({
+        title: "Video required", 
+        description: "Please upload a video for your video post",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (contentType === 'advertisement' && !title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please add a title to your advertisement",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Create FormData to handle files
     const formData = new FormData();
     formData.append("content", content);
+    formData.append("contentType", contentType);
     
     if (title.trim()) {
       formData.append("title", title);
@@ -253,6 +308,15 @@ export default function CreatePost({
     
     if (videoFile) {
       formData.append("video", videoFile);
+    }
+    
+    if (linkUrl.trim()) {
+      formData.append("linkUrl", linkUrl);
+    }
+    
+    // Add promotion status for advertisements
+    if (contentType === 'advertisement') {
+      formData.append("isPromoted", isPromoted.toString());
     }
     
     // Add community ID if posting to community
