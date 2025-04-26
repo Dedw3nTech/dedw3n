@@ -23,6 +23,7 @@ import {
   CompassIcon, 
   Loader2, 
   Users, 
+  User,
   Hash, 
   Store, 
   MessageSquare,
