@@ -17,6 +17,11 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 
+// Import new page components
+import Products from "@/pages/products";
+import ProductDetail from "@/pages/product-detail";
+import AddProduct from "@/pages/add-product";
+
 function Router() {
   return (
     <Switch>
@@ -26,6 +31,9 @@ function Router() {
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/payment-success" component={PaymentSuccess} />
+      <Route path="/products" component={Products} />
+      <Route path="/product/:id" component={ProductDetail} />
+      <Route path="/add-product" component={AddProduct} />
       <Route component={NotFound} />
     </Switch>
   );
