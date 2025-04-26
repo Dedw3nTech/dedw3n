@@ -5,6 +5,10 @@ import {
   SheetTitle, 
   SheetFooter 
 } from '@/components/ui/sheet';
+
+interface SocialMessagingProps {
+  embedded?: boolean;
+}
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +31,7 @@ import ProductSearch from './ProductSearch';
 import ProductMessage from './ProductMessage';
 import defaultAvatar from '@assets/WHITE BG DEDWEN LOGO (320 x 132 px) (128 x 56 px).png';
 
-export default function SocialMessaging() {
+export default function SocialMessaging({ embedded = false }: SocialMessagingProps) {
   const { user } = useAuth();
   const { 
     sendMessage, 
