@@ -97,7 +97,7 @@ function App() {
               <Footer />
               <MobileNavigation />
               <OfflineIndicator />
-              {import.meta.env.DEV && <OfflineSimulator />}
+              {/* Offline simulator hidden as requested */}
               {/* Chatbot will be implemented later when API key is available */}
               {/* <ChatbotWindow /> */}
             </div>
