@@ -12,9 +12,9 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
   const { t } = useTranslation();
   
   const sizeClass = {
-    sm: 'w-16 h-7',  // 64px × 28px
-    md: 'w-24 h-10', // 96px × 40px
-    lg: 'w-32 h-14'  // 128px × 56px (exact dimensions from the image)
+    sm: 'w-32 h-14',    // 128px × 56px
+    md: 'w-60 h-24',    // 240px × 96px 
+    lg: 'w-80 h-[132px]'  // 320px × 132px (exact dimensions requested)
   };
 
   return (
