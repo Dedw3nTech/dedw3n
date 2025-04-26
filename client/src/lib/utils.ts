@@ -108,6 +108,16 @@ export function generateAvatarFallback(name: string): string {
     .toUpperCase();
 }
 
+export function getInitials(name: string): string {
+  if (!name) return '';
+  
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase();
+}
+
 export function getRandomColor(seed: string): string {
   // Simple hash function
   let hash = 0;

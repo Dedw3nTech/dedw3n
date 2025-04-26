@@ -33,6 +33,12 @@ import SpendingAnalytics from "@/pages/spending-analytics";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
 
+// Import community-related components
+import CommunitiesPage from "@/pages/communities";
+import CreateCommunityPage from "@/pages/create-community";
+import CommunityDetailPage from "@/pages/community-detail";
+import CommunityManagePage from "@/pages/community-manage";
+
 function Router() {
   return (
     <Switch>
@@ -52,6 +58,10 @@ function Router() {
       <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
+      <Route path="/communities" component={CommunitiesPage} />
+      <Route path="/communities/create" component={CreateCommunityPage} />
+      <Route path="/communities/:id" component={CommunityDetailPage} />
+      <Route path="/communities/:id/manage" component={CommunityManagePage} />
       <Route component={NotFound} />
     </Switch>
   );
