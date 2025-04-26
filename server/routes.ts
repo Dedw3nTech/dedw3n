@@ -847,7 +847,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || `Transfer to ${recipientUsername}`,
         category: "transfer",
         paymentMethod: "wallet",
-        status: "completed"
+        status: "completed",
+        relatedUserId: recipient.id  // Link to recipient's user ID
       });
       
       // Create a transaction for the recipient (transfer_in)
@@ -858,7 +859,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || `Transfer from ${(req.user as any).username}`,
         category: "transfer",
         paymentMethod: "wallet",
-        status: "completed"
+        status: "completed",
+        relatedUserId: senderId  // Link to sender's user ID
       });
       
       // Update wallet balances

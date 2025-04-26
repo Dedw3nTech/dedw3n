@@ -151,6 +151,7 @@ export const transactions = pgTable("transactions", {
   description: text("description"),
   metadata: text("metadata"), // JSON string for additional info
   referenceId: varchar("reference_id", { length: 100 }), // Order ID, Payment ID, etc.
+  relatedUserId: integer("related_user_id").references(() => users.id), // For transfers: the user on the other end of the transaction
   createdAt: timestamp("created_at").defaultNow(),
 });
 
