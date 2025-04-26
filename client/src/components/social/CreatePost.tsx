@@ -387,6 +387,12 @@ export default function CreatePost({
       postData.linkUrl = linkUrl;
     }
     
+    // Add product tagging if enabled
+    if (isShoppable && selectedProduct) {
+      postData.isShoppable = true;
+      postData.productId = selectedProduct.id;
+    }
+    
     // Add promotion status for advertisements
     if (contentType === 'advertisement') {
       postData.isPromoted = isPromoted;
@@ -668,7 +674,161 @@ export default function CreatePost({
                     <ImageIcon className="h-4 w-4 mr-1" />
                     Add Photo
                   </Button>
+                  
+                  {/* Product tagging button */}
+                  <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant={selectedProduct ? "default" : "outline"}
+                        size="sm"
+                      >
+                        <ShoppingBag className="h-4 w-4 mr-1" />
+                        {selectedProduct ? "Product Tagged" : "Tag Product"}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Select a Product to Tag</DialogTitle>
+                        <DialogDescription>
+                          Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="my-4">
+                        <div className="flex gap-2 mb-4">
+                          <Input
+                            placeholder="Search products..."
+                            value={productSearchQuery}
+                            onChange={(e) => setProductSearchQuery(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button variant="secondary" size="icon">
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <ScrollArea className="h-[300px] rounded-md border p-2">
+                          {isLoadingProducts ? (
+                            <div className="flex justify-center py-10">
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : products && products.length > 0 ? (
+                            <div className="space-y-3">
+                              {products.map((product: Product) => (
+                                <div 
+                                  key={product.id}
+                                  className={`flex gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                                    selectedProduct?.id === product.id
+                                      ? "bg-primary/10 border border-primary/30"
+                                      : "hover:bg-muted"
+                                  }`}
+                                  onClick={() => setSelectedProduct(product)}
+                                >
+                                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
+                                    <img 
+                                      src={product.imageUrl} 
+                                      alt={product.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="font-medium text-sm">{product.name}</h3>
+                                    <p className="text-xs text-muted-foreground mb-1">
+                                      {product.category || "Uncategorized"}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      {product.discountPrice ? (
+                                        <>
+                                          <span className="text-xs line-through text-muted-foreground">
+                                            £{product.price.toFixed(2)}
+                                          </span>
+                                          <span className="text-sm font-semibold text-primary">
+                                            £{product.discountPrice.toFixed(2)}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span className="text-sm font-semibold">
+                                          £{product.price.toFixed(2)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                              <p>No products found</p>
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsProductDialogOpen(false);
+                            setSelectedProduct(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setIsProductDialogOpen(false);
+                            setIsShoppable(!!selectedProduct);
+                          }}
+                          disabled={!selectedProduct}
+                        >
+                          Confirm Selection
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
+                
+                {/* Selected Product Preview */}
+                {selectedProduct && (
+                  <div className="border rounded-md p-3 bg-muted/30 mt-3 flex items-center gap-3">
+                    <div className="h-14 w-14 rounded overflow-hidden flex-shrink-0">
+                      <img 
+                        src={selectedProduct.imageUrl} 
+                        alt={selectedProduct.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-sm">{selectedProduct.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {selectedProduct.discountPrice ? (
+                          <>
+                            <span className="text-xs line-through text-muted-foreground">
+                              £{selectedProduct.price.toFixed(2)}
+                            </span>
+                            <span className="text-sm font-semibold text-primary">
+                              £{selectedProduct.discountPrice.toFixed(2)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold">
+                            £{selectedProduct.price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        setIsShoppable(false);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
               {/* Article Content */}
