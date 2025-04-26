@@ -44,6 +44,19 @@ const MemberCard = ({ member, onMessageClick, onCallClick, onVideoClick }: {
   onVideoClick: (member: UserWithoutPassword) => void
 }) => {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
+  
+  // For grabbing vendor data if the user is a vendor
+  const { data: vendorData } = useQuery<{ id: number; storeName: string }>({
+    queryKey: [`/api/vendors/user/${member.id}`],
+    enabled: !!member.isVendor,
+  });
+  
+  const goToVendorStore = () => {
+    if (vendorData) {
+      setLocation(`/vendor/${vendorData.id}`);
+    }
+  };
   
   return (
     <Card className="h-full flex flex-col">
@@ -54,10 +67,21 @@ const MemberCard = ({ member, onMessageClick, onCallClick, onVideoClick }: {
             <AvatarFallback>{generateAvatarFallback(member.name)}</AvatarFallback>
           </Avatar>
           {member.isVendor && (
-            <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300">
-              <Store className="mr-1 h-3 w-3" />
-              {t('members.vendor')}
-            </Badge>
+            <div className="flex flex-col items-end">
+              <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300 mb-1">
+                <Store className="mr-1 h-3 w-3" />
+                {t('members.vendor')}
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs bg-primary text-white border-primary hover:bg-primary/90 hover:text-white"
+                onClick={goToVendorStore}
+              >
+                <Store className="mr-1 h-3 w-3" />
+                {t('members.visit_store')}
+              </Button>
+            </div>
           )}
         </div>
         <CardTitle className="mt-2">{member.name}</CardTitle>
