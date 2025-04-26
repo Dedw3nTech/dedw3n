@@ -21,6 +21,7 @@ export default function WalletPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [recipient, setRecipient] = useState('');
   
   // Redirect if not logged in
   if (!user) {
@@ -93,6 +94,36 @@ export default function WalletPage() {
       toast({
         title: t('wallet.transaction_error'),
         description: error.message || t('wallet.transaction_failed'),
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Create transfer mutation
+  const createTransferMutation = useMutation({
+    mutationFn: async (data: { 
+      recipientUsername: string; 
+      amount: number; 
+      description?: string 
+    }) => {
+      const res = await apiRequest('POST', '/api/transfers', data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallets/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      setAmount('');
+      setDescription('');
+      setRecipient('');
+      toast({
+        title: t('wallet.transfer_success'),
+        description: t('wallet.transfer_completed'),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('wallet.transfer_error'),
+        description: error.message || t('wallet.transfer_failed'),
         variant: 'destructive',
       });
     }
@@ -243,6 +274,7 @@ export default function WalletPage() {
                   <TabsTrigger value="overview" className="flex-1">{t('wallet.overview')}</TabsTrigger>
                   <TabsTrigger value="deposit" className="flex-1">{t('wallet.deposit')}</TabsTrigger>
                   <TabsTrigger value="withdraw" className="flex-1">{t('wallet.withdraw')}</TabsTrigger>
+                  <TabsTrigger value="transfer" className="flex-1">{t('wallet.transfer')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -389,6 +421,69 @@ export default function WalletPage() {
                         </span>
                       ) : (
                         t('wallet.withdraw_funds')
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+                
+                <TabsContent value="transfer">
+                  <form onSubmit={handleTransaction('transfer')} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="recipient">{t('wallet.recipient_username')}</Label>
+                      <Input 
+                        id="recipient"
+                        type="text"
+                        placeholder={t('wallet.enter_username')}
+                        value={recipient}
+                        onChange={(e) => setRecipient(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">{t('wallet.amount')}</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                        <Input 
+                          id="amount"
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          max={wallet.balance}
+                          placeholder="0.00"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          className="pl-7"
+                          required
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t('wallet.available')}: ${wallet.balance.toFixed(2)}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description">{t('wallet.description')} ({t('wallet.optional')})</Label>
+                      <Input 
+                        id="description"
+                        placeholder={t('wallet.transfer_description')}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={createTransferMutation.isPending || !recipient || Number(amount) > wallet.balance}
+                    >
+                      {createTransferMutation.isPending ? (
+                        <span className="flex items-center">
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                          {t('wallet.processing')}
+                        </span>
+                      ) : (
+                        t('wallet.transfer_funds')
                       )}
                     </Button>
                   </form>
