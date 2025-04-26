@@ -351,6 +351,17 @@ export default function SocialMessaging() {
                               controls
                               className="max-w-full rounded"
                             />
+                          ) : message.attachmentType?.includes('product') ? (
+                            <ProductMessage
+                              product={{
+                                id: 0,
+                                name: message.content.replace('Check out this product: ', ''),
+                                price: 0,
+                                imageUrl: message.attachmentUrl,
+                                vendorId: 0
+                              }}
+                              inConversation={true}
+                            />
                           ) : (
                             <div className="flex items-center gap-2 p-2 bg-background rounded">
                               <FileText size={16} />
@@ -423,7 +434,7 @@ export default function SocialMessaging() {
               onClick={() => handleAttachment('video/mp4')}
               className="p-2 rounded-full hover:bg-muted"
             >
-              <Video size={18} />
+              <VideoIcon size={18} />
             </button>
             <button
               type="button"
