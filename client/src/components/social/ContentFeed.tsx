@@ -10,19 +10,28 @@ import { useTranslation } from "react-i18next";
 interface ContentFeedProps {
   initialContentType?: string;
   userId?: number;
+  limit?: number;
+  userPosts?: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-export default function ContentFeed({ initialContentType, userId }: ContentFeedProps) {
+export default function ContentFeed({ initialContentType, userId, limit, userPosts }: ContentFeedProps) {
   const { t } = useTranslation();
   const [contentType, setContentType] = useState<string | null>(initialContentType || null);
   const [page, setPage] = useState(1);
   
+  // Get the current user ID for user posts
+  const { user } = useAuth();
+  const currentUserId = userPosts && user ? user.id : userId;
+  
+  // Set the item limit
+  const itemLimit = limit || ITEMS_PER_PAGE;
+  
   // Construct the query key based on filters
   const queryKey = contentType 
-    ? ["/api/posts", { contentType, userId, limit: ITEMS_PER_PAGE, offset: (page - 1) * ITEMS_PER_PAGE }] 
-    : ["/api/posts", { userId, limit: ITEMS_PER_PAGE, offset: (page - 1) * ITEMS_PER_PAGE }];
+    ? ["/api/posts", { contentType, userId: currentUserId, limit: itemLimit, offset: (page - 1) * itemLimit }] 
+    : ["/api/posts", { userId: currentUserId, limit: itemLimit, offset: (page - 1) * itemLimit }];
   
   // Fetch posts
   const { data, isLoading, isFetching } = useQuery<Post[]>({

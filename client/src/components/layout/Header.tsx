@@ -40,7 +40,7 @@ export default function Header() {
 
   const handleViewChange = (newView: "marketplace" | "social") => {
     setView(newView);
-    setLocation(newView === "marketplace" ? "/" : "/social");
+    setLocation(newView === "marketplace" ? "/products" : "/social");
   };
 
   const { t } = useTranslation();

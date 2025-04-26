@@ -58,6 +58,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/social" component={Social} />
+      <Route path="/social/:tab" component={Social} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
