@@ -20,6 +20,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
+import ChatbotWindow from "@/components/ai/ChatbotWindow";
 
 // Import new page components
 import Products from "@/pages/products";
@@ -97,6 +98,8 @@ function App() {
               <MobileNavigation />
               <OfflineIndicator />
               {import.meta.env.DEV && <OfflineSimulator />}
+              {/* Chatbot will be implemented later when API key is available */}
+              {/* <ChatbotWindow /> */}
             </div>
             <Toaster />
           </ViewProvider>
