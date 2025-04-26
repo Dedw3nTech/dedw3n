@@ -47,6 +47,9 @@ import WallPage from "@/pages/wall";
 import MessagesPage from "@/pages/messages";
 import ExplorePage from "@/pages/explore";
 
+// Import video pages
+import TrendingVideosPage from "@/pages/videos/trending";
+
 function Router() {
   return (
     <Switch>
@@ -74,6 +77,15 @@ function Router() {
       <Route path="/wall" component={WallPage} />
       <Route path="/messages/:username?" component={MessagesPage} />
       <Route path="/explore" component={ExplorePage} />
+      
+      {/* Video routes */}
+      <Route path="/videos/trending" component={TrendingVideosPage} />
+      <Route path="/videos/shorts" component={TrendingVideosPage} />
+      <Route path="/videos/stories" component={TrendingVideosPage} />
+      <Route path="/videos/live" component={TrendingVideosPage} />
+      <Route path="/videos/upload" component={TrendingVideosPage} />
+      <Route path="/videos/:id" component={TrendingVideosPage} />
+      
       <Route component={NotFound} />
     </Switch>
   );

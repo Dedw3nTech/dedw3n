@@ -21,7 +21,13 @@ import {
   Activity,
   ShoppingBag,
   Heart,
+  TrendingUp,
+  Film,
+  Clock,
+  Radio,
+  Upload
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function WallPage() {
   const { user } = useAuth();
@@ -207,6 +213,53 @@ export default function WallPage() {
                 >
                   <Activity className="h-4 w-4 mr-2" />
                   Explore
+                </Button>
+                
+                {/* Video section divider */}
+                <Separator className="my-2" />
+                
+                {/* Videos section */}
+                <h4 className="text-sm font-medium text-muted-foreground px-2">Videos</h4>
+                
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/videos/trending")}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Trending Videos
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/videos/shorts")}
+                >
+                  <Film className="h-4 w-4 mr-2" />
+                  Shorts
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/videos/stories")}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Stories
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/videos/live")}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Live
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-primary"
+                  onClick={() => setLocation("/videos/upload")}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Video
                 </Button>
               </div>
             </Card>
