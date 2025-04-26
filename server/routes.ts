@@ -232,6 +232,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get user posts" });
     }
   });
+  
+  // Get user's communities
+  app.get("/api/users/:username/communities", async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get communities the user is a member of
+      const communities = await storage.getUserCommunities(user.id);
+      res.json(communities);
+    } catch (error) {
+      console.error("[ERROR] Failed to get user communities:", error);
+      res.status(500).json({ message: "Failed to get user communities" });
+    }
+  });
+  
+  // Get user's vendor information
+  app.get("/api/users/:username/vendor", async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if user is a vendor
+      if (!user.isVendor) {
+        return res.status(404).json({ message: "User is not a vendor" });
+      }
+      
+      // Get vendor info
+      const vendorInfo = await storage.getVendorByUserId(user.id);
+      
+      if (!vendorInfo) {
+        return res.status(404).json({ message: "Vendor information not found" });
+      }
+      
+      res.json(vendorInfo);
+    } catch (error) {
+      console.error("[ERROR] Failed to get vendor info:", error);
+      res.status(500).json({ message: "Failed to get vendor information" });
+    }
+  });
 
   // Auth middleware
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
