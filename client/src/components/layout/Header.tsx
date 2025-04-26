@@ -85,14 +85,7 @@ export default function Header() {
               <i className="ri-wallet-3-line text-xl"></i>
             </Link>
 
-            <button className="relative p-2 text-gray-600 hover:text-primary">
-              <i className="ri-message-3-line text-xl"></i>
-              {messageData && messageData.count > 0 && (
-                <Badge className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
-                  {messageData.count}
-                </Badge>
-              )}
-            </button>
+{/* Messaging button removed as it's integrated into Social button */}
 
             <button className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-notification-3-line text-xl"></i>

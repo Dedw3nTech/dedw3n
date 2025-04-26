@@ -23,6 +23,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication with passport
   setupAuth(app);
 
+  // Create HTTP server from Express
+  const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time messaging
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active connections with user IDs
+  const connections = new Map<number, WebSocket[]>();
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    let userId: number | null = null;
+    
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle authentication
+        if (data.type === 'auth') {
+          userId = data.userId;
+          // Store connection by user ID
+          if (!connections.has(userId)) {
+            connections.set(userId, []);
+          }
+          connections.get(userId)?.push(ws);
+          console.log(`User ${userId} authenticated on WebSocket`);
+          
+          // Send initial online status of connections
+          const onlineUsers = Array.from(connections.keys());
+          ws.send(JSON.stringify({
+            type: 'online_users',
+            users: onlineUsers
+          }));
+        }
+        
+        // Handle chat message
+        else if (data.type === 'message') {
+          console.log(`Received message: ${JSON.stringify(data)}`);
+          
+          // Store message in database
+          if (userId && data.recipientId && data.content) {
+            const messageData = {
+              senderId: userId,
+              recipientId: data.recipientId,
+              content: data.content,
+              chatType: data.chatType || 'private',
+              roomId: data.roomId,
+              attachmentUrl: data.attachmentUrl,
+              attachmentType: data.attachmentType,
+              isRead: false
+            };
+            
+            // Save to database
+            const savedMessage = await storage.createMessage(messageData);
+            
+            // Forward message to recipient if online
+            const recipientConnections = connections.get(data.recipientId);
+            if (recipientConnections && recipientConnections.length > 0) {
+              const outgoingMessage = JSON.stringify({
+                type: 'new_message',
+                message: savedMessage
+              });
+              
+              recipientConnections.forEach(conn => {
+                if (conn.readyState === WebSocket.OPEN) {
+                  conn.send(outgoingMessage);
+                }
+              });
+            }
+            
+            // Send confirmation back to sender
+            ws.send(JSON.stringify({
+              type: 'message_sent',
+              messageId: savedMessage.id
+            }));
+          }
+        }
+        
+        // Handle typing indicator
+        else if (data.type === 'typing') {
+          if (userId && data.recipientId) {
+            const recipientConnections = connections.get(data.recipientId);
+            if (recipientConnections && recipientConnections.length > 0) {
+              const typingNotification = JSON.stringify({
+                type: 'typing',
+                senderId: userId,
+                chatType: data.chatType || 'private',
+                roomId: data.roomId,
+                isTyping: data.isTyping
+              });
+              
+              recipientConnections.forEach(conn => {
+                if (conn.readyState === WebSocket.OPEN) {
+                  conn.send(typingNotification);
+                }
+              });
+            }
+          }
+        }
+        
+        // Handle read receipts
+        else if (data.type === 'read_receipt') {
+          if (userId && data.messageIds && Array.isArray(data.messageIds)) {
+            // Update messages as read in database
+            for (const messageId of data.messageIds) {
+              await storage.markMessageAsRead(messageId);
+            }
+            
+            // Notify sender that messages were read
+            if (data.senderId) {
+              const senderConnections = connections.get(data.senderId);
+              if (senderConnections && senderConnections.length > 0) {
+                const readReceipt = JSON.stringify({
+                  type: 'read_receipt',
+                  messageIds: data.messageIds,
+                  readBy: userId
+                });
+                
+                senderConnections.forEach(conn => {
+                  if (conn.readyState === WebSocket.OPEN) {
+                    conn.send(readReceipt);
+                  }
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      if (userId) {
+        // Remove this connection from user's connections
+        const userConnections = connections.get(userId);
+        if (userConnections) {
+          const index = userConnections.indexOf(ws);
+          if (index !== -1) {
+            userConnections.splice(index, 1);
+          }
+          
+          // If no more connections, remove user from connections map
+          if (userConnections.length === 0) {
+            connections.delete(userId);
+            
+            // Broadcast user offline status
+            for (const connections of connections.values()) {
+              connections.forEach(conn => {
+                if (conn.readyState === WebSocket.OPEN) {
+                  conn.send(JSON.stringify({
+                    type: 'user_offline',
+                    userId
+                  }));
+                }
+              });
+            }
+          }
+        }
+      }
+    });
+  });
+
   // Seed the database with initial data
   await seedDatabase();
 
@@ -55,6 +219,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register mobile money payment routes
   registerMobileMoneyRoutes(app);
+  
+  // Message routes
+  // Get user's conversations
+  app.get("/api/messages/conversations", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const conversations = await storage.getUserConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get conversations" });
+    }
+  });
+  
+  // Get conversation messages between users
+  app.get("/api/messages/conversation/:partnerId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const partnerId = parseInt(req.params.partnerId);
+      const messages = await storage.getConversationMessages(userId, partnerId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get conversation messages" });
+    }
+  });
+  
+  // Get chat room messages
+  app.get("/api/messages/room/:roomId", isAuthenticated, async (req, res) => {
+    try {
+      const roomId = req.params.roomId;
+      const messages = await storage.getRoomMessages(roomId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get room messages" });
+    }
+  });
+  
+  // Get unread message count
+  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get unread message count" });
+    }
+  });
+  
+  // Mark messages as read
+  app.post("/api/messages/mark-read", isAuthenticated, async (req, res) => {
+    try {
+      const { messageIds } = req.body;
+      
+      if (!messageIds || !Array.isArray(messageIds)) {
+        return res.status(400).json({ message: "Invalid message IDs" });
+      }
+      
+      for (const messageId of messageIds) {
+        await storage.markMessageAsRead(messageId);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+  
+  // Create a new chat room
+  app.post("/api/messages/rooms", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { name, type, memberIds } = req.body;
+      
+      if (!name || !type) {
+        return res.status(400).json({ message: "Room name and type are required" });
+      }
+      
+      // Validate room type
+      if (!['group', 'broadcast', 'community', 'public'].includes(type)) {
+        return res.status(400).json({ message: "Invalid room type" });
+      }
+      
+      // For group chats, member IDs are required
+      if (type === 'group' && (!memberIds || !Array.isArray(memberIds) || memberIds.length === 0)) {
+        return res.status(400).json({ message: "Member IDs are required for group chats" });
+      }
+      
+      const roomData = {
+        name,
+        type,
+        creatorId: userId,
+        isActive: true,
+        memberIds: type === 'group' ? [...memberIds, userId] : undefined,
+      };
+      
+      const room = await storage.createChatRoom(roomData);
+      res.status(201).json(room);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create chat room" });
+    }
+  });
+  
+  // Get user's chat rooms
+  app.get("/api/messages/rooms", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const rooms = await storage.getUserChatRooms(userId);
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get chat rooms" });
+    }
+  });
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
@@ -973,8 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize HTTP server
-  const httpServer = createServer(app);
+  // HTTP server already initialized at the top of the function
   
   // Add member directory routes
   app.get("/api/members", async (req, res) => {
@@ -1704,12 +1978,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set up WebSocket server for real-time messaging
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  
+  // WebSocket server already set up at the top of the function
   // Store active connections
   const clients = new Map();
   
+  // Use the existing WebSocket server
+  // Additional connection handler for specific messaging features
   wss.on('connection', (socket, req) => {
     console.log('WebSocket connection established');
     // Get user ID from query params
