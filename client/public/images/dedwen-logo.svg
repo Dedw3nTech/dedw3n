@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background removed from original -->
+  
+  <!-- Blue lotus petals -->
+  <path d="M120 30L80 90L40 150C40 190 75 220 120 220C165 220 200 190 200 150L160 90L120 30Z" fill="#4682B4" stroke="#F9E852" stroke-width="4"/>
+  
+  <!-- White lotus petals inner -->
+  <path d="M120 40L90 90L60 140C60 170 85 195 120 195C155 195 180 170 180 140L150 90L120 40Z" fill="white" stroke="#4682B4" stroke-width="2"/>
+  
+  <!-- Center D -->
+  <g transform="translate(100, 100)">
+    <rect x="0" y="-20" width="40" height="40" rx="5" fill="#280075" stroke="#F9E852" stroke-width="2"/>
+    <text x="12" y="10" font-family="Arial, sans-serif" font-weight="bold" font-size="40" fill="#F9E852">D</text>
+  </g>
+</svg>

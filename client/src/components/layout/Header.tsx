@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
 import { LanguageSelector } from "../lang";
 import { useTranslation } from "react-i18next";
+import Logo from "../ui/logo";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -47,10 +48,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-2">
-            <i className="ri-store-2-line text-primary text-2xl"></i>
-            <Link href="/">
-              <h1 className="text-xl font-bold text-gray-800 cursor-pointer">{t('app.name')}</h1>
-            </Link>
+            <Logo size="md" />
           </div>
 
           <div className="hidden md:flex items-center space-x-4">

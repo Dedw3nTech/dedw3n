@@ -5,6 +5,7 @@ import SearchOverlay from "../ui/search-overlay";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "../lang";
+import Logo from "../ui/logo";
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
@@ -22,6 +23,9 @@ export default function MobileNavigation() {
 
   return (
     <>
+      <div className="md:hidden fixed top-3 left-3 z-50">
+        <Logo size="sm" withText={false} />
+      </div>
       <div className="md:hidden fixed top-3 right-3 z-50">
         <LanguageSelector minimal className="bg-white shadow-md rounded-full" />
       </div>
