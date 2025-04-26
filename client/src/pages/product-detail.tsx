@@ -10,7 +10,19 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Star, ShoppingCart } from 'lucide-react';
+import { Loader2, Star, ShoppingCart, RefreshCw } from 'lucide-react';
+import { 
+  supportedCurrencies, 
+  formatCurrency, 
+  convertCurrency
+} from '@/lib/currencyConverter';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -21,6 +33,10 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
+  const [convertedDiscountPrice, setConvertedDiscountPrice] = useState<number | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
 
   // Fetch product details
   const {
@@ -131,6 +147,45 @@ export default function ProductDetail() {
     }
     return stars;
   };
+  
+  // Effect to handle currency conversion
+  useEffect(() => {
+    if (!product || selectedCurrency === 'GBP') {
+      setConvertedPrice(null);
+      setConvertedDiscountPrice(null);
+      return;
+    }
+    
+    const updateConvertedPrices = async () => {
+      try {
+        setIsConverting(true);
+        
+        // Convert main price
+        const newPrice = await convertCurrency(product.price, 'GBP', selectedCurrency);
+        setConvertedPrice(newPrice);
+        
+        // Convert discount price if it exists
+        if (product.discountPrice && product.discountPrice < product.price) {
+          const newDiscountPrice = await convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
+          setConvertedDiscountPrice(newDiscountPrice);
+        } else {
+          setConvertedDiscountPrice(null);
+        }
+        
+      } catch (error) {
+        console.error('Error converting currency:', error);
+        toast({
+          title: 'Currency Conversion Error',
+          description: 'Unable to convert currency at this time.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsConverting(false);
+      }
+    };
+    
+    updateConvertedPrices();
+  }, [product, selectedCurrency, toast]);
 
   // Loading state
   if (isLoading) {
@@ -212,23 +267,87 @@ export default function ProductDetail() {
 
           {/* Price */}
           <div className="mb-6">
-            {product.discountPrice && product.discountPrice < product.price ? (
-              <>
-                <span className="text-2xl font-bold text-primary mr-2">
-                  {formatPrice(product.discountPrice)}
-                </span>
-                <span className="text-lg text-gray-500 line-through">
-                  {formatPrice(product.price)}
-                </span>
-                <Badge className="ml-2 bg-red-500">
-                  Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-                </Badge>
-              </>
-            ) : (
-              <span className="text-2xl font-bold text-gray-900">
-                {formatPrice(product.price)}
-              </span>
-            )}
+            <div className="flex flex-col space-y-2">
+              <div>
+                {product.discountPrice && product.discountPrice < product.price ? (
+                  <>
+                    <span className="text-2xl font-bold text-primary mr-2">
+                      {formatPrice(product.discountPrice)}
+                    </span>
+                    <span className="text-lg text-gray-500 line-through">
+                      {formatPrice(product.price)}
+                    </span>
+                    <Badge className="ml-2 bg-red-500">
+                      Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                    </Badge>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-gray-900">
+                    {formatPrice(product.price)}
+                  </span>
+                )}
+              </div>
+              
+              {/* Currency converter */}
+              <div className="flex items-center mt-2">
+                <div className="flex-1 flex items-center">
+                  <div className="w-48 mr-2">
+                    <Select
+                      value={selectedCurrency}
+                      onValueChange={(value) => setSelectedCurrency(value)}
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supportedCurrencies.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            {currency}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {selectedCurrency !== 'GBP' && (
+                    <>
+                      {isConverting ? (
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin text-primary" />
+                      ) : (
+                        <RefreshCw 
+                          className="ml-2 h-4 w-4 text-gray-500 cursor-pointer hover:text-primary" 
+                          onClick={() => {
+                            setConvertedPrice(null);
+                            setConvertedDiscountPrice(null);
+                            setSelectedCurrency(selectedCurrency); // Retrigger conversion
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Converted price display */}
+              {selectedCurrency !== 'GBP' && convertedPrice !== null && (
+                <div className="mt-1 text-sm text-gray-600">
+                  {convertedDiscountPrice !== null ? (
+                    <>
+                      <span className="font-medium">
+                        {formatCurrency(convertedDiscountPrice, selectedCurrency)}
+                      </span>
+                      <span className="ml-2 text-gray-400 line-through">
+                        {formatCurrency(convertedPrice, selectedCurrency)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium">
+                      {formatCurrency(convertedPrice, selectedCurrency)}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Badges */}
