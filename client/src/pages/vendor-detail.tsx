@@ -250,7 +250,7 @@ export default function VendorDetailPage() {
         <p className="text-muted-foreground mb-6">
           The vendor you're looking for doesn't exist or has been removed.
         </p>
-        <Button onClick={() => navigate("/vendors")}>
+        <Button onClick={() => setLocation("/vendors")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Vendors
         </Button>
@@ -261,7 +261,7 @@ export default function VendorDetailPage() {
   return (
     <div className="container py-8">
       <div className="flex items-center mb-8">
-        <Button variant="ghost" onClick={() => navigate("/vendors")}>
+        <Button variant="ghost" onClick={() => setLocation("/vendors")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           {t("navigation.back")}
         </Button>
@@ -306,7 +306,7 @@ export default function VendorDetailPage() {
                   <div>
                     <h3 className="font-medium mb-2">{t("vendors.analytics")}</h3>
                     <Button 
-                      onClick={() => navigate(`/vendor-analytics?vendorId=${vendor.id}`)}
+                      onClick={() => setLocation(`/vendor-analytics?vendorId=${vendor.id}`)}
                       className="w-full"
                     >
                       <BarChart3 className="mr-2 h-4 w-4" />
