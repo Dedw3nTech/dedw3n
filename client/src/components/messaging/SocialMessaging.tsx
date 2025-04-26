@@ -8,11 +8,21 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useMessaging } from '@/hooks/use-messaging';
+import { useVideos } from '@/hooks/use-videos';
+import { useLocation } from 'wouter';
 import { format } from 'date-fns';
-import { Loader2, Send, User, MoreVertical, ArrowLeft, PlusCircle, Paperclip, Image, Video, FileText } from 'lucide-react';
+import { 
+  Loader2, Send, User, MoreVertical, ArrowLeft, PlusCircle, 
+  Paperclip, Image, Video as VideoIcon, FileText, 
+  MessageCircle, TrendingUp, Play, Heart, Share2, 
+  Clock, Film, Home, Compass, UserCircle
+} from 'lucide-react';
 import defaultAvatar from '@assets/WHITE BG DEDWEN LOGO (320 x 132 px) (128 x 56 px).png';
 
 export default function SocialMessaging() {
@@ -26,6 +36,18 @@ export default function SocialMessaging() {
     isConnected
   } = useMessaging();
   
+  const {
+    trendingVideos,
+    userVideos,
+    isLoadingTrending,
+    isLoadingUserVideos,
+    likeVideoMutation,
+    shareVideoMutation,
+    viewVideoMutation,
+  } = useVideos();
+  
+  const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState('messaging');
   const [activeView, setActiveView] = useState<'conversations' | 'chat' | 'contacts'>('conversations');
   const [activeChat, setActiveChat] = useState<number | null>(null);
   const [messageText, setMessageText] = useState('');
