@@ -10,6 +10,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication with passport
   setupAuth(app);
 
+  // Backward compatibility for client-side code
+  app.post("/api/register", (req, res) => res.redirect(307, "/api/auth/register"));
+  app.post("/api/login", (req, res) => res.redirect(307, "/api/auth/login"));
+  app.post("/api/logout", (req, res) => res.redirect(307, "/api/auth/logout"));
+  app.get("/api/user", (req, res) => res.redirect(307, "/api/auth/me"));
+
   // Auth middleware
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
     if (req.isAuthenticated()) {

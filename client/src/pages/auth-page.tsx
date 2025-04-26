@@ -87,7 +87,11 @@ export default function AuthPage() {
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     try {
       const { confirmPassword, ...userData } = values;
-      await registerMutation.mutateAsync(userData);
+      console.log("Attempting to register with:", userData);
+      await registerMutation.mutateAsync({
+        ...userData,
+        isVendor: false, // Set default values that might be required by the schema
+      });
       // Redirect will happen automatically in the useEffect
     } catch (error) {
       console.error("Registration failed:", error);
