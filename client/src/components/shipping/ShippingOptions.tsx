@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { formatPrice } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 type ShippingMethod = {
   id: string;
@@ -20,97 +27,160 @@ type ShippingOptionsProps = {
 };
 
 export default function ShippingOptions({ orderTotal, onShippingMethodChange }: ShippingOptionsProps) {
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch shipping methods
-  const { data: shippingMethods, isLoading, error } = useQuery<ShippingMethod[]>({
-    queryKey: ['/api/shipping/methods'],
-  });
-
-  // Calculate shipping cost when method or order total changes
   useEffect(() => {
-    if (!selectedMethod || !shippingMethods) return;
-    
-    const method = shippingMethods.find(m => m.id === selectedMethod);
-    if (!method) return;
-    
-    // Check for free shipping
-    const cost = orderTotal >= method.freeShippingThreshold ? 0 : method.basePrice;
-    setShippingCost(cost);
-    
-    // Notify parent component
-    onShippingMethodChange(method, cost);
-  }, [selectedMethod, orderTotal, shippingMethods, onShippingMethodChange]);
+    const fetchShippingMethods = async () => {
+      try {
+        const response = await apiRequest("GET", "/api/shipping/methods");
+        const methods = await response.json();
+        setShippingMethods(methods);
+        
+        // Select the first method by default
+        if (methods.length > 0) {
+          const defaultMethod = methods[0];
+          handleShippingMethodSelect(defaultMethod.id);
+        }
+      } catch (err: any) {
+        console.error("Error fetching shipping methods:", err);
+        setError("Could not load shipping options. Please try again later.");
+        
+        // Fallback shipping methods for development
+        const fallbackMethods = [
+          {
+            id: "standard",
+            name: "Standard Shipping",
+            description: "Delivery in 5-7 business days",
+            basePrice: 4.99,
+            freeShippingThreshold: 50
+          },
+          {
+            id: "express",
+            name: "Express Shipping",
+            description: "Delivery in 2-3 business days",
+            basePrice: 12.99,
+            freeShippingThreshold: 100
+          },
+          {
+            id: "overnight",
+            name: "Overnight Shipping",
+            description: "Next day delivery (order before 2pm)",
+            basePrice: 24.99,
+            freeShippingThreshold: 150
+          }
+        ];
+        
+        setShippingMethods(fallbackMethods);
+        
+        // Select the first fallback method by default
+        handleShippingMethodSelect(fallbackMethods[0].id);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Set default shipping method when data is loaded
-  useEffect(() => {
-    if (shippingMethods && shippingMethods.length > 0 && !selectedMethod) {
-      setSelectedMethod(shippingMethods[0].id);
+    fetchShippingMethods();
+  }, []);
+
+  const calculateShippingCost = (method: ShippingMethod): number => {
+    // Free shipping if order meets the threshold
+    if (orderTotal >= method.freeShippingThreshold) {
+      return 0;
     }
-  }, [shippingMethods, selectedMethod]);
+    return method.basePrice;
+  };
 
-  if (isLoading) {
+  const handleShippingMethodSelect = (methodId: string) => {
+    const selectedMethod = shippingMethods.find(method => method.id === methodId);
+    if (selectedMethod) {
+      const cost = calculateShippingCost(selectedMethod);
+      setSelectedMethodId(methodId);
+      onShippingMethodChange(selectedMethod, cost);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Shipping Options</CardTitle>
+          <CardDescription>Loading available shipping methods...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
 
-  if (error) {
+  if (error && shippingMethods.length === 0) {
     return (
-      <div className="text-red-500 p-4">
-        Error loading shipping options. Please try again.
-      </div>
-    );
-  }
-
-  if (!shippingMethods || shippingMethods.length === 0) {
-    return (
-      <div className="text-amber-500 p-4">
-        No shipping options available. Please try again later.
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Shipping Options</CardTitle>
+          <CardDescription>An error occurred</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-red-50 text-red-800 p-4 rounded-md">
+            {error}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h3 className="text-lg font-medium mb-4">Shipping Method</h3>
+      <CardHeader>
+        <CardTitle>Shipping Options</CardTitle>
+        <CardDescription>Select your preferred shipping method</CardDescription>
+      </CardHeader>
+      <CardContent>
         <RadioGroup
-          value={selectedMethod || ""}
-          onValueChange={setSelectedMethod}
-          className="space-y-3"
+          value={selectedMethodId || ""}
+          onValueChange={handleShippingMethodSelect}
+          className="space-y-4"
         >
           {shippingMethods.map((method) => {
-            const cost = orderTotal >= method.freeShippingThreshold ? 0 : method.basePrice;
-            const isFree = cost === 0;
+            const shippingCost = calculateShippingCost(method);
+            const isFree = shippingCost === 0;
             
             return (
-              <div 
-                key={method.id} 
-                className={`flex items-center justify-between rounded-lg border p-4 transition-all ${
-                  selectedMethod === method.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+              <div
+                key={method.id}
+                className={`flex items-center justify-between p-4 border rounded-lg hover:border-primary transition-colors ${
+                  selectedMethodId === method.id ? "border-primary bg-primary/5" : ""
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <RadioGroupItem value={method.id} id={`shipping-${method.id}`} />
+                  <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
                   <div>
-                    <Label htmlFor={`shipping-${method.id}`} className="text-base font-medium">
+                    <Label htmlFor={method.id} className="font-medium text-base cursor-pointer">
                       {method.name}
+                      {isFree && (
+                        <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 hover:bg-green-50">
+                          FREE
+                        </Badge>
+                      )}
                     </Label>
                     <p className="text-sm text-muted-foreground">{method.description}</p>
-                    {isFree && orderTotal >= method.freeShippingThreshold && (
-                      <span className="inline-block mt-1 text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded">
+                    {!isFree && (
+                      <p className="text-xs text-muted-foreground mt-1">
                         Free shipping on orders over {formatPrice(method.freeShippingThreshold)}
-                      </span>
+                      </p>
                     )}
                   </div>
                 </div>
-                <span className="font-medium">
-                  {isFree ? "FREE" : formatPrice(method.basePrice)}
-                </span>
+                <div className="font-medium">
+                  {isFree ? (
+                    <span className="text-green-600">FREE</span>
+                  ) : (
+                    formatPrice(shippingCost)
+                  )}
+                </div>
               </div>
             );
           })}

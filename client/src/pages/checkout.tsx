@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
+import ShippingOptions from '@/components/shipping/ShippingOptions';
+import AddressForm from '@/components/shipping/AddressForm';
 import { Loader2 } from 'lucide-react';
 
 // Initialize Stripe with publishable key (will be available only when keys are set up)
@@ -22,6 +24,11 @@ export default function Checkout() {
   const [error, setError] = useState<string | null>(null);
   const [orderTotal, setOrderTotal] = useState(0);
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<any>(null);
+  const [addressValid, setAddressValid] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState<any>(null);
+  const [checkoutStep, setCheckoutStep] = useState<'shipping' | 'payment'>('shipping');
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -63,36 +70,6 @@ export default function Checkout() {
           return;
         }
 
-        // Create a payment intent
-        if (stripePromise) {
-          try {
-            // Ensure total is at least $0.50 (50 cents) as Stripe has a minimum charge amount
-            const minAmount = Math.max(total, 0.5);
-            console.log('Amount being sent to Stripe:', minAmount);
-            
-            const response = await apiRequest('POST', '/api/payments/create-intent', {
-              amount: minAmount,
-              currency: 'usd',
-              metadata: {
-                userId: user.id,
-                items: JSON.stringify(items.map((item: any) => ({
-                  id: item.productId,
-                  quantity: item.quantity
-                })))
-              }
-            });
-            
-            const data = await response.json();
-            console.log('Payment intent created:', data);
-            setClientSecret(data.clientSecret);
-          } catch (err: any) {
-            console.error('Error creating payment intent:', err);
-            setError(`Could not initialize payment: ${err.status || ''} ${err.message || 'Unknown error'}`);
-          }
-        } else {
-          setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
-        }
-        
         setLoading(false);
       } catch (err: any) {
         setError(`Error loading cart: ${err.message}`);
@@ -103,6 +80,81 @@ export default function Checkout() {
     fetchCartItems();
   }, [user, setLocation]);
 
+  // Handle shipping method selection
+  const handleShippingMethodChange = (method: any, cost: number) => {
+    setSelectedShippingMethod(method);
+    setShippingCost(cost);
+  };
+
+  // Handle address validation
+  const handleAddressSubmit = (address: any, isValid: boolean) => {
+    setShippingAddress(address);
+    setAddressValid(isValid);
+  };
+
+  // Continue to payment step
+  const handleContinueToPayment = async () => {
+    if (!addressValid || !selectedShippingMethod) {
+      toast({
+        title: "Cannot proceed",
+        description: !addressValid 
+          ? "Please validate your shipping address first" 
+          : "Please select a shipping method",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Create a payment intent with shipping cost included
+    if (stripePromise && user) {
+      try {
+        setLoading(true);
+
+        // Include shipping cost in the total
+        const totalWithShipping = orderTotal + shippingCost;
+        
+        // Ensure total is at least $0.50 (50 cents) as Stripe has a minimum charge amount
+        const minAmount = Math.max(totalWithShipping, 0.5);
+        console.log('Amount being sent to Stripe (with shipping):', minAmount);
+        
+        const response = await apiRequest('POST', '/api/payments/create-intent', {
+          amount: minAmount,
+          currency: 'usd',
+          metadata: {
+            userId: user.id,
+            items: JSON.stringify(cartItems.map((item: any) => ({
+              id: item.productId,
+              quantity: item.quantity
+            }))),
+            shipping: JSON.stringify({
+              method: selectedShippingMethod.id,
+              cost: shippingCost,
+              address: shippingAddress
+            })
+          }
+        });
+        
+        const data = await response.json();
+        console.log('Payment intent created:', data);
+        setClientSecret(data.clientSecret);
+        setCheckoutStep('payment');
+        setLoading(false);
+      } catch (err: any) {
+        console.error('Error creating payment intent:', err);
+        setError(`Could not initialize payment: ${err.status || ''} ${err.message || 'Unknown error'}`);
+        setLoading(false);
+      }
+    } else {
+      setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
+    }
+  };
+
+  // Go back to shipping step
+  const handleBackToShipping = () => {
+    setCheckoutStep('shipping');
+  };
+
+  // Go back to cart
   const handleBackToCart = () => {
     setLocation('/cart');
   };
@@ -187,10 +239,28 @@ export default function Checkout() {
                 <tfoot className="bg-gray-50">
                   <tr>
                     <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                      Total
+                      Subtotal
                     </th>
                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                       {formatPrice(orderTotal)}
+                    </th>
+                  </tr>
+                  {selectedShippingMethod && (
+                    <tr>
+                      <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                        Shipping ({selectedShippingMethod.name})
+                      </th>
+                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                        {shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}
+                      </th>
+                    </tr>
+                  )}
+                  <tr>
+                    <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                      Total
+                    </th>
+                    <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                      {formatPrice(orderTotal + shippingCost)}
                     </th>
                   </tr>
                 </tfoot>
@@ -198,23 +268,52 @@ export default function Checkout() {
             </div>
           </div>
 
-          {clientSecret && stripePromise ? (
+          {checkoutStep === 'shipping' && (
+            <>
+              <div className="space-y-8 mt-8">
+                <div>
+                  <AddressForm onAddressSubmit={handleAddressSubmit} />
+                </div>
+                
+                <div>
+                  <ShippingOptions 
+                    orderTotal={orderTotal} 
+                    onShippingMethodChange={handleShippingMethodChange} 
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {checkoutStep === 'payment' && clientSecret && stripePromise && (
             <div className="mt-8">
               <h3 className="text-lg font-medium mb-4">Payment Details</h3>
               <Elements stripe={stripePromise} options={{ clientSecret }}>
                 <CheckoutForm />
               </Elements>
             </div>
-          ) : (
-            <div className="text-center p-4 border rounded-md bg-yellow-50 text-yellow-800">
-              {stripePromise ? 'Preparing payment gateway...' : 'Payment gateway not configured yet. Please check back later.'}
-            </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleBackToCart}>
-            Back to Cart
-          </Button>
+          {checkoutStep === 'shipping' ? (
+            <>
+              <Button variant="outline" onClick={handleBackToCart}>
+                Back to Cart
+              </Button>
+              <Button 
+                onClick={handleContinueToPayment}
+                disabled={!addressValid || !selectedShippingMethod}
+              >
+                Continue to Payment
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleBackToShipping}>
+                Back to Shipping
+              </Button>
+            </>
+          )}
         </CardFooter>
       </Card>
     </div>
