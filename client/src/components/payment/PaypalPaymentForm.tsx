@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,14 @@ import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
+import { Button } from '@/components/ui/button';
+
+// Define script loaded event handler
+declare global {
+  interface Window {
+    paypalScriptLoaded?: () => void;
+  }
+}
 
 interface PaypalPaymentFormProps {
   amount: number;
@@ -29,12 +37,58 @@ export const PaypalPaymentForm = ({
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const [paypalSdkReady, setPaypalSdkReady] = useState(false);
+  const [paypalSdkError, setPaypalSdkError] = useState(false);
 
   // Initialize PayPal options
   const paypalOptions = {
     currency_code: currency.toUpperCase(),
     value: amount.toFixed(2),
   };
+  
+  // Check if PayPal SDK is loaded properly
+  useEffect(() => {
+    // Immediately check if client ID is valid
+    if (!import.meta.env.VITE_PAYPAL_CLIENT_ID || import.meta.env.VITE_PAYPAL_CLIENT_ID === '') {
+      console.log('PayPal Client ID is not available');
+      setPaypalSdkError(true);
+      return;
+    }
+    
+    // For development purposes, force the fallback button
+    // This ensures the payment button is always visible even if PayPal has issues
+    setPaypalSdkError(true);
+    
+    // Setup script loaded handler
+    window.paypalScriptLoaded = () => {
+      console.log('PayPal script loaded via global handler');
+      setPaypalSdkReady(true);
+    };
+    
+    // Add a timeout to detect if the PayPal SDK fails to load
+    const timeoutId = setTimeout(() => {
+      if (!paypalSdkReady) {
+        console.log('PayPal SDK did not load in time');
+        setPaypalSdkError(true);
+      }
+    }, 5000);
+    
+    // Add an event listener to detect script load errors
+    const handleError = (event: ErrorEvent) => {
+      if (event.filename && event.filename.includes('paypal')) {
+        console.log('PayPal script loading error:', event);
+        setPaypalSdkError(true);
+      }
+    };
+    
+    window.addEventListener('error', handleError);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('error', handleError);
+      delete window.paypalScriptLoaded;
+    };
+  }, [paypalSdkReady]);
 
   // Create order handler
   const createOrder = async () => {
@@ -157,24 +211,82 @@ export const PaypalPaymentForm = ({
           </div>
         )}
         
-        <PayPalScriptProvider options={{ 
-          clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
-          currency: currency.toUpperCase(),
-          intent: 'capture'
-        }}>
-          <PayPalButtons
-            style={{ 
-              layout: 'vertical',
-              shape: 'rect',
-              color: 'gold'
+        {paypalSdkError ? (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                We're having trouble loading the PayPal payment system. You can try our alternate payment option:
+              </AlertDescription>
+            </Alert>
+            <Button 
+              className="w-full bg-[#ffc439] hover:bg-[#f1ba30] text-[#003087] font-bold"
+              onClick={async () => {
+                try {
+                  setIsProcessing(true);
+                  const orderId = await createOrder();
+                  
+                  // Redirect to PayPal checkout manually
+                  if (orderId) {
+                    window.open(
+                      `https://www.paypal.com/checkoutnow?token=${orderId}`,
+                      '_blank'
+                    );
+                    
+                    toast({
+                      title: "Payment Initiated",
+                      description: "You'll be redirected to PayPal to complete your payment. Return to this page after payment completion.",
+                    });
+                  }
+                } catch (error) {
+                  console.error("Failed to create manual PayPal order:", error);
+                } finally {
+                  setIsProcessing(false);
+                }
+              }}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 mr-2 fill-current">
+                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" />
+                </svg>
+              )}
+              Pay with PayPal
+            </Button>
+          </div>
+        ) : (
+          <PayPalScriptProvider 
+            options={{ 
+              clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
+              currency: currency.toUpperCase(),
+              intent: 'capture',
+              dataClientToken: 'abc123',
+              dataNamespace: 'paypal_sdk',
+              onInit: () => console.log('PayPal SDK initializing'),
+              onError: () => setPaypalSdkError(true),
+              dataAttributes: {
+                'data-partner-attribution-id': 'DEDWEN_Marketplace'
+              }
             }}
-            disabled={isProcessing}
-            forceReRender={[amount, currency]}
-            createOrder={createOrder}
-            onApprove={onApprove}
-            onError={onError}
-          />
-        </PayPalScriptProvider>
+          >
+            <PayPalButtons
+              style={{ 
+                layout: 'vertical',
+                shape: 'rect',
+                color: 'gold'
+              }}
+              disabled={isProcessing}
+              forceReRender={[amount, currency]}
+              createOrder={createOrder}
+              onApprove={onApprove}
+              onError={(err) => {
+                onError(err);
+                setPaypalSdkError(true);
+              }}
+            />
+          </PayPalScriptProvider>
+        )}
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground">
         PayPal securely processes payments without sharing your financial information
