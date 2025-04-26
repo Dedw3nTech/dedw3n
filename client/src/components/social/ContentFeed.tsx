@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ContentFeedProps {
   initialContentType?: string;
