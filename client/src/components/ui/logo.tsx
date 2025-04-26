@@ -12,15 +12,15 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
   const { t } = useTranslation();
   
   const sizeClass = {
-    sm: 'w-10 h-10',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16'
+    sm: 'w-14 h-6',
+    md: 'w-24 h-10',
+    lg: 'w-32 h-14'
   };
 
   return (
     <Link href="/">
       <div className={`flex items-center space-x-2 cursor-pointer ${className}`}>
-        <div className={`${sizeClass[size]} flex-shrink-0 rounded-full shadow-sm overflow-hidden`}>
+        <div className={`${sizeClass[size]} flex-shrink-0 overflow-hidden`}>
           <img 
             src="/images/dedwen-logo.svg" 
             alt="Dedwen Logo" 
@@ -29,14 +29,11 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
         </div>
         {withText && (
           <div className="flex flex-col">
-            <h1 className={`font-bold bg-gradient-to-r from-blue-700 to-teal-500 bg-clip-text text-transparent ${
-              size === 'sm' ? 'text-lg' : size === 'md' ? 'text-xl' : 'text-2xl'
+            <h1 className={`font-extrabold text-[#3B83BD] ${
+              size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'
             }`}>
-              {t('app.name')}
+              Dedw3n
             </h1>
-            <p className="text-xs text-gray-500 -mt-1">
-              {t('app.slogan')}
-            </p>
           </div>
         )}
       </div>

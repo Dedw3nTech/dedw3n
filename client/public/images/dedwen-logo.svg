@@ -1,63 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Main circle background -->
-  <circle cx="100" cy="100" r="100" fill="#5F9EA0"/>
+<svg width="320" height="132" viewBox="0 0 320 132" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lotus Flower based on the exact image provided -->
   
-  <!-- Lotus flower petals - layer 1 (outermost) -->
-  <path d="M100 10
-           C 70 30, 30 60, 20 100
-           C 20 140, 50 180, 100 190
-           C 150 180, 180 140, 180 100
-           C 170 60, 130 30, 100 10Z" 
-        fill="#3B7A9E" stroke="#F9E852" stroke-width="2"/>
+  <!-- Left petal -->
+  <path d="M66 40 C 30 45, 20 80, 40 100 C 60 115, 80 110, 100 90" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
   
-  <!-- Lotus flower petals - layer 2 -->
-  <path d="M100 25
-           C 75 40, 45 70, 35 100
-           C 35 130, 60 165, 100 175
-           C 140 165, 165 130, 165 100
-           C 155 70, 125 40, 100 25Z" 
-        fill="#4682B4" stroke="#F9E852" stroke-width="1.5"/>
+  <!-- Right petal -->
+  <path d="M254 40 C 290 45, 300 80, 280 100 C 260 115, 240 110, 220 90" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
   
-  <!-- Lotus flower petals - layer 3 (innermost) -->
-  <path d="M100 40
-           C 80 50, 60 80, 50 100
-           C 50 120, 70 150, 100 160
-           C 130 150, 150 120, 150 100
-           C 140 80, 120 50, 100 40Z" 
-        fill="#FFFFFF" stroke="#4682B4" stroke-width="1"/>
+  <!-- Bottom left petal -->
+  <path d="M100 90 C 90 120, 100 130, 130 120 C 150 110, 155 100, 160 85" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
   
-  <!-- Center shape for DEDWEN 'D' -->
-  <g transform="translate(100, 100)">
-    <!-- Background circle -->
-    <circle cx="0" cy="0" r="30" fill="#280075" stroke="#F9E852" stroke-width="2"/>
-    
-    <!-- Stylized "D" -->
-    <path d="M-15 -15
-             L -15 15
-             C -15 15, -15 20, -10 20
-             L 5 20
-             C 15 20, 20 10, 20 0
-             C 20 -10, 15 -20, 5 -20
-             L -10 -20
-             C -15 -20, -15 -15, -15 -15
-             Z" 
-          fill="#F9E852"/>
-    
-    <!-- Inner space of D -->
-    <path d="M-10 -15
-             L -10 15
-             L 5 15
-             C 12 15, 15 7, 15 0
-             C 15 -7, 12 -15, 5 -15
-             L -10 -15
-             Z" 
-          fill="#280075"/>
+  <!-- Bottom right petal -->
+  <path d="M220 90 C 230 120, 220 130, 190 120 C 170 110, 165 100, 160 85" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  
+  <!-- Top petal -->
+  <path d="M100 90 C 110 70, 130 50, 160 45 C 190 50, 210 70, 220 90" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  
+  <!-- Center shape -->
+  <ellipse cx="160" cy="80" rx="25" ry="35" fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
+  
+  <!-- D in center -->
+  <g transform="translate(160, 80)">
+    <ellipse cx="0" cy="0" rx="15" ry="25" fill="#280075"/>
+    <path d="M-7 -15 L -7 15 C -7 15, -7 16, -5 16 L 2 16 C 8 16, 10 8, 10 0 C 10 -8, 8 -16, 2 -16 L -5 -16 C -7 -16, -7 -15, -7 -15 Z" fill="#280075"/>
+    <path d="M-5 -13 L -5 13 L 1 13 C 5 13, 7 7, 7 0 C 7 -7, 5 -13, 1 -13 L -5 -13 Z" fill="#FFFFFF"/>
   </g>
   
-  <!-- Golden lotus petal accents -->
-  <path d="M100 10 C 110 15, 120 25, 130 40" stroke="#F9E852" stroke-width="1.5" fill="none"/>
-  <path d="M100 10 C 90 15, 80 25, 70 40" stroke="#F9E852" stroke-width="1.5" fill="none"/>
-  <path d="M20 100 C 25 110, 35 120, 50 130" stroke="#F9E852" stroke-width="1.5" fill="none"/>
-  <path d="M180 100 C 175 110, 165 120, 150 130" stroke="#F9E852" stroke-width="1.5" fill="none"/>
+  <!-- Gold outline accents -->
+  <path d="M66 40 C 30 45, 20 80, 40 100 C 60 115, 80 110, 100 90" 
+        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
+  <path d="M254 40 C 290 45, 300 80, 280 100 C 260 115, 240 110, 220 90" 
+        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
+  <path d="M100 90 C 90 120, 100 130, 130 120 C 150 110, 155 100, 160 85" 
+        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
+  <path d="M220 90 C 230 120, 220 130, 190 120 C 170 110, 165 100, 160 85" 
+        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
+  <path d="M100 90 C 110 70, 130 50, 160 45 C 190 50, 210 70, 220 90" 
+        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
 </svg>
