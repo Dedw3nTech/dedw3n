@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ import {
   CalendarDays,
   Loader2,
   Send,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Film,
 } from "lucide-react";
 
 // Type for the post object
@@ -37,6 +43,11 @@ interface Post {
   };
   imageUrl?: string | null;
   videoUrl?: string | null;
+  thumbnailUrl?: string | null;
+  contentType?: string;
+  duration?: number;
+  views?: number;
+  videoType?: 'standard' | 'short' | 'story' | 'live';
   likes: number;
   comments: number;
   shares: number;
@@ -68,6 +79,12 @@ export default function PostCard({
   const [, setLocation] = useLocation();
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentText, setCommentText] = useState("");
+  
+  // Video player states
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch comments if needed
   const {
@@ -289,6 +306,60 @@ export default function PostCard({
     commentMutation.mutate(commentText);
   };
 
+  // Video player functions
+  const toggleVideoPlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    setIsPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  const handleVideoTimeUpdate = () => {
+    if (videoRef.current) {
+      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setVideoProgress(progress);
+    }
+  };
+
+  const handleViewFullVideo = () => {
+    // Navigate to video detail page
+    if (post.videoType === 'short') {
+      setLocation('/videos/shorts');
+    } else if (post.videoType === 'story') {
+      setLocation('/videos/stories');
+    } else if (post.videoType === 'live') {
+      setLocation('/videos/live');
+    } else {
+      setLocation(`/videos/${post.id}`);
+    }
+  };
+
+  // Format video duration from seconds to MM:SS
+  const formatVideoDuration = (seconds?: number) => {
+    if (!seconds) return '';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
@@ -394,7 +465,7 @@ export default function PostCard({
         
         <p className={`${isDetailed ? "" : "line-clamp-4"} mb-4`}>{post.content}</p>
         
-        {post.imageUrl && (
+        {post.imageUrl && !post.videoUrl && (
           <div 
             className="rounded-md overflow-hidden mb-4 cursor-pointer"
             onClick={() => setLocation(`/posts/${post.id}`)}
@@ -408,12 +479,123 @@ export default function PostCard({
         )}
         
         {post.videoUrl && (
-          <div className="rounded-md overflow-hidden mb-4">
-            <video 
-              src={post.videoUrl} 
-              controls 
-              className="w-full"
-            />
+          <div className="rounded-md overflow-hidden mb-4 relative group">
+            {/* Video thumbnail with play overlay when video is not playing */}
+            {!isPlaying && post.thumbnailUrl && (
+              <div className="relative">
+                <img 
+                  src={post.thumbnailUrl} 
+                  alt={post.title || "Video thumbnail"} 
+                  className="w-full aspect-video object-cover"
+                />
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 cursor-pointer"
+                  onClick={toggleVideoPlay}
+                >
+                  <Play className="h-16 w-16 text-white" />
+                  
+                  {/* Video type badge */}
+                  {post.videoType && (
+                    <Badge 
+                      variant={post.videoType === 'live' ? 'destructive' : 'secondary'} 
+                      className="absolute top-3 left-3"
+                    >
+                      {post.videoType === 'short' ? 'SHORT' : 
+                       post.videoType === 'story' ? 'STORY' : 
+                       post.videoType === 'live' ? 'LIVE' : 'VIDEO'}
+                    </Badge>
+                  )}
+                  
+                  {/* Duration badge */}
+                  {post.duration && post.videoType !== 'live' && (
+                    <Badge variant="outline" className="absolute bottom-3 right-3 bg-black/70 text-white">
+                      {formatVideoDuration(post.duration)}
+                    </Badge>
+                  )}
+                  
+                  {/* View count if available */}
+                  {post.views !== undefined && (
+                    <Badge variant="outline" className="absolute bottom-3 left-3 bg-black/70 text-white flex items-center gap-1">
+                      <i className="ri-eye-line text-xs"></i>
+                      {post.views}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Actual video player */}
+            <div className={isPlaying ? 'block' : 'hidden'}>
+              <video 
+                ref={videoRef}
+                src={post.videoUrl} 
+                className="w-full aspect-video object-cover"
+                autoPlay={isPlaying}
+                muted={isMuted}
+                playsInline
+                loop={post.videoType === 'short'}
+                onTimeUpdate={handleVideoTimeUpdate}
+                onEnded={handleVideoEnded}
+              />
+              
+              {/* Video controls overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                <div className="flex justify-between items-start w-full">
+                  {/* Video type badge */}
+                  {post.videoType && (
+                    <Badge 
+                      variant={post.videoType === 'live' ? 'destructive' : 'secondary'} 
+                    >
+                      {post.videoType === 'short' ? 'SHORT' : 
+                       post.videoType === 'story' ? 'STORY' : 
+                       post.videoType === 'live' ? 'LIVE' : 'VIDEO'}
+                    </Badge>
+                  )}
+                  
+                  {/* View in fullscreen button */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-white hover:bg-black/30"
+                    onClick={handleViewFullVideo}
+                  >
+                    <Maximize className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="w-full">
+                  {/* Progress bar */}
+                  <div className="w-full h-1 bg-white/30 mb-3">
+                    <div 
+                      className="h-full bg-primary"
+                      style={{ width: `${videoProgress}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    {/* Play/pause button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-white hover:bg-black/30"
+                      onClick={toggleVideoPlay}
+                    >
+                      {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                    </Button>
+                    
+                    {/* Volume control */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-white hover:bg-black/30"
+                      onClick={toggleVideoMute}
+                    >
+                      {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         
