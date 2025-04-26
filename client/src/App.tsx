@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewProvider } from "@/hooks/use-view";
+import { AuthProvider } from "@/hooks/use-auth";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -26,17 +27,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ViewProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">
-              <Router />
-            </main>
-            <Footer />
-            <MobileNavigation />
-          </div>
-          <Toaster />
-        </ViewProvider>
+        <AuthProvider>
+          <ViewProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow">
+                <Router />
+              </main>
+              <Footer />
+              <MobileNavigation />
+            </div>
+            <Toaster />
+          </ViewProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

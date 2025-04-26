@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AuthContextType, UserWithoutPassword } from "@/lib/types";
+import { User } from "@shared/schema";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,12 +15,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch current user
   const { data: user, isLoading: isUserLoading } = useQuery<UserWithoutPassword>({
     queryKey: ["/api/auth/me"],
-    onError: () => {
-      setIsLoading(false);
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (!response.ok) {
+          setIsLoading(false);
+          return null as unknown as UserWithoutPassword;
+        }
+        return await response.json();
+      } catch (error) {
+        setIsLoading(false);
+        throw error;
+      }
     },
-    onSuccess: () => {
-      setIsLoading(false);
-    },
+    retry: false,
   });
 
   // Login mutation
