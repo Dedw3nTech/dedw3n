@@ -154,6 +154,35 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Orders model
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  totalAmount: doublePrecision("total_amount").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, processing, shipped, delivered, canceled
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCost: doublePrecision("shipping_cost").notNull().default(0),
+  paymentMethod: varchar("payment_method", { length: 30 }).notNull(), // wallet, card, mobile_money, paypal, bank_transfer
+  paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("pending"), // pending, completed, failed, refunded
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OrderItems model
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
+  quantity: integer("quantity").notNull(),
+  unitPrice: doublePrecision("unit_price").notNull(),
+  discount: doublePrecision("discount").default(0),
+  totalPrice: doublePrecision("total_price").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, shipped, delivered, returned
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
@@ -186,6 +215,12 @@ export const insertWalletSchema = createInsertSchema(wallets)
   .omit({ id: true, createdAt: true, updatedAt: true });
 
 export const insertTransactionSchema = createInsertSchema(transactions)
+  .omit({ id: true, createdAt: true });
+
+export const insertOrderSchema = createInsertSchema(orders)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertOrderItemSchema = createInsertSchema(orderItems)
   .omit({ id: true, createdAt: true });
 
 // Types
@@ -221,3 +256,9 @@ export type InsertWallet = z.infer<typeof insertWalletSchema>;
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;

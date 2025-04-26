@@ -96,6 +96,36 @@ export interface IStorage {
     byCategoryExpense: Record<string, number>;
     byCategoryIncome: Record<string, number>;
   }>;
+  
+  // Order operations
+  getOrder(id: number): Promise<Order | undefined>;
+  getOrdersByUser(userId: number): Promise<Order[]>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderStatus(id: number, status: string): Promise<Order>;
+  
+  // Order Item operations
+  getOrderItem(id: number): Promise<OrderItem | undefined>;
+  getOrderItemsByOrder(orderId: number): Promise<OrderItem[]>;
+  createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
+  updateOrderItemStatus(id: number, status: string): Promise<OrderItem>;
+  
+  // Vendor Analytics operations
+  getVendorTotalSales(vendorId: number): Promise<number>;
+  getVendorOrderStats(vendorId: number): Promise<{
+    totalOrders: number;
+    pendingOrders: number;
+    shippedOrders: number;
+    deliveredOrders: number;
+    canceledOrders: number;
+  }>;
+  getVendorRevenueByPeriod(vendorId: number, period: "daily" | "weekly" | "monthly" | "yearly"): Promise<Record<string, number>>;
+  getVendorTopProducts(vendorId: number, limit?: number): Promise<{ product: Product; totalSold: number; revenue: number }[]>;
+  getVendorProfitLoss(vendorId: number): Promise<{
+    totalRevenue: number;
+    totalCost: number;
+    netProfit: number;
+    profitMargin: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -113,6 +143,8 @@ export class MemStorage implements IStorage {
   private carts: Map<number, Cart>;
   private wallets: Map<number, Wallet>;
   private transactions: Map<number, Transaction>;
+  private orders: Map<number, Order>;
+  private orderItems: Map<number, OrderItem>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -144,6 +176,8 @@ export class MemStorage implements IStorage {
     this.carts = new Map();
     this.wallets = new Map();
     this.transactions = new Map();
+    this.orders = new Map();
+    this.orderItems = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
