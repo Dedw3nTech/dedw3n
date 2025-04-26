@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewProvider } from "@/hooks/use-view";
 import { AuthProvider } from "@/hooks/use-auth";
+import { initializeOfflineDetection } from "@/lib/offline";
+import { useEffect } from "react";
+import { OfflineIndicator } from "@/components/ui/offline-indicator";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -44,6 +47,11 @@ function Router() {
 }
 
 function App() {
+  // Initialize offline detection
+  useEffect(() => {
+    initializeOfflineDetection();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -56,6 +64,7 @@ function App() {
               </main>
               <Footer />
               <MobileNavigation />
+              <OfflineIndicator />
             </div>
             <Toaster />
           </ViewProvider>
