@@ -9,6 +9,7 @@ import { MessagingProvider } from "@/hooks/use-messaging";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { useEffect } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -57,38 +58,40 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/social" component={Social} />
-      <Route path="/social/:tab" component={Social} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/cart" component={Cart} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/payment-success" component={PaymentSuccess} />
       <Route path="/products" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
-      <Route path="/add-product" component={AddProduct} />
-      <Route path="/upload-product" component={UploadProduct} />
-      <Route path="/members" component={MembersPage} />
-      <Route path="/wallet" component={WalletPage} />
-      <Route path="/spending-analytics" component={SpendingAnalytics} />
-      <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
-      <Route path="/communities" component={CommunitiesPage} />
-      <Route path="/communities/create" component={CreateCommunityPage} />
-      <Route path="/communities/:id" component={CommunityDetailPage} />
-      <Route path="/communities/:id/manage" component={CommunityManagePage} />
-      <Route path="/profile/:username" component={ProfilePage} />
-      <Route path="/wall" component={WallPage} />
-      <Route path="/messages/:username?" component={MessagesPage} />
-      <Route path="/explore" component={ExplorePage} />
       
-      {/* Video routes */}
-      <Route path="/videos/trending" component={TrendingVideosPage} />
-      <Route path="/videos/shorts" component={ShortsPage} />
-      <Route path="/videos/stories" component={StoriesPage} />
-      <Route path="/videos/live" component={LivePage} />
-      <Route path="/videos/upload" component={TrendingVideosPage} />
-      <Route path="/videos/:id" component={TrendingVideosPage} />
+      {/* Protected routes - require authentication */}
+      <ProtectedRoute path="/social" component={Social} />
+      <ProtectedRoute path="/social/:tab" component={Social} />
+      <ProtectedRoute path="/cart" component={Cart} />
+      <ProtectedRoute path="/checkout" component={Checkout} />
+      <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
+      <ProtectedRoute path="/add-product" component={AddProduct} />
+      <ProtectedRoute path="/upload-product" component={UploadProduct} />
+      <ProtectedRoute path="/members" component={MembersPage} />
+      <ProtectedRoute path="/wallet" component={WalletPage} />
+      <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
+      <ProtectedRoute path="/vendor-analytics" component={VendorAnalytics} />
+      <ProtectedRoute path="/communities" component={CommunitiesPage} />
+      <ProtectedRoute path="/communities/create" component={CreateCommunityPage} />
+      <ProtectedRoute path="/communities/:id" component={CommunityDetailPage} />
+      <ProtectedRoute path="/communities/:id/manage" component={CommunityManagePage} />
+      <ProtectedRoute path="/profile/:username" component={ProfilePage} />
+      <ProtectedRoute path="/wall" component={WallPage} />
+      <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
+      <ProtectedRoute path="/explore" component={ExplorePage} />
+      
+      {/* Protected video routes */}
+      <ProtectedRoute path="/videos/trending" component={TrendingVideosPage} />
+      <ProtectedRoute path="/videos/shorts" component={ShortsPage} />
+      <ProtectedRoute path="/videos/stories" component={StoriesPage} />
+      <ProtectedRoute path="/videos/live" component={LivePage} />
+      <ProtectedRoute path="/videos/upload" component={TrendingVideosPage} />
+      <ProtectedRoute path="/videos/:id" component={TrendingVideosPage} />
       
       <Route component={NotFound} />
     </Switch>
