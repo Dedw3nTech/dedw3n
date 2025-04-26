@@ -210,6 +210,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get user profile" });
     }
   });
+  
+  // Get user's posts
+  app.get("/api/users/:username/posts", async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const posts = await storage.getUserPosts(user.id);
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user posts" });
+    }
+  });
 
   // Auth middleware
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
