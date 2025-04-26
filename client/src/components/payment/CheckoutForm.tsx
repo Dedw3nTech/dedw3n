@@ -5,7 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
 
-export const CheckoutForm = () => {
+interface CheckoutFormProps {
+  onPaymentComplete?: () => void;
+}
+
+export const CheckoutForm = ({ onPaymentComplete }: CheckoutFormProps = {}) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -43,6 +47,12 @@ export const CheckoutForm = () => {
           title: 'Payment Successful',
           description: 'Thank you for your purchase!',
         });
+        
+        // Call the onPaymentComplete callback if provided
+        if (onPaymentComplete) {
+          onPaymentComplete();
+        }
+        
         setLocation('/payment-success');
       } else {
         // Handle other paymentIntent statuses as needed

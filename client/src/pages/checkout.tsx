@@ -37,9 +37,29 @@ export default function Checkout() {
   const [addressValid, setAddressValid] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [checkoutStep, setCheckoutStep] = useState<'shipping' | 'payment'>('shipping');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet'>('stripe');
+  const [paymentComplete, setPaymentComplete] = useState(false);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Fetch user's wallet
+  const { data: wallet } = useQuery({
+    queryKey: ['/api/wallets/me'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('GET', '/api/wallets/me');
+        if (res.ok) {
+          return res.json();
+        }
+        return null;
+      } catch (error) {
+        console.error('Error fetching wallet:', error);
+        return null;
+      }
+    },
+    enabled: !!user && checkoutStep === 'payment'
+  });
 
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -113,11 +133,14 @@ export default function Checkout() {
       return;
     }
 
-    // Create a payment intent with shipping cost included
-    if (stripePromise && user) {
-      try {
-        setLoading(true);
-
+    try {
+      setLoading(true);
+      
+      // Move to payment step first (this allows wallet payment option without Stripe being initialized)
+      setCheckoutStep('payment');
+      
+      // If using Stripe payment, we need to create a payment intent
+      if (stripePromise && user) {
         // Include shipping cost in the total
         const totalWithShipping = orderTotal + shippingCost;
         
@@ -145,15 +168,16 @@ export default function Checkout() {
         const data = await response.json();
         console.log('Payment intent created:', data);
         setClientSecret(data.clientSecret);
-        setCheckoutStep('payment');
-        setLoading(false);
-      } catch (err: any) {
-        console.error('Error creating payment intent:', err);
-        setError(`Could not initialize payment: ${err.status || ''} ${err.message || 'Unknown error'}`);
-        setLoading(false);
+      } else if (paymentMethod === 'stripe') {
+        // Only show error if Stripe is selected but not available
+        setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
       }
-    } else {
-      setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
+      
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Error initializing payment:', err);
+      setError(`Could not initialize payment: ${err.message || 'Unknown error'}`);
+      setLoading(false);
     }
   };
 
@@ -293,12 +317,89 @@ export default function Checkout() {
             </>
           )}
 
-          {checkoutStep === 'payment' && clientSecret && stripePromise && (
+          {checkoutStep === 'payment' && (
             <div className="mt-8">
-              <h3 className="text-lg font-medium mb-4">Payment Details</h3>
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <CheckoutForm />
-              </Elements>
+              <h3 className="text-lg font-medium mb-4">Payment Method</h3>
+              
+              <Tabs 
+                defaultValue="stripe" 
+                value={paymentMethod} 
+                onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'wallet')}
+                className="w-full mb-6"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="stripe" className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Credit Card
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="wallet" 
+                    className="flex items-center gap-2"
+                    disabled={!wallet}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    E-Wallet
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="stripe" className="mt-4">
+                  {clientSecret && stripePromise ? (
+                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                      <CheckoutForm 
+                        onPaymentComplete={() => {
+                          setPaymentComplete(true);
+                          // Clear cart after successful payment
+                          queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                        }}
+                      />
+                    </Elements>
+                  ) : (
+                    <div className="flex items-center justify-center p-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="wallet" className="mt-4">
+                  {wallet ? (
+                    <WalletPaymentForm
+                      amount={orderTotal + shippingCost}
+                      walletBalance={wallet.balance}
+                      walletCurrency={wallet.currency}
+                      onPaymentComplete={() => {
+                        setPaymentComplete(true);
+                        // Clear cart after successful payment
+                        queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                      }}
+                      metadata={{
+                        userId: user?.id || 0,
+                        items: JSON.stringify(cartItems.map((item: any) => ({
+                          id: item.productId,
+                          quantity: item.quantity
+                        }))),
+                        shipping: JSON.stringify({
+                          method: selectedShippingMethod.id,
+                          cost: shippingCost,
+                          address: shippingAddress
+                        })
+                      }}
+                    />
+                  ) : (
+                    <Card className="p-6">
+                      <CardTitle className="text-center mb-4">No Wallet Found</CardTitle>
+                      <CardDescription className="text-center mb-6">
+                        You don't have an e-wallet set up yet. Please create a wallet to use this payment method.
+                      </CardDescription>
+                      <Button
+                        onClick={() => setLocation('/wallet')}
+                        className="w-full"
+                      >
+                        Set Up Wallet
+                      </Button>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </CardContent>
