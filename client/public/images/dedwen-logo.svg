@@ -1,46 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="320" height="132" viewBox="0 0 320 132" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Lotus Flower based on the exact image provided -->
+<svg width="128" height="56" viewBox="0 0 128 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Smaller, simplified lotus flower based on the updated image -->
   
   <!-- Left petal -->
-  <path d="M66 40 C 30 45, 20 80, 40 100 C 60 115, 80 110, 100 90" 
-        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  <path d="M26 16 C 12 18, 8 32, 16 40 C 24 46, 32 44, 40 36" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
   
   <!-- Right petal -->
-  <path d="M254 40 C 290 45, 300 80, 280 100 C 260 115, 240 110, 220 90" 
-        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  <path d="M102 16 C 116 18, 120 32, 112 40 C 104 46, 96 44, 88 36" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
   
   <!-- Bottom left petal -->
-  <path d="M100 90 C 90 120, 100 130, 130 120 C 150 110, 155 100, 160 85" 
-        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  <path d="M40 36 C 36 48, 40 52, 52 48 C 60 44, 62 40, 64 34" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
   
   <!-- Bottom right petal -->
-  <path d="M220 90 C 230 120, 220 130, 190 120 C 170 110, 165 100, 160 85" 
-        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  <path d="M88 36 C 92 48, 88 52, 76 48 C 68 44, 66 40, 64 34" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
   
   <!-- Top petal -->
-  <path d="M100 90 C 110 70, 130 50, 160 45 C 190 50, 210 70, 220 90" 
-        fill="#FFFFFF" stroke="#3B83BD" stroke-width="4"/>
+  <path d="M40 36 C 44 28, 52 20, 64 18 C 76 20, 84 28, 88 36" 
+        fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
   
   <!-- Center shape -->
-  <ellipse cx="160" cy="80" rx="25" ry="35" fill="#FFFFFF" stroke="#3B83BD" stroke-width="2"/>
+  <ellipse cx="64" cy="32" rx="10" ry="14" fill="#FFFFFF" stroke="#3B83BD" stroke-width="1"/>
   
   <!-- D in center -->
-  <g transform="translate(160, 80)">
-    <ellipse cx="0" cy="0" rx="15" ry="25" fill="#280075"/>
-    <path d="M-7 -15 L -7 15 C -7 15, -7 16, -5 16 L 2 16 C 8 16, 10 8, 10 0 C 10 -8, 8 -16, 2 -16 L -5 -16 C -7 -16, -7 -15, -7 -15 Z" fill="#280075"/>
-    <path d="M-5 -13 L -5 13 L 1 13 C 5 13, 7 7, 7 0 C 7 -7, 5 -13, 1 -13 L -5 -13 Z" fill="#FFFFFF"/>
+  <g transform="translate(64, 32)">
+    <ellipse cx="0" cy="0" rx="6" ry="10" fill="#280075"/>
+    <path d="M-3 -6 L -3 6 C -3 6, -3 7, -2 7 L 1 7 C 3 7, 4 3, 4 0 C 4 -3, 3 -7, 1 -7 L -2 -7 C -3 -7, -3 -6, -3 -6 Z" fill="#280075"/>
+    <path d="M-2 -5 L -2 5 L 0 5 C 2 5, 3 3, 3 0 C 3 -3, 2 -5, 0 -5 L -2 -5 Z" fill="#FFFFFF"/>
   </g>
   
-  <!-- Gold outline accents -->
-  <path d="M66 40 C 30 45, 20 80, 40 100 C 60 115, 80 110, 100 90" 
-        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
-  <path d="M254 40 C 290 45, 300 80, 280 100 C 260 115, 240 110, 220 90" 
-        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
-  <path d="M100 90 C 90 120, 100 130, 130 120 C 150 110, 155 100, 160 85" 
-        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
-  <path d="M220 90 C 230 120, 220 130, 190 120 C 170 110, 165 100, 160 85" 
-        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
-  <path d="M100 90 C 110 70, 130 50, 160 45 C 190 50, 210 70, 220 90" 
-        fill="none" stroke="#F9E852" stroke-width="1" stroke-opacity="0.7"/>
+  <!-- Gold outline accents - subtle and thinner -->
+  <path d="M26 16 C 12 18, 8 32, 16 40 C 24 46, 32 44, 40 36" 
+        fill="none" stroke="#F9E852" stroke-width="0.5" stroke-opacity="0.6"/>
+  <path d="M102 16 C 116 18, 120 32, 112 40 C 104 46, 96 44, 88 36" 
+        fill="none" stroke="#F9E852" stroke-width="0.5" stroke-opacity="0.6"/>
+  <path d="M40 36 C 36 48, 40 52, 52 48 C 60 44, 62 40, 64 34" 
+        fill="none" stroke="#F9E852" stroke-width="0.5" stroke-opacity="0.6"/>
+  <path d="M88 36 C 92 48, 88 52, 76 48 C 68 44, 66 40, 64 34" 
+        fill="none" stroke="#F9E852" stroke-width="0.5" stroke-opacity="0.6"/>
+  <path d="M40 36 C 44 28, 52 20, 64 18 C 76 20, 84 28, 88 36" 
+        fill="none" stroke="#F9E852" stroke-width="0.5" stroke-opacity="0.6"/>
 </svg>
