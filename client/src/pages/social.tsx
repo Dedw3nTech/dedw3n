@@ -87,6 +87,21 @@ export default function Social() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("wall");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/logout");
+      if (!response.ok) {
+        throw new Error("Failed to log out");
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/user"], null);
+      setLocation("/auth");
+    }
+  });
 
   // Get unread message count
   const { data: messageData } = useQuery<{ count: number }>({
