@@ -19,9 +19,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from 'react-i18next';
-import { ChevronUpIcon, ChevronDownIcon, RefreshCwIcon, ArrowRightIcon, PlusIcon, WalletIcon } from 'lucide-react';
+import { 
+  ChevronUpIcon, 
+  ChevronDownIcon, 
+  RefreshCwIcon, 
+  ArrowRightIcon, 
+  PlusIcon, 
+  WalletIcon,
+  ArrowUpDownIcon
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { Redirect } from 'wouter';
+import { 
+  supportedCurrencies, 
+  currencySymbols, 
+  convertCurrency, 
+  formatCurrency,
+  fetchExchangeRates
+} from '@/lib/currencyConverter';
 
 export default function WalletPage() {
   const { t } = useTranslation();
@@ -32,17 +47,28 @@ export default function WalletPage() {
   const [description, setDescription] = useState('');
   const [recipient, setRecipient] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [targetCurrency, setTargetCurrency] = useState('');
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
   
-  // Currency symbols for formatting
-  const currencySymbols = {
-    USD: '$',
-    GBP: '£',
-    EUR: '€',
-    CNY: '¥',
-    INR: '₹',
-    BRL: 'R$'
-  };
-  
+  // Initialize default target currency and fetch exchange rates
+  useEffect(() => {
+    if (wallet && wallet.currency) {
+      // Find a default target currency different from the current wallet currency
+      const defaultTarget = supportedCurrencies.find(c => c !== wallet.currency) || 'USD';
+      setTargetCurrency(defaultTarget);
+      
+      // Fetch exchange rates
+      fetchExchangeRates(wallet.currency)
+        .then(rates => {
+          setExchangeRates(rates);
+        })
+        .catch(error => {
+          console.error('Error fetching initial exchange rates:', error);
+        });
+    }
+  }, [wallet]);
+
   // Redirect if not logged in
   if (!user) {
     return <Redirect to="/auth" />;
@@ -360,6 +386,10 @@ export default function WalletPage() {
                   <TabsTrigger value="deposit" className="flex-1">{t('wallet.deposit')}</TabsTrigger>
                   <TabsTrigger value="withdraw" className="flex-1">{t('wallet.withdraw')}</TabsTrigger>
                   <TabsTrigger value="transfer" className="flex-1">{t('wallet.transfer')}</TabsTrigger>
+                  <TabsTrigger value="convert" className="flex-1">
+                    <ArrowUpDownIcon className="h-4 w-4 mr-1" />
+                    {t('wallet.convert')}
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -580,6 +610,154 @@ export default function WalletPage() {
                       )}
                     </Button>
                   </form>
+                </TabsContent>
+
+                <TabsContent value="convert">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-medium">{t('wallet.currency_converter')}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('wallet.convert_description')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>{t('wallet.amount')}</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                            {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                          </span>
+                          <Input 
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            max={wallet.balance}
+                            placeholder="0.00"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="pl-7"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {t('wallet.available')}: {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                          {wallet.balance.toFixed(2)}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <Label>{t('wallet.from')}</Label>
+                          <Select defaultValue={wallet.currency} disabled>
+                            <SelectTrigger>
+                              <SelectValue>{wallet.currency}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={wallet.currency}>{wallet.currency}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="pt-6">
+                          <ArrowUpDownIcon className="h-5 w-5" />
+                        </div>
+
+                        <div className="flex-1">
+                          <Label>{t('wallet.to')}</Label>
+                          <Select
+                            value={targetCurrency}
+                            onValueChange={setTargetCurrency}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('wallet.select_currency')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {supportedCurrencies
+                                  .filter(c => c !== wallet.currency)
+                                  .map(currency => (
+                                    <SelectItem key={currency} value={currency}>
+                                      {currency} - {currencySymbols[currency as keyof typeof currencySymbols]}
+                                    </SelectItem>
+                                  ))
+                                }
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={async () => {
+                          if (!amount || !targetCurrency || isNaN(Number(amount))) {
+                            toast({
+                              title: t('wallet.conversion_error'),
+                              description: t('wallet.provide_valid_amount'),
+                              variant: 'destructive'
+                            });
+                            return;
+                          }
+                          
+                          try {
+                            const amountToConvert = Number(amount);
+                            
+                            // Fetch fresh rates
+                            const rates = await fetchExchangeRates(wallet.currency);
+                            setExchangeRates(rates);
+                            
+                            // Calculate converted amount
+                            const converted = amountToConvert * (rates[targetCurrency] || 1);
+                            setConvertedAmount(converted);
+                            
+                            toast({
+                              title: t('wallet.conversion_result'),
+                              description: `${formatCurrency(amountToConvert, wallet.currency, true)} = ${formatCurrency(converted, targetCurrency, true)}`
+                            });
+                          } catch (error) {
+                            console.error('Conversion error:', error);
+                            toast({
+                              title: t('wallet.conversion_error'),
+                              description: t('wallet.rate_fetch_failed'),
+                              variant: 'destructive'
+                            });
+                          }
+                        }}
+                        disabled={!amount || !targetCurrency || isNaN(Number(amount))}
+                        className="w-full mt-2"
+                      >
+                        {t('wallet.calculate_rate')}
+                      </Button>
+                      
+                      {convertedAmount !== null && exchangeRates[targetCurrency] && (
+                        <div className="bg-muted p-4 rounded-md mt-4">
+                          <h4 className="font-medium mb-2">{t('wallet.conversion_result')}</h4>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="text-2xl font-bold">
+                                {formatCurrency(Number(amount), wallet.currency)}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{wallet.currency}</p>
+                            </div>
+                            <ArrowRightIcon className="h-5 w-5 mx-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-2xl font-bold">
+                                {formatCurrency(convertedAmount, targetCurrency)}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{targetCurrency}</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t">
+                            <p className="text-sm text-muted-foreground">
+                              {t('wallet.exchange_rate')}: 1 {wallet.currency} = {exchangeRates[targetCurrency].toFixed(4)} {targetCurrency}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {t('wallet.rates_updated')}: {new Date().toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardHeader>
