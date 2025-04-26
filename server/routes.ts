@@ -192,6 +192,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/login", (req, res) => res.redirect(307, "/api/auth/login"));
   app.post("/api/logout", (req, res) => res.redirect(307, "/api/auth/logout"));
   app.get("/api/user", (req, res) => res.redirect(307, "/api/auth/me"));
+  
+  // User profile routes
+  app.get("/api/users/:username", async (req, res) => {
+    try {
+      const username = req.params.username;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password before sending
+      const { password, ...userData } = user;
+      res.json(userData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user profile" });
+    }
+  });
 
   // Auth middleware
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
