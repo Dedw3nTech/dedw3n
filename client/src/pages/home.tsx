@@ -6,6 +6,8 @@ import { Product } from "@shared/schema";
 import { formatPrice } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency, convertCurrency } from "@/lib/currencyConverter";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
   Card,
@@ -14,13 +16,17 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon } from "lucide-react";
+import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw } from "lucide-react";
 
 export default function Home() {
   const { setView } = useView();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
+  const [convertedDiscountPrices, setConvertedDiscountPrices] = useState<Record<number, number>>({});
+  const [isConverting, setIsConverting] = useState(false);
+  
   useEffect(() => {
     setView("marketplace");
   }, [setView]);
@@ -67,6 +73,9 @@ export default function Home() {
     },
   });
 
+  // List of supported currencies
+  const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
+
   // Render product card
   const renderProductCard = (product: any) => (
     <Card 
@@ -104,20 +113,47 @@ export default function Home() {
         <div className="text-sm text-gray-500 mb-2">{product.category}</div>
       </CardContent>
       
-      <CardFooter className="flex justify-between items-center">
-        <div>
-          {product.discountPrice ? (
-            <div className="flex items-center">
-              <div className="font-bold text-primary">{formatPrice(product.discountPrice)}</div>
-              <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
-            </div>
-          ) : (
-            <div className="font-bold">{formatPrice(product.price)}</div>
-          )}
+      <CardFooter className="flex flex-col w-full">
+        <div className="flex justify-between items-center w-full">
+          <div>
+            {product.discountPrice ? (
+              <div className="flex items-center">
+                <div className="font-bold text-primary">{formatPrice(product.discountPrice)}</div>
+                <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
+              </div>
+            ) : (
+              <div className="font-bold">{formatPrice(product.price)}</div>
+            )}
+            
+            {/* Converted price display */}
+            {selectedCurrency !== 'GBP' && convertedPrices[product.id] && (
+              <div className="text-xs text-gray-600 mt-1">
+                {product.discountPrice && convertedDiscountPrices[product.id] ? (
+                  <div className="flex items-center">
+                    <span>{formatCurrency(convertedDiscountPrices[product.id], selectedCurrency)}</span>
+                    <span className="ml-1 text-gray-400 line-through">
+                      {formatCurrency(convertedPrices[product.id], selectedCurrency)}
+                    </span>
+                  </div>
+                ) : (
+                  <span>{formatCurrency(convertedPrices[product.id], selectedCurrency)}</span>
+                )}
+              </div>
+            )}
+          </div>
+          <Button variant="outline" size="sm" onClick={(e) => {
+            e.stopPropagation();
+            setLocation(`/product/${product.id}`);
+          }}>
+            View
+          </Button>
         </div>
-        <Button variant="outline" size="sm">
-          View
-        </Button>
+        
+        {isConverting && (
+          <div className="w-full flex justify-center mt-2">
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
