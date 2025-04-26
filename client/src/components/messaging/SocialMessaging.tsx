@@ -195,6 +195,46 @@ export default function SocialMessaging({ embedded = false }: SocialMessagingPro
       'application/product'
     );
   };
+  
+  // If in embedded mode, we need to adjust the styling and layout
+  if (embedded) {
+    return (
+      <div className="flex flex-col h-full">
+        {activeView === 'conversations' && renderConversationsList()}
+        {activeView === 'chat' && renderChatView()}
+        {activeView === 'contacts' && (
+          <div className="flex-1 overflow-auto p-4">
+            <button
+              onClick={() => setActiveView('conversations')}
+              className="mb-4 text-sm text-blue-600 flex items-center gap-1"
+            >
+              <ArrowLeft size={14} /> Back to conversations
+            </button>
+            
+            <h3 className="text-lg font-medium mb-4">Start a new conversation</h3>
+            
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((userId) => (
+                <div
+                  key={userId}
+                  className="flex items-center gap-3 p-3 rounded-md hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleOpenChat(userId)}
+                >
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <User className="h-6 w-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm">User {userId}</h4>
+                    <p className="text-xs text-gray-500">Click to start chatting</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const renderConversationsList = () => (
     <>
