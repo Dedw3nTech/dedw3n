@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { offlineAwareFetch, useOfflineStore, cacheResponse } from "./offline";
+import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from "./offline";
 
 async function throwIfResNotOk(res: Response) {
   // Special handling for offline mode
@@ -28,6 +28,21 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
+  
+  // If this was a successful mutation (non-GET request), invalidate related caches
+  // This ensures we don't show stale data after mutations
+  if (method !== 'GET' && res.ok && useOfflineStore.getState().isOnline) {
+    // Extract the base path to invalidate related queries
+    const basePath = url.split('?')[0].split('/').slice(0, -1).join('/');
+    if (basePath) {
+      // Clear cache for this endpoint pattern
+      clearCache(basePath);
+      
+      // Invalidate related queries in React Query cache
+      queryClient.invalidateQueries({ queryKey: [basePath] });
+    }
+  }
+  
   return res;
 }
 
