@@ -1,109 +1,126 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
+import crypto from 'crypto';
+import { storage } from './storage';
 
-// Define African mobile money providers
+// Mock database for payment references and statuses (in a real app, this would be in a database)
+const paymentReferences = new Map<string, {
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  amount: number;
+  currency: string;
+  phoneNumber: string;
+  providerId: string;
+  metadata: any;
+  createdAt: Date;
+}>();
+
+// Mobile money providers with PawaPay featured prominently
 export const mobileMoneyProviders = [
-  { 
-    id: "mpesa", 
-    name: "M-Pesa", 
-    countries: ["Kenya", "Tanzania", "Mozambique", "DRC", "Ghana"],
-    logo: "https://upload.wikimedia.org/wikipedia/en/thumb/c/c8/M-PESA_LOGO-01.svg/1200px-M-PESA_LOGO-01.svg.png",
-    minPayment: 5,
-    maxPayment: 5000
+  {
+    id: 'pawapay_mpesa',
+    name: 'M-Pesa (PawaPay)',
+    countries: ['Kenya', 'Tanzania', 'Ghana'],
+    logo: 'https://pawapay.io/logo.png', // Replace with actual logo URL
+    minPayment: 1,
+    maxPayment: 10000
   },
-  { 
-    id: "orange-money", 
-    name: "Orange Money", 
-    countries: ["Senegal", "Mali", "Ivory Coast", "Guinea", "Cameroon", "DRC", "Madagascar"],
-    logo: "https://seeklogo.com/images/O/orange-money-logo-93D13B8C09-seeklogo.com.png",
-    minPayment: 5,
-    maxPayment: 5000
+  {
+    id: 'pawapay_mtn',
+    name: 'MTN Mobile Money (PawaPay)',
+    countries: ['Ghana', 'Uganda', 'Cameroon', 'Cote d\'Ivoire', 'Rwanda'],
+    logo: 'https://pawapay.io/mtn-logo.png', // Replace with actual logo URL
+    minPayment: 1,
+    maxPayment: 10000
   },
-  { 
-    id: "mtn-momo", 
-    name: "MTN Mobile Money", 
-    countries: ["Ghana", "Uganda", "Rwanda", "Zambia", "Cameroon", "Ivory Coast", "South Africa"],
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/New-mtn-logo.svg/1200px-New-mtn-logo.svg.png",
-    minPayment: 5,
-    maxPayment: 5000
+  {
+    id: 'pawapay_airtel',
+    name: 'Airtel Money (PawaPay)',
+    countries: ['Kenya', 'Uganda', 'Tanzania', 'Rwanda', 'Malawi'],
+    logo: 'https://pawapay.io/airtel-logo.png', // Replace with actual logo URL
+    minPayment: 1,
+    maxPayment: 10000
   },
-  { 
-    id: "airtel-money", 
-    name: "Airtel Money", 
-    countries: ["Kenya", "Tanzania", "Uganda", "Rwanda", "Nigeria", "DRC", "Zambia"],
-    logo: "https://www.airtel.co.ke/assets/images/airtel-money-logo-white.svg",
-    minPayment: 5,
-    maxPayment: 5000
-  },
-  { 
-    id: "wave", 
-    name: "Wave", 
-    countries: ["Senegal", "Ivory Coast", "Mali", "Burkina Faso", "Uganda"],
-    logo: "https://wave.com/static/wave-logo-59f5aede398f58d39bd84e58c23ce0d6.svg",
-    minPayment: 5,
-    maxPayment: 5000
+  {
+    id: 'pawapay_orange',
+    name: 'Orange Money (PawaPay)',
+    countries: ['Senegal', 'Mali', 'Cote d\'Ivoire', 'Guinea', 'Cameroon'],
+    logo: 'https://pawapay.io/orange-logo.png', // Replace with actual logo URL
+    minPayment: 1,
+    maxPayment: 10000
   }
 ];
 
-// Get all supported mobile money providers
+// Get available mobile money providers
 export function getMobileMoneyProviders(req: Request, res: Response) {
-  return res.json(mobileMoneyProviders);
+  res.json(mobileMoneyProviders);
 }
 
-// Initiate a mobile money payment
+// Initiate mobile money payment
 export async function initiatePayment(req: Request, res: Response) {
   try {
-    const { providerId, phoneNumber, amount, currency = 'GBP', metadata } = req.body;
-    
-    // Validate incoming data
-    if (!providerId) {
-      return res.status(400).json({ message: 'Mobile money provider is required' });
+    const { providerId, phoneNumber, amount, currency, metadata } = req.body;
+
+    if (!providerId || !phoneNumber || !amount) {
+      return res.status(400).json({ message: 'Missing required fields: providerId, phoneNumber, amount' });
     }
-    
-    if (!phoneNumber || !/^\+?[0-9]{10,15}$/.test(phoneNumber)) {
-      return res.status(400).json({ message: 'Valid phone number is required (10-15 digits)' });
+
+    // Validate phone number
+    if (!/^\+?[0-9]{10,15}$/.test(phoneNumber)) {
+      return res.status(400).json({ message: 'Invalid phone number format' });
     }
-    
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ message: 'Valid amount is required' });
-    }
-    
-    // Find the provider
+
+    // Check if provider exists
     const provider = mobileMoneyProviders.find(p => p.id === providerId);
     if (!provider) {
-      return res.status(400).json({ message: 'Invalid mobile money provider' });
+      return res.status(400).json({ message: 'Invalid provider ID' });
     }
-    
-    // Validate amount against provider limits
+
+    // Check payment amount limits
     if (amount < provider.minPayment || amount > provider.maxPayment) {
       return res.status(400).json({ 
-        message: `Amount must be between ${provider.minPayment} and ${provider.maxPayment} ${currency}`
+        message: `Payment amount must be between ${provider.minPayment} and ${provider.maxPayment}` 
       });
     }
-    
-    // Generate a reference ID for the transaction
-    const referenceId = `MM-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-    
-    // For development purpose, simulate a successful payment initiation
-    console.log(`Initiated ${provider.name} payment of ${amount} ${currency} to phone ${phoneNumber} with reference ${referenceId}`);
-    
-    // In a production environment, you would:
-    // 1. Call the provider's API to initiate the payment
-    // 2. Store the payment request in your database
-    // 3. Set up a webhook to receive the payment confirmation
-    
-    // Return response with payment instructions
-    return res.status(201).json({
-      referenceId,
-      provider: provider.name,
+
+    // Generate a unique reference ID
+    const referenceId = crypto.randomUUID();
+
+    // Store payment details
+    paymentReferences.set(referenceId, {
       status: 'PENDING',
-      instructions: `A payment request has been sent to ${phoneNumber}. Please check your mobile phone and approve the payment of ${amount} ${currency} on your ${provider.name} app.`,
-      expiresIn: '15 minutes',
-      redirectUrl: `/payment-status?ref=${referenceId}`,
-      metadata
+      amount,
+      currency: currency || 'GBP',
+      phoneNumber,
+      providerId,
+      metadata,
+      createdAt: new Date()
     });
+
+    // Get provider-specific instructions
+    let instructions = '';
+    if (providerId.includes('mpesa')) {
+      instructions = `1. You will receive a prompt on your phone number ${phoneNumber}.\n2. Enter your M-Pesa PIN to authorize the payment.\n3. You will receive a confirmation SMS once the payment is complete.`;
+    } else if (providerId.includes('mtn')) {
+      instructions = `1. Dial *170# on your phone.\n2. Select "Make Payment" or "Pay Bill".\n3. Enter the merchant code: PAY-DEDWEN.\n4. Enter the reference code: ${referenceId.substring(0, 8)}.\n5. Enter your PIN to confirm payment.`;
+    } else if (providerId.includes('airtel')) {
+      instructions = `1. Dial *185# on your phone.\n2. Select "Make Payments".\n3. Enter the business number: 123456.\n4. Enter the reference code: ${referenceId.substring(0, 8)}.\n5. Enter your PIN to confirm payment.`;
+    } else {
+      instructions = `1. Open your mobile money app.\n2. Select "Pay" or "Make Payment".\n3. Enter the reference code: ${referenceId.substring(0, 8)}.\n4. Confirm the payment with your PIN.`;
+    }
+
+    // In a real implementation, this would make an API call to PawaPay or another provider
+    // For this demo, we'll simulate a successful initiation
+
+    // Return the payment reference and instructions
+    res.status(201).json({
+      referenceId,
+      status: 'PENDING',
+      instructions,
+      provider: provider.name
+    });
+
   } catch (error: any) {
     console.error('Error initiating mobile money payment:', error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: 'Failed to initiate payment', error: error.message });
   }
 }
 
@@ -112,62 +129,83 @@ export async function checkPaymentStatus(req: Request, res: Response) {
   try {
     const { referenceId } = req.params;
     
-    if (!referenceId) {
-      return res.status(400).json({ message: 'Reference ID is required' });
+    // Get payment details
+    const payment = paymentReferences.get(referenceId);
+    
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment reference not found' });
     }
+
+    // In a real implementation, this would check the status with the provider's API
+    // For this demo, we'll simulate a random payment status change occasionally
     
-    // In a production environment, you would:
-    // 1. Query your database for the payment status
-    // 2. If still pending, check with the provider's API
+    // After 15 seconds, randomly transition to COMPLETED or FAILED
+    const timeElapsed = (new Date().getTime() - payment.createdAt.getTime()) / 1000;
     
-    // For development, randomly simulate different payment statuses
-    // In reality, this would be based on actual payment status from the provider
-    const statuses = ['COMPLETED', 'PENDING', 'FAILED'];
-    const randomStatus = Math.random() > 0.3 ? 'COMPLETED' : (Math.random() > 0.5 ? 'PENDING' : 'FAILED');
-    
-    return res.json({
+    if (timeElapsed > 15 && payment.status === 'PENDING') {
+      // 80% chance of success
+      const succeeded = Math.random() < 0.8;
+      payment.status = succeeded ? 'COMPLETED' : 'FAILED';
+      paymentReferences.set(referenceId, payment);
+    }
+
+    res.json({
       referenceId,
-      status: randomStatus,
-      message: randomStatus === 'COMPLETED' 
-        ? 'Payment successful'
-        : (randomStatus === 'PENDING' 
-            ? 'Payment is still being processed'
-            : 'Payment failed or was cancelled'),
-      timestamp: new Date().toISOString()
+      status: payment.status
     });
+
   } catch (error: any) {
     console.error('Error checking mobile money payment status:', error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: 'Failed to check payment status', error: error.message });
   }
 }
 
-// Verify completed payment
+// Verify successful payment and update order
 export async function verifyPayment(req: Request, res: Response) {
   try {
-    const { referenceId } = req.body;
+    const { referenceId, amount, provider } = req.body;
     
     if (!referenceId) {
-      return res.status(400).json({ message: 'Reference ID is required' });
+      return res.status(400).json({ message: 'Missing required field: referenceId' });
     }
     
-    // For development, always return successful verification
-    // In a production environment, you would verify with the payment provider's API
-    return res.json({
-      referenceId,
-      verified: true,
-      amount: req.body.amount || '0.00',
-      currency: req.body.currency || 'GBP',
-      paymentDate: new Date().toISOString(),
-      paymentMethod: 'Mobile Money',
-      provider: req.body.provider || 'Unknown'
+    // Get payment details
+    const payment = paymentReferences.get(referenceId);
+    
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment reference not found' });
+    }
+    
+    if (payment.status !== 'COMPLETED') {
+      return res.status(400).json({ message: 'Payment has not been completed' });
+    }
+
+    // Verify amount if provided
+    if (amount && payment.amount !== amount) {
+      return res.status(400).json({ message: 'Payment amount does not match' });
+    }
+
+    // In a real application:
+    // 1. Update order status
+    // 2. Create transaction record
+    // 3. Send confirmation email
+    
+    // For this demo, we'll just remove the payment from our "database"
+    // after it's verified to simulate completing the process
+    paymentReferences.delete(referenceId);
+    
+    res.json({
+      success: true,
+      message: 'Payment verified successfully'
     });
+
   } catch (error: any) {
     console.error('Error verifying mobile money payment:', error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+    res.status(500).json({ message: 'Failed to verify payment', error: error.message });
   }
 }
 
-// Register mobile money routes
+// Register all mobile money routes
 export function registerMobileMoneyRoutes(app: any) {
   app.get('/api/payments/mobile-money/providers', getMobileMoneyProviders);
   app.post('/api/payments/mobile-money/initiate', initiatePayment);
