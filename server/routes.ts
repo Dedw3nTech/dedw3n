@@ -581,6 +581,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get profit/loss analytics" });
     }
   });
+  
+  // Get top buyers for a vendor
+  app.get("/api/vendors/:vendorId/analytics/top-buyers", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const topBuyers = await storage.getVendorTopBuyers(vendorId, limit);
+      res.json(topBuyers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get top buyers analytics" });
+    }
+  });
 
   // Initialize HTTP server
   const httpServer = createServer(app);

@@ -127,6 +127,13 @@ export interface IStorage {
     netProfit: number;
     profitMargin: number;
   }>;
+  
+  // Get top buyers for a vendor
+  getVendorTopBuyers(vendorId: number, limit?: number): Promise<{ 
+    user: { id: number; username: string; name: string; email: string; }; 
+    totalSpent: number; 
+    orderCount: number;
+  }[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -961,6 +968,67 @@ export class MemStorage implements IStorage {
       netProfit,
       profitMargin,
     };
+  }
+  
+  // Get top buyers for a specific vendor
+  async getVendorTopBuyers(vendorId: number, limit: number = 5): Promise<{ 
+    user: { id: number; username: string; name: string; email: string; }; 
+    totalSpent: number; 
+    orderCount: number;
+  }[]> {
+    // Get all order items for this vendor
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId && item.status !== 'canceled' && item.status !== 'returned');
+    
+    // Map to get the orders these items belong to
+    const orderIds = new Set(orderItems.map(item => item.orderId));
+    const orders = Array.from(this.orders.values()).filter(order => orderIds.has(order.id));
+    
+    // Group by user and calculate stats
+    const buyerStats = new Map<number, { userId: number; totalSpent: number; orderCount: number }>();
+    
+    orders.forEach(order => {
+      const userId = order.userId;
+      
+      // Get all order items for this order and vendor
+      const items = orderItems.filter(item => item.orderId === order.id);
+      const totalSpent = items.reduce((sum, item) => sum + item.totalPrice, 0);
+      
+      if (!buyerStats.has(userId)) {
+        buyerStats.set(userId, { userId, totalSpent, orderCount: 1 });
+      } else {
+        const stats = buyerStats.get(userId)!;
+        stats.totalSpent += totalSpent;
+        stats.orderCount += 1;
+      }
+    });
+    
+    // Convert to array and sort by total spent
+    const result = Array.from(buyerStats.values())
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, limit);
+      
+    // Fetch user details
+    return result.map(stats => {
+      const user = this.users.get(stats.userId);
+      if (!user) {
+        return {
+          user: { id: stats.userId, username: "Unknown", name: "Unknown User", email: "" },
+          totalSpent: stats.totalSpent,
+          orderCount: stats.orderCount
+        };
+      }
+      return {
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          email: user.email
+        },
+        totalSpent: stats.totalSpent,
+        orderCount: stats.orderCount
+      };
+    });
   }
 }
 

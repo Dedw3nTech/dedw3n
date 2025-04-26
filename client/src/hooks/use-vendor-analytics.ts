@@ -25,6 +25,17 @@ export interface TopProduct {
   revenue: number;
 }
 
+export interface TopBuyer {
+  user: {
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+  };
+  totalSpent: number;
+  orderCount: number;
+}
+
 export type RevenuePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export function useVendorAnalytics(vendorId: number) {
@@ -91,6 +102,18 @@ export function useVendorAnalytics(vendorId: number) {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+  
+  // Top Buyers
+  const {
+    data: topBuyersData,
+    isLoading: isLoadingTopBuyers,
+    error: topBuyersError
+  } = useQuery<TopBuyer[]>({
+    queryKey: [`/api/vendors/${vendorId}/analytics/top-buyers`],
+    enabled: isEnabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   // Handle errors with toasts
   if (totalSalesError) {
@@ -124,13 +147,22 @@ export function useVendorAnalytics(vendorId: number) {
       variant: "destructive",
     });
   }
+  
+  if (topBuyersError) {
+    toast({
+      title: "Error loading top buyers data",
+      description: (topBuyersError as Error).message,
+      variant: "destructive",
+    });
+  }
 
   return {
     totalSales: totalSalesData?.totalSales || 0,
     orderStats: orderStatsData,
     topProducts: topProductsData || [],
+    topBuyers: topBuyersData || [],
     profitLoss: profitLossData,
     getRevenueData,
-    isLoading: isLoadingTotalSales || isLoadingOrderStats || isLoadingTopProducts || isLoadingProfitLoss,
+    isLoading: isLoadingTotalSales || isLoadingOrderStats || isLoadingTopProducts || isLoadingProfitLoss || isLoadingTopBuyers,
   };
 }
