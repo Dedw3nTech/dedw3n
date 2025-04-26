@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import UserMenu from "../ui/user-menu";
@@ -8,6 +8,9 @@ import { Badge } from "../ui/badge";
 import { LanguageSelector } from "../lang";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
+import { useMessaging } from "@/hooks/use-messaging";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import SocialMessaging from "@/components/messaging/SocialMessaging";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -107,12 +110,20 @@ export default function Header() {
           >
             <i className="ri-store-3-line mr-1"></i> Marketplace
           </button>
-          <button
-            onClick={() => setLocation("/wall")}
-            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
-          >
-            <i className="ri-group-line mr-1"></i> Social
-          </button>
+          {/* Social button with integrated messaging */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary relative">
+                <i className="ri-group-line mr-1"></i> Social
+                {messageData && messageData.count > 0 && (
+                  <Badge className="absolute top-1 right-1/4 w-4 h-4 p-0 flex items-center justify-center">
+                    {messageData.count}
+                  </Badge>
+                )}
+              </button>
+            </SheetTrigger>
+            <SocialMessaging />
+          </Sheet>
         </div>
       </div>
 
