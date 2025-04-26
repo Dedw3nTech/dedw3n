@@ -39,6 +39,12 @@ import CreateCommunityPage from "@/pages/create-community";
 import CommunityDetailPage from "@/pages/community-detail";
 import CommunityManagePage from "@/pages/community-manage";
 
+// Import social networking and user components
+import ProfilePage from "@/pages/profile";
+import WallPage from "@/pages/wall";
+import MessagesPage from "@/pages/messages";
+import ExplorePage from "@/pages/explore";
+
 function Router() {
   return (
     <Switch>
@@ -62,6 +68,10 @@ function Router() {
       <Route path="/communities/create" component={CreateCommunityPage} />
       <Route path="/communities/:id" component={CommunityDetailPage} />
       <Route path="/communities/:id/manage" component={CommunityManagePage} />
+      <Route path="/profile/:username" component={ProfilePage} />
+      <Route path="/wall" component={WallPage} />
+      <Route path="/messages/:username?" component={MessagesPage} />
+      <Route path="/explore" component={ExplorePage} />
       <Route component={NotFound} />
     </Switch>
   );

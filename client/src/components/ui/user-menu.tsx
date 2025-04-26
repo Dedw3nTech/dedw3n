@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
+import { getInitials } from "@/lib/utils";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { user, logoutMutation } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleLogout = () => {
+    logoutMutation.mutate();
     toast({
       title: t('auth.logout'),
       description: t('auth.logout') + " " + t('misc.success').toLowerCase(),

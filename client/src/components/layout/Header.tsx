@@ -142,6 +142,18 @@ export default function Header() {
           >
             <i className="ri-group-2-line mr-1"></i> Communities
           </button>
+          <button
+            onClick={() => setLocation("/explore")}
+            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
+          >
+            <i className="ri-compass-3-line mr-1"></i> Explore
+          </button>
+          <button
+            onClick={() => setLocation("/wall")}
+            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
+          >
+            <i className="ri-layout-masonry-line mr-1"></i> My Wall
+          </button>
         </div>
       </div>
 
