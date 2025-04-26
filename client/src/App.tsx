@@ -30,6 +30,8 @@ import MembersPage from "@/pages/members";
 import WalletPage from "@/pages/wallet";
 import VendorAnalytics from "@/pages/vendor-analytics";
 import SpendingAnalytics from "@/pages/spending-analytics";
+import VendorsPage from "@/pages/vendors";
+import VendorDetailPage from "@/pages/vendor-detail";
 
 function Router() {
   return (
@@ -47,7 +49,9 @@ function Router() {
       <Route path="/members" component={MembersPage} />
       <Route path="/wallet" component={WalletPage} />
       <Route path="/spending-analytics" component={SpendingAnalytics} />
-      <Route path="/vendor/analytics" component={VendorAnalytics} />
+      <Route path="/vendor-analytics" component={VendorAnalytics} />
+      <Route path="/vendors" component={VendorsPage} />
+      <Route path="/vendors/:id" component={VendorDetailPage} />
       <Route component={NotFound} />
     </Switch>
   );

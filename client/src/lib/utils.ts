@@ -13,7 +13,11 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
-export function formatCurrency(price: number, currencyCode: string): string {
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat("en-GB").format(value);
+}
+
+export function formatCurrency(price: number, currencyCode: string = "GBP"): string {
   const currencyLocales: Record<string, string> = {
     GBP: "en-GB",
     USD: "en-US",
