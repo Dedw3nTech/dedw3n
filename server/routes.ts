@@ -6,7 +6,7 @@ import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
 import { registerShippingRoutes } from "./shipping";
 import { seedDatabase } from "./seed";
-import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
+import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -483,6 +483,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(memberData);
     } catch (error) {
       res.status(500).json({ message: "Failed to get member" });
+    }
+  });
+  
+  // Wallet routes
+  app.post("/api/wallets", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Check if user already has a wallet
+      const existingWallet = await storage.getWalletByUserId(userId);
+      if (existingWallet) {
+        return res.status(400).json({ message: "User already has a wallet" });
+      }
+      
+      const validatedData = insertWalletSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      const wallet = await storage.createWallet(validatedData);
+      res.status(201).json(wallet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create wallet" });
+    }
+  });
+  
+  app.get("/api/wallets/me", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const wallet = await storage.getWalletByUserId(userId);
+      
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+      
+      res.json(wallet);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get wallet" });
+    }
+  });
+  
+  app.post("/api/transactions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get the user's wallet
+      const wallet = await storage.getWalletByUserId(userId);
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found, please create a wallet first" });
+      }
+      
+      // Check if sufficient funds for withdrawals and payments
+      if ((req.body.type === 'withdrawal' || req.body.type === 'payment') && 
+          wallet.balance < req.body.amount) {
+        return res.status(400).json({ message: "Insufficient funds" });
+      }
+      
+      const validatedData = insertTransactionSchema.parse({
+        ...req.body,
+        walletId: wallet.id,
+      });
+      
+      const transaction = await storage.createTransaction(validatedData);
+      res.status(201).json(transaction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create transaction" });
+    }
+  });
+  
+  app.get("/api/transactions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const transactions = await storage.listTransactionsByUser(userId);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list transactions" });
     }
   });
   

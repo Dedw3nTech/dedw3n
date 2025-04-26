@@ -529,6 +529,84 @@ export class MemStorage implements IStorage {
     
     return totalCount;
   }
+  
+  // Wallet operations
+  async getWallet(id: number): Promise<Wallet | undefined> {
+    return this.wallets.get(id);
+  }
+  
+  async getWalletByUserId(userId: number): Promise<Wallet | undefined> {
+    return Array.from(this.wallets.values()).find(wallet => wallet.userId === userId);
+  }
+  
+  async createWallet(wallet: InsertWallet): Promise<Wallet> {
+    const id = this.walletIdCounter++;
+    const newWallet: Wallet = {
+      id,
+      ...wallet,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.wallets.set(id, newWallet);
+    return newWallet;
+  }
+  
+  async updateWalletBalance(id: number, amount: number): Promise<Wallet> {
+    const wallet = this.wallets.get(id);
+    if (!wallet) throw new Error(`Wallet with id ${id} not found`);
+    
+    wallet.balance += amount;
+    wallet.updatedAt = new Date();
+    this.wallets.set(id, wallet);
+    return wallet;
+  }
+  
+  // Transaction operations
+  async getTransaction(id: number): Promise<Transaction | undefined> {
+    return this.transactions.get(id);
+  }
+  
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const id = this.transactionIdCounter++;
+    const newTransaction: Transaction = {
+      id,
+      ...transaction,
+      createdAt: new Date(),
+    };
+    this.transactions.set(id, newTransaction);
+    
+    // If this is a deposit or a refund, add money to the wallet
+    // If this is a withdrawal or a payment, subtract money from the wallet
+    const wallet = await this.getWallet(transaction.walletId);
+    if (wallet) {
+      let adjustmentAmount = 0;
+      
+      if (transaction.type === 'deposit' || transaction.type === 'refund') {
+        adjustmentAmount = transaction.amount;
+      } else if (transaction.type === 'withdrawal' || transaction.type === 'payment') {
+        adjustmentAmount = -transaction.amount; // Negative for withdrawals/payments
+      }
+      
+      if (adjustmentAmount !== 0) {
+        await this.updateWalletBalance(wallet.id, adjustmentAmount);
+      }
+    }
+    
+    return newTransaction;
+  }
+  
+  async listTransactionsByWallet(walletId: number): Promise<Transaction[]> {
+    return Array.from(this.transactions.values())
+      .filter(transaction => transaction.walletId === walletId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+  
+  async listTransactionsByUser(userId: number): Promise<Transaction[]> {
+    const wallet = await this.getWalletByUserId(userId);
+    if (!wallet) return [];
+    
+    return this.listTransactionsByWallet(wallet.id);
+  }
 }
 
 export const storage = new MemStorage();
