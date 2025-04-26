@@ -49,6 +49,9 @@ import ExplorePage from "@/pages/explore";
 
 // Import video pages
 import TrendingVideosPage from "@/pages/videos/trending";
+import ShortsPage from "@/pages/videos/shorts";
+import StoriesPage from "@/pages/videos/stories";
+import LivePage from "@/pages/videos/live";
 
 function Router() {
   return (
@@ -80,9 +83,9 @@ function Router() {
       
       {/* Video routes */}
       <Route path="/videos/trending" component={TrendingVideosPage} />
-      <Route path="/videos/shorts" component={TrendingVideosPage} />
-      <Route path="/videos/stories" component={TrendingVideosPage} />
-      <Route path="/videos/live" component={TrendingVideosPage} />
+      <Route path="/videos/shorts" component={ShortsPage} />
+      <Route path="/videos/stories" component={StoriesPage} />
+      <Route path="/videos/live" component={LivePage} />
       <Route path="/videos/upload" component={TrendingVideosPage} />
       <Route path="/videos/:id" component={TrendingVideosPage} />
       
