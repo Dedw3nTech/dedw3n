@@ -1,6 +1,6 @@
 import {
   users, vendors, products, categories, posts, comments,
-  likes, messages, notifications, reviews, follows, carts,
+  likes, messages, notifications, reviews, carts,
   wallets, transactions, orders, orderItems, communities,
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
@@ -26,6 +26,15 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   listUsers(): Promise<User[]>;
+  
+  // Messaging operations
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessage(id: number): Promise<Message | undefined>;
+  getUserMessages(userId: number): Promise<Message[]>;
+  getConversationMessages(userId1: number, userId2: number): Promise<Message[]>;
+  getUserConversations(userId: number): Promise<any[]>; // Returns user's active conversations
+  getUnreadMessageCount(userId: number): Promise<number>;
+  markMessageAsRead(id: number): Promise<Message | undefined>;
 
   // Vendor operations
   getVendor(id: number): Promise<Vendor | undefined>;
@@ -77,11 +86,7 @@ export interface IStorage {
   createComment(comment: InsertComment): Promise<Comment>;
   listCommentsByPost(postId: number): Promise<Comment[]>;
 
-  // Message operations
-  getMessage(id: number): Promise<Message | undefined>;
-  createMessage(message: InsertMessage): Promise<Message>;
-  listMessagesByUser(userId: number): Promise<Message[]>;
-  countUnreadMessages(userId: number): Promise<number>;
+  // Legacy message operations (will be replaced with our enhanced versions above)
 
   // Review operations
   getReview(id: number): Promise<Review | undefined>;
@@ -269,7 +274,7 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message>;
   private notifications: Map<number, { userId: number; message: string; isRead: boolean }>;
   private reviews: Map<number, Review>;
-  private follows: Map<number, { followerId: number; followingId: number }>;
+  // Instead of follows, we'll use connections for user relationships
   private carts: Map<number, Cart>;
   private wallets: Map<number, Wallet>;
   private transactions: Map<number, Transaction>;
@@ -328,7 +333,7 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.notifications = new Map();
     this.reviews = new Map();
-    this.follows = new Map();
+    // Use connections for user relationships
     this.carts = new Map();
     this.wallets = new Map();
     this.transactions = new Map();
@@ -2238,6 +2243,100 @@ export class MemStorage implements IStorage {
     
     // Get the top users based on limit
     return sortedUsers.slice(0, limit);
+  }
+
+  // Enhanced messaging operations
+  async getUserMessages(userId: number): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(message => message.senderId === userId || message.receiverId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+
+  async getConversationMessages(userId1: number, userId2: number): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(message => 
+        (message.senderId === userId1 && message.receiverId === userId2) || 
+        (message.senderId === userId2 && message.receiverId === userId1)
+      )
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return aTime - bTime;
+      });
+  }
+
+  async getUserConversations(userId: number): Promise<any[]> {
+    // Get all messages where the user is either sender or receiver
+    const userMessages = await this.getUserMessages(userId);
+    
+    // Extract unique user IDs the current user has conversed with
+    const conversationUserIds = new Set<number>();
+    userMessages.forEach(message => {
+      const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+      conversationUserIds.add(otherUserId);
+    });
+    
+    // Build conversations summary
+    const conversations = [];
+    for (const otherUserId of conversationUserIds) {
+      const otherUser = await this.getUser(otherUserId);
+      if (!otherUser) continue;
+      
+      // Get messages between these users
+      const messages = await this.getConversationMessages(userId, otherUserId);
+      const latestMessage = messages.length > 0 ? messages[messages.length - 1] : null; // Messages are sorted by date
+      
+      // Count unread messages
+      const unreadCount = messages.filter(
+        msg => msg.senderId === otherUserId && !msg.isRead
+      ).length;
+      
+      conversations.push({
+        user: {
+          id: otherUser.id,
+          username: otherUser.username,
+          name: otherUser.name,
+          avatar: otherUser.avatar
+        },
+        latestMessage: latestMessage ? {
+          id: latestMessage.id,
+          content: latestMessage.content,
+          createdAt: latestMessage.createdAt,
+          isRead: latestMessage.isRead,
+          senderId: latestMessage.senderId,
+          attachmentUrl: latestMessage.attachmentUrl,
+          attachmentType: latestMessage.attachmentType
+        } : null,
+        unreadCount
+      });
+    }
+    
+    // Sort by latest message date
+    return conversations.sort((a, b) => {
+      if (!a.latestMessage || !b.latestMessage) return 0;
+      const aTime = a.latestMessage.createdAt ? new Date(a.latestMessage.createdAt).getTime() : 0;
+      const bTime = b.latestMessage.createdAt ? new Date(b.latestMessage.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    return Array.from(this.messages.values())
+      .filter(message => message.receiverId === userId && !message.isRead)
+      .length;
+  }
+
+  async markMessageAsRead(id: number): Promise<Message | undefined> {
+    const message = this.messages.get(id);
+    if (!message) return undefined;
+    
+    message.isRead = true;
+    this.messages.set(id, message);
+    return message;
   }
 }
 
