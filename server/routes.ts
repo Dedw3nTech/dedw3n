@@ -492,6 +492,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to unpromote post" });
     }
   });
+  
+  // Social network explore routes
+  app.get("/api/explore/trending", async (req, res) => {
+    try {
+      // Get trending posts - those with most likes, comments and views
+      const limit = parseInt(req.query.limit as string) || 10;
+      const trending = await storage.getTrendingPosts(limit);
+      res.json(trending);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch trending content" });
+    }
+  });
+  
+  app.get("/api/explore/tags", async (req, res) => {
+    try {
+      // Get popular tags
+      const limit = parseInt(req.query.limit as string) || 20;
+      const tags = await storage.getPopularTags(limit);
+      res.json(tags);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch popular tags" });
+    }
+  });
+  
+  app.get("/api/explore/communities", async (req, res) => {
+    try {
+      // Get recommended communities
+      const limit = parseInt(req.query.limit as string) || 10;
+      const communities = await storage.getPopularCommunities(limit);
+      res.json(communities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch recommended communities" });
+    }
+  });
+  
+  app.get("/api/explore/products", async (req, res) => {
+    try {
+      // Get featured products
+      const limit = parseInt(req.query.limit as string) || 10;
+      const products = await storage.getFeaturedProducts(limit);
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch featured products" });
+    }
+  });
+  
+  app.get("/api/explore/users", async (req, res) => {
+    try {
+      // Get suggested users
+      const limit = parseInt(req.query.limit as string) || 10;
+      const userId = req.isAuthenticated() ? (req.user as any).id : undefined;
+      
+      const users = await storage.getSuggestedUsers(limit, userId);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch suggested users" });
+    }
+  });
 
   // Comment routes
   app.post("/api/comments", isAuthenticated, async (req, res) => {

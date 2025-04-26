@@ -249,6 +249,13 @@ export interface IStorage {
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscriptionStatus(id: number, status: string): Promise<Subscription>;
   cancelSubscription(id: number): Promise<Subscription>;
+  
+  // Social network operations
+  getTrendingPosts(limit?: number): Promise<Post[]>;
+  getPopularTags(limit?: number): Promise<{ name: string; count: number }[]>;
+  getPopularCommunities(limit?: number): Promise<Community[]>;
+  getFeaturedProducts(limit?: number): Promise<Product[]>;
+  getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -2000,6 +2007,237 @@ export class MemStorage implements IStorage {
     subscription.updatedAt = new Date();
     this.subscriptions.set(id, subscription);
     return subscription;
+  }
+
+  // Social network methods for new explore page
+  async getTrendingPosts(limit: number = 10): Promise<Post[]> {
+    // In a real implementation, we would order by a combination of likes, comments, and recency
+    // For our memory storage implementation, we'll simulate this by creating a trending score
+    const posts = Array.from(this.posts.values());
+    
+    // Sort posts by a trending score (likes + comments + views, with recency as a factor)
+    const sortedPosts = posts.sort((a, b) => {
+      // Calculate weighted score based on engagement metrics
+      const aScore = (a.likes || 0) * 3 + (a.comments || 0) * 2 + (a.views || 0);
+      const bScore = (b.likes || 0) * 3 + (b.comments || 0) * 2 + (b.views || 0);
+      
+      // Add recency factor (newer posts get a boost)
+      const aAge = Date.now() - new Date(a.createdAt).getTime();
+      const bAge = Date.now() - new Date(b.createdAt).getTime();
+      
+      // Final score combining engagement and recency
+      const aFinalScore = aScore / Math.sqrt(aAge);
+      const bFinalScore = bScore / Math.sqrt(bAge);
+      
+      return bFinalScore - aFinalScore;
+    });
+    
+    return sortedPosts.slice(0, limit);
+  }
+  
+  async getPopularTags(limit: number = 20): Promise<{ name: string; count: number }[]> {
+    // In a real database implementation, we would aggregate tags from posts
+    // For our memory implementation, we'll extract tags from posts and count them
+    const posts = Array.from(this.posts.values());
+    const tagCounts: Record<string, number> = {};
+    
+    // Count tag occurrences
+    posts.forEach(post => {
+      if (post.tags && Array.isArray(post.tags)) {
+        post.tags.forEach(tag => {
+          if (typeof tag === 'string') {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          }
+        });
+      }
+    });
+    
+    // Convert to array and sort by count
+    const popularTags = Object.entries(tagCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    
+    // Generate sample tags if we don't have enough from posts
+    if (popularTags.length < limit) {
+      const sampleTags = [
+        { name: "fashion", count: 120 },
+        { name: "technology", count: 95 },
+        { name: "food", count: 87 },
+        { name: "travel", count: 76 },
+        { name: "art", count: 65 },
+        { name: "music", count: 58 },
+        { name: "health", count: 52 },
+        { name: "business", count: 48 },
+        { name: "sports", count: 42 },
+        { name: "books", count: 38 },
+        { name: "photography", count: 35 },
+        { name: "education", count: 32 },
+        { name: "gaming", count: 30 },
+        { name: "fitness", count: 28 },
+        { name: "beauty", count: 25 },
+        { name: "nature", count: 22 },
+        { name: "science", count: 20 },
+        { name: "movies", count: 18 },
+        { name: "design", count: 15 },
+        { name: "cooking", count: 12 }
+      ];
+      
+      // Add sample tags that don't already exist in our popularTags
+      const existingTagNames = new Set(popularTags.map(tag => tag.name));
+      sampleTags.forEach(tag => {
+        if (!existingTagNames.has(tag.name)) {
+          popularTags.push(tag);
+        }
+      });
+      
+      // Re-sort the combined list
+      popularTags.sort((a, b) => b.count - a.count);
+    }
+    
+    return popularTags.slice(0, limit);
+  }
+  
+  async getPopularCommunities(limit: number = 10): Promise<Community[]> {
+    // Get communities and sort by member count (most popular first)
+    const communities = Array.from(this.communities.values());
+    
+    // Sort by member count (descending) and recent activity
+    const sortedCommunities = communities.sort((a, b) => {
+      // First compare by member count
+      const memberCountDiff = (b.memberCount || 0) - (a.memberCount || 0);
+      if (memberCountDiff !== 0) return memberCountDiff;
+      
+      // If equal member count, compare by creation date (newer first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    
+    // If we have no communities yet, generate some samples
+    if (sortedCommunities.length === 0) {
+      // Create sample communities for demonstration
+      const sampleCommunities = [
+        {
+          id: 1,
+          name: "Tech Enthusiasts",
+          description: "A community for technology lovers to discuss the latest gadgets, software, and tech news.",
+          memberCount: 1250,
+          visibility: "public",
+          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+          ownerId: 1
+        },
+        {
+          id: 2,
+          name: "Foodies United",
+          description: "Share your favorite recipes, restaurant experiences, and culinary adventures.",
+          memberCount: 980,
+          visibility: "public",
+          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
+          ownerId: 1
+        },
+        {
+          id: 3,
+          name: "Digital Nomads",
+          description: "Connect with people who work while traveling the world. Share tips, destinations, and remote work advice.",
+          memberCount: 750,
+          visibility: "public",
+          createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+          ownerId: 1
+        }
+      ];
+      
+      // Add sample communities to our storage
+      sampleCommunities.forEach(comm => {
+        const community: Community = {
+          ...comm,
+          id: this.communityIdCounter++,
+          logo: null,
+          bannerImage: null,
+          topics: [],
+          isVerified: false,
+          about: null,
+          rules: null,
+          location: null,
+          website: null,
+          socialLinks: null,
+          type: "general",
+          updatedAt: new Date()
+        };
+        
+        this.communities.set(community.id, community);
+        sortedCommunities.push(community);
+      });
+      
+      // Re-sort after adding samples
+      sortedCommunities.sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0));
+    }
+    
+    return sortedCommunities.slice(0, limit);
+  }
+  
+  async getFeaturedProducts(limit: number = 10): Promise<Product[]> {
+    // In a real implementation, we would have a featured flag or algorithm
+    // For now, we'll use a combination of factors like ratings, sales, etc. to simulate featured products
+    const products = Array.from(this.products.values());
+    
+    // Sort by some criteria (isOnSale, isNew, price descending)
+    const sortedProducts = products.sort((a, b) => {
+      // Prioritize on-sale products
+      if (a.isOnSale && !b.isOnSale) return -1;
+      if (!a.isOnSale && b.isOnSale) return 1;
+      
+      // Then new products
+      if (a.isNew && !b.isNew) return -1;
+      if (!a.isNew && b.isNew) return 1;
+      
+      // Finally by price (higher price first as a proxy for premium/featured)
+      return b.price - a.price;
+    });
+    
+    // Add vendor info to each product
+    const featuredProducts = sortedProducts.slice(0, limit);
+    
+    for (const product of featuredProducts) {
+      if (product.vendorId) {
+        product.vendor = await this.getVendor(product.vendorId);
+        
+        // Add vendor name from user data if available
+        if (product.vendor && product.vendor.userId) {
+          const user = await this.getUser(product.vendor.userId);
+          if (user) {
+            product.vendor.user = {
+              id: user.id,
+              name: user.name,
+              username: user.username
+            };
+          }
+        }
+      }
+    }
+    
+    return featuredProducts;
+  }
+  
+  async getSuggestedUsers(limit: number = 10, currentUserId?: number): Promise<User[]> {
+    // Get all users
+    let users = Array.from(this.users.values());
+    
+    // Filter out current user if specified
+    if (currentUserId !== undefined) {
+      users = users.filter(user => user.id !== currentUserId);
+    }
+    
+    // In a real app we'd have an algorithm based on connections, interests, etc.
+    // For now, just sort by some criteria (e.g., recently joined, has avatar, etc.)
+    const sortedUsers = users.sort((a, b) => {
+      // Prioritize users with avatars
+      if (a.avatar && !b.avatar) return -1;
+      if (!a.avatar && b.avatar) return 1;
+      
+      // Then by creation date (newer first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    
+    // Get the top users based on limit
+    return sortedUsers.slice(0, limit);
   }
 }
 
