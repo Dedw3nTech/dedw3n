@@ -1,14 +1,21 @@
 import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, reviews, follows, carts,
-  wallets, transactions, orders, orderItems,
+  wallets, transactions, orders, orderItems, communities,
+  communityMembers, membershipTiers, memberships, events,
+  eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
   type Message, type InsertMessage, type Review, type InsertReview,
   type Cart, type InsertCart, type Wallet, type InsertWallet,
   type Transaction, type InsertTransaction, type Order, type InsertOrder,
-  type OrderItem, type InsertOrderItem
+  type OrderItem, type InsertOrderItem, type Community, type InsertCommunity,
+  type CommunityMember, type InsertCommunityMember, type MembershipTier, type InsertMembershipTier,
+  type Membership, type InsertMembership, type Event, type InsertEvent,
+  type EventRegistration, type InsertEventRegistration, type Poll, type InsertPoll,
+  type PollVote, type InsertPollVote, type CreatorEarning, type InsertCreatorEarning,
+  type Subscription, type InsertSubscription
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -145,6 +152,103 @@ export interface IStorage {
     totalSpent: number; 
     orderCount: number;
   }[]>;
+
+  // Community management operations
+  getCommunity(id: number): Promise<Community | undefined>;
+  getCommunityByName(name: string): Promise<Community | undefined>;
+  createCommunity(community: InsertCommunity): Promise<Community>;
+  updateCommunity(id: number, data: Partial<InsertCommunity>): Promise<Community>;
+  updateCommunityMemberCount(id: number, change: number): Promise<Community>;
+  listCommunities(options?: {
+    ownerId?: number;
+    visibility?: string | string[];
+    topics?: string[];
+    isVerified?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Community[]>;
+  
+  // Community members operations
+  getCommunityMember(id: number): Promise<CommunityMember | undefined>;
+  getMembershipStatus(communityId: number, userId: number): Promise<CommunityMember | undefined>;
+  addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
+  updateMemberRole(communityId: number, userId: number, role: string): Promise<CommunityMember>;
+  removeCommunityMember(communityId: number, userId: number): Promise<boolean>;
+  listCommunityMembers(communityId: number, role?: string): Promise<CommunityMember[]>;
+  
+  // Membership tiers operations
+  getMembershipTier(id: number): Promise<MembershipTier | undefined>;
+  createMembershipTier(tier: InsertMembershipTier): Promise<MembershipTier>;
+  updateMembershipTier(id: number, data: Partial<InsertMembershipTier>): Promise<MembershipTier>;
+  deleteMembershipTier(id: number): Promise<boolean>;
+  listMembershipTiers(communityId: number): Promise<MembershipTier[]>;
+  
+  // User membership operations
+  getMembership(id: number): Promise<Membership | undefined>;
+  getUserMemberships(userId: number): Promise<Membership[]>;
+  createMembership(membership: InsertMembership): Promise<Membership>;
+  updateMembershipStatus(id: number, status: string): Promise<Membership>;
+  cancelMembership(id: number): Promise<Membership>;
+  
+  // Events operations
+  getEvent(id: number): Promise<Event | undefined>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: number, data: Partial<InsertEvent>): Promise<Event>;
+  listEvents(options?: {
+    communityId?: number;
+    hostId?: number;
+    eventType?: string;
+    startAfter?: Date;
+    startBefore?: Date;
+    isPublished?: boolean;
+    requiredTierId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<Event[]>;
+  publishEvent(id: number): Promise<Event>;
+  cancelEvent(id: number): Promise<boolean>;
+  
+  // Event registrations operations
+  getEventRegistration(id: number): Promise<EventRegistration | undefined>;
+  registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration>;
+  cancelRegistration(eventId: number, userId: number): Promise<boolean>;
+  checkInAttendee(eventId: number, userId: number): Promise<EventRegistration>;
+  listEventAttendees(eventId: number): Promise<EventRegistration[]>;
+  countEventAttendees(eventId: number): Promise<number>;
+  
+  // Polls operations
+  getPoll(id: number): Promise<Poll | undefined>;
+  createPoll(poll: InsertPoll): Promise<Poll>;
+  updatePoll(id: number, data: Partial<InsertPoll>): Promise<Poll>;
+  closePoll(id: number): Promise<Poll>;
+  listPolls(communityId: number, isActive?: boolean): Promise<Poll[]>;
+  
+  // Poll votes operations
+  getPollVote(pollId: number, userId: number): Promise<PollVote | undefined>;
+  castVote(vote: InsertPollVote): Promise<PollVote>;
+  listPollVotes(pollId: number): Promise<PollVote[]>;
+  getPollResults(pollId: number): Promise<{ optionIndex: number; votes: number; percentage: number }[]>;
+  
+  // Creator earnings operations
+  getCreatorEarning(id: number): Promise<CreatorEarning | undefined>;
+  addCreatorEarning(earning: InsertCreatorEarning): Promise<CreatorEarning>;
+  updateEarningStatus(id: number, status: string): Promise<CreatorEarning>;
+  listCreatorEarnings(userId: number): Promise<CreatorEarning[]>;
+  getCreatorRevenueStats(userId: number): Promise<{
+    totalRevenue: number;
+    pendingPayouts: number;
+    paidRevenue: number;
+    bySource: Record<string, number>;
+    byPeriod: Record<string, number>;
+  }>;
+  
+  // Subscriptions operations
+  getSubscription(id: number): Promise<Subscription | undefined>;
+  getUserSubscriptions(userId: number): Promise<Subscription[]>;
+  getCreatorSubscribers(creatorId: number): Promise<Subscription[]>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscriptionStatus(id: number, status: string): Promise<Subscription>;
+  cancelSubscription(id: number): Promise<Subscription>;
 }
 
 export class MemStorage implements IStorage {
@@ -164,6 +268,18 @@ export class MemStorage implements IStorage {
   private transactions: Map<number, Transaction>;
   private orders: Map<number, Order>;
   private orderItems: Map<number, OrderItem>;
+  
+  // Community management and monetization maps
+  private communities: Map<number, Community>;
+  private communityMembers: Map<number, CommunityMember>;
+  private membershipTiers: Map<number, MembershipTier>;
+  private memberships: Map<number, Membership>;
+  private events: Map<number, Event>;
+  private eventRegistrations: Map<number, EventRegistration>;
+  private polls: Map<number, Poll>;
+  private pollVotes: Map<number, PollVote>;
+  private creatorEarnings: Map<number, CreatorEarning>;
+  private subscriptions: Map<number, Subscription>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -181,6 +297,18 @@ export class MemStorage implements IStorage {
   private transactionIdCounter: number;
   private orderIdCounter: number;
   private orderItemIdCounter: number;
+  
+  // Community management and monetization counters
+  private communityIdCounter: number;
+  private communityMemberIdCounter: number;
+  private membershipTierIdCounter: number;
+  private membershipIdCounter: number;
+  private eventIdCounter: number;
+  private eventRegistrationIdCounter: number;
+  private pollIdCounter: number;
+  private pollVoteIdCounter: number;
+  private creatorEarningIdCounter: number;
+  private subscriptionIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -199,6 +327,18 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.orders = new Map();
     this.orderItems = new Map();
+    
+    // Initialize community management and monetization maps
+    this.communities = new Map();
+    this.communityMembers = new Map();
+    this.membershipTiers = new Map();
+    this.memberships = new Map();
+    this.events = new Map();
+    this.eventRegistrations = new Map();
+    this.polls = new Map();
+    this.pollVotes = new Map();
+    this.creatorEarnings = new Map();
+    this.subscriptions = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
@@ -216,6 +356,18 @@ export class MemStorage implements IStorage {
     this.transactionIdCounter = 1;
     this.orderIdCounter = 1;
     this.orderItemIdCounter = 1;
+    
+    // Initialize community management and monetization counters
+    this.communityIdCounter = 1;
+    this.communityMemberIdCounter = 1;
+    this.membershipTierIdCounter = 1;
+    this.membershipIdCounter = 1;
+    this.eventIdCounter = 1;
+    this.eventRegistrationIdCounter = 1;
+    this.pollIdCounter = 1;
+    this.pollVoteIdCounter = 1;
+    this.creatorEarningIdCounter = 1;
+    this.subscriptionIdCounter = 1;
 
     this.initDefaultData();
   }

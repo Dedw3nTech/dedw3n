@@ -1,6 +1,12 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Enums
+export const communityVisibilityEnum = pgEnum('community_visibility', ['public', 'private', 'secret']);
+export const membershipTierTypeEnum = pgEnum('membership_tier_type', ['free', 'paid', 'premium']);
+export const eventTypeEnum = pgEnum('event_type', ['live_stream', 'course', 'workshop', 'meetup', 'qa_session']);
+export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['daily', 'weekly', 'monthly', 'yearly', 'one_time']);
 
 // User model
 export const users = pgTable("users", {
@@ -193,6 +199,175 @@ export const orderItems = pgTable("order_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Community model for public, private, and secret communities
+export const communities = pgTable("communities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  ownerId: integer("owner_id").notNull().references(() => users.id),
+  logo: text("logo"),
+  bannerImage: text("banner_image"),
+  visibility: communityVisibilityEnum("visibility").notNull().default("public"),
+  rules: text("rules"),
+  topics: text("topics").array(),
+  memberCount: integer("member_count").default(0),
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Community members model
+export const communityMembers = pgTable("community_members", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: varchar("role", { length: 20 }).notNull().default("member"), // owner, admin, moderator, member
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueMember: unique().on(table.communityId, table.userId),
+  };
+});
+
+// Membership tiers for monetizing communities and content
+export const membershipTiers = pgTable("membership_tiers", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  price: doublePrecision("price").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  tierType: membershipTierTypeEnum("tier_type").notNull(),
+  benefits: text("benefits").array(),
+  durationDays: integer("duration_days").notNull(), // 30, 90, 365 days etc
+  isActive: boolean("is_active").default(true),
+  maxMembers: integer("max_members"), // optional limit for exclusive tiers
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User membership subscriptions
+export const memberships = pgTable("memberships", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tierId: integer("tier_id").notNull().references(() => membershipTiers.id),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, canceled, expired
+  paymentStatus: varchar("payment_status", { length: 20 }).notNull(), // paid, trial, pending, failed
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date").notNull(),
+  autoRenew: boolean("auto_renew").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueMembership: unique().on(table.userId, table.tierId),
+  };
+});
+
+// Community events (live streams, courses, workshops)
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  hostId: integer("host_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  eventType: eventTypeEnum("event_type").notNull(),
+  coverImage: text("cover_image"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  timezone: varchar("timezone", { length: 50 }).notNull().default("UTC"),
+  location: text("location"), // URL for virtual events or physical address
+  price: doublePrecision("price").default(0), // 0 for free events
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  maxAttendees: integer("max_attendees"),
+  isPublished: boolean("is_published").default(false),
+  requiredTierId: integer("required_tier_id").references(() => membershipTiers.id), // Optional tier restriction
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Event registrations
+export const eventRegistrations = pgTable("event_registrations", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 20 }).notNull().default("registered"), // registered, attended, canceled, no_show
+  registeredAt: timestamp("registered_at").defaultNow(),
+  checkedInAt: timestamp("checked_in_at"),
+}, (table) => {
+  return {
+    uniqueRegistration: unique().on(table.eventId, table.userId),
+  };
+});
+
+// Polls for interactive community engagement
+export const polls = pgTable("polls", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  creatorId: integer("creator_id").notNull().references(() => users.id),
+  question: text("question").notNull(),
+  options: json("options").notNull(), // JSON array of option strings
+  allowMultipleAnswers: boolean("allow_multiple_answers").default(false),
+  startsAt: timestamp("starts_at").defaultNow(),
+  endsAt: timestamp("ends_at"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  isActive: boolean("is_active").default(true),
+  totalVotes: integer("total_votes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Poll votes
+export const pollVotes = pgTable("poll_votes", {
+  id: serial("id").primaryKey(),
+  pollId: integer("poll_id").notNull().references(() => polls.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  selectedOptions: integer("selected_options").array().notNull(), // Array of option indices
+  votedAt: timestamp("voted_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueVote: unique().on(table.pollId, table.userId),
+  };
+});
+
+// Creator earnings from monetization
+export const creatorEarnings = pgTable("creator_earnings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  communityId: integer("community_id").references(() => communities.id),
+  amount: doublePrecision("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  source: varchar("source", { length: 30 }).notNull(), // membership, event, donation, tips, ads
+  sourceId: integer("source_id"), // Membership ID, Event ID, etc.
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, paid, failed
+  paymentDate: timestamp("payment_date"),
+  platformFee: doublePrecision("platform_fee").notNull().default(0),
+  taxWithheld: doublePrecision("tax_withheld").default(0),
+  netAmount: doublePrecision("net_amount").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Subscriptions for recurring payments and monetization
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  creatorId: integer("creator_id").notNull().references(() => users.id),
+  planName: varchar("plan_name", { length: 50 }).notNull(),
+  amount: doublePrecision("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  interval: subscriptionIntervalEnum("interval").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, canceled, paused, failed
+  currentPeriodStart: timestamp("current_period_start").notNull(),
+  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 100 }),
+  paypalSubscriptionId: varchar("paypal_subscription_id", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
@@ -241,6 +416,37 @@ export const insertOrderSchema = createInsertSchema(orders)
 export const insertOrderItemSchema = createInsertSchema(orderItems)
   .omit({ id: true, createdAt: true });
 
+// Community and Monetization Schemas
+export const insertCommunitySchema = createInsertSchema(communities)
+  .omit({ id: true, memberCount: true, isVerified: true, createdAt: true, updatedAt: true });
+
+export const insertCommunityMemberSchema = createInsertSchema(communityMembers)
+  .omit({ id: true, joinedAt: true });
+
+export const insertMembershipTierSchema = createInsertSchema(membershipTiers)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertMembershipSchema = createInsertSchema(memberships)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertEventSchema = createInsertSchema(events)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertEventRegistrationSchema = createInsertSchema(eventRegistrations)
+  .omit({ id: true, registeredAt: true, checkedInAt: true });
+
+export const insertPollSchema = createInsertSchema(polls)
+  .omit({ id: true, totalVotes: true, createdAt: true, updatedAt: true });
+
+export const insertPollVoteSchema = createInsertSchema(pollVotes)
+  .omit({ id: true, votedAt: true });
+
+export const insertCreatorEarningSchema = createInsertSchema(creatorEarnings)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -280,3 +486,34 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+
+// Community and Monetization Types
+export type Community = typeof communities.$inferSelect;
+export type InsertCommunity = z.infer<typeof insertCommunitySchema>;
+
+export type CommunityMember = typeof communityMembers.$inferSelect;
+export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
+
+export type MembershipTier = typeof membershipTiers.$inferSelect;
+export type InsertMembershipTier = z.infer<typeof insertMembershipTierSchema>;
+
+export type Membership = typeof memberships.$inferSelect;
+export type InsertMembership = z.infer<typeof insertMembershipSchema>;
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type InsertEventRegistration = z.infer<typeof insertEventRegistrationSchema>;
+
+export type Poll = typeof polls.$inferSelect;
+export type InsertPoll = z.infer<typeof insertPollSchema>;
+
+export type PollVote = typeof pollVotes.$inferSelect;
+export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
+
+export type CreatorEarning = typeof creatorEarnings.$inferSelect;
+export type InsertCreatorEarning = z.infer<typeof insertCreatorEarningSchema>;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
