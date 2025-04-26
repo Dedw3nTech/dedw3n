@@ -582,6 +582,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // New endpoints for categorized transactions
+  app.get("/api/transactions/categories", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const wallet = await storage.getWalletByUserId(userId);
+      
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+      
+      const categorizedTransactions = await storage.getTransactionsByCategory(wallet.id);
+      res.json(categorizedTransactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get categorized transactions" });
+    }
+  });
+  
+  app.get("/api/transactions/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const wallet = await storage.getWalletByUserId(userId);
+      
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+      
+      const stats = await storage.getTransactionStats(wallet.id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get transaction statistics" });
+    }
+  });
+  
   // Wallet transfers route
   app.post("/api/transfers", isAuthenticated, async (req, res) => {
     try {
@@ -631,6 +664,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: Number(amount),
         walletId: senderWallet.id,
         description: description || `Transfer to ${recipientUsername}`,
+        category: "transfer",
+        paymentMethod: "wallet",
         status: "completed"
       });
       
@@ -640,6 +675,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: Number(amount),
         walletId: recipientWallet.id,
         description: description || `Transfer from ${(req.user as any).username}`,
+        category: "transfer",
+        paymentMethod: "wallet",
         status: "completed"
       });
       
