@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -6,14 +6,11 @@ import { Wallet, Transaction } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 import { ChevronUpIcon, ChevronDownIcon, RefreshCwIcon, ArrowRightIcon, PlusIcon, WalletIcon } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { Redirect } from 'wouter';
 
@@ -23,9 +20,8 @@ export default function WalletPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [amount, setAmount] = useState('');
-  const [transactionType, setTransactionType] = useState('deposit');
   const [description, setDescription] = useState('');
-
+  
   // Redirect if not logged in
   if (!user) {
     return <Redirect to="/auth" />;
@@ -106,7 +102,7 @@ export default function WalletPage() {
     createWalletMutation.mutate();
   };
 
-  const handleTransaction = (e: React.FormEvent) => {
+  const handleTransaction = (type: string) => (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -118,8 +114,18 @@ export default function WalletPage() {
       return;
     }
 
+    // For withdrawals, check if there are sufficient funds
+    if (type === 'withdrawal' && wallet && Number(amount) > wallet.balance) {
+      toast({
+        title: t('wallet.insufficient_funds'),
+        description: t('wallet.amount_positive'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     createTransactionMutation.mutate({
-      type: transactionType,
+      type,
       amount: Number(amount),
       description: description || undefined
     });
@@ -291,13 +297,7 @@ export default function WalletPage() {
                 </TabsContent>
 
                 <TabsContent value="deposit">
-                  <form onSubmit={handleTransaction} className="space-y-4">
-                    <input type="hidden" name="type" value="deposit" />
-                    {/* Set transaction type */}
-                    {React.useEffect(() => {
-                      setTransactionType('deposit');
-                    }, [])}
-                    
+                  <form onSubmit={handleTransaction('deposit')} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="amount">{t('wallet.amount')}</Label>
                       <div className="relative">
@@ -344,13 +344,7 @@ export default function WalletPage() {
                 </TabsContent>
                 
                 <TabsContent value="withdraw">
-                  <form onSubmit={handleTransaction} className="space-y-4">
-                    <input type="hidden" name="type" value="withdrawal" />
-                    {/* Set transaction type */}
-                    {React.useEffect(() => {
-                      setTransactionType('withdrawal');
-                    }, [])}
-                    
+                  <form onSubmit={handleTransaction('withdrawal')} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="amount">{t('wallet.amount')}</Label>
                       <div className="relative">
