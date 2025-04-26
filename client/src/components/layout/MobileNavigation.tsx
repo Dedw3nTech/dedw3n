@@ -23,7 +23,7 @@ export default function MobileNavigation() {
 
   return (
     <>
-      <div className="md:hidden fixed top-3 left-3 z-50">
+      <div className="md:hidden fixed top-3 left-3 z-50 bg-white/80 backdrop-blur-sm rounded-full shadow-md p-1">
         <Logo size="sm" withText={false} />
       </div>
       <div className="md:hidden fixed top-3 right-3 z-50">
