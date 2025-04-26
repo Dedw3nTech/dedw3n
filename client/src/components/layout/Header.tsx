@@ -81,6 +81,10 @@ export default function Header() {
               )}
             </Link>
 
+            <Link href="/wallet" className="relative p-2 text-gray-600 hover:text-primary">
+              <i className="ri-wallet-3-line text-xl"></i>
+            </Link>
+
             <button className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-message-3-line text-xl"></i>
               {messageData && messageData.count > 0 && (
