@@ -1,11 +1,13 @@
 import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, reviews, follows, carts,
+  wallets, transactions,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
   type Message, type InsertMessage, type Review, type InsertReview,
-  type Cart, type InsertCart
+  type Cart, type InsertCart, type Wallet, type InsertWallet,
+  type Transaction, type InsertTransaction
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -75,6 +77,18 @@ export interface IStorage {
   removeFromCart(id: number): Promise<boolean>;
   listCartItems(userId: number): Promise<Cart[]>;
   countCartItems(userId: number): Promise<number>;
+  
+  // Wallet operations
+  getWallet(id: number): Promise<Wallet | undefined>;
+  getWalletByUserId(userId: number): Promise<Wallet | undefined>;
+  createWallet(wallet: InsertWallet): Promise<Wallet>;
+  updateWalletBalance(id: number, amount: number): Promise<Wallet>;
+  
+  // Transaction operations
+  getTransaction(id: number): Promise<Transaction | undefined>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  listTransactionsByWallet(walletId: number): Promise<Transaction[]>;
+  listTransactionsByUser(userId: number): Promise<Transaction[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -90,6 +104,8 @@ export class MemStorage implements IStorage {
   private reviews: Map<number, Review>;
   private follows: Map<number, { followerId: number; followingId: number }>;
   private carts: Map<number, Cart>;
+  private wallets: Map<number, Wallet>;
+  private transactions: Map<number, Transaction>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -103,6 +119,8 @@ export class MemStorage implements IStorage {
   private reviewIdCounter: number;
   private followIdCounter: number;
   private cartIdCounter: number;
+  private walletIdCounter: number;
+  private transactionIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -117,6 +135,8 @@ export class MemStorage implements IStorage {
     this.reviews = new Map();
     this.follows = new Map();
     this.carts = new Map();
+    this.wallets = new Map();
+    this.transactions = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
@@ -130,6 +150,8 @@ export class MemStorage implements IStorage {
     this.reviewIdCounter = 1;
     this.followIdCounter = 1;
     this.cartIdCounter = 1;
+    this.walletIdCounter = 1;
+    this.transactionIdCounter = 1;
 
     this.initDefaultData();
   }

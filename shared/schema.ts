@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -128,6 +128,30 @@ export const carts = pgTable("carts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Wallet model
+export const wallets = pgTable("wallets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  balance: doublePrecision("balance").notNull().default(0),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Transaction model
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  amount: doublePrecision("amount").notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // deposit, withdrawal, payment, refund, transfer
+  status: varchar("status", { length: 20 }).notNull().default("completed"), // pending, completed, failed, reversed
+  description: text("description"),
+  metadata: text("metadata"), // JSON string for additional info
+  referenceId: varchar("reference_id", { length: 100 }), // Order ID, Payment ID, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
@@ -154,6 +178,12 @@ export const insertCategorySchema = createInsertSchema(categories)
   .omit({ id: true });
 
 export const insertCartSchema = createInsertSchema(carts)
+  .omit({ id: true, createdAt: true });
+
+export const insertWalletSchema = createInsertSchema(wallets)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertTransactionSchema = createInsertSchema(transactions)
   .omit({ id: true, createdAt: true });
 
 // Types
@@ -183,3 +213,9 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 
 export type Cart = typeof carts.$inferSelect;
 export type InsertCart = z.infer<typeof insertCartSchema>;
+
+export type Wallet = typeof wallets.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
