@@ -28,6 +28,7 @@ import AddProduct from "@/pages/add-product";
 import UploadProduct from "@/pages/upload-product";
 import MembersPage from "@/pages/members";
 import WalletPage from "@/pages/wallet";
+import VendorAnalytics from "@/pages/vendor-analytics";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/upload-product" component={UploadProduct} />
       <Route path="/members" component={MembersPage} />
       <Route path="/wallet" component={WalletPage} />
+      <Route path="/vendor/analytics" component={VendorAnalytics} />
       <Route component={NotFound} />
     </Switch>
   );

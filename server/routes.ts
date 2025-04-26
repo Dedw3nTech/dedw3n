@@ -459,6 +459,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vendor Analytics routes
+  app.get("/api/vendors/:vendorId/analytics/total-sales", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const totalSales = await storage.getVendorTotalSales(vendorId);
+      res.json({ totalSales });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get total sales analytics" });
+    }
+  });
+  
+  app.get("/api/vendors/:vendorId/analytics/order-stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const orderStats = await storage.getVendorOrderStats(vendorId);
+      res.json(orderStats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get order stats analytics" });
+    }
+  });
+  
+  app.get("/api/vendors/:vendorId/analytics/revenue", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      const period = (req.query.period as "daily" | "weekly" | "monthly" | "yearly") || "monthly";
+      
+      // Validate period
+      if (!["daily", "weekly", "monthly", "yearly"].includes(period)) {
+        return res.status(400).json({ message: "Invalid period. Use daily, weekly, monthly, or yearly." });
+      }
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const revenueData = await storage.getVendorRevenueByPeriod(vendorId, period);
+      res.json(revenueData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get revenue analytics" });
+    }
+  });
+  
+  app.get("/api/vendors/:vendorId/analytics/top-products", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const topProducts = await storage.getVendorTopProducts(vendorId, limit);
+      res.json(topProducts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get top products analytics" });
+    }
+  });
+  
+  app.get("/api/vendors/:vendorId/analytics/profit-loss", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      const profitLossData = await storage.getVendorProfitLoss(vendorId);
+      res.json(profitLossData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get profit/loss analytics" });
+    }
+  });
+
   // Initialize HTTP server
   const httpServer = createServer(app);
   
