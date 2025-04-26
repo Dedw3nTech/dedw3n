@@ -145,8 +145,8 @@ export default function WalletPage() {
       return;
     }
 
-    // For withdrawals, check if there are sufficient funds
-    if (type === 'withdrawal' && wallet && Number(amount) > wallet.balance) {
+    // For withdrawals and transfers, check if there are sufficient funds
+    if ((type === 'withdrawal' || type === 'transfer') && wallet && Number(amount) > wallet.balance) {
       toast({
         title: t('wallet.insufficient_funds'),
         description: t('wallet.amount_positive'),
@@ -154,7 +154,27 @@ export default function WalletPage() {
       });
       return;
     }
+    
+    // Handle transfer
+    if (type === 'transfer') {
+      if (!recipient) {
+        toast({
+          title: t('wallet.recipient_required'),
+          description: t('wallet.enter_recipient'),
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      createTransferMutation.mutate({
+        recipientUsername: recipient,
+        amount: Number(amount),
+        description: description || undefined
+      });
+      return;
+    }
 
+    // Handle deposit and withdrawal
     createTransactionMutation.mutate({
       type,
       amount: Number(amount),
@@ -172,6 +192,10 @@ export default function WalletPage() {
         return <ArrowRightIcon className="h-4 w-4 text-blue-500" />;
       case 'refund':
         return <RefreshCwIcon className="h-4 w-4 text-amber-500" />;
+      case 'transfer':
+      case 'transfer_in':
+      case 'transfer_out':
+        return <ArrowRightIcon className="h-4 w-4 text-blue-500" />;
       default:
         return <ArrowRightIcon className="h-4 w-4" />;
     }
@@ -181,17 +205,26 @@ export default function WalletPage() {
     switch (type) {
       case 'deposit':
       case 'refund':
+      case 'transfer_in':
         return 'text-green-600';
       case 'withdrawal':
       case 'payment':
+      case 'transfer_out':
         return 'text-red-500';
+      case 'transfer':
+        return 'text-blue-500';
       default:
         return '';
     }
   };
 
   const formatAmount = (type: string, amount: number) => {
-    const prefix = type === 'deposit' || type === 'refund' ? '+' : '-';
+    let prefix = '-';
+    
+    if (type === 'deposit' || type === 'refund' || type === 'transfer_in') {
+      prefix = '+';
+    }
+    
     return `${prefix}$${amount.toFixed(2)}`;
   };
 
