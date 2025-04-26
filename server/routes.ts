@@ -1121,6 +1121,458 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Community management API routes
+  // Communities routes
+  app.post("/api/communities", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const validatedData = insertCommunitySchema.parse({
+        ...req.body,
+        ownerId: userId,
+      });
+      
+      const community = await storage.createCommunity(validatedData);
+      res.status(201).json(community);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create community" });
+    }
+  });
+  
+  app.get("/api/communities", async (req, res) => {
+    try {
+      const options: any = {};
+      
+      // Extract query parameters
+      if (req.query.ownerId) {
+        options.ownerId = parseInt(req.query.ownerId as string);
+      }
+      
+      if (req.query.visibility) {
+        options.visibility = req.query.visibility;
+      }
+      
+      if (req.query.topics) {
+        options.topics = (req.query.topics as string).split(',');
+      }
+      
+      if (req.query.isVerified !== undefined) {
+        options.isVerified = req.query.isVerified === 'true';
+      }
+      
+      if (req.query.limit) {
+        options.limit = parseInt(req.query.limit as string);
+      }
+      
+      if (req.query.offset) {
+        options.offset = parseInt(req.query.offset as string);
+      }
+      
+      const communities = await storage.listCommunities(options);
+      res.json(communities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list communities" });
+    }
+  });
+  
+  app.get("/api/communities/:id", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.id);
+      const community = await storage.getCommunity(communityId);
+      
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      res.json(community);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get community" });
+    }
+  });
+  
+  app.put("/api/communities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Get the community
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check if the user is the owner
+      if (community.ownerId !== userId) {
+        return res.status(403).json({ message: "Only the community owner can update it" });
+      }
+      
+      const validatedData = insertCommunitySchema.partial().parse(req.body);
+      const updatedCommunity = await storage.updateCommunity(communityId, validatedData);
+      
+      res.json(updatedCommunity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update community" });
+    }
+  });
+  
+  // Community membership routes
+  app.post("/api/communities/:id/members", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check if already a member
+      const existingMembership = await storage.getMembershipStatus(communityId, userId);
+      if (existingMembership) {
+        return res.status(400).json({ message: "Already a member of this community" });
+      }
+      
+      // Add as member
+      const member = await storage.addCommunityMember({
+        communityId,
+        userId,
+        role: "member"
+      });
+      
+      res.status(201).json(member);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to join community" });
+    }
+  });
+  
+  app.get("/api/communities/:id/members", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.id);
+      const { role } = req.query;
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Get members, optionally filtered by role
+      const members = await storage.listCommunityMembers(
+        communityId, 
+        role ? (role as string) : undefined
+      );
+      
+      // Enrich with user information
+      const membersWithUserInfo = await Promise.all(
+        members.map(async (member) => {
+          const user = await storage.getUser(member.userId);
+          if (user) {
+            const { password, ...userData } = user;
+            return {
+              ...member,
+              user: userData
+            };
+          }
+          return member;
+        })
+      );
+      
+      res.json(membersWithUserInfo);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list community members" });
+    }
+  });
+  
+  app.delete("/api/communities/:communityId/members/:userId", isAuthenticated, async (req, res) => {
+    try {
+      const requestingUserId = (req.user as any).id;
+      const communityId = parseInt(req.params.communityId);
+      const targetUserId = parseInt(req.params.userId);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check permissions: must be removing self or be the owner
+      if (requestingUserId !== targetUserId && community.ownerId !== requestingUserId) {
+        return res.status(403).json({ message: "You don't have permission to remove this member" });
+      }
+      
+      // Remove member
+      const result = await storage.removeCommunityMember(communityId, targetUserId);
+      
+      if (result) {
+        res.status(200).json({ message: "Member removed successfully" });
+      } else {
+        res.status(404).json({ message: "Member not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to remove member" });
+    }
+  });
+  
+  // Membership tiers routes
+  app.post("/api/communities/:id/tiers", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists and user is the owner
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      if (community.ownerId !== userId) {
+        return res.status(403).json({ message: "Only the community owner can create membership tiers" });
+      }
+      
+      const validatedData = insertMembershipTierSchema.parse({
+        ...req.body,
+        communityId,
+      });
+      
+      const tier = await storage.createMembershipTier(validatedData);
+      res.status(201).json(tier);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create membership tier" });
+    }
+  });
+  
+  app.get("/api/communities/:id/tiers", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      const tiers = await storage.listMembershipTiers(communityId);
+      res.json(tiers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list membership tiers" });
+    }
+  });
+  
+  // Events routes
+  app.post("/api/communities/:id/events", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check if the user is a member or the owner
+      const isMember = await storage.getMembershipStatus(communityId, userId);
+      if (!isMember && community.ownerId !== userId) {
+        return res.status(403).json({ message: "Only community members can create events" });
+      }
+      
+      const validatedData = insertEventSchema.parse({
+        ...req.body,
+        communityId,
+        hostId: userId
+      });
+      
+      const event = await storage.createEvent(validatedData);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+  
+  app.get("/api/communities/:id/events", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Get events with optional filters
+      const options: any = { communityId };
+      
+      if (req.query.eventType) {
+        options.eventType = req.query.eventType;
+      }
+      
+      if (req.query.startAfter) {
+        options.startAfter = new Date(req.query.startAfter as string);
+      }
+      
+      if (req.query.isPublished !== undefined) {
+        options.isPublished = req.query.isPublished === 'true';
+      }
+      
+      const events = await storage.listEvents(options);
+      
+      // Enrich with host information
+      const eventsWithHostInfo = await Promise.all(
+        events.map(async (event) => {
+          const host = await storage.getUser(event.hostId);
+          if (host) {
+            const { password, ...hostData } = host;
+            return {
+              ...event,
+              host: hostData
+            };
+          }
+          return event;
+        })
+      );
+      
+      res.json(eventsWithHostInfo);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list events" });
+    }
+  });
+  
+  // Polls routes
+  app.post("/api/communities/:id/polls", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check if the user is a member or owner
+      const isMember = await storage.getMembershipStatus(communityId, userId);
+      if (!isMember && community.ownerId !== userId) {
+        return res.status(403).json({ message: "Only community members can create polls" });
+      }
+      
+      const validatedData = insertPollSchema.parse({
+        ...req.body,
+        communityId,
+        creatorId: userId
+      });
+      
+      const poll = await storage.createPoll(validatedData);
+      res.status(201).json(poll);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create poll" });
+    }
+  });
+  
+  app.get("/api/communities/:id/polls", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Get active status from query params
+      const isActive = req.query.isActive !== undefined 
+        ? req.query.isActive === 'true'
+        : undefined;
+      
+      const polls = await storage.listPolls(communityId, isActive);
+      
+      // Enrich with creator info
+      const enrichedPolls = await Promise.all(
+        polls.map(async (poll) => {
+          const creator = await storage.getUser(poll.creatorId);
+          let creatorData = null;
+          if (creator) {
+            const { password, ...userData } = creator;
+            creatorData = userData;
+          }
+          
+          return {
+            ...poll,
+            creator: creatorData
+          };
+        })
+      );
+      
+      res.json(enrichedPolls);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list polls" });
+    }
+  });
+  
+  app.post("/api/polls/:id/vote", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const pollId = parseInt(req.params.id);
+      
+      // Validate selected options
+      if (!req.body.selectedOptions || !Array.isArray(req.body.selectedOptions)) {
+        return res.status(400).json({ message: "selectedOptions must be an array" });
+      }
+      
+      try {
+        const vote = await storage.castVote({
+          pollId,
+          userId,
+          selectedOptions: req.body.selectedOptions
+        });
+        
+        res.status(201).json(vote);
+      } catch (error) {
+        return res.status(400).json({ message: error instanceof Error ? error.message : "Failed to cast vote" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to cast vote" });
+    }
+  });
+  
+  // Creator earnings routes
+  app.get("/api/creator/earnings", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const earnings = await storage.listCreatorEarnings(userId);
+      res.json(earnings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get creator earnings" });
+    }
+  });
+  
+  app.get("/api/creator/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      const stats = await storage.getCreatorRevenueStats(userId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get creator stats" });
+    }
+  });
+
   // Set up WebSocket server for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
