@@ -117,6 +117,7 @@ export interface IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Post[]>;
+  getUserPosts(userId: number): Promise<Post[]>;
   incrementPostView(id: number): Promise<Post>;
   promotePost(id: number, endDate: Date): Promise<Post>;
   unpromotePost(id: number): Promise<Post>;
@@ -765,6 +766,16 @@ export class MemStorage implements IStorage {
       posts = posts.slice(offset, offset + options.limit);
     }
     
+    return posts;
+  }
+  
+  async getUserPosts(userId: number): Promise<Post[]> {
+    console.log(`[DEBUG] Getting posts for user ID: ${userId}`);
+    
+    // Reuse the existing listPosts method with the userId filter
+    const posts = await this.listPosts({ userId });
+    
+    console.log(`[DEBUG] Found ${posts.length} posts for user ID: ${userId}`);
     return posts;
   }
   
