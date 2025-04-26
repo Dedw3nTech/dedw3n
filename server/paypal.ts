@@ -5,10 +5,14 @@ import { storage } from "./storage";
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://api-m.paypal.com'
   : 'https://api-m.sandbox.paypal.com';
+  
+// Make PAYPAL_CLIENT_ID available to both client and server
+process.env.VITE_PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 
 // Generate an access token for PayPal API calls
 async function generateAccessToken() {
   try {
+    // Check for environment variable
     if (!process.env.PAYPAL_CLIENT_ID) {
       throw new Error('PAYPAL_CLIENT_ID environment variable is not set');
     }

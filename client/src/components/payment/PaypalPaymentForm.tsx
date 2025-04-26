@@ -112,14 +112,19 @@ export const PaypalPaymentForm = ({
 
   // Error handler
   const onError = (err: Record<string, unknown>) => {
-    setErrorMessage('PayPal encountered an error. Please try again later.');
+    const errorMessage = 'PayPal encountered an error. Please try again later.';
+    setErrorMessage(errorMessage);
     toast({
       title: 'PayPal Error',
-      description: 'PayPal encountered an error. Please try again later.',
+      description: errorMessage,
       variant: 'destructive',
     });
     setIsProcessing(false);
     console.error('PayPal error:', err);
+    console.log('PayPal config:', {
+      clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID ? 'Set' : 'Not set',
+      currency
+    });
   };
 
   return (
@@ -153,7 +158,7 @@ export const PaypalPaymentForm = ({
         )}
         
         <PayPalScriptProvider options={{ 
-          clientId: import.meta.env.PAYPAL_CLIENT_ID || '',
+          clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
           currency: currency.toUpperCase(),
           intent: 'capture'
         }}>

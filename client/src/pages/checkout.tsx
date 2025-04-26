@@ -452,6 +452,11 @@ export default function Checkout() {
               <Button variant="outline" onClick={handleBackToShipping}>
                 Back to Shipping
               </Button>
+              {paymentMethod === 'paypal' && (
+                <div className="text-sm text-muted-foreground">
+                  Please use the PayPal buttons above to complete your payment
+                </div>
+              )}
             </>
           )}
         </CardFooter>
