@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
 import ShippingOptions from '@/components/shipping/ShippingOptions';
-import AddressForm from '@/components/shipping/AddressForm';
+import { AddressForm } from '@/components/shipping/AddressForm';
 import { Loader2 } from 'lucide-react';
 
 // Initialize Stripe with publishable key (will be available only when keys are set up)
@@ -87,9 +87,9 @@ export default function Checkout() {
   };
 
   // Handle address validation
-  const handleAddressSubmit = (address: any, isValid: boolean) => {
+  const handleSubmit = (address: any) => {
     setShippingAddress(address);
-    setAddressValid(isValid);
+    setAddressValid(true);
   };
 
   // Continue to payment step
@@ -272,7 +272,7 @@ export default function Checkout() {
             <>
               <div className="space-y-8 mt-8">
                 <div>
-                  <AddressForm onAddressSubmit={handleAddressSubmit} />
+                  <AddressForm onSubmit={handleSubmit} />
                 </div>
                 
                 <div>
