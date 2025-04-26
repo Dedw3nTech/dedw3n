@@ -84,7 +84,8 @@
     "select_currency": "Select Currency",
     "calculate_rate": "Calculate Rate",
     "processing": "Processing...",
-    "transaction_error": "Transaction Error"
+    "transaction_error": "Transaction Error",
+    "view_profile": "View Profile"
   },
   "members": {
     "directory": "Member Directory",

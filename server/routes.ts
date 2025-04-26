@@ -739,7 +739,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       const transactions = await storage.listTransactionsByUser(userId);
-      res.json(transactions);
+      
+      // Fetch related user information for transfer transactions
+      const transactionsWithUserInfo = await Promise.all(
+        transactions.map(async transaction => {
+          if ((transaction.type === 'transfer_in' || transaction.type === 'transfer_out') && transaction.relatedUserId) {
+            try {
+              const relatedUser = await storage.getUser(transaction.relatedUserId);
+              if (relatedUser) {
+                // Remove sensitive data like password
+                const { password, ...userData } = relatedUser;
+                return {
+                  ...transaction,
+                  relatedUser: userData
+                };
+              }
+            } catch (err) {
+              console.error('Error fetching related user:', err);
+            }
+          }
+          return transaction;
+        })
+      );
+      
+      res.json(transactionsWithUserInfo);
     } catch (error) {
       res.status(500).json({ message: "Failed to list transactions" });
     }

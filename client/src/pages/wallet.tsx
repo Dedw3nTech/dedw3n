@@ -528,7 +528,7 @@ export default function WalletPage() {
                         {transactions.slice(0, 5).map((transaction) => (
                           <div 
                             key={transaction.id} 
-                            className="flex items-center justify-between p-3 border rounded-lg"
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
                           >
                             <div className="flex items-center">
                               <div className="mr-3 p-2 bg-gray-100 rounded-full">
@@ -543,6 +543,19 @@ export default function WalletPage() {
                                 </p>
                                 {transaction.description && (
                                   <p className="text-xs text-muted-foreground mt-1">{transaction.description}</p>
+                                )}
+                                {/* Display link to related user profile for transfers */}
+                                {(transaction.type === 'transfer_in' || transaction.type === 'transfer_out') && 
+                                 (transaction as any).relatedUser && (
+                                  <Link 
+                                    to={`/members/${(transaction as any).relatedUser.id}`}
+                                    className="text-xs text-primary flex items-center mt-1 hover:underline"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                    {t('wallet.view_profile')}: {(transaction as any).relatedUser.name}
+                                  </Link>
                                 )}
                               </div>
                             </div>
