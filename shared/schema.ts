@@ -7,6 +7,8 @@ export const communityVisibilityEnum = pgEnum('community_visibility', ['public',
 export const membershipTierTypeEnum = pgEnum('membership_tier_type', ['free', 'paid', 'premium']);
 export const eventTypeEnum = pgEnum('event_type', ['live_stream', 'course', 'workshop', 'meetup', 'qa_session']);
 export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['daily', 'weekly', 'monthly', 'yearly', 'one_time']);
+export const videoTypeEnum = pgEnum('video_type', ['short_form', 'story', 'live_stream', 'live_commerce', 'recorded']);
+export const videoVisibilityEnum = pgEnum('video_visibility', ['public', 'followers', 'private']);
 
 // User model
 export const users = pgTable("users", {
@@ -538,3 +540,102 @@ export type InsertConnection = z.infer<typeof insertConnectionSchema>;
 
 export type Like = typeof likes.$inferSelect;
 export type InsertLike = z.infer<typeof insertLikeSchema>;
+
+// Video model for short-form, stories, live streams, and recorded videos
+export const videos = pgTable("videos", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // in seconds
+  videoType: videoTypeEnum("video_type").notNull(), // short_form, story, live_stream, live_commerce, recorded
+  visibility: videoVisibilityEnum("visibility").default("public"),
+  views: integer("views").default(0),
+  likes: integer("likes").default(0),
+  shares: integer("shares").default(0),
+  isLive: boolean("is_live").default(false),
+  isProcessed: boolean("is_processed").default(true), // Indicates if video has finished processing
+  productId: integer("product_id").references(() => products.id), // For live commerce
+  communityId: integer("community_id").references(() => communities.id), // For community-specific videos
+  expiresAt: timestamp("expires_at"), // For stories that expire
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Video engagements model (comments, reactions)
+export const videoEngagements = pgTable("video_engagements", {
+  id: serial("id").primaryKey(),
+  videoId: integer("video_id").notNull().references(() => videos.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 20 }).notNull(), // comment, reaction, share
+  content: text("content"), // For comments
+  reactionType: varchar("reaction_type", { length: 20 }), // like, love, laugh, etc.
+  timestamp: integer("timestamp"), // Timestamp in the video (in seconds) for timed comments
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Video analytics model
+export const videoAnalytics = pgTable("video_analytics", {
+  id: serial("id").primaryKey(),
+  videoId: integer("video_id").notNull().references(() => videos.id),
+  totalViews: integer("total_views").default(0),
+  uniqueViewers: integer("unique_viewers").default(0),
+  averageWatchTime: integer("average_watch_time").default(0), // in seconds
+  completionRate: doublePrecision("completion_rate").default(0), // percentage of viewers who watched to the end
+  engagementRate: doublePrecision("engagement_rate").default(0), // likes + comments + shares / views
+  demographics: json("demographics"), // JSON data for viewer demographics
+  viewsByCountry: json("views_by_country"), // JSON data for geographic distribution
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Video playlist model 
+export const videoPlaylists = pgTable("video_playlists", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  isPublic: boolean("is_public").default(true),
+  thumbnailUrl: text("thumbnail_url"),
+  videoCount: integer("video_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Video playlist items model
+export const playlistItems = pgTable("playlist_items", {
+  id: serial("id").primaryKey(),
+  playlistId: integer("playlist_id").notNull().references(() => videoPlaylists.id),
+  videoId: integer("video_id").notNull().references(() => videos.id),
+  position: integer("position").notNull(), // Order in the playlist
+  addedAt: timestamp("added_at").defaultNow(),
+}, (table) => {
+  return {
+    uniquePlaylistItem: unique().on(table.playlistId, table.videoId),
+  };
+});
+
+// Video schemas
+export const insertVideoSchema = createInsertSchema(videos);
+export const insertVideoEngagementSchema = createInsertSchema(videoEngagements);
+export const insertVideoAnalyticsSchema = createInsertSchema(videoAnalytics);
+export const insertVideoPlaylistSchema = createInsertSchema(videoPlaylists);
+export const insertPlaylistItemSchema = createInsertSchema(playlistItems);
+
+// Video types
+export type Video = typeof videos.$inferSelect;
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+
+export type VideoEngagement = typeof videoEngagements.$inferSelect;
+export type InsertVideoEngagement = z.infer<typeof insertVideoEngagementSchema>;
+
+export type VideoAnalytics = typeof videoAnalytics.$inferSelect;
+export type InsertVideoAnalytics = z.infer<typeof insertVideoAnalyticsSchema>;
+
+export type VideoPlaylist = typeof videoPlaylists.$inferSelect;
+export type InsertVideoPlaylist = z.infer<typeof insertVideoPlaylistSchema>;
+
+export type PlaylistItem = typeof playlistItems.$inferSelect;
+export type InsertPlaylistItem = z.infer<typeof insertPlaylistItemSchema>;
