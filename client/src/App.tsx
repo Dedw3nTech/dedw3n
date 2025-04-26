@@ -29,6 +29,7 @@ import UploadProduct from "@/pages/upload-product";
 import MembersPage from "@/pages/members";
 import WalletPage from "@/pages/wallet";
 import VendorAnalytics from "@/pages/vendor-analytics";
+import SpendingAnalytics from "@/pages/spending-analytics";
 
 function Router() {
   return (
