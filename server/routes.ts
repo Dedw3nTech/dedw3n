@@ -520,14 +520,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Save message to database
             const savedMessage = await storage.createMessage({
               senderId: parseInt(userId),
-              recipientId: message.recipientId,
+              receiverId: message.receiverId,
               content: message.content,
               isRead: false,
               createdAt: new Date()
             });
             
             // Forward message to recipient if online
-            const recipientSocket = clients.get(message.recipientId.toString());
+            const recipientSocket = clients.get(message.receiverId.toString());
             if (recipientSocket && recipientSocket.readyState === WebSocket.OPEN) {
               recipientSocket.send(JSON.stringify({
                 type: 'chat',
@@ -542,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             socket.send(JSON.stringify({
               type: 'confirmation',
               messageId: savedMessage.id,
-              recipientId: message.recipientId,
+              receiverId: message.receiverId,
               status: 'sent',
               timestamp: new Date().toISOString()
             }));
@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Handle video/audio call requests
           else if (message.type === 'call-request') {
-            const recipientSocket = clients.get(message.recipientId.toString());
+            const recipientSocket = clients.get(message.receiverId.toString());
             if (recipientSocket && recipientSocket.readyState === WebSocket.OPEN) {
               recipientSocket.send(JSON.stringify({
                 type: 'call-request',
@@ -562,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Recipient offline
               socket.send(JSON.stringify({
                 type: 'call-error',
-                recipientId: message.recipientId,
+                receiverId: message.receiverId,
                 error: 'recipient-offline',
                 timestamp: new Date().toISOString()
               }));

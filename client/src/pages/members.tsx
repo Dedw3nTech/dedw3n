@@ -174,7 +174,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
     
     const messageData = {
       type: 'chat',
-      recipientId: member.id,
+      receiverId: member.id,
       content: message
     };
     
