@@ -197,7 +197,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:username", async (req, res) => {
     try {
       const username = req.params.username;
+      console.log(`[DEBUG] Fetching profile for username: ${username}`);
       const user = await storage.getUserByUsername(username);
+      
+      console.log(`[DEBUG] User found:`, user ? 'Yes' : 'No');
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -205,8 +208,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Remove password before sending
       const { password, ...userData } = user;
+      console.log(`[DEBUG] Returning user data for username: ${username}`);
       res.json(userData);
     } catch (error) {
+      console.error(`[ERROR] Failed to get profile for ${req.params.username}:`, error);
       res.status(500).json({ message: "Failed to get user profile" });
     }
   });

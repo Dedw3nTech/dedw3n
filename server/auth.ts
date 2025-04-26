@@ -93,15 +93,19 @@ export function setupAuth(app: Express) {
   // Authentication routes
   app.post("/api/auth/register", async (req, res, next) => {
     try {
+      console.log(`[DEBUG] Registration attempt for username: ${req.body.username}`);
+      
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log(`[DEBUG] Registration failed: Username ${req.body.username} already exists`);
         return res.status(400).json({ message: "Username already exists" });
       }
 
       // Check if email already exists
       const existingEmail = await storage.getUserByEmail(req.body.email);
       if (existingEmail) {
+        console.log(`[DEBUG] Registration failed: Email ${req.body.email} already exists`);
         return res.status(400).json({ message: "Email already exists" });
       }
 
@@ -109,20 +113,27 @@ export function setupAuth(app: Express) {
       const hashedPassword = await hashPassword(req.body.password);
 
       // Create user
+      console.log(`[DEBUG] Creating new user ${req.body.username} in storage`);
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
       });
+      console.log(`[DEBUG] User created with ID: ${user.id}, username: ${user.username}`);
 
       // Log in the user
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error(`[ERROR] Login after registration failed:`, err);
+          return next(err);
+        }
         
+        console.log(`[DEBUG] User ${user.username} logged in after registration`);
         // Return user without password
         const { password, ...userWithoutPassword } = user;
         res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
+      console.error(`[ERROR] Registration failed:`, error);
       next(error);
     }
   });
