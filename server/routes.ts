@@ -355,6 +355,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.put("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if the post belongs to the user
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You can only update your own posts" });
+      }
+      
+      const validatedData = insertPostSchema.partial().parse(req.body);
+      const updatedPost = await storage.updatePost(postId, validatedData);
+      
+      res.json(updatedPost);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+  
+  app.post("/api/posts/:id/like", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const postId = parseInt(req.params.id);
+      
+      // Get the post
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Update like count
+      const updatedPost = await storage.updatePostStats(postId, {
+        likes: (post.likes || 0) + 1
+      });
+      
+      res.json(updatedPost);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to like post" });
+    }
+  });
+  
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
