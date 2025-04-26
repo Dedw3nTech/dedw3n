@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
 import { WalletPaymentForm } from '@/components/payment/WalletPaymentForm';
+import { PaypalPaymentForm } from '@/components/payment/PaypalPaymentForm';
 import ShippingOptions from '@/components/shipping/ShippingOptions';
 import { AddressForm } from '@/components/shipping/AddressForm';
 import { Loader2, CreditCard, Wallet } from 'lucide-react';

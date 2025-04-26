@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
+import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
 import { seedDatabase } from "./seed";
 import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, insertTransactionSchema } from "@shared/schema";
@@ -36,6 +37,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register payment routes
   registerPaymentRoutes(app);
+  
+  // Register PayPal routes
+  registerPaypalRoutes(app);
   
   // Register shipping routes
   registerShippingRoutes(app);
