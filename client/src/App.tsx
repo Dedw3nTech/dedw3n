@@ -46,6 +46,7 @@ function Router() {
       <Route path="/upload-product" component={UploadProduct} />
       <Route path="/members" component={MembersPage} />
       <Route path="/wallet" component={WalletPage} />
+      <Route path="/spending-analytics" component={SpendingAnalytics} />
       <Route path="/vendor/analytics" component={VendorAnalytics} />
       <Route component={NotFound} />
     </Switch>

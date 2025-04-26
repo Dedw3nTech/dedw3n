@@ -705,6 +705,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Additional endpoint to get transactions for a specific user (needed for spending analytics)
+  app.get("/api/transactions/user/:userId", isAuthenticated, async (req, res) => {
+    try {
+      const requestingUserId = (req.user as any).id;
+      const targetUserId = parseInt(req.params.userId);
+      
+      // Users can only see their own transactions (security check)
+      if (requestingUserId !== targetUserId) {
+        return res.status(403).json({ message: "You can only view your own transactions" });
+      }
+      
+      const transactions = await storage.listTransactionsByUser(targetUserId);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list user transactions" });
+    }
+  });
+  
   // New endpoints for categorized transactions
   app.get("/api/transactions/categories", isAuthenticated, async (req, res) => {
     try {
