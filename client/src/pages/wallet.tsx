@@ -269,6 +269,32 @@ export default function WalletPage() {
             <CardTitle>{t('wallet.no_wallet')}</CardTitle>
             <CardDescription>{t('wallet.create_description')}</CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currency">{t('wallet.select_currency')}</Label>
+                <Select 
+                  value={selectedCurrency} 
+                  onValueChange={setSelectedCurrency}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('wallet.select_currency')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>{t('wallet.available_currencies')}</SelectLabel>
+                      <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                      <SelectItem value="CNY">CNY - Chinese Yuan (¥)</SelectItem>
+                      <SelectItem value="INR">INR - Indian Rupee (₹)</SelectItem>
+                      <SelectItem value="BRL">BRL - Brazilian Real (R$)</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
           <CardFooter>
             <Button 
               onClick={handleCreateWallet}
@@ -310,7 +336,10 @@ export default function WalletPage() {
               <div className="flex flex-col gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('wallet.balance')}</p>
-                  <p className="text-3xl font-bold">${wallet.balance.toFixed(2)}</p>
+                  <p className="text-3xl font-bold">
+                    {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                    {wallet.balance.toFixed(2)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('wallet.currency')}</p>
@@ -389,7 +418,9 @@ export default function WalletPage() {
                     <div className="space-y-2">
                       <Label htmlFor="amount">{t('wallet.amount')}</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                          {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                        </span>
                         <Input 
                           id="amount"
                           type="number"
@@ -436,7 +467,9 @@ export default function WalletPage() {
                     <div className="space-y-2">
                       <Label htmlFor="amount">{t('wallet.amount')}</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                          {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                        </span>
                         <Input 
                           id="amount"
                           type="number"
@@ -451,7 +484,8 @@ export default function WalletPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {t('wallet.available')}: ${wallet.balance.toFixed(2)}
+                        {t('wallet.available')}: {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                        {wallet.balance.toFixed(2)}
                       </p>
                     </div>
                     
@@ -499,7 +533,9 @@ export default function WalletPage() {
                     <div className="space-y-2">
                       <Label htmlFor="amount">{t('wallet.amount')}</Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                          {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                        </span>
                         <Input 
                           id="amount"
                           type="number"
@@ -514,7 +550,8 @@ export default function WalletPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {t('wallet.available')}: ${wallet.balance.toFixed(2)}
+                        {t('wallet.available')}: {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
+                        {wallet.balance.toFixed(2)}
                       </p>
                     </div>
                     
