@@ -13,6 +13,28 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
+export function formatCurrency(price: number, currencyCode: string): string {
+  const currencyLocales: Record<string, string> = {
+    GBP: "en-GB",
+    USD: "en-US",
+    EUR: "de-DE",
+    JPY: "ja-JP",
+    CNY: "zh-CN",
+    INR: "hi-IN",
+    CAD: "en-CA",
+    AUD: "en-AU",
+    SGD: "en-SG",
+  };
+  
+  const locale = currencyLocales[currencyCode] || "en-US";
+  
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currencyCode,
+    currencyDisplay: "symbol",
+  }).format(price);
+}
+
 export function timeAgo(date: Date): string {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);

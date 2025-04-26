@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useView } from "@/hooks/use-view";
-import { Link, useLocation } from "wouter";
-import { Product } from "@shared/schema";
-import { formatPrice } from "@/lib/utils";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { formatCurrency, convertCurrency } from "@/lib/currencyConverter";
+import { useView } from "@/hooks/use-view";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatPrice, formatCurrency } from "@/lib/utils";
+import { convertCurrency } from "@/lib/currencyConverter";
+import { Product } from "@shared/schema";
 
 import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw } from "lucide-react";
@@ -26,6 +31,9 @@ export default function Home() {
   const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
   const [convertedDiscountPrices, setConvertedDiscountPrices] = useState<Record<number, number>>({});
   const [isConverting, setIsConverting] = useState(false);
+  
+  // List of supported currencies
+  const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
   
   useEffect(() => {
     setView("marketplace");
@@ -72,9 +80,49 @@ export default function Home() {
       return response.json();
     },
   });
+  
+  // Effect to handle currency conversion when currency changes
+  useEffect(() => {
+    if (selectedCurrency === 'GBP' || (!featuredProducts?.length && !newProducts?.length)) {
+      setConvertedPrices({});
+      setConvertedDiscountPrices({});
+      return;
+    }
 
-  // List of supported currencies
-  const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
+    const allProducts = [...(featuredProducts || []), ...(newProducts || [])];
+    // Remove duplicates
+    const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.id, p])).values());
+    
+    const convertAllPrices = async () => {
+      try {
+        setIsConverting(true);
+        
+        const newConvertedPrices: Record<number, number> = {};
+        const newConvertedDiscountPrices: Record<number, number> = {};
+        
+        for (const product of uniqueProducts) {
+          // Convert main price
+          const newPrice = await convertCurrency(product.price, 'GBP', selectedCurrency);
+          newConvertedPrices[product.id] = newPrice;
+          
+          // Convert discount price if it exists
+          if (product.discountPrice && product.discountPrice < product.price) {
+            const newDiscountPrice = await convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
+            newConvertedDiscountPrices[product.id] = newDiscountPrice;
+          }
+        }
+        
+        setConvertedPrices(newConvertedPrices);
+        setConvertedDiscountPrices(newConvertedDiscountPrices);
+      } catch (error) {
+        console.error('Error converting currencies:', error);
+      } finally {
+        setIsConverting(false);
+      }
+    };
+    
+    convertAllPrices();
+  }, [selectedCurrency, featuredProducts, newProducts]);
 
   // Render product card
   const renderProductCard = (product: any) => (
@@ -185,6 +233,46 @@ export default function Home() {
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Sell Your Products
               </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Currency Selector */}
+      <div className="mb-6">
+        <div className="flex justify-end items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Currency:</span>
+            <Select
+              value={selectedCurrency}
+              onValueChange={(value) => setSelectedCurrency(value)}
+            >
+              <SelectTrigger className="h-8 w-32">
+                <SelectValue placeholder="Currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {supportedCurrencies.map((currency) => (
+                  <SelectItem key={currency} value={currency}>
+                    {currency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedCurrency !== 'GBP' && (
+              <>
+                {isConverting ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                ) : (
+                  <RefreshCw 
+                    className="h-4 w-4 text-gray-500 cursor-pointer hover:text-primary" 
+                    onClick={() => {
+                      setConvertedPrices({});
+                      setConvertedDiscountPrices({});
+                      setSelectedCurrency(selectedCurrency); // Retrigger conversion
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

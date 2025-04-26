@@ -1,16 +1,19 @@
 // Currency conversion utility
 
 // List of supported currencies
-export const supportedCurrencies = ['GBP', 'USD', 'EUR', 'CNY', 'INR', 'BRL'];
+export const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
 
 // Currency symbols for displaying amounts
 export const currencySymbols: Record<string, string> = {
   USD: '$',
   GBP: '£',
   EUR: '€',
+  JPY: '¥',
   CNY: '¥',
   INR: '₹',
-  BRL: 'R$'
+  CAD: 'C$',
+  AUD: 'A$',
+  SGD: 'S$'
 };
 
 // Cache for exchange rates to avoid frequent API calls
@@ -75,9 +78,12 @@ export const fetchExchangeRates = async (baseCurrency: string = 'GBP'): Promise<
       GBP: 1,
       USD: 1.28,
       EUR: 1.18,
+      JPY: 194.75,
       CNY: 9.09,
       INR: 106.56,
-      BRL: 7.28
+      CAD: 1.72,
+      AUD: 1.94,
+      SGD: 1.71
     };
   }
 };
