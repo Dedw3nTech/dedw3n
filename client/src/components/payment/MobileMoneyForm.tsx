@@ -35,7 +35,7 @@ export default function MobileMoneyForm({ amount, metadata, onSuccess }: MobileM
   const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'COMPLETED' | 'FAILED' | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   // Load mobile money providers
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function MobileMoneyForm({ amount, metadata, onSuccess }: MobileM
               onSuccess();
             } else {
               // Navigate to success page
-              navigate('/payment-success');
+              setLocation('/payment-success');
             }
             return;
           } else if (data.status === 'FAILED') {

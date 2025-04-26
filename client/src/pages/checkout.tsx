@@ -39,7 +39,7 @@ export default function Checkout() {
   const [addressValid, setAddressValid] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [checkoutStep, setCheckoutStep] = useState<'shipping' | 'payment'>('shipping');
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet' | 'paypal'>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet' | 'paypal' | 'mobile-money'>('stripe');
   const [paymentComplete, setPaymentComplete] = useState(false);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
