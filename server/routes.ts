@@ -8,7 +8,14 @@ import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { seedDatabase } from "./seed";
-import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, insertTransactionSchema } from "@shared/schema";
+import { 
+  insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
+  insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
+  insertTransactionSchema, insertCommunitySchema, insertCommunityMemberSchema,
+  insertMembershipTierSchema, insertMembershipSchema, insertEventSchema,
+  insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
+  insertCreatorEarningSchema, insertSubscriptionSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {

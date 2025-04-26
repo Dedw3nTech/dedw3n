@@ -1290,6 +1290,717 @@ export class MemStorage implements IStorage {
       };
     });
   }
+
+  // COMMUNITY MANAGEMENT METHODS
+  
+  // Community management operations
+  async getCommunity(id: number): Promise<Community | undefined> {
+    return this.communities.get(id);
+  }
+
+  async getCommunityByName(name: string): Promise<Community | undefined> {
+    return Array.from(this.communities.values()).find(community => 
+      community.name.toLowerCase() === name.toLowerCase());
+  }
+
+  async createCommunity(community: InsertCommunity): Promise<Community> {
+    const id = this.communityIdCounter++;
+    const newCommunity: Community = {
+      id,
+      ...community,
+      memberCount: 0,
+      isVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.communities.set(id, newCommunity);
+    
+    // Auto-add the owner as a member with "owner" role
+    await this.addCommunityMember({
+      communityId: id,
+      userId: community.ownerId,
+      role: "owner"
+    });
+    
+    return newCommunity;
+  }
+
+  async updateCommunity(id: number, data: Partial<InsertCommunity>): Promise<Community> {
+    const community = this.communities.get(id);
+    if (!community) throw new Error(`Community with id ${id} not found`);
+    
+    const updatedCommunity = {
+      ...community,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.communities.set(id, updatedCommunity);
+    return updatedCommunity;
+  }
+
+  async updateCommunityMemberCount(id: number, change: number): Promise<Community> {
+    const community = this.communities.get(id);
+    if (!community) throw new Error(`Community with id ${id} not found`);
+    
+    community.memberCount += change;
+    community.updatedAt = new Date();
+    this.communities.set(id, community);
+    return community;
+  }
+
+  async listCommunities(options?: {
+    ownerId?: number;
+    visibility?: string | string[];
+    topics?: string[];
+    isVerified?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Community[]> {
+    let communities = Array.from(this.communities.values());
+    
+    if (options) {
+      if (options.ownerId !== undefined) {
+        communities = communities.filter(community => community.ownerId === options.ownerId);
+      }
+      
+      if (options.visibility !== undefined) {
+        const visibilities = Array.isArray(options.visibility) 
+          ? options.visibility 
+          : [options.visibility];
+        communities = communities.filter(community => visibilities.includes(community.visibility));
+      }
+      
+      if (options.topics && options.topics.length > 0) {
+        communities = communities.filter(community => {
+          if (!community.topics) return false;
+          return options.topics!.some(topic => community.topics!.includes(topic));
+        });
+      }
+      
+      if (options.isVerified !== undefined) {
+        communities = communities.filter(community => community.isVerified === options.isVerified);
+      }
+      
+      // Apply pagination
+      if (options.offset !== undefined) {
+        communities = communities.slice(options.offset);
+      }
+      
+      if (options.limit !== undefined) {
+        communities = communities.slice(0, options.limit);
+      }
+    }
+    
+    return communities;
+  }
+
+  // Community members operations
+  async getCommunityMember(id: number): Promise<CommunityMember | undefined> {
+    return this.communityMembers.get(id);
+  }
+
+  async getMembershipStatus(communityId: number, userId: number): Promise<CommunityMember | undefined> {
+    return Array.from(this.communityMembers.values()).find(member => 
+      member.communityId === communityId && member.userId === userId);
+  }
+
+  async addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember> {
+    // Check if member already exists
+    const existingMember = await this.getMembershipStatus(member.communityId, member.userId);
+    if (existingMember) {
+      return existingMember;
+    }
+    
+    const id = this.communityMemberIdCounter++;
+    const newMember: CommunityMember = {
+      id,
+      ...member,
+      joinedAt: new Date()
+    };
+    this.communityMembers.set(id, newMember);
+    
+    // Update the community member count
+    await this.updateCommunityMemberCount(member.communityId, 1);
+    
+    return newMember;
+  }
+
+  async updateMemberRole(communityId: number, userId: number, role: string): Promise<CommunityMember> {
+    const member = Array.from(this.communityMembers.values()).find(m => 
+      m.communityId === communityId && m.userId === userId);
+    
+    if (!member) throw new Error(`Community member not found`);
+    
+    member.role = role;
+    this.communityMembers.set(member.id, member);
+    return member;
+  }
+
+  async removeCommunityMember(communityId: number, userId: number): Promise<boolean> {
+    // Find the member
+    const member = Array.from(this.communityMembers.values()).find(m => 
+      m.communityId === communityId && m.userId === userId);
+    
+    if (!member) return false;
+    
+    // Check if it's the owner
+    const community = this.communities.get(communityId);
+    if (community && community.ownerId === userId) {
+      throw new Error(`Cannot remove the owner from a community`);
+    }
+    
+    // Remove the member
+    const result = this.communityMembers.delete(member.id);
+    
+    // Update member count
+    if (result) {
+      await this.updateCommunityMemberCount(communityId, -1);
+    }
+    
+    return result;
+  }
+
+  async listCommunityMembers(communityId: number, role?: string): Promise<CommunityMember[]> {
+    let members = Array.from(this.communityMembers.values())
+      .filter(member => member.communityId === communityId);
+    
+    if (role) {
+      members = members.filter(member => member.role === role);
+    }
+    
+    return members;
+  }
+
+  // Membership tiers operations
+  async getMembershipTier(id: number): Promise<MembershipTier | undefined> {
+    return this.membershipTiers.get(id);
+  }
+
+  async createMembershipTier(tier: InsertMembershipTier): Promise<MembershipTier> {
+    const id = this.membershipTierIdCounter++;
+    const newTier: MembershipTier = {
+      id,
+      ...tier,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.membershipTiers.set(id, newTier);
+    return newTier;
+  }
+
+  async updateMembershipTier(id: number, data: Partial<InsertMembershipTier>): Promise<MembershipTier> {
+    const tier = this.membershipTiers.get(id);
+    if (!tier) throw new Error(`Membership tier with id ${id} not found`);
+    
+    const updatedTier = {
+      ...tier,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.membershipTiers.set(id, updatedTier);
+    return updatedTier;
+  }
+
+  async deleteMembershipTier(id: number): Promise<boolean> {
+    // Check if any memberships are using this tier
+    const hasMembers = Array.from(this.memberships.values())
+      .some(membership => membership.tierId === id);
+    
+    if (hasMembers) {
+      throw new Error(`Cannot delete a tier with active members`);
+    }
+    
+    return this.membershipTiers.delete(id);
+  }
+
+  async listMembershipTiers(communityId: number): Promise<MembershipTier[]> {
+    return Array.from(this.membershipTiers.values())
+      .filter(tier => tier.communityId === communityId);
+  }
+
+  // User membership operations
+  async getMembership(id: number): Promise<Membership | undefined> {
+    return this.memberships.get(id);
+  }
+
+  async getUserMemberships(userId: number): Promise<Membership[]> {
+    return Array.from(this.memberships.values())
+      .filter(membership => membership.userId === userId);
+  }
+
+  async createMembership(membership: InsertMembership): Promise<Membership> {
+    const id = this.membershipIdCounter++;
+    const newMembership: Membership = {
+      id,
+      ...membership,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.memberships.set(id, newMembership);
+    
+    // Ensure the user is a member of the community
+    await this.addCommunityMember({
+      communityId: membership.communityId,
+      userId: membership.userId,
+      role: "member"
+    });
+    
+    return newMembership;
+  }
+
+  async updateMembershipStatus(id: number, status: string): Promise<Membership> {
+    const membership = this.memberships.get(id);
+    if (!membership) throw new Error(`Membership with id ${id} not found`);
+    
+    membership.status = status;
+    membership.updatedAt = new Date();
+    this.memberships.set(id, membership);
+    return membership;
+  }
+
+  async cancelMembership(id: number): Promise<Membership> {
+    const membership = this.memberships.get(id);
+    if (!membership) throw new Error(`Membership with id ${id} not found`);
+    
+    membership.status = "canceled";
+    membership.autoRenew = false;
+    membership.updatedAt = new Date();
+    this.memberships.set(id, membership);
+    return membership;
+  }
+  
+  // Events operations
+  async getEvent(id: number): Promise<Event | undefined> {
+    return this.events.get(id);
+  }
+
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const id = this.eventIdCounter++;
+    const newEvent: Event = {
+      id,
+      ...event,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.events.set(id, newEvent);
+    return newEvent;
+  }
+
+  async updateEvent(id: number, data: Partial<InsertEvent>): Promise<Event> {
+    const event = this.events.get(id);
+    if (!event) throw new Error(`Event with id ${id} not found`);
+    
+    const updatedEvent = {
+      ...event,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.events.set(id, updatedEvent);
+    return updatedEvent;
+  }
+
+  async listEvents(options?: {
+    communityId?: number;
+    hostId?: number;
+    eventType?: string;
+    startAfter?: Date;
+    startBefore?: Date;
+    isPublished?: boolean;
+    requiredTierId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<Event[]> {
+    let events = Array.from(this.events.values());
+    
+    if (options) {
+      if (options.communityId !== undefined) {
+        events = events.filter(event => event.communityId === options.communityId);
+      }
+      
+      if (options.hostId !== undefined) {
+        events = events.filter(event => event.hostId === options.hostId);
+      }
+      
+      if (options.eventType !== undefined) {
+        events = events.filter(event => event.eventType === options.eventType);
+      }
+      
+      if (options.startAfter !== undefined) {
+        events = events.filter(event => event.startTime >= options.startAfter!);
+      }
+      
+      if (options.startBefore !== undefined) {
+        events = events.filter(event => event.startTime <= options.startBefore!);
+      }
+      
+      if (options.isPublished !== undefined) {
+        events = events.filter(event => event.isPublished === options.isPublished);
+      }
+      
+      if (options.requiredTierId !== undefined) {
+        events = events.filter(event => event.requiredTierId === options.requiredTierId);
+      }
+      
+      // Sort by start time (soonest first)
+      events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+      
+      // Apply pagination
+      if (options.offset !== undefined) {
+        events = events.slice(options.offset);
+      }
+      
+      if (options.limit !== undefined) {
+        events = events.slice(0, options.limit);
+      }
+    }
+    
+    return events;
+  }
+
+  async publishEvent(id: number): Promise<Event> {
+    const event = this.events.get(id);
+    if (!event) throw new Error(`Event with id ${id} not found`);
+    
+    event.isPublished = true;
+    event.updatedAt = new Date();
+    this.events.set(id, event);
+    return event;
+  }
+
+  async cancelEvent(id: number): Promise<boolean> {
+    return this.events.delete(id);
+  }
+
+  // Event registrations operations
+  async getEventRegistration(id: number): Promise<EventRegistration | undefined> {
+    return this.eventRegistrations.get(id);
+  }
+
+  async registerForEvent(registration: InsertEventRegistration): Promise<EventRegistration> {
+    // Check if already registered
+    const existingRegistration = Array.from(this.eventRegistrations.values()).find(reg => 
+      reg.eventId === registration.eventId && reg.userId === registration.userId);
+      
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+    
+    const id = this.eventRegistrationIdCounter++;
+    const newRegistration: EventRegistration = {
+      id,
+      ...registration,
+      registeredAt: new Date(),
+      checkedInAt: null
+    };
+    this.eventRegistrations.set(id, newRegistration);
+    return newRegistration;
+  }
+
+  async cancelRegistration(eventId: number, userId: number): Promise<boolean> {
+    const registration = Array.from(this.eventRegistrations.values()).find(reg => 
+      reg.eventId === eventId && reg.userId === userId);
+      
+    if (!registration) return false;
+    
+    return this.eventRegistrations.delete(registration.id);
+  }
+
+  async checkInAttendee(eventId: number, userId: number): Promise<EventRegistration> {
+    const registration = Array.from(this.eventRegistrations.values()).find(reg => 
+      reg.eventId === eventId && reg.userId === userId);
+      
+    if (!registration) {
+      throw new Error(`Registration not found for user ${userId} at event ${eventId}`);
+    }
+    
+    registration.status = "attended";
+    registration.checkedInAt = new Date();
+    this.eventRegistrations.set(registration.id, registration);
+    return registration;
+  }
+
+  async listEventAttendees(eventId: number): Promise<EventRegistration[]> {
+    return Array.from(this.eventRegistrations.values())
+      .filter(reg => reg.eventId === eventId);
+  }
+
+  async countEventAttendees(eventId: number): Promise<number> {
+    return (await this.listEventAttendees(eventId)).length;
+  }
+
+  // Polls operations
+  async getPoll(id: number): Promise<Poll | undefined> {
+    return this.polls.get(id);
+  }
+
+  async createPoll(poll: InsertPoll): Promise<Poll> {
+    const id = this.pollIdCounter++;
+    const newPoll: Poll = {
+      id,
+      ...poll,
+      totalVotes: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.polls.set(id, newPoll);
+    return newPoll;
+  }
+
+  async updatePoll(id: number, data: Partial<InsertPoll>): Promise<Poll> {
+    const poll = this.polls.get(id);
+    if (!poll) throw new Error(`Poll with id ${id} not found`);
+    
+    const updatedPoll = {
+      ...poll,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.polls.set(id, updatedPoll);
+    return updatedPoll;
+  }
+
+  async closePoll(id: number): Promise<Poll> {
+    const poll = this.polls.get(id);
+    if (!poll) throw new Error(`Poll with id ${id} not found`);
+    
+    poll.isActive = false;
+    poll.endsAt = new Date();
+    poll.updatedAt = new Date();
+    this.polls.set(id, poll);
+    return poll;
+  }
+
+  async listPolls(communityId: number, isActive?: boolean): Promise<Poll[]> {
+    let polls = Array.from(this.polls.values())
+      .filter(poll => poll.communityId === communityId);
+      
+    if (isActive !== undefined) {
+      polls = polls.filter(poll => poll.isActive === isActive);
+    }
+    
+    // Sort by creation date (newest first)
+    return polls.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  // Poll votes operations
+  async getPollVote(pollId: number, userId: number): Promise<PollVote | undefined> {
+    return Array.from(this.pollVotes.values()).find(vote => 
+      vote.pollId === pollId && vote.userId === userId);
+  }
+
+  async castVote(vote: InsertPollVote): Promise<PollVote> {
+    // Check if user already voted
+    const existingVote = await this.getPollVote(vote.pollId, vote.userId);
+    if (existingVote) {
+      throw new Error(`User ${vote.userId} has already voted in poll ${vote.pollId}`);
+    }
+    
+    // Check if poll is active
+    const poll = await this.getPoll(vote.pollId);
+    if (!poll) {
+      throw new Error(`Poll with id ${vote.pollId} not found`);
+    }
+    
+    if (!poll.isActive) {
+      throw new Error(`Poll is no longer active`);
+    }
+    
+    // Cast vote
+    const id = this.pollVoteIdCounter++;
+    const newVote: PollVote = {
+      id,
+      ...vote,
+      votedAt: new Date()
+    };
+    this.pollVotes.set(id, newVote);
+    
+    // Update poll total votes
+    poll.totalVotes += 1;
+    this.polls.set(poll.id, poll);
+    
+    return newVote;
+  }
+
+  async listPollVotes(pollId: number): Promise<PollVote[]> {
+    return Array.from(this.pollVotes.values())
+      .filter(vote => vote.pollId === pollId);
+  }
+
+  async getPollResults(pollId: number): Promise<{ optionIndex: number; votes: number; percentage: number }[]> {
+    const poll = await this.getPoll(pollId);
+    if (!poll) {
+      throw new Error(`Poll with id ${pollId} not found`);
+    }
+    
+    const votes = await this.listPollVotes(pollId);
+    const options = poll.options as any[];
+    
+    // Initialize results
+    const results = options.map((_, index) => ({
+      optionIndex: index,
+      votes: 0,
+      percentage: 0
+    }));
+    
+    // Count votes for each option
+    votes.forEach(vote => {
+      vote.selectedOptions.forEach(optionIndex => {
+        if (results[optionIndex]) {
+          results[optionIndex].votes += 1;
+        }
+      });
+    });
+    
+    // Calculate percentages
+    const totalVotes = poll.totalVotes;
+    if (totalVotes > 0) {
+      results.forEach(result => {
+        result.percentage = (result.votes / totalVotes) * 100;
+      });
+    }
+    
+    return results.sort((a, b) => b.votes - a.votes);
+  }
+  
+  // Creator earnings operations
+  async getCreatorEarning(id: number): Promise<CreatorEarning | undefined> {
+    return this.creatorEarnings.get(id);
+  }
+
+  async addCreatorEarning(earning: InsertCreatorEarning): Promise<CreatorEarning> {
+    const id = this.creatorEarningIdCounter++;
+    const newEarning: CreatorEarning = {
+      id,
+      ...earning,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.creatorEarnings.set(id, newEarning);
+    return newEarning;
+  }
+
+  async updateEarningStatus(id: number, status: string): Promise<CreatorEarning> {
+    const earning = this.creatorEarnings.get(id);
+    if (!earning) throw new Error(`Creator earning with id ${id} not found`);
+    
+    earning.status = status;
+    if (status === "paid") {
+      earning.paymentDate = new Date();
+    }
+    earning.updatedAt = new Date();
+    this.creatorEarnings.set(id, earning);
+    return earning;
+  }
+
+  async listCreatorEarnings(userId: number): Promise<CreatorEarning[]> {
+    return Array.from(this.creatorEarnings.values())
+      .filter(earning => earning.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getCreatorRevenueStats(userId: number): Promise<{
+    totalRevenue: number;
+    pendingPayouts: number;
+    paidRevenue: number;
+    bySource: Record<string, number>;
+    byPeriod: Record<string, number>;
+  }> {
+    const earnings = await this.listCreatorEarnings(userId);
+    
+    let totalRevenue = 0;
+    let pendingPayouts = 0;
+    let paidRevenue = 0;
+    const bySource: Record<string, number> = {};
+    const byPeriod: Record<string, number> = {};
+    
+    // Calculate today's date and month start for period calculations
+    const today = new Date();
+    const currentMonth = `${today.getFullYear()}-${today.getMonth() + 1}`;
+    
+    // Process earnings
+    earnings.forEach(earning => {
+      const amount = earning.netAmount;
+      totalRevenue += amount;
+      
+      // Status-based stats
+      if (earning.status === "pending") {
+        pendingPayouts += amount;
+      } else if (earning.status === "paid") {
+        paidRevenue += amount;
+      }
+      
+      // Source-based stats
+      if (!bySource[earning.source]) {
+        bySource[earning.source] = 0;
+      }
+      bySource[earning.source] += amount;
+      
+      // Period-based stats (monthly)
+      const earningDate = earning.createdAt;
+      const earningMonth = `${earningDate.getFullYear()}-${earningDate.getMonth() + 1}`;
+      
+      if (!byPeriod[earningMonth]) {
+        byPeriod[earningMonth] = 0;
+      }
+      byPeriod[earningMonth] += amount;
+    });
+    
+    return {
+      totalRevenue,
+      pendingPayouts,
+      paidRevenue,
+      bySource,
+      byPeriod
+    };
+  }
+  
+  // Subscriptions operations
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    return this.subscriptions.get(id);
+  }
+
+  async getUserSubscriptions(userId: number): Promise<Subscription[]> {
+    return Array.from(this.subscriptions.values())
+      .filter(sub => sub.userId === userId);
+  }
+
+  async getCreatorSubscribers(creatorId: number): Promise<Subscription[]> {
+    return Array.from(this.subscriptions.values())
+      .filter(sub => sub.creatorId === creatorId && sub.status === "active");
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const id = this.subscriptionIdCounter++;
+    const newSubscription: Subscription = {
+      id,
+      ...subscription,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.subscriptions.set(id, newSubscription);
+    return newSubscription;
+  }
+
+  async updateSubscriptionStatus(id: number, status: string): Promise<Subscription> {
+    const subscription = this.subscriptions.get(id);
+    if (!subscription) throw new Error(`Subscription with id ${id} not found`);
+    
+    subscription.status = status;
+    subscription.updatedAt = new Date();
+    this.subscriptions.set(id, subscription);
+    return subscription;
+  }
+
+  async cancelSubscription(id: number): Promise<Subscription> {
+    const subscription = this.subscriptions.get(id);
+    if (!subscription) throw new Error(`Subscription with id ${id} not found`);
+    
+    subscription.status = "canceled";
+    subscription.cancelAtPeriodEnd = true;
+    subscription.updatedAt = new Date();
+    this.subscriptions.set(id, subscription);
+    return subscription;
+  }
 }
 
 export const storage = new MemStorage();
