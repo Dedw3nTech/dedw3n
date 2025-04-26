@@ -14,13 +14,13 @@ export default function Header() {
   // Fetch cart count
   const { data: cartData } = useQuery<{ count: number }>({
     queryKey: ["/api/cart/count"],
-    enabled: false, // Disable until auth is implemented
+    // Enabled by default - will return 401 if not logged in
   });
 
   // Fetch message count
   const { data: messageData } = useQuery<{ count: number }>({
     queryKey: ["/api/messages/unread/count"],
-    enabled: false, // Disable until auth is implemented
+    // Enabled by default - will return 401 if not logged in
   });
 
   // Placeholder notification count
@@ -52,20 +52,23 @@ export default function Header() {
               <i className="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
             </div>
 
-            <button className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition">
+            <Link 
+              href="/upload-product" 
+              className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition"
+            >
               <i className="ri-add-line mr-1"></i> Sell
-            </button>
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="relative p-2 text-gray-600 hover:text-primary">
+            <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-shopping-cart-2-line text-xl"></i>
               {cartData && cartData.count > 0 && (
                 <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
                   {cartData.count}
                 </Badge>
               )}
-            </button>
+            </Link>
 
             <button className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-message-3-line text-xl"></i>

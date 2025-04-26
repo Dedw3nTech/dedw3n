@@ -164,12 +164,12 @@ export default function ProductDetail() {
     <div className="container max-w-6xl mx-auto py-12 px-4">
       {/* Breadcrumbs */}
       <div className="mb-6 text-sm text-gray-500">
-        <Link href="/">
-          <a className="hover:text-primary">Home</a>
+        <Link href="/" className="hover:text-primary">
+          Home
         </Link>
         <span className="mx-2">/</span>
-        <Link href={`/category/${encodeURIComponent(product.category)}`}>
-          <a className="hover:text-primary">{product.category}</a>
+        <Link href={`/category/${encodeURIComponent(product.category)}`} className="hover:text-primary">
+          {product.category}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-700">{product.name}</span>
@@ -203,8 +203,8 @@ export default function ProductDetail() {
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 Sold by{' '}
-                <Link href={`/vendor/${vendor.id}`}>
-                  <a className="text-primary hover:underline">{vendor.storeName}</a>
+                <Link href={`/vendor/${vendor.id}`} className="text-primary hover:underline">
+                  {vendor.storeName}
                 </Link>
               </p>
             </div>
