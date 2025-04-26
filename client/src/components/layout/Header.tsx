@@ -1,0 +1,115 @@
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useView } from "@/hooks/use-view";
+import UserMenu from "../ui/user-menu";
+import SearchOverlay from "../ui/search-overlay";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "../ui/badge";
+
+export default function Header() {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { view, setView } = useView();
+  const [, setLocation] = useLocation();
+
+  // Fetch cart count
+  const { data: cartData } = useQuery<{ count: number }>({
+    queryKey: ["/api/cart/count"],
+    enabled: false, // Disable until auth is implemented
+  });
+
+  // Fetch message count
+  const { data: messageData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread/count"],
+    enabled: false, // Disable until auth is implemented
+  });
+
+  // Placeholder notification count
+  const notificationCount = 1;
+
+  const handleViewChange = (newView: "marketplace" | "social") => {
+    setView(newView);
+    setLocation(newView === "marketplace" ? "/" : "/social");
+  };
+
+  return (
+    <header className="bg-white shadow-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          <div className="flex items-center space-x-2">
+            <i className="ri-store-2-line text-primary text-2xl"></i>
+            <Link href="/">
+              <h1 className="text-xl font-bold text-gray-800 cursor-pointer">SocialMarket</h1>
+            </Link>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products or posts..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <i className="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
+            </div>
+
+            <button className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition">
+              <i className="ri-add-line mr-1"></i> Sell
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <button className="relative p-2 text-gray-600 hover:text-primary">
+              <i className="ri-shopping-cart-2-line text-xl"></i>
+              {cartData && cartData.count > 0 && (
+                <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                  {cartData.count}
+                </Badge>
+              )}
+            </button>
+
+            <button className="relative p-2 text-gray-600 hover:text-primary">
+              <i className="ri-message-3-line text-xl"></i>
+              {messageData && messageData.count > 0 && (
+                <Badge className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                  {messageData.count}
+                </Badge>
+              )}
+            </button>
+
+            <button className="relative p-2 text-gray-600 hover:text-primary">
+              <i className="ri-notification-3-line text-xl"></i>
+              {notificationCount > 0 && (
+                <Badge variant="secondary" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                  {notificationCount}
+                </Badge>
+              )}
+            </button>
+
+            <UserMenu />
+          </div>
+        </div>
+
+        <div className="flex border-b border-gray-200 -mb-px">
+          <button
+            className={`flex-1 py-4 text-center font-medium text-sm focus:outline-none ${
+              view === "marketplace" ? "border-b-2 border-primary text-primary" : "text-gray-600"
+            }`}
+            onClick={() => handleViewChange("marketplace")}
+          >
+            <i className="ri-store-2-line mr-1"></i> Marketplace
+          </button>
+          <button
+            className={`flex-1 py-4 text-center font-medium text-sm focus:outline-none ${
+              view === "social" ? "border-b-2 border-primary text-primary" : "text-gray-600"
+            }`}
+            onClick={() => handleViewChange("social")}
+          >
+            <i className="ri-group-line mr-1"></i> Social
+          </button>
+        </div>
+      </div>
+
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+    </header>
+  );
+}
