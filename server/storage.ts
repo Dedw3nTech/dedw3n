@@ -1,3 +1,6 @@
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
 import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, reviews, carts,
@@ -23,6 +26,9 @@ import {
 
 // Interface for all storage operations
 export interface IStorage {
+  // Session store for authentication
+  sessionStore: any;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -388,7 +394,16 @@ export class MemStorage implements IStorage {
   
   // Video-related counters (already defined above)
 
+  // Session store for authentication
+  sessionStore: any;
+  
   constructor() {
+    // Initialize session store with memorystore
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+    
     this.users = new Map();
     this.vendors = new Map();
     this.products = new Map();

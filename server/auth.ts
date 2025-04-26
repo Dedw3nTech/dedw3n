@@ -33,17 +33,12 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Use memorystore for persistent session storage
-  const MemoryStore = createMemoryStore(session);
-  
-  // Set up session with memory store
+  // Set up session using the session store from storage
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "socialmarket-secret-key",
     resave: false,
-    saveUninitialized: true, // Changed to true to ensure guest sessions are saved
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    saveUninitialized: true, // Ensures guest sessions are saved
+    store: storage.sessionStore, // Use the session store from storage
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
       httpOnly: true,
