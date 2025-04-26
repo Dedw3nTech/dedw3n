@@ -8,7 +8,7 @@ import { Loader2, Phone, AlertCircle, CheckCircle } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 type MobileMoneyProvider = {
   id: string;
