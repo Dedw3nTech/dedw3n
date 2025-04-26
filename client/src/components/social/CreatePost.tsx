@@ -550,43 +550,170 @@ export default function CreatePost({
               </div>
             </div>
             
-            <div className="flex items-center justify-between pt-3 border-t">
+            {/* Content Type Selector Tabs */}
+            <Tabs
+              value={contentType}
+              onValueChange={(value) => setContentType(value as ContentType)}
+              className="w-full pt-3 border-t"
+            >
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="standard" className="flex items-center gap-1">
+                  <MessageSquarePlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Standard</span>
+                </TabsTrigger>
+                <TabsTrigger value="article" className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Article</span>
+                </TabsTrigger>
+                <TabsTrigger value="visual" className="flex items-center gap-1">
+                  <ImageIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Visual</span>
+                </TabsTrigger>
+                <TabsTrigger value="video" className="flex items-center gap-1">
+                  <Video className="h-4 w-4" />
+                  <span className="hidden sm:inline">Video</span>
+                </TabsTrigger>
+                <TabsTrigger value="advertisement" className="flex items-center gap-1">
+                  <Megaphone className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ad</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Standard Post Content */}
+              <TabsContent value="standard" className="space-y-2">
+                <div className="flex gap-2 mt-3">
+                  {/* Image upload button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!!videoFile}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-1" />
+                    Add Photo
+                  </Button>
+                </div>
+              </TabsContent>
+
+              {/* Article Content */}
+              <TabsContent value="article" className="space-y-2">
+                <p className="text-sm text-muted-foreground mt-3">
+                  Write a detailed article with a compelling title. Great for sharing expertise and insights.
+                </p>
+              </TabsContent>
+
+              {/* Visual Content */}
+              <TabsContent value="visual" className="space-y-2">
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant={imageFile ? "secondary" : "default"}
+                    size="sm"
+                    className="w-full"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-1" />
+                    {imageFile ? "Change Image" : "Upload Image"}
+                  </Button>
+                </div>
+              </TabsContent>
+
+              {/* Video Content */}
+              <TabsContent value="video" className="space-y-2">
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant={videoFile ? "secondary" : "default"}
+                    size="sm"
+                    className="w-full"
+                    onClick={() => videoInputRef.current?.click()}
+                  >
+                    <Video className="h-4 w-4 mr-1" />
+                    {videoFile ? "Change Video" : "Upload Video"}
+                  </Button>
+                </div>
+              </TabsContent>
+
+              {/* Advertisement Content */}
+              <TabsContent value="advertisement" className="space-y-2">
+                <div className="mt-3 space-y-3">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!!videoFile}
+                    >
+                      <ImageIcon className="h-4 w-4 mr-1" />
+                      Add Photo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={!!imageFile}
+                    >
+                      <Video className="h-4 w-4 mr-1" />
+                      Add Video
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="External link URL (optional)"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    className="border bg-accent/30"
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="promote-post"
+                      checked={isPromoted}
+                      onChange={(e) => setIsPromoted(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <label htmlFor="promote-post" className="text-sm">
+                      Promote this advertisement
+                    </label>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Shared upload inputs */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={videoInputRef}
+              accept="video/*"
+              onChange={handleVideoChange}
+              className="hidden"
+            />
+
+            <div className="flex items-center justify-between mt-3">
               <div className="flex gap-2">
-                {/* Image upload button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!!videoFile}
-                >
-                  <ImageIcon className="h-4 w-4 mr-1" />
-                  Photo
-                </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                
-                {/* Video upload button */}
+                {/* Tags button */}
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-muted-foreground"
                   onClick={() => {
-                    const input = document.createElement("input");
-                    input.type = "file";
-                    input.accept = "video/*";
-                    input.onchange = (e) => handleVideoChange(e as any);
-                    input.click();
+                    if (!currentTag.trim() && tags.length < 5) {
+                      const tag = prompt("Add a tag (without #):");
+                      if (tag && !tags.includes(tag.trim())) {
+                        setTags([...tags, tag.trim()]);
+                      }
+                    }
                   }}
-                  disabled={!!imageFile}
                 >
-                  <Video className="h-4 w-4 mr-1" />
-                  Video
+                  <Tag className="h-4 w-4 mr-1" />
+                  Tags ({tags.length}/5)
                 </Button>
               </div>
               
@@ -605,6 +732,9 @@ export default function CreatePost({
                     setVideoPreview("");
                     setPostToVisibility("public");
                     setSelectedCommunityId(communityId || null);
+                    setContentType('standard');
+                    setLinkUrl('');
+                    setIsPromoted(false);
                   }}
                 >
                   Cancel
