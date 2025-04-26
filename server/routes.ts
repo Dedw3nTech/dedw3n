@@ -328,7 +328,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get a specific video by ID
+  // Get trending videos - MUST be before the video ID route to avoid conflict
+  app.get("/api/videos/trending", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const videos = await storage.getTrendingVideos(limit);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get trending videos" });
+    }
+  });
+  
+  // Get videos by type - MUST be before the video ID route to avoid conflict
+  app.get("/api/videos/type/:type", async (req, res) => {
+    try {
+      const type = req.params.type;
+      const videos = await storage.getVideosByType(type);
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get videos by type" });
+    }
+  });
+  
+  // Get a specific video by ID - This route MUST come after all other /api/videos/* routes
   app.get("/api/videos/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -393,17 +415,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get trending videos
-  app.get("/api/videos/trending", async (req, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const videos = await storage.getTrendingVideos(limit);
-      res.json(videos);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get trending videos" });
-    }
-  });
-  
   // Get user's videos
   app.get("/api/users/:userId/videos", async (req, res) => {
     try {
@@ -412,17 +423,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(videos);
     } catch (error) {
       res.status(500).json({ message: "Failed to get user videos" });
-    }
-  });
-  
-  // Get videos by type
-  app.get("/api/videos/type/:type", async (req, res) => {
-    try {
-      const type = req.params.type;
-      const videos = await storage.getVideosByType(type);
-      res.json(videos);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get videos by type" });
     }
   });
   
