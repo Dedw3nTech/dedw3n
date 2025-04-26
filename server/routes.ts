@@ -250,22 +250,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced post routes for limitless content
+  // Enhanced post routes for limitless content with file uploads
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       
-      const validatedData = insertPostSchema.parse({
-        ...req.body,
+      // Create a post data object from form fields
+      const postData: any = {
         userId,
-      });
+        content: req.body.content,
+        contentType: req.body.contentType || 'standard',
+      };
       
+      // Add optional fields if they exist
+      if (req.body.title) postData.title = req.body.title;
+      if (req.body.communityId) postData.communityId = parseInt(req.body.communityId);
+      if (req.body.tags) {
+        try {
+          postData.tags = JSON.parse(req.body.tags);
+        } catch (e) {
+          // If tags parsing fails, just use an empty array
+          postData.tags = [];
+        }
+      }
+      
+      if (req.body.linkUrl) postData.linkUrl = req.body.linkUrl;
+      if (req.body.isPromoted) postData.isPromoted = req.body.isPromoted === 'true';
+      
+      // Handle image upload if present
+      if (req.files && req.files.image) {
+        const imageFile = req.files.image as any;
+        // Generate a unique filename
+        const filename = `${Date.now()}_${imageFile.name}`;
+        // Move the file to the uploads directory
+        await imageFile.mv(`./public/uploads/images/${filename}`);
+        // Set the image URL
+        postData.imageUrl = `/uploads/images/${filename}`;
+      }
+      
+      // Handle video upload if present
+      if (req.files && req.files.video) {
+        const videoFile = req.files.video as any;
+        // Generate a unique filename
+        const filename = `${Date.now()}_${videoFile.name}`;
+        // Move the file to the uploads directory
+        await videoFile.mv(`./public/uploads/videos/${filename}`);
+        // Set the video URL
+        postData.videoUrl = `/uploads/videos/${filename}`;
+      }
+      
+      console.log("Creating post with data:", postData);
+      
+      // Validate the data before creating the post
+      const validatedData = insertPostSchema.parse(postData);
       const post = await storage.createPost(validatedData);
-      
-      // Increment user's post count if needed
       
       res.status(201).json(post);
     } catch (error) {
+      console.error("Error creating post:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors });
       }
