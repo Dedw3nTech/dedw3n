@@ -25,6 +25,7 @@ import {
   Search, 
   MessageSquare, 
   Phone, 
+  PhoneOff,
   Video, 
   ChevronLeft, 
   ChevronRight,
@@ -120,6 +121,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
     timestamp: Date;
   }>>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [callStatus, setCallStatus] = useState<'none' | 'incoming' | 'outgoing' | 'active'>('none');
+  const [callType, setCallType] = useState<'audio' | 'video' | null>(null);
+  const [callerId, setCallerId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && member && user) {
@@ -137,6 +141,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
           const data = JSON.parse(event.data);
           console.log('Received message:', data);
           
+          // Handle chat messages
           if (data.type === 'chat' && data.senderId === member.id) {
             setChatMessages(prev => [...prev, {
               id: data.messageId || Date.now(),
@@ -144,6 +149,49 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
               senderId: data.senderId,
               timestamp: new Date(data.timestamp)
             }]);
+          }
+          
+          // Handle incoming call request
+          else if (data.type === 'call-request' && data.callerId === member.id) {
+            setCallStatus('incoming');
+            setCallType(data.callType);
+            setCallerId(data.callerId);
+            
+            // Show browser notification if supported
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification(t('members.incoming_call'), {
+                body: t('members.incoming_call_from', { name: member.name }),
+                icon: member.avatar || undefined
+              });
+            } else {
+              // If notifications not supported, use alert
+              if (window.confirm(t('members.incoming_call_from', { name: member.name }) + "\n" + 
+                                 t('members.accept_call'))) {
+                acceptCall();
+              } else {
+                rejectCall();
+              }
+            }
+          }
+          
+          // Handle call response (accept/reject)
+          else if (data.type === 'call-response' && data.responderId === member.id) {
+            if (data.accepted) {
+              setCallStatus('active');
+              // In a real implementation, this would set up WebRTC connection
+              alert(t('members.call_connected'));
+            } else {
+              setCallStatus('none');
+              setCallType(null);
+              alert(t('members.call_rejected'));
+            }
+          }
+          
+          // Handle call errors
+          else if (data.type === 'call-error') {
+            setCallStatus('none');
+            setCallType(null);
+            alert(t('members.call_error', { error: data.error }));
           }
         } catch (error) {
           console.error('Error parsing WebSocket message', error);
@@ -167,7 +215,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
         newSocket.close();
       };
     }
-  }, [isOpen, member, user]);
+  }, [isOpen, member, user, t]);
   
   const sendMessage = () => {
     if (!message.trim() || !socket || !member || !user) return;
@@ -191,6 +239,44 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
     setMessage('');
   };
   
+  // Handle accepting an incoming call
+  const acceptCall = () => {
+    if (!socket || !callerId) return;
+    
+    socket.send(JSON.stringify({
+      type: 'call-response',
+      callerId: callerId,
+      accepted: true,
+      // In a real implementation, this would include WebRTC SDP offer
+      sdpOffer: null
+    }));
+    
+    setCallStatus('active');
+  };
+  
+  // Handle rejecting an incoming call
+  const rejectCall = () => {
+    if (!socket || !callerId) return;
+    
+    socket.send(JSON.stringify({
+      type: 'call-response',
+      callerId: callerId,
+      accepted: false
+    }));
+    
+    setCallStatus('none');
+    setCallType(null);
+    setCallerId(null);
+  };
+  
+  // Handle ending an active call
+  const endCall = () => {
+    setCallStatus('none');
+    setCallType(null);
+    setCallerId(null);
+    // In a real implementation, this would close WebRTC connections
+  };
+  
   if (!isOpen || !member) return null;
   
   return (
@@ -203,12 +289,71 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
           </Avatar>
           <div>
             <h3 className="font-medium">{member.name}</h3>
+            {callStatus !== 'none' && (
+              <p className="text-xs text-muted-foreground">
+                {callStatus === 'incoming' ? t('members.incoming_call') : 
+                 callStatus === 'outgoing' ? t('members.calling') : 
+                 t('members.in_call')}
+                {callType && ` (${callType})`}
+              </p>
+            )}
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
           &times;
         </Button>
       </div>
+      
+      {/* Incoming Call UI */}
+      {callStatus === 'incoming' && (
+        <div className="p-4 bg-green-50 border-b flex flex-col items-center">
+          <div className="flex items-center justify-center mb-2">
+            <Phone className="h-6 w-6 text-green-500 animate-pulse mr-2" />
+            <span>{t('members.incoming_call_from', { name: member.name })}</span>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={acceptCall} 
+              variant="default" 
+              className="bg-green-500 hover:bg-green-600"
+              size="sm"
+            >
+              <Phone className="mr-1 h-4 w-4" />
+              {t('members.accept')}
+            </Button>
+            <Button 
+              onClick={rejectCall} 
+              variant="destructive"
+              size="sm"
+            >
+              <PhoneOff className="mr-1 h-4 w-4" />
+              {t('members.decline')}
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Active Call UI */}
+      {callStatus === 'active' && (
+        <div className="p-4 bg-blue-50 border-b flex flex-col items-center">
+          <div className="flex items-center justify-center mb-2">
+            {callType === 'audio' ? (
+              <Phone className="h-6 w-6 text-blue-500 mr-2" />
+            ) : (
+              <Video className="h-6 w-6 text-blue-500 mr-2" />
+            )}
+            <span>{t('members.call_in_progress', { duration: '00:00' })}</span>
+          </div>
+          <Button 
+            onClick={endCall} 
+            variant="destructive"
+            size="sm"
+          >
+            <PhoneOff className="mr-1 h-4 w-4" />
+            {t('members.end_call')}
+          </Button>
+        </div>
+      )}
       
       <div className="flex-grow p-3 overflow-y-auto flex flex-col gap-2">
         {chatMessages.length === 0 ? (
@@ -256,6 +401,40 @@ const MembersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeChatMember, setActiveChatMember] = useState<UserWithoutPassword | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('all');
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  
+  // Connect to WebSocket when component mounts
+  useEffect(() => {
+    if (!user) return;
+    
+    // Create WebSocket connection
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+    
+    ws.onmessage = (event) => {
+      // This would process incoming messages when not in a chat
+      console.log('Received message:', event.data);
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+    
+    setSocket(ws);
+    
+    return () => {
+      ws.close();
+    };
+  }, [user]);
   
   const membersPerPage = 12;
   
@@ -303,13 +482,41 @@ const MembersPage = () => {
   };
   
   const handleCallClick = (member: UserWithoutPassword) => {
-    // For real implementation, this would initiate a call request via WebSocket
-    alert(`Starting audio call with ${member.name}`);
+    if (!socket || !user) {
+      alert(t('members.connection_error'));
+      return;
+    }
+    
+    setActiveChatMember(member);
+    
+    // Send call request via WebSocket
+    const callRequest = {
+      type: 'call-request',
+      receiverId: member.id,
+      callType: 'audio'
+    };
+    
+    socket.send(JSON.stringify(callRequest));
+    alert(t('members.calling_audio', { name: member.name }));
   };
   
   const handleVideoClick = (member: UserWithoutPassword) => {
-    // For real implementation, this would initiate a video call request via WebSocket
-    alert(`Starting video call with ${member.name}`);
+    if (!socket || !user) {
+      alert(t('members.connection_error'));
+      return;
+    }
+    
+    setActiveChatMember(member);
+    
+    // Send call request via WebSocket
+    const callRequest = {
+      type: 'call-request',
+      receiverId: member.id,
+      callType: 'video'
+    };
+    
+    socket.send(JSON.stringify(callRequest));
+    alert(t('members.calling_video', { name: member.name }));
   };
   
   return (
