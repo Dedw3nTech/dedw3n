@@ -1,0 +1,396 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Post } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
+import { 
+  Heart, 
+  MessageSquare, 
+  Share2, 
+  MoreHorizontal,
+  ThumbsUp, 
+  Tag,
+  BadgeCheck
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+
+interface EnhancedPostCardProps {
+  post: Post;
+}
+
+export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
+  const [showComments, setShowComments] = useState(false);
+  
+  const isOwner = user?.id === post.userId;
+  
+  // Format date
+  const formattedDate = post.createdAt 
+    ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) 
+    : "";
+  
+  // Like post mutation
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/posts/${post.id}/like`, {});
+      return { success: true };
+    },
+    onMutate: () => {
+      setIsLiked(true);
+      setLikeCount(prev => prev + 1);
+    },
+    onError: () => {
+      setIsLiked(false);
+      setLikeCount(prev => prev - 1);
+      toast({
+        title: t("errors.error"),
+        description: t("social.like_error"),
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    },
+  });
+  
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/posts/${post.id}`, {});
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      toast({
+        title: t("social.post_deleted"),
+        description: t("social.post_delete_success"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("errors.error"),
+        description: t("social.delete_error"),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleLike = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!isLiked) {
+      likeMutation.mutate();
+    }
+  };
+  
+  const handleComment = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowComments(!showComments);
+  };
+  
+  const handleShare = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real app, this would open a sharing dialog
+    // For now, we'll just copy the post link to clipboard
+    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    navigator.clipboard.writeText(postUrl)
+      .then(() => {
+        toast({
+          title: t("social.link_copied"),
+          description: t("social.copied_to_clipboard"),
+        });
+      })
+      .catch(() => {
+        toast({
+          title: t("errors.error"),
+          description: t("social.copy_error"),
+          variant: "destructive",
+        });
+      });
+  };
+  
+  const handleDelete = () => {
+    // Confirm before deleting
+    if (window.confirm(t("social.confirm_delete"))) {
+      deletePostMutation.mutate();
+    }
+  };
+  
+  // Render content based on content type
+  const renderContent = () => {
+    switch (post.contentType) {
+      case "image":
+        return (
+          <div className="mb-4">
+            {post.imageUrl && (
+              <img 
+                src={post.imageUrl} 
+                alt={post.title || t("social.post_image")} 
+                className="w-full rounded-md object-cover max-h-[400px]"
+              />
+            )}
+            <p className="mt-3 text-gray-700">{post.content}</p>
+          </div>
+        );
+        
+      case "video":
+        return (
+          <div className="mb-4">
+            {post.videoUrl && (
+              <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
+                <iframe
+                  src={post.videoUrl}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            )}
+            <p className="mt-3 text-gray-700">{post.content}</p>
+          </div>
+        );
+        
+      case "article":
+        return (
+          <div className="mb-4">
+            {post.title && (
+              <h2 className="text-xl font-bold mb-2">{post.title}</h2>
+            )}
+            <div className="prose max-w-none">
+              <p className="text-gray-700">{post.content}</p>
+            </div>
+            {post.imageUrl && (
+              <img 
+                src={post.imageUrl} 
+                alt={post.title || t("social.article_image")} 
+                className="w-full rounded-md object-cover mt-4 max-h-[300px]"
+              />
+            )}
+          </div>
+        );
+        
+      case "advertisement":
+        return (
+          <div className="mb-4 relative">
+            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md">
+              {t("social.sponsored")}
+            </div>
+            {post.title && (
+              <h2 className="text-xl font-bold mb-2">{post.title}</h2>
+            )}
+            <p className="text-gray-700">{post.content}</p>
+            {post.imageUrl && (
+              <img 
+                src={post.imageUrl} 
+                alt={post.title || t("social.ad_image")} 
+                className="w-full rounded-md object-cover mt-4 max-h-[300px]"
+              />
+            )}
+            <div className="mt-4">
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                {t("social.learn_more")}
+              </Button>
+            </div>
+          </div>
+        );
+        
+      case "text":
+      default:
+        return (
+          <div className="mb-4">
+            <p className="text-gray-700">{post.content}</p>
+          </div>
+        );
+    }
+  };
+  
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+      {/* Post Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Link href={`/members/${post.userId}`}>
+            <a className="block">
+              <img
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
+                alt="User avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            </a>
+          </Link>
+          <div>
+            <div className="flex items-center">
+              <Link href={`/members/${post.userId}`}>
+                <a className="font-medium text-gray-900 hover:underline">
+                  User {post.userId}
+                </a>
+              </Link>
+              {post.isPromoted && (
+                <BadgeCheck className="w-4 h-4 text-blue-500 ml-1" />
+              )}
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <span>{formattedDate}</span>
+              <span className="mx-1">•</span>
+              <span className="capitalize">{post.contentType}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="px-2">
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isOwner ? (
+                <>
+                  <DropdownMenuItem disabled>{t("social.edit")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete}>{t("social.delete")}</DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem disabled>{t("social.report")}</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{t("social.hide")}</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      {/* Post Content */}
+      {renderContent()}
+      
+      {/* Tags */}
+      {post.tags && post.tags.length > 0 && (
+        <div className="flex items-center flex-wrap gap-2 mb-4">
+          {post.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200">
+              #{tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+      
+      {/* Post Stats */}
+      <div className="flex items-center justify-between text-sm text-gray-500 py-2 border-t border-b">
+        <div>
+          {likeCount > 0 && (
+            <span className="flex items-center">
+              <ThumbsUp className="w-4 h-4 text-blue-500 mr-1" />
+              {likeCount}
+            </span>
+          )}
+        </div>
+        <div className="flex space-x-4">
+          {(post.comments && post.comments > 0) && (
+            <span>{post.comments} {t("social.comments")}</span>
+          )}
+          {(post.shares && post.shares > 0) && (
+            <span>{post.shares} {t("social.shares")}</span>
+          )}
+          {(post.views && post.views > 0) && (
+            <span>{post.views} {t("social.views")}</span>
+          )}
+        </div>
+      </div>
+      
+      {/* Post Actions */}
+      <div className="flex justify-between pt-2">
+        <button
+          onClick={handleLike}
+          className={`flex items-center py-1 px-2 rounded-md ${
+            isLiked ? "text-blue-500" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          <Heart className={`w-5 h-5 mr-1 ${isLiked ? "fill-current" : ""}`} />
+          <span>{t("social.like")}</span>
+        </button>
+        
+        <button
+          onClick={handleComment}
+          className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+        >
+          <MessageSquare className="w-5 h-5 mr-1" />
+          <span>{t("social.comment")}</span>
+        </button>
+        
+        <button
+          onClick={handleShare}
+          className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+        >
+          <Share2 className="w-5 h-5 mr-1" />
+          <span>{t("social.share")}</span>
+        </button>
+      </div>
+      
+      {/* Comments Section - Placeholder */}
+      {showComments && (
+        <div className="mt-4 pt-3 border-t">
+          <div className="flex items-center space-x-3 mb-4">
+            <img
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
+              alt="User avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder={t("social.write_comment")}
+                className="w-full p-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white"
+              />
+            </div>
+          </div>
+          
+          <div className="text-center text-gray-500 text-sm py-4">
+            {t("social.comments_coming_soon")}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
