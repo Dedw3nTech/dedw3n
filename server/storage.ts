@@ -1,13 +1,14 @@
 import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, reviews, follows, carts,
-  wallets, transactions,
+  wallets, transactions, orders, orderItems,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
   type Message, type InsertMessage, type Review, type InsertReview,
   type Cart, type InsertCart, type Wallet, type InsertWallet,
-  type Transaction, type InsertTransaction
+  type Transaction, type InsertTransaction, type Order, type InsertOrder,
+  type OrderItem, type InsertOrderItem
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -160,6 +161,8 @@ export class MemStorage implements IStorage {
   private cartIdCounter: number;
   private walletIdCounter: number;
   private transactionIdCounter: number;
+  private orderIdCounter: number;
+  private orderItemIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -193,6 +196,8 @@ export class MemStorage implements IStorage {
     this.cartIdCounter = 1;
     this.walletIdCounter = 1;
     this.transactionIdCounter = 1;
+    this.orderIdCounter = 1;
+    this.orderItemIdCounter = 1;
 
     this.initDefaultData();
   }
@@ -750,6 +755,212 @@ export class MemStorage implements IStorage {
     if (!wallet) return [];
     
     return this.listTransactionsByWallet(wallet.id);
+  }
+
+  // Order operations
+  async getOrder(id: number): Promise<Order | undefined> {
+    return this.orders.get(id);
+  }
+
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    return Array.from(this.orders.values())
+      .filter(order => order.userId === userId)
+      .sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const id = this.orderIdCounter++;
+    const newOrder: Order = {
+      id,
+      ...order,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.orders.set(id, newOrder);
+    return newOrder;
+  }
+
+  async updateOrderStatus(id: number, status: string): Promise<Order> {
+    const order = this.orders.get(id);
+    if (!order) throw new Error(`Order with id ${id} not found`);
+
+    order.status = status;
+    order.updatedAt = new Date();
+    this.orders.set(id, order);
+    return order;
+  }
+
+  // Order Item operations
+  async getOrderItem(id: number): Promise<OrderItem | undefined> {
+    return this.orderItems.get(id);
+  }
+
+  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> {
+    return Array.from(this.orderItems.values())
+      .filter(item => item.orderId === orderId)
+      .sort((a, b) => a.id - b.id);
+  }
+
+  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
+    const id = this.orderItemIdCounter++;
+    const newOrderItem: OrderItem = {
+      id,
+      ...orderItem,
+      createdAt: new Date(),
+    };
+    this.orderItems.set(id, newOrderItem);
+    return newOrderItem;
+  }
+
+  async updateOrderItemStatus(id: number, status: string): Promise<OrderItem> {
+    const orderItem = this.orderItems.get(id);
+    if (!orderItem) throw new Error(`Order item with id ${id} not found`);
+
+    orderItem.status = status;
+    this.orderItems.set(id, orderItem);
+    return orderItem;
+  }
+
+  // Vendor Analytics operations
+  async getVendorTotalSales(vendorId: number): Promise<number> {
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    return orderItems.reduce((total, item) => total + item.totalPrice, 0);
+  }
+
+  async getVendorOrderStats(vendorId: number): Promise<{
+    totalOrders: number;
+    pendingOrders: number;
+    shippedOrders: number;
+    deliveredOrders: number;
+    canceledOrders: number;
+  }> {
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    const stats = {
+      totalOrders: orderItems.length,
+      pendingOrders: orderItems.filter(item => item.status === 'pending').length,
+      shippedOrders: orderItems.filter(item => item.status === 'shipped').length,
+      deliveredOrders: orderItems.filter(item => item.status === 'delivered').length,
+      canceledOrders: orderItems.filter(item => item.status === 'returned' || item.status === 'canceled').length,
+    };
+    
+    return stats;
+  }
+
+  async getVendorRevenueByPeriod(vendorId: number, period: "daily" | "weekly" | "monthly" | "yearly"): Promise<Record<string, number>> {
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId && item.status !== 'canceled' && item.status !== 'returned');
+    
+    const result: Record<string, number> = {};
+    
+    // Group by period
+    for (const item of orderItems) {
+      if (!item.createdAt) continue;
+      
+      const date = new Date(item.createdAt);
+      let key: string;
+      
+      switch (period) {
+        case 'daily':
+          key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+          break;
+        case 'weekly':
+          // Get the week number
+          const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+          const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+          const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+          key = `${date.getFullYear()}-W${weekNumber}`;
+          break;
+        case 'monthly':
+          key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+          break;
+        case 'yearly':
+          key = `${date.getFullYear()}`;
+          break;
+      }
+      
+      if (!result[key]) {
+        result[key] = 0;
+      }
+      
+      result[key] += item.totalPrice;
+    }
+    
+    return result;
+  }
+
+  async getVendorTopProducts(vendorId: number, limit: number = 5): Promise<{ product: Product; totalSold: number; revenue: number }[]> {
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId && item.status !== 'canceled' && item.status !== 'returned');
+    
+    // Group by product
+    const productMap = new Map<number, { totalSold: number; revenue: number }>();
+    
+    for (const item of orderItems) {
+      if (!productMap.has(item.productId)) {
+        productMap.set(item.productId, { totalSold: 0, revenue: 0 });
+      }
+      
+      const stats = productMap.get(item.productId)!;
+      stats.totalSold += item.quantity;
+      stats.revenue += item.totalPrice;
+      
+      productMap.set(item.productId, stats);
+    }
+    
+    // Convert to array and sort by revenue
+    const result: { product: Product; totalSold: number; revenue: number }[] = [];
+    
+    for (const [productId, stats] of productMap.entries()) {
+      const product = await this.getProduct(productId);
+      if (product) {
+        result.push({
+          product,
+          totalSold: stats.totalSold,
+          revenue: stats.revenue,
+        });
+      }
+    }
+    
+    // Sort by revenue (highest first) and limit
+    return result
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, limit);
+  }
+
+  async getVendorProfitLoss(vendorId: number): Promise<{
+    totalRevenue: number;
+    totalCost: number;
+    netProfit: number;
+    profitMargin: number;
+  }> {
+    const orderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId && item.status !== 'canceled' && item.status !== 'returned');
+    
+    const totalRevenue = orderItems.reduce((total, item) => total + item.totalPrice, 0);
+    
+    // For this example, we'll estimate the cost as 60% of the price
+    // In a real application, you would store and use actual product costs
+    const totalCost = orderItems.reduce((total, item) => {
+      const unitCost = item.unitPrice * 0.6; // Assume 60% of price is cost
+      return total + (unitCost * item.quantity);
+    }, 0);
+    
+    const netProfit = totalRevenue - totalCost;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+    
+    return {
+      totalRevenue,
+      totalCost,
+      netProfit,
+      profitMargin,
+    };
   }
 }
 
