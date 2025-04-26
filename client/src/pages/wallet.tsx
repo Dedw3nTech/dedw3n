@@ -47,9 +47,25 @@ export default function WalletPage() {
   const [description, setDescription] = useState('');
   const [recipient, setRecipient] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
-  const [targetCurrency, setTargetCurrency] = useState('');
+  // Start with USD as a default target currency, will be updated when wallet data is available
+  const [targetCurrency, setTargetCurrency] = useState('GBP');
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
+  
+  // Redirect if not logged in
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+
+  // Fetch user's wallet
+  const { 
+    data: wallet, 
+    isLoading: walletLoading, 
+    isError: walletError 
+  } = useQuery<Wallet>({
+    queryKey: ['/api/wallets/me'],
+    retry: false,
+  });
   
   // Initialize default target currency and fetch exchange rates
   useEffect(() => {
@@ -68,21 +84,6 @@ export default function WalletPage() {
         });
     }
   }, [wallet]);
-
-  // Redirect if not logged in
-  if (!user) {
-    return <Redirect to="/auth" />;
-  }
-
-  // Fetch user's wallet
-  const { 
-    data: wallet, 
-    isLoading: walletLoading, 
-    isError: walletError 
-  } = useQuery<Wallet>({
-    queryKey: ['/api/wallets/me'],
-    retry: false,
-  });
 
   // Fetch user's transactions
   const { 
