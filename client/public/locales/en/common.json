@@ -3,6 +3,25 @@
     "name": "Global Marketplace",
     "slogan": "Connect. Shop. Thrive."
   },
+  "members": {
+    "directory": "Member Directory",
+    "search": "Search members...",
+    "message": "Message",
+    "call": "Call",
+    "video": "Video Call",
+    "all": "All Members",
+    "vendors": "Vendors",
+    "regular": "Regular Members",
+    "no_members_found": "No members found",
+    "try_different_search": "Try a different search term or filter",
+    "page": "Page",
+    "of": "of",
+    "vendor": "Vendor",
+    "no_bio": "No bio provided",
+    "type_message": "Type a message...",
+    "send": "Send",
+    "start_conversation": "Start a conversation with this member"
+  },
   "nav": {
     "home": "Home",
     "products": "Products",

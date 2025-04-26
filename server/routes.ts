@@ -451,6 +451,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize HTTP server
   const httpServer = createServer(app);
+  
+  // Add member directory routes
+  app.get("/api/members", async (req, res) => {
+    try {
+      const users = await storage.listUsers();
+      // Remove sensitive data like passwords before sending
+      const members = users.map(user => {
+        const { password, ...memberData } = user;
+        return memberData;
+      });
+      res.json(members);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list members" });
+    }
+  });
+
+  app.get("/api/members/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      
+      // Remove password before sending
+      const { password, ...memberData } = user;
+      res.json(memberData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get member" });
+    }
+  });
+  
+  // Set up WebSocket server for real-time messaging
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active connections
+  const clients = new Map();
+  
+  wss.on('connection', (socket, req) => {
+    console.log('WebSocket connection established');
+    // Get user ID from query params
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const userId = url.searchParams.get('userId');
+    
+    if (userId) {
+      clients.set(userId, socket);
+      
+      // Send initial connection confirmation
+      socket.send(JSON.stringify({
+        type: 'connection',
+        status: 'connected',
+        userId: userId,
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Handle messages
+      socket.on('message', async (data) => {
+        try {
+          const message = JSON.parse(data.toString());
+          console.log('Received message:', message);
+          
+          // Handle different message types
+          if (message.type === 'chat') {
+            // Save message to database
+            const savedMessage = await storage.createMessage({
+              senderId: parseInt(userId),
+              recipientId: message.recipientId,
+              content: message.content,
+              isRead: false,
+              createdAt: new Date()
+            });
+            
+            // Forward message to recipient if online
+            const recipientSocket = clients.get(message.recipientId.toString());
+            if (recipientSocket && recipientSocket.readyState === WebSocket.OPEN) {
+              recipientSocket.send(JSON.stringify({
+                type: 'chat',
+                messageId: savedMessage.id,
+                senderId: parseInt(userId),
+                content: message.content,
+                timestamp: new Date().toISOString()
+              }));
+            }
+            
+            // Confirm message saved to sender
+            socket.send(JSON.stringify({
+              type: 'confirmation',
+              messageId: savedMessage.id,
+              recipientId: message.recipientId,
+              status: 'sent',
+              timestamp: new Date().toISOString()
+            }));
+          }
+          
+          // Handle video/audio call requests
+          else if (message.type === 'call-request') {
+            const recipientSocket = clients.get(message.recipientId.toString());
+            if (recipientSocket && recipientSocket.readyState === WebSocket.OPEN) {
+              recipientSocket.send(JSON.stringify({
+                type: 'call-request',
+                callerId: parseInt(userId),
+                callType: message.callType, // 'audio' or 'video'
+                timestamp: new Date().toISOString()
+              }));
+            } else {
+              // Recipient offline
+              socket.send(JSON.stringify({
+                type: 'call-error',
+                recipientId: message.recipientId,
+                error: 'recipient-offline',
+                timestamp: new Date().toISOString()
+              }));
+            }
+          }
+          
+          // Handle call acceptance/rejection
+          else if (message.type === 'call-response') {
+            const callerSocket = clients.get(message.callerId.toString());
+            if (callerSocket && callerSocket.readyState === WebSocket.OPEN) {
+              callerSocket.send(JSON.stringify({
+                type: 'call-response',
+                accepted: message.accepted,
+                responderId: parseInt(userId),
+                sdpOffer: message.sdpOffer, // For WebRTC
+                timestamp: new Date().toISOString()
+              }));
+            }
+          }
+          
+          // Handle WebRTC signaling
+          else if (message.type === 'webrtc-signal') {
+            const targetSocket = clients.get(message.targetId.toString());
+            if (targetSocket && targetSocket.readyState === WebSocket.OPEN) {
+              targetSocket.send(JSON.stringify({
+                type: 'webrtc-signal',
+                senderId: parseInt(userId),
+                signal: message.signal,
+                timestamp: new Date().toISOString()
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('WebSocket message error:', error);
+          socket.send(JSON.stringify({
+            type: 'error',
+            error: 'Failed to process message',
+            timestamp: new Date().toISOString()
+          }));
+        }
+      });
+      
+      // Handle disconnection
+      socket.on('close', () => {
+        console.log(`User ${userId} disconnected`);
+        clients.delete(userId);
+        
+        // Notify relevant users about the disconnection
+        // (This could be used to update online status in the member directory)
+        // Implementation depends on your application's requirements
+      });
+    } else {
+      // No userId provided, close connection
+      socket.send(JSON.stringify({
+        type: 'error',
+        error: 'No user ID provided',
+        timestamp: new Date().toISOString()
+      }));
+      socket.close();
+    }
+  });
+
   return httpServer;
 }
