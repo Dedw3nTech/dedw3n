@@ -492,9 +492,20 @@ export class MemStorage implements IStorage {
   }
 
   async countCartItems(userId: number): Promise<number> {
-    return Array.from(this.carts.values())
-      .filter(item => item.userId === userId)
-      .reduce((total, item) => total + item.quantity, 0);
+    const cartItems = Array.from(this.carts.values())
+      .filter(item => item.userId === userId);
+    
+    // Count total quantity
+    let totalCount = 0;
+    for (const item of cartItems) {
+      if (item.quantity) {
+        totalCount += item.quantity;
+      } else {
+        totalCount += 1; // Default to 1 if quantity is not defined
+      }
+    }
+    
+    return totalCount;
   }
 }
 

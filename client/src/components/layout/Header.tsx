@@ -11,16 +11,23 @@ export default function Header() {
   const { view, setView } = useView();
   const [, setLocation] = useLocation();
 
+  // Fetch user data to check if logged in
+  const { data: userData } = useQuery({
+    queryKey: ["/api/auth/me"],
+  });
+  
+  const isLoggedIn = !!userData;
+
   // Fetch cart count
   const { data: cartData } = useQuery<{ count: number }>({
     queryKey: ["/api/cart/count"],
-    // Enabled by default - will return 401 if not logged in
+    enabled: isLoggedIn, // Only fetch if logged in
   });
 
   // Fetch message count
   const { data: messageData } = useQuery<{ count: number }>({
-    queryKey: ["/api/messages/unread/count"],
-    // Enabled by default - will return 401 if not logged in
+    queryKey: ["/api/messages/unread/count"], 
+    enabled: isLoggedIn, // Only fetch if logged in
   });
 
   // Placeholder notification count
