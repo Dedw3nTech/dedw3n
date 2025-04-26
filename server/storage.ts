@@ -36,6 +36,11 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   listUsers(): Promise<User[]>;
   
+  // Community and vendor operations
+  getUserCommunities(userId: number): Promise<Community[]>;
+  getVendorByUserId(userId: number): Promise<Vendor | undefined>;
+  getUserPosts(userId: number): Promise<Post[]>;
+  
   // Messaging operations
   createMessage(message: InsertMessage): Promise<Message>;
   getMessage(id: number): Promise<Message | undefined>;
