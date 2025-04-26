@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Home, 
   Search, 
@@ -23,6 +31,8 @@ import {
   ShoppingBag,
   ImageIcon,
   Flame,
+  Settings,
+  LogOut,
   LayoutGrid
 } from "lucide-react";
 
@@ -121,6 +131,131 @@ export default function Social() {
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-6">
+        {/* User Profile Card - Always visible */}
+        {user && (
+          <Card className="shadow-sm mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    {user.avatar ? (
+                      <AvatarImage src={user.avatar} alt={user.name || "User"} />
+                    ) : null}
+                    <AvatarFallback className="text-lg">
+                      {getInitials(user.name || "User")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-medium">{user.name}</h3>
+                    <p className="text-sm text-muted-foreground">@{user.username}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 text-sm">
+                  <div className="text-center px-2 cursor-pointer hover:bg-accent rounded-md py-1" onClick={() => setLocation('/profile')}>
+                    <div className="font-semibold">128</div>
+                    <div className="text-xs text-muted-foreground">Posts</div>
+                  </div>
+                  <div className="text-center px-2 cursor-pointer hover:bg-accent rounded-md py-1" onClick={() => setLocation('/profile?tab=following')}>
+                    <div className="font-semibold">843</div>
+                    <div className="text-xs text-muted-foreground">Following</div>
+                  </div>
+                  <div className="text-center px-2 cursor-pointer hover:bg-accent rounded-md py-1" onClick={() => setLocation('/profile?tab=followers')}>
+                    <div className="font-semibold">2.4k</div>
+                    <div className="text-xs text-muted-foreground">Followers</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2 ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Settings className="h-4 w-4 mr-1" />
+                        <span className="sr-only md:not-sr-only md:text-xs">Profile Options</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setLocation('/profile/edit')}>
+                        <User className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLocation('/settings')}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+              
+              {/* Quick Navigation within Profile Card */}
+              <div className="mt-4 pt-4 border-t">
+                <div className="grid grid-cols-5 gap-2">
+                  <Button 
+                    variant={activeTab === "wall" ? "default" : "ghost"} 
+                    size="sm" 
+                    className="flex flex-col items-center h-auto py-2"
+                    onClick={() => setActiveTab("wall")}
+                  >
+                    <Home className="h-4 w-4 mb-1" />
+                    <span className="text-xs">Wall</span>
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "explore" ? "default" : "ghost"} 
+                    size="sm" 
+                    className="flex flex-col items-center h-auto py-2"
+                    onClick={() => setActiveTab("explore")}
+                  >
+                    <Compass className="h-4 w-4 mb-1" />
+                    <span className="text-xs">Explore</span>
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "messages" ? "default" : "ghost"} 
+                    size="sm" 
+                    className="flex flex-col items-center h-auto py-2 relative"
+                    onClick={() => setActiveTab("messages")}
+                  >
+                    <MessageCircle className="h-4 w-4 mb-1" />
+                    <span className="text-xs">Messages</span>
+                    {messageData && messageData.count > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                        {messageData.count}
+                      </Badge>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "videos" ? "default" : "ghost"} 
+                    size="sm" 
+                    className="flex flex-col items-center h-auto py-2"
+                    onClick={() => setActiveTab("videos")}
+                  >
+                    <Video className="h-4 w-4 mb-1" />
+                    <span className="text-xs">Videos</span>
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "communities" ? "default" : "ghost"} 
+                    size="sm" 
+                    className="flex flex-col items-center h-auto py-2"
+                    onClick={() => setActiveTab("communities")}
+                  >
+                    <Users className="h-4 w-4 mb-1" />
+                    <span className="text-xs">Communities</span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Social Navigation with Integrated Tabs */}
         <Card className="shadow-sm mb-6">
           <CardContent className="p-0">
@@ -130,7 +265,7 @@ export default function Social() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="w-full grid grid-cols-6 rounded-none px-0 h-auto bg-transparent">
+              <TabsList className="w-full grid grid-cols-5 rounded-none px-0 h-auto bg-transparent">
                 <TabsTrigger 
                   value="wall" 
                   className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
@@ -147,15 +282,6 @@ export default function Social() {
                   <div className="flex flex-col items-center gap-1">
                     <Compass className="h-4 w-4" />
                     <span className="text-xs">Explore</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="profile"
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <User className="h-4 w-4" />
-                    <span className="text-xs">Profile</span>
                   </div>
                 </TabsTrigger>
                 <TabsTrigger 
@@ -509,124 +635,7 @@ export default function Social() {
                 </div>
               </TabsContent>
 
-              {/* Profile Tab Content */}
-              <TabsContent value="profile" className="mt-0 pt-6 px-4 pb-4">
-                {user ? (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    {/* Profile Info */}
-                    <div className="md:col-span-1">
-                      <Card>
-                        <CardContent className="p-6">
-                          <div className="flex flex-col items-center mb-4">
-                            <Avatar className="h-20 w-20 mb-3">
-                              {user.avatar ? (
-                                <AvatarImage src={user.avatar} alt={user.name || "User"} />
-                              ) : null}
-                              <AvatarFallback className="text-2xl">
-                                {getInitials(user.name || "User")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <h2 className="text-xl font-bold">{user.name}</h2>
-                            <p className="text-muted-foreground">@{user.username}</p>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-2 text-center text-sm mb-4">
-                            <div className="bg-muted rounded-md p-3">
-                              <div className="font-semibold">128</div>
-                              <div className="text-xs text-muted-foreground">Posts</div>
-                            </div>
-                            <div className="bg-muted rounded-md p-3">
-                              <div className="font-semibold">843</div>
-                              <div className="text-xs text-muted-foreground">Following</div>
-                            </div>
-                            <div className="bg-muted rounded-md p-3">
-                              <div className="font-semibold">2.4k</div>
-                              <div className="text-xs text-muted-foreground">Followers</div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Button variant="outline" className="w-full">
-                              Edit Profile
-                            </Button>
-                            <Button variant="outline" className="w-full">
-                              Settings
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    {/* User Content */}
-                    <div className="md:col-span-3">
-                      <Card>
-                        <CardContent className="p-0">
-                          <Tabs defaultValue="posts">
-                            <TabsList className="w-full grid grid-cols-4 rounded-t-lg rounded-b-none">
-                              <TabsTrigger value="posts">Posts</TabsTrigger>
-                              <TabsTrigger value="media">Media</TabsTrigger>
-                              <TabsTrigger value="products">Products</TabsTrigger>
-                              <TabsTrigger value="about">About</TabsTrigger>
-                            </TabsList>
-                            
-                            <div className="p-4">
-                              <TabsContent value="posts" className="m-0">
-                                <ContentFeed userPosts />
-                              </TabsContent>
-                              
-                              <TabsContent value="media" className="m-0">
-                                <div className="grid grid-cols-3 gap-2">
-                                  {Array(9).fill(0).map((_, i) => (
-                                    <div 
-                                      key={i} 
-                                      className="aspect-square bg-muted rounded-md cursor-pointer"
-                                    ></div>
-                                  ))}
-                                </div>
-                              </TabsContent>
-                              
-                              <TabsContent value="products" className="m-0">
-                                <div className="text-center py-8">
-                                  <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                                  <h3 className="text-lg font-medium mb-2">No products yet</h3>
-                                  <p className="text-muted-foreground mb-4">
-                                    Start selling by adding products to your store!
-                                  </p>
-                                  <Button onClick={() => setLocation("/upload-product")}>
-                                    Add Product
-                                  </Button>
-                                </div>
-                              </TabsContent>
-                              
-                              <TabsContent value="about" className="m-0">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h3 className="text-lg font-medium mb-2">Bio</h3>
-                                    <p className="text-muted-foreground">
-                                      No bio provided.
-                                    </p>
-                                  </div>
-                                </div>
-                              </TabsContent>
-                            </div>
-                          </Tabs>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-10">
-                    <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h2 className="text-2xl font-bold mb-2">Profile not available</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Please log in to view your profile
-                    </p>
-                    <Button onClick={() => setLocation("/auth")}>
-                      Log In
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
+              {/* Profile content moved to permanent card at the top */}
 
               {/* Messages Tab Content */}
               <TabsContent value="messages" className="mt-0 p-0">
