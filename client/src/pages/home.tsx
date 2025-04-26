@@ -132,6 +132,8 @@ export default function Home() {
   }, [selectedCurrency, featuredProducts, newProducts]);
 
   // Render product card
+  const { toast } = useToast();
+  
   const renderProductCard = (product: any) => (
     <Card 
       key={product.id} 
@@ -196,12 +198,46 @@ export default function Home() {
               </div>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={(e) => {
-            e.stopPropagation();
-            setLocation(`/product/${product.id}`);
-          }}>
-            View
-          </Button>
+          <div className="flex space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={(e) => {
+                  e.stopPropagation();
+                }} className="h-8 w-8 p-0">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {user && (
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    setLocation(`/messages?share=${product.id}`);
+                  }}>
+                    <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                    Share with User
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  const productUrl = `${window.location.origin}/product/${product.id}`;
+                  navigator.clipboard.writeText(productUrl);
+                  toast({
+                    title: "Link Copied",
+                    description: "Product link copied to clipboard",
+                  });
+                }}>
+                  <Share2 className="h-4 w-4 mr-2 text-gray-600" />
+                  Copy Link
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              setLocation(`/product/${product.id}`);
+            }}>
+              View
+            </Button>
+          </div>
         </div>
         
         {isConverting && (
