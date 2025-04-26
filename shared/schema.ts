@@ -99,6 +99,8 @@ export const messages = pgTable("messages", {
   senderId: integer("sender_id").notNull().references(() => users.id),
   receiverId: integer("receiver_id").notNull().references(() => users.id),
   content: text("content").notNull(),
+  attachmentUrl: text("attachment_url"),
+  attachmentType: text("attachment_type"),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });

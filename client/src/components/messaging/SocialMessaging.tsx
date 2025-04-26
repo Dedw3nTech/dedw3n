@@ -1,306 +1,449 @@
-import { useState, useRef, useEffect } from 'react';
-import { useMessaging } from '@/hooks/use-messaging';
-import { useAuth } from '@/hooks/use-auth';
-import { useQuery } from '@tanstack/react-query';
-import { Avatar } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { 
   SheetContent, 
   SheetHeader, 
-  SheetTitle,
+  SheetTitle, 
   SheetFooter 
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Send, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/use-auth';
+import { useMessaging } from '@/hooks/use-messaging';
+import { format } from 'date-fns';
+import { Loader2, Send, User, MoreVertical, ArrowLeft, PlusCircle, Paperclip, Image, Video, FileText } from 'lucide-react';
+import defaultAvatar from '@assets/WHITE BG DEDWEN LOGO (320 x 132 px) (128 x 56 px).png';
 
-// Inline components for messaging UI
-const MessageList = ({ selectedUserId }: { selectedUserId: number | null }) => {
+export default function SocialMessaging() {
   const { user } = useAuth();
+  const { 
+    sendMessage, 
+    markAsRead, 
+    onlineUsers, 
+    typingUsers, 
+    sendTypingStatus,
+    isConnected
+  } = useMessaging();
+  
+  const [activeView, setActiveView] = useState<'conversations' | 'chat' | 'contacts'>('conversations');
+  const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [messageText, setMessageText] = useState('');
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+  const [attachmentType, setAttachmentType] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Message type
+  interface Message {
+    id: number;
+    senderId: number;
+    receiverId: number;
+    content: string;
+    createdAt: string;
+    isRead: boolean;
+    attachmentUrl?: string;
+    attachmentType?: string;
+  }
 
-  // Query for conversation messages
-  const { data: messages, isLoading } = useQuery({
-    queryKey: ['/api/messages/conversation', selectedUserId],
-    enabled: !!selectedUserId,
+  // Conversation type
+  interface Conversation {
+    userId: number;
+    name: string;
+    avatar: string | null;
+    lastMessage: string;
+    lastMessageTime: string;
+    unreadCount: number;
+  }
+
+  // User type
+  interface ChatUser {
+    id: number;
+    name: string;
+    username: string;
+    email: string;
+    avatar: string | null;
+  }
+
+  // Fetch conversations
+  const { data: conversations = [] as Conversation[], isLoading: isLoadingConversations } = useQuery<Conversation[]>({
+    queryKey: ['/api/messages/conversations'],
+    enabled: user !== null && activeView === 'conversations',
   });
 
-  // Scroll to bottom when messages change
+  // Fetch messages for active chat
+  const { data: messages = [] as Message[], isLoading: isLoadingMessages } = useQuery<Message[]>({
+    queryKey: ['/api/messages/conversation', activeChat],
+    enabled: activeChat !== null && activeView === 'chat',
+  });
+
+  // Fetch user data for active chat
+  const { data: chatPartner = {} as ChatUser, isLoading: isLoadingPartner } = useQuery<ChatUser>({
+    queryKey: ['/api/users', activeChat],
+    enabled: activeChat !== null && activeView === 'chat',
+  });
+
+  // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current && messages.length > 0) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Mark messages as read when viewing chat
+  useEffect(() => {
+    if (activeChat && messages && messages.length > 0) {
+      messages.forEach((message: Message) => {
+        if (!message.isRead && message.senderId !== user?.id) {
+          markAsRead(message.id);
+        }
+      });
+    }
+  }, [activeChat, messages, markAsRead, user]);
 
-  if (!messages || messages.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground">
-        <p>No messages yet</p>
-        <p className="text-sm">Start a conversation</p>
-      </div>
-    );
-  }
+  const handleSendMessage = (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!messageText.trim() && !attachmentUrl) return;
+    if (activeChat === null) return;
+    
+    sendMessage(activeChat, messageText, attachmentUrl || undefined, attachmentType || undefined);
+    
+    // Clear form
+    setMessageText('');
+    setAttachmentUrl(null);
+    setAttachmentType(null);
+  };
 
-  return (
-    <div className="space-y-4 p-4">
-      {messages.map((message) => {
-        const isCurrentUser = message.senderId === user?.id;
-        
-        return (
-          <div 
-            key={message.id} 
-            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+  const handleOpenChat = (userId: number) => {
+    setActiveChat(userId);
+    setActiveView('chat');
+  };
+
+  const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageText(e.target.value);
+    
+    if (activeChat) {
+      sendTypingStatus(activeChat, e.target.value.length > 0);
+    }
+  };
+
+  const handleAttachment = (type: string) => {
+    // In a real implementation, this would open a file picker
+    // For now, we'll just simulate attaching a sample image
+    setAttachmentUrl('https://example.com/sample.jpg');
+    setAttachmentType(type);
+  };
+
+  const renderConversationsList = () => (
+    <>
+      <SheetHeader>
+        <SheetTitle>Messages</SheetTitle>
+        <div className="flex justify-between items-center mt-2">
+          <Badge variant="outline" className={isConnected ? "bg-green-100" : "bg-red-100"}>
+            {isConnected ? "Connected" : "Disconnected"}
+          </Badge>
+          <button 
+            onClick={() => setActiveView('contacts')}
+            className="text-sm text-blue-600 flex items-center gap-1"
           >
-            <div className={`flex max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-              {!isCurrentUser && (
-                <Avatar className="h-8 w-8 mr-2">
-                  <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center">
-                    {message.senderName?.charAt(0) || '?'}
-                  </div>
-                </Avatar>
-              )}
-              <div>
-                <div 
-                  className={`px-3 py-2 rounded-lg ${
-                    isCurrentUser 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted'
-                  }`}
+            <PlusCircle size={14} /> New Chat
+          </button>
+        </div>
+      </SheetHeader>
+      
+      <ScrollArea className="flex-1 my-4">
+        {isLoadingConversations ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-2 px-1">
+            {conversations.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <p>No conversations yet</p>
+                <button 
+                  onClick={() => setActiveView('contacts')}
+                  className="mt-2 text-sm text-blue-600"
                 >
-                  {message.attachmentUrl && message.attachmentType === 'image' && (
-                    <img 
-                      src={message.attachmentUrl} 
-                      alt="Attachment" 
-                      className="max-w-full rounded-md mb-2"
-                    />
+                  Start a new chat
+                </button>
+              </div>
+            ) : (
+              conversations.map((convo: Conversation) => (
+                <div
+                  key={convo.userId}
+                  className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleOpenChat(convo.userId)}
+                >
+                  <div className="relative">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                      {convo.avatar ? (
+                        <img src={convo.avatar} alt={convo.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-6 w-6 text-gray-600" />
+                      )}
+                    </div>
+                    {onlineUsers.includes(convo.userId) && (
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between">
+                      <h4 className="font-medium text-sm truncate">{convo.name}</h4>
+                      <span className="text-xs text-gray-500">
+                        {convo.lastMessageTime && format(new Date(convo.lastMessageTime), 'HH:mm')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 truncate">{convo.lastMessage}</p>
+                  </div>
+                  {convo.unreadCount > 0 && (
+                    <Badge className="ml-auto">{convo.unreadCount}</Badge>
                   )}
-                  {message.content}
                 </div>
-                <div className={`text-xs text-muted-foreground mt-1 ${
-                  isCurrentUser ? 'text-right' : 'text-left'
-                }`}>
-                  {new Date(message.createdAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                  {isCurrentUser && (
-                    <span className="ml-2">
-                      {message.isRead ? 'Read' : 'Sent'}
-                    </span>
+              ))
+            )}
+          </div>
+        )}
+      </ScrollArea>
+    </>
+  );
+
+  const renderChatView = () => (
+    <>
+      <SheetHeader>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setActiveView('conversations')}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          
+          {isLoadingPartner ? (
+            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                {chatPartner.avatar ? (
+                  <img src={chatPartner.avatar} alt={chatPartner.name} className="h-full w-full object-cover" />
+                ) : (
+                  <img src={defaultAvatar} alt="Default avatar" className="h-full w-full object-cover" />
+                )}
+              </div>
+              <div>
+                <h4 className="font-medium text-sm">{chatPartner.name}</h4>
+                <div className="flex items-center text-xs text-gray-500">
+                  {onlineUsers.includes(activeChat || 0) ? (
+                    <span className="text-green-500">Online</span>
+                  ) : (
+                    <span>Offline</span>
                   )}
                 </div>
               </div>
-              {isCurrentUser && (
-                <Avatar className="h-8 w-8 ml-2">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt={user.name} />
-                  ) : (
-                    <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center">
-                      {user?.name.charAt(0)}
-                    </div>
-                  )}
-                </Avatar>
-              )}
             </div>
-          </div>
-        );
-      })}
-      <div ref={messagesEndRef} />
-    </div>
-  );
-};
-
-const ConversationList = ({ 
-  selectedUserId, 
-  onSelectUser 
-}: { 
-  selectedUserId: number | null; 
-  onSelectUser: (userId: number) => void;
-}) => {
-  const { onlineUsers } = useMessaging();
-  
-  // Query for conversations
-  const { data: conversations, isLoading } = useQuery({
-    queryKey: ['/api/messages/conversations'],
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!conversations || conversations.length === 0) {
-    return (
-      <div className="text-center py-4 text-muted-foreground">
-        <p>No conversations yet</p>
-        <p className="text-sm">Start a new conversation</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1">
-      {conversations.map((convo) => (
-        <div
-          key={convo.user.id}
-          className={`flex items-center p-2 rounded-md cursor-pointer hover:bg-muted ${
-            selectedUserId === convo.user.id ? 'bg-muted' : ''
-          }`}
-          onClick={() => onSelectUser(convo.user.id)}
-        >
-          <div className="relative">
-            <Avatar className="h-10 w-10">
-              {convo.user.avatar ? (
-                <img src={convo.user.avatar} alt={convo.user.name} />
-              ) : (
-                <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center">
-                  {convo.user.name.charAt(0)}
-                </div>
-              )}
-            </Avatar>
-            {onlineUsers.includes(convo.user.id) && (
-              <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 border border-background"></span>
-            )}
-          </div>
-          <div className="ml-2 flex-1 overflow-hidden">
-            <div className="flex justify-between">
-              <h4 className="font-medium text-sm truncate">{convo.user.name}</h4>
-              {convo.lastMessage && (
-                <span className="text-xs text-muted-foreground">
-                  {new Date(convo.lastMessage.createdAt).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              {convo.lastMessage?.content || "No messages yet"}
-            </p>
-          </div>
-          {convo.unreadCount > 0 && (
-            <Badge className="ml-1 h-5 min-w-[20px] flex items-center justify-center">
-              {convo.unreadCount}
-            </Badge>
           )}
+          
+          <button className="ml-auto text-gray-600 hover:text-gray-900">
+            <MoreVertical size={18} />
+          </button>
         </div>
-      ))}
-    </div>
-  );
-};
-
-export default function SocialMessaging() {
-  const { sendMessage, unreadCount } = useMessaging();
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [messageText, setMessageText] = useState('');
-  const [showConversations, setShowConversations] = useState(true);
-
-  // Handle sending a message
-  const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedUserId) return;
-    
-    sendMessage(selectedUserId, messageText);
-    setMessageText('');
-  };
-
-  // Get user details of selected conversation
-  const { data: selectedUser } = useQuery({
-    queryKey: ['/api/users', selectedUserId],
-    enabled: !!selectedUserId,
-  });
-
-  return (
-    <SheetContent className="w-[400px] sm:max-w-md p-0 flex flex-col">
-      <SheetHeader className="p-4 border-b">
-        {selectedUserId && !showConversations ? (
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="mr-2 h-8 w-8"
-              onClick={() => setShowConversations(true)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <Avatar className="h-8 w-8 mr-2">
-              {selectedUser?.avatar ? (
-                <img src={selectedUser.avatar} alt={selectedUser.name} />
-              ) : (
-                <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center">
-                  {selectedUser?.name?.charAt(0) || '?'}
-                </div>
-              )}
-            </Avatar>
-            <SheetTitle className="text-base m-0">{selectedUser?.name || 'Loading...'}</SheetTitle>
+      </SheetHeader>
+      
+      <ScrollArea className="flex-1 my-4 px-1">
+        {isLoadingMessages ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <SheetTitle>Messages {unreadCount > 0 && `(${unreadCount})`}</SheetTitle>
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <p>No messages yet</p>
+                <p className="text-sm">Start the conversation!</p>
+              </div>
+            ) : (
+              messages.map((message: Message) => {
+                const isMine = message.senderId === user?.id;
+                
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[75%] rounded-lg px-3 py-2 ${
+                        isMine
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      {message.attachmentUrl && (
+                        <div className="mb-2">
+                          {message.attachmentType?.includes('image') ? (
+                            <img
+                              src={message.attachmentUrl}
+                              alt="Attachment"
+                              className="max-w-full rounded"
+                            />
+                          ) : message.attachmentType?.includes('video') ? (
+                            <video
+                              src={message.attachmentUrl}
+                              controls
+                              className="max-w-full rounded"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 p-2 bg-background rounded">
+                              <FileText size={16} />
+                              <span className="text-xs truncate">Attachment</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-sm">{message.content}</p>
+                      <span
+                        className={`text-xs mt-1 block text-right ${
+                          isMine ? 'text-primary-foreground/70' : 'text-gray-500'
+                        }`}
+                      >
+                        {format(new Date(message.createdAt), 'HH:mm')}
+                        {isMine && message.isRead && (
+                          <span className="ml-1">✓</span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            
+            {typingUsers[activeChat || 0] && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-lg px-3 py-2 max-w-[75%]">
+                  <div className="flex space-x-1">
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"></div>
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-75"></div>
+                    <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce delay-150"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
         )}
-      </SheetHeader>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Conversation List (visible on conversation view or when no user selected) */}
-        {(showConversations || !selectedUserId) && (
-          <ScrollArea className="flex-1 h-[calc(100vh-10rem)]">
-            <div className="p-3">
-              <Input
-                placeholder="Search conversations..."
-                className="mb-3"
-              />
-              <ConversationList 
-                selectedUserId={selectedUserId} 
-                onSelectUser={(userId) => {
-                  setSelectedUserId(userId);
-                  setShowConversations(false);
-                }} 
-              />
-            </div>
-          </ScrollArea>
+      </ScrollArea>
+      
+      <SheetFooter className="px-0">
+        {attachmentUrl && (
+          <div className="w-full mb-2 p-2 bg-muted rounded-md flex items-center gap-2">
+            <div className="flex-1 truncate text-xs">Attachment ready</div>
+            <button
+              onClick={() => {
+                setAttachmentUrl(null);
+                setAttachmentType(null);
+              }}
+              className="text-destructive hover:text-destructive/80"
+            >
+              &times;
+            </button>
+          </div>
         )}
-
-        {/* Message View (visible when user selected and not showing conversations) */}
-        {selectedUserId && !showConversations && (
-          <ScrollArea className="flex-1 h-[calc(100vh-10rem)]">
-            <MessageList selectedUserId={selectedUserId} />
-          </ScrollArea>
-        )}
-      </div>
-
-      {/* Message Input (only visible when a conversation is selected) */}
-      {selectedUserId && !showConversations && (
-        <SheetFooter className="p-3 border-t flex-row gap-2">
+        
+        <form onSubmit={handleSendMessage} className="flex w-full gap-2">
+          <div className="flex gap-1 text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => handleAttachment('image/jpeg')}
+              className="p-2 rounded-full hover:bg-muted"
+            >
+              <Image size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAttachment('video/mp4')}
+              className="p-2 rounded-full hover:bg-muted"
+            >
+              <Video size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAttachment('application/pdf')}
+              className="p-2 rounded-full hover:bg-muted"
+            >
+              <Paperclip size={18} />
+            </button>
+          </div>
+          
           <Input
             placeholder="Type a message..."
             value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
+            onChange={handleTyping}
             className="flex-1"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
           />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!messageText.trim()}
-            size="icon"
+          
+          <button
+            type="submit"
+            disabled={!messageText.trim() && !attachmentUrl}
+            className="bg-primary text-primary-foreground p-2 rounded-full disabled:opacity-50"
           >
-            <Send className="h-4 w-4" />
-          </Button>
-        </SheetFooter>
-      )}
+            <Send size={18} />
+          </button>
+        </form>
+      </SheetFooter>
+    </>
+  );
+
+  const renderContactsList = () => (
+    <>
+      <SheetHeader>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setActiveView('conversations')}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <SheetTitle>New Message</SheetTitle>
+        </div>
+      </SheetHeader>
+      
+      <div className="py-4">
+        <Input 
+          placeholder="Search users..." 
+          className="mb-4"
+        />
+        
+        <ScrollArea className="h-[400px]">
+          <div className="space-y-2">
+            {/* This would be populated with actual users from the API */}
+            {[1, 2, 3].map((id) => (
+              <div
+                key={id}
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                onClick={() => handleOpenChat(id)}
+              >
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="h-6 w-6 text-gray-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm">User {id}</h4>
+                  <p className="text-xs text-gray-500">user{id}@example.com</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    </>
+  );
+
+  return (
+    <SheetContent className="flex flex-col">
+      {activeView === 'conversations' && renderConversationsList()}
+      {activeView === 'chat' && renderChatView()}
+      {activeView === 'contacts' && renderContactsList()}
     </SheetContent>
   );
 }

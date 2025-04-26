@@ -1,208 +1,240 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
 
-// Message types for the WebSocket
-interface WebSocketMessage {
-  type: string;
-  [key: string]: any;
+interface MessagingContextType {
+  sendMessage: (receiverId: number, content: string, attachmentUrl?: string, attachmentType?: string) => Promise<void>;
+  markAsRead: (messageId: number) => Promise<void>;
+  onlineUsers: number[];
+  typingUsers: Record<number, boolean>;
+  sendTypingStatus: (receiverId: number, isTyping: boolean) => void;
+  isConnected: boolean;
 }
 
-// User interface
-interface User {
-  id: number;
-  name: string;
-  username: string;
-  avatar: string | null;
-}
+const MessagingContext = createContext<MessagingContextType | null>(null);
 
-// Message interface
-interface Message {
-  id: number;
-  senderId: number;
-  receiverId: number;
-  content: string;
-  createdAt: string;
-  isRead: boolean;
-  chatType?: string;
-  roomId?: string;
-  attachmentUrl?: string;
-  attachmentType?: string;
-}
-
-export function useMessaging() {
+export const MessagingProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
-  const [activeConversations, setActiveConversations] = useState<{[key: number]: Message[]}>({});
-  const socketRef = useRef<WebSocket | null>(null);
-  
-  // Initialize WebSocket connection
-  useEffect(() => {
+  const [typingUsers, setTypingUsers] = useState<Record<number, boolean>>({});
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const maxReconnectAttempts = 5;
+  const reconnectInterval = 3000; // 3 seconds
+
+  const connectWebSocket = useCallback(() => {
     if (!user) return;
-    
-    // Create WebSocket connection
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
-    const socket = new WebSocket(wsUrl);
-    
-    socket.onopen = () => {
-      console.log('WebSocket connected');
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
       setIsConnected(true);
-      
-      // Authenticate with the WebSocket server
-      socket.send(JSON.stringify({
+      setReconnectAttempt(0);
+      console.log('WebSocket connection established');
+
+      // Send authentication message
+      ws.send(JSON.stringify({
         type: 'auth',
         userId: user.id
       }));
     };
-    
-    socket.onmessage = (event) => {
+
+    ws.onclose = (e) => {
+      setIsConnected(false);
+      console.log('WebSocket connection closed', e.code, e.reason);
+
+      // Attempt to reconnect unless maximum attempts reached
+      if (reconnectAttempt < maxReconnectAttempts) {
+        setTimeout(() => {
+          setReconnectAttempt((prev) => prev + 1);
+          connectWebSocket();
+        }, reconnectInterval);
+      } else {
+        toast({
+          title: 'Connection lost',
+          description: 'Failed to reconnect to messaging service. Please refresh the page.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      toast({
+        title: 'Connection error',
+        description: 'There was an error with the messaging service.',
+        variant: 'destructive',
+      });
+    };
+
+    ws.onmessage = (event) => {
       try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        console.log('WebSocket message:', message);
-        
-        switch (message.type) {
-          case 'online_users':
-            setOnlineUsers(message.users);
-            break;
-            
-          case 'user_online':
-            setOnlineUsers(prev => [...prev, message.userId]);
-            break;
-            
-          case 'user_offline':
-            setOnlineUsers(prev => prev.filter(id => id !== message.userId));
-            break;
-            
-          case 'new_message':
-            // Update unread count
-            if (message.message.receiverId === user.id && !message.message.isRead) {
-              setUnreadCount(prev => prev + 1);
-              
-              // Show notification toast
+        const data = JSON.parse(event.data);
+
+        switch (data.type) {
+          case 'message':
+            // Invalidate query cache for the conversation and unread count
+            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.senderId] });
+            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+
+            // Show toast notification for new message if not from current user
+            if (data.senderId !== user.id) {
               toast({
-                title: 'New Message',
-                description: message.message.content.length > 30 
-                  ? message.message.content.substring(0, 30) + '...' 
-                  : message.message.content,
+                title: data.senderName,
+                description: data.content.length > 30 
+                  ? data.content.substring(0, 30) + '...' 
+                  : data.content,
               });
             }
-            
-            // Update active conversations
-            const senderId = message.message.senderId;
-            setActiveConversations(prev => ({
+            break;
+
+          case 'typing':
+            setTypingUsers(prev => ({
               ...prev,
-              [senderId]: [...(prev[senderId] || []), message.message]
+              [data.senderId]: data.isTyping
             }));
-            
-            // Invalidate queries to update UI
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/unread/count'] });
             break;
-            
-          case 'message_sent':
-            // Message sent confirmation handling
+
+          case 'online_users':
+            setOnlineUsers(data.users || []);
             break;
-            
+
           case 'read_receipt':
-            // Read receipt handling
+            // Invalidate query cache for the conversation
+            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.userId] });
             break;
+
+          default:
+            console.log('Unknown message type:', data.type);
         }
       } catch (error) {
         console.error('Error parsing WebSocket message:', error);
       }
     };
-    
-    socket.onclose = () => {
-      console.log('WebSocket disconnected');
-      setIsConnected(false);
-    };
-    
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    socketRef.current = socket;
-    
-    // Fetch initial unread count
-    fetch('/api/messages/unread/count')
-      .then(res => res.json())
-      .then(data => {
-        setUnreadCount(data.count);
-      })
-      .catch(err => {
-        console.error('Error fetching unread count:', err);
-      });
-    
-    // Clean up on unmount
+
+    setSocket(ws);
+
     return () => {
-      socket.close();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
-  }, [user, queryClient, toast]);
-  
-  // Send a message via WebSocket
-  const sendMessage = (recipientId: number, content: string, chatType: string = 'private', attachmentUrl?: string) => {
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+  }, [user, reconnectAttempt, toast]);
+
+  useEffect(() => {
+    if (user) {
+      connectWebSocket();
+    }
+
+    return () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, [user, connectWebSocket]);
+
+  const sendMessage = async (
+    receiverId: number, 
+    content: string, 
+    attachmentUrl?: string, 
+    attachmentType?: string
+  ) => {
+    if (!user) return;
+
+    try {
+      // Send message to server via API
+      await apiRequest('POST', '/api/messages', {
+        receiverId,
+        content,
+        attachmentUrl,
+        attachmentType
+      });
+
+      // Also send via WebSocket for real-time delivery
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'message',
+          receiverId,
+          content,
+          attachmentUrl,
+          attachmentType
+        }));
+      }
+
+      // Invalidate query cache for the conversation
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', receiverId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+    } catch (error) {
+      console.error('Error sending message:', error);
       toast({
-        title: 'Connection Error',
-        description: 'Not connected to messaging server',
+        title: 'Error sending message',
+        description: 'Your message could not be sent. Please try again.',
         variant: 'destructive',
       });
-      return;
     }
-    
-    const messageData = {
-      type: 'message',
-      recipientId,
-      content,
-      chatType,
-      attachmentUrl,
-      attachmentType: attachmentUrl ? 
-        (attachmentUrl.startsWith('data:image/') ? 'image' : 
-         attachmentUrl.startsWith('data:video/') ? 'video' : 'file') : 
-        undefined
-    };
-    
-    socketRef.current.send(JSON.stringify(messageData));
   };
-  
-  // Mark messages as read
-  const markAsRead = (messageIds: number[], senderId: number) => {
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
-    
-    // Send read receipt via WebSocket
-    socketRef.current.send(JSON.stringify({
-      type: 'read_receipt',
-      messageIds,
-      senderId,
+
+  const markAsRead = async (messageId: number) => {
+    if (!user) return;
+
+    try {
+      // Mark message as read via API
+      await apiRequest('POST', `/api/messages/${messageId}/read`, {});
+
+      // Also send via WebSocket for real-time delivery
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'read_receipt',
+          messageId
+        }));
+      }
+
+      // Invalidate query cache for conversations and unread count
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
+
+  const sendTypingStatus = (receiverId: number, isTyping: boolean) => {
+    if (!user || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({
+      type: 'typing',
+      receiverId,
+      isTyping
     }));
-    
-    // Update local unread count
-    setUnreadCount(prev => Math.max(0, prev - messageIds.length));
-    
-    // Update server via API
-    fetch('/api/messages/mark-read', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ messageIds }),
-    }).catch(err => {
-      console.error('Error marking messages as read:', err);
-    });
   };
-  
-  return {
-    isConnected,
-    unreadCount,
-    onlineUsers,
-    activeConversations,
-    sendMessage,
-    markAsRead,
-  };
-}
+
+  return (
+    <MessagingContext.Provider
+      value={{
+        sendMessage,
+        markAsRead,
+        onlineUsers,
+        typingUsers,
+        sendTypingStatus,
+        isConnected
+      }}
+    >
+      {children}
+    </MessagingContext.Provider>
+  );
+};
+
+export const useMessaging = () => {
+  const context = useContext(MessagingContext);
+  if (!context) {
+    throw new Error('useMessaging must be used within a MessagingProvider');
+  }
+  return context;
+};

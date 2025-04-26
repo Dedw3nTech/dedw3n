@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewProvider } from "@/hooks/use-view";
 import { AuthProvider } from "@/hooks/use-auth";
+import { MessagingProvider } from "@/hooks/use-messaging";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { useEffect } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
@@ -88,21 +89,23 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <ViewProvider>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-grow">
-                <Router />
-              </main>
-              <Footer />
-              <MobileNavigation />
-              <OfflineIndicator />
-              {/* Offline simulator hidden as requested */}
-              {/* Chatbot will be implemented later when API key is available */}
-              {/* <ChatbotWindow /> */}
-            </div>
-            <Toaster />
-          </ViewProvider>
+          <MessagingProvider>
+            <ViewProvider>
+              <div className="flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-grow">
+                  <Router />
+                </main>
+                <Footer />
+                <MobileNavigation />
+                <OfflineIndicator />
+                {/* Offline simulator hidden as requested */}
+                {/* Chatbot will be implemented later when API key is available */}
+                {/* <ChatbotWindow /> */}
+              </div>
+              <Toaster />
+            </ViewProvider>
+          </MessagingProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
