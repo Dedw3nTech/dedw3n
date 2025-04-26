@@ -38,6 +38,37 @@ export interface IStorage {
   getUserConversations(userId: number): Promise<any[]>; // Returns user's active conversations
   getUnreadMessageCount(userId: number): Promise<number>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
+  
+  // Video operations
+  createVideo(video: InsertVideo): Promise<Video>;
+  getVideo(id: number): Promise<Video | undefined>;
+  updateVideo(id: number, updates: Partial<Video>): Promise<Video | undefined>;
+  deleteVideo(id: number): Promise<boolean>;
+  listVideos(filter?: Record<string, any>): Promise<Video[]>;
+  getTrendingVideos(limit?: number): Promise<Video[]>;
+  getUserVideos(userId: number): Promise<Video[]>;
+  getVideosByType(type: string): Promise<Video[]>;
+  
+  // Video engagements
+  createVideoEngagement(engagement: InsertVideoEngagement): Promise<VideoEngagement>;
+  getVideoEngagements(videoId: number, type?: string): Promise<VideoEngagement[]>;
+  getUserVideoEngagements(userId: number, type?: string): Promise<VideoEngagement[]>;
+  
+  // Video analytics
+  getVideoAnalytics(videoId: number): Promise<VideoAnalytics | undefined>;
+  updateVideoAnalytics(videoId: number, data: Partial<VideoAnalytics>): Promise<VideoAnalytics>;
+  
+  // Playlist operations
+  createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist>;
+  getPlaylist(id: number): Promise<VideoPlaylist | undefined>;
+  updatePlaylist(id: number, updates: Partial<VideoPlaylist>): Promise<VideoPlaylist | undefined>;
+  deletePlaylist(id: number): Promise<boolean>;
+  getUserPlaylists(userId: number): Promise<VideoPlaylist[]>;
+  
+  // Playlist item operations
+  addToPlaylist(item: InsertPlaylistItem): Promise<PlaylistItem>;
+  removeFromPlaylist(playlistId: number, videoId: number): Promise<boolean>;
+  getPlaylistItems(playlistId: number): Promise<PlaylistItem[]>;
 
   // Vendor operations
   getVendor(id: number): Promise<Vendor | undefined>;

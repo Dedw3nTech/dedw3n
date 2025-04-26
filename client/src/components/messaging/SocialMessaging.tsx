@@ -461,11 +461,183 @@ export default function SocialMessaging() {
     </>
   );
 
+  // Render video card
+  const renderVideoCard = (video: any, index: number) => (
+    <Card key={index} className="overflow-hidden shadow-sm mb-4">
+      <div className="relative aspect-video bg-gray-200">
+        {video.thumbnailUrl ? (
+          <img 
+            src={video.thumbnailUrl} 
+            alt={video.title} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <VideoIcon className="h-12 w-12 text-gray-400" />
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
+            <Play className="h-8 w-8 text-white" />
+          </Button>
+        </div>
+        {video.duration && (
+          <Badge variant="secondary" className="absolute bottom-2 right-2">
+            {Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+          </Badge>
+        )}
+        {video.videoType === 'live' && (
+          <Badge variant="destructive" className="absolute top-2 left-2">LIVE</Badge>
+        )}
+      </div>
+      <CardContent className="pt-3 pb-2">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="font-medium text-sm line-clamp-1">{video.title}</h3>
+          <Badge variant="outline" className="ml-2 text-xs">
+            {video.videoType}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+          {video.description || "No description"}
+        </p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex space-x-4">
+            <div className="flex items-center">
+              <Heart className="h-3 w-3 mr-1" />
+              {video.likes}
+            </div>
+            <div className="flex items-center">
+              <TrendingUp className="h-3 w-3 mr-1" />
+              {video.views}
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Render videos tab content
+  const renderVideosTab = () => (
+    <>
+      <SheetHeader>
+        <SheetTitle>Videos</SheetTitle>
+      </SheetHeader>
+      
+      <ScrollArea className="flex-1 my-4 px-1">
+        {isLoadingTrending ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-medium">Trending</h3>
+              <Button variant="ghost" size="sm" className="text-xs">
+                See more
+              </Button>
+            </div>
+            
+            {trendingVideos.length === 0 ? (
+              <div className="text-center py-5 text-muted-foreground">
+                <p>No trending videos</p>
+              </div>
+            ) : (
+              trendingVideos.slice(0, 3).map((video, index) => renderVideoCard(video, index))
+            )}
+            
+            <div className="flex justify-between items-center my-3">
+              <h3 className="font-medium">Your Videos</h3>
+              <Button variant="ghost" size="sm" className="text-xs">
+                See all
+              </Button>
+            </div>
+            
+            {isLoadingUserVideos ? (
+              <div className="flex justify-center py-5">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : userVideos.length === 0 ? (
+              <div className="text-center py-5 text-muted-foreground">
+                <p>You haven't uploaded any videos yet</p>
+                <Button variant="outline" size="sm" className="mt-2">
+                  <PlusCircle className="h-4 w-4 mr-1" /> Upload Video
+                </Button>
+              </div>
+            ) : (
+              userVideos.slice(0, 2).map((video, index) => renderVideoCard(video, index))
+            )}
+            
+            <div className="pt-4 pb-2">
+              <Button className="w-full" onClick={() => setLocation("/upload-video")}>
+                <PlusCircle className="h-4 w-4 mr-1" /> Create New Video
+              </Button>
+            </div>
+          </div>
+        )}
+      </ScrollArea>
+    </>
+  );
+
+  // Render navigation for social tabs
+  const renderSocialNavigation = () => (
+    <div className="py-2 px-1">
+      <Tabs defaultValue="messaging" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full mb-2">
+          <TabsTrigger value="messaging" className="flex flex-col items-center gap-1 py-2 text-xs">
+            <MessageCircle className="h-4 w-4" />
+            Messages
+          </TabsTrigger>
+          <TabsTrigger value="videos" className="flex flex-col items-center gap-1 py-2 text-xs">
+            <Film className="h-4 w-4" />
+            Videos
+          </TabsTrigger>
+          <TabsTrigger value="feed" className="flex flex-col items-center gap-1 py-2 text-xs">
+            <Home className="h-4 w-4" />
+            Feed
+          </TabsTrigger>
+          <TabsTrigger value="explore" className="flex flex-col items-center gap-1 py-2 text-xs">
+            <Compass className="h-4 w-4" />
+            Explore
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="messaging" className="flex-1 mt-0 p-0 border-none">
+          {activeView === 'conversations' && renderConversationsList()}
+          {activeView === 'chat' && renderChatView()}
+          {activeView === 'contacts' && renderContactsList()}
+        </TabsContent>
+        
+        <TabsContent value="videos" className="flex-1 mt-0 p-0 border-none">
+          {renderVideosTab()}
+        </TabsContent>
+        
+        <TabsContent value="feed" className="mt-0 p-0 border-none">
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-muted-foreground mb-2">Go to the Wall</p>
+            <Button variant="outline" onClick={() => setLocation("/wall")}>
+              View Wall
+            </Button>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="explore" className="mt-0 p-0 border-none">
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-muted-foreground mb-2">Go to Explore</p>
+            <Button variant="outline" onClick={() => setLocation("/explore")}>
+              Explore Content
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
   return (
-    <SheetContent className="flex flex-col">
-      {activeView === 'conversations' && renderConversationsList()}
-      {activeView === 'chat' && renderChatView()}
-      {activeView === 'contacts' && renderContactsList()}
+    <SheetContent className="flex flex-col p-0 overflow-hidden">
+      {renderSocialNavigation()}
     </SheetContent>
   );
 }
