@@ -66,27 +66,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (userId && data.recipientId && data.content) {
             const messageData = {
               senderId: userId,
-              recipientId: data.recipientId,
+              receiverId: data.recipientId, // Changed to receiverId to match schema
               content: data.content,
-              chatType: data.chatType || 'private',
-              roomId: data.roomId,
-              attachmentUrl: data.attachmentUrl,
-              attachmentType: data.attachmentType,
-              isRead: false
+              attachmentUrl: data.attachmentUrl || null,
+              attachmentType: data.attachmentType || null
             };
             
             // Save to database
             const savedMessage = await storage.createMessage(messageData);
             
             // Forward message to recipient if online
-            const recipientConnections = connections.get(data.recipientId);
-            if (recipientConnections && recipientConnections.length > 0) {
+            const receiverConnections = connections.get(data.recipientId);
+            if (receiverConnections && receiverConnections.length > 0) {
               const outgoingMessage = JSON.stringify({
                 type: 'new_message',
                 message: savedMessage
               });
               
-              recipientConnections.forEach(conn => {
+              receiverConnections.forEach(conn => {
                 if (conn.readyState === WebSocket.OPEN) {
                   conn.send(outgoingMessage);
                 }
@@ -104,17 +101,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle typing indicator
         else if (data.type === 'typing') {
           if (userId && data.recipientId) {
-            const recipientConnections = connections.get(data.recipientId);
-            if (recipientConnections && recipientConnections.length > 0) {
+            const receiverConnections = connections.get(data.recipientId);
+            if (receiverConnections && receiverConnections.length > 0) {
               const typingNotification = JSON.stringify({
                 type: 'typing',
                 senderId: userId,
-                chatType: data.chatType || 'private',
-                roomId: data.roomId,
+                receiverId: data.recipientId,
                 isTyping: data.isTyping
               });
               
-              recipientConnections.forEach(conn => {
+              receiverConnections.forEach(conn => {
                 if (conn.readyState === WebSocket.OPEN) {
                   conn.send(typingNotification);
                 }
@@ -171,8 +167,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             connections.delete(userId);
             
             // Broadcast user offline status
-            for (const connections of connections.values()) {
-              connections.forEach(conn => {
+            for (const userConnections of connections.values()) {
+              userConnections.forEach(conn => {
                 if (conn.readyState === WebSocket.OPEN) {
                   conn.send(JSON.stringify({
                     type: 'user_offline',
@@ -244,16 +240,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get chat room messages
-  app.get("/api/messages/room/:roomId", isAuthenticated, async (req, res) => {
-    try {
-      const roomId = req.params.roomId;
-      const messages = await storage.getRoomMessages(roomId);
-      res.json(messages);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get room messages" });
-    }
-  });
+  // Room-based messaging will be implemented in a future update
+  // For now, we're focusing on direct user-to-user messaging
   
   // Get unread message count
   app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
@@ -285,51 +273,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create a new chat room
-  app.post("/api/messages/rooms", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const { name, type, memberIds } = req.body;
-      
-      if (!name || !type) {
-        return res.status(400).json({ message: "Room name and type are required" });
-      }
-      
-      // Validate room type
-      if (!['group', 'broadcast', 'community', 'public'].includes(type)) {
-        return res.status(400).json({ message: "Invalid room type" });
-      }
-      
-      // For group chats, member IDs are required
-      if (type === 'group' && (!memberIds || !Array.isArray(memberIds) || memberIds.length === 0)) {
-        return res.status(400).json({ message: "Member IDs are required for group chats" });
-      }
-      
-      const roomData = {
-        name,
-        type,
-        creatorId: userId,
-        isActive: true,
-        memberIds: type === 'group' ? [...memberIds, userId] : undefined,
-      };
-      
-      const room = await storage.createChatRoom(roomData);
-      res.status(201).json(room);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create chat room" });
-    }
-  });
-  
-  // Get user's chat rooms
-  app.get("/api/messages/rooms", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const rooms = await storage.getUserChatRooms(userId);
-      res.json(rooms);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get chat rooms" });
-    }
-  });
+  // Group chat and room-based messaging will be implemented in a future update
+  // For now, we're focusing on direct user-to-user messaging
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
