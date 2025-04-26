@@ -9,6 +9,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import createMemoryStore from "memorystore";
 
 declare global {
   namespace Express {
@@ -32,11 +33,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Use memorystore for persistent session storage
+  const MemoryStore = createMemoryStore(session);
+  
   // Set up session with memory store
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "socialmarket-secret-key",
     resave: false,
     saveUninitialized: true, // Changed to true to ensure guest sessions are saved
+    store: new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
       httpOnly: true,
