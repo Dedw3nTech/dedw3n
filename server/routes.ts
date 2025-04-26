@@ -1,67 +1,13 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import bcrypt from "bcryptjs";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import MemoryStore from "memorystore";
-import { insertUserSchema, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
+import { setupAuth } from "./auth";
+import { insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, insertMessageSchema, insertReviewSchema, insertCartSchema } from "@shared/schema";
 import { z } from "zod";
 
-const SessionStore = MemoryStore(session);
-
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup session middleware
-  app.use(
-    session({
-      cookie: { maxAge: 86400000 }, // 24 hours
-      store: new SessionStore({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
-      resave: false,
-      saveUninitialized: false,
-      secret: process.env.SESSION_SECRET || "socialmarket-secret",
-    })
-  );
-
-  // Setup passport middleware
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Configure passport local strategy
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return done(null, false, { message: "Incorrect username." });
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) {
-          return done(null, false, { message: "Incorrect password." });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
-    })
-  );
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  });
+  // Setup authentication with passport
+  setupAuth(app);
 
   // Auth middleware
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -73,64 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register API Routes
   // All routes should be prefixed with /api
-  
-  // Auth routes
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const validatedData = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(validatedData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-
-      const existingEmail = await storage.getUserByEmail(validatedData.email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(validatedData.password, 10);
-      
-      // Create user
-      const user = await storage.createUser({
-        ...validatedData,
-        password: hashedPassword,
-      });
-      
-      // Remove password from response
-      const { password, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors });
-      }
-      res.status(500).json({ message: "Failed to register user" });
-    }
-  });
-
-  app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
-    // Remove password from response
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.logout(() => {
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
-    // Remove password from response
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
-  });
+  // Authentication routes are handled by auth.ts
 
   // Vendor routes
   app.post("/api/vendors", isAuthenticated, async (req, res) => {
