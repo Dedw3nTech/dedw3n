@@ -23,13 +23,24 @@ import {
   MessageSquarePlus,
   PenLine,
   Book,
-  Megaphone
+  Megaphone,
+  ShoppingBag,
+  Search
 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -46,6 +57,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CreatePostProps {
   communityId?: number;
@@ -54,6 +66,18 @@ interface CreatePostProps {
 }
 
 type ContentType = 'standard' | 'article' | 'visual' | 'video' | 'advertisement';
+
+// Product interface
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  vendorId: number;
+  vendorName?: string;
+  discountPrice?: number | null;
+  category?: string;
+}
 
 export default function CreatePost({
   communityId,
@@ -82,6 +106,12 @@ export default function CreatePost({
   const [contentType, setContentType] = useState<ContentType>(editingPost?.contentType || 'standard');
   const [linkUrl, setLinkUrl] = useState(editingPost?.linkUrl || "");
   const [isPromoted, setIsPromoted] = useState(editingPost?.isPromoted || false);
+  
+  // Product tagging
+  const [isShoppable, setIsShoppable] = useState(editingPost?.isShoppable || false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(editingPost?.product || null);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
 
   // Fetch communities that the user is a member of
   const { data: userCommunities, isLoading: isLoadingCommunities } = useQuery({
@@ -94,6 +124,22 @@ export default function CreatePost({
       return response.json();
     },
     enabled: !!user,
+  });
+
+  // Fetch products for tagging
+  const { data: products, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ["/api/products", productSearchQuery],
+    queryFn: async () => {
+      const url = productSearchQuery 
+        ? `/api/products?search=${encodeURIComponent(productSearchQuery)}`
+        : "/api/products";
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      return response.json();
+    },
+    enabled: isProductDialogOpen
   });
 
   // Create/Edit post mutation
@@ -126,6 +172,8 @@ export default function CreatePost({
       setIsExpanded(false);
       setPostToVisibility("public");
       setSelectedCommunityId(communityId || null);
+      setSelectedProduct(null);
+      setIsShoppable(false);
       
       // Show success message
       toast({
