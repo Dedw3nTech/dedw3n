@@ -298,16 +298,16 @@ const MembersPage = () => {
     currentPage * membersPerPage
   );
   
-  const handleMessageClick = (member: Omit<User, 'password'>) => {
+  const handleMessageClick = (member: UserWithoutPassword) => {
     setActiveChatMember(member);
   };
   
-  const handleCallClick = (member: Omit<User, 'password'>) => {
+  const handleCallClick = (member: UserWithoutPassword) => {
     // For real implementation, this would initiate a call request via WebSocket
     alert(`Starting audio call with ${member.name}`);
   };
   
-  const handleVideoClick = (member: Omit<User, 'password'>) => {
+  const handleVideoClick = (member: UserWithoutPassword) => {
     // For real implementation, this would initiate a video call request via WebSocket
     alert(`Starting video call with ${member.name}`);
   };

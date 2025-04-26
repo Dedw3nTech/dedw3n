@@ -120,6 +120,12 @@ export default function Header() {
           >
             <i className="ri-group-line mr-1"></i> {t('nav.social')}
           </button>
+          <Link 
+            href="/members"
+            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
+          >
+            <i className="ri-user-search-line mr-1"></i> {t('members.directory')}
+          </Link>
         </div>
       </div>
 

@@ -22,6 +22,7 @@ import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
 import AddProduct from "@/pages/add-product";
 import UploadProduct from "@/pages/upload-product";
+import MembersPage from "@/pages/members";
 
 function Router() {
   return (
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/add-product" component={AddProduct} />
       <Route path="/upload-product" component={UploadProduct} />
+      <Route path="/members" component={MembersPage} />
       <Route component={NotFound} />
     </Switch>
   );
