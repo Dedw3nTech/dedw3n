@@ -89,6 +89,13 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   listTransactionsByWallet(walletId: number): Promise<Transaction[]>;
   listTransactionsByUser(userId: number): Promise<Transaction[]>;
+  getTransactionsByCategory(walletId: number): Promise<Record<string, Transaction[]>>;
+  getTransactionStats(walletId: number): Promise<{
+    totalIncome: number;
+    totalExpense: number;
+    byCategoryExpense: Record<string, number>;
+    byCategoryIncome: Record<string, number>;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -568,11 +575,57 @@ export class MemStorage implements IStorage {
   
   async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
     const id = this.transactionIdCounter++;
+    
+    // Set default category if not provided based on transaction type
+    let category = transaction.category;
+    
+    if (!category) {
+      // Default categorization based on transaction type
+      switch (transaction.type) {
+        case 'deposit':
+          category = 'income';
+          break;
+        case 'withdrawal':
+          category = 'general';
+          break;
+        case 'payment':
+          if (transaction.metadata) {
+            try {
+              const metadata = JSON.parse(transaction.metadata);
+              if (metadata.productCategory) {
+                category = metadata.productCategory;
+              } else {
+                category = 'shopping';
+              }
+            } catch {
+              category = 'shopping';
+            }
+          } else {
+            category = 'shopping';
+          }
+          break;
+        case 'refund':
+          category = 'refund';
+          break;
+        case 'transfer':
+          category = 'transfer';
+          break;
+        default:
+          category = 'other';
+      }
+    }
+    
+    // Set default payment method if not provided
+    const paymentMethod = transaction.paymentMethod || 'wallet';
+    
     const newTransaction: Transaction = {
       id,
       ...transaction,
+      category,
+      paymentMethod,
       createdAt: new Date(),
     };
+    
     this.transactions.set(id, newTransaction);
     
     // If this is a deposit or a refund, add money to the wallet
@@ -593,6 +646,62 @@ export class MemStorage implements IStorage {
     }
     
     return newTransaction;
+  }
+  
+  async getTransactionsByCategory(walletId: number): Promise<Record<string, Transaction[]>> {
+    const transactions = await this.listTransactionsByWallet(walletId);
+    const categorized: Record<string, Transaction[]> = {};
+    
+    transactions.forEach(transaction => {
+      if (!categorized[transaction.category]) {
+        categorized[transaction.category] = [];
+      }
+      categorized[transaction.category].push(transaction);
+    });
+    
+    return categorized;
+  }
+  
+  async getTransactionStats(walletId: number): Promise<{
+    totalIncome: number;
+    totalExpense: number;
+    byCategoryExpense: Record<string, number>;
+    byCategoryIncome: Record<string, number>;
+  }> {
+    const transactions = await this.listTransactionsByWallet(walletId);
+    
+    let totalIncome = 0;
+    let totalExpense = 0;
+    const byCategoryExpense: Record<string, number> = {};
+    const byCategoryIncome: Record<string, number> = {};
+    
+    transactions.forEach(transaction => {
+      // Skip transactions that aren't completed
+      if (transaction.status !== 'completed') return;
+      
+      if (transaction.type === 'deposit' || transaction.type === 'refund') {
+        totalIncome += transaction.amount;
+        
+        if (!byCategoryIncome[transaction.category]) {
+          byCategoryIncome[transaction.category] = 0;
+        }
+        byCategoryIncome[transaction.category] += transaction.amount;
+      } else if (transaction.type === 'withdrawal' || transaction.type === 'payment') {
+        totalExpense += transaction.amount;
+        
+        if (!byCategoryExpense[transaction.category]) {
+          byCategoryExpense[transaction.category] = 0;
+        }
+        byCategoryExpense[transaction.category] += transaction.amount;
+      }
+    });
+    
+    return {
+      totalIncome,
+      totalExpense,
+      byCategoryExpense,
+      byCategoryIncome
+    };
   }
   
   async listTransactionsByWallet(walletId: number): Promise<Transaction[]> {

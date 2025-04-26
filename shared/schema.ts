@@ -145,6 +145,8 @@ export const transactions = pgTable("transactions", {
   walletId: integer("wallet_id").notNull().references(() => wallets.id),
   amount: doublePrecision("amount").notNull(),
   type: varchar("type", { length: 20 }).notNull(), // deposit, withdrawal, payment, refund, transfer
+  category: varchar("category", { length: 30 }).notNull(), // shopping, bills, groceries, entertainment, transport, health, education, income, investment, etc.
+  paymentMethod: varchar("payment_method", { length: 30 }), // wallet, card, mobile_money, paypal, bank_transfer, cash
   status: varchar("status", { length: 20 }).notNull().default("completed"), // pending, completed, failed, reversed
   description: text("description"),
   metadata: text("metadata"), // JSON string for additional info
