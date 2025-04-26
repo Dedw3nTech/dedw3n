@@ -1,7 +1,7 @@
 // Currency conversion utility
 
 // List of supported currencies
-export const supportedCurrencies = ['USD', 'GBP', 'EUR', 'CNY', 'INR', 'BRL'];
+export const supportedCurrencies = ['GBP', 'USD', 'EUR', 'CNY', 'INR', 'BRL'];
 
 // Currency symbols for displaying amounts
 export const currencySymbols: Record<string, string> = {
@@ -23,7 +23,7 @@ interface ExchangeRateCache {
 let rateCache: ExchangeRateCache = {
   rates: {},
   lastUpdated: 0,
-  baseCurrency: 'USD'
+  baseCurrency: 'GBP'
 };
 
 // Timeout for cache (5 minutes)
@@ -34,7 +34,7 @@ const CACHE_TIMEOUT = 5 * 60 * 1000;
  * @param baseCurrency Base currency to get rates for
  * @returns Object with exchange rates
  */
-export const fetchExchangeRates = async (baseCurrency: string = 'USD'): Promise<Record<string, number>> => {
+export const fetchExchangeRates = async (baseCurrency: string = 'GBP'): Promise<Record<string, number>> => {
   const now = Date.now();
   
   // Return from cache if still valid and for the same base currency
@@ -72,12 +72,12 @@ export const fetchExchangeRates = async (baseCurrency: string = 'USD'): Promise<
     
     // Fallback to some default rates if API fails and no cache
     return {
-      USD: 1,
-      GBP: 0.78,
-      EUR: 0.92,
-      CNY: 7.09,
-      INR: 83.12,
-      BRL: 5.68
+      GBP: 1,
+      USD: 1.28,
+      EUR: 1.18,
+      CNY: 9.09,
+      INR: 106.56,
+      BRL: 7.28
     };
   }
 };

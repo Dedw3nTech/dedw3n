@@ -17,7 +17,7 @@ export async function createPaymentIntent(req: Request, res: Response) {
   }
 
   try {
-    const { amount, currency = "usd", metadata = {} } = req.body;
+    const { amount, currency = "gbp", metadata = {} } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Valid amount is required" });
