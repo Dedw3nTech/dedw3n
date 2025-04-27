@@ -1602,6 +1602,24 @@ export class MemStorage implements IStorage {
     
     return members;
   }
+  
+  async getUserCommunities(userId: number): Promise<Community[]> {
+    console.log(`[DEBUG] Getting communities for user ID: ${userId}`);
+    
+    // Get all community memberships for this user
+    const userMemberships = Array.from(this.communityMembers.values())
+      .filter(member => member.userId === userId);
+      
+    console.log(`[DEBUG] Found ${userMemberships.length} community memberships for user ${userId}`);
+    
+    // Get the actual communities from the memberships
+    const communities = userMemberships
+      .map(membership => this.communities.get(membership.communityId))
+      .filter(community => community !== undefined) as Community[];
+    
+    console.log(`[DEBUG] Returning ${communities.length} communities for user ${userId}`);
+    return communities;
+  }
 
   // Membership tiers operations
   async getMembershipTier(id: number): Promise<MembershipTier | undefined> {
