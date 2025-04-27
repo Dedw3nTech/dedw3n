@@ -305,6 +305,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register mobile money payment routes
   registerMobileMoneyRoutes(app);
   
+  // Update user profile
+  app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`[DEBUG] Updating profile for user ID: ${userId}`);
+      
+      // Handle form data or JSON
+      const updates = req.body;
+      console.log(`[DEBUG] Update data:`, updates);
+      
+      const updatedUser = await storage.updateUser(userId, updates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password before sending
+      const { password, ...userData } = updatedUser;
+      console.log(`[DEBUG] Profile updated successfully for user ID: ${userId}`);
+      res.json(userData);
+    } catch (error) {
+      console.error(`[ERROR] Failed to update profile:`, error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
   // Message routes
   // Get user's conversations
   app.get("/api/messages/conversations", isAuthenticated, async (req, res) => {
