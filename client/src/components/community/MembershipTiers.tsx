@@ -41,13 +41,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+const benefitsTransform = (val: string): string[] => {
+  return val.split('\n').filter(benefit => benefit.trim() !== '');
+};
+
 const tierSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   price: z.coerce.number().min(0, "Price must be a non-negative number"),
   currency: z.string().default("USD"),
   tierType: z.enum(["free", "paid", "premium"]),
-  benefits: z.string().transform(val => val.split('\n').filter(benefit => benefit.trim() !== '')),
+  benefits: z.string().transform(benefitsTransform),
   durationDays: z.coerce.number().min(1, "Duration must be at least 1 day"),
   isActive: z.boolean().default(true),
   maxMembers: z.coerce.number().optional(),
@@ -568,8 +572,8 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
           <DialogHeader>
             <DialogTitle>Subscribe to {selectedTier?.name}</DialogTitle>
             <DialogDescription>
-              {selectedTier?.price > 0 
-                ? `You'll be charged $${selectedTier?.price} for a ${selectedTier?.durationDays}-day subscription.`
+              {selectedTier && selectedTier.price > 0 
+                ? `You'll be charged $${selectedTier.price} for a ${selectedTier.durationDays}-day subscription.`
                 : 'You\'re joining a free membership tier.'}
             </DialogDescription>
           </DialogHeader>
@@ -577,7 +581,7 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
           <div className="py-4">
             <h4 className="font-medium mb-2">Benefits:</h4>
             <ul className="space-y-2">
-              {selectedTier?.benefits.map((benefit, index) => (
+              {selectedTier?.benefits?.map((benefit, index) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
                   <span>{benefit}</span>
@@ -600,7 +604,7 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
               {subscribeMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {selectedTier?.price > 0 ? 'Pay & Subscribe' : 'Confirm'}
+              {selectedTier && selectedTier.price > 0 ? 'Pay & Subscribe' : 'Confirm'}
             </Button>
           </DialogFooter>
         </DialogContent>

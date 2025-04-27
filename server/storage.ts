@@ -258,6 +258,8 @@ export interface IStorage {
   // User membership operations
   getMembership(id: number): Promise<Membership | undefined>;
   getUserMemberships(userId: number): Promise<Membership[]>;
+  getUserCommunityMembership(userId: number, communityId: number): Promise<Membership | undefined>;
+  getTierMemberCount(tierId: number): Promise<number>;
   createMembership(membership: InsertMembership): Promise<Membership>;
   updateMembershipStatus(id: number, status: string): Promise<Membership>;
   cancelMembership(id: number): Promise<Membership>;
@@ -1725,6 +1727,23 @@ export class MemStorage implements IStorage {
   async getUserMemberships(userId: number): Promise<Membership[]> {
     return Array.from(this.memberships.values())
       .filter(membership => membership.userId === userId);
+  }
+  
+  async getUserCommunityMembership(userId: number, communityId: number): Promise<Membership | undefined> {
+    return Array.from(this.memberships.values())
+      .find(membership => 
+        membership.userId === userId && 
+        membership.communityId === communityId && 
+        membership.status === "active"
+      );
+  }
+
+  async getTierMemberCount(tierId: number): Promise<number> {
+    return Array.from(this.memberships.values())
+      .filter(membership => 
+        membership.tierId === tierId && 
+        membership.status === "active"
+      ).length;
   }
 
   async createMembership(membership: InsertMembership): Promise<Membership> {
