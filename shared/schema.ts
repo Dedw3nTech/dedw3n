@@ -691,3 +691,33 @@ export type InsertPlaylistItem = z.infer<typeof insertPlaylistItemSchema>;
 
 export type VideoPurchase = typeof videoPurchases.$inferSelect;
 export type InsertVideoPurchase = z.infer<typeof insertVideoPurchaseSchema>;
+
+// Community content for exclusive/premium content
+export const contentTypeEnum = pgEnum('content_type', ['video', 'article', 'image', 'audio']);
+
+export const communityContents = pgTable("community_contents", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  creatorId: integer("creator_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  content: text("content"), // Main content text (for articles)
+  contentType: contentTypeEnum("content_type").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  videoUrl: text("video_url"), // For video content
+  audioUrl: text("audio_url"), // For audio content
+  imageUrl: text("image_url"), // For image content
+  tierId: integer("tier_id").notNull().references(() => membershipTiers.id), // Required tier to access
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCommunityContentSchema = createInsertSchema(communityContents)
+  .omit({ id: true, viewCount: true, likeCount: true, commentCount: true, createdAt: true, updatedAt: true });
+
+export type CommunityContent = typeof communityContents.$inferSelect;
+export type InsertCommunityContent = z.infer<typeof insertCommunityContentSchema>;

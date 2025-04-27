@@ -8,7 +8,7 @@ import {
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
-  videoPurchases, videoProductOverlays,
+  videoPurchases, videoProductOverlays, communityContents,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -23,7 +23,8 @@ import {
   type Subscription, type InsertSubscription, type Video, type InsertVideo,
   type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
   type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
-  type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase
+  type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase,
+  type CommunityContent, type InsertCommunityContent
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -353,6 +354,22 @@ export interface IStorage {
   createVideoPurchase(purchase: InsertVideoPurchase): Promise<VideoPurchase>;
   getVideoPurchase(id: number): Promise<VideoPurchase | undefined>;
   getVideoPurchaseByUserAndVideo(userId: number, videoId: number): Promise<VideoPurchase | undefined>;
+  
+  // Community Content operations
+  getCommunityContent(id: number): Promise<CommunityContent | undefined>;
+  createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent>;
+  updateCommunityContent(id: number, data: Partial<InsertCommunityContent>): Promise<CommunityContent | undefined>;
+  deleteCommunityContent(id: number): Promise<boolean>;
+  listCommunityContents(communityId: number, options?: {
+    contentType?: string;
+    tierId?: number;
+    isFeatured?: boolean;
+    creatorId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<CommunityContent[]>;
+  incrementContentView(id: number): Promise<CommunityContent | undefined>;
+  getUserAccessibleContent(userId: number, communityId: number): Promise<CommunityContent[]>;
   getUserVideoPurchases(userId: number): Promise<VideoPurchase[]>;
   hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean>;
   getVideoRevenue(videoId: number): Promise<number>;
@@ -388,6 +405,7 @@ export class MemStorage implements IStorage {
   private pollVotes: Map<number, PollVote>;
   private creatorEarnings: Map<number, CreatorEarning>;
   private subscriptions: Map<number, Subscription>;
+  private communityContents: Map<number, CommunityContent>;
   
   // Video-related maps
   private videos: Map<number, Video>;
@@ -433,6 +451,7 @@ export class MemStorage implements IStorage {
   private pollVoteIdCounter: number;
   private creatorEarningIdCounter: number;
   private subscriptionIdCounter: number;
+  private communityContentIdCounter: number;
   
   // Video-related counters (already defined above)
 
@@ -474,6 +493,7 @@ export class MemStorage implements IStorage {
     this.pollVotes = new Map();
     this.creatorEarnings = new Map();
     this.subscriptions = new Map();
+    this.communityContents = new Map();
     
     // Initialize video-related maps
     this.videos = new Map();
@@ -512,6 +532,7 @@ export class MemStorage implements IStorage {
     this.pollVoteIdCounter = 1;
     this.creatorEarningIdCounter = 1;
     this.subscriptionIdCounter = 1;
+    this.communityContentIdCounter = 1;
     
     // Initialize video-related counters
     this.videoIdCounter = 1;
@@ -2973,6 +2994,132 @@ export class MemStorage implements IStorage {
   async hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean> {
     const purchase = await this.getVideoPurchaseByUserAndVideo(userId, videoId);
     return purchase !== undefined;
+  }
+
+  // Community Content operations
+  async getCommunityContent(id: number): Promise<CommunityContent | undefined> {
+    return this.communityContents.get(id);
+  }
+  
+  async createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent> {
+    const id = this.communityContentIdCounter++;
+    const newContent: CommunityContent = {
+      id,
+      ...content,
+      viewCount: 0,
+      likeCount: 0,
+      commentCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.communityContents.set(id, newContent);
+    return newContent;
+  }
+  
+  async updateCommunityContent(id: number, data: Partial<InsertCommunityContent>): Promise<CommunityContent | undefined> {
+    const content = this.communityContents.get(id);
+    if (!content) {
+      return undefined;
+    }
+    
+    const updatedContent = { 
+      ...content, 
+      ...data,
+      updatedAt: new Date() 
+    };
+    
+    this.communityContents.set(id, updatedContent);
+    return updatedContent;
+  }
+  
+  async deleteCommunityContent(id: number): Promise<boolean> {
+    return this.communityContents.delete(id);
+  }
+  
+  async listCommunityContents(communityId: number, options?: {
+    contentType?: string;
+    tierId?: number;
+    isFeatured?: boolean;
+    creatorId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<CommunityContent[]> {
+    let contents = Array.from(this.communityContents.values())
+      .filter(content => content.communityId === communityId);
+      
+    if (options) {
+      if (options.contentType) {
+        contents = contents.filter(content => content.contentType === options.contentType);
+      }
+      
+      if (options.tierId !== undefined) {
+        contents = contents.filter(content => content.tierId === options.tierId);
+      }
+      
+      if (options.isFeatured !== undefined) {
+        contents = contents.filter(content => content.isFeatured === options.isFeatured);
+      }
+      
+      if (options.creatorId !== undefined) {
+        contents = contents.filter(content => content.creatorId === options.creatorId);
+      }
+    }
+    
+    // Sort by most recent first
+    contents.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+    
+    // Apply pagination if limit is specified
+    if (options?.limit) {
+      const offset = options.offset || 0;
+      contents = contents.slice(offset, offset + options.limit);
+    }
+    
+    return contents;
+  }
+  
+  async incrementContentView(id: number): Promise<CommunityContent | undefined> {
+    const content = this.communityContents.get(id);
+    if (!content) {
+      return undefined;
+    }
+    
+    const updatedContent = { 
+      ...content, 
+      viewCount: content.viewCount + 1,
+      updatedAt: new Date() 
+    };
+    
+    this.communityContents.set(id, updatedContent);
+    return updatedContent;
+  }
+  
+  async getUserAccessibleContent(userId: number, communityId: number): Promise<CommunityContent[]> {
+    // Check user's membership tier for this community
+    const membership = await this.getUserCommunityMembership(userId, communityId);
+    if (!membership) {
+      return []; // User is not a member, no access to content
+    }
+    
+    // Get all content for the community
+    const allContents = await this.listCommunityContents(communityId);
+    
+    // Filter content based on user's tier level
+    return allContents.filter(content => {
+      // Get the tier info for this content
+      const contentTier = this.membershipTiers.get(content.tierId);
+      const userTier = this.membershipTiers.get(membership.tierId);
+      
+      if (!contentTier || !userTier) {
+        return false;
+      }
+      
+      // Simple access check based on tier id
+      // A lower id number typically means a higher tier
+      return userTier.id <= contentTier.id;
+    });
   }
 }
 
