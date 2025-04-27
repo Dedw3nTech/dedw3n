@@ -270,9 +270,10 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
   }, [user, reconnectAttempt, toast]);
 
   useEffect(() => {
-    if (user) {
-      connectWebSocket();
-    }
+    // Temporarily disable WebSocket connections to prevent errors
+    // if (user) {
+    //   connectWebSocket();
+    // }
 
     return () => {
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -298,16 +299,16 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
         attachmentType
       });
 
-      // Also send via WebSocket for real-time delivery
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-          type: 'message',
-          receiverId,
-          content,
-          attachmentUrl,
-          attachmentType
-        }));
-      }
+      // Temporarily disable WebSocket for real-time delivery
+      // if (socket && socket.readyState === WebSocket.OPEN) {
+      //   socket.send(JSON.stringify({
+      //     type: 'message',
+      //     receiverId,
+      //     content,
+      //     attachmentUrl,
+      //     attachmentType
+      //   }));
+      // }
 
       // Invalidate query cache for the conversation
       queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', receiverId] });
@@ -329,13 +330,13 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
       // Mark message as read via API
       await apiRequest('POST', `/api/messages/${messageId}/read`, {});
 
-      // Also send via WebSocket for real-time delivery
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({
-          type: 'read_receipt',
-          messageId
-        }));
-      }
+      // Temporarily disable WebSocket for real-time delivery
+      // if (socket && socket.readyState === WebSocket.OPEN) {
+      //   socket.send(JSON.stringify({
+      //     type: 'read_receipt',
+      //     messageId
+      //   }));
+      // }
 
       // Invalidate query cache for conversations and unread count
       queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
@@ -346,13 +347,15 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendTypingStatus = (receiverId: number, isTyping: boolean) => {
-    if (!user || !socket || socket.readyState !== WebSocket.OPEN) return;
-
-    socket.send(JSON.stringify({
-      type: 'typing',
-      receiverId,
-      isTyping
-    }));
+    // Temporarily disabled WebSocket typing indicators
+    // if (!user || !socket || socket.readyState !== WebSocket.OPEN) return;
+    
+    // socket.send(JSON.stringify({
+    //   type: 'typing',
+    //   receiverId,
+    //   isTyping
+    // }));
+    return; // No-op for now
   };
 
   return (
