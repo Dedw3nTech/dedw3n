@@ -1,6 +1,9 @@
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
+import connectPg from "connect-pg-simple";
+import { pool, db } from "./db";
+import { eq, like, and, or, desc, sql, count } from "drizzle-orm";
 
 import {
   users, vendors, products, categories, posts, comments,
