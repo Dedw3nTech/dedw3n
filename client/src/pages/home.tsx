@@ -275,8 +275,7 @@ export default function Home() {
         <div className="max-w-3xl">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to Dedw3n</h1>
           <p className="text-lg mb-6">
-            Discover amazing products from trusted vendors, connect with other shoppers, 
-            and enjoy a seamless shopping experience.
+            Discover amazing products and services from your friends, trusted vendors and much more
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
