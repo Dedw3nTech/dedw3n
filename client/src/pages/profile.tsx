@@ -52,6 +52,7 @@ import {
   GraduationCap,
   Building,
   Globe,
+  ShoppingCart,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -666,7 +667,7 @@ export default function ProfilePage() {
                       )}
                       
                       <div className="flex items-center text-sm text-muted-foreground">
-                        <ShoppingBag className="h-3.5 w-3.5 mr-1" />
+                        <ShoppingCart className="h-3.5 w-3.5 mr-1" />
                         <span>
                           {vendorInfo.productCount || 0} products available
                         </span>

@@ -444,7 +444,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get user's communities
+  // Get user's communities by ID
+  app.get("/api/users/id/:userId/communities", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get communities the user is a member of
+      const communities = await storage.getUserCommunities(user.id);
+      res.json(communities);
+    } catch (error) {
+      console.error(`[ERROR] Failed to get communities for user ID ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to get user communities" });
+    }
+  });
+  
+  // Get user's communities by username
   app.get("/api/users/:username/communities", async (req, res) => {
     try {
       const username = req.params.username;
@@ -463,7 +487,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get user's vendor information
+  // Get user's vendor information by ID
+  app.get("/api/users/id/:userId/vendor", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if user is a vendor
+      if (!user.isVendor) {
+        return res.status(404).json({ message: "User is not a vendor" });
+      }
+      
+      // Get vendor info
+      const vendorInfo = await storage.getVendorByUserId(user.id);
+      
+      if (!vendorInfo) {
+        return res.status(404).json({ message: "Vendor information not found" });
+      }
+      
+      res.json(vendorInfo);
+    } catch (error) {
+      console.error(`[ERROR] Failed to get vendor info for user ID ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to get vendor information" });
+    }
+  });
+  
+  // Get user's vendor information by username
   app.get("/api/users/:username/vendor", async (req, res) => {
     try {
       const username = req.params.username;
