@@ -81,6 +81,8 @@ function Router() {
       <ProtectedRoute path="/social" component={Social} />
       <ProtectedRoute path="/social/:tab" component={Social} />
       <ProtectedRoute path="/social-console" component={SocialConsolePage} />
+      <ProtectedRoute path="/social-insights" component={SocialInsightsPage} />
+      <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
       <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
       <ProtectedRoute path="/social-insights" component={SocialInsightsPage} />
       <ProtectedRoute path="/cart" component={Cart} />
