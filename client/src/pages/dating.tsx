@@ -63,9 +63,9 @@ const sampleProfiles: DatingProfile[] = [
     name: "Jessica Miller",
     avatar: null,
     photos: [
-      "/images/profile1-photo1.jpg", 
-      "/images/profile1-photo2.jpg", 
-      "/images/profile1-photo3.jpg"
+      "https://via.placeholder.com/400x400?text=Jessica+1", 
+      "https://via.placeholder.com/400x400?text=Jessica+2", 
+      "https://via.placeholder.com/400x400?text=Jessica+3"
     ],
     bio: "Love hiking and outdoor activities. Looking for someone who shares my passion for adventure!",
     relationshipPreference: "dating",
@@ -76,7 +76,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 1,
         name: "Hiking Boots",
         price: 129.99,
-        imageUrl: "/images/hiking-boots.jpg",
+        imageUrl: "https://via.placeholder.com/100x100?text=Hiking+Boots",
         link: "/product/123"
       }
     ]
@@ -88,10 +88,10 @@ const sampleProfiles: DatingProfile[] = [
     name: "Mark Johnson",
     avatar: null,
     photos: [
-      "/images/profile2-photo1.jpg", 
-      "/images/profile2-photo2.jpg", 
-      "/images/profile2-photo3.jpg",
-      "/images/profile2-photo4.jpg"
+      "https://via.placeholder.com/400x400?text=Mark+1", 
+      "https://via.placeholder.com/400x400?text=Mark+2", 
+      "https://via.placeholder.com/400x400?text=Mark+3",
+      "https://via.placeholder.com/400x400?text=Mark+4"
     ],
     bio: "Tech enthusiast and coffee lover. Looking for meaningful connections.",
     relationshipPreference: "meeting",
@@ -102,7 +102,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 2,
         name: "Coffee Machine",
         price: 199.99,
-        imageUrl: "/images/coffee-machine.jpg",
+        imageUrl: "https://via.placeholder.com/100x100?text=Coffee+Machine",
         link: "/product/456"
       }
     ]
@@ -114,9 +114,9 @@ const sampleProfiles: DatingProfile[] = [
     name: "Sara Parker",
     avatar: null,
     photos: [
-      "/images/profile3-photo1.jpg", 
-      "/images/profile3-photo2.jpg", 
-      "/images/profile3-photo3.jpg"
+      "https://via.placeholder.com/400x400?text=Sara+1", 
+      "https://via.placeholder.com/400x400?text=Sara+2", 
+      "https://via.placeholder.com/400x400?text=Sara+3"
     ],
     bio: "Art teacher who loves painting and good conversations. Looking for someone special.",
     relationshipPreference: "marriage",
@@ -127,7 +127,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 3,
         name: "Art Supplies Set",
         price: 79.99,
-        imageUrl: "/images/art-supplies.jpg",
+        imageUrl: "https://via.placeholder.com/100x100?text=Art+Supplies",
         link: "/product/789"
       }
     ]
@@ -251,7 +251,7 @@ export default function DatingPage() {
       id: myWishlist.length + 1,
       name: wishlistItem,
       price: parseFloat(wishlistItemPrice),
-      imageUrl: "/images/gift-placeholder.jpg",
+      imageUrl: "https://via.placeholder.com/100x100?text=Gift",
       link: `/product/${wishlistItem.toLowerCase().replace(/\s+/g, '-')}`
     };
     
@@ -303,7 +303,7 @@ export default function DatingPage() {
                     {/* Main profile photo */}
                     <div className="relative w-full h-48 overflow-hidden">
                       <img 
-                        src={profile.photos[0] || "/images/profile-placeholder.jpg"} 
+                        src={profile.photos[0] || "https://via.placeholder.com/400x400?text=Profile+Photo"} 
                         alt={`${profile.name}'s profile`}
                         className="w-full h-full object-cover transition-all hover:scale-105"
                       />
@@ -314,7 +314,7 @@ export default function DatingPage() {
                       {profile.photos.slice(1, 4).map((photo, index) => (
                         <div key={index} className="w-8 h-8 rounded-md overflow-hidden border border-white">
                           <img 
-                            src={photo} 
+                            src={photo || "https://via.placeholder.com/100x100?text=Photo"} 
                             alt={`${profile.name}'s photo ${index + 2}`}
                             className="w-full h-full object-cover"
                           />
