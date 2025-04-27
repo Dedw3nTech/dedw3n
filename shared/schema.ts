@@ -561,6 +561,8 @@ export const videos = pgTable("videos", {
   communityId: integer("community_id").references(() => communities.id), // For community-specific videos
   expiresAt: timestamp("expires_at"), // For stories that expire
   tags: text("tags").array(),
+  isPremium: boolean("is_premium").default(false), // Whether this is a premium video requiring payment
+  price: doublePrecision("price"), // Price for accessing premium content, null for free content
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -638,6 +640,26 @@ export const playlistItems = pgTable("playlist_items", {
 });
 
 // Video schemas
+// Video purchases for premium content access
+export const videoPurchases = pgTable("video_purchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  videoId: integer("video_id").notNull().references(() => videos.id),
+  amount: doublePrecision("amount").notNull(), // Amount paid
+  currency: varchar("currency", { length: 3 }).notNull().default("GBP"),
+  paymentMethod: varchar("payment_method", { length: 20 }).notNull(), // stripe, paypal, wallet, etc.
+  transactionId: varchar("transaction_id", { length: 100 }), // Reference to payment provider transaction
+  status: varchar("status", { length: 20 }).notNull().default("completed"), // pending, completed, failed, refunded
+  expiresAt: timestamp("expires_at"), // For time-limited access (null for permanent)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    // Each user can only have one active purchase per video
+    uniqueUserVideo: unique().on(table.userId, table.videoId),
+  };
+});
+
 export const insertVideoSchema = createInsertSchema(videos);
 export const insertVideoEngagementSchema = createInsertSchema(videoEngagements);
 export const insertVideoProductOverlaySchema = createInsertSchema(videoProductOverlays)
@@ -645,6 +667,8 @@ export const insertVideoProductOverlaySchema = createInsertSchema(videoProductOv
 export const insertVideoAnalyticsSchema = createInsertSchema(videoAnalytics);
 export const insertVideoPlaylistSchema = createInsertSchema(videoPlaylists);
 export const insertPlaylistItemSchema = createInsertSchema(playlistItems);
+export const insertVideoPurchaseSchema = createInsertSchema(videoPurchases)
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
 // Video types
 export type Video = typeof videos.$inferSelect;
@@ -664,3 +688,6 @@ export type InsertVideoPlaylist = z.infer<typeof insertVideoPlaylistSchema>;
 
 export type PlaylistItem = typeof playlistItems.$inferSelect;
 export type InsertPlaylistItem = z.infer<typeof insertPlaylistItemSchema>;
+
+export type VideoPurchase = typeof videoPurchases.$inferSelect;
+export type InsertVideoPurchase = z.infer<typeof insertVideoPurchaseSchema>;

@@ -8,6 +8,7 @@ import {
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
+  videoPurchases, videoProductOverlays,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -22,7 +23,7 @@ import {
   type Subscription, type InsertSubscription, type Video, type InsertVideo,
   type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
   type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
-  type VideoProductOverlay, type InsertVideoProductOverlay
+  type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -79,6 +80,15 @@ export interface IStorage {
   // Video analytics
   getVideoAnalytics(videoId: number): Promise<VideoAnalytics | undefined>;
   updateVideoAnalytics(videoId: number, data: Partial<VideoAnalytics>): Promise<VideoAnalytics>;
+  
+  // Premium video purchases
+  createVideoPurchase(purchase: InsertVideoPurchase): Promise<VideoPurchase>;
+  getVideoPurchase(id: number): Promise<VideoPurchase | undefined>;
+  getVideoPurchaseByUserAndVideo(userId: number, videoId: number): Promise<VideoPurchase | undefined>;
+  getUserVideoPurchases(userId: number): Promise<VideoPurchase[]>;
+  getVideoRevenue(videoId: number): Promise<number>;
+  getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }>;
+  hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean>;
   
   // Playlist operations
   createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist>;
