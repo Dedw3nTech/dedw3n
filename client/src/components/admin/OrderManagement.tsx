@@ -13,6 +13,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,15 +33,35 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2, MoreHorizontal, Plus, Search, X } from "lucide-react";
+import { 
+  AlertCircle, 
+  BarChart3, 
+  Clock, 
+  ExternalLink, 
+  Loader2, 
+  MoreHorizontal, 
+  PackageCheck, 
+  Plus, 
+  Search, 
+  Truck, 
+  X 
+} from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function OrderManagement() {
@@ -135,28 +157,51 @@ export default function OrderManagement() {
     }
   };
 
+  // States for order settings
+  const [enableAHT, setEnableAHT] = useState(true);
+  const [enableQuantityCheck, setEnableQuantityCheck] = useState(true); 
+  const [enableTrackingUpdates, setEnableTrackingUpdates] = useState(true);
+  const [enableLotTracking, setEnableLotTracking] = useState(false);
+  const [selectedShippingAPI, setSelectedShippingAPI] = useState("fedex");
+  
+  // Save order settings
+  const handleSaveSettings = () => {
+    toast({
+      title: "Settings Saved",
+      description: "Order management settings have been updated successfully.",
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-bold">Order Management</CardTitle>
-          <div className="flex items-center gap-2">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="orders" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-bold">Order Management</CardTitle>
+              <div className="flex items-center gap-2">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="refunded">Refunded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between mb-4">
             <div className="relative w-full max-w-sm">
@@ -392,6 +437,312 @@ export default function OrderManagement() {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+        
+        {/* Order Metrics Tab */}
+        <TabsContent value="metrics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Performance Metrics</CardTitle>
+              <CardDescription>
+                Monitor key metrics to improve order fulfillment and customer satisfaction
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* AHT Metric */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Accurate Handling Time (AHT)</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Time from order acknowledgment to order fulfillment
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Current Average</div>
+                    <div className="text-2xl font-bold">3.2 hours</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Target</div>
+                    <div className="text-2xl font-bold">2.5 hours</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Improvement</div>
+                    <div className="text-2xl font-bold text-yellow-600">+28%</div>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-100 rounded-md p-3">
+                  <h4 className="font-medium text-blue-700 mb-1">How to improve</h4>
+                  <p className="text-sm text-blue-600">
+                    Improve order processing workflows by adopting an OMS with automation functionality.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Quantity Check Metric */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <PackageCheck className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Correct Quantity Products Shipped</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Accuracy of products and quantities in shipments
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Accuracy Rate</div>
+                    <div className="text-2xl font-bold">97.8%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Target</div>
+                    <div className="text-2xl font-bold">99.5%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Error Cost</div>
+                    <div className="text-2xl font-bold text-red-600">£2,850</div>
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 border border-green-100 rounded-md p-3">
+                  <h4 className="font-medium text-green-700 mb-1">How to improve</h4>
+                  <p className="text-sm text-green-600">
+                    Implement checks at various stages of order fulfillment to prevent errors in quantity shipped.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Tracking Marketplace Metric */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <Truck className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Tracking Sent to Marketplaces</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Timely transmission of tracking information
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Transmission Rate</div>
+                    <div className="text-2xl font-bold">92.4%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Target</div>
+                    <div className="text-2xl font-bold">98%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Avg. Delay</div>
+                    <div className="text-2xl font-bold text-orange-600">8.5 hrs</div>
+                  </div>
+                </div>
+                
+                <div className="bg-purple-50 border border-purple-100 rounded-md p-3">
+                  <h4 className="font-medium text-purple-700 mb-1">How to improve</h4>
+                  <p className="text-sm text-purple-600">
+                    Integrate order management system for real-time tracking updates and automate notifications to customers.
+                  </p>
+                </div>
+              </div>
+              
+              {/* LOT/Serial Tracking Metric */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-amber-100 rounded-full">
+                    <BarChart3 className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">LOT/Serial Number Tracking</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Accuracy of tracking products with LOT and serial numbers
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Tracking Accuracy</div>
+                    <div className="text-2xl font-bold">89.2%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Target</div>
+                    <div className="text-2xl font-bold">99.9%</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="text-sm text-muted-foreground mb-1">Compliance Rate</div>
+                    <div className="text-2xl font-bold text-red-600">85.7%</div>
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50 border border-amber-100 rounded-md p-3">
+                  <h4 className="font-medium text-amber-700 mb-1">How to improve</h4>
+                  <p className="text-sm text-amber-600">
+                    Implement dedicated LOT/Serial tracking for regulatory compliance and improved recall management.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Order Settings Tab */}
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Processing Settings</CardTitle>
+              <CardDescription>
+                Configure settings for order handling, shipping, and tracking
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Order Processing Settings */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Order Processing Controls</h3>
+                  <div className="space-y-4">
+                    {/* AHT Setting */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base" htmlFor="aht-monitoring">
+                          Accurate Handling Time (AHT) Monitoring
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Track time between order acknowledgment and fulfillment
+                        </p>
+                      </div>
+                      <Switch 
+                        id="aht-monitoring" 
+                        checked={enableAHT}
+                        onCheckedChange={setEnableAHT}
+                      />
+                    </div>
+                    
+                    {/* Quantity Check Setting */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base" htmlFor="quantity-check">
+                          Quantity Verification Checks
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Enable multi-stage verification for order quantities
+                        </p>
+                      </div>
+                      <Switch 
+                        id="quantity-check" 
+                        checked={enableQuantityCheck}
+                        onCheckedChange={setEnableQuantityCheck}
+                      />
+                    </div>
+                    
+                    {/* Marketplace Tracking Setting */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base" htmlFor="tracking-update">
+                          Automatic Tracking Updates
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Send real-time tracking updates to marketplaces
+                        </p>
+                      </div>
+                      <Switch 
+                        id="tracking-update" 
+                        checked={enableTrackingUpdates}
+                        onCheckedChange={setEnableTrackingUpdates}
+                      />
+                    </div>
+                    
+                    {/* LOT/Serial Tracking Setting */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-base" htmlFor="lot-tracking">
+                          LOT/Serial Number Tracking
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Track products with LOT and serial numbers throughout fulfillment
+                        </p>
+                      </div>
+                      <Switch 
+                        id="lot-tracking" 
+                        checked={enableLotTracking}
+                        onCheckedChange={setEnableLotTracking}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Shipping API Integration */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4">Shipping API Integration</h3>
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="shipping-api">Select Shipping API Provider</Label>
+                      <Select 
+                        value={selectedShippingAPI} 
+                        onValueChange={setSelectedShippingAPI}
+                      >
+                        <SelectTrigger id="shipping-api">
+                          <SelectValue placeholder="Select a shipping provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fedex">FedEx</SelectItem>
+                          <SelectItem value="ups">UPS</SelectItem>
+                          <SelectItem value="dhl">DHL</SelectItem>
+                          <SelectItem value="usps">USPS</SelectItem>
+                          <SelectItem value="royalmail">Royal Mail</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center p-3 text-sm border rounded-md bg-yellow-50 border-yellow-200">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mr-2 flex-shrink-0" />
+                      <p className="text-amber-700">
+                        You'll need to provide API credentials in the integration settings.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Configure API
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                      >
+                        Test Connection
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2">
+              <Button variant="outline">Cancel</Button>
+              <Button onClick={handleSaveSettings}>Save Settings</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
