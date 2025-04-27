@@ -29,6 +29,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
 import { 
   User as UserIcon,
+  Users,
   Pencil,
   Mail,
   Store,
