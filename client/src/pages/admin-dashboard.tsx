@@ -13,11 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle } from "lucide-react";
+import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle, Brain, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import UserManagement from "@/components/admin/UserManagement";
+import AIInsights from "@/components/social/AIInsights";
 
 // Import placeholder component for development
 const PlaceholderComponent = ({ title }: { title: string }) => (
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
 
         {/* Main Admin Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-7 gap-2">
+          <TabsList className="grid grid-cols-2 md:grid-cols-8 gap-2">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               <span className="hidden md:inline">Overview</span>
@@ -152,6 +153,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="communities" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden md:inline">Communities</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights" className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              <span className="hidden md:inline">AI Insights</span>
             </TabsTrigger>
             <TabsTrigger value="moderation" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -181,6 +186,23 @@ export default function AdminDashboard() {
           
           <TabsContent value="communities" className="space-y-4">
             <PlaceholderComponent title="Community Management" />
+          </TabsContent>
+          
+          <TabsContent value="ai-insights" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-primary" />
+                  AI Social Insights Dashboard
+                </CardTitle>
+                <CardDescription>
+                  Advanced analytics and AI-driven insights for platform optimization
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AIInsights />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="moderation" className="space-y-4">

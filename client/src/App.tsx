@@ -21,6 +21,9 @@ import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AIInsightsPage from "@/pages/ai-insights";
+import SocialInsightsPage from "@/pages/social-insights";
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
@@ -78,6 +81,8 @@ function Router() {
       <ProtectedRoute path="/social" component={Social} />
       <ProtectedRoute path="/social/:tab" component={Social} />
       <ProtectedRoute path="/social-console" component={SocialConsolePage} />
+      <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
+      <ProtectedRoute path="/social-insights" component={SocialInsightsPage} />
       <ProtectedRoute path="/cart" component={Cart} />
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
