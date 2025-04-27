@@ -17,7 +17,7 @@ import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, Acti
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import UserManagement from "@/components/admin/UserManagement";
+import UserModeration from "@/components/admin/UserModeration";
 import PostModeration from "@/components/admin/PostModeration";
 import EnhancedModeration from "@/components/admin/EnhancedModeration";
 import AIInsights from "@/components/social/AIInsights";
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="users" className="space-y-4">
-            <UserManagement />
+            <UserModeration />
           </TabsContent>
           
           <TabsContent value="products" className="space-y-4">
