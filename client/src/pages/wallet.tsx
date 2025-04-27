@@ -62,11 +62,11 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [recipient, setRecipient] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
   // Start with EUR as a default target currency, will be updated when wallet data is available
-  const [targetCurrency, setTargetCurrency] = useState('EUR');
+  const [targetCurrency, setTargetCurrency] = useState<CurrencyCode>('EUR');
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
-  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
+  const [exchangeRates, setExchangeRates] = useState<Record<CurrencyCode, number>>({} as Record<CurrencyCode, number>);
   
   // Top-up card payment dialog state
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -91,12 +91,17 @@ export default function WalletPage() {
   // Initialize default target currency and fetch exchange rates
   useEffect(() => {
     if (wallet && wallet.currency) {
+      // Convert the wallet currency to a valid CurrencyCode or use GBP as fallback
+      const walletCurrency = supportedCurrencies.includes(wallet.currency as CurrencyCode) 
+        ? (wallet.currency as CurrencyCode) 
+        : 'GBP';
+      
       // Find a default target currency different from the current wallet currency
-      const defaultTarget = supportedCurrencies.find(c => c !== wallet.currency) || 'USD';
+      const defaultTarget = supportedCurrencies.find(c => c !== walletCurrency) || 'USD';
       setTargetCurrency(defaultTarget);
       
       // Fetch exchange rates
-      fetchExchangeRates(wallet.currency)
+      fetchExchangeRates(walletCurrency)
         .then(rates => {
           setExchangeRates(rates);
         })
@@ -528,7 +533,7 @@ export default function WalletPage() {
                 <Label htmlFor="currency">{t('wallet.select_currency')}</Label>
                 <Select 
                   value={selectedCurrency} 
-                  onValueChange={setSelectedCurrency}
+                  onValueChange={(value: string) => setSelectedCurrency(value as CurrencyCode)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('wallet.select_currency')} />
@@ -1099,8 +1104,13 @@ export default function WalletPage() {
                           try {
                             const amountToConvert = Number(amount);
                             
+                            // Get wallet currency as CurrencyCode or use GBP as fallback
+                            const walletCurrency = supportedCurrencies.includes(wallet.currency as CurrencyCode)
+                              ? (wallet.currency as CurrencyCode)
+                              : 'GBP';
+                            
                             // Fetch fresh rates
-                            const rates = await fetchExchangeRates(wallet.currency);
+                            const rates = await fetchExchangeRates(walletCurrency);
                             setExchangeRates(rates);
                             
                             // Calculate converted amount
@@ -1109,7 +1119,7 @@ export default function WalletPage() {
                             
                             toast({
                               title: t('wallet.conversion_result'),
-                              description: `${formatCurrency(amountToConvert, wallet.currency, true)} = ${formatCurrency(converted, targetCurrency, true)}`
+                              description: `${formatCurrency(amountToConvert, walletCurrency, true)} = ${formatCurrency(converted, targetCurrency, true)}`
                             });
                           } catch (error) {
                             console.error('Conversion error:', error);
@@ -1132,7 +1142,7 @@ export default function WalletPage() {
                           <div className="flex justify-between items-center">
                             <div>
                               <p className="text-2xl font-bold">
-                                {formatCurrency(Number(amount), wallet.currency)}
+                                {formatCurrency(Number(amount), supportedCurrencies.includes(wallet.currency as CurrencyCode) ? (wallet.currency as CurrencyCode) : 'GBP')}
                               </p>
                               <p className="text-sm text-muted-foreground">{wallet.currency}</p>
                             </div>
