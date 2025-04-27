@@ -650,6 +650,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Premium Video Purchase Routes
+  
+  // Purchase access to a premium video
+  app.post("/api/videos/:videoId/purchase", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Check if the video is premium
+      if (!video.isPremium) {
+        return res.status(400).json({ message: "This video is not premium content" });
+      }
+      
+      // Check if user already purchased this video
+      const existingPurchase = await storage.getVideoPurchaseByUserAndVideo(userId, videoId);
+      if (existingPurchase) {
+        return res.status(400).json({ message: "You already have access to this video" });
+      }
+      
+      // Create purchase record
+      const purchase = await storage.createVideoPurchase({
+        userId,
+        videoId,
+        amount: video.price || 0,
+        purchaseDate: new Date(),
+        paymentMethod: req.body.paymentMethod || "wallet"
+      });
+      
+      res.status(201).json({
+        success: true,
+        message: "Video access granted",
+        purchase
+      });
+    } catch (error) {
+      console.error("Error purchasing video:", error);
+      res.status(500).json({ message: "Failed to process video purchase" });
+    }
+  });
+  
+  // Check if user has access to a premium video
+  app.get("/api/videos/:videoId/access", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // If video is not premium, everyone has access
+      if (!video.isPremium) {
+        return res.json({ hasAccess: true, isPremium: false });
+      }
+      
+      // Check if the user is the creator (creators always have access to their own content)
+      if (video.userId === userId) {
+        return res.json({ hasAccess: true, isPremium: true, isCreator: true });
+      }
+      
+      // Check if user has purchased this video
+      const hasAccess = await storage.hasUserPurchasedVideo(userId, videoId);
+      
+      res.json({
+        hasAccess,
+        isPremium: true,
+        isCreator: false,
+        price: video.price || 0
+      });
+    } catch (error) {
+      console.error("Error checking video access:", error);
+      res.status(500).json({ message: "Failed to check video access" });
+    }
+  });
+  
+  // Get all videos purchased by the authenticated user
+  app.get("/api/user/video-purchases", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get all user's video purchases
+      const purchases = await storage.getUserVideoPurchases(userId);
+      
+      // For each purchase, get the video details
+      const purchasesWithDetails = await Promise.all(
+        purchases.map(async (purchase) => {
+          const video = await storage.getVideo(purchase.videoId);
+          return {
+            ...purchase,
+            video: video || { title: "Video not available" }
+          };
+        })
+      );
+      
+      res.json(purchasesWithDetails);
+    } catch (error) {
+      console.error("Error fetching user's video purchases:", error);
+      res.status(500).json({ message: "Failed to fetch video purchases" });
+    }
+  });
+  
+  // Get revenue statistics for a creator's premium videos
+  app.get("/api/creator/video-revenue", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get revenue statistics
+      const revenueStats = await storage.getCreatorVideoRevenue(userId);
+      
+      // Get all creator's videos
+      const videos = await storage.getUserVideos(userId);
+      
+      // Get premium videos with detailed statistics
+      const premiumVideos = [];
+      for (const video of videos) {
+        if (video.isPremium) {
+          const revenue = await storage.getVideoRevenue(video.id);
+          premiumVideos.push({
+            ...video,
+            revenue
+          });
+        }
+      }
+      
+      res.json({
+        totalRevenue: revenueStats.totalRevenue,
+        premiumVideoCount: revenueStats.videoCount,
+        premiumVideos
+      });
+    } catch (error) {
+      console.error("Error fetching creator video revenue:", error);
+      res.status(500).json({ message: "Failed to fetch video revenue statistics" });
+    }
+  });
+  
   // Update a product overlay
   app.patch("/api/product-overlays/:overlayId", isAuthenticated, async (req, res) => {
     try {

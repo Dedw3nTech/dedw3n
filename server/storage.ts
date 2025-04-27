@@ -346,6 +346,15 @@ export interface IStorage {
   removeVideoFromPlaylist(playlistId: number, videoId: number): Promise<void>;
   getUserPlaylists(userId: number): Promise<VideoPlaylist[]>;
   getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
+  
+  // Premium video purchase operations
+  createVideoPurchase(purchase: InsertVideoPurchase): Promise<VideoPurchase>;
+  getVideoPurchase(id: number): Promise<VideoPurchase | undefined>;
+  getVideoPurchaseByUserAndVideo(userId: number, videoId: number): Promise<VideoPurchase | undefined>;
+  getUserVideoPurchases(userId: number): Promise<VideoPurchase[]>;
+  hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean>;
+  getVideoRevenue(videoId: number): Promise<number>;
+  getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }>;
 }
 
 export class MemStorage implements IStorage {
@@ -404,6 +413,7 @@ export class MemStorage implements IStorage {
   private videoProductOverlayIdCounter: number;
   private videoPlaylistIdCounter: number;
   private playlistItemIdCounter: number;
+  private videoPurchaseIdCounter: number;
   private cartIdCounter: number;
   private walletIdCounter: number;
   private transactionIdCounter: number;
