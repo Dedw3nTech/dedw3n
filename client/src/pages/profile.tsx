@@ -184,13 +184,22 @@ export default function ProfilePage() {
 
   // Profile update mutation
   const updateProfileMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async (profileData: any) => {
       try {
+        console.log("Updating profile with data:", profileData);
+        
+        // If avatarUrl is provided, we'll use a different field name than avatar for now
+        // to distinguish it from file uploads (which will be implemented later)
+        if (profileData.avatarUrl) {
+          profileData.avatar = profileData.avatarUrl;
+          delete profileData.avatarUrl;
+        }
+        
         const response = await apiRequest(
           "PATCH",
           "/api/users/profile",
-          formData,
-          true // This is the isFormData parameter
+          profileData,
+          false // Using JSON, not FormData
         );
         
         if (!response.ok) {
@@ -264,23 +273,32 @@ export default function ProfilePage() {
   const handleUpdateProfile = () => {
     if (!currentUser) return;
     
-    const formData = new FormData();
-    formData.append("name", editName);
-    formData.append("bio", editBio);
+    // Create a profile update object with the basic data
+    const profileUpdate = {
+      name: editName,
+      bio: editBio
+    };
     
+    // Only include non-empty fields
     if (editLocation) {
-      formData.append("location", editLocation);
+      profileUpdate.location = editLocation;
     }
     
     if (editWebsite) {
-      formData.append("website", editWebsite);
+      profileUpdate.website = editWebsite;
     }
     
-    if (avatarFile) {
-      formData.append("avatar", avatarFile);
+    // For now, if the user has selected a new avatar, we'll use a URL approach
+    // later we can implement proper file upload
+    if (avatarPreview && avatarPreview !== profileData.avatar) {
+      // Temporary solution: just using a placeholder URL
+      // In a real implementation, we would upload the file separately
+      // and get back a URL to store
+      profileUpdate.avatarUrl = avatarPreview;
     }
     
-    updateProfileMutation.mutate(formData);
+    console.log("Submitting profile update:", profileUpdate);
+    updateProfileMutation.mutate(profileUpdate);
   };
 
   // Handle connection action
