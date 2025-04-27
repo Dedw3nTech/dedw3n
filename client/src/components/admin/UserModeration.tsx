@@ -617,6 +617,8 @@ export default function UserModeration() {
       );
     }
   };
+  
+
 
   // Render action badge
   const renderActionBadge = (action: UserModerationAction["action"]) => {
@@ -1512,10 +1514,11 @@ export default function UserModeration() {
               {/* User History Column */}
               <div className="flex-1">
                 <Tabs value={activeUserTab} onValueChange={setActiveUserTab}>
-                  <TabsList className="grid grid-cols-3 w-full">
+                  <TabsList className="grid grid-cols-4 w-full">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="violations">Violations</TabsTrigger>
                     <TabsTrigger value="actions">Actions</TabsTrigger>
+                    <TabsTrigger value="security">Security</TabsTrigger>
                   </TabsList>
 
                   {/* Overview Tab */}
@@ -1702,6 +1705,244 @@ export default function UserModeration() {
                         ))}
                       </div>
                     )}
+                  </TabsContent>
+
+                  {/* Security Tab */}
+                  <TabsContent value="security" className="space-y-4 mt-4">
+                    {/* Risk Assessment */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium text-sm">Risk Assessment</h3>
+                        {selectedUser.riskScore !== undefined && (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              selectedUser.riskScore > 70 ? "border-red-500 text-red-500" :
+                              selectedUser.riskScore > 40 ? "border-amber-500 text-amber-500" :
+                              "border-green-500 text-green-500"
+                            }
+                          >
+                            {selectedUser.riskScore > 70 ? "High Risk" :
+                             selectedUser.riskScore > 40 ? "Medium Risk" :
+                             "Low Risk"}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="bg-muted p-3 rounded-md text-sm">
+                        {selectedUser.riskScore !== undefined && (
+                          <div className="mb-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-muted-foreground">Risk Score:</span>
+                              <span>{selectedUser.riskScore}/100</span>
+                            </div>
+                            <Progress
+                              value={selectedUser.riskScore}
+                              max={100}
+                              className="h-1.5"
+                              style={{
+                                backgroundColor: 
+                                  selectedUser.riskScore > 70 ? 'rgb(239 68 68 / 0.2)' :
+                                  selectedUser.riskScore > 40 ? 'rgb(245 158 11 / 0.2)' :
+                                  'rgb(34 197 94 / 0.2)',
+                              }}
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Verification Level:</span>
+                            <span className="capitalize">
+                              {selectedUser.verificationLevel || "None"}
+                            </span>
+                          </div>
+                          <Separator className="my-1" />
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Login Attempts:</span>
+                            <span>
+                              {selectedUser.loginAttempts || 0}
+                              {selectedUser.loginAttempts && selectedUser.loginAttempts > 15 && (
+                                <Badge variant="outline" className="ml-2 text-xs border-red-500 text-red-500">
+                                  Suspicious
+                                </Badge>
+                              )}
+                            </span>
+                          </div>
+                          <Separator className="my-1" />
+                          <div className="flex justify-between text-muted-foreground">
+                            <span>Account Age:</span>
+                            <span>{selectedUser.accountAgeInDays || 0} days</span>
+                          </div>
+                          
+                          {selectedUser.accountLockReason && (
+                            <>
+                              <Separator className="my-1" />
+                              <div className="flex justify-between text-red-500">
+                                <span>Account Lock Reason:</span>
+                                <span>{selectedUser.accountLockReason}</span>
+                              </div>
+                            </>
+                          )}
+
+                          {selectedUser.suspiciousActivityFlags && selectedUser.suspiciousActivityFlags.length > 0 && (
+                            <>
+                              <Separator className="my-1" />
+                              <div className="text-muted-foreground">
+                                <div>Suspicious Activity Flags:</div>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {selectedUser.suspiciousActivityFlags.map((flag, i) => (
+                                    <Badge key={i} variant="outline" className="text-xs border-red-500 text-red-500">
+                                      {flag.replace(/_/g, ' ')}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Devices */}
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-sm">Device History</h3>
+                      {isLoadingDevices ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : !userDevices || userDevices.length === 0 ? (
+                        <div className="bg-muted p-3 rounded-md text-sm text-muted-foreground text-center">
+                          No device history available
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                          {userDevices.map((device) => (
+                            <div key={device.id} className="bg-muted p-2 rounded-md text-sm">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium flex items-center">
+                                    {device.deviceName}
+                                    {device.isCurrentDevice && (
+                                      <Badge className="ml-2 bg-green-500 text-white text-xs">Current</Badge>
+                                    )}
+                                    {!device.isTrusted && (
+                                      <Badge variant="outline" className="ml-2 text-xs border-red-500 text-red-500">Untrusted</Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {device.operatingSystem} / {device.browser}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {getRelativeTime(device.lastUsed)}
+                                </div>
+                              </div>
+                              <div className="mt-1 flex justify-between text-xs">
+                                <div className="font-mono text-muted-foreground">{device.ipAddress}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Locations */}
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-sm">Location History</h3>
+                      {isLoadingLocations ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : !userLocations || userLocations.length === 0 ? (
+                        <div className="bg-muted p-3 rounded-md text-sm text-muted-foreground text-center">
+                          No location history available
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                          {userLocations.map((location) => (
+                            <div key={location.id} className="bg-muted p-2 rounded-md text-sm">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium flex items-center">
+                                    {location.city}, {location.country}
+                                    {location.isSuspicious && (
+                                      <Badge variant="outline" className="ml-2 text-xs border-red-500 text-red-500">Suspicious</Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    Frequency: <span className="capitalize">{location.frequency}</span>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {getRelativeTime(location.lastSeen)}
+                                </div>
+                              </div>
+                              <div className="mt-1 flex justify-between text-xs">
+                                <div className="font-mono text-muted-foreground">{location.ipAddress}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Security Logs */}
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-sm">Security Logs</h3>
+                      {isLoadingSecurityLogs ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : !securityLogs || securityLogs.length === 0 ? (
+                        <div className="bg-muted p-3 rounded-md text-sm text-muted-foreground text-center">
+                          No security logs available
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                          {securityLogs.map((log) => (
+                            <div key={log.id} className="bg-muted p-2 rounded-md text-sm">
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-center">
+                                  <Badge 
+                                    className={log.success ? "bg-green-500 text-white" : "bg-red-500 text-white"}
+                                  >
+                                    {log.eventType.replace(/_/g, ' ')}
+                                  </Badge>
+                                  {log.eventType === "suspicious_activity" && (
+                                    <Badge variant="outline" className="ml-2 text-xs border-red-500 text-red-500">
+                                      Alert
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {getRelativeTime(log.timestamp)}
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs text-muted-foreground grid gap-1">
+                                {log.details && (
+                                  <div className="mb-1">{log.details}</div>
+                                )}
+                                <div className="flex justify-between">
+                                  <span>Device:</span>
+                                  <span>{log.deviceInfo}</span>
+                                </div>
+                                {log.location && (
+                                  <div className="flex justify-between">
+                                    <span>Location:</span>
+                                    <span>{log.location}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between">
+                                  <span>IP Address:</span>
+                                  <span className="font-mono">{log.ipAddress}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
