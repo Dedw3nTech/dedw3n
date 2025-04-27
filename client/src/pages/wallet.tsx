@@ -228,45 +228,36 @@ export default function WalletPage() {
   // Handle top-up card selection
   const handleCardSelection = (value: number) => {
     setSelectedCardValue(value);
+    setPaymentMethod('card'); // Default to card payment
     setShowPaymentDialog(true);
+    
+    // Set amount and description for the top-up card
+    setAmount(value.toString());
+    setDescription(`${wallet?.currency || 'GBP'}${value} Top-up Card`);
   };
 
   // Handle card payment for top-up
   const handleCardPayment = async () => {
     try {
-      // Create a payment intent with Stripe
-      const paymentResponse = await apiRequest('POST', '/api/create-payment-intent', {
-        amount: selectedCardValue
+      // For this prototype, we'll directly add funds to the wallet instead of processing a real payment
+      // In a production app, we would connect to Stripe API here
+      
+      toast({
+        title: "Payment Processing",
+        description: `Processing payment for £${selectedCardValue} top-up card...`,
       });
 
-      if (paymentResponse.ok) {
-        const paymentData = await paymentResponse.json();
+      // Simulate payment processing delay
+      setTimeout(() => {
+        // Add funds to wallet
+        createTransactionMutation.mutate({
+          type: 'deposit',
+          amount: selectedCardValue,
+          description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+        });
         
-        // Mock successful payment for now
-        // In a real implementation, we would redirect to a Stripe checkout page or use Stripe Elements
-        toast({
-          title: "Payment Processing",
-          description: `Processing payment for £${selectedCardValue} top-up card...`,
-        });
-
-        // Simulate payment processing
-        setTimeout(() => {
-          // After payment success, create the transaction to add funds to wallet
-          createTransactionMutation.mutate({
-            type: 'deposit',
-            amount: selectedCardValue,
-            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
-          });
-          
-          setShowPaymentDialog(false);
-        }, 1500);
-      } else {
-        toast({
-          title: "Payment Failed",
-          description: "Unable to process payment. Please try again.",
-          variant: "destructive"
-        });
-      }
+        setShowPaymentDialog(false);
+      }, 1500);
     } catch (error) {
       console.error("Payment error:", error);
       toast({
@@ -280,40 +271,25 @@ export default function WalletPage() {
   // Handle mobile money payment for top-up
   const handleMobileMoneyPayment = async () => {
     try {
-      // Create a mobile money payment request
-      const paymentResponse = await apiRequest('POST', '/api/mobile-money/initiate', {
-        amount: selectedCardValue,
-        currency: wallet?.currency || 'GBP',
-        description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+      // For this prototype, we'll directly add funds to the wallet instead of processing a real payment
+      // In a production app, we would connect to a mobile money API here
+      
+      toast({
+        title: "Mobile Money Payment",
+        description: `Processing mobile money payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
       });
 
-      if (paymentResponse.ok) {
-        const paymentData = await paymentResponse.json();
+      // Simulate payment processing delay
+      setTimeout(() => {
+        // Add funds to wallet
+        createTransactionMutation.mutate({
+          type: 'deposit',
+          amount: selectedCardValue,
+          description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - Mobile Money`
+        });
         
-        // Mock successful mobile money payment
-        toast({
-          title: "Mobile Money Payment",
-          description: `Processing mobile money payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
-        });
-
-        // Simulate payment processing
-        setTimeout(() => {
-          // After payment success, create the transaction to add funds to wallet
-          createTransactionMutation.mutate({
-            type: 'deposit',
-            amount: selectedCardValue,
-            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - Mobile Money`
-          });
-          
-          setShowPaymentDialog(false);
-        }, 1500);
-      } else {
-        toast({
-          title: "Payment Failed",
-          description: "Unable to process mobile money payment. Please try again.",
-          variant: "destructive"
-        });
-      }
+        setShowPaymentDialog(false);
+      }, 1500);
     } catch (error) {
       console.error("Mobile money payment error:", error);
       toast({
@@ -327,40 +303,25 @@ export default function WalletPage() {
   // Handle PayPal payment for top-up
   const handlePaypalPayment = async () => {
     try {
-      // Create a PayPal order
-      const paymentResponse = await apiRequest('POST', '/api/create-paypal-order', {
-        amount: selectedCardValue,
-        currency: wallet?.currency || 'GBP',
-        description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+      // For this prototype, we'll directly add funds to the wallet instead of processing a real payment
+      // In a production app, we would connect to the PayPal API here
+      
+      toast({
+        title: "PayPal Payment",
+        description: `Processing PayPal payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
       });
 
-      if (paymentResponse.ok) {
-        const paymentData = await paymentResponse.json();
+      // Simulate payment processing delay
+      setTimeout(() => {
+        // Add funds to wallet
+        createTransactionMutation.mutate({
+          type: 'deposit',
+          amount: selectedCardValue,
+          description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - PayPal`
+        });
         
-        // Mock successful PayPal payment
-        toast({
-          title: "PayPal Payment",
-          description: `Processing PayPal payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
-        });
-
-        // Simulate payment processing
-        setTimeout(() => {
-          // After payment success, create the transaction to add funds to wallet
-          createTransactionMutation.mutate({
-            type: 'deposit',
-            amount: selectedCardValue,
-            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - PayPal`
-          });
-          
-          setShowPaymentDialog(false);
-        }, 1500);
-      } else {
-        toast({
-          title: "Payment Failed",
-          description: "Unable to process PayPal payment. Please try again.",
-          variant: "destructive"
-        });
-      }
+        setShowPaymentDialog(false);
+      }, 1500);
     } catch (error) {
       console.error("PayPal payment error:", error);
       toast({
