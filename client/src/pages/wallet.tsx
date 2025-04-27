@@ -50,7 +50,8 @@ import {
   currencySymbols, 
   convertCurrency, 
   formatCurrency,
-  fetchExchangeRates
+  fetchExchangeRates,
+  CurrencyCode
 } from '@/lib/currencyConverter';
 
 export default function WalletPage() {

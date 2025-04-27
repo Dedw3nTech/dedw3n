@@ -93,20 +93,22 @@ export function convertCurrency(
  * Format currency with proper symbol and decimal places
  * @param amount The amount to format
  * @param currencyCode The currency code
+ * @param includeCode Optional flag to include currency code in output
  * @returns Formatted currency string with symbol
  */
-export function formatCurrency(amount: number, currencyCode: CurrencyCode): string {
-  const symbols: Record<CurrencyCode, string> = {
-    GBP: '£',
-    EUR: '€',
-    USD: '$',
-    CNY: '¥',
-    INR: '₹',
-    BRL: 'R$',
-  };
-
+export function formatCurrency(
+  amount: number, 
+  currencyCode: CurrencyCode,
+  includeCode: boolean = false
+): string {
+  // Use the globally defined currency symbols
+  const symbol = currencySymbols[currencyCode];
+  
   // Format with 2 decimal places and appropriate currency symbol
-  return `${symbols[currencyCode]}${amount.toFixed(2)}`;
+  const formattedAmount = `${symbol}${amount.toFixed(2)}`;
+  
+  // Optionally include the currency code
+  return includeCode ? `${formattedAmount} ${currencyCode}` : formattedAmount;
 }
 
 /**

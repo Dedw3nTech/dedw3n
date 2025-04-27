@@ -14,30 +14,55 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, CircleDollarSign } from "lucide-react";
-import { supportedCurrencies, convertCurrency, formatCurrency, fetchExchangeRates } from "@/lib/currencyConverter";
+import { 
+  supportedCurrencies, 
+  convertCurrency, 
+  formatCurrency, 
+  fetchExchangeRates, 
+  currencySymbols,
+  getFormattedExchangeRate,
+  CurrencyCode 
+} from "@/lib/currencyConverter";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "@/hooks/use-currency";
 
 export default function CurrencyConverter() {
   const { t } = useTranslation();
+  const { currency: defaultCurrency } = useCurrency();
   const [amount, setAmount] = useState<number>(1);
-  const [fromCurrency, setFromCurrency] = useState<string>("GBP");
-  const [toCurrency, setToCurrency] = useState<string>("USD");
+  const [fromCurrency, setFromCurrency] = useState<CurrencyCode>(defaultCurrency);
+  const [toCurrency, setToCurrency] = useState<CurrencyCode>("USD");
   const [result, setResult] = useState<number | null>(null);
   const [isConverting, setIsConverting] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const [exchangeRates, setExchangeRates] = useState<Record<CurrencyCode, number> | null>(null);
 
   // Initialize exchange rates when component mounts
   useEffect(() => {
-    fetchExchangeRates();
-  }, []);
+    const initRates = async () => {
+      try {
+        const rates = await fetchExchangeRates(fromCurrency);
+        setExchangeRates(rates);
+      } catch (error) {
+        console.error("Error fetching exchange rates:", error);
+      }
+    };
+    
+    initRates();
+  }, [fromCurrency]);
+
+  // Update from currency when default currency changes
+  useEffect(() => {
+    setFromCurrency(defaultCurrency);
+  }, [defaultCurrency]);
 
   // Convert currencies
-  const handleConvert = async () => {
+  const handleConvert = () => {
     if (!amount || amount <= 0) return;
     
     setIsConverting(true);
     try {
-      const convertedAmount = await convertCurrency(amount, fromCurrency, toCurrency);
+      const convertedAmount = convertCurrency(amount, fromCurrency, toCurrency);
       setResult(convertedAmount);
     } catch (error) {
       console.error("Error converting currency:", error);
@@ -98,7 +123,7 @@ export default function CurrencyConverter() {
             <div className="col-span-2">
               <Select
                 value={fromCurrency}
-                onValueChange={(value) => {
+                onValueChange={(value: CurrencyCode) => {
                   setFromCurrency(value);
                   setResult(null);
                 }}
@@ -108,7 +133,9 @@ export default function CurrencyConverter() {
                 </SelectTrigger>
                 <SelectContent>
                   {supportedCurrencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    <SelectItem key={currency} value={currency}>
+                      {currencySymbols[currency]} {currency}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -128,7 +155,7 @@ export default function CurrencyConverter() {
             <div className="col-span-1">
               <Select
                 value={toCurrency}
-                onValueChange={(value) => {
+                onValueChange={(value: CurrencyCode) => {
                   setToCurrency(value);
                   setResult(null);
                 }}
@@ -138,7 +165,9 @@ export default function CurrencyConverter() {
                 </SelectTrigger>
                 <SelectContent>
                   {supportedCurrencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    <SelectItem key={currency} value={currency}>
+                      {currencySymbols[currency]} {currency}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -152,13 +181,13 @@ export default function CurrencyConverter() {
           ) : result !== null ? (
             <div className="text-center py-2 space-y-1">
               <div className="text-sm font-medium">
-                {formatCurrency(amount, fromCurrency, true)} =
+                {`${currencySymbols[fromCurrency]}${amount.toFixed(2)} ${fromCurrency}`} =
               </div>
               <div className="text-lg font-bold text-primary">
-                {formatCurrency(result, toCurrency, true)}
+                {`${currencySymbols[toCurrency]}${result.toFixed(2)} ${toCurrency}`}
               </div>
               <div className="text-xs text-gray-500">
-                1 {fromCurrency} = {(result / amount).toFixed(4)} {toCurrency}
+                {getFormattedExchangeRate(fromCurrency, toCurrency)}
               </div>
             </div>
           ) : null}
