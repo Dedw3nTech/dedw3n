@@ -151,7 +151,7 @@ export default function AdminDashboard() {
 
         {/* Main Admin Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-9 gap-2">
+          <TabsList className="grid grid-cols-3 md:grid-cols-8 gap-2">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               <span className="hidden md:inline">Overview</span>
@@ -167,10 +167,6 @@ export default function AdminDashboard() {
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
               <span className="hidden md:inline">Orders</span>
-            </TabsTrigger>
-            <TabsTrigger value="product-kpis" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden md:inline">Product KPIs</span>
             </TabsTrigger>
             <TabsTrigger value="communities" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -450,28 +446,79 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="products" className="space-y-4">
-            <PlaceholderComponent title="Product Management" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5 text-primary" />
+                      Product Management
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your product catalog
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between bg-slate-50 p-2 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="text-sm">All Products</span>
+                        </div>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </div>
+                      <div className="flex items-center justify-between bg-slate-50 p-2 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="text-sm">Categories</span>
+                        </div>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </div>
+                      <div className="flex items-center justify-between bg-slate-50 p-2 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="text-sm">Inventory</span>
+                        </div>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </div>
+                      <div className="flex items-center justify-between bg-slate-50 p-2 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="text-sm">Product Reviews</span>
+                        </div>
+                        <Button variant="ghost" size="sm">View</Button>
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <Button variant="outline" className="w-full">
+                        Add New Product
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="col-span-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      Product Manager KPI Dashboard
+                    </CardTitle>
+                    <CardDescription>
+                      Monitor product performance and identify growth opportunities with comprehensive metrics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ProductManagerDashboard />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="orders" className="space-y-4">
             <PlaceholderComponent title="Order Management" />
-          </TabsContent>
-          
-          <TabsContent value="product-kpis" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Product Manager KPI Dashboard
-                </CardTitle>
-                <CardDescription>
-                  Monitor product performance and identify growth opportunities with comprehensive metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProductManagerDashboard />
-              </CardContent>
-            </Card>
           </TabsContent>
           
           <TabsContent value="communities" className="space-y-4">
