@@ -1425,16 +1425,19 @@ export class MemStorage implements IStorage {
     // Convert to array and sort by revenue
     const result: { product: Product; totalSold: number; revenue: number }[] = [];
     
-    for (const [productId, stats] of productMap.entries()) {
-      const product = await this.getProduct(productId);
-      if (product) {
-        result.push({
-          product,
-          totalSold: stats.totalSold,
-          revenue: stats.revenue,
-        });
-      }
-    }
+    // Using Array.from to avoid TypeScript MapIterator issues
+    await Promise.all(
+      Array.from(productMap.entries()).map(async ([productId, stats]) => {
+        const product = await this.getProduct(productId);
+        if (product) {
+          result.push({
+            product,
+            totalSold: stats.totalSold,
+            revenue: stats.revenue,
+          });
+        }
+      })
+    );
     
     // Sort by revenue (highest first) and limit
     return result

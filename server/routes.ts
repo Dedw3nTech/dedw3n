@@ -186,7 +186,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     // Send to all connected clients except the user
-    for (const [otherUserId, userConnections] of connections.entries()) {
+    // Convert Map.entries() to Array to avoid TypeScript MapIterator issues
+    Array.from(connections.entries()).forEach(([otherUserId, userConnections]) => {
       if (otherUserId !== userId) {
         // Using Array.from to avoid TypeScript iteration issues with Set
         Array.from(userConnections).forEach(conn => {
@@ -199,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-    }
+    });
   }
   
   // Handle chat messages
