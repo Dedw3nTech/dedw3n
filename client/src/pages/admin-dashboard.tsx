@@ -13,11 +13,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle, Brain, Sparkles, FileWarning, TrendingUp } from "lucide-react";
+import { 
+  Loader2, 
+  Users, 
+  Package, 
+  ShoppingCart, 
+  BarChart, 
+  Settings, 
+  Shield, 
+  ActivitySquare, 
+  AlertTriangle, 
+  Brain, 
+  Sparkles, 
+  FileWarning, 
+  TrendingUp,
+  ShieldCheck,
+  Store,
+  UserCog,
+  Languages,
+  CreditCard,
+  Truck,
+  FileText,
+  BarChart3,
+  Bell,
+  ExternalLink,
+  DollarSign
+} from "lucide-react";
 import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import UserModeration from "@/components/admin/UserModeration";
 import PostModeration from "@/components/admin/PostModeration";
 import EnhancedModeration from "@/components/admin/EnhancedModeration";
@@ -547,7 +582,253 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
-            <PlaceholderComponent title="System Settings" />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Settings Sidebar */}
+              <div className="col-span-3 space-y-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold">Settings</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Manage system configurations
+                      </p>
+                    </div>
+                    <div className="mt-4 space-y-1.5">
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <Settings className="h-4 w-4" />
+                        General
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <ShieldCheck className="h-4 w-4" />
+                        Security
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <Store className="h-4 w-4" />
+                        Marketplace
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <UserCog className="h-4 w-4" />
+                        User Management
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <Bell className="h-4 w-4" />
+                        Notifications
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <Languages className="h-4 w-4" />
+                        Localization
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <CreditCard className="h-4 w-4" />
+                        Payment Methods
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <Truck className="h-4 w-4" />
+                        Shipping Options
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <FileText className="h-4 w-4" />
+                        Legal & Terms
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                        <BarChart3 className="h-4 w-4" />
+                        Analytics
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Settings Content */}
+              <div className="col-span-9 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-primary" />
+                      General Settings
+                    </CardTitle>
+                    <CardDescription>
+                      Configure basic system settings and preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Platform Settings */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Platform Settings</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="platform-name">Platform Name</Label>
+                          <Input 
+                            id="platform-name" 
+                            defaultValue="Dedw3n Global Marketplace" 
+                            className="max-w-md"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            The name of your platform as it appears to users
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="contact-email">Contact Email</Label>
+                          <Input 
+                            id="contact-email" 
+                            type="email" 
+                            defaultValue="support@dedw3n.com" 
+                            className="max-w-md"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Primary email for system notifications and user support
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="default-currency">Default Currency</Label>
+                          <Select defaultValue="gbp">
+                            <SelectTrigger className="max-w-md">
+                              <SelectValue placeholder="Select a currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gbp">British Pound (GBP)</SelectItem>
+                              <SelectItem value="usd">US Dollar (USD)</SelectItem>
+                              <SelectItem value="eur">Euro (EUR)</SelectItem>
+                              <SelectItem value="jpy">Japanese Yen (JPY)</SelectItem>
+                              <SelectItem value="cny">Chinese Yuan (CNY)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Default currency for product prices and transactions
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="default-language">Default Language</Label>
+                          <Select defaultValue="en">
+                            <SelectTrigger className="max-w-md">
+                              <SelectValue placeholder="Select a language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en">English</SelectItem>
+                              <SelectItem value="fr">French</SelectItem>
+                              <SelectItem value="es">Spanish</SelectItem>
+                              <SelectItem value="de">German</SelectItem>
+                              <SelectItem value="zh">Chinese</SelectItem>
+                              <SelectItem value="ar">Arabic</SelectItem>
+                              <SelectItem value="hi">Hindi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Default language for the platform interface
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Feature Toggles */}
+                    <div className="space-y-4 pt-4">
+                      <h3 className="text-lg font-medium">Feature Settings</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">Social Features</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable social networking features like community posts and messaging
+                            </p>
+                          </div>
+                          <Switch defaultChecked id="social-features" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">Dating Features</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable dating and matchmaking services on the platform
+                            </p>
+                          </div>
+                          <Switch defaultChecked id="dating-features" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">Governmental Services</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable government service application features
+                            </p>
+                          </div>
+                          <Switch defaultChecked id="gov-features" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">Digital Wallet</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable e-wallet features for users
+                            </p>
+                          </div>
+                          <Switch defaultChecked id="wallet-features" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">AI-Powered Features</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Enable AI recommendations and insights
+                            </p>
+                          </div>
+                          <Switch defaultChecked id="ai-features" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* System Maintenance */}
+                    <div className="space-y-4 pt-4">
+                      <h3 className="text-lg font-medium">System Maintenance</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="maintenance-mode">Maintenance Mode</Label>
+                          <Select defaultValue="off">
+                            <SelectTrigger className="max-w-md">
+                              <SelectValue placeholder="Select maintenance mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="off">Off</SelectItem>
+                              <SelectItem value="scheduled">Scheduled</SelectItem>
+                              <SelectItem value="on">On (Site Down)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Set the site to maintenance mode for system updates
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="cache-clear">Cache Management</Label>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              Clear System Cache
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              Rebuild Indices
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Manage system cache and search indices
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Save Settings Button */}
+                    <div className="pt-4 flex justify-end gap-2">
+                      <Button variant="outline">Reset to Defaults</Button>
+                      <Button>Save Settings</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
