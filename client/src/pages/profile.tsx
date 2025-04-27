@@ -59,7 +59,11 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/profile/:username");
-  const username = params?.username || (currentUser ? currentUser.username : '');
+  
+  // If we have a username param, use it; otherwise use the current user's ID instead of username
+  // This fixes issues with spaces in usernames
+  const usernameOrId = params?.username || (currentUser ? currentUser.id.toString() : '');
+  const isUsingId = !params?.username && currentUser;
   
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditing, setIsEditing] = useState(false);
@@ -77,9 +81,10 @@ export default function ProfilePage() {
     error: profileError,
     refetch: refetchProfile,
   } = useQuery({
-    queryKey: [`/api/users/${username}`],
+    queryKey: [isUsingId ? `/api/users/id/${usernameOrId}` : `/api/users/${usernameOrId}`],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${username}`);
+      const endpoint = isUsingId ? `/api/users/id/${usernameOrId}` : `/api/users/${usernameOrId}`;
+      const response = await fetch(endpoint);
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("User not found");
@@ -88,7 +93,7 @@ export default function ProfilePage() {
       }
       return response.json();
     },
-    enabled: !!username,
+    enabled: !!usernameOrId,
   });
 
   // Fetch user's posts
@@ -97,15 +102,16 @@ export default function ProfilePage() {
     isLoading: isLoadingPosts,
     refetch: refetchPosts,
   } = useQuery({
-    queryKey: [`/api/users/${username}/posts`],
+    queryKey: [isUsingId ? `/api/users/id/${usernameOrId}/posts` : `/api/users/${usernameOrId}/posts`],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${username}/posts`);
+      const endpoint = isUsingId ? `/api/users/id/${usernameOrId}/posts` : `/api/users/${usernameOrId}/posts`;
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error("Failed to fetch user posts");
       }
       return response.json();
     },
-    enabled: !!username,
+    enabled: !!usernameOrId,
   });
 
   // Fetch user's communities
@@ -113,15 +119,16 @@ export default function ProfilePage() {
     data: userCommunities,
     isLoading: isLoadingCommunities,
   } = useQuery({
-    queryKey: [`/api/users/${username}/communities`],
+    queryKey: [isUsingId ? `/api/users/id/${usernameOrId}/communities` : `/api/users/${usernameOrId}/communities`],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${username}/communities`);
+      const endpoint = isUsingId ? `/api/users/id/${usernameOrId}/communities` : `/api/users/${usernameOrId}/communities`;
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error("Failed to fetch user communities");
       }
       return response.json();
     },
-    enabled: !!username,
+    enabled: !!usernameOrId,
   });
 
   // Fetch user's vendor info if they are a vendor
@@ -129,9 +136,10 @@ export default function ProfilePage() {
     data: vendorInfo,
     isLoading: isLoadingVendorInfo,
   } = useQuery({
-    queryKey: [`/api/users/${username}/vendor`],
+    queryKey: [isUsingId ? `/api/users/id/${usernameOrId}/vendor` : `/api/users/${usernameOrId}/vendor`],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${username}/vendor`);
+      const endpoint = isUsingId ? `/api/users/id/${usernameOrId}/vendor` : `/api/users/${usernameOrId}/vendor`;
+      const response = await fetch(endpoint);
       if (!response.ok && response.status !== 404) {
         throw new Error("Failed to fetch vendor information");
       }
@@ -140,7 +148,7 @@ export default function ProfilePage() {
       }
       return response.json();
     },
-    enabled: !!profileData?.isVendor && !!username,
+    enabled: !!profileData?.isVendor && !!usernameOrId,
   });
 
   // Connection status mutation
@@ -161,7 +169,7 @@ export default function ProfilePage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${username}`] });
+      queryClient.invalidateQueries({ queryKey: [isUsingId ? `/api/users/id/${usernameOrId}` : `/api/users/${usernameOrId}`] });
       refetchProfile();
     },
     onError: (error: Error) => {
@@ -209,7 +217,7 @@ export default function ProfilePage() {
       });
       setIsEditing(false);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${username}`] });
+      queryClient.invalidateQueries({ queryKey: [isUsingId ? `/api/users/id/${usernameOrId}` : `/api/users/${usernameOrId}`] });
       refetchProfile();
     },
     onError: (error: Error) => {

@@ -355,6 +355,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user", (req, res) => res.redirect(307, "/api/auth/me"));
   
   // User profile routes
+  app.get("/api/users/id/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      console.log(`[DEBUG] Fetching profile for user ID: ${userId}`);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      console.log(`[DEBUG] User found by ID:`, user ? 'Yes' : 'No');
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password before sending
+      const { password, ...userData } = user;
+      console.log(`[DEBUG] Returning user data for user ID: ${userId}`);
+      res.json(userData);
+    } catch (error) {
+      console.error(`[ERROR] Failed to get profile for user ID ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+  
   app.get("/api/users/:username", async (req, res) => {
     try {
       const username = req.params.username;
@@ -377,7 +404,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get user's posts
+  // Get user's posts by ID
+  app.get("/api/users/id/:userId/posts", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const posts = await storage.getUserPosts(user.id);
+      res.json(posts);
+    } catch (error) {
+      console.error(`[ERROR] Failed to get posts for user ID ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to get user posts" });
+    }
+  });
+  
+  // Get user's posts by username
   app.get("/api/users/:username/posts", async (req, res) => {
     try {
       const username = req.params.username;
