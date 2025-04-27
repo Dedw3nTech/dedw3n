@@ -94,6 +94,8 @@ export default function AdminDashboard() {
   const [activeSetting, setActiveSetting] = useState("general");
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+  const [isRebuildingIndices, setIsRebuildingIndices] = useState(false);
   
   // Handler for saving settings
   const handleSaveSettings = () => {
@@ -121,6 +123,34 @@ export default function AdminDashboard() {
         variant: "default",
       });
     }, 800);
+  };
+  
+  // Handler for clearing system cache
+  const handleClearCache = () => {
+    setIsClearingCache(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsClearingCache(false);
+      toast({
+        title: "Cache cleared",
+        description: "System cache has been successfully cleared.",
+        variant: "default",
+      });
+    }, 1000);
+  };
+  
+  // Handler for rebuilding indices
+  const handleRebuildIndices = () => {
+    setIsRebuildingIndices(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsRebuildingIndices(false);
+      toast({
+        title: "Indices rebuilt",
+        description: "System indices have been successfully rebuilt.",
+        variant: "default",
+      });
+    }, 1500);
   };
   
   const { data: stats = { 
@@ -627,43 +657,83 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className="mt-4 space-y-1.5">
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "general" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("general")}
+                      >
                         <Settings className="h-4 w-4" />
                         General
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "security" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("security")}
+                      >
                         <ShieldCheck className="h-4 w-4" />
                         Security
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "marketplace" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("marketplace")}
+                      >
                         <Store className="h-4 w-4" />
                         Marketplace
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "user-management" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("user-management")}
+                      >
                         <UserCog className="h-4 w-4" />
                         User Management
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "notifications" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("notifications")}
+                      >
                         <Bell className="h-4 w-4" />
                         Notifications
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "localization" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("localization")}
+                      >
                         <Languages className="h-4 w-4" />
                         Localization
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "payment" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("payment")}
+                      >
                         <CreditCard className="h-4 w-4" />
                         Payment Methods
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "shipping" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("shipping")}
+                      >
                         <Truck className="h-4 w-4" />
                         Shipping Options
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "legal" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("legal")}
+                      >
                         <FileText className="h-4 w-4" />
                         Legal & Terms
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start gap-2 font-medium">
+                      <Button 
+                        variant={activeSetting === "analytics" ? "default" : "ghost"} 
+                        className="w-full justify-start gap-2 font-medium"
+                        onClick={() => setActiveSetting("analytics")}
+                      >
                         <BarChart3 className="h-4 w-4" />
                         Analytics
                       </Button>
@@ -839,11 +909,35 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                           <Label htmlFor="cache-clear">Cache Management</Label>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
-                              Clear System Cache
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={handleClearCache}
+                              disabled={isClearingCache || isRebuildingIndices}
+                            >
+                              {isClearingCache ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  Clearing...
+                                </>
+                              ) : (
+                                "Clear System Cache"
+                              )}
                             </Button>
-                            <Button variant="outline" size="sm">
-                              Rebuild Indices
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={handleRebuildIndices}
+                              disabled={isRebuildingIndices || isClearingCache}
+                            >
+                              {isRebuildingIndices ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  Rebuilding...
+                                </>
+                              ) : (
+                                "Rebuild Indices"
+                              )}
                             </Button>
                           </div>
                           <p className="text-xs text-muted-foreground">
