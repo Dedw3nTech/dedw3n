@@ -57,7 +57,7 @@ export default function Footer() {
             </div>
           </div>
           <p className="text-xs text-gray-500 text-center md:text-left">
-            Dedw3n is a British Start Up registered in England, Wales and Scotland
+            Dedw3n is a British Company registered in England, Wales and Scotland
             under registration number <span className="font-medium">15930281</span>, whose registered office is
             situated <span className="font-medium">50 Essex Street, London, England, WC2R3JF</span>.
           </p>
