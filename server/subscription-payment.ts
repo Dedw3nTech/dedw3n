@@ -132,7 +132,7 @@ export async function processMembershipPayment(req: Request, res: Response) {
     });
 
     // Create a record of this payment in the creator earnings table
-    await storage.createCreatorEarning({
+    await storage.addCreatorEarning({
       userId: parseInt(userId),
       communityId: parseInt(communityId),
       amount: tier.price,
@@ -274,7 +274,7 @@ export async function processPaypalMembership(req: Request, res: Response) {
     });
 
     // Create a record of this payment in the creator earnings table
-    await storage.createCreatorEarning({
+    await storage.addCreatorEarning({
       userId,
       communityId,
       amount: tier.price,

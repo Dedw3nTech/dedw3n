@@ -8,6 +8,7 @@ import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
 import { registerMobileMoneyRoutes } from "./mobile-money";
+import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { seedDatabase } from "./seed";
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -305,6 +306,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register mobile money payment routes
   registerMobileMoneyRoutes(app);
+  
+  // Register subscription payment routes
+  registerSubscriptionPaymentRoutes(app);
   
   // Update user profile
   app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
@@ -2563,33 +2567,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You already have an active membership in this community" });
       }
       
-      // Calculate end date based on tier duration
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + tier.durationDays);
-      
-      // Handle payment for paid tiers (free tiers are automatically approved)
-      let paymentStatus = "paid";
-      if (tier.price > 0) {
-        // For now, we'll simulate payment success for all paid tiers
-        // In a production environment, you would integrate with a payment gateway here
-        // and set paymentStatus based on the payment result
-        paymentStatus = "paid";
+      // For free tiers, create membership immediately
+      if (tier.price <= 0) {
+        // Calculate end date based on tier duration
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + tier.durationDays);
+        
+        // Create the membership
+        const membership = await storage.createMembership({
+          userId,
+          tierId,
+          communityId,
+          status: "active",
+          paymentStatus: "paid", // Free tiers are automatically "paid"
+          startDate,
+          endDate,
+          autoRenew: true
+        });
+        
+        res.status(201).json({
+          membership,
+          tier,
+          requiresPayment: false
+        });
+      } else {
+        // For paid tiers, return tier information so the client can initiate payment
+        res.status(200).json({
+          tier,
+          requiresPayment: true,
+          paymentOptions: [
+            {
+              method: "stripe",
+              endpoint: "/api/membership/payment/stripe/create-intent"
+            },
+            {
+              method: "paypal",
+              endpoint: "/api/membership/payment/paypal/create-order"
+            }
+          ]
+        });
       }
-      
-      // Create the membership
-      const membership = await storage.createMembership({
-        userId,
-        tierId,
-        communityId,
-        status: "active",
-        paymentStatus,
-        startDate,
-        endDate,
-        autoRenew: true
-      });
-      
-      res.status(201).json(membership);
     } catch (error) {
       console.error("Failed to create membership:", error);
       res.status(500).json({ message: "Failed to create membership" });
