@@ -33,8 +33,14 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update currency with user choice and save preference
   const handleSetCurrency = (newCurrency: CurrencyType) => {
+    console.log('Currency changing from', currency, 'to', newCurrency);
     setCurrency(newCurrency);
     saveUserCurrency(newCurrency);
+    
+    // Force refresh to update all components that display prices
+    window.dispatchEvent(new CustomEvent('currency-changed', { 
+      detail: { from: currency, to: newCurrency } 
+    }));
   };
 
   // Initialize currency based on user location

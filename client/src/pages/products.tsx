@@ -36,6 +36,21 @@ export default function Products() {
   const [, setLocation] = useLocation();
   const { marketType, marketTypeLabel } = useMarketType();
   const { currency } = useCurrency();
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Force rerender when currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      console.log('Products page detected currency change');
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    window.addEventListener('currency-changed', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('currency-changed', handleCurrencyChange);
+    };
+  }, []);
 
   // Fetch products
   const {

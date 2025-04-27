@@ -5,9 +5,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
+import { useCurrency } from "@/hooks/use-currency";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatPrice, formatCurrency } from "@/lib/utils";
+import { formatPrice, formatCurrency, formatPriceWithCurrency } from "@/lib/utils";
 import { convertCurrency } from "@/lib/currencyConverter";
 import { Product } from "@shared/schema";
 
@@ -35,18 +36,39 @@ export default function Home() {
   const { setView } = useView();
   const { user } = useAuth();
   const { setMarketType } = useMarketType();
+  const { currency } = useCurrency();
   const [, setLocation] = useLocation();
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
   const [convertedDiscountPrices, setConvertedDiscountPrices] = useState<Record<number, number>>({});
   const [isConverting, setIsConverting] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
   
   // List of supported currencies
   const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
   
+  // Force rerender when currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      console.log('Home page detected currency change');
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    window.addEventListener('currency-changed', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('currency-changed', handleCurrencyChange);
+    };
+  }, []);
+  
   useEffect(() => {
     setView("marketplace");
   }, [setView]);
+  
+  // Update selected currency when the global currency changes
+  useEffect(() => {
+    setSelectedCurrency(currency);
+  }, [currency]);
 
   // Fetch featured products (limit to 6)
   const { 
