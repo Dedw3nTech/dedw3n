@@ -18,14 +18,29 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  isFormData?: boolean,
 ): Promise<Response> {
-  // Use our offline-aware fetch implementation
-  const res = await offlineAwareFetch(url, {
+  // Set up request options
+  const options: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
-  });
+  };
+
+  // Handle body and headers based on whether this is FormData or not
+  if (data) {
+    if (isFormData) {
+      // For FormData, let the browser set the Content-Type with boundary
+      options.body = data as FormData;
+      // Don't set Content-Type for FormData
+    } else {
+      // For JSON data, set Content-Type and stringify
+      options.headers = { "Content-Type": "application/json" };
+      options.body = JSON.stringify(data);
+    }
+  }
+
+  // Use our offline-aware fetch implementation
+  const res = await offlineAwareFetch(url, options);
 
   await throwIfResNotOk(res);
   

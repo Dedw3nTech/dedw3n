@@ -176,19 +176,31 @@ export default function ProfilePage() {
   // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await apiRequest(
-        "PATCH",
-        "/api/users/profile",
-        formData,
-        true
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update profile");
+      try {
+        const response = await apiRequest(
+          "PATCH",
+          "/api/users/profile",
+          formData,
+          true // This is the isFormData parameter
+        );
+        
+        if (!response.ok) {
+          // Try to parse the error response as JSON
+          try {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to update profile");
+          } catch (jsonError) {
+            // If we can't parse as JSON, get the text content
+            const errorText = await response.text();
+            throw new Error(errorText || "Failed to update profile");
+          }
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Profile update error:", error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({
