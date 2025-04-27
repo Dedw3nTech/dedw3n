@@ -15,6 +15,32 @@ export const languages = [
   { code: 'es', name: 'Español' }  // Spanish
 ];
 
+// Get the language from URL parameter or localStorage or default to English
+const getInitialLanguage = () => {
+  // Check URL parameters first (highest priority)
+  const params = new URLSearchParams(window.location.search);
+  const langParam = params.get('lang');
+  if (langParam && supportedLanguages.includes(langParam)) {
+    console.log('Using language from URL parameter:', langParam);
+    return langParam;
+  }
+  
+  // Check localStorage next
+  const storedLang = localStorage.getItem('i18nextLng');
+  if (storedLang && supportedLanguages.includes(storedLang)) {
+    console.log('Using language from localStorage:', storedLang);
+    return storedLang;
+  }
+  
+  // Fallback to English
+  return 'en';
+};
+
+// Determine initial language
+const initialLanguage = getInitialLanguage();
+// Ensure it's saved in localStorage
+localStorage.setItem('i18nextLng', initialLanguage);
+
 i18n
   // Load translations from backend
   .use(Backend)
@@ -25,12 +51,14 @@ i18n
   // Initialize i18next
   .init({
     fallbackLng: 'en',
+    lng: initialLanguage, // Force the initial language
     debug: import.meta.env.DEV,
     interpolation: {
       escapeValue: false, // React already escapes values
     },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
+      lookupQuerystring: 'lang', // Look for the 'lang' parameter in the URL
       caches: ['localStorage'],
     },
     backend: {

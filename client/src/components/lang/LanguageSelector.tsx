@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Check, ChevronDown, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,11 +7,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { languages, changeLanguage } from '@/lib/i18n';
+import { languages } from '@/lib/i18n';
 
 export function LanguageSelector() {
-  const { i18n } = useTranslation();
-  const currentLanguage = i18n.language;
+  // Get current language from localStorage
+  const getCurrentLanguage = () => {
+    return localStorage.getItem('i18nextLng') || 'en';
+  };
+  
+  const currentLanguage = getCurrentLanguage();
 
   // Get the current language's full name
   const getCurrentLanguageName = () => {
@@ -20,18 +23,14 @@ export function LanguageSelector() {
     return lang ? lang.name : 'English';
   };
 
+  // Direct approach with a hard URL change to force complete reload with new language
   const handleLanguageChange = (code: string) => {
-    // Save the language preference in multiple ways to ensure it persists
+    // Set the language in localStorage
     localStorage.setItem('i18nextLng', code);
-    localStorage.setItem('userLanguage', code); // Our custom storage key
     
-    // Also store in i18next's cache
-    i18n.changeLanguage(code);
-    
-    // Force a complete page reload to ensure all components re-render with the new language
-    setTimeout(() => {
-      window.location.reload();
-    }, 100); // Small delay to ensure preferences are saved
+    // Force a complete URL reload with a parameter to ensure cache refresh
+    const timestamp = new Date().getTime();
+    window.location.href = `${window.location.pathname}?lang=${code}&t=${timestamp}`;
   };
 
   return (
