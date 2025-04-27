@@ -73,8 +73,8 @@ export default function CurrencyConverter() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-600 hover:text-primary">
-          <CircleDollarSign className="h-4 w-4 mr-1" />
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-600 hover:text-primary flex items-center">
+          <span className="text-lg mr-1">💱</span>
           <span className="text-xs font-medium">
             {fromCurrency} → {toCurrency}
           </span>
@@ -121,7 +121,7 @@ export default function CurrencyConverter() {
                 onClick={handleSwap}
                 className="h-8 w-8"
               >
-                <ArrowUpDown className="h-4 w-4" />
+                <span className="text-md">⇅</span>
               </Button>
             </div>
             
