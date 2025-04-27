@@ -47,13 +47,24 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 Dedw3n. All rights reserved.</p>
-          <div className="flex space-x-4">
-            <a href="/privacy" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</a>
-            <a href="/terms" className="text-sm text-gray-600 hover:text-primary">Terms of Service</a>
-            <a href="/cookies" className="text-sm text-gray-600 hover:text-primary">Cookie Policy</a>
+        <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col space-y-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 Dedw3n. All rights reserved.</p>
+            <div className="flex space-x-4">
+              <a href="/privacy" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</a>
+              <a href="/terms" className="text-sm text-gray-600 hover:text-primary">Terms of Service</a>
+              <a href="/cookies" className="text-sm text-gray-600 hover:text-primary">Cookie Policy</a>
+            </div>
           </div>
+          <p className="text-xs text-gray-500 text-center md:text-left">
+            Dedw3n is a British Start Up registered in England, Wales and Scotland
+            under registration number <span className="font-medium">15930281</span>, whose registered office is
+            situated <span className="font-medium">50 Essex Street, London, England, WC2R3JF</span>.
+          </p>
+          <p className="text-xs text-gray-500 text-center md:text-left">
+            Our bank is registered with HSBC UK IBAN <span className="font-medium">GB79 HBUK 4003 2782 3984 94</span>
+            (BIC <span className="font-medium">BUKGB4B</span>), our sole official website is <a href="https://www.dedw3n.com" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
+          </p>
         </div>
       </div>
     </footer>
