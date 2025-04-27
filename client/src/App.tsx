@@ -68,6 +68,7 @@ function Router() {
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
+      <Route path="/government" component={GovernmentPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={Social} />
