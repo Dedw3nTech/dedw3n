@@ -2944,7 +2944,7 @@ export class MemStorage implements IStorage {
   }
   
   // Video playlist operations
-  async createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> {
+  async createVideoPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> {
     const id = this.videoPlaylistIdCounter++;
     const newPlaylist: VideoPlaylist = {
       id,
@@ -2957,8 +2957,18 @@ export class MemStorage implements IStorage {
     return newPlaylist;
   }
   
-  async getPlaylist(id: number): Promise<VideoPlaylist | undefined> {
+  // Alias for createVideoPlaylist to maintain compatibility
+  async createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> {
+    return this.createVideoPlaylist(playlist);
+  }
+  
+  async getVideoPlaylist(id: number): Promise<VideoPlaylist | undefined> {
     return this.videoPlaylists.get(id);
+  }
+  
+  // Alias for getVideoPlaylist to maintain compatibility
+  async getPlaylist(id: number): Promise<VideoPlaylist | undefined> {
+    return this.getVideoPlaylist(id);
   }
   
   async updatePlaylist(id: number, updates: Partial<VideoPlaylist>): Promise<VideoPlaylist | undefined> {
@@ -2989,6 +2999,128 @@ export class MemStorage implements IStorage {
         const bTime = b.createdAt ? b.createdAt.getTime() : 0;
         return bTime - aTime;
       });
+  }
+  
+  // Method to get all videos in a playlist
+  async getPlaylistVideos(playlistId: number): Promise<Video[]> {
+    // First get all playlist items
+    const items = await this.getPlaylistItems(playlistId);
+    
+    // Then fetch each video
+    const videos = await Promise.all(
+      items.map(item => this.getVideo(item.videoId))
+    );
+    
+    // Filter out any undefined videos and return
+    return videos.filter((video): video is Video => video !== undefined);
+  }
+  
+  // Video operations
+  async getVideo(id: number): Promise<Video | undefined> {
+    return this.videos.get(id);
+  }
+  
+  async getUserVideos(userId: number): Promise<Video[]> {
+    return [...this.videos.values()]
+      .filter(video => video.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+  
+  // Alias for interface compatibility
+  async getVideosByUser(userId: number): Promise<Video[]> {
+    return this.getUserVideos(userId);
+  }
+  
+  async createVideo(video: InsertVideo): Promise<Video> {
+    const id = this.videoIdCounter++;
+    const newVideo: Video = {
+      id,
+      ...video,
+      viewCount: 0,
+      likeCount: 0,
+      commentCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.videos.set(id, newVideo);
+    return newVideo;
+  }
+  
+  async updateVideo(id: number, updates: Partial<Video>): Promise<Video | undefined> {
+    const video = this.videos.get(id);
+    if (!video) {
+      return undefined;
+    }
+    
+    const updatedVideo = { 
+      ...video, 
+      ...updates,
+      updatedAt: new Date() 
+    };
+    
+    this.videos.set(id, updatedVideo);
+    return updatedVideo;
+  }
+  
+  async deleteVideo(id: number): Promise<boolean> {
+    return this.videos.delete(id);
+  }
+  
+  async listVideos(options?: {
+    userId?: number;
+    isPremium?: boolean;
+    isPublished?: boolean;
+    limit?: number;
+    offset?: number;
+    sortBy?: 'newest' | 'mostViewed' | 'mostLiked';
+  }): Promise<Video[]> {
+    let videos = [...this.videos.values()];
+    
+    // Apply filters
+    if (options) {
+      if (options.userId !== undefined) {
+        videos = videos.filter(v => v.userId === options.userId);
+      }
+      
+      if (options.isPremium !== undefined) {
+        videos = videos.filter(v => v.isPremium === options.isPremium);
+      }
+      
+      if (options.isPublished !== undefined) {
+        videos = videos.filter(v => v.isPublished === options.isPublished);
+      }
+      
+      // Apply sorting
+      if (options.sortBy) {
+        switch (options.sortBy) {
+          case 'newest':
+            videos = videos.sort((a, b) => {
+              const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+              const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+              return bTime - aTime;
+            });
+            break;
+          case 'mostViewed':
+            videos = videos.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+            break;
+          case 'mostLiked':
+            videos = videos.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+            break;
+        }
+      }
+      
+      // Apply pagination
+      if (options.limit !== undefined) {
+        const offset = options.offset || 0;
+        videos = videos.slice(offset, offset + options.limit);
+      }
+    }
+    
+    return videos;
   }
   
   // Playlist item operations
