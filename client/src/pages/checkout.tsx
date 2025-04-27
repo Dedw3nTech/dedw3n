@@ -14,6 +14,7 @@ import { WalletPaymentForm } from '@/components/payment/WalletPaymentForm';
 import { PaypalPaymentForm } from '@/components/payment/PaypalPaymentForm';
 import MobileMoneyForm from '@/components/payment/MobileMoneyForm';
 import ShippingOptions from '@/components/shipping/ShippingOptions';
+import MultiCarrierShipping from '@/components/shipping/MultiCarrierShipping';
 import { AddressForm } from '@/components/shipping/AddressForm';
 import { Loader2, CreditCard, Wallet, CreditCardIcon, Phone } from 'lucide-react';
 import {
@@ -310,7 +311,7 @@ export default function Checkout() {
                 </div>
                 
                 <div>
-                  <ShippingOptions 
+                  <MultiCarrierShipping 
                     orderTotal={orderTotal} 
                     onShippingMethodChange={handleShippingMethodChange} 
                   />

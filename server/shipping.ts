@@ -424,7 +424,13 @@ export function validateAddress(req: Request, res: Response) {
  * Register shipping-related routes to the Express app
  */
 export function registerShippingRoutes(app: any) {
+  // Legacy routes
   app.get("/api/shipping/methods", getShippingMethods);
   app.post("/api/shipping/calculate", calculateShipping);
   app.post("/api/shipping/validate-address", validateAddress);
+  
+  // New multi-carrier shipping routes
+  app.get("/api/shipping/carriers", getCarrierShippingOptions);
+  app.post("/api/shipping/carriers/:carrierId/rates", getCarrierRates);
+  app.post("/api/shipping/rates", getAllShippingRates);
 }
