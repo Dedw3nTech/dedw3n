@@ -87,8 +87,6 @@ export default function Header() {
               <i className="ri-wallet-3-line text-xl"></i>
             </Link>
 
-{/* Messaging button removed as it's integrated into Social button */}
-
             <button className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-notification-3-line text-xl"></i>
               {notificationCount > 0 && (
