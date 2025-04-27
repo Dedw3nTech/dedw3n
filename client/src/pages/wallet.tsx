@@ -72,6 +72,21 @@ export default function WalletPage() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedCardValue, setSelectedCardValue] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Force rerender when currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      console.log('Wallet page detected currency change');
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    window.addEventListener('currency-changed', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('currency-changed', handleCurrencyChange);
+    };
+  }, []);
   
   // Redirect if not logged in
   if (!user) {
