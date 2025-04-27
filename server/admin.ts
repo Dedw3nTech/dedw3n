@@ -81,7 +81,7 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Validate role
-      if (role && !['user', 'admin', 'moderator', 'vendor'].includes(role)) {
+      if (role && !['user', 'admin', 'moderator', 'vendor', 'business'].includes(role)) {
         return res.status(400).json({ message: 'Invalid role' });
       }
       
@@ -136,7 +136,7 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Validate role
-      if (role && !['user', 'admin', 'moderator', 'vendor'].includes(role)) {
+      if (role && !['user', 'admin', 'moderator', 'vendor', 'business'].includes(role)) {
         return res.status(400).json({ message: 'Invalid role' });
       }
       
