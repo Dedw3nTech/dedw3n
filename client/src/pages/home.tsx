@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail, Store, Building, Landmark } from "lucide-react";
+import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail, Store, Building, Landmark, Heart, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -300,7 +300,7 @@ export default function Home() {
             Discover amazing products and services from your friends, trusted vendors and much more
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-6">
             <div 
               className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
               onClick={() => {
@@ -343,6 +343,26 @@ export default function Home() {
             >
               <Landmark className="h-10 w-10 mb-2" />
               <span className="font-medium">Governmental Services</span>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setLocation("/social");
+              }}
+            >
+              <MessageSquare className="h-10 w-10 mb-2" />
+              <span className="font-medium">Social</span>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setLocation("/dating");
+              }}
+            >
+              <Heart className="h-10 w-10 mb-2" />
+              <span className="font-medium">Dating</span>
             </div>
           </div>
         </div>
