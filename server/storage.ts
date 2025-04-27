@@ -3143,6 +3143,25 @@ export class MemStorage implements IStorage {
     return newItem;
   }
   
+  // Alias for addToPlaylist to maintain compatibility with IStorage interface
+  async addVideoToPlaylist(playlistId: number, videoId: number, position: number = 0): Promise<PlaylistItem> {
+    // Get current max position for proper ordering if not specified
+    if (position === 0) {
+      const playlistItems = await this.getPlaylistItems(playlistId);
+      if (playlistItems.length > 0) {
+        position = Math.max(...playlistItems.map(item => item.position)) + 1;
+      } else {
+        position = 1; // First item in the playlist
+      }
+    }
+    
+    return this.addToPlaylist({
+      playlistId,
+      videoId,
+      position,
+    });
+  }
+  
   async removeFromPlaylist(playlistId: number, videoId: number): Promise<boolean> {
     const item = [...this.playlistItems.values()]
       .find(i => i.playlistId === playlistId && i.videoId === videoId);
@@ -3159,6 +3178,11 @@ export class MemStorage implements IStorage {
     }
     
     return true;
+  }
+  
+  // Alias for removeFromPlaylist to maintain compatibility with IStorage interface
+  async removeVideoFromPlaylist(playlistId: number, videoId: number): Promise<boolean> {
+    return this.removeFromPlaylist(playlistId, videoId);
   }
   
   async getPlaylistItems(playlistId: number): Promise<PlaylistItem[]> {
