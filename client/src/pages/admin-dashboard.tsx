@@ -19,7 +19,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import UserManagement from "@/components/admin/UserManagement";
 import PostModeration from "@/components/admin/PostModeration";
-import ContentModerationTools from "@/components/admin/ContentModerationTools";
+import EnhancedModeration from "@/components/admin/EnhancedModeration";
 import AIInsights from "@/components/social/AIInsights";
 
 // Import placeholder component for development
@@ -223,22 +223,7 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="moderation" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileWarning className="h-5 w-5 text-primary" />
-                  Post Moderation
-                </CardTitle>
-                <CardDescription>
-                  Review, approve, flag, or remove social posts and updates
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PostModeration />
-              </CardContent>
-            </Card>
-            
-            <ContentModerationTools />
+            <EnhancedModeration />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
