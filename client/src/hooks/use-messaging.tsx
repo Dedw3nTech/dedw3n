@@ -29,105 +29,116 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
   const connectWebSocket = useCallback(() => {
     if (!user) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      console.log('Connecting to WebSocket at:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      
+      // Set the socket immediately to keep a reference to it
+      setSocket(ws);
 
-    const ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        setIsConnected(true);
+        setReconnectAttempt(0);
+        console.log('WebSocket connection established');
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      setReconnectAttempt(0);
-      console.log('WebSocket connection established');
+        // Send authentication message
+        ws.send(JSON.stringify({
+          type: 'auth',
+          userId: user.id
+        }));
+      };
 
-      // Send authentication message
-      ws.send(JSON.stringify({
-        type: 'auth',
-        userId: user.id
-      }));
-    };
+      ws.onclose = (e) => {
+        setIsConnected(false);
+        console.log('WebSocket connection closed', e.code, e.reason);
 
-    ws.onclose = (e) => {
-      setIsConnected(false);
-      console.log('WebSocket connection closed', e.code, e.reason);
+        // Attempt to reconnect unless maximum attempts reached
+        if (reconnectAttempt < maxReconnectAttempts) {
+          setTimeout(() => {
+            setReconnectAttempt((prev) => prev + 1);
+            connectWebSocket();
+          }, reconnectInterval);
+        } else {
+          toast({
+            title: 'Connection lost',
+            description: 'Failed to reconnect to messaging service. Please refresh the page.',
+            variant: 'destructive',
+          });
+        }
+      };
 
-      // Attempt to reconnect unless maximum attempts reached
-      if (reconnectAttempt < maxReconnectAttempts) {
-        setTimeout(() => {
-          setReconnectAttempt((prev) => prev + 1);
-          connectWebSocket();
-        }, reconnectInterval);
-      } else {
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
         toast({
-          title: 'Connection lost',
-          description: 'Failed to reconnect to messaging service. Please refresh the page.',
+          title: 'Connection error',
+          description: 'There was an error with the messaging service.',
           variant: 'destructive',
         });
-      }
-    };
+      };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          switch (data.type) {
+            case 'message':
+              // Invalidate query cache for the conversation and unread count
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.senderId] });
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+
+              // Show toast notification for new message if not from current user
+              if (data.senderId !== user.id) {
+                toast({
+                  title: data.senderName,
+                  description: data.content.length > 30 
+                    ? data.content.substring(0, 30) + '...' 
+                    : data.content,
+                });
+              }
+              break;
+
+            case 'typing':
+              setTypingUsers(prev => ({
+                ...prev,
+                [data.senderId]: data.isTyping
+              }));
+              break;
+
+            case 'online_users':
+              setOnlineUsers(data.users || []);
+              break;
+
+            case 'read_receipt':
+              // Invalidate query cache for the conversation
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.userId] });
+              break;
+
+            default:
+              console.log('Unknown message type:', data.type);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
       toast({
         title: 'Connection error',
-        description: 'There was an error with the messaging service.',
+        description: 'Failed to connect to messaging service. Please try again later.',
         variant: 'destructive',
       });
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        switch (data.type) {
-          case 'message':
-            // Invalidate query cache for the conversation and unread count
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.senderId] });
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
-
-            // Show toast notification for new message if not from current user
-            if (data.senderId !== user.id) {
-              toast({
-                title: data.senderName,
-                description: data.content.length > 30 
-                  ? data.content.substring(0, 30) + '...' 
-                  : data.content,
-              });
-            }
-            break;
-
-          case 'typing':
-            setTypingUsers(prev => ({
-              ...prev,
-              [data.senderId]: data.isTyping
-            }));
-            break;
-
-          case 'online_users':
-            setOnlineUsers(data.users || []);
-            break;
-
-          case 'read_receipt':
-            // Invalidate query cache for the conversation
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.userId] });
-            break;
-
-          default:
-            console.log('Unknown message type:', data.type);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-
-    setSocket(ws);
+    }
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
       }
     };
-  }, [user, reconnectAttempt, toast]);
+  }, [user, reconnectAttempt, toast, queryClient, socket]);
 
   useEffect(() => {
     if (user) {
@@ -139,7 +150,7 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
         socket.close();
       }
     };
-  }, [user, connectWebSocket]);
+  }, [user, connectWebSocket, socket]);
 
   const sendMessage = async (
     receiverId: number, 

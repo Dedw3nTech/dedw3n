@@ -31,12 +31,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time messaging
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    clientTracking: true 
+  });
   
   // Store active connections with user IDs
   const connections = new Map<number, WebSocket[]>();
   
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     console.log('WebSocket client connected');
     let userId: number | null = null;
     
@@ -47,6 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle authentication
         if (data.type === 'auth') {
           userId = data.userId;
+          console.log('User', userId, 'authenticated on WebSocket');
           // Store connection by user ID
           if (!connections.has(userId)) {
             connections.set(userId, []);
