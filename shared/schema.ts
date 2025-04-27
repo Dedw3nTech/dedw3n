@@ -10,6 +10,9 @@ export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['daily'
 export const videoTypeEnum = pgEnum('video_type', ['short_form', 'story', 'live_stream', 'live_commerce', 'recorded']);
 export const videoVisibilityEnum = pgEnum('video_visibility', ['public', 'followers', 'private']);
 
+// Define user roles enum
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -20,7 +23,18 @@ export const users = pgTable("users", {
   bio: text("bio"),
   avatar: text("avatar"),
   isVendor: boolean("is_vendor").default(false),
+  role: userRoleEnum("role").default('user').notNull(),
+  lastLogin: timestamp("last_login"),
+  failedLoginAttempts: integer("failed_login_attempts").default(0),
+  isLocked: boolean("is_locked").default(false),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
+  emailVerified: boolean("email_verified").default(false),
+  verificationToken: text("verification_token"),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorSecret: text("two_factor_secret"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Vendor model
