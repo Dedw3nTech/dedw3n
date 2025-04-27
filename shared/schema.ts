@@ -71,6 +71,9 @@ export const categories = pgTable("categories", {
 });
 
 // Post model (for social features)
+// Define post review status enum
+export const postReviewStatusEnum = pgEnum('post_review_status', ['pending', 'approved', 'rejected']);
+
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -88,6 +91,13 @@ export const posts = pgTable("posts", {
   isPromoted: boolean("is_promoted").default(false), // For advertisements
   promotionEndDate: timestamp("promotion_end_date"), // For advertisements
   isPublished: boolean("is_published").default(true),
+  // Moderation fields
+  isFlagged: boolean("is_flagged").default(false),
+  flagReason: text("flag_reason"),
+  reviewStatus: postReviewStatusEnum("review_status").default('pending'),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  moderationNote: text("moderation_note"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

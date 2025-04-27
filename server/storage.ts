@@ -184,9 +184,20 @@ export interface IStorage {
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
   createPost(post: InsertPost): Promise<Post>;
-  updatePost(id: number, postData: Partial<InsertPost>): Promise<Post>;
+  updatePost(id: number, postData: Partial<InsertPost & { 
+    isFlagged?: boolean;
+    flagReason?: string | null;
+    reviewStatus?: 'pending' | 'approved' | 'rejected';
+    reviewedAt?: Date;
+    reviewedBy?: number;
+    moderationNote?: string;
+  }>): Promise<Post>;
   updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number; views?: number }): Promise<Post>;
   deletePost(id: number): Promise<boolean>;
+  countPosts(filters?: {
+    reviewStatus?: 'pending' | 'approved' | 'rejected';
+    isFlagged?: boolean;
+  }): Promise<number>;
   listPosts(options?: {
     userId?: number;
     contentType?: string | string[];
@@ -1049,6 +1060,24 @@ export class MemStorage implements IStorage {
     return this.posts.delete(id);
   }
 
+  async countPosts(filters?: {
+    reviewStatus?: 'pending' | 'approved' | 'rejected';
+    isFlagged?: boolean;
+  }): Promise<number> {
+    let filteredPosts = Array.from(this.posts.values());
+
+    // Apply filters
+    if (filters?.reviewStatus) {
+      filteredPosts = filteredPosts.filter(post => post.reviewStatus === filters.reviewStatus);
+    }
+
+    if (filters?.isFlagged !== undefined) {
+      filteredPosts = filteredPosts.filter(post => post.isFlagged === filters.isFlagged);
+    }
+
+    return filteredPosts.length;
+  }
+  
   async listPosts(options?: {
     userId?: number;
     contentType?: string | string[];
@@ -1056,6 +1085,10 @@ export class MemStorage implements IStorage {
     tags?: string[];
     limit?: number;
     offset?: number;
+    search?: string;
+    reviewStatus?: 'pending' | 'approved' | 'rejected';
+    isFlagged?: boolean;
+    withUserDetails?: boolean;
   }): Promise<Post[]> {
     let posts = Array.from(this.posts.values());
     
@@ -1081,8 +1114,26 @@ export class MemStorage implements IStorage {
       });
     }
     
+    // Apply moderation filters
+    if (options?.reviewStatus) {
+      posts = posts.filter(post => post.reviewStatus === options.reviewStatus);
+    }
+    
+    if (options?.isFlagged !== undefined) {
+      posts = posts.filter(post => post.isFlagged === options.isFlagged);
+    }
+    
+    // Apply search filter
+    if (options?.search) {
+      const searchLower = options.search.toLowerCase();
+      posts = posts.filter(post => 
+        post.content.toLowerCase().includes(searchLower) || 
+        (post.title && post.title.toLowerCase().includes(searchLower))
+      );
+    }
+    
     // Filter out unpublished posts (except when specifically querying for them)
-    if (options?.isPromoted === undefined) {
+    if (options?.isPromoted === undefined && options?.reviewStatus === undefined && options?.isFlagged === undefined) {
       posts = posts.filter(post => post.isPublished);
     }
     
@@ -1091,6 +1142,21 @@ export class MemStorage implements IStorage {
       if (!a.createdAt || !b.createdAt) return 0;
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
+    
+    // Add user details if requested
+    if (options?.withUserDetails) {
+      posts = await Promise.all(posts.map(async post => {
+        const user = await this.getUser(post.userId);
+        return {
+          ...post,
+          user: user ? {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+          } : undefined
+        };
+      }));
+    }
     
     // Apply pagination if limit is specified
     if (options?.limit) {
