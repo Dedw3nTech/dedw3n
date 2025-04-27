@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { SubscriptionWall } from "@/components/subscription/SubscriptionWall";
 
 // Dating preferences types
 type RelationshipPreference = "dating" | "meeting" | "marriage" | "casual";
@@ -215,22 +216,23 @@ export default function DatingPage() {
         icon={<Heart className="h-6 w-6" />}
       />
       
-      <div className="mt-8">
-        <Tabs defaultValue="browse">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="browse">
-              <Users className="h-4 w-4 mr-2" />
-              Browse Profiles
-            </TabsTrigger>
-            <TabsTrigger value="myprofile">
-              <User className="h-4 w-4 mr-2" />
-              My Profile
-            </TabsTrigger>
-            <TabsTrigger value="matches">
-              <Heart className="h-4 w-4 mr-2" />
-              My Matches
-            </TabsTrigger>
-          </TabsList>
+      <SubscriptionWall featureName="Dating & Relationships">
+        <div className="mt-8">
+          <Tabs defaultValue="browse">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="browse">
+                <Users className="h-4 w-4 mr-2" />
+                Browse Profiles
+              </TabsTrigger>
+              <TabsTrigger value="myprofile">
+                <User className="h-4 w-4 mr-2" />
+                My Profile
+              </TabsTrigger>
+              <TabsTrigger value="matches">
+                <Heart className="h-4 w-4 mr-2" />
+                My Matches
+              </TabsTrigger>
+            </TabsList>
           
           {/* Browse Profiles Tab */}
           <TabsContent value="browse" className="mt-6">
@@ -475,7 +477,8 @@ export default function DatingPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      </SubscriptionWall>
     </div>
   );
 }

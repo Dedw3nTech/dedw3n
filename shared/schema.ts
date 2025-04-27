@@ -364,15 +364,19 @@ export const creatorEarnings = pgTable("creator_earnings", {
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  creatorId: integer("creator_id").notNull().references(() => users.id),
-  planName: varchar("plan_name", { length: 50 }).notNull(),
-  amount: doublePrecision("amount").notNull(),
-  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
-  interval: subscriptionIntervalEnum("interval").notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("active"), // active, canceled, paused, failed
-  currentPeriodStart: timestamp("current_period_start").notNull(),
-  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  creatorId: integer("creator_id").references(() => users.id),
+  planName: varchar("plan_name", { length: 50 }).default("premium"),
+  plan: varchar("plan", { length: 50 }), // For backward compatibility
+  amount: doublePrecision("amount").default(20),
+  currency: varchar("currency", { length: 3 }).default("GBP"),
+  interval: subscriptionIntervalEnum("interval").default("monthly"),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, trial, canceled, paused, expired
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  expiresAt: timestamp("expires_at"), // When the subscription ends (for trials or fixed terms)
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  tier: varchar("tier", { length: 50 }), // Tier level (basic, premium, etc.)
+  stripeCustomerId: varchar("stripe_customer_id", { length: 100 }),
   stripeSubscriptionId: varchar("stripe_subscription_id", { length: 100 }),
   paypalSubscriptionId: varchar("paypal_subscription_id", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
