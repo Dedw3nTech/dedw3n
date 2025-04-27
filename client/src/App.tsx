@@ -11,7 +11,7 @@ import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -127,6 +127,9 @@ function Router() {
 }
 
 function App() {
+  // Force refresh state to update all components when language changes
+  const [forceRefresh, setForceRefresh] = useState(0);
+  
   // Initialize offline detection and language
   useEffect(() => {
     // Initialize offline detection
@@ -134,10 +137,23 @@ function App() {
     
     // Initialize language based on user location
     initializeLanguageFromLocation();
+    
+    // Listen for language changes and force refresh
+    const handleLanguageChange = () => {
+      console.log('App detected language change, refreshing entire application');
+      setForceRefresh((prev: number) => prev + 1);
+    };
+    
+    window.addEventListener('language-changed', handleLanguageChange);
+    
+    return () => {
+      window.removeEventListener('language-changed', handleLanguageChange);
+    };
   }, []);
 
+  // Using forceRefresh in a key forces re-rendering when language changes
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
       <TooltipProvider>
         <AuthProvider>
           <MessagingProvider>

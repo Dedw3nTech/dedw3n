@@ -67,8 +67,15 @@ export async function initializeLanguageFromLocation() {
 
 // Change language and save preference
 export function changeLanguage(languageCode: string) {
+  console.log('Language changing from', i18n.language, 'to', languageCode);
+  const prevLanguage = i18n.language;
   i18n.changeLanguage(languageCode);
   saveUserLanguage(languageCode);
+  
+  // Dispatch custom event for language change to force components to update
+  window.dispatchEvent(new CustomEvent('language-changed', { 
+    detail: { from: prevLanguage, to: languageCode } 
+  }));
 }
 
 export default i18n;
