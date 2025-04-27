@@ -1,140 +1,152 @@
-// Currency conversion utility
+export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL';
 
 // List of supported currencies
-export const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
+export const supportedCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL'];
 
-// Currency symbols for displaying amounts
-export const currencySymbols: Record<string, string> = {
-  USD: '$',
+// Symbol lookup for different currencies
+export const currencySymbols: Record<CurrencyCode, string> = {
   GBP: '£',
   EUR: '€',
-  JPY: '¥',
+  USD: '$',
   CNY: '¥',
   INR: '₹',
-  CAD: 'C$',
-  AUD: 'A$',
-  SGD: 'S$'
+  BRL: 'R$',
 };
 
-// Cache for exchange rates to avoid frequent API calls
-interface ExchangeRateCache {
-  rates: Record<string, number>;
-  lastUpdated: number;
-  baseCurrency: string;
-}
-
-let rateCache: ExchangeRateCache = {
-  rates: {},
-  lastUpdated: 0,
-  baseCurrency: 'GBP'
+// Exchange rates with GBP as the base currency
+// These rates would ideally come from a real-time API in production
+export const exchangeRates: Record<CurrencyCode, number> = {
+  GBP: 1.0,      // Base currency
+  EUR: 1.17,     // 1 GBP = 1.17 EUR
+  USD: 1.25,     // 1 GBP = 1.25 USD
+  CNY: 9.07,     // 1 GBP = 9.07 CNY
+  INR: 104.43,   // 1 GBP = 104.43 INR
+  BRL: 6.35,     // 1 GBP = 6.35 BRL
 };
-
-// Timeout for cache (5 minutes)
-const CACHE_TIMEOUT = 5 * 60 * 1000;
 
 /**
- * Fetch latest exchange rates from API
- * @param baseCurrency Base currency to get rates for
- * @returns Object with exchange rates
+ * Fetch exchange rates from source currency
+ * In a real app, this would call a currency exchange API
+ * @param baseCurrency The base currency to get rates for
+ * @returns A promise resolving to exchange rates
  */
-export const fetchExchangeRates = async (baseCurrency: string = 'GBP'): Promise<Record<string, number>> => {
-  const now = Date.now();
+export async function fetchExchangeRates(baseCurrency: CurrencyCode): Promise<Record<CurrencyCode, number>> {
+  // For demo purposes, we're using static rates
+  // In a real app, this would call an API like OpenExchangeRates or CurrencyAPI
   
-  // Return from cache if still valid and for the same base currency
-  if (
-    rateCache.lastUpdated > 0 && 
-    now - rateCache.lastUpdated < CACHE_TIMEOUT &&
-    rateCache.baseCurrency === baseCurrency
-  ) {
-    return rateCache.rates;
-  }
-  
-  try {
-    // Using Exchange Rate API (free tier)
-    const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
-    const data = await response.json();
-    
-    if (data && data.rates) {
-      // Update cache
-      rateCache = {
-        rates: data.rates,
-        lastUpdated: now,
-        baseCurrency
-      };
-      return data.rates;
-    } else {
-      throw new Error('Invalid response from exchange rate API');
-    }
-  } catch (error) {
-    console.error('Error fetching exchange rates:', error);
-    
-    // If we have cached rates, return those even if outdated
-    if (Object.keys(rateCache.rates).length > 0) {
-      return rateCache.rates;
-    }
-    
-    // Fallback to some default rates if API fails and no cache
-    return {
-      GBP: 1,
-      USD: 1.28,
-      EUR: 1.18,
-      JPY: 194.75,
-      CNY: 9.09,
-      INR: 106.56,
-      CAD: 1.72,
-      AUD: 1.94,
-      SGD: 1.71
-    };
-  }
+  // Simulate network request
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // If base currency is GBP, return rates as is
+      if (baseCurrency === 'GBP') {
+        resolve({...exchangeRates});
+        return;
+      }
+      
+      // Otherwise, convert to the requested base currency
+      const baseRate = exchangeRates[baseCurrency];
+      const convertedRates: Record<CurrencyCode, number> = {} as Record<CurrencyCode, number>;
+      
+      // Calculate rates relative to the requested base currency
+      supportedCurrencies.forEach(currency => {
+        if (currency === baseCurrency) {
+          convertedRates[currency] = 1.0; // Base currency to itself is always 1
+        } else {
+          // Convert through GBP: first find the GBP value of 1 unit of baseCurrency,
+          // then convert that GBP value to the target currency
+          const rateInGBP = 1 / exchangeRates[baseCurrency]; // How much GBP for 1 unit of baseCurrency
+          const targetRate = rateInGBP * exchangeRates[currency]; // Convert that GBP to target currency
+          convertedRates[currency] = targetRate;
+        }
+      });
+      
+      resolve(convertedRates);
+    }, 500); // Simulate network delay
+  });
 };
 
 /**
  * Convert amount from one currency to another
- * @param amount Amount to convert
- * @param fromCurrency Source currency
- * @param toCurrency Target currency
- * @returns Converted amount
+ * @param amount The amount to convert
+ * @param fromCurrency The source currency code
+ * @param toCurrency The target currency code
+ * @returns The converted amount
  */
-export const convertCurrency = async (
+export function convertCurrency(
   amount: number,
-  fromCurrency: string,
-  toCurrency: string
-): Promise<number> => {
-  // Same currency, no conversion needed
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode
+): number {
+  // If same currency, no conversion needed
   if (fromCurrency === toCurrency) {
     return amount;
   }
+
+  // First convert to GBP (base currency)
+  const inGBP = amount / exchangeRates[fromCurrency];
   
-  // Get rates with fromCurrency as base
-  const rates = await fetchExchangeRates(fromCurrency);
-  
-  // Convert to target currency
-  if (rates[toCurrency]) {
-    return amount * rates[toCurrency];
-  }
-  
-  // Fallback if conversion rate not found
-  console.error(`Conversion rate from ${fromCurrency} to ${toCurrency} not found`);
-  return amount;
-};
+  // Then convert from GBP to target currency
+  return inGBP * exchangeRates[toCurrency];
+}
 
 /**
- * Format amount with currency symbol
- * @param amount Amount to format
- * @param currency Currency code
- * @param showCode Whether to include currency code
- * @returns Formatted amount string
+ * Format currency with proper symbol and decimal places
+ * @param amount The amount to format
+ * @param currencyCode The currency code
+ * @returns Formatted currency string with symbol
  */
-export const formatCurrency = (
-  amount: number,
-  currency: string,
-  showCode: boolean = false
-): string => {
-  const symbol = currencySymbols[currency] || '$';
-  
-  const formatted = amount.toFixed(2);
-  
-  return showCode 
-    ? `${symbol}${formatted} ${currency}`
-    : `${symbol}${formatted}`;
-};
+export function formatCurrency(amount: number, currencyCode: CurrencyCode): string {
+  const symbols: Record<CurrencyCode, string> = {
+    GBP: '£',
+    EUR: '€',
+    USD: '$',
+    CNY: '¥',
+    INR: '₹',
+    BRL: 'R$',
+  };
+
+  // Format with 2 decimal places and appropriate currency symbol
+  return `${symbols[currencyCode]}${amount.toFixed(2)}`;
+}
+
+/**
+ * Get exchange rate between two currencies
+ * @param fromCurrency The source currency code
+ * @param toCurrency The target currency code
+ * @returns The exchange rate
+ */
+export function getExchangeRate(
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode
+): number {
+  // If the same currency, rate is 1:1
+  if (fromCurrency === toCurrency) {
+    return 1;
+  }
+
+  // Calculate the exchange rate: how many toCurrency units for 1 fromCurrency unit
+  return exchangeRates[toCurrency] / exchangeRates[fromCurrency];
+}
+
+/**
+ * Get formatted exchange rate string
+ * @param fromCurrency The source currency code
+ * @param toCurrency The target currency code
+ * @returns A formatted string showing the exchange rate
+ */
+export function getFormattedExchangeRate(
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode
+): string {
+  const rate = getExchangeRate(fromCurrency, toCurrency);
+  const symbols = {
+    GBP: '£',
+    EUR: '€',
+    USD: '$',
+    CNY: '¥',
+    INR: '₹',
+    BRL: 'R$',
+  };
+
+  return `1 ${symbols[fromCurrency]} = ${rate.toFixed(4)} ${symbols[toCurrency]}`;
+}

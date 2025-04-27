@@ -1,78 +1,52 @@
-import { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { languages } from '@/lib/i18n';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { Check, ChevronDown, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Globe } from 'lucide-react';
+import { languages, changeLanguage } from '@/lib/i18n';
 
-interface LanguageSelectorProps {
-  minimal?: boolean;
-  className?: string;
-}
+export function LanguageSelector() {
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language;
 
-export const LanguageSelector = ({ minimal = false, className = '' }: LanguageSelectorProps) => {
-  const { i18n, t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-
-  const currentLanguage = languages.find(lng => lng.code === i18n.language) || languages[0];
-
-  const handleLanguageChange = (language: string) => {
-    i18n.changeLanguage(language);
-    setIsOpen(false);
+  // Get the current language's full name
+  const getCurrentLanguageName = () => {
+    const lang = languages.find(l => l.code === currentLanguage);
+    return lang ? lang.name : 'English';
   };
 
-  if (minimal) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`${className} flex items-center space-x-1 px-2`}
-          >
-            <Globe className="h-4 w-4" />
-            <span>{currentLanguage.code.toUpperCase()}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {languages.map((language) => (
-            <DropdownMenuItem 
-              key={language.code}
-              className={i18n.language === language.code ? 'bg-muted' : ''}
-              onClick={() => handleLanguageChange(language.code)}
-            >
-              {language.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
+  const handleLanguageChange = (code: string) => {
+    changeLanguage(code);
+  };
 
   return (
-    <Select onValueChange={handleLanguageChange} defaultValue={i18n.language}>
-      <SelectTrigger className={`w-[140px] ${className}`}>
-        <SelectValue placeholder={t('nav.language')} />
-      </SelectTrigger>
-      <SelectContent>
-        {languages.map((language) => (
-          <SelectItem key={language.code} value={language.code}>
-            {language.name}
-          </SelectItem>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
+          <Globe className="h-4 w-4" />
+          <span className="hidden sm:inline-block">{getCurrentLanguageName()}</span>
+          <ChevronDown className="h-4 w-4 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => handleLanguageChange(lang.code)}
+            className="flex items-center justify-between"
+          >
+            <span>{lang.name}</span>
+            {currentLanguage === lang.code && <Check className="h-4 w-4" />}
+          </DropdownMenuItem>
         ))}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
-};
+}
+
+export default LanguageSelector;

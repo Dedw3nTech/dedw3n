@@ -4,10 +4,10 @@ import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
 import SearchOverlay from "../ui/search-overlay";
-import CurrencyConverter from "../ui/currency-converter";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
-import { LanguageSelector } from "../lang";
+import { LanguageSelector } from "../lang/LanguageSelector";
+import { CurrencySelector } from "../lang/CurrencySelector";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useMessaging } from "@/hooks/use-messaging";
@@ -81,8 +81,8 @@ export default function Header() {
             </Link>
             
             <div className="flex items-center space-x-2">
-              <CurrencyConverter />
-              <LanguageSelector minimal className="hidden lg:flex" />
+              <CurrencySelector />
+              <LanguageSelector />
             </div>
           </div>
 

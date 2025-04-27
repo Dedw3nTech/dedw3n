@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
+import { detectUserLocation, getUserPreferredLanguage, saveUserLanguage, supportedLanguages } from './locationDetection';
 
 // Available languages
 export const languages = [
@@ -37,7 +38,37 @@ i18n
     },
     ns: 'common',
     defaultNS: 'common',
-    supportedLngs: ['en', 'fr', 'pt', 'zh', 'hi', 'ar', 'es'],
+    supportedLngs: supportedLanguages,
   });
+
+// Initialize language based on geo-location
+export async function initializeLanguageFromLocation() {
+  try {
+    // Check if user already has a language preference
+    const savedLanguage = getUserPreferredLanguage();
+    if (savedLanguage) {
+      await i18n.changeLanguage(savedLanguage);
+      return;
+    }
+
+    // Detect location and get appropriate language
+    const locationInfo = await detectUserLocation();
+    
+    if (locationInfo && locationInfo.language) {
+      // Change the language
+      await i18n.changeLanguage(locationInfo.language);
+      // Save the detected language preference
+      saveUserLanguage(locationInfo.language);
+    }
+  } catch (error) {
+    console.error('Error initializing language from location:', error);
+  }
+}
+
+// Change language and save preference
+export function changeLanguage(languageCode: string) {
+  i18n.changeLanguage(languageCode);
+  saveUserLanguage(languageCode);
+}
 
 export default i18n;

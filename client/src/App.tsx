@@ -8,7 +8,9 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { MessagingProvider } from "@/hooks/use-messaging";
 import { MarketTypeProvider } from "@/hooks/use-market-type";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
+import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
+import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -125,9 +127,13 @@ function Router() {
 }
 
 function App() {
-  // Initialize offline detection
+  // Initialize offline detection and language
   useEffect(() => {
+    // Initialize offline detection
     initializeOfflineDetection();
+    
+    // Initialize language based on user location
+    initializeLanguageFromLocation();
   }, []);
 
   return (
@@ -138,19 +144,21 @@ function App() {
             <ViewProvider>
               <MarketTypeProvider>
                 <SubscriptionProvider>
-                  <div className="flex flex-col min-h-screen">
-                    <Header />
-                    <main className="flex-grow">
-                      <Router />
-                    </main>
-                    <Footer />
-                    <MobileNavigation />
-                    <OfflineIndicator />
-                    {/* Offline simulator hidden as requested */}
-                    {/* Chatbot will be implemented later when API key is available */}
-                    {/* <ChatbotWindow /> */}
-                  </div>
-                  <Toaster />
+                  <CurrencyProvider>
+                    <div className="flex flex-col min-h-screen">
+                      <Header />
+                      <main className="flex-grow">
+                        <Router />
+                      </main>
+                      <Footer />
+                      <MobileNavigation />
+                      <OfflineIndicator />
+                      {/* Offline simulator hidden as requested */}
+                      {/* Chatbot will be implemented later when API key is available */}
+                      {/* <ChatbotWindow /> */}
+                    </div>
+                    <Toaster />
+                  </CurrencyProvider>
                 </SubscriptionProvider>
               </MarketTypeProvider>
             </ViewProvider>
