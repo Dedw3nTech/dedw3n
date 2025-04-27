@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useView } from "@/hooks/use-view";
+import { useMarketType } from "@/hooks/use-market-type";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail } from "lucide-react";
+import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail, Store, Building, Landmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -33,6 +34,7 @@ import {
 export default function Home() {
   const { setView } = useView();
   const { user } = useAuth();
+  const { setMarketType } = useMarketType();
   const [, setLocation] = useLocation();
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
@@ -268,7 +270,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Hero Section */}
+      {/* Marketplace Options */}
       <div className="rounded-lg bg-gradient-to-r from-primary to-primary-dark p-8 mb-12 text-white">
         <div className="max-w-3xl">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to SocialMarket</h1>
@@ -276,24 +278,51 @@ export default function Home() {
             Discover amazing products from trusted vendors, connect with other shoppers, 
             and enjoy a seamless shopping experience.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button
-              onClick={() => setLocation("/products")} 
-              className="bg-white text-primary hover:bg-gray-100"
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setMarketType("c2c");
+                setLocation("/products");
+              }}
             >
-              <Search className="mr-2 h-4 w-4" />
-              Browse Products
-            </Button>
-            {user && (
-              <Button
-                onClick={() => setLocation("/add-product")}
-                variant="outline"
-                className="border-white text-white hover:bg-white/20"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Sell Your Products
-              </Button>
-            )}
+              <Users className="h-10 w-10 mb-2" />
+              <span className="font-medium">Buy from a friend (C2C)</span>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setMarketType("b2c");
+                setLocation("/products");
+              }}
+            >
+              <Store className="h-10 w-10 mb-2" />
+              <span className="font-medium">Buy from a store (B2C)</span>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setMarketType("b2b");
+                setLocation("/products");
+              }}
+            >
+              <Building className="h-10 w-10 mb-2" />
+              <span className="font-medium">Business (B2B)</span>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
+              onClick={() => {
+                setMarketType("gov");
+                setLocation("/government");
+              }}
+            >
+              <Landmark className="h-10 w-10 mb-2" />
+              <span className="font-medium">Governmental Services</span>
+            </div>
           </div>
         </div>
       </div>
