@@ -1004,7 +1004,7 @@ export default function ProfilePage() {
                             {/* Products */}
                             <div className="flex items-center gap-3">
                               <div className="w-8 flex justify-center">
-                                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                               </div>
                               <div>
                                 <p className="text-sm text-muted-foreground">Products</p>
