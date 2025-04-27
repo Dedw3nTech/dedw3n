@@ -451,8 +451,6 @@ export class MemStorage implements IStorage {
   private videoPlaylists: Map<number, VideoPlaylist>;
   private playlistItems: Map<number, PlaylistItem>;
   private videoPurchases: Map<number, VideoPurchase>;
-  private communityContents: Map<number, CommunityContent>;
-  private contentLikes: Map<number, { contentId: number; userId: number }> = new Map();
 
   private userIdCounter: number;
   private vendorIdCounter: number;
