@@ -375,8 +375,11 @@ export function registerAdminRoutes(app: Express) {
       const updates: any = {
         reviewStatus: status,
         reviewedAt: new Date(),
-        reviewedBy: req.user.id,
       };
+      
+      if (req.user) {
+        updates.reviewedBy = req.user.id;
+      }
       
       if (moderationNote) {
         updates.moderationNote = moderationNote;
@@ -422,9 +425,12 @@ export function registerAdminRoutes(app: Express) {
       
       const updates: any = {
         isFlagged,
-        reviewedBy: req.user.id,
         reviewedAt: new Date(),
       };
+      
+      if (req.user) {
+        updates.reviewedBy = req.user.id;
+      }
       
       if (isFlagged) {
         updates.flagReason = flagReason || 'Flagged for review';
@@ -454,7 +460,12 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Record deletion attempt in logs first
-      console.log(`Admin ${req.user.id} (${req.user.username}) deleted post ${postId}`);
+      if (req.user) {
+        console.log(`Admin ${req.user.id} (${req.user.username}) deleted post ${postId}`);
+      } else {
+        console.log(`Admin deleted post ${postId}`);
+      }
+      
       if (req.body.reason) {
         console.log(`Deletion reason: ${req.body.reason}`);
       }
