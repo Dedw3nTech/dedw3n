@@ -12,6 +12,7 @@ import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
 import { registerSubscriptionRoutes } from "./subscription";
 import { registerAdminRoutes } from "./admin";
+import { registerAIInsightsRoutes } from "./ai-insights";
 import { seedDatabase } from "./seed";
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -31,6 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register admin routes
   registerAdminRoutes(app);
+  
+  // Register AI insights routes
+  registerAIInsightsRoutes(app);
 
   // Create HTTP server from Express
   const httpServer = createServer(app);

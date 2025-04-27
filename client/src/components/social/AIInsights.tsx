@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,40 +38,26 @@ type ContentInsight = {
 
 export default function AIInsights() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("topic");
+  const [activeTab, setActiveTab] = useState("audience");
 
-  // Mock data until backend is implemented
-  const topicsData: Topic[] = [
-    { name: "Technology", count: 245, percentage: 32 },
-    { name: "Fashion", count: 189, percentage: 25 },
-    { name: "Travel", count: 156, percentage: 21 },
-    { name: "Food", count: 124, percentage: 16 },
-    { name: "Entertainment", count: 76, percentage: 10 }
-  ];
+  // Fetch AI insights data from API
+  const { 
+    data: insightsData,
+    isLoading: isLoadingInsights,
+    error: insightsError,
+    refetch: refetchInsights
+  } = useQuery({
+    queryKey: ['/api/social/insights'],
+    retry: 1,
+  });
 
-  const sentimentData: Sentiment = {
-    positive: 65,
-    neutral: 23,
-    negative: 12
-  };
-
-  const contentInsightsData: ContentInsight[] = [
-    { 
-      type: "Video", 
-      engagement: 84, 
-      recommendation: "Short-form vertical videos under 60 seconds perform best for your audience" 
-    },
-    { 
-      type: "Images", 
-      engagement: 68, 
-      recommendation: "Product showcases with lifestyle context generate most interactions" 
-    },
-    { 
-      type: "Text", 
-      engagement: 42, 
-      recommendation: "Question-based posts drive more comments and discussions" 
-    }
-  ];
+  // Use data from API or fallback to default values
+  const topicsData: Topic[] = insightsData?.topics || [];
+  const sentimentData: Sentiment = insightsData?.sentiment || { positive: 0, neutral: 0, negative: 0 };
+  const contentInsightsData: ContentInsight[] = insightsData?.contentInsights || [];
+  
+  // Check if OpenAI API is available
+  const openaiAvailable = insightsData?._meta?.openaiAvailable || false;
 
   // Generate AI insights mutation
   const generateInsightsMutation = useMutation({
@@ -98,6 +84,52 @@ export default function AIInsights() {
     generateInsightsMutation.mutate(type);
   };
 
+  // Handle success state of the generate insights mutation
+  React.useEffect(() => {
+    if (generateInsightsMutation.isSuccess) {
+      // Refetch insights data to show updated values
+      refetchInsights();
+    }
+  }, [generateInsightsMutation.isSuccess, refetchInsights]);
+
+  // Handle missing OpenAI API key
+  React.useEffect(() => {
+    if (generateInsightsMutation.isError && 
+        generateInsightsMutation.error?.message?.includes('OPENAI_API_KEY')) {
+      toast({
+        title: "API Key Required",
+        description: "OpenAI API key is required for generating insights. Please add it in your settings.",
+        variant: "destructive",
+      });
+    }
+  }, [generateInsightsMutation.isError, generateInsightsMutation.error, toast]);
+
+  // Loading state for the entire component
+  if (isLoadingInsights) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading AI insights...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (insightsError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="rounded-full bg-red-100 p-4">
+          <BarChart className="h-12 w-12 text-red-500" />
+        </div>
+        <h3 className="text-xl font-bold">Failed to load insights</h3>
+        <p className="text-muted-foreground max-w-lg text-center">
+          We couldn't load your social insights data. This could be due to a temporary server issue.
+        </p>
+        <Button onClick={() => refetchInsights()}>Try Again</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2">
@@ -105,6 +137,14 @@ export default function AIInsights() {
         <p className="text-muted-foreground">
           Leverage AI-powered analytics to understand your audience and optimize your content.
         </p>
+        {!openaiAvailable && (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Note:</span> 
+              Add an OpenAI API key to enable advanced AI insights generation.
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
