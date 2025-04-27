@@ -44,21 +44,40 @@ i18n
 // Initialize language based on geo-location
 export async function initializeLanguageFromLocation() {
   try {
-    // Check if user already has a language preference
-    const savedLanguage = getUserPreferredLanguage();
-    if (savedLanguage) {
+    // Check from multiple sources to ensure we find the saved preference
+    // 1. Check our own localStorage key
+    const customSavedLanguage = localStorage.getItem('userLanguage');
+    
+    // 2. Check i18next's default localStorage key
+    const i18nextSavedLanguage = localStorage.getItem('i18nextLng');
+    
+    // 3. Check our function that reads from application storage
+    const appSavedLanguage = getUserPreferredLanguage();
+    
+    // Use the first valid language we find
+    const savedLanguage = customSavedLanguage || i18nextSavedLanguage || appSavedLanguage;
+    
+    if (savedLanguage && supportedLanguages.includes(savedLanguage)) {
+      console.log('Loading saved language preference:', savedLanguage);
       await i18n.changeLanguage(savedLanguage);
+      // Make sure language is saved in all places
+      saveUserLanguage(savedLanguage);
+      localStorage.setItem('i18nextLng', savedLanguage);
+      localStorage.setItem('userLanguage', savedLanguage);
       return;
     }
 
-    // Detect location and get appropriate language
+    // If no saved preference, detect location and get appropriate language
     const locationInfo = await detectUserLocation();
     
-    if (locationInfo && locationInfo.language) {
+    if (locationInfo && locationInfo.language && supportedLanguages.includes(locationInfo.language)) {
+      console.log('Setting language based on location:', locationInfo.language);
       // Change the language
       await i18n.changeLanguage(locationInfo.language);
-      // Save the detected language preference
+      // Save the detected language preference in all places
       saveUserLanguage(locationInfo.language);
+      localStorage.setItem('i18nextLng', locationInfo.language);
+      localStorage.setItem('userLanguage', locationInfo.language);
     }
   } catch (error) {
     console.error('Error initializing language from location:', error);

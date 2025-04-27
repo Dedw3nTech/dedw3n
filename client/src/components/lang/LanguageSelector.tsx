@@ -21,7 +21,17 @@ export function LanguageSelector() {
   };
 
   const handleLanguageChange = (code: string) => {
-    changeLanguage(code);
+    // Save the language preference in multiple ways to ensure it persists
+    localStorage.setItem('i18nextLng', code);
+    localStorage.setItem('userLanguage', code); // Our custom storage key
+    
+    // Also store in i18next's cache
+    i18n.changeLanguage(code);
+    
+    // Force a complete page reload to ensure all components re-render with the new language
+    setTimeout(() => {
+      window.location.reload();
+    }, 100); // Small delay to ensure preferences are saved
   };
 
   return (
