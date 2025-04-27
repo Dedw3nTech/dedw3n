@@ -63,15 +63,16 @@ export default function Header() {
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <Logo size="md" />
-          </div>
-
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-1 ml-4">
               <CurrencySelector />
               <LanguageSelector />
             </div>
+          </div>
+
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Empty div to maintain layout */}
           </div>
 
           <div className="flex items-center space-x-4">

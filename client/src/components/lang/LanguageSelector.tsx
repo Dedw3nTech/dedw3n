@@ -36,10 +36,10 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
-          <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline-block">{getCurrentLanguageName()}</span>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+        <Button variant="ghost" size="sm" className="h-7 gap-1 px-1">
+          <Globe className="h-3.5 w-3.5" />
+          <span className="text-xs font-medium">{getCurrentLanguageName()}</span>
+          <ChevronDown className="h-3.5 w-3.5 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
