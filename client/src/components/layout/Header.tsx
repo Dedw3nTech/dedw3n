@@ -4,6 +4,7 @@ import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
 import SearchOverlay from "../ui/search-overlay";
+import CurrencyConverter from "../ui/currency-converter";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
 import { LanguageSelector } from "../lang";
@@ -79,7 +80,10 @@ export default function Header() {
               <i className="ri-add-line mr-1"></i> {t('vendor.add_product')}
             </Link>
             
-            <LanguageSelector minimal className="hidden lg:flex" />
+            <div className="flex items-center space-x-2">
+              <CurrencyConverter />
+              <LanguageSelector minimal className="hidden lg:flex" />
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
