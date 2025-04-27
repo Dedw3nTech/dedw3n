@@ -7,7 +7,6 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <i className="ri-store-2-line text-primary text-2xl"></i>
               <h2 className="text-xl font-bold text-gray-800">SocialMarket</h2>
             </div>
             <p className="text-gray-600 text-sm mb-4">
