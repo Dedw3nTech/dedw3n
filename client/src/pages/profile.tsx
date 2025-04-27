@@ -61,10 +61,21 @@ export default function ProfilePage() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/profile/:username");
   
-  // If we have a username param, use it; otherwise use the current user's ID instead of username
-  // This fixes issues with spaces in usernames
-  const usernameOrId = params?.username || (currentUser ? currentUser.id.toString() : '');
-  const isUsingId = !params?.username && currentUser;
+  // Use proper routing for profile URLs
+  // If we have a username parameter, use that to fetch by username
+  // If no parameter, use the current logged-in user's ID (safer than username)
+  // This provides a fallback mechanism and prevents "User not found" errors
+  
+  // Handle special cases like 'me' or 'edit' that aren't actual usernames but shortcuts
+  const isSpecialRoute = params?.username === 'me' || params?.username === 'edit';
+  
+  // If it's a special route or no param, use current user ID if logged in
+  const usernameOrId = isSpecialRoute ? 
+    (currentUser ? currentUser.id.toString() : '') : 
+    params?.username || (currentUser ? currentUser.id.toString() : '');
+    
+  // Determine if we're using ID-based fetching instead of username-based
+  const isUsingId = isSpecialRoute || !params?.username || !usernameOrId;
   
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditing, setIsEditing] = useState(false);
@@ -182,9 +193,19 @@ export default function ProfilePage() {
     },
   });
 
+  // Define the profile update interface
+  interface ProfileUpdate {
+    name: string;
+    bio: string;
+    location?: string;
+    website?: string;
+    avatarUrl?: string;
+    avatar?: string;
+  }
+  
   // Profile update mutation
-  const updateProfileMutation = useMutation({
-    mutationFn: async (profileData: any) => {
+  const updateProfileMutation = useMutation<any, Error, ProfileUpdate>({
+    mutationFn: async (profileData: ProfileUpdate) => {
       try {
         console.log("Updating profile with data:", profileData);
         
@@ -274,7 +295,7 @@ export default function ProfilePage() {
     if (!currentUser) return;
     
     // Create a profile update object with the basic data
-    const profileUpdate = {
+    const profileUpdate: ProfileUpdate = {
       name: editName,
       bio: editBio
     };
@@ -290,7 +311,7 @@ export default function ProfilePage() {
     
     // For now, if the user has selected a new avatar, we'll use a URL approach
     // later we can implement proper file upload
-    if (avatarPreview && avatarPreview !== profileData.avatar) {
+    if (avatarPreview && avatarPreview !== profileData?.avatar) {
       // Temporary solution: just using a placeholder URL
       // In a real implementation, we would upload the file separately
       // and get back a URL to store
