@@ -13,17 +13,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare } from "lucide-react";
+import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import UserManagement from "@/components/admin/UserManagement";
-import ProductManagement from "@/components/admin/ProductManagement";
-import CommunityManagement from "@/components/admin/CommunityManagement";
-import OrderManagement from "@/components/admin/OrderManagement";
-import SystemSettings from "@/components/admin/SystemSettings";
-import AdminAnalytics from "@/components/admin/AdminAnalytics";
-import ContentModeration from "@/components/admin/ContentModeration";
+
+// Import placeholder component for development
+const PlaceholderComponent = ({ title }: { title: string }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+      <CardDescription>This section is under development</CardDescription>
+    </CardHeader>
+    <CardContent className="flex flex-col items-center justify-center py-10">
+      <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
+      <p className="text-center text-muted-foreground">
+        The admin API endpoints for this feature are being implemented.
+        <br />Check back soon!
+      </p>
+    </CardContent>
+  </Card>
+);
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -32,11 +42,11 @@ export default function AdminDashboard() {
   
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ["/api/admin/stats"],
-    enabled: user?.role === "admin" || user?.role === "superadmin",
+    enabled: user?.role === "admin",
   });
 
   // If user is not admin, redirect to home
-  if (user && user.role !== "admin" && user.role !== "superadmin") {
+  if (user && user.role !== "admin") {
     setLocation("/");
     return null;
   }
@@ -153,31 +163,31 @@ export default function AdminDashboard() {
           </TabsList>
           
           <TabsContent value="overview" className="space-y-4">
-            <AdminAnalytics />
+            <PlaceholderComponent title="Analytics & Dashboard Overview" />
           </TabsContent>
           
           <TabsContent value="users" className="space-y-4">
-            <UserManagement />
+            <PlaceholderComponent title="User Management" />
           </TabsContent>
           
           <TabsContent value="products" className="space-y-4">
-            <ProductManagement />
+            <PlaceholderComponent title="Product Management" />
           </TabsContent>
           
           <TabsContent value="orders" className="space-y-4">
-            <OrderManagement />
+            <PlaceholderComponent title="Order Management" />
           </TabsContent>
           
           <TabsContent value="communities" className="space-y-4">
-            <CommunityManagement />
+            <PlaceholderComponent title="Community Management" />
           </TabsContent>
           
           <TabsContent value="moderation" className="space-y-4">
-            <ContentModeration />
+            <PlaceholderComponent title="Content Moderation" />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
-            <SystemSettings />
+            <PlaceholderComponent title="System Settings" />
           </TabsContent>
         </Tabs>
       </div>

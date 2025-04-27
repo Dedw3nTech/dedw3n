@@ -20,6 +20,7 @@ import AuthPage from "@/pages/auth-page";
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
+import AdminDashboard from "@/pages/admin-dashboard";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
@@ -108,6 +109,10 @@ function Router() {
       {/* Premium video routes */}
       <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />
       <ProtectedRoute path="/premium-videos/:id" component={PremiumVideoPage} />
+      
+      {/* Admin routes */}
+      <ProtectedRoute path="/admin" component={AdminDashboard} />
+      <ProtectedRoute path="/admin/:tab" component={AdminDashboard} />
       
       <Route component={NotFound} />
     </Switch>
