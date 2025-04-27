@@ -10,6 +10,7 @@ import { registerShippingRoutes } from "./shipping";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
+import { registerSubscriptionRoutes } from "./subscription";
 import { seedDatabase } from "./seed";
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
