@@ -61,6 +61,15 @@ export interface IStorage {
   getUserVideos(userId: number): Promise<Video[]>;
   getVideosByType(type: string): Promise<Video[]>;
   
+  // Video product overlays
+  createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay>;
+  getVideoProductOverlays(videoId: number): Promise<VideoProductOverlay[]>;
+  getVideoProductOverlay(id: number): Promise<VideoProductOverlay | undefined>;
+  updateVideoProductOverlay(id: number, updates: Partial<VideoProductOverlay>): Promise<VideoProductOverlay | undefined>;
+  deleteVideoProductOverlay(id: number): Promise<boolean>;
+  incrementOverlayClickCount(id: number): Promise<VideoProductOverlay | undefined>;
+  incrementOverlayConversionCount(id: number): Promise<VideoProductOverlay | undefined>;
+  
   // Video engagements
   createVideoEngagement(engagement: InsertVideoEngagement): Promise<VideoEngagement>;
   getVideoEngagements(videoId: number, type?: string): Promise<VideoEngagement[]>;
@@ -362,6 +371,7 @@ export class MemStorage implements IStorage {
   private videos: Map<number, Video>;
   private videoEngagements: Map<number, VideoEngagement>;
   private videoAnalytics: Map<number, VideoAnalytics>;
+  private videoProductOverlays: Map<number, VideoProductOverlay>;
   private videoPlaylists: Map<number, VideoPlaylist>;
   private playlistItems: Map<number, PlaylistItem>;
 
@@ -379,6 +389,7 @@ export class MemStorage implements IStorage {
   private videoIdCounter: number;
   private videoEngagementIdCounter: number;
   private videoAnalyticsIdCounter: number;
+  private videoProductOverlayIdCounter: number;
   private videoPlaylistIdCounter: number;
   private playlistItemIdCounter: number;
   private cartIdCounter: number;
@@ -444,6 +455,7 @@ export class MemStorage implements IStorage {
     this.videos = new Map();
     this.videoEngagements = new Map();
     this.videoAnalytics = new Map();
+    this.videoProductOverlays = new Map();
     this.videoPlaylists = new Map();
     this.playlistItems = new Map();
 
@@ -480,6 +492,7 @@ export class MemStorage implements IStorage {
     this.videoIdCounter = 1;
     this.videoEngagementIdCounter = 1;
     this.videoAnalyticsIdCounter = 1;
+    this.videoProductOverlayIdCounter = 1;
     this.videoPlaylistIdCounter = 1;
     this.playlistItemIdCounter = 1;
 
