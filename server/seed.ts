@@ -15,6 +15,7 @@ async function seedDatabase() {
         name: 'Admin User',
         email: 'admin@example.com',
         isVendor: true,
+        role: 'admin', // Set role to admin
       });
       console.log(`Admin user created with ID: ${admin.id}`);
     }

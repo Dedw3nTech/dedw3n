@@ -47,6 +47,13 @@ export interface IStorage {
   incrementLoginAttempts(id: number): Promise<User | undefined>;
   resetLoginAttempts(id: number): Promise<User | undefined>;
   listUsers(): Promise<User[]>;
+  searchUsers(searchTerm: string): Promise<User[]>;
+  deleteUser(id: number): Promise<boolean>;
+  resetUserPassword(id: number, newPassword: string): Promise<User | undefined>;
+  getUserCount(): Promise<number>;
+  getProductCount(): Promise<number>;
+  getOrderCount(): Promise<number>;
+  getCommunityCount(): Promise<number>;
   
   // Community and vendor operations
   getUserCommunities(userId: number): Promise<Community[]>;
