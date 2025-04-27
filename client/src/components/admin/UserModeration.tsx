@@ -243,6 +243,8 @@ export default function UserModeration() {
   const [activeUserTab, setActiveUserTab] = useState("overview");
   const [activeTab, setActiveTab] = useState("users");
   
+  // Security-related state management is handled through useQuery hooks below
+  
   const itemsPerPage = 10;
 
   // Fetch users
