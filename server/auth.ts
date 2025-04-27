@@ -94,6 +94,8 @@ export function setupAuth(app: Express) {
   app.post("/api/auth/register", async (req, res, next) => {
     try {
       console.log(`[DEBUG] Registration attempt for username: ${req.body.username}`);
+      console.log(`[DEBUG] Registration: request body:`, req.body);
+      console.log(`[DEBUG] Registration: session ID before:`, req.sessionID);
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -121,6 +123,7 @@ export function setupAuth(app: Express) {
       console.log(`[DEBUG] User created with ID: ${user.id}, username: ${user.username}`);
 
       // Log in the user
+      console.log(`[DEBUG] Calling req.login for newly created user ${user.username}`);
       req.login(user, (err) => {
         if (err) {
           console.error(`[ERROR] Login after registration failed:`, err);
@@ -128,10 +131,12 @@ export function setupAuth(app: Express) {
         }
         
         console.log(`[DEBUG] User ${user.username} logged in after registration`);
+        console.log(`[DEBUG] Session ID after login:`, req.sessionID);
         
         // Double-check authentication status
         console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
         console.log(`[DEBUG] User in session:`, req.user);
+        console.log(`[DEBUG] Session object:`, req.session);
         
         // Return user without password
         const { password, ...userWithoutPassword } = user;
@@ -144,14 +149,30 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/auth/login", (req, res, next) => {
+    console.log(`[DEBUG] Login attempt for username: ${req.body.username}`);
+    
     passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
-      if (err) return next(err);
+      if (err) {
+        console.error(`[ERROR] Login authentication error:`, err);
+        return next(err);
+      }
+      
       if (!user) {
+        console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
+      console.log(`[DEBUG] User ${user.username} authenticated, calling req.login`);
+      
       req.login(user, (err: Error | null) => {
-        if (err) return next(err);
+        if (err) {
+          console.error(`[ERROR] req.login error:`, err);
+          return next(err);
+        }
+        
+        console.log(`[DEBUG] req.login successful for ${user.username}`);
+        console.log(`[DEBUG] Session ID: ${req.sessionID}`);
+        console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
         
         // Return user without password
         const { password, ...userWithoutPassword } = user;
