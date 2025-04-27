@@ -1320,7 +1320,7 @@ export default function ContentModerationTools() {
                   <CardContent>
                     <div className="space-y-4">
                       {contentAnalysisData?.topics?.length > 0 ? (
-                        contentAnalysisData.topics.map((topic) => (
+                        contentAnalysisData.topics.map((topic: Topic) => (
                           <div key={topic.name} className="space-y-1">
                             <div className="flex justify-between text-sm">
                               <span>{topic.name}</span>
@@ -1422,7 +1422,7 @@ export default function ContentModerationTools() {
                   <CardContent>
                     <div className="space-y-4">
                       {contentAnalysisData?.contentInsights?.length > 0 ? (
-                        contentAnalysisData.contentInsights.map((insight) => (
+                        contentAnalysisData.contentInsights.map((insight: ContentInsight) => (
                           <div key={insight.type} className="border rounded-lg p-3">
                             <div className="flex justify-between items-center mb-2">
                               <span className="font-medium">{insight.type}</span>
