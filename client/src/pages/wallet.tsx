@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -576,52 +577,79 @@ export default function WalletPage() {
                 </TabsContent>
 
                 <TabsContent value="deposit">
-                  <form onSubmit={handleTransaction('deposit')} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">{t('wallet.amount')}</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2">
-                          {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
-                        </span>
-                        <Input 
-                          id="amount"
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          className="pl-7"
-                          required
-                        />
+                  <div className="space-y-6">
+                    {/* Top-up Cards */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Quick Top-up Cards</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[5, 10, 25, 50, 100, 250, 500, 1000].map((value) => (
+                          <div 
+                            key={value}
+                            onClick={() => {
+                              setAmount(value.toString());
+                              setDescription(`${wallet.currency}${value} Top-up Card`);
+                            }}
+                            className="border rounded-lg p-3 text-center hover:border-primary hover:bg-primary/5 cursor-pointer transition-colors"
+                          >
+                            <p className="text-sm font-medium mb-1">Top-up Card</p>
+                            <p className="text-xl font-bold text-primary">
+                              {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '£'}{value}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="description">{t('wallet.description')} ({t('wallet.optional')})</Label>
-                      <Input 
-                        id="description"
-                        placeholder={t('wallet.deposit_description')}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={createTransactionMutation.isPending}
-                    >
-                      {createTransactionMutation.isPending ? (
-                        <span className="flex items-center">
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                          {t('wallet.processing')}
-                        </span>
-                      ) : (
-                        t('wallet.deposit_funds')
-                      )}
-                    </Button>
-                  </form>
+
+                    <Separator />
+
+                    {/* Custom Amount Form */}
+                    <form onSubmit={handleTransaction('deposit')} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount">{t('wallet.amount')}</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                            {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '£'}
+                          </span>
+                          <Input 
+                            id="amount"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="pl-7"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="description">{t('wallet.description')} ({t('wallet.optional')})</Label>
+                        <Input 
+                          id="description"
+                          placeholder={t('wallet.deposit_description')}
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={createTransactionMutation.isPending}
+                      >
+                        {createTransactionMutation.isPending ? (
+                          <span className="flex items-center">
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                            {t('wallet.processing')}
+                          </span>
+                        ) : (
+                          t('wallet.deposit_funds')
+                        )}
+                      </Button>
+                    </form>
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="withdraw">
