@@ -35,8 +35,7 @@ export default function Header() {
     enabled: isLoggedIn, // Only fetch if logged in
   });
 
-  // Placeholder notification count
-  const notificationCount = 1;
+  // Notification functionality has been removed
 
   const handleViewChange = (newView: "marketplace" | "social") => {
     setView(newView);
@@ -86,15 +85,6 @@ export default function Header() {
             <Link href="/wallet" className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-wallet-3-line text-xl"></i>
             </Link>
-
-            <button className="relative p-2 text-gray-600 hover:text-primary">
-              <i className="ri-notification-3-line text-xl"></i>
-              {notificationCount > 0 && (
-                <Badge variant="secondary" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
-                  {notificationCount}
-                </Badge>
-              )}
-            </button>
 
             <UserMenu />
           </div>
