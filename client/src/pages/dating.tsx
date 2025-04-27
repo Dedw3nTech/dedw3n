@@ -138,6 +138,7 @@ export default function DatingPage() {
   const [interests, setInterests] = useState("");
   const [wishlistItem, setWishlistItem] = useState("");
   const [wishlistItemPrice, setWishlistItemPrice] = useState("");
+  const [myWishlist, setMyWishlist] = useState<WishlistItem[]>([]);
   const [matches, setMatches] = useState<Match[]>([sampleMatch]); // Sample match data
   
   // Handling form submission
@@ -154,14 +155,14 @@ export default function DatingPage() {
   
   // Handling gift purchases
   const handleSendGift = (profileId: number, giftId: number) => {
-    // In a real app, this would initiate a purchase flow
+    // In a real app, this would add the gift to cart first
     toast({
-      title: "Gift Selected",
-      description: "Moving to checkout with selected gift.",
+      title: "Gift Added to Cart",
+      description: "Redirecting to checkout...",
     });
     
-    // Navigate to checkout or gift purchase page
-    // setLocation(`/gift-checkout/${profileId}/${giftId}`);
+    // Redirect to checkout page
+    setLocation("/checkout");
   };
   
   // Handling message initiation
@@ -173,6 +174,37 @@ export default function DatingPage() {
     
     // Navigate to messages with the specific user
     setLocation(`/messages/${username}`);
+  };
+  
+  // Add item to wishlist
+  const handleAddToWishlist = () => {
+    if (!wishlistItem || !wishlistItemPrice) {
+      toast({
+        title: "Missing information",
+        description: "Please provide both a gift name and price.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newItem: WishlistItem = {
+      id: myWishlist.length + 1,
+      name: wishlistItem,
+      price: parseFloat(wishlistItemPrice),
+      imageUrl: "/images/gift-placeholder.jpg",
+      link: `/product/${wishlistItem.toLowerCase().replace(/\s+/g, '-')}`
+    };
+    
+    setMyWishlist([...myWishlist, newItem]);
+    
+    // Clear the inputs
+    setWishlistItem("");
+    setWishlistItemPrice("");
+    
+    toast({
+      title: "Wishlist Updated",
+      description: `${newItem.name} has been added to your wishlist.`,
+    });
   };
 
   return (
@@ -356,10 +388,31 @@ export default function DatingPage() {
                       onChange={(e) => setWishlistItemPrice(e.target.value)} 
                     />
                   </div>
-                  <Button variant="outline" className="w-full mt-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-2"
+                    onClick={handleAddToWishlist}
+                  >
                     <Gift className="h-4 w-4 mr-2" />
                     Add to Wishlist
                   </Button>
+                  
+                  {myWishlist.length > 0 && (
+                    <div className="mt-4 border rounded-md p-4">
+                      <h4 className="text-sm font-medium mb-2">My Current Wishlist</h4>
+                      <div className="space-y-2">
+                        {myWishlist.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between border-b pb-2">
+                            <div className="flex items-center gap-2">
+                              <Gift className="h-4 w-4 text-gray-500" />
+                              <span className="text-sm">{item.name}</span>
+                            </div>
+                            <span className="text-sm font-medium">${item.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
