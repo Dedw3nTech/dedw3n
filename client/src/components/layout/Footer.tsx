@@ -32,7 +32,6 @@ export default function Footer() {
               <li><Link href="#" className="hover:text-primary">Events</Link></li>
               <li><Link href="#" className="hover:text-primary">Creator Spotlights</Link></li>
               <li><Link href="#" className="hover:text-primary">Community Guidelines</Link></li>
-              <li><Link href="#" className="hover:text-primary">Creator Resources</Link></li>
             </ul>
           </div>
 
