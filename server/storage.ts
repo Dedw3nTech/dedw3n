@@ -2242,6 +2242,18 @@ export class MemStorage implements IStorage {
     return Array.from(this.subscriptions.values())
       .filter(sub => sub.userId === userId);
   }
+  
+  async getUserSubscription(userId: number): Promise<Subscription | undefined> {
+    // Get the most recent subscription for the user
+    const subscriptions = await this.getUserSubscriptions(userId);
+    if (subscriptions.length === 0) return undefined;
+    
+    // Sort by created date descending and get the most recent one
+    return subscriptions.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    })[0];
+  }
 
   async getCreatorSubscribers(creatorId: number): Promise<Subscription[]> {
     return Array.from(this.subscriptions.values())
@@ -2279,6 +2291,55 @@ export class MemStorage implements IStorage {
     subscription.updatedAt = new Date();
     this.subscriptions.set(id, subscription);
     return subscription;
+  }
+  
+  async createOrUpdateSubscription(data: Partial<Subscription>): Promise<Subscription> {
+    // If we have a subscription ID, update the existing subscription
+    if (data.id && this.subscriptions.has(data.id)) {
+      const subscription = this.subscriptions.get(data.id)!;
+      
+      // Update the subscription with new data
+      Object.assign(subscription, {
+        ...data,
+        updatedAt: new Date()
+      });
+      
+      this.subscriptions.set(subscription.id, subscription);
+      return subscription;
+    } 
+    
+    // If no ID provided or ID doesn't exist, create a new subscription
+    const userId = data.userId;
+    if (!userId) {
+      throw new Error('userId is required to create a subscription');
+    }
+    
+    // Get existing subscription for the user if any
+    const existingSubscription = await this.getUserSubscription(userId);
+    
+    if (existingSubscription) {
+      // Update existing subscription
+      Object.assign(existingSubscription, {
+        ...data,
+        updatedAt: new Date()
+      });
+      
+      this.subscriptions.set(existingSubscription.id, existingSubscription);
+      return existingSubscription;
+    }
+    
+    // Create a new subscription
+    return this.createSubscription({
+      userId,
+      status: data.status || 'active',
+      plan: data.plan || 'premium',
+      expiresAt: data.expiresAt,
+      creatorId: data.creatorId,
+      cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+      stripeCustomerId: data.stripeCustomerId,
+      stripeSubscriptionId: data.stripeSubscriptionId,
+      tier: data.tier
+    } as InsertSubscription);
   }
 
   // Social network methods for new explore page

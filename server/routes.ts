@@ -469,6 +469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register subscription payment routes
   registerSubscriptionPaymentRoutes(app);
   
+  // Register subscription management routes
+  registerSubscriptionRoutes(app);
+  
   // Register exclusive content routes
   registerExclusiveContentRoutes(app);
   
