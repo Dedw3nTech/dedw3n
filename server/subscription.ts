@@ -23,14 +23,14 @@ export async function getSubscriptionStatus(req: Request, res: Response) {
     }
 
     const now = new Date();
-    const expiresAt = subscription.expiresAt ? new Date(subscription.expiresAt) : null;
     
     // Check if subscription has expired
-    if (expiresAt && expiresAt < now) {
+    // Access expiresAt as subscription.expiresAt
+    if (subscription.expiresAt && new Date(subscription.expiresAt) < now) {
       return res.json({
         status: 'expired',
         trialDaysLeft: null,
-        expiresAt: expiresAt,
+        expiresAt: subscription.expiresAt,
         isActive: false
       });
     }
@@ -39,15 +39,16 @@ export async function getSubscriptionStatus(req: Request, res: Response) {
     const isTrial = subscription.status === 'trial';
     let trialDaysLeft = null;
     
-    if (isTrial && expiresAt) {
-      const diffTime = Math.abs(expiresAt.getTime() - now.getTime());
+    if (isTrial && subscription.expiresAt) {
+      const expiresAtDate = new Date(subscription.expiresAt);
+      const diffTime = Math.abs(expiresAtDate.getTime() - now.getTime());
       trialDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
     return res.json({
       status: subscription.status,
       trialDaysLeft,
-      expiresAt,
+      expiresAt: subscription.expiresAt,
       isActive: true
     });
   } catch (error) {

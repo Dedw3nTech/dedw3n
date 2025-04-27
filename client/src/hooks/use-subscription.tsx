@@ -47,17 +47,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const res = await apiRequest('GET', '/api/subscription/status');
         const data = await res.json();
         
-        // For now, we'll just mock this response until we have the backend endpoint
-        const mockData = {
+        return {
           status: data.status || 'none',
           trialDaysLeft: data.trialDaysLeft || null,
           expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
           isActive: ['active', 'trial'].includes(data.status || 'none'),
         };
-        
-        return mockData;
       } catch (error) {
-        // If endpoint doesn't exist yet, return default state
+        console.error('Failed to fetch subscription status:', error);
         return defaultSubscriptionState;
       }
     },
