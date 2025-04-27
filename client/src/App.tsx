@@ -48,6 +48,7 @@ import SettingsPage from "@/pages/settings";
 import WallPage from "@/pages/wall";
 import MessagesPage from "@/pages/messages";
 import ExplorePage from "@/pages/explore";
+import SocialConsolePage from "@/pages/social-console";
 
 // Import video pages
 import TrendingVideosPage from "@/pages/videos/trending";
@@ -69,6 +70,7 @@ function Router() {
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={Social} />
       <ProtectedRoute path="/social/:tab" component={Social} />
+      <ProtectedRoute path="/social-console" component={SocialConsolePage} />
       <ProtectedRoute path="/cart" component={Cart} />
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
