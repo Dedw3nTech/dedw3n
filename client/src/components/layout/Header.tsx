@@ -18,7 +18,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Store, Users, Building } from "lucide-react";
+import { ChevronDown, Store, Users, Building, Landmark } from "lucide-react";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -139,6 +139,16 @@ export default function Header() {
               >
                 <Building className="mr-2 h-4 w-4" />
                 <span>Business (B2B)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setMarketType("gov");
+                  setLocation("/government");
+                }}
+                className="flex items-center cursor-pointer"
+              >
+                <Landmark className="mr-2 h-4 w-4" />
+                <span>Governmental Services</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

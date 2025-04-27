@@ -36,6 +36,7 @@ import VendorAnalytics from "@/pages/vendor-analytics";
 import SpendingAnalytics from "@/pages/spending-analytics";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
+import GovernmentPage from "@/pages/government";
 
 // Import community-related components
 import CommunitiesPage from "@/pages/communities";
