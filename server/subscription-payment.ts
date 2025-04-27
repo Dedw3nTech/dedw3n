@@ -299,6 +299,180 @@ export async function processPaypalMembership(req: Request, res: Response) {
 }
 
 /**
+ * Process e-wallet payment for membership
+ */
+export async function processEWalletMembershipPayment(req: Request, res: Response) {
+  try {
+    const { walletId, tierId, communityId, amount, currency } = req.body;
+    const userId = (req.user as any).id;
+
+    if (!walletId || !tierId || !communityId || !amount || !currency) {
+      return res.status(400).json({ 
+        error: "Missing required parameters. Please provide walletId, tierId, communityId, amount, and currency." 
+      });
+    }
+
+    // Get user's wallet
+    const wallet = await storage.getWalletById(walletId);
+    if (!wallet || wallet.userId !== userId) {
+      return res.status(404).json({ error: "Wallet not found or does not belong to the current user" });
+    }
+
+    // Check if wallet has sufficient balance
+    if (wallet.balance < amount) {
+      return res.status(400).json({ error: "Insufficient balance in wallet" });
+    }
+
+    // Get tier information
+    const tier = await storage.getMembershipTier(tierId);
+    if (!tier) {
+      return res.status(404).json({ error: "Membership tier not found" });
+    }
+
+    if (tier.communityId !== communityId) {
+      return res.status(400).json({ error: "Tier does not belong to specified community" });
+    }
+
+    // Calculate end date based on tier duration
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + tier.durationDays);
+
+    // Create transaction record in wallet
+    const transaction = await storage.createWalletTransaction({
+      walletId: wallet.id,
+      type: "debit",
+      amount,
+      category: "membership",
+      paymentMethod: "wallet",
+      status: "completed",
+      description: `Membership payment for ${tier.name}`,
+      metadata: JSON.stringify({
+        tierId,
+        communityId,
+        membershipType: tier.name
+      })
+    });
+
+    // Update wallet balance
+    await storage.updateWallet(wallet.id, {
+      balance: wallet.balance - amount
+    });
+
+    // Create the membership
+    const membership = await storage.createMembership({
+      userId,
+      tierId,
+      communityId,
+      status: "active",
+      paymentStatus: "paid",
+      startDate,
+      endDate,
+      autoRenew: false // E-wallet payments typically don't auto-renew
+    });
+
+    // Create a record of this payment in the creator earnings table
+    await storage.addCreatorEarning({
+      userId,
+      communityId,
+      amount: tier.price,
+      currency: tier.currency,
+      source: "membership",
+      sourceId: membership.id,
+      status: "paid",
+      platformFee: tier.price * 0.1, // 10% platform fee (adjust as needed)
+      netAmount: tier.price * 0.9 // 90% goes to creator after platform fee
+    });
+
+    res.json({
+      success: true,
+      membership,
+      transaction
+    });
+  } catch (error: any) {
+    console.error("Error processing e-wallet membership payment:", error);
+    res.status(500).json({
+      error: error.message || "Failed to process e-wallet payment"
+    });
+  }
+}
+
+/**
+ * Initiate mobile money payment for membership
+ */
+export async function initiateMobileMoneyMembershipPayment(req: Request, res: Response) {
+  try {
+    const { phoneNumber, provider, tierId, communityId, amount, currency } = req.body;
+    const userId = (req.user as any).id;
+
+    if (!phoneNumber || !provider || !tierId || !communityId || !amount || !currency) {
+      return res.status(400).json({ 
+        error: "Missing required parameters. Please provide phoneNumber, provider, tierId, communityId, amount, and currency."
+      });
+    }
+
+    // Get the tier information
+    const tier = await storage.getMembershipTier(tierId);
+    if (!tier) {
+      return res.status(404).json({ error: "Membership tier not found" });
+    }
+
+    if (tier.communityId !== communityId) {
+      return res.status(400).json({ error: "Tier does not belong to specified community" });
+    }
+
+    // Get the community info for metadata
+    const community = await storage.getCommunity(communityId);
+    if (!community) {
+      return res.status(404).json({ error: "Community not found" });
+    }
+
+    // In a real implementation, you would integrate with a mobile money provider API
+    // For now, we'll simulate a successful initiation
+    
+    // Generate a reference number for this payment
+    const referenceNumber = `MM-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+    
+    // Calculate end date based on tier duration
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + tier.durationDays);
+
+    // Store payment information for later verification
+    // This would typically be handled by the mobile money provider in a webhook
+    const pendingPayment = {
+      referenceNumber,
+      userId,
+      tierId,
+      communityId,
+      phoneNumber,
+      provider,
+      amount,
+      currency,
+      status: "pending"
+    };
+
+    // In a real implementation, you would:
+    // 1. Call mobile money provider's API to initiate payment
+    // 2. Store the payment details in your database
+    // 3. Handle webhook callbacks from the provider to confirm payment
+
+    // Return payment reference and instructions
+    res.json({
+      success: true,
+      referenceNumber,
+      instructions: `Please confirm the payment prompt on your mobile device with number ${phoneNumber}`,
+      tier
+    });
+  } catch (error: any) {
+    console.error("Error initiating mobile money membership payment:", error);
+    res.status(500).json({
+      error: error.message || "Failed to initiate mobile money payment"
+    });
+  }
+}
+
+/**
  * Register subscription payment-related routes
  */
 export function registerSubscriptionPaymentRoutes(app: any) {
@@ -306,4 +480,6 @@ export function registerSubscriptionPaymentRoutes(app: any) {
   app.post("/api/membership/payment/stripe/process", processMembershipPayment);
   app.post("/api/membership/payment/paypal/create-order", createPaypalMembershipOrder);
   app.post("/api/membership/payment/paypal/process", processPaypalMembership);
+  app.post("/api/membership/payment/ewallet/process", processEWalletMembershipPayment);
+  app.post("/api/membership/payment/mobile-money/initiate", initiateMobileMoneyMembershipPayment);
 }

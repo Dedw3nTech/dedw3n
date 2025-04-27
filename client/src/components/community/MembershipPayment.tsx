@@ -227,7 +227,7 @@ const PaypalPaymentSection = ({ tier, communityId, onSuccess, onCancel }: Paymen
             try {
               const response = await apiRequest(
                 "POST",
-                `/api/membership-payment/capture-paypal-order`,
+                `/api/membership/payment/paypal/process`,
                 {
                   orderId: data.orderID,
                   tierId: tier.id,
