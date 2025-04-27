@@ -8,8 +8,8 @@ import { useMarketType } from "@/hooks/use-market-type";
 import { useCurrency } from "@/hooks/use-currency";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatPrice, formatCurrency, formatPriceWithCurrency } from "@/lib/utils";
-import { convertCurrency } from "@/lib/currencyConverter";
+import { formatPrice, formatCurrency } from "@/lib/utils";
+import { convertCurrency, formatPriceWithCurrency, CurrencyCode } from "@/lib/currencyConverter";
 import { Product } from "@shared/schema";
 
 import {
@@ -38,14 +38,14 @@ export default function Home() {
   const { setMarketType } = useMarketType();
   const { currency } = useCurrency();
   const [, setLocation] = useLocation();
-  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
   const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
   const [convertedDiscountPrices, setConvertedDiscountPrices] = useState<Record<number, number>>({});
   const [isConverting, setIsConverting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
   // List of supported currencies
-  const supportedCurrencies = ['GBP', 'USD', 'EUR', 'JPY', 'CNY', 'INR', 'CAD', 'AUD', 'SGD'];
+  const supportedCurrencies: CurrencyCode[] = ['GBP', 'USD', 'EUR', 'CNY', 'INR', 'BRL'];
   
   // Force rerender when currency changes
   useEffect(() => {
@@ -211,13 +211,13 @@ export default function Home() {
               <div className="text-xs text-gray-600 mt-1">
                 {product.discountPrice && convertedDiscountPrices[product.id] ? (
                   <div className="flex items-center">
-                    <span>{formatCurrency(convertedDiscountPrices[product.id], selectedCurrency)}</span>
+                    <span>{formatPriceWithCurrency(convertedDiscountPrices[product.id], selectedCurrency)}</span>
                     <span className="ml-1 text-gray-400 line-through">
-                      {formatCurrency(convertedPrices[product.id], selectedCurrency)}
+                      {formatPriceWithCurrency(convertedPrices[product.id], selectedCurrency)}
                     </span>
                   </div>
                 ) : (
-                  <span>{formatCurrency(convertedPrices[product.id], selectedCurrency)}</span>
+                  <span>{formatPriceWithCurrency(convertedPrices[product.id], selectedCurrency)}</span>
                 )}
               </div>
             )}
@@ -355,7 +355,7 @@ export default function Home() {
             <span className="text-sm text-gray-500">Currency:</span>
             <Select
               value={selectedCurrency}
-              onValueChange={(value) => setSelectedCurrency(value)}
+              onValueChange={(value) => setSelectedCurrency(value as CurrencyCode)}
             >
               <SelectTrigger className="h-8 w-32">
                 <SelectValue placeholder="Currency" />

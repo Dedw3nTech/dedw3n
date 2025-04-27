@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/hooks/use-currency';
 import { 
   Loader2, 
   Star, 
@@ -47,12 +48,33 @@ export default function ProductDetail() {
   const [, params] = useRoute('/product/:id');
   const productId = params?.id ? parseInt(params.id) : null;
   const { user } = useAuth();
+  const { currency } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
   const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
   const [convertedDiscountPrice, setConvertedDiscountPrice] = useState<number | null>(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Force rerender when currency changes
+  useEffect(() => {
+    const handleCurrencyChange = () => {
+      console.log('Product detail page detected currency change');
+      setForceUpdate(prev => prev + 1);
+    };
+    
+    window.addEventListener('currency-changed', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('currency-changed', handleCurrencyChange);
+    };
+  }, []);
+  
+  // Update selected currency when the global currency changes
+  useEffect(() => {
+    setSelectedCurrency(currency);
+  }, [currency]);
 
   // Fetch product details
   const {
