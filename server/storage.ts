@@ -36,8 +36,16 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserPassword(id: number, newPassword: string): Promise<User | undefined>;
+  updateUserRole(id: number, role: string): Promise<User | undefined>;
+  verifyUserEmail(id: number): Promise<User | undefined>;
+  lockUserAccount(id: number, isLocked: boolean): Promise<User | undefined>;
+  incrementLoginAttempts(id: number): Promise<User | undefined>;
+  resetLoginAttempts(id: number): Promise<User | undefined>;
   listUsers(): Promise<User[]>;
   
   // Community and vendor operations
@@ -618,6 +626,14 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
+  }
+  
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.passwordResetToken === token);
+  }
+  
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.verificationToken === token);
   }
 
   async createUser(user: InsertUser): Promise<User> {
