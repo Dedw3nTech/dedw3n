@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
+import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
 import SearchOverlay from "../ui/search-overlay";
 import { useQuery } from "@tanstack/react-query";
@@ -10,10 +11,19 @@ import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useMessaging } from "@/hooks/use-messaging";
 import SocialNav from "@/components/social/SocialNav";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Store, Users, Building } from "lucide-react";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { view, setView } = useView();
+  const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const [, setLocation] = useLocation();
 
   // Fetch user data to check if logged in
@@ -91,12 +101,47 @@ export default function Header() {
         </div>
 
         <div className="flex border-b border-gray-200 -mb-px">
-          <button
-            onClick={() => setLocation("/products")}
-            className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary"
-          >
-            <i className="ri-store-3-line mr-1"></i> Marketplace
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary flex items-center justify-center"
+              >
+                <i className="ri-store-3-line mr-1"></i> Marketplace: {marketTypeLabel} <ChevronDown className="ml-1 h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem 
+                onClick={() => {
+                  setMarketType("c2c");
+                  setLocation("/products");
+                }}
+                className="flex items-center cursor-pointer"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                <span>Buy from a friend (C2C)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setMarketType("b2c");
+                  setLocation("/products");
+                }}
+                className="flex items-center cursor-pointer"
+              >
+                <Store className="mr-2 h-4 w-4" />
+                <span>Buy from a store (B2C)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setMarketType("b2b");
+                  setLocation("/products");
+                }}
+                className="flex items-center cursor-pointer"
+              >
+                <Building className="mr-2 h-4 w-4" />
+                <span>Business (B2B)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Social button with integrated navigation and messaging */}
           <SocialNav />
         </div>
