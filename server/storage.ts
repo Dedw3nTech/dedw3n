@@ -21,7 +21,8 @@ import {
   type PollVote, type InsertPollVote, type CreatorEarning, type InsertCreatorEarning,
   type Subscription, type InsertSubscription, type Video, type InsertVideo,
   type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
-  type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem
+  type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
+  type VideoProductOverlay, type InsertVideoProductOverlay
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -2708,6 +2709,84 @@ export class MemStorage implements IStorage {
     
     this.videoAnalytics.set(analytics.id, updatedAnalytics);
     return updatedAnalytics;
+  }
+
+  // Video Product Overlay operations
+  async createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay> {
+    const id = this.videoProductOverlayIdCounter++;
+    const newOverlay: VideoProductOverlay = {
+      id,
+      ...overlay,
+      clickCount: 0,
+      conversionCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.videoProductOverlays.set(id, newOverlay);
+    return newOverlay;
+  }
+
+  async getVideoProductOverlay(id: number): Promise<VideoProductOverlay | undefined> {
+    return this.videoProductOverlays.get(id);
+  }
+
+  async getVideoProductOverlays(videoId: number): Promise<VideoProductOverlay[]> {
+    return Array.from(this.videoProductOverlays.values())
+      .filter(overlay => overlay.videoId === videoId);
+  }
+
+  async updateVideoProductOverlay(id: number, updates: Partial<VideoProductOverlay>): Promise<VideoProductOverlay | undefined> {
+    const overlay = this.videoProductOverlays.get(id);
+    if (!overlay) {
+      return undefined;
+    }
+
+    const updatedOverlay = {
+      ...overlay,
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    this.videoProductOverlays.set(id, updatedOverlay);
+    return updatedOverlay;
+  }
+
+  async deleteVideoProductOverlay(id: number): Promise<boolean> {
+    return this.videoProductOverlays.delete(id);
+  }
+
+  async incrementOverlayClickCount(id: number): Promise<VideoProductOverlay | undefined> {
+    const overlay = this.videoProductOverlays.get(id);
+    if (!overlay) {
+      return undefined;
+    }
+
+    // Increment click count
+    const updatedOverlay = {
+      ...overlay,
+      clickCount: overlay.clickCount + 1,
+      updatedAt: new Date()
+    };
+
+    this.videoProductOverlays.set(id, updatedOverlay);
+    return updatedOverlay;
+  }
+
+  async incrementOverlayConversionCount(id: number): Promise<VideoProductOverlay | undefined> {
+    const overlay = this.videoProductOverlays.get(id);
+    if (!overlay) {
+      return undefined;
+    }
+
+    // Increment conversion count
+    const updatedOverlay = {
+      ...overlay,
+      conversionCount: overlay.conversionCount + 1,
+      updatedAt: new Date()
+    };
+
+    this.videoProductOverlays.set(id, updatedOverlay);
+    return updatedOverlay;
   }
   
   // Playlist operations

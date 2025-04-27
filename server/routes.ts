@@ -16,7 +16,8 @@ import {
   insertMembershipTierSchema, insertMembershipSchema, insertEventSchema,
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
-  insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema
+  insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
+  insertVideoProductOverlaySchema
 } from "@shared/schema";
 import { z } from "zod";
 
