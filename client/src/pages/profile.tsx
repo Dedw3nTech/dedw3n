@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/profile/:username");
-  const username = params?.username;
+  const username = params?.username || (currentUser ? currentUser.username : '');
   
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditing, setIsEditing] = useState(false);

@@ -81,6 +81,7 @@ function Router() {
       <ProtectedRoute path="/communities/create" component={CreateCommunityPage} />
       <ProtectedRoute path="/communities/:id" component={CommunityDetailPage} />
       <ProtectedRoute path="/communities/:id/manage" component={CommunityManagePage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
