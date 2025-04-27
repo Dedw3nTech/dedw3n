@@ -2517,6 +2517,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Membership subscription routes
+  app.post("/api/communities/:id/memberships", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      const { tierId } = req.body;
+      
+      if (!tierId) {
+        return res.status(400).json({ message: "Tier ID is required" });
+      }
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Check if tier exists and is active
+      const tier = await storage.getMembershipTier(tierId);
+      if (!tier) {
+        return res.status(404).json({ message: "Membership tier not found" });
+      }
+      
+      if (!tier.isActive) {
+        return res.status(400).json({ message: "This membership tier is not currently available" });
+      }
+      
+      // Check if tier belongs to this community
+      if (tier.communityId !== communityId) {
+        return res.status(400).json({ message: "This tier does not belong to the specified community" });
+      }
+      
+      // Check if the tier has reached its member limit
+      if (tier.maxMembers) {
+        const currentMemberCount = await storage.getTierMemberCount(tierId);
+        if (currentMemberCount >= tier.maxMembers) {
+          return res.status(400).json({ message: "This tier has reached its member limit" });
+        }
+      }
+      
+      // Check if user already has an active subscription to this community
+      const existingMembership = await storage.getUserCommunityMembership(userId, communityId);
+      if (existingMembership && existingMembership.status === "active") {
+        return res.status(400).json({ message: "You already have an active membership in this community" });
+      }
+      
+      // Calculate end date based on tier duration
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + tier.durationDays);
+      
+      // Handle payment for paid tiers (free tiers are automatically approved)
+      let paymentStatus = "paid";
+      if (tier.price > 0) {
+        // For now, we'll simulate payment success for all paid tiers
+        // In a production environment, you would integrate with a payment gateway here
+        // and set paymentStatus based on the payment result
+        paymentStatus = "paid";
+      }
+      
+      // Create the membership
+      const membership = await storage.createMembership({
+        userId,
+        tierId,
+        communityId,
+        status: "active",
+        paymentStatus,
+        startDate,
+        endDate,
+        autoRenew: true
+      });
+      
+      res.status(201).json(membership);
+    } catch (error) {
+      console.error("Failed to create membership:", error);
+      res.status(500).json({ message: "Failed to create membership" });
+    }
+  });
+  
+  app.get("/api/communities/:id/memberships/user", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.id);
+      
+      // Check if community exists
+      const community = await storage.getCommunity(communityId);
+      if (!community) {
+        return res.status(404).json({ message: "Community not found" });
+      }
+      
+      // Get user's membership for this community
+      const membership = await storage.getUserCommunityMembership(userId, communityId);
+      if (!membership) {
+        return res.status(404).json({ message: "You are not a member of this community" });
+      }
+      
+      res.json(membership);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get membership information" });
+    }
+  });
+  
+  app.get("/api/users/me/memberships", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get all user's memberships
+      const memberships = await storage.getUserMemberships(userId);
+      res.json(memberships);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user memberships" });
+    }
+  });
+  
+  app.post("/api/memberships/:id/cancel", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const membershipId = parseInt(req.params.id);
+      
+      // Check if membership exists and belongs to the user
+      const membership = await storage.getMembership(membershipId);
+      if (!membership) {
+        return res.status(404).json({ message: "Membership not found" });
+      }
+      
+      if (membership.userId !== userId) {
+        return res.status(403).json({ message: "You do not have permission to cancel this membership" });
+      }
+      
+      // Cancel the membership
+      const updatedMembership = await storage.cancelMembership(membershipId);
+      res.json(updatedMembership);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to cancel membership" });
+    }
+  });
+  
   // Events routes
   app.post("/api/communities/:id/events", isAuthenticated, async (req, res) => {
     try {
