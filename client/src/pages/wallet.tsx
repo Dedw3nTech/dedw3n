@@ -1069,7 +1069,7 @@ export default function WalletPage() {
                           <Label>{t('wallet.to')}</Label>
                           <Select
                             value={targetCurrency}
-                            onValueChange={setTargetCurrency}
+                            onValueChange={(value) => setTargetCurrency(value as CurrencyCode)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder={t('wallet.select_currency')} />

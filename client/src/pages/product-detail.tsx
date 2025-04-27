@@ -25,7 +25,9 @@ import {
 import { 
   supportedCurrencies, 
   formatCurrency, 
-  convertCurrency
+  convertCurrency,
+  CurrencyCode,
+  formatPriceWithCurrency
 } from '@/lib/currencyConverter';
 import { 
   Select,
@@ -223,7 +225,7 @@ export default function ProductDetail() {
     };
     
     updateConvertedPrices();
-  }, [product, selectedCurrency, toast]);
+  }, [product, selectedCurrency, toast, forceUpdate]);
 
   // Loading state
   if (isLoading) {
@@ -332,7 +334,7 @@ export default function ProductDetail() {
                   <div className="w-48 mr-2">
                     <Select
                       value={selectedCurrency}
-                      onValueChange={(value) => setSelectedCurrency(value)}
+                      onValueChange={(value) => setSelectedCurrency(value as CurrencyCode)}
                     >
                       <SelectTrigger className="h-9 w-full">
                         <SelectValue placeholder="Currency" />
