@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
-import fs from 'fs';
+import fs from 'fs/promises';
+import path from 'path';
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerPaymentRoutes } from "./payment";
@@ -597,14 +598,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       console.log(`[DEBUG] Updating profile for user ID: ${userId}`);
       
-      // Handle form data or JSON
+      // Handle JSON input
       const updates = req.body;
       console.log(`[DEBUG] Update data:`, updates);
+      
+      // Check if the user exists before attempting to update
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        console.error(`[ERROR] User not found with ID: ${userId}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // For now, we're handling just basic profile updates without file uploads
+      // Handle avatar URL if provided as a string (e.g., from an external service)
+      if (updates.avatarUrl) {
+        updates.avatar = updates.avatarUrl;
+        delete updates.avatarUrl; // Remove the temporary field
+      }
       
       const updatedUser = await storage.updateUser(userId, updates);
       
       if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
+        console.error(`[ERROR] Failed to update user with ID: ${userId}`);
+        return res.status(404).json({ message: "User update failed" });
       }
       
       // Remove password before sending
