@@ -13,12 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle, Brain, Sparkles } from "lucide-react";
+import { Loader2, Users, Package, ShoppingCart, BarChart, Settings, Shield, ActivitySquare, AlertTriangle, Brain, Sparkles, FileWarning } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import UserManagement from "@/components/admin/UserManagement";
 import PostModeration from "@/components/admin/PostModeration";
+import ContentModerationTools from "@/components/admin/ContentModerationTools";
 import AIInsights from "@/components/social/AIInsights";
 
 // Import placeholder component for development
@@ -38,12 +39,27 @@ const PlaceholderComponent = ({ title }: { title: string }) => (
   </Card>
 );
 
+// Define types for admin stats
+type AdminStats = {
+  userCount: number;
+  productCount: number;
+  orderCount: number;
+  communityCount: number;
+  postCount?: number;
+  reportCount?: number;
+};
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
+  const { data: stats = { 
+    userCount: 0, 
+    productCount: 0, 
+    orderCount: 0, 
+    communityCount: 0 
+  }, isLoading: isLoadingStats } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
     enabled: user?.role === "admin",
   });
@@ -210,17 +226,19 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Content Moderation
+                  <FileWarning className="h-5 w-5 text-primary" />
+                  Post Moderation
                 </CardTitle>
                 <CardDescription>
-                  Review, approve, flag, or remove user-generated content
+                  Review, approve, flag, or remove social posts and updates
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <PostModeration />
               </CardContent>
             </Card>
+            
+            <ContentModerationTools />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
