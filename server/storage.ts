@@ -2943,6 +2943,54 @@ export class MemStorage implements IStorage {
       });
   }
   
+  // Video playlist operations
+  async createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> {
+    const id = this.videoPlaylistIdCounter++;
+    const newPlaylist: VideoPlaylist = {
+      id,
+      ...playlist,
+      videoCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.videoPlaylists.set(id, newPlaylist);
+    return newPlaylist;
+  }
+  
+  async getPlaylist(id: number): Promise<VideoPlaylist | undefined> {
+    return this.videoPlaylists.get(id);
+  }
+  
+  async updatePlaylist(id: number, updates: Partial<VideoPlaylist>): Promise<VideoPlaylist | undefined> {
+    const playlist = this.videoPlaylists.get(id);
+    if (!playlist) {
+      return undefined;
+    }
+    
+    const updatedPlaylist = { 
+      ...playlist, 
+      ...updates,
+      updatedAt: new Date() 
+    };
+    
+    this.videoPlaylists.set(id, updatedPlaylist);
+    return updatedPlaylist;
+  }
+  
+  async deletePlaylist(id: number): Promise<boolean> {
+    return this.videoPlaylists.delete(id);
+  }
+  
+  async getUserPlaylists(userId: number): Promise<VideoPlaylist[]> {
+    return [...this.videoPlaylists.values()]
+      .filter(p => p.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+  
   // Playlist item operations
   async addToPlaylist(item: InsertPlaylistItem): Promise<PlaylistItem> {
     const id = this.playlistItemIdCounter++;
@@ -2952,6 +3000,14 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     };
     this.playlistItems.set(id, newItem);
+    
+    // Update the video count in the playlist
+    const playlist = this.videoPlaylists.get(item.playlistId);
+    if (playlist) {
+      playlist.videoCount = (playlist.videoCount || 0) + 1;
+      this.videoPlaylists.set(item.playlistId, playlist);
+    }
+    
     return newItem;
   }
   
@@ -2962,6 +3018,14 @@ export class MemStorage implements IStorage {
     if (!item) return false;
     
     this.playlistItems.delete(item.id);
+    
+    // Update the video count in the playlist
+    const playlist = this.videoPlaylists.get(playlistId);
+    if (playlist && playlist.videoCount && playlist.videoCount > 0) {
+      playlist.videoCount--;
+      this.videoPlaylists.set(playlistId, playlist);
+    }
+    
     return true;
   }
   
@@ -3157,44 +3221,6 @@ export class MemStorage implements IStorage {
       // A lower id number typically means a higher tier
       return userTier.id <= contentTier.id;
     });
-  }
-
-  // Add community content methods within the class
-  async createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent> {
-    const id = this.communityContentIdCounter++;
-    const newContent: CommunityContent = {
-      id,
-      ...content,
-      viewCount: 0,
-      likeCount: 0,
-      commentCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.communityContents.set(id, newContent);
-    return newContent;
-  }
-
-  async getCommunityContent(contentId: number): Promise<CommunityContent | undefined> {
-    return this.communityContents.get(contentId);
-  }
-
-  async updateCommunityContent(contentId: number, updates: Partial<CommunityContent>): Promise<CommunityContent | undefined> {
-    const content = this.communityContents.get(contentId);
-    if (!content) {
-      return undefined;
-    }
-    const updatedContent = { 
-      ...content, 
-      ...updates,
-      updatedAt: new Date() 
-    };
-    this.communityContents.set(contentId, updatedContent);
-    return updatedContent;
-  }
-
-  async deleteCommunityContent(contentId: number): Promise<boolean> {
-    return this.communityContents.delete(contentId);
   }
 
   async listCommunityContent(communityId: number): Promise<CommunityContent[]> {
