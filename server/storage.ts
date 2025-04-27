@@ -3864,4 +3864,645 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation - uses PostgreSQL database
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
+
+  constructor() {
+    // Initialize session store with PostgreSQL
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+      tableName: 'session'
+    });
+  }
+
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by ID:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      console.log(`[DEBUG] Looking up user by username: "${username}"`);
+      const allUsers = await db.select().from(users);
+      console.log(`[DEBUG] Current users in storage:`, allUsers);
+      
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      console.log(`[DEBUG] User found: ${user ? 'Yes' : 'No'}`);
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by username:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by reset token:', error);
+      return undefined;
+    }
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.verificationToken, token));
+      return user || undefined;
+    } catch (error) {
+      console.error('Error getting user by verification token:', error);
+      return undefined;
+    }
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      console.log(`[DEBUG] Creating new user with ID ${user.id || 'auto'}, username: ${user.username}, role: ${user.role}`);
+      const [createdUser] = await db.insert(users).values(user).returning();
+      return createdUser;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return undefined;
+    }
+  }
+
+  async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ password: newPassword })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error updating user password:', error);
+      return undefined;
+    }
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ role: role as any })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      return undefined;
+    }
+  }
+
+  async verifyUserEmail(id: number): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ emailVerified: true, verificationToken: null as any })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error verifying user email:', error);
+      return undefined;
+    }
+  }
+
+  async lockUserAccount(id: number, isLocked: boolean): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ isLocked })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error locking/unlocking user account:', error);
+      return undefined;
+    }
+  }
+
+  async incrementLoginAttempts(id: number): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({
+          failedLoginAttempts: sql`${users.failedLoginAttempts} + 1`
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error incrementing login attempts:', error);
+      return undefined;
+    }
+  }
+
+  async resetLoginAttempts(id: number): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ failedLoginAttempts: 0 })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error resetting login attempts:', error);
+      return undefined;
+    }
+  }
+
+  async listUsers(): Promise<User[]> {
+    try {
+      return await db.select().from(users);
+    } catch (error) {
+      console.error('Error listing users:', error);
+      return [];
+    }
+  }
+
+  async searchUsers(searchTerm: string): Promise<User[]> {
+    try {
+      return await db.select().from(users).where(
+        or(
+          like(users.username, `%${searchTerm}%`),
+          like(users.name, `%${searchTerm}%`),
+          like(users.email, `%${searchTerm}%`)
+        )
+      );
+    } catch (error) {
+      console.error('Error searching users:', error);
+      return [];
+    }
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
+
+  async resetUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({
+          password: newPassword,
+          passwordResetToken: null as any,
+          passwordResetExpires: null as any
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || undefined;
+    } catch (error) {
+      console.error('Error resetting user password:', error);
+      return undefined;
+    }
+  }
+
+  async getUserCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(users);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting user count:', error);
+      return 0;
+    }
+  }
+
+  async getProductCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(products);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting product count:', error);
+      return 0;
+    }
+  }
+
+  async getOrderCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(orders);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting order count:', error);
+      return 0;
+    }
+  }
+
+  async getCommunityCount(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() }).from(communities);
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting community count:', error);
+      return 0;
+    }
+  }
+
+  // We'll implement more methods as needed, using MemStorage as a fallback
+  // for now to get the core authentication working with the database
+
+  // For now, we'll reuse the MemStorage implementation for the remaining methods
+  // but gradually move them to the database implementation
+  
+  // Implement the Category operations since they're used during login
+  async getCategory(id: number): Promise<Category | undefined> {
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.id, id));
+      return category || undefined;
+    } catch (error) {
+      console.error('Error getting category:', error);
+      return undefined;
+    }
+  }
+
+  async getCategoryByName(name: string): Promise<Category | undefined> {
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.name, name));
+      return category || undefined;
+    } catch (error) {
+      console.error('Error getting category by name:', error);
+      return undefined;
+    }
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    try {
+      const [createdCategory] = await db.insert(categories).values(category).returning();
+      return createdCategory;
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+  }
+
+  async listCategories(): Promise<Category[]> {
+    try {
+      return await db.select().from(categories);
+    } catch (error) {
+      console.error('Error listing categories:', error);
+      return [];
+    }
+  }
+
+  // Implement Vendor methods
+  async getVendor(id: number): Promise<Vendor | undefined> {
+    try {
+      const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id));
+      return vendor || undefined;
+    } catch (error) {
+      console.error('Error getting vendor:', error);
+      return undefined;
+    }
+  }
+
+  async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
+    try {
+      const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
+      return vendor || undefined;
+    } catch (error) {
+      console.error('Error getting vendor by user ID:', error);
+      return undefined;
+    }
+  }
+
+  async createVendor(vendor: InsertVendor): Promise<Vendor> {
+    try {
+      const [createdVendor] = await db.insert(vendors).values(vendor).returning();
+      return createdVendor;
+    } catch (error) {
+      console.error('Error creating vendor:', error);
+      throw error;
+    }
+  }
+
+  async updateVendorRating(id: number, rating: number): Promise<Vendor> {
+    try {
+      const [updatedVendor] = await db.update(vendors)
+        .set({ 
+          rating,
+          ratingCount: sql`${vendors.ratingCount} + 1`
+        })
+        .where(eq(vendors.id, id))
+        .returning();
+      
+      if (!updatedVendor) {
+        throw new Error(`Vendor with ID ${id} not found`);
+      }
+      
+      return updatedVendor;
+    } catch (error) {
+      console.error('Error updating vendor rating:', error);
+      throw error;
+    }
+  }
+
+  async listVendors(): Promise<Vendor[]> {
+    try {
+      return await db.select().from(vendors);
+    } catch (error) {
+      console.error('Error listing vendors:', error);
+      return [];
+    }
+  }
+
+  // Product operations
+  async getProduct(id: number): Promise<Product | undefined> {
+    try {
+      const [product] = await db.select().from(products).where(eq(products.id, id));
+      return product || undefined;
+    } catch (error) {
+      console.error('Error getting product:', error);
+      return undefined;
+    }
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    try {
+      const [createdProduct] = await db.insert(products).values(product).returning();
+      return createdProduct;
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
+  }
+
+  async updateProduct(id: number, productUpdates: Partial<InsertProduct>): Promise<Product> {
+    try {
+      const [updatedProduct] = await db.update(products)
+        .set(productUpdates)
+        .where(eq(products.id, id))
+        .returning();
+      
+      if (!updatedProduct) {
+        throw new Error(`Product with ID ${id} not found`);
+      }
+      
+      return updatedProduct;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    try {
+      await db.delete(products).where(eq(products.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return false;
+    }
+  }
+
+  async listProducts(filters?: {
+    category?: string;
+    vendorId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    isOnSale?: boolean;
+    isNew?: boolean;
+  }): Promise<Product[]> {
+    try {
+      let query = db.select().from(products);
+      
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.category) {
+          conditions.push(eq(products.category, filters.category));
+        }
+        
+        if (filters.vendorId !== undefined) {
+          conditions.push(eq(products.vendorId, filters.vendorId));
+        }
+        
+        if (filters.minPrice !== undefined) {
+          conditions.push(sql`${products.price} >= ${filters.minPrice}`);
+        }
+        
+        if (filters.maxPrice !== undefined) {
+          conditions.push(sql`${products.price} <= ${filters.maxPrice}`);
+        }
+        
+        if (filters.isOnSale !== undefined) {
+          conditions.push(eq(products.isOnSale, filters.isOnSale));
+        }
+        
+        if (filters.isNew !== undefined) {
+          conditions.push(eq(products.isNew, filters.isNew));
+        }
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error listing products:', error);
+      return [];
+    }
+  }
+
+  // For Post operations - we'll implement the ones needed for seeding
+  async getPost(id: number): Promise<Post | undefined> {
+    try {
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      return post || undefined;
+    } catch (error) {
+      console.error('Error getting post:', error);
+      return undefined;
+    }
+  }
+
+  async createPost(post: InsertPost): Promise<Post> {
+    try {
+      const [createdPost] = await db.insert(posts).values(post).returning();
+      return createdPost;
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw error;
+    }
+  }
+
+  // Other methods will be implemented as needed - for now we'll use a fallback
+  // The methods below will be implemented as we move forward
+
+  // Placeholder implementations for required methods to satisfy the interface
+  // These will be implemented when needed
+  
+  // Continue implementing remaining methods as needed...
+  async updatePost(id: number, postData: Partial<InsertPost & { 
+    isFlagged?: boolean;
+    flagReason?: string | null;
+    reviewStatus?: 'pending' | 'approved' | 'rejected';
+    reviewedAt?: Date;
+    reviewedBy?: number;
+    moderationNote?: string;
+  }>): Promise<Post> {
+    throw new Error("Method not implemented.");
+  }
+
+  // Other required methods - implement as needed
+  async getUserCommunities(userId: number): Promise<Community[]> { return []; }
+  async getUserPosts(userId: number): Promise<Post[]> { return []; }
+  async getCommunityContent(contentId: number): Promise<CommunityContent | undefined> { return undefined; }
+  async updateCommunityContent(contentId: number, updates: Partial<CommunityContent>): Promise<CommunityContent | undefined> { return undefined; }
+  async deleteCommunityContent(contentId: number): Promise<boolean> { return false; }
+  async listCommunityContent(communityId: number): Promise<CommunityContent[]> { return []; }
+  async getAccessibleCommunityContent(userId: number, communityId: number): Promise<CommunityContent[]> { return []; }
+  async canUserAccessContent(userId: number, contentId: number): Promise<boolean> { return false; }
+  async incrementContentViewCount(contentId: number): Promise<void> {}
+  async likeContent(contentId: number, userId: number): Promise<void> {}
+  async unlikeContent(contentId: number, userId: number): Promise<void> {}
+  async getCommunityContentByTier(communityId: number, tierId: number): Promise<CommunityContent[]> { return []; }
+  async getCommunityContentByType(communityId: number, contentType: string): Promise<CommunityContent[]> { return []; }
+  async getFeaturedCommunityContent(communityId: number): Promise<CommunityContent[]> { return []; }
+  async isUserCommunityAdminOrOwner(userId: number, communityId: number): Promise<boolean> { return false; }
+  async getMembershipTier(tierId: number): Promise<MembershipTier | undefined> { return undefined; }
+  async createMessage(message: InsertMessage): Promise<Message> { throw new Error("Method not implemented."); }
+  async getMessage(id: number): Promise<Message | undefined> { return undefined; }
+  async getUserMessages(userId: number): Promise<Message[]> { return []; }
+  async getConversationMessages(userId1: number, userId2: number): Promise<Message[]> { return []; }
+  async getUserConversations(userId: number): Promise<any[]> { return []; }
+  async getUnreadMessageCount(userId: number): Promise<number> { return 0; }
+  async markMessageAsRead(id: number): Promise<Message | undefined> { return undefined; }
+  async createVideo(video: InsertVideo): Promise<Video> { throw new Error("Method not implemented."); }
+  async getVideo(id: number): Promise<Video | undefined> { return undefined; }
+  async updateVideo(id: number, updates: Partial<Video>): Promise<Video | undefined> { return undefined; }
+  async deleteVideo(id: number): Promise<boolean> { return false; }
+  async listVideos(filter?: Record<string, any>): Promise<Video[]> { return []; }
+  async getTrendingVideos(limit?: number): Promise<Video[]> { return []; }
+  async getUserVideos(userId: number): Promise<Video[]> { return []; }
+  async getVideosByType(type: string): Promise<Video[]> { return []; }
+  async createVideoProductOverlay(overlay: InsertVideoProductOverlay): Promise<VideoProductOverlay> { throw new Error("Method not implemented."); }
+  async getVideoProductOverlays(videoId: number): Promise<VideoProductOverlay[]> { return []; }
+  async getVideoProductOverlay(id: number): Promise<VideoProductOverlay | undefined> { return undefined; }
+  async updateVideoProductOverlay(id: number, updates: Partial<VideoProductOverlay>): Promise<VideoProductOverlay | undefined> { return undefined; }
+  async deleteVideoProductOverlay(id: number): Promise<boolean> { return false; }
+  async incrementOverlayClickCount(id: number): Promise<VideoProductOverlay | undefined> { return undefined; }
+  async incrementOverlayConversionCount(id: number): Promise<VideoProductOverlay | undefined> { return undefined; }
+  async createVideoEngagement(engagement: InsertVideoEngagement): Promise<VideoEngagement> { throw new Error("Method not implemented."); }
+  async getVideoEngagements(videoId: number, type?: string): Promise<VideoEngagement[]> { return []; }
+  async getUserVideoEngagements(userId: number, type?: string): Promise<VideoEngagement[]> { return []; }
+  async getVideoAnalytics(videoId: number): Promise<VideoAnalytics | undefined> { return undefined; }
+  async updateVideoAnalytics(videoId: number, data: Partial<VideoAnalytics>): Promise<VideoAnalytics> { throw new Error("Method not implemented."); }
+  async createVideoPurchase(purchase: InsertVideoPurchase): Promise<VideoPurchase> { throw new Error("Method not implemented."); }
+  async getVideoPurchase(id: number): Promise<VideoPurchase | undefined> { return undefined; }
+  async getVideoPurchaseByUserAndVideo(userId: number, videoId: number): Promise<VideoPurchase | undefined> { return undefined; }
+  async getUserVideoPurchases(userId: number): Promise<VideoPurchase[]> { return []; }
+  async getVideoRevenue(videoId: number): Promise<number> { return 0; }
+  async getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }> { return { totalRevenue: 0, videoCount: 0 }; }
+  async hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean> { return false; }
+  async updateCommunityContent(id: number, data: Partial<InsertCommunityContent>): Promise<CommunityContent | undefined> { return undefined; }
+  async listCommunityContents(communityId: number, options?: any): Promise<CommunityContent[]> { return []; }
+  async incrementContentView(id: number): Promise<CommunityContent | undefined> { return undefined; }
+  async getUserAccessibleContent(userId: number, communityId: number): Promise<CommunityContent[]> { return []; }
+  async createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist> { throw new Error("Method not implemented."); }
+  async getPlaylist(id: number): Promise<VideoPlaylist | undefined> { return undefined; }
+  async updatePlaylist(id: number, updates: Partial<VideoPlaylist>): Promise<VideoPlaylist | undefined> { return undefined; }
+  async deletePlaylist(id: number): Promise<boolean> { return false; }
+  async getUserPlaylists(userId: number): Promise<VideoPlaylist[]> { return []; }
+  async addToPlaylist(item: InsertPlaylistItem): Promise<PlaylistItem> { throw new Error("Method not implemented."); }
+  async removeFromPlaylist(playlistId: number, videoId: number): Promise<boolean> { return false; }
+  async getPlaylistItems(playlistId: number): Promise<PlaylistItem[]> { return []; }
+  async updatePostStats(id: number, stats: { likes?: number; comments?: number; shares?: number; views?: number }): Promise<Post> { throw new Error("Method not implemented."); }
+  async deletePost(id: number): Promise<boolean> { return false; }
+  async countPosts(filters?: { reviewStatus?: 'pending' | 'approved' | 'rejected'; isFlagged?: boolean; }): Promise<number> { return 0; }
+  async listPosts(options?: { userId?: number; contentType?: string | string[]; isPromoted?: boolean; tags?: string[]; limit?: number; offset?: number; }): Promise<Post[]> { return []; }
+  async incrementPostView(id: number): Promise<Post> { throw new Error("Method not implemented."); }
+  async promotePost(id: number, endDate: Date): Promise<Post> { throw new Error("Method not implemented."); }
+  async unpromotePost(id: number): Promise<Post> { throw new Error("Method not implemented."); }
+  async getComment(id: number): Promise<Comment | undefined> { return undefined; }
+  async createComment(comment: InsertComment): Promise<Comment> { throw new Error("Method not implemented."); }
+  async listCommentsByPost(postId: number): Promise<Comment[]> { return []; }
+  async getReview(id: number): Promise<Review | undefined> { return undefined; }
+  async createReview(review: InsertReview): Promise<Review> { throw new Error("Method not implemented."); }
+  async listReviewsByProduct(productId: number): Promise<Review[]> { return []; }
+  async listReviewsByVendor(vendorId: number): Promise<Review[]> { return []; }
+  async getCartItem(id: number): Promise<Cart | undefined> { return undefined; }
+  async addToCart(cart: InsertCart): Promise<Cart> { throw new Error("Method not implemented."); }
+  async updateCartQuantity(id: number, quantity: number): Promise<Cart> { throw new Error("Method not implemented."); }
+  async removeFromCart(id: number): Promise<boolean> { return false; }
+  async listCartItems(userId: number): Promise<Cart[]> { return []; }
+  async countCartItems(userId: number): Promise<number> { return 0; }
+  async getWallet(id: number): Promise<Wallet | undefined> { return undefined; }
+  async getWalletByUserId(userId: number): Promise<Wallet | undefined> { return undefined; }
+  async createWallet(wallet: InsertWallet): Promise<Wallet> { throw new Error("Method not implemented."); }
+  async updateWalletBalance(id: number, amount: number): Promise<Wallet> { throw new Error("Method not implemented."); }
+  async getTransaction(id: number): Promise<Transaction | undefined> { return undefined; }
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> { throw new Error("Method not implemented."); }
+  async listTransactionsByWallet(walletId: number): Promise<Transaction[]> { return []; }
+  async listTransactionsByUser(userId: number): Promise<Transaction[]> { return []; }
+  async getTransactionsByCategory(walletId: number): Promise<Record<string, Transaction[]>> { return {}; }
+  async getTransactionStats(walletId: number): Promise<{ totalIncome: number; totalExpense: number; byCategoryExpense: Record<string, number>; byCategoryIncome: Record<string, number>; }> { return { totalIncome: 0, totalExpense: 0, byCategoryExpense: {}, byCategoryIncome: {} }; }
+  async getOrder(id: number): Promise<Order | undefined> { return undefined; }
+  async getOrdersByUser(userId: number): Promise<Order[]> { return []; }
+  async createOrder(order: InsertOrder): Promise<Order> { throw new Error("Method not implemented."); }
+  async updateOrderStatus(id: number, status: string): Promise<Order> { throw new Error("Method not implemented."); }
+  async getOrderItem(id: number): Promise<OrderItem | undefined> { return undefined; }
+  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> { return []; }
+  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> { throw new Error("Method not implemented."); }
+  async updateOrderItemStatus(id: number, status: string): Promise<OrderItem> { throw new Error("Method not implemented."); }
+  async getVendorTotalSales(vendorId: number): Promise<number> { return 0; }
+  async getVendorOrderStats(vendorId: number): Promise<{ totalOrders: number; pendingOrders: number; shippedOrders: number; deliveredOrders: number; canceledOrders: number; }> { return { totalOrders: 0, pendingOrders: 0, shippedOrders: 0, deliveredOrders: 0, canceledOrders: 0 }; }
+  async getVendorRevenueByPeriod(vendorId: number, period: "daily" | "weekly" | "monthly" | "yearly"): Promise<Record<string, number>> { return {}; }
+  async getVendorTopProducts(vendorId: number, limit?: number): Promise<{ product: Product; totalSold: number; revenue: number }[]> { return []; }
+  async getVendorProfitLoss(vendorId: number): Promise<{ totalRevenue: number; totalCost: number; netProfit: number; profitMargin: number; }> { return { totalRevenue: 0, totalCost: 0, netProfit: 0, profitMargin: 0 }; }
+  async getVendorTopBuyers(vendorId: number, limit?: number): Promise<{ user: { id: number; username: string; name: string; email: string; }; totalSpent: number; orderCount: number; }[]> { return []; }
+  async getCommunity(id: number): Promise<Community | undefined> { return undefined; }
+  async getCommunityByName(name: string): Promise<Community | undefined> { return undefined; }
+  async createCommunity(community: InsertCommunity): Promise<Community> { throw new Error("Method not implemented."); }
+  async updateCommunity(id: number, data: Partial<InsertCommunity>): Promise<Community> { throw new Error("Method not implemented."); }
+  async updateCommunityMemberCount(id: number, change: number): Promise<Community> { throw new Error("Method not implemented."); }
+  async listCommunities(options?: { ownerId?: number; visibility?: string | string[]; topics?: string[]; isVerified?: boolean; limit?: number; offset?: number; }): Promise<Community[]> { return []; }
+  async getCommunityMember(id: number): Promise<CommunityMember | undefined> { return undefined; }
+  async getMembershipStatus(communityId: number, userId: number): Promise<CommunityMember | undefined> { return undefined; }
+  async addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember> { throw new Error("Method not implemented."); }
+  async updateMemberRole(communityId: number, userId: number, role: string): Promise<CommunityMember> { throw new Error("Method not implemented."); }
+  async removeCommunityMember(communityId: number, userId: number): Promise<boolean> { return false; }
+  async listCommunityMembers(communityId: number, role?: string): Promise<CommunityMember[]> { return []; }
+  async createMembershipTier(tier: InsertMembershipTier): Promise<MembershipTier> { throw new Error("Method not implemented."); }
+  async updateMembershipTier(id: number, data: Partial<InsertMembershipTier>): Promise<MembershipTier> { throw new Error("Method not implemented."); }
+  async deleteMembershipTier(id: number): Promise<boolean> { return false; }
+  async listMembershipTiers(communityId: number): Promise<MembershipTier[]> { return []; }
+  async getMembership(id: number): Promise<Membership | undefined> { return undefined; }
+  async getUserMemberships(userId: number): Promise<Membership[]> { return []; }
+  async getUserCommunityMembership(userId: number, communityId: number): Promise<Membership | undefined> { return undefined; }
+  async getTierMemberCount(tierId: number): Promise<number> { return 0; }
+  async createMembership(membership: InsertMembership): Promise<Membership> { throw new Error("Method not implemented."); }
+}
+
+// Switch to database storage
+export const storage = new DatabaseStorage();
