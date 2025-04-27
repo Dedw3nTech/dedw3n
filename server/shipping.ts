@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 
-export const shippingMethods = [
+// Base shipping methods (default options without specific carrier)
+export const baseShippingMethods = [
   {
     id: "standard",
     name: "Standard Shipping",
@@ -25,6 +26,146 @@ export const shippingMethods = [
   }
 ];
 
+// Carriers available in our multi-shipping system
+export const carriers = [
+  {
+    id: "fedex",
+    name: "FedEx",
+    logo: "https://cdn-icons-png.flaticon.com/512/5968/5968244.png",
+    methods: [
+      {
+        id: "fedex_ground",
+        name: "FedEx Ground",
+        description: "Delivery in 3-5 business days",
+        basePrice: 8.99,
+        freeShippingThreshold: 75,
+        estimatedDeliveryDays: 5
+      },
+      {
+        id: "fedex_express",
+        name: "FedEx Express Saver",
+        description: "Delivery in 2-3 business days",
+        basePrice: 14.99,
+        freeShippingThreshold: 120,
+        estimatedDeliveryDays: 3
+      },
+      {
+        id: "fedex_overnight",
+        name: "FedEx Overnight",
+        description: "Next business day delivery",
+        basePrice: 29.99,
+        freeShippingThreshold: 200,
+        estimatedDeliveryDays: 1
+      }
+    ]
+  },
+  {
+    id: "ups",
+    name: "UPS",
+    logo: "https://cdn-icons-png.flaticon.com/512/5968/5968304.png",
+    methods: [
+      {
+        id: "ups_ground",
+        name: "UPS Ground",
+        description: "Delivery in 4-6 business days",
+        basePrice: 7.99,
+        freeShippingThreshold: 60,
+        estimatedDeliveryDays: 6
+      },
+      {
+        id: "ups_3day",
+        name: "UPS 3-Day Select",
+        description: "Delivery in 3 business days",
+        basePrice: 13.99,
+        freeShippingThreshold: 110,
+        estimatedDeliveryDays: 3
+      },
+      {
+        id: "ups_2day",
+        name: "UPS 2nd Day Air",
+        description: "Delivery in 2 business days",
+        basePrice: 19.99,
+        freeShippingThreshold: 150,
+        estimatedDeliveryDays: 2
+      }
+    ]
+  },
+  {
+    id: "usps",
+    name: "USPS",
+    logo: "https://cdn-icons-png.flaticon.com/512/5968/5968399.png",
+    methods: [
+      {
+        id: "usps_first",
+        name: "USPS First Class",
+        description: "Delivery in 3-5 business days",
+        basePrice: 5.99,
+        freeShippingThreshold: 30,
+        estimatedDeliveryDays: 5
+      },
+      {
+        id: "usps_priority",
+        name: "USPS Priority Mail",
+        description: "Delivery in 1-3 business days",
+        basePrice: 10.99,
+        freeShippingThreshold: 90,
+        estimatedDeliveryDays: 3
+      },
+      {
+        id: "usps_express",
+        name: "USPS Priority Mail Express",
+        description: "Next business day delivery",
+        basePrice: 25.99,
+        freeShippingThreshold: 180,
+        estimatedDeliveryDays: 1
+      }
+    ]
+  },
+  {
+    id: "dhl",
+    name: "DHL",
+    logo: "https://cdn-icons-png.flaticon.com/512/5968/5968249.png",
+    methods: [
+      {
+        id: "dhl_economy",
+        name: "DHL Economy Select",
+        description: "Delivery in 5-7 business days",
+        basePrice: 9.99,
+        freeShippingThreshold: 80,
+        estimatedDeliveryDays: 7
+      },
+      {
+        id: "dhl_express",
+        name: "DHL Express",
+        description: "Delivery in 2-3 business days",
+        basePrice: 16.99,
+        freeShippingThreshold: 130,
+        estimatedDeliveryDays: 3
+      },
+      {
+        id: "dhl_overnight",
+        name: "DHL Express Overnight",
+        description: "Next business day delivery",
+        basePrice: 27.99,
+        freeShippingThreshold: 190,
+        estimatedDeliveryDays: 1
+      }
+    ]
+  }
+];
+
+// Legacy support - returns all shipping methods from all carriers flattened
+export const shippingMethods = [
+  ...baseShippingMethods,
+  ...carriers.flatMap(carrier => 
+    carrier.methods.map(method => ({
+      ...method,
+      carrier: carrier.name,
+      carrierLogo: carrier.logo
+    }))
+  )
+];
+
 /**
  * Calculate shipping cost based on order total and shipping method
  */
@@ -44,14 +185,100 @@ export function calculateShippingCost(orderTotal: number, shippingMethodId: stri
 }
 
 /**
- * Get available shipping methods
+ * Get available shipping methods (legacy)
  */
 export function getShippingMethods(req: Request, res: Response) {
   res.json(shippingMethods);
 }
 
 /**
- * Calculate shipping cost for an order
+ * Get carrier-based shipping options
+ */
+export function getCarrierShippingOptions(req: Request, res: Response) {
+  res.json(carriers);
+}
+
+/**
+ * Get shipping rates for a specific carrier
+ */
+export function getCarrierRates(req: Request, res: Response) {
+  const carrierId = req.params.carrierId;
+  const carrier = carriers.find(c => c.id === carrierId);
+  
+  if (!carrier) {
+    return res.status(404).json({ error: `Carrier with ID ${carrierId} not found` });
+  }
+  
+  const schema = z.object({
+    orderTotal: z.number().min(0),
+    weight: z.number().min(0).optional(),
+    destination: z.object({
+      country: z.string(),
+      postalCode: z.string(),
+      state: z.string().optional(),
+      city: z.string().optional()
+    })
+  });
+
+  try {
+    const { orderTotal, weight = 1, destination } = schema.parse(req.body);
+    
+    // In a real API integration, we would call the shipping carrier's API here
+    // For demonstration purposes, we're using our predefined rates with some randomization
+    // to simulate real-time rate calculation
+    
+    const shippingRates = carrier.methods.map(method => {
+      // Calculate the base cost
+      let cost = method.basePrice;
+      
+      // Adjust for order total (free shipping threshold)
+      if (orderTotal >= method.freeShippingThreshold) {
+        cost = 0;
+      }
+      
+      // Adjust for weight (add a bit extra for heavier packages)
+      if (weight > 2) {
+        const weightFactor = Math.min(weight - 1, 20) / 10; // Cap at 3x for super heavy items
+        cost = cost * (1 + weightFactor);
+      }
+      
+      // Add a small random variation to simulate real rates (+/- 10%)
+      const variationFactor = 0.9 + (Math.random() * 0.2);
+      cost = cost * variationFactor;
+      
+      // Calculate delivery date
+      const today = new Date();
+      const deliveryDate = new Date(today);
+      deliveryDate.setDate(today.getDate() + method.estimatedDeliveryDays);
+      
+      return {
+        id: method.id,
+        name: method.name,
+        description: method.description,
+        cost: parseFloat(cost.toFixed(2)),
+        estimatedDeliveryDays: method.estimatedDeliveryDays,
+        estimatedDeliveryDate: deliveryDate.toISOString().split('T')[0], // YYYY-MM-DD
+        guaranteedDelivery: method.id.includes('overnight'),
+        carrier: carrier.name,
+        carrierId: carrier.id,
+        carrierLogo: carrier.logo
+      };
+    });
+    
+    res.json(shippingRates);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unexpected error occurred" });
+    }
+  }
+}
+
+/**
+ * Calculate shipping cost for an order (legacy)
  */
 export function calculateShipping(req: Request, res: Response) {
   const schema = z.object({
@@ -72,6 +299,78 @@ export function calculateShipping(req: Request, res: Response) {
       res.status(400).json({ error: error.errors });
     } else if (error instanceof Error) {
       res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "An unexpected error occurred" });
+    }
+  }
+}
+
+/**
+ * Get all available shipping rates from all carriers in one request
+ */
+export function getAllShippingRates(req: Request, res: Response) {
+  const schema = z.object({
+    orderTotal: z.number().min(0),
+    weight: z.number().min(0).optional(),
+    destination: z.object({
+      country: z.string(),
+      postalCode: z.string(),
+      state: z.string().optional(),
+      city: z.string().optional()
+    })
+  });
+
+  try {
+    const { orderTotal, weight = 1, destination } = schema.parse(req.body);
+    
+    // Get rates from all carriers
+    const allRates = carriers.flatMap(carrier => {
+      return carrier.methods.map(method => {
+        // Calculate the base cost
+        let cost = method.basePrice;
+        
+        // Adjust for order total (free shipping threshold)
+        if (orderTotal >= method.freeShippingThreshold) {
+          cost = 0;
+        }
+        
+        // Adjust for weight
+        if (weight > 2) {
+          const weightFactor = Math.min(weight - 1, 20) / 10;
+          cost = cost * (1 + weightFactor);
+        }
+        
+        // Add a small random variation
+        const variationFactor = 0.9 + (Math.random() * 0.2);
+        cost = cost * variationFactor;
+        
+        // Calculate delivery date
+        const today = new Date();
+        const deliveryDate = new Date(today);
+        deliveryDate.setDate(today.getDate() + method.estimatedDeliveryDays);
+        
+        return {
+          id: method.id,
+          name: method.name,
+          description: method.description,
+          cost: parseFloat(cost.toFixed(2)),
+          estimatedDeliveryDays: method.estimatedDeliveryDays,
+          estimatedDeliveryDate: deliveryDate.toISOString().split('T')[0],
+          guaranteedDelivery: method.id.includes('overnight'),
+          carrier: carrier.name,
+          carrierId: carrier.id,
+          carrierLogo: carrier.logo
+        };
+      });
+    });
+    
+    // Sort by cost (cheapest first)
+    allRates.sort((a, b) => a.cost - b.cost);
+    
+    res.json(allRates);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
     } else {
       res.status(500).json({ error: "An unexpected error occurred" });
     }
