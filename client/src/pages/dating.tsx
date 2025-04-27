@@ -23,6 +23,7 @@ type DatingProfile = {
   username: string;
   name: string;
   avatar: string | null;
+  photos: string[]; // Array of photo URLs
   bio: string;
   relationshipPreference: RelationshipPreference;
   isActive: boolean;
@@ -60,6 +61,11 @@ const sampleProfiles: DatingProfile[] = [
     username: "jessica_m",
     name: "Jessica Miller",
     avatar: null,
+    photos: [
+      "/images/profile1-photo1.jpg", 
+      "/images/profile1-photo2.jpg", 
+      "/images/profile1-photo3.jpg"
+    ],
     bio: "Love hiking and outdoor activities. Looking for someone who shares my passion for adventure!",
     relationshipPreference: "dating",
     isActive: true,
@@ -80,6 +86,12 @@ const sampleProfiles: DatingProfile[] = [
     username: "mark_johnson",
     name: "Mark Johnson",
     avatar: null,
+    photos: [
+      "/images/profile2-photo1.jpg", 
+      "/images/profile2-photo2.jpg", 
+      "/images/profile2-photo3.jpg",
+      "/images/profile2-photo4.jpg"
+    ],
     bio: "Tech enthusiast and coffee lover. Looking for meaningful connections.",
     relationshipPreference: "meeting",
     isActive: true,
@@ -100,6 +112,11 @@ const sampleProfiles: DatingProfile[] = [
     username: "sara_p",
     name: "Sara Parker",
     avatar: null,
+    photos: [
+      "/images/profile3-photo1.jpg", 
+      "/images/profile3-photo2.jpg", 
+      "/images/profile3-photo3.jpg"
+    ],
     bio: "Art teacher who loves painting and good conversations. Looking for someone special.",
     relationshipPreference: "marriage",
     isActive: true,
@@ -141,14 +158,55 @@ export default function DatingPage() {
   const [wishlistItemPrice, setWishlistItemPrice] = useState("");
   const [myWishlist, setMyWishlist] = useState<WishlistItem[]>([]);
   const [matches, setMatches] = useState<Match[]>([sampleMatch]); // Sample match data
+  const [myPhotos, setMyPhotos] = useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  
+  // Handle photo upload
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const files = Array.from(e.target.files);
+    const newPhotos = [...photoUrls];
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          newPhotos.push(e.target.result as string);
+          setPhotoUrls([...newPhotos]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  
+  // Remove a photo
+  const handleRemovePhoto = (index: number) => {
+    const newPhotos = [...photoUrls];
+    newPhotos.splice(index, 1);
+    setPhotoUrls(newPhotos);
+  };
   
   // Handling form submission
   const handleSaveProfile = () => {
+    // Photo validation - require at least 3 photos
+    if (photoUrls.length < 3) {
+      toast({
+        title: "More photos needed",
+        description: "Please upload at least 3 photos to your profile.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // In a real app, this would send data to the backend
     toast({
       title: "Profile Updated",
       description: "Your dating profile has been updated successfully.",
     });
+    
+    // Set photos to the profile
+    setMyPhotos(photoUrls);
     
     // Toggle profile active status
     setIsProfileActive(true);
@@ -239,6 +297,36 @@ export default function DatingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sampleProfiles.map((profile) => (
                 <Card key={profile.id} className="overflow-hidden">
+                  {/* Photo Gallery */}
+                  <div className="relative">
+                    {/* Main profile photo */}
+                    <div className="relative w-full h-48 overflow-hidden">
+                      <img 
+                        src={profile.photos[0] || "/images/profile-placeholder.jpg"} 
+                        alt={`${profile.name}'s profile`}
+                        className="w-full h-full object-cover transition-all hover:scale-105"
+                      />
+                    </div>
+                    
+                    {/* Photo thumbnails */}
+                    <div className="absolute bottom-2 right-2 flex space-x-1">
+                      {profile.photos.slice(1, 4).map((photo, index) => (
+                        <div key={index} className="w-8 h-8 rounded-md overflow-hidden border border-white">
+                          <img 
+                            src={photo} 
+                            alt={`${profile.name}'s photo ${index + 2}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                      {profile.photos.length > 4 && (
+                        <div className="w-8 h-8 rounded-md bg-black/60 flex items-center justify-center text-white text-xs border border-white">
+                          +{profile.photos.length - 4}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
@@ -373,6 +461,58 @@ export default function DatingPage() {
                     value={interests}
                     onChange={(e) => setInterests(e.target.value)} 
                   />
+                </div>
+                
+                {/* Photo Upload Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Profile Photos</Label>
+                    <Badge variant={photoUrls.length >= 3 ? "default" : "destructive"}>
+                      {photoUrls.length >= 3 ? `${photoUrls.length} Photos Added` : `At least 3 photos required (${photoUrls.length}/3)`}
+                    </Badge>
+                  </div>
+                  
+                  {/* Photo Gallery Grid */}
+                  {photoUrls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {photoUrls.map((photo, index) => (
+                        <div key={index} className="relative rounded-md overflow-hidden aspect-square">
+                          <img 
+                            src={photo} 
+                            alt={`Profile photo ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 rounded-full"
+                            onClick={() => handleRemovePhoto(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                          {index === 0 && (
+                            <Badge className="absolute bottom-1 left-1">
+                              Main Photo
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="photos" className="text-sm text-muted-foreground">
+                      Upload at least 3 photos for your profile (first photo will be your main profile picture)
+                    </Label>
+                    <Input
+                      id="photos"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="cursor-pointer"
+                      onChange={handlePhotoUpload}
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
