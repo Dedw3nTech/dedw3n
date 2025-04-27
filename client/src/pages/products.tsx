@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
+import { useMarketType } from '@/hooks/use-market-type';
 import {
   Card,
   CardContent,
@@ -31,6 +32,7 @@ export default function Products() {
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
+  const { marketType, marketTypeLabel } = useMarketType();
 
   // Fetch products
   const {
@@ -155,7 +157,16 @@ export default function Products() {
     }
 
     return filteredProducts.map((product: any) => (
-      <Card key={product.id} className="overflow-hidden flex flex-col">
+      <Card 
+        key={product.id} 
+        className={`overflow-hidden flex flex-col ${
+          marketType === 'c2c' 
+            ? 'border-blue-200 hover:border-blue-300' 
+            : marketType === 'b2c' 
+              ? 'border-green-200 hover:border-green-300' 
+              : 'border-purple-200 hover:border-purple-300'
+        } transition-colors`}
+      >
         <div 
           className="aspect-square bg-gray-100 relative overflow-hidden group"
           onClick={() => setLocation(`/product/${product.id}`)}
@@ -174,10 +185,27 @@ export default function Products() {
           
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isNew && (
-              <Badge className="bg-blue-500">New</Badge>
+              <Badge className={marketType === 'c2c' ? 'bg-blue-500' : marketType === 'b2c' ? 'bg-green-500' : 'bg-purple-500'}>
+                New
+              </Badge>
             )}
             {product.isOnSale && (
               <Badge className="bg-red-500">Sale</Badge>
+            )}
+            
+            {/* B2B badge for minimum quantities */}
+            {marketType === 'b2b' && (
+              <Badge className="bg-gray-700">Min qty: 10</Badge>
+            )}
+
+            {/* Verified seller badge for B2C */}
+            {marketType === 'b2c' && product.vendorId % 2 === 0 && (
+              <Badge className="bg-green-600">Verified</Badge>
+            )}
+
+            {/* Friend indicator for C2C */}
+            {marketType === 'c2c' && product.vendorId % 3 === 0 && (
+              <Badge className="bg-blue-600">Friend</Badge>
             )}
           </div>
         </div>
@@ -190,21 +218,48 @@ export default function Products() {
           <div className="line-clamp-2 text-sm text-gray-600 mb-2">
             {product.description}
           </div>
+          
+          {/* Additional info based on market type */}
+          {marketType === 'b2b' && (
+            <div className="text-xs mt-1 text-gray-500">
+              <span className="font-medium">Volume discount available</span>
+            </div>
+          )}
+          {marketType === 'c2c' && (
+            <div className="text-xs mt-1 text-gray-500">
+              <span>Listed by User{product.vendorId}</span>
+            </div>
+          )}
         </CardContent>
         
         <CardFooter className="flex justify-between items-center">
           <div>
             {product.discountPrice ? (
               <div className="flex items-center">
-                <div className="font-bold text-primary">{formatPrice(product.discountPrice)}</div>
+                <div className={`font-bold ${
+                  marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
+                }`}>
+                  {formatPrice(product.discountPrice)}
+                  {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
+                </div>
                 <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
               </div>
             ) : (
-              <div className="font-bold">{formatPrice(product.price)}</div>
+              <div className={`font-bold ${
+                  marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
+                }`}>
+                {formatPrice(product.price)}
+                {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
+              </div>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={() => setLocation(`/product/${product.id}`)}>
-            View
+          <Button 
+            variant={marketType === 'c2c' ? 'outline' : 'default'} 
+            size="sm" 
+            onClick={() => setLocation(`/product/${product.id}`)}
+            className={marketType === 'b2c' ? 'bg-green-600 hover:bg-green-700' : marketType === 'b2b' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+          >
+            {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Shop' : 'Bulk Buy'}
           </Button>
         </CardFooter>
       </Card>
@@ -283,6 +338,79 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Market-specific filters */}
+      {marketType === 'c2c' && (
+        <div>
+          <h3 className="text-lg font-medium mb-2">Friend Options</h3>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="friends-only"
+              />
+              <Label htmlFor="friends-only" className="text-sm">Friends only</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="local-only"
+              />
+              <Label htmlFor="local-only" className="text-sm">Local pickup only</Label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {marketType === 'b2c' && (
+        <div>
+          <h3 className="text-lg font-medium mb-2">Store Options</h3>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="verified-only"
+              />
+              <Label htmlFor="verified-only" className="text-sm">Verified stores only</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="free-shipping"
+              />
+              <Label htmlFor="free-shipping" className="text-sm">Free shipping</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="next-day-delivery"
+              />
+              <Label htmlFor="next-day-delivery" className="text-sm">Next day delivery</Label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {marketType === 'b2b' && (
+        <div>
+          <h3 className="text-lg font-medium mb-2">Business Options</h3>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="bulk-discount"
+              />
+              <Label htmlFor="bulk-discount" className="text-sm">Volume discounts</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="wholesale-only"
+              />
+              <Label htmlFor="wholesale-only" className="text-sm">Wholesale only</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="tax-exempt"
+              />
+              <Label htmlFor="tax-exempt" className="text-sm">Tax exempt eligible</Label>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Button
         variant="outline"
         onClick={resetFilters}
@@ -295,7 +423,7 @@ export default function Products() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Products</h1>
         
         {/* Mobile filter button */}
@@ -318,6 +446,43 @@ export default function Products() {
             </div>
           </SheetContent>
         </Sheet>
+      </div>
+      
+      {/* Market type banner */}
+      <div className={`p-4 mb-6 rounded-lg ${
+        marketType === 'c2c' 
+          ? 'bg-blue-50 border border-blue-200' 
+          : marketType === 'b2c' 
+            ? 'bg-green-50 border border-green-200' 
+            : 'bg-purple-50 border border-purple-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">
+              {marketType === 'c2c' 
+                ? '👥 Friend-to-Friend Marketplace' 
+                : marketType === 'b2c' 
+                  ? '🏪 Store Marketplace' 
+                  : '🏢 Business Marketplace'}
+            </h2>
+            <p className="text-sm text-gray-600">
+              {marketType === 'c2c' 
+                ? 'Browse products from other users in your community. Perfect for finding unique and second-hand items.' 
+                : marketType === 'b2c' 
+                  ? 'Shop products from verified stores and businesses. Expect quality products and reliable shipping.' 
+                  : 'Wholesale products for businesses. Bulk quantities, competitive pricing, and B2B services.'}
+            </p>
+          </div>
+          <div className={`text-sm font-medium px-3 py-1 rounded-full ${
+            marketType === 'c2c' 
+              ? 'bg-blue-100 text-blue-800' 
+              : marketType === 'b2c' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-purple-100 text-purple-800'
+          }`}>
+            {marketTypeLabel}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
