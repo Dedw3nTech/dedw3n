@@ -63,9 +63,9 @@ const sampleProfiles: DatingProfile[] = [
     name: "Jessica Miller",
     avatar: null,
     photos: [
-      "https://via.placeholder.com/400x400?text=Jessica+1", 
-      "https://via.placeholder.com/400x400?text=Jessica+2", 
-      "https://via.placeholder.com/400x400?text=Jessica+3"
+      "https://placehold.co/400x400/purple/white?text=Jessica+1", 
+      "https://placehold.co/400x400/purple/white?text=Jessica+2", 
+      "https://placehold.co/400x400/purple/white?text=Jessica+3"
     ],
     bio: "Love hiking and outdoor activities. Looking for someone who shares my passion for adventure!",
     relationshipPreference: "dating",
@@ -76,7 +76,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 1,
         name: "Hiking Boots",
         price: 129.99,
-        imageUrl: "https://via.placeholder.com/100x100?text=Hiking+Boots",
+        imageUrl: "https://placehold.co/100x100/green/white?text=Hiking+Boots",
         link: "/product/123"
       }
     ]
@@ -88,10 +88,10 @@ const sampleProfiles: DatingProfile[] = [
     name: "Mark Johnson",
     avatar: null,
     photos: [
-      "https://via.placeholder.com/400x400?text=Mark+1", 
-      "https://via.placeholder.com/400x400?text=Mark+2", 
-      "https://via.placeholder.com/400x400?text=Mark+3",
-      "https://via.placeholder.com/400x400?text=Mark+4"
+      "https://placehold.co/400x400/blue/white?text=Mark+1", 
+      "https://placehold.co/400x400/blue/white?text=Mark+2", 
+      "https://placehold.co/400x400/blue/white?text=Mark+3",
+      "https://placehold.co/400x400/blue/white?text=Mark+4"
     ],
     bio: "Tech enthusiast and coffee lover. Looking for meaningful connections.",
     relationshipPreference: "meeting",
@@ -102,7 +102,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 2,
         name: "Coffee Machine",
         price: 199.99,
-        imageUrl: "https://via.placeholder.com/100x100?text=Coffee+Machine",
+        imageUrl: "https://placehold.co/100x100/brown/white?text=Coffee+Machine",
         link: "/product/456"
       }
     ]
@@ -114,9 +114,9 @@ const sampleProfiles: DatingProfile[] = [
     name: "Sara Parker",
     avatar: null,
     photos: [
-      "https://via.placeholder.com/400x400?text=Sara+1", 
-      "https://via.placeholder.com/400x400?text=Sara+2", 
-      "https://via.placeholder.com/400x400?text=Sara+3"
+      "https://placehold.co/400x400/pink/white?text=Sara+1", 
+      "https://placehold.co/400x400/pink/white?text=Sara+2", 
+      "https://placehold.co/400x400/pink/white?text=Sara+3"
     ],
     bio: "Art teacher who loves painting and good conversations. Looking for someone special.",
     relationshipPreference: "marriage",
@@ -127,7 +127,7 @@ const sampleProfiles: DatingProfile[] = [
         id: 3,
         name: "Art Supplies Set",
         price: 79.99,
-        imageUrl: "https://via.placeholder.com/100x100?text=Art+Supplies",
+        imageUrl: "https://placehold.co/100x100/purple/white?text=Art+Supplies",
         link: "/product/789"
       }
     ]
@@ -251,7 +251,7 @@ export default function DatingPage() {
       id: myWishlist.length + 1,
       name: wishlistItem,
       price: parseFloat(wishlistItemPrice),
-      imageUrl: "https://via.placeholder.com/100x100?text=Gift",
+      imageUrl: "https://placehold.co/100x100/teal/white?text=Gift",
       link: `/product/${wishlistItem.toLowerCase().replace(/\s+/g, '-')}`
     };
     
@@ -303,7 +303,7 @@ export default function DatingPage() {
                     {/* Main profile photo */}
                     <div className="relative w-full h-48 overflow-hidden">
                       <img 
-                        src={profile.photos[0] || "https://via.placeholder.com/400x400?text=Profile+Photo"} 
+                        src={profile.photos[0] || "https://placehold.co/400x400/gray/white?text=Profile+Photo"} 
                         alt={`${profile.name}'s profile`}
                         className="w-full h-full object-cover transition-all hover:scale-105"
                       />
@@ -314,7 +314,7 @@ export default function DatingPage() {
                       {profile.photos.slice(1, 4).map((photo, index) => (
                         <div key={index} className="w-8 h-8 rounded-md overflow-hidden border border-white">
                           <img 
-                            src={photo || "https://via.placeholder.com/100x100?text=Photo"} 
+                            src={photo || "https://placehold.co/100x100/gray/white?text=Photo"} 
                             alt={`${profile.name}'s photo ${index + 2}`}
                             className="w-full h-full object-cover"
                           />
