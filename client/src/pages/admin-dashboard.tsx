@@ -43,6 +43,7 @@ import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard"
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { 
@@ -87,8 +88,40 @@ type AdminStats = {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeSetting, setActiveSetting] = useState("general");
+  const [isSettingsSaved, setIsSettingsSaved] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  
+  // Handler for saving settings
+  const handleSaveSettings = () => {
+    setIsSettingsSaved(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSettingsSaved(false);
+      toast({
+        title: "Settings saved",
+        description: "Your system settings have been updated successfully.",
+        variant: "default",
+      });
+    }, 800);
+  };
+  
+  // Handler for resetting settings to defaults
+  const handleResetSettings = () => {
+    setIsResetting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsResetting(false);
+      toast({
+        title: "Settings reset",
+        description: "Your system settings have been reset to default values.",
+        variant: "default",
+      });
+    }, 800);
+  };
   
   const { data: stats = { 
     userCount: 0, 
@@ -822,8 +855,33 @@ export default function AdminDashboard() {
 
                     {/* Save Settings Button */}
                     <div className="pt-4 flex justify-end gap-2">
-                      <Button variant="outline">Reset to Defaults</Button>
-                      <Button>Save Settings</Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleResetSettings} 
+                        disabled={isResetting || isSettingsSaved}
+                      >
+                        {isResetting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Resetting...
+                          </>
+                        ) : (
+                          "Reset to Defaults"
+                        )}
+                      </Button>
+                      <Button 
+                        onClick={handleSaveSettings} 
+                        disabled={isSettingsSaved || isResetting}
+                      >
+                        {isSettingsSaved ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Settings"
+                        )}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
