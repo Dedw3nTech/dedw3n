@@ -9,6 +9,7 @@ import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
+import { registerExclusiveContentRoutes } from "./exclusive-content";
 import { seedDatabase } from "./seed";
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -309,6 +310,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register subscription payment routes
   registerSubscriptionPaymentRoutes(app);
+  
+  // Register exclusive content routes
+  registerExclusiveContentRoutes(app);
   
   // Update user profile
   app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
