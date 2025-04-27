@@ -128,6 +128,11 @@ export function setupAuth(app: Express) {
         }
         
         console.log(`[DEBUG] User ${user.username} logged in after registration`);
+        
+        // Double-check authentication status
+        console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
+        console.log(`[DEBUG] User in session:`, req.user);
+        
         // Return user without password
         const { password, ...userWithoutPassword } = user;
         res.status(201).json(userWithoutPassword);
@@ -165,9 +170,15 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/auth/me", (req, res) => {
+    console.log(`[DEBUG] /api/auth/me - isAuthenticated: ${req.isAuthenticated()}`);
+    
     if (!req.isAuthenticated()) {
+      console.log(`[DEBUG] /api/auth/me - Session ID: ${req.sessionID}`);
+      console.log(`[DEBUG] /api/auth/me - Session:`, req.session);
       return res.status(401).json({ message: "Not authenticated" });
     }
+    
+    console.log(`[DEBUG] /api/auth/me - User in session:`, req.user);
     
     // Return user without password
     const { password, ...userWithoutPassword } = req.user as SelectUser;
