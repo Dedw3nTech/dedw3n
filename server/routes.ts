@@ -18,7 +18,7 @@ import {
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
   insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
-  insertVideoProductOverlaySchema
+  insertVideoProductOverlaySchema, insertCommunityContentSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -3012,6 +3012,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date().toISOString()
       }));
       socket.close();
+    }
+  });
+
+  // Community Content Routes
+  
+  // Get all content for a community (with filtering and pagination)
+  app.get("/api/communities/:communityId/content", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Extract query parameters for filtering
+      const { contentType, tierId, isFeatured, creatorId, limit, offset } = req.query;
+      
+      // Build options object with proper type conversion
+      const options: any = {};
+      if (contentType) options.contentType = contentType as string;
+      if (tierId) options.tierId = parseInt(tierId as string);
+      if (isFeatured) options.isFeatured = isFeatured === 'true';
+      if (creatorId) options.creatorId = parseInt(creatorId as string);
+      if (limit) options.limit = parseInt(limit as string);
+      if (offset) options.offset = parseInt(offset as string);
+      
+      const contents = await storage.listCommunityContents(communityId, options);
+      res.json(contents);
+    } catch (error) {
+      console.error("Error fetching community content:", error);
+      res.status(500).json({ message: "Failed to fetch community content" });
+    }
+  });
+  
+  // Get accessible content for the authenticated user
+  app.get("/api/communities/:communityId/accessible-content", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.communityId);
+      
+      const accessibleContent = await storage.getUserAccessibleContent(userId, communityId);
+      res.json(accessibleContent);
+    } catch (error) {
+      console.error("Error fetching accessible content:", error);
+      res.status(500).json({ message: "Failed to fetch accessible content" });
+    }
+  });
+  
+  // Get a specific content item
+  app.get("/api/community-content/:contentId", async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      const content = await storage.getCommunityContent(contentId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Increment view count if user is authenticated
+      if (req.isAuthenticated()) {
+        await storage.incrementContentView(contentId);
+      }
+      
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching content item:", error);
+      res.status(500).json({ message: "Failed to fetch content item" });
+    }
+  });
+  
+  // Create a new content item (requires authentication)
+  app.post("/api/communities/:communityId/content", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const communityId = parseInt(req.params.communityId);
+      
+      // Check if user is a member with permission to create content
+      const membership = await storage.getUserCommunityMembership(userId, communityId);
+      if (!membership) {
+        return res.status(403).json({ message: "You must be a member of this community to create content" });
+      }
+      
+      // Validate the data using the insert schema
+      const validatedData = insertCommunityContentSchema.parse({
+        ...req.body,
+        communityId,
+        creatorId: userId,
+      });
+      
+      const newContent = await storage.createCommunityContent(validatedData);
+      res.status(201).json(newContent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      console.error("Error creating content:", error);
+      res.status(500).json({ message: "Failed to create content" });
+    }
+  });
+  
+  // Update a content item (creator only)
+  app.patch("/api/community-content/:contentId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const contentId = parseInt(req.params.contentId);
+      
+      // Get the content item
+      const content = await storage.getCommunityContent(contentId);
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Check if user is the creator
+      if (content.creatorId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own content" });
+      }
+      
+      // Update the content
+      const updatedContent = await storage.updateCommunityContent(contentId, req.body);
+      res.json(updatedContent);
+    } catch (error) {
+      console.error("Error updating content:", error);
+      res.status(500).json({ message: "Failed to update content" });
+    }
+  });
+  
+  // Delete a content item (creator only)
+  app.delete("/api/community-content/:contentId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const contentId = parseInt(req.params.contentId);
+      
+      // Get the content item
+      const content = await storage.getCommunityContent(contentId);
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Check if user is the creator
+      if (content.creatorId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own content" });
+      }
+      
+      // Delete the content
+      const success = await storage.deleteCommunityContent(contentId);
+      if (success) {
+        res.status(200).json({ message: "Content deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete content" });
+      }
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      res.status(500).json({ message: "Failed to delete content" });
     }
   });
 
