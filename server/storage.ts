@@ -638,11 +638,27 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
+    const now = new Date();
+    
+    // Initialize user with all security fields and defaults
     const newUser: User = {
       id,
       ...user,
-      createdAt: new Date(),
+      role: user.role || 'user',
+      lastLogin: now,
+      failedLoginAttempts: 0,
+      isLocked: false,
+      passwordResetToken: null,
+      passwordResetExpires: null, 
+      emailVerified: false,
+      verificationToken: null,
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      createdAt: now,
+      updatedAt: now
     };
+    
+    console.log(`[DEBUG] Creating new user with ID ${id}, username: ${user.username}, role: ${newUser.role}`);
     this.users.set(id, newUser);
     return newUser;
   }
@@ -653,7 +669,123 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
-    const updatedUser = { ...user, ...updates };
+    const updatedUser = { 
+      ...user, 
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      password: newPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      failedLoginAttempts: 0,
+      isLocked: false,
+      updatedAt: new Date() 
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserRole(id: number, role: "user" | "admin" | "moderator" | "vendor"): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    // Validate role is one of the allowed values
+    if (!["user", "admin", "moderator", "vendor"].includes(role)) {
+      throw new Error(`Invalid role: ${role}. Must be one of: user, admin, moderator, vendor`);
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      role,
+      updatedAt: new Date() 
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async verifyUserEmail(id: number): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      emailVerified: true,
+      verificationToken: null,
+      updatedAt: new Date() 
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async lockUserAccount(id: number, isLocked: boolean): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      isLocked,
+      updatedAt: new Date() 
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async incrementLoginAttempts(id: number): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+    const isLocked = failedAttempts >= 5; // Lock after 5 failed attempts
+    
+    const updatedUser = { 
+      ...user, 
+      failedLoginAttempts: failedAttempts,
+      isLocked: isLocked ? true : user.isLocked,
+      updatedAt: new Date() 
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async resetLoginAttempts(id: number): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      failedLoginAttempts: 0,
+      lastLogin: new Date(),
+      updatedAt: new Date() 
+    };
+    
     this.users.set(id, updatedUser);
     return updatedUser;
   }
