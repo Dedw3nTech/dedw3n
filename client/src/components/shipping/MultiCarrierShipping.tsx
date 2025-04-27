@@ -69,12 +69,30 @@ export default function MultiCarrierShipping({ orderTotal, onShippingMethodChang
         setShippingRates(rates);
         
         // Organize rates by carrier
-        const ratesByCarrier: Record<string, ShippingRate[]> = {};
+        const ratesByCarrier: Record<string, ShippingRate[]> = {
+          fedex: [],
+          ups: [],
+          usps: [],
+          dhl: [],
+          others: []
+        };
+        
         rates.forEach((rate: ShippingRate) => {
-          if (!ratesByCarrier[rate.carrierId]) {
-            ratesByCarrier[rate.carrierId] = [];
+          // Make sure we have valid carrier ID
+          const carrierId = rate.carrierId || "others";
+          
+          // Check if this is one of our main carriers, otherwise put in "others"
+          if (["fedex", "ups", "usps", "dhl"].includes(carrierId)) {
+            if (!ratesByCarrier[carrierId]) {
+              ratesByCarrier[carrierId] = [];
+            }
+            ratesByCarrier[carrierId].push(rate);
+          } else {
+            if (!ratesByCarrier["others"]) {
+              ratesByCarrier["others"] = [];
+            }
+            ratesByCarrier["others"].push(rate);
           }
-          ratesByCarrier[rate.carrierId].push(rate);
         });
         
         setCarrierRates(ratesByCarrier);
@@ -112,9 +130,13 @@ export default function MultiCarrierShipping({ orderTotal, onShippingMethodChang
             
             setShippingRates(convertedRates);
             
-            // Create a single carrier for legacy methods
+            // Create a single carrier for legacy methods (put in "others" tab)
             setCarrierRates({
-              standard: convertedRates
+              fedex: [],
+              ups: [],
+              usps: [],
+              dhl: [],
+              others: convertedRates
             });
             
             // Select the first method by default
@@ -184,16 +206,11 @@ export default function MultiCarrierShipping({ orderTotal, onShippingMethodChang
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="mb-6">
           <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="all">All Carriers</TabsTrigger>
-            {carriers.slice(0, 5).map(carrierId => (
-              <TabsTrigger key={carrierId} value={carrierId}>
-                {carrierId === "fedex" ? "FedEx" : 
-                 carrierId === "ups" ? "UPS" : 
-                 carrierId === "usps" ? "USPS" : 
-                 carrierId === "dhl" ? "DHL" : 
-                 carrierId === "others" ? "Others" :
-                 carrierId === "standard" ? "Standard" : carrierId}
-              </TabsTrigger>
-            ))}
+            <TabsTrigger value="fedex">FedEx</TabsTrigger>
+            <TabsTrigger value="ups">UPS</TabsTrigger>
+            <TabsTrigger value="usps">USPS</TabsTrigger>
+            <TabsTrigger value="dhl">DHL</TabsTrigger>
+            <TabsTrigger value="others">Others</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
@@ -212,23 +229,85 @@ export default function MultiCarrierShipping({ orderTotal, onShippingMethodChang
             </RadioGroup>
           </TabsContent>
           
-          {carriers.map(carrierId => (
-            <TabsContent key={carrierId} value={carrierId}>
-              <RadioGroup
-                value={selectedRateId || ""}
-                onValueChange={handleShippingRateSelect}
-                className="space-y-4"
-              >
-                {carrierRates[carrierId]?.map((rate) => (
-                  <ShippingRateOption 
-                    key={rate.id} 
-                    rate={rate} 
-                    isSelected={selectedRateId === rate.id} 
-                  />
-                ))}
-              </RadioGroup>
-            </TabsContent>
-          ))}
+          <TabsContent value="fedex">
+            <RadioGroup
+              value={selectedRateId || ""}
+              onValueChange={handleShippingRateSelect}
+              className="space-y-4"
+            >
+              {carrierRates["fedex"]?.map((rate) => (
+                <ShippingRateOption 
+                  key={rate.id} 
+                  rate={rate} 
+                  isSelected={selectedRateId === rate.id} 
+                />
+              ))}
+            </RadioGroup>
+          </TabsContent>
+
+          <TabsContent value="ups">
+            <RadioGroup
+              value={selectedRateId || ""}
+              onValueChange={handleShippingRateSelect}
+              className="space-y-4"
+            >
+              {carrierRates["ups"]?.map((rate) => (
+                <ShippingRateOption 
+                  key={rate.id} 
+                  rate={rate} 
+                  isSelected={selectedRateId === rate.id} 
+                />
+              ))}
+            </RadioGroup>
+          </TabsContent>
+
+          <TabsContent value="usps">
+            <RadioGroup
+              value={selectedRateId || ""}
+              onValueChange={handleShippingRateSelect}
+              className="space-y-4"
+            >
+              {carrierRates["usps"]?.map((rate) => (
+                <ShippingRateOption 
+                  key={rate.id} 
+                  rate={rate} 
+                  isSelected={selectedRateId === rate.id} 
+                />
+              ))}
+            </RadioGroup>
+          </TabsContent>
+
+          <TabsContent value="dhl">
+            <RadioGroup
+              value={selectedRateId || ""}
+              onValueChange={handleShippingRateSelect}
+              className="space-y-4"
+            >
+              {carrierRates["dhl"]?.map((rate) => (
+                <ShippingRateOption 
+                  key={rate.id} 
+                  rate={rate} 
+                  isSelected={selectedRateId === rate.id} 
+                />
+              ))}
+            </RadioGroup>
+          </TabsContent>
+
+          <TabsContent value="others">
+            <RadioGroup
+              value={selectedRateId || ""}
+              onValueChange={handleShippingRateSelect}
+              className="space-y-4"
+            >
+              {carrierRates["others"]?.map((rate) => (
+                <ShippingRateOption 
+                  key={rate.id} 
+                  rate={rate} 
+                  isSelected={selectedRateId === rate.id} 
+                />
+              ))}
+            </RadioGroup>
+          </TabsContent>
         </Tabs>
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground">
