@@ -160,6 +160,48 @@ interface User {
   activeWarnings: number;
   notes?: string;
   ipAddresses?: string[];
+  verificationLevel?: "none" | "email" | "phone" | "government_id" | "biometric";
+  accountLockReason?: string;
+  loginAttempts?: number;
+  suspiciousActivityFlags?: string[];
+  deviceHistory?: UserDevice[];
+  locationData?: UserLocation[];
+  riskScore?: number;
+  accountAgeInDays?: number;
+  region?: string;
+  preferredLanguage?: string;
+  contentSettings?: UserContentSettings;
+}
+
+interface UserDevice {
+  id: number;
+  deviceId: string;
+  deviceName: string;
+  browser: string;
+  operatingSystem: string;
+  lastUsed: string;
+  ipAddress: string;
+  isTrusted: boolean;
+  isCurrentDevice?: boolean;
+}
+
+interface UserLocation {
+  id: number;
+  country: string;
+  city?: string;
+  region?: string;
+  lastSeen: string;
+  ipAddress: string;
+  frequency: "rare" | "occasional" | "frequent";
+  isSuspicious: boolean;
+}
+
+interface UserContentSettings {
+  contentFilters: ("none" | "low" | "medium" | "high")[];
+  languagePreferences: string[];
+  allowAdultContent: boolean;
+  allowDataCollection: boolean;
+  visibilitySettings: "public" | "friends" | "private";
 }
 
 interface ModeratorNote {
@@ -169,6 +211,18 @@ interface ModeratorNote {
   createdAt: string;
   moderatorId: number;
   moderatorName: string;
+}
+
+interface SecurityLog {
+  id: number;
+  userId: number;
+  eventType: "login" | "logout" | "password_change" | "email_change" | "2fa_enabled" | "2fa_disabled" | "account_locked" | "account_unlocked" | "password_reset" | "suspicious_activity";
+  timestamp: string;
+  ipAddress: string;
+  deviceInfo: string;
+  location?: string;
+  success: boolean;
+  details?: string;
 }
 
 export default function UserModeration() {
@@ -257,6 +311,45 @@ export default function UserModeration() {
       return generateMockNotes(selectedUser?.id || 0);
     },
     enabled: !!selectedUser && showUserDetailDialog,
+  });
+  
+  // Fetch security logs for the selected user
+  const {
+    data: securityLogs = [],
+    isLoading: isLoadingSecurityLogs,
+  } = useQuery<SecurityLog[]>({
+    queryKey: ["/api/admin/users/security-logs", selectedUser?.id],
+    queryFn: async () => {
+      // Mock data for UI development
+      return generateMockSecurityLogs(selectedUser?.id || 0);
+    },
+    enabled: !!selectedUser && showUserDetailDialog && activeUserTab === "security",
+  });
+  
+  // Fetch devices for the selected user
+  const {
+    data: userDevices = [],
+    isLoading: isLoadingDevices,
+  } = useQuery<UserDevice[]>({
+    queryKey: ["/api/admin/users/devices", selectedUser?.id],
+    queryFn: async () => {
+      // Mock data for UI development
+      return generateMockDevices(selectedUser?.id || 0);
+    },
+    enabled: !!selectedUser && showUserDetailDialog && activeUserTab === "security",
+  });
+  
+  // Fetch user locations for the selected user
+  const {
+    data: userLocations = [],
+    isLoading: isLoadingLocations,
+  } = useQuery<UserLocation[]>({
+    queryKey: ["/api/admin/users/locations", selectedUser?.id],
+    queryFn: async () => {
+      // Mock data for UI development
+      return generateMockLocations(selectedUser?.id || 0);
+    },
+    enabled: !!selectedUser && showUserDetailDialog && activeUserTab === "security",
   });
 
   // Add note mutation
@@ -1748,6 +1841,9 @@ const ErrorState = ({ onRetry, message }: { onRetry: () => void; message: string
 function generateMockUsers(): User[] {
   const statuses: User["status"][] = ["active", "muted", "banned", "global_banned"];
   const roles: User["role"][] = ["user", "vendor", "moderator", "admin"];
+  const verificationLevels: NonNullable<User["verificationLevel"]>[] = ["none", "email", "phone", "government_id", "biometric"];
+  const languages = ["en", "fr", "es", "de", "it", "ja", "zh"];
+  const regions = ["UK", "US", "EU", "APAC", "LATAM", "MENA", "AFR"];
   
   return Array.from({ length: 30 }).map((_, i) => {
     const status = statuses[Math.floor(Math.random() * statuses.length)];
@@ -1755,6 +1851,7 @@ function generateMockUsers(): User[] {
     const reportCount = Math.floor(Math.random() * 5);
     const violationCount = Math.floor(Math.random() * 3);
     const activeWarnings = Math.floor(Math.random() * 2);
+    const loginAttempts = Math.floor(Math.random() * 20);
     
     // Calculate trust score based on violations, reports, etc.
     let trustScore = 100;
@@ -1765,8 +1862,21 @@ function generateMockUsers(): User[] {
     if (status !== "active") trustScore -= 30;
     trustScore = Math.max(0, Math.min(100, trustScore));
     
+    // Calculate risk score (separate from trust score - security risk)
+    let riskScore = 0;
+    if (loginAttempts > 10) {
+      riskScore = Math.floor(Math.random() * 30) + 70; // High risk (70-100)
+    } else if (reportCount > 3 || violationCount > 2) {
+      riskScore = Math.floor(Math.random() * 20) + 50; // Medium-high risk (50-70)
+    } else if (Math.random() < 0.7) {
+      riskScore = Math.floor(Math.random() * 20) + 10; // Low risk (10-30)
+    } else {
+      riskScore = Math.floor(Math.random() * 20) + 30; // Medium risk (30-50)
+    }
+    
     const dateJoined = new Date(Date.now() - Math.random() * 365 * 86400000).toISOString();
     const lastActive = new Date(Date.now() - Math.random() * 30 * 86400000).toISOString();
+    const accountAgeInDays = Math.floor((Date.now() - new Date(dateJoined).getTime()) / (1000 * 60 * 60 * 24));
     
     let muteExpiresAt, banExpiresAt;
     if (status === "muted") {
@@ -1776,16 +1886,55 @@ function generateMockUsers(): User[] {
       banExpiresAt = new Date(Date.now() + Math.random() * 30 * 86400000).toISOString();
     }
     
+    // Account lock reason if applicable
+    let accountLockReason: string | undefined;
+    if (loginAttempts > 15) {
+      accountLockReason = "Too many failed login attempts";
+    } else if (status === "banned" || status === "global_banned") {
+      accountLockReason = "Account banned due to policy violations";
+    }
+    
+    // Suspicious activity flags
+    const suspiciousFlags = [
+      "multiple_failed_logins",
+      "unusual_location_activity",
+      "rapid_region_changes",
+      "suspicious_ip_activity",
+      "unusual_device_activity"
+    ];
+    
+    const suspiciousActivityFlags = Math.random() < 0.2 ? 
+      suspiciousFlags.filter(() => Math.random() < 0.5) : undefined;
+    
     const ipAddresses = Math.random() > 0.7 ? [
       `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
       `10.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
     ] : undefined;
+    
+    // Language and region preferences
+    const preferredLanguage = languages[Math.floor(Math.random() * languages.length)];
+    const region = regions[Math.floor(Math.random() * regions.length)];
+    
+    // Content settings
+    const contentFilters: NonNullable<User["contentSettings"]>["contentFilters"] = 
+      Math.random() < 0.25 ? ["none"] :
+      Math.random() < 0.5 ? ["low"] :
+      Math.random() < 0.75 ? ["medium"] : ["high"];
+    
+    const contentSettings: UserContentSettings = {
+      contentFilters,
+      languagePreferences: [preferredLanguage, languages[Math.floor(Math.random() * languages.length)]],
+      allowAdultContent: Math.random() > 0.5,
+      allowDataCollection: Math.random() > 0.3,
+      visibilitySettings: Math.random() < 0.33 ? "private" : Math.random() < 0.66 ? "friends" : "public"
+    };
     
     return {
       id: i + 1,
       username: `user${i + 1}`,
       name: `User ${i + 1}`,
       email: `user${i + 1}@example.com`,
+      avatarUrl: Math.random() > 0.3 ? `https://i.pravatar.cc/150?u=${i + 1}` : undefined,
       role: i === 0 ? "admin" : roles[Math.floor(Math.random() * roles.length)],
       status: i < 3 ? "active" : status,
       dateJoined,
@@ -1797,7 +1946,17 @@ function generateMockUsers(): User[] {
       activeWarnings,
       muteExpiresAt,
       banExpiresAt,
-      ipAddresses
+      ipAddresses,
+      // Enhanced user management fields
+      verificationLevel: verificationLevels[Math.floor(Math.random() * verificationLevels.length)],
+      accountLockReason,
+      loginAttempts,
+      suspiciousActivityFlags,
+      riskScore,
+      accountAgeInDays,
+      region,
+      preferredLanguage,
+      contentSettings: Math.random() > 0.3 ? contentSettings : undefined
     };
   });
 }
@@ -1966,5 +2125,183 @@ function generateMockNotes(userId: number): ModeratorNote[] {
       moderatorId: Math.floor(Math.random() * 3) + 1,
       moderatorName: `moderator${Math.floor(Math.random() * 3) + 1}`
     };
+  });
+}
+
+function generateMockSecurityLogs(userId: number): SecurityLog[] {
+  // Generate a random number of security logs
+  const logCount = Math.floor(Math.random() * 10) + 3;
+  
+  const eventTypes: SecurityLog["eventType"][] = [
+    "login", "logout", "password_change", "email_change", 
+    "2fa_enabled", "2fa_disabled", "account_locked", 
+    "account_unlocked", "password_reset", "suspicious_activity"
+  ];
+  
+  const devices = [
+    "Windows 11 / Chrome 121.0.1234",
+    "macOS 14.3 / Safari 17.3",
+    "iOS 17.4 / Mobile Safari",
+    "Android 14 / Chrome Mobile 121.0.1234",
+    "Ubuntu 22.04 / Firefox 123.0"
+  ];
+  
+  const locations = [
+    "London, United Kingdom",
+    "New York, United States",
+    "Paris, France",
+    "Tokyo, Japan",
+    "Sydney, Australia",
+    "Unknown Location"
+  ];
+  
+  return Array.from({ length: logCount }).map((_, i) => {
+    const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+    const timestamp = new Date(Date.now() - Math.random() * 90 * 86400000).toISOString();
+    const success = Math.random() > 0.2;
+    const ipAddress = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    const deviceInfo = devices[Math.floor(Math.random() * devices.length)];
+    const location = Math.random() > 0.2 ? locations[Math.floor(Math.random() * (locations.length - 1))] : locations[locations.length - 1];
+    
+    // Generate details based on event type
+    let details = "";
+    if (!success) {
+      details = eventType === "login" ? "Incorrect password entered" : "Failed authentication";
+    } else if (eventType === "suspicious_activity") {
+      details = "Login from unusual location";
+    } else if (eventType === "account_locked") {
+      details = "Too many failed login attempts";
+    }
+    
+    return {
+      id: i + 1,
+      userId,
+      eventType,
+      timestamp,
+      ipAddress,
+      deviceInfo,
+      location,
+      success,
+      details: details || undefined
+    };
+  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+function generateMockDevices(userId: number): UserDevice[] {
+  // Generate a random number of devices (1-5)
+  const deviceCount = Math.floor(Math.random() * 4) + 1;
+  
+  const deviceNames = [
+    "iPhone 14 Pro",
+    "iPhone 15",
+    "MacBook Pro",
+    "iPad Air",
+    "Windows PC",
+    "Surface Pro",
+    "Google Pixel 7",
+    "Samsung Galaxy S23",
+    "Dell XPS Laptop",
+    "Lenovo ThinkPad"
+  ];
+  
+  const browsers = [
+    "Chrome 121.0.1234",
+    "Safari 17.3",
+    "Firefox 123.0",
+    "Edge 121.0.2345",
+    "Chrome Mobile 121.0.1234",
+    "Mobile Safari"
+  ];
+  
+  const operatingSystems = [
+    "Windows 11",
+    "macOS 14.3",
+    "iOS 17.4",
+    "Android 14",
+    "iPadOS 17.4",
+    "Ubuntu 22.04"
+  ];
+  
+  return Array.from({ length: deviceCount }).map((_, i) => {
+    const deviceName = deviceNames[Math.floor(Math.random() * deviceNames.length)];
+    const browser = browsers[Math.floor(Math.random() * browsers.length)];
+    const operatingSystem = operatingSystems[Math.floor(Math.random() * operatingSystems.length)];
+    const lastUsed = new Date(Date.now() - Math.random() * 30 * 86400000).toISOString();
+    const ipAddress = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    const isTrusted = Math.random() > 0.2;
+    const isCurrentDevice = i === 0; // Make the first device the current one
+    
+    return {
+      id: i + 1,
+      deviceId: `device_${Math.random().toString(36).substring(2, 15)}`,
+      deviceName,
+      browser,
+      operatingSystem,
+      lastUsed,
+      ipAddress,
+      isTrusted,
+      isCurrentDevice
+    };
+  }).sort((a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime());
+}
+
+function generateMockLocations(userId: number): UserLocation[] {
+  // Generate a random number of locations (1-4)
+  const locationCount = Math.floor(Math.random() * 3) + 1;
+  
+  const countries = [
+    "United Kingdom",
+    "United States",
+    "France",
+    "Germany",
+    "Japan",
+    "Australia",
+    "Canada",
+    "Italy",
+    "Spain",
+    "Brazil"
+  ];
+  
+  const cities: Record<string, string[]> = {
+    "United Kingdom": ["London", "Manchester", "Birmingham", "Edinburgh"],
+    "United States": ["New York", "Los Angeles", "Chicago", "San Francisco"],
+    "France": ["Paris", "Lyon", "Marseille", "Nice"],
+    "Germany": ["Berlin", "Munich", "Hamburg", "Frankfurt"],
+    "Japan": ["Tokyo", "Osaka", "Kyoto", "Fukuoka"],
+    "Australia": ["Sydney", "Melbourne", "Brisbane", "Perth"],
+    "Canada": ["Toronto", "Vancouver", "Montreal", "Calgary"],
+    "Italy": ["Rome", "Milan", "Florence", "Venice"],
+    "Spain": ["Madrid", "Barcelona", "Valencia", "Seville"],
+    "Brazil": ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"]
+  };
+  
+  const frequencies: UserLocation["frequency"][] = ["rare", "occasional", "frequent"];
+  
+  return Array.from({ length: locationCount }).map((_, i) => {
+    const country = countries[Math.floor(Math.random() * countries.length)];
+    const city = cities[country][Math.floor(Math.random() * cities[country].length)];
+    const lastSeen = new Date(Date.now() - Math.random() * 90 * 86400000).toISOString();
+    const ipAddress = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    const frequency = frequencies[Math.floor(Math.random() * frequencies.length)];
+    const isSuspicious = Math.random() < 0.2;
+    
+    return {
+      id: i + 1,
+      country,
+      city,
+      region: city, // Use city as region for simplicity
+      lastSeen,
+      ipAddress,
+      frequency,
+      isSuspicious
+    };
+  }).sort((a, b) => {
+    // Sort by frequency first (frequent > occasional > rare)
+    const freqOrder = { frequent: 3, occasional: 2, rare: 1 };
+    if (freqOrder[a.frequency] !== freqOrder[b.frequency]) {
+      return freqOrder[b.frequency] - freqOrder[a.frequency];
+    }
+    // Then by last seen date
+    return new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime();
   });
 }
