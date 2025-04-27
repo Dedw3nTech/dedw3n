@@ -19,6 +19,16 @@ export interface CommentWithUser extends Comment {
 // View type for switching between Marketplace and Social
 export type ViewType = "marketplace" | "social";
 
+// Market type for different marketplace experiences
+export type MarketType = "c2c" | "b2c" | "b2b";
+
+// Market type labels
+export const MARKET_TYPE_LABELS = {
+  c2c: "Buy from a friend",
+  b2c: "Buy from a store", 
+  b2b: "Business"
+};
+
 // Authentication
 export interface AuthContextType {
   user: UserWithoutPassword | null;

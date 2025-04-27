@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewProvider } from "@/hooks/use-view";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MessagingProvider } from "@/hooks/use-messaging";
+import { MarketTypeProvider } from "@/hooks/use-market-type";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { useEffect } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
@@ -120,19 +121,21 @@ function App() {
         <AuthProvider>
           <MessagingProvider>
             <ViewProvider>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <main className="flex-grow">
-                  <Router />
-                </main>
-                <Footer />
-                <MobileNavigation />
-                <OfflineIndicator />
-                {/* Offline simulator hidden as requested */}
-                {/* Chatbot will be implemented later when API key is available */}
-                {/* <ChatbotWindow /> */}
-              </div>
-              <Toaster />
+              <MarketTypeProvider>
+                <div className="flex flex-col min-h-screen">
+                  <Header />
+                  <main className="flex-grow">
+                    <Router />
+                  </main>
+                  <Footer />
+                  <MobileNavigation />
+                  <OfflineIndicator />
+                  {/* Offline simulator hidden as requested */}
+                  {/* Chatbot will be implemented later when API key is available */}
+                  {/* <ChatbotWindow /> */}
+                </div>
+                <Toaster />
+              </MarketTypeProvider>
             </ViewProvider>
           </MessagingProvider>
         </AuthProvider>
