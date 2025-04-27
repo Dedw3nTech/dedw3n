@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, Express } from "express";
 import { z } from "zod";
+import { storage } from "./storage";
 
 // Types for AI social insights
 type Topic = {
