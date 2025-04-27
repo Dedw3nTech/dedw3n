@@ -35,6 +35,7 @@ export default function Products() {
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
   const { marketType, marketTypeLabel } = useMarketType();
+  const { currency } = useCurrency();
 
   // Fetch products
   const {
@@ -241,16 +242,16 @@ export default function Products() {
                 <div className={`font-bold ${
                   marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
                 }`}>
-                  {formatPrice(product.discountPrice)}
+                  {formatPriceWithCurrency(product.discountPrice, currency)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                 </div>
-                <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
+                <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceWithCurrency(product.price, currency)}</div>
               </div>
             ) : (
               <div className={`font-bold ${
                   marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
                 }`}>
-                {formatPrice(product.price)}
+                {formatPriceWithCurrency(product.price, currency)}
                 {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
               </div>
             )}
@@ -284,8 +285,8 @@ export default function Products() {
             className="my-6"
           />
           <div className="flex justify-between text-sm">
-            <div>{formatPrice(priceRange[0])}</div>
-            <div>{formatPrice(priceRange[1])}</div>
+            <div>{formatPriceWithCurrency(priceRange[0], currency)}</div>
+            <div>{formatPriceWithCurrency(priceRange[1], currency)}</div>
           </div>
         </div>
       </div>
