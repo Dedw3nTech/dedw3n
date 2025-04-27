@@ -70,7 +70,7 @@ export default function SystemSettings() {
 
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
-    siteName: "Global Marketplace",
+    siteName: "Dedw3n",
     siteDescription: "Connect. Shop. Thrive.",
     allowRegistration: true,
     requireEmailVerification: true,
@@ -85,8 +85,8 @@ export default function SystemSettings() {
     smtpPort: "587",
     smtpUsername: "",
     smtpPassword: "",
-    senderEmail: "noreply@globalmarketplace.com",
-    senderName: "Global Marketplace",
+    senderEmail: "noreply@dedw3n.com",
+    senderName: "Dedw3n",
     enableEmailNotifications: true,
   });
 

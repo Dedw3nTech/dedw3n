@@ -764,7 +764,7 @@ export default function AdminDashboard() {
                           <Label htmlFor="platform-name">Platform Name</Label>
                           <Input 
                             id="platform-name" 
-                            defaultValue="Dedw3n Global Marketplace" 
+                            defaultValue="Dedw3n" 
                             className="max-w-md"
                           />
                           <p className="text-xs text-muted-foreground">
