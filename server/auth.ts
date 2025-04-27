@@ -425,6 +425,40 @@ export function setupAuth(app: Express) {
     const { password, passwordResetToken, passwordResetExpires, verificationToken, ...safeUserData } = req.user as SelectUser;
     res.json(safeUserData);
   });
+  
+  // Debug endpoint to check user credentials - FOR DEVELOPMENT ONLY
+  app.get("/api/auth/test-login", async (req, res) => {
+    try {
+      console.log("[DEBUG] Testing login credentials");
+      const { username, password } = req.query;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required as query parameters" });
+      }
+      
+      // Get user from database
+      const user = await storage.getUserByUsername(username as string);
+      console.log(`[DEBUG] Test login - User lookup for "${username}": ${user ? "Found" : "Not found"}`);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check password
+      const isValid = await comparePasswords(password as string, user.password);
+      console.log(`[DEBUG] Test login - Password check: ${isValid ? "Valid" : "Invalid"}`);
+      
+      // Return result
+      if (isValid) {
+        return res.json({ success: true, message: "Login credentials are valid" });
+      } else {
+        return res.status(401).json({ success: false, message: "Invalid password" });
+      }
+    } catch (error) {
+      console.error("[ERROR] Test login failed:", error);
+      res.status(500).json({ message: "Test login failed", error: String(error) });
+    }
+  });
 
   // Middleware to check if user is authenticated
   app.use((req, res, next) => {
