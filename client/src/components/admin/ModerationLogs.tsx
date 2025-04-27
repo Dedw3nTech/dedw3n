@@ -326,15 +326,15 @@ export default function ModerationLogs() {
       case "post":
         return <FileText className="h-4 w-4 text-primary" />;
       case "comment":
-        return <MessageSquare className="h-4 w-4 text-primary" />;
+        return <MessageSquare width={16} height={16} className="text-primary" />;
       case "image":
         return <ImageOff className="h-4 w-4 text-primary" />;
       case "product":
-        return <ShoppingBag className="h-4 w-4 text-primary" />;
+        return <ShoppingBag width={16} height={16} className="text-primary" />;
       case "user":
         return <User className="h-4 w-4 text-primary" />;
       case "community":
-        return <Users className="h-4 w-4 text-primary" />;
+        return <Users width={16} height={16} className="text-primary" />;
       case "allow_list":
         return <BookOpen className="h-4 w-4 text-primary" />;
       case "block_list":
@@ -520,7 +520,7 @@ export default function ModerationLogs() {
                   onClick={() => setDate(undefined)}
                   className="h-9 w-9"
                 >
-                  <X className="h-4 w-4" />
+                  <X width={16} height={16} />
                 </Button>
               )}
             </div>
