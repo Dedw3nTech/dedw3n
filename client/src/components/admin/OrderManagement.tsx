@@ -79,37 +79,166 @@ export default function OrderManagement() {
   const [enableLotTracking, setEnableLotTracking] = useState(false);
   const [selectedShippingAPI, setSelectedShippingAPI] = useState("fedex");
   
-  // Fetch orders
+  // Mock orders data while API is being implemented
+  const mockOrders = [
+    {
+      id: 1001,
+      createdAt: new Date().toISOString(),
+      customerName: "John Smith",
+      customerEmail: "john@example.com",
+      customerPhone: "+44 1234 567890",
+      total: 129.99,
+      subtotal: 119.99,
+      shippingCost: 10.00,
+      discount: 0,
+      status: "processing",
+      paymentStatus: "paid",
+      paymentMethod: "Credit Card",
+      shippingAddress: {
+        line1: "123 Main St",
+        line2: "Apt 4B",
+        city: "London",
+        postalCode: "W1 6AA",
+        country: "United Kingdom"
+      },
+      items: [
+        {
+          productName: "Premium Wireless Headphones",
+          quantity: 1,
+          price: 119.99
+        }
+      ]
+    },
+    {
+      id: 1002,
+      createdAt: new Date(Date.now() - 86400000).toISOString(), // yesterday
+      customerName: "Sarah Johnson",
+      customerEmail: "sarah@example.com",
+      customerPhone: "+44 9876 543210",
+      total: 254.98,
+      subtotal: 239.98,
+      shippingCost: 15.00,
+      discount: 0,
+      status: "shipped",
+      paymentStatus: "paid",
+      paymentMethod: "PayPal",
+      shippingAddress: {
+        line1: "45 Park Avenue",
+        line2: "",
+        city: "Manchester",
+        postalCode: "M1 2RT",
+        country: "United Kingdom"
+      },
+      items: [
+        {
+          productName: "Smartphone Case",
+          quantity: 1,
+          price: 19.99
+        },
+        {
+          productName: "Smart Watch",
+          quantity: 1,
+          price: 219.99
+        }
+      ]
+    },
+    {
+      id: 1003,
+      createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+      customerName: "Michael Brown",
+      customerEmail: "michael@example.com",
+      customerPhone: "+44 5544 332211",
+      total: 89.99,
+      subtotal: 79.99,
+      shippingCost: 10.00,
+      discount: 0,
+      status: "delivered",
+      paymentStatus: "paid",
+      paymentMethod: "Mobile Money",
+      shippingAddress: {
+        line1: "78 High Street",
+        line2: "Suite 12",
+        city: "Birmingham",
+        postalCode: "B1 1AA",
+        country: "United Kingdom"
+      },
+      items: [
+        {
+          productName: "Fitness Tracker",
+          quantity: 1,
+          price: 79.99
+        }
+      ]
+    },
+    {
+      id: 1004,
+      createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+      customerName: "Emily Williams",
+      customerEmail: "emily@example.com",
+      customerPhone: "+44 1122 334455",
+      total: 345.97,
+      subtotal: 325.97,
+      shippingCost: 20.00,
+      discount: 0,
+      status: "pending",
+      paymentStatus: "pending",
+      paymentMethod: "Bank Transfer",
+      shippingAddress: {
+        line1: "12 Queen's Road",
+        line2: "",
+        city: "Edinburgh",
+        postalCode: "EH2 4AD",
+        country: "United Kingdom"
+      },
+      items: [
+        {
+          productName: "Laptop Backpack",
+          quantity: 1,
+          price: 45.99
+        },
+        {
+          productName: "Bluetooth Speaker",
+          quantity: 1,
+          price: 79.99
+        },
+        {
+          productName: "Wireless Earbuds",
+          quantity: 2,
+          price: 99.99
+        }
+      ]
+    }
+  ];
+
+  // Fetch orders with fallback to mock data
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ["/api/admin/orders", searchTerm, filterStatus],
     queryFn: async () => {
-      let endpoint = "/api/admin/orders";
-      const params = new URLSearchParams();
+      // Filter mock orders based on search and filter criteria
+      // This simulates what would happen on the server
+      let filteredOrders = [...mockOrders];
       
       if (searchTerm) {
-        params.append("search", searchTerm);
+        const search = searchTerm.toLowerCase();
+        filteredOrders = filteredOrders.filter(order => 
+          order.id.toString().includes(search) ||
+          order.customerName.toLowerCase().includes(search) ||
+          order.customerEmail.toLowerCase().includes(search)
+        );
       }
       
       if (filterStatus !== "all") {
-        params.append("status", filterStatus);
+        filteredOrders = filteredOrders.filter(order => 
+          order.status.toLowerCase() === filterStatus.toLowerCase()
+        );
       }
       
-      if (params.toString()) {
-        endpoint += `?${params.toString()}`;
-      }
-      
-      try {
-        const res = await fetch(endpoint);
-        if (!res.ok) {
-          throw new Error('API endpoint not ready');
-        }
-        return res.json();
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-        throw new Error('API endpoint not ready');
-      }
+      return filteredOrders;
     },
-    retry: false, // Don't retry if the endpoint doesn't exist yet
+    retry: false,
+    // Always return mock data without hitting the API
+    // This simulates the API being ready
+    initialData: mockOrders,
   });
 
   // Update order status mutation
@@ -234,47 +363,24 @@ export default function OrderManagement() {
                 </div>
               </div>
 
+              {/* API Implementation Note */}
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <div className="ml-2">
+                    <h3 className="text-sm font-medium text-amber-800">
+                      The admin API endpoints for this feature are being implemented
+                    </h3>
+                    <div className="mt-2 text-sm text-amber-700">
+                      <p>Currently displaying example data for demonstration purposes.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {isLoading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : isError ? (
-                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 my-4">
-                  <div className="flex items-start">
-                    <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <div className="ml-2">
-                      <h3 className="text-sm font-medium text-amber-800">
-                        The admin API endpoints for this feature are being implemented
-                      </h3>
-                      <div className="mt-2 text-sm text-amber-700">
-                        <p>Check back soon for real-time order management functionality.</p>
-                        <p className="mt-2">
-                          In the meantime, here's a preview of the order management UI with placeholder data.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Temporary Order Status UI */}
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <Label className="w-24 flex-shrink-0">Order Status:</Label>
-                      <Select defaultValue="processing">
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="delivered">Delivered</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="refunded">Refunded</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" className="ml-2">Update Status</Button>
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div className="rounded-md border">
@@ -497,6 +603,20 @@ export default function OrderManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* API Implementation Note */}
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <div className="ml-2">
+                    <h3 className="text-sm font-medium text-amber-800">
+                      The admin API endpoints for this feature are being implemented
+                    </h3>
+                    <div className="mt-2 text-sm text-amber-700">
+                      <p>Currently displaying example metrics data for demonstration purposes.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* AHT Metric */}
               <div className="border rounded-lg p-4 space-y-4">
                 <div className="flex items-center gap-2">
@@ -658,6 +778,21 @@ export default function OrderManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* API Implementation Note */}
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <div className="ml-2">
+                    <h3 className="text-sm font-medium text-amber-800">
+                      The admin API endpoints for this feature are being implemented
+                    </h3>
+                    <div className="mt-2 text-sm text-amber-700">
+                      <p>Settings configuration functionality will be available soon. Currently showing UI demonstration.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Order Processing Settings */}
               <div className="space-y-6">
                 <div>
