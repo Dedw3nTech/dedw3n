@@ -11,7 +11,7 @@ export const videoTypeEnum = pgEnum('video_type', ['short_form', 'story', 'live_
 export const videoVisibilityEnum = pgEnum('video_visibility', ['public', 'followers', 'private']);
 
 // Define user roles enum
-export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor']);
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor', 'business']);
 
 // User model
 export const users = pgTable("users", {

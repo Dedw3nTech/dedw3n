@@ -332,13 +332,32 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ message: 'Post not found' });
       }
       
-      const { content, title, moderationNote } = req.body;
+      const { content, title, moderationNote, reviewStatus } = req.body;
       const updates: any = {};
       
       if (content !== undefined) updates.content = content;
       if (title !== undefined) updates.title = title;
       if (moderationNote !== undefined) updates.moderationNote = moderationNote;
-      
+      if (reviewStatus !== undefined) {
+        // Validate review status
+        if (!['approved', 'rejected', 'pending'].includes(reviewStatus)) {
+          return res.status(400).json({ 
+            message: 'Invalid review status. Must be one of: approved, rejected, pending'
+          });
+        }
+        updates.reviewStatus = reviewStatus;
+        
+        // If approving a post, automatically unflag it
+        if (reviewStatus === 'approved') {
+          updates.isFlagged = false;
+          updates.flagReason = null;
+        }
+        
+        // If rejecting a post, also unpublish it
+        if (reviewStatus === 'rejected') {
+          updates.isPublished = false;
+        }
+      }
       // Update updatedAt timestamp
       updates.updatedAt = new Date();
       
