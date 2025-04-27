@@ -45,6 +45,25 @@ export interface IStorage {
   getVendorByUserId(userId: number): Promise<Vendor | undefined>;
   getUserPosts(userId: number): Promise<Post[]>;
   
+  // Community content operations
+  createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent>;
+  getCommunityContent(contentId: number): Promise<CommunityContent | undefined>;
+  updateCommunityContent(contentId: number, updates: Partial<CommunityContent>): Promise<CommunityContent | undefined>;
+  deleteCommunityContent(contentId: number): Promise<boolean>;
+  listCommunityContent(communityId: number): Promise<CommunityContent[]>;
+  getAccessibleCommunityContent(userId: number, communityId: number): Promise<CommunityContent[]>;
+  canUserAccessContent(userId: number, contentId: number): Promise<boolean>;
+  incrementContentViewCount(contentId: number): Promise<void>;
+  likeContent(contentId: number, userId: number): Promise<void>;
+  unlikeContent(contentId: number, userId: number): Promise<void>;
+  getCommunityContentByTier(communityId: number, tierId: number): Promise<CommunityContent[]>;
+  getCommunityContentByType(communityId: number, contentType: string): Promise<CommunityContent[]>;
+  getFeaturedCommunityContent(communityId: number): Promise<CommunityContent[]>;
+  isUserCommunityAdminOrOwner(userId: number, communityId: number): Promise<boolean>;
+  
+  // Membership tier operations
+  getMembershipTier(tierId: number): Promise<MembershipTier | undefined>;
+  
   // Messaging operations
   createMessage(message: InsertMessage): Promise<Message>;
   getMessage(id: number): Promise<Message | undefined>;

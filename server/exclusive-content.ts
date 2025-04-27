@@ -1,286 +1,416 @@
-import { Request, Response } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
+import { z } from "zod";
+import { contentTypeEnum, insertCommunityContentSchema } from "@shared/schema";
 
-/**
- * Get exclusive content for a community
- */
-export async function getExclusiveContent(req: Request, res: Response) {
-  try {
-    const communityId = parseInt(req.params.communityId);
-    
-    if (isNaN(communityId)) {
-      return res.status(400).json({ message: "Invalid community ID" });
-    }
-    
-    // Check if user is authenticated
-    const userId = req.isAuthenticated() ? (req.user as any).id : null;
-    
-    // Get the community
-    const community = await storage.getCommunity(communityId);
-    if (!community) {
-      return res.status(404).json({ message: "Community not found" });
-    }
-    
-    // Get user's membership (if any)
-    let userMembership = null;
-    if (userId) {
-      userMembership = await storage.getUserMembership(userId, communityId);
-    }
-    
-    // Get content based on user's membership
-    const content = await storage.getCommunityContent(communityId);
-    
-    // If the user has no membership, only return previews of content
-    // If user has membership, return content for their tier and below
-    const processedContent = content.map(item => {
-      // Determine if the user can access this content based on their membership
-      const canAccess = userMembership && 
-                       (userMembership.tierId >= item.tierId || 
-                        userMembership.isAdmin);
-      
-      // Return either full content or preview based on access
-      return {
-        ...item,
-        // For protected content, only provide a preview unless the user has access
-        content: canAccess ? item.content : null,
-        videoUrl: canAccess ? item.videoUrl : null,
-        audioUrl: canAccess ? item.audioUrl : null,
-        // Always include basic info for preview purposes
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        contentType: item.contentType,
-        thumbnailUrl: item.thumbnailUrl,
-        tierId: item.tierId,
-        tierName: item.tierName,
-        createdAt: item.createdAt,
-        creatorId: item.creatorId,
-        creatorName: item.creatorName,
-        creatorAvatar: item.creatorAvatar,
-      };
-    });
-    
-    // Organize content into sections
-    const result = {
-      featured: processedContent.filter(item => item.isFeatured).slice(0, 6),
-      recentContent: processedContent.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ).slice(0, 12),
-      byContentType: {
-        video: processedContent.filter(item => item.contentType === 'video'),
-        article: processedContent.filter(item => item.contentType === 'article'),
-        image: processedContent.filter(item => item.contentType === 'image'),
-        audio: processedContent.filter(item => item.contentType === 'audio')
-      }
-    };
-    
-    res.json(result);
-  } catch (error) {
-    console.error("[ERROR] Failed to get exclusive content:", error);
-    res.status(500).json({ message: "Failed to get exclusive content" });
+// Middleware to check if user is authenticated
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
   }
-}
+  return res.status(401).json({ message: "Not authenticated" });
+};
 
-/**
- * Get a specific exclusive content item
- */
-export async function getContentItem(req: Request, res: Response) {
+// Middleware to check if user is a member of a community with the required tier
+const hasContentAccess = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const userId = (req.user as any).id;
+  const contentId = parseInt(req.params.contentId);
+
   try {
-    const communityId = parseInt(req.params.communityId);
-    const contentId = parseInt(req.params.contentId);
+    // Get the content details to check which tier it belongs to
+    const content = await storage.getCommunityContent(contentId);
     
-    if (isNaN(communityId) || isNaN(contentId)) {
-      return res.status(400).json({ message: "Invalid parameters" });
-    }
-    
-    // Check if user is authenticated
-    const userId = req.isAuthenticated() ? (req.user as any).id : null;
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    
-    // Get the content
-    const contentItem = await storage.getCommunityContentItem(contentId);
-    if (!contentItem) {
+    if (!content) {
       return res.status(404).json({ message: "Content not found" });
     }
+
+    // Check if user has access to this content
+    const hasAccess = await storage.canUserAccessContent(userId, contentId);
     
-    // Verify the content belongs to the specified community
-    if (contentItem.communityId !== communityId) {
-      return res.status(404).json({ message: "Content not found in this community" });
-    }
-    
-    // Check user's membership
-    const userMembership = await storage.getUserMembership(userId, communityId);
-    
-    // Determine if the user can access this content
-    const canAccess = userMembership && 
-                     (userMembership.tierId >= contentItem.tierId || 
-                      userMembership.isAdmin);
-    
-    if (!canAccess) {
+    if (!hasAccess) {
       return res.status(403).json({ 
-        message: "Upgrade your membership to access this content",
-        requiredTierId: contentItem.tierId
+        message: "You need to upgrade your membership to access this content",
+        requiredTierId: content.tierId
       });
     }
-    
-    // Return the full content
-    res.json(contentItem);
-  } catch (error) {
-    console.error("[ERROR] Failed to get content item:", error);
-    res.status(500).json({ message: "Failed to get content item" });
-  }
-}
 
-/**
- * Create a new exclusive content item
- */
-export async function createExclusiveContent(req: Request, res: Response) {
-  try {
-    const communityId = parseInt(req.params.communityId);
-    
-    if (isNaN(communityId)) {
-      return res.status(400).json({ message: "Invalid community ID" });
-    }
-    
-    // Check if user is authenticated
-    const userId = req.isAuthenticated() ? (req.user as any).id : null;
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    
-    // Verify user is an admin or moderator of the community
-    const userMembership = await storage.getUserMembership(userId, communityId);
-    if (!userMembership || (!userMembership.isAdmin && !userMembership.isModerator)) {
-      return res.status(403).json({ message: "Unauthorized to create content" });
-    }
-    
-    // Create the content
-    const contentData = {
-      ...req.body,
-      communityId,
-      creatorId: userId,
-    };
-    
-    const content = await storage.createCommunityContent(contentData);
-    res.status(201).json(content);
+    // User has access, continue
+    next();
   } catch (error) {
-    console.error("[ERROR] Failed to create exclusive content:", error);
-    res.status(500).json({ message: "Failed to create exclusive content" });
+    console.error("Error checking content access:", error);
+    return res.status(500).json({ message: "Failed to check content access" });
   }
-}
+};
 
-/**
- * Update an exclusive content item
- */
-export async function updateExclusiveContent(req: Request, res: Response) {
-  try {
-    const communityId = parseInt(req.params.communityId);
-    const contentId = parseInt(req.params.contentId);
-    
-    if (isNaN(communityId) || isNaN(contentId)) {
-      return res.status(400).json({ message: "Invalid parameters" });
+export function registerExclusiveContentRoutes(app: Express) {
+  // Get all community content (with limited info)
+  app.get("/api/communities/:communityId/content", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Get all content items for this community
+      const content = await storage.listCommunityContent(communityId);
+      
+      // Map to include tier info
+      const contentWithTiers = await Promise.all(content.map(async (item) => {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(item.tierId);
+        return {
+          ...item,
+          tierName: tier?.name || `Tier ${item.tierId}`,
+          // Include creator info
+          creatorName: item.creatorName || (await storage.getUser(item.userId))?.name || "Unknown",
+          creatorAvatar: item.creatorAvatar || (await storage.getUser(item.userId))?.avatar || null,
+        };
+      }));
+      
+      res.json(contentWithTiers);
+    } catch (error) {
+      console.error("Error fetching community content:", error);
+      res.status(500).json({ message: "Failed to get community content" });
     }
-    
-    // Check if user is authenticated
-    const userId = req.isAuthenticated() ? (req.user as any).id : null;
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    
-    // Get the content item
-    const contentItem = await storage.getCommunityContentItem(contentId);
-    if (!contentItem) {
-      return res.status(404).json({ message: "Content not found" });
-    }
-    
-    // Verify the content belongs to the specified community
-    if (contentItem.communityId !== communityId) {
-      return res.status(404).json({ message: "Content not found in this community" });
-    }
-    
-    // Verify user is an admin, moderator, or the creator
-    const userMembership = await storage.getUserMembership(userId, communityId);
-    const isCreator = contentItem.creatorId === userId;
-    
-    if (!userMembership || 
-        (!userMembership.isAdmin && !userMembership.isModerator && !isCreator)) {
-      return res.status(403).json({ message: "Unauthorized to update content" });
-    }
-    
-    // Update the content
-    const updatedContent = await storage.updateCommunityContent(contentId, req.body);
-    res.json(updatedContent);
-  } catch (error) {
-    console.error("[ERROR] Failed to update exclusive content:", error);
-    res.status(500).json({ message: "Failed to update exclusive content" });
-  }
-}
+  });
 
-/**
- * Delete an exclusive content item
- */
-export async function deleteExclusiveContent(req: Request, res: Response) {
-  try {
-    const communityId = parseInt(req.params.communityId);
-    const contentId = parseInt(req.params.contentId);
-    
-    if (isNaN(communityId) || isNaN(contentId)) {
-      return res.status(400).json({ message: "Invalid parameters" });
+  // Get all accessible content for the authenticated user
+  app.get("/api/communities/:communityId/accessible-content", isAuthenticated, async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const userId = (req.user as any).id;
+      
+      // Get all content that this user can access
+      const content = await storage.getAccessibleCommunityContent(userId, communityId);
+      
+      // Map to include tier info
+      const contentWithTiers = await Promise.all(content.map(async (item) => {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(item.tierId);
+        return {
+          ...item,
+          tierName: tier?.name || `Tier ${item.tierId}`,
+          // Include creator info
+          creatorName: item.creatorName || (await storage.getUser(item.userId))?.name || "Unknown",
+          creatorAvatar: item.creatorAvatar || (await storage.getUser(item.userId))?.avatar || null,
+        };
+      }));
+      
+      res.json(contentWithTiers);
+    } catch (error) {
+      console.error("Error fetching accessible content:", error);
+      res.status(500).json({ message: "Failed to get accessible content" });
     }
-    
-    // Check if user is authenticated
-    const userId = req.isAuthenticated() ? (req.user as any).id : null;
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    
-    // Get the content item
-    const contentItem = await storage.getCommunityContentItem(contentId);
-    if (!contentItem) {
-      return res.status(404).json({ message: "Content not found" });
-    }
-    
-    // Verify the content belongs to the specified community
-    if (contentItem.communityId !== communityId) {
-      return res.status(404).json({ message: "Content not found in this community" });
-    }
-    
-    // Verify user is an admin, moderator, or the creator
-    const userMembership = await storage.getUserMembership(userId, communityId);
-    const isCreator = contentItem.creatorId === userId;
-    
-    if (!userMembership || 
-        (!userMembership.isAdmin && !userMembership.isModerator && !isCreator)) {
-      return res.status(403).json({ message: "Unauthorized to delete content" });
-    }
-    
-    // Delete the content
-    await storage.deleteCommunityContent(contentId);
-    res.status(204).send();
-  } catch (error) {
-    console.error("[ERROR] Failed to delete exclusive content:", error);
-    res.status(500).json({ message: "Failed to delete exclusive content" });
-  }
-}
+  });
 
-/**
- * Register exclusive content routes
- */
-export function registerExclusiveContentRoutes(app: any) {
-  // Get all exclusive content for a community
-  app.get("/api/communities/:communityId/exclusive-content", getExclusiveContent);
-  
   // Get a specific content item
-  app.get("/api/communities/:communityId/exclusive-content/:contentId", getContentItem);
-  
-  // Create a new content item
-  app.post("/api/communities/:communityId/exclusive-content", createExclusiveContent);
-  
-  // Update a content item
-  app.patch("/api/communities/:communityId/exclusive-content/:contentId", updateExclusiveContent);
-  
-  // Delete a content item
-  app.delete("/api/communities/:communityId/exclusive-content/:contentId", deleteExclusiveContent);
+  app.get("/api/community-content/:contentId", async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      
+      // Get the content details
+      const content = await storage.getCommunityContent(contentId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+
+      // If user is not authenticated, return limited info
+      if (!req.isAuthenticated()) {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(content.tierId);
+        
+        return res.status(403).json({ 
+          id: content.id,
+          title: content.title,
+          description: content.description,
+          contentType: content.contentType,
+          thumbnailUrl: content.thumbnailUrl,
+          tierId: content.tierId,
+          tierName: tier?.name || `Tier ${content.tierId}`,
+          createdAt: content.createdAt,
+          creatorId: content.userId,
+          creatorName: (await storage.getUser(content.userId))?.name || "Unknown",
+          creatorAvatar: (await storage.getUser(content.userId))?.avatar || null,
+          requiredTierId: content.tierId,
+          message: "Authentication required to access this content"
+        });
+      }
+
+      // Check if the authenticated user has access
+      const userId = (req.user as any).id;
+      const hasAccess = await storage.canUserAccessContent(userId, contentId);
+      
+      // Get the membership tier details
+      const tier = await storage.getMembershipTier(content.tierId);
+      const creatorInfo = await storage.getUser(content.userId);
+      
+      if (!hasAccess) {
+        // Return limited info with error message
+        return res.status(403).json({ 
+          id: content.id,
+          title: content.title,
+          description: content.description,
+          contentType: content.contentType,
+          thumbnailUrl: content.thumbnailUrl,
+          tierId: content.tierId,
+          tierName: tier?.name || `Tier ${content.tierId}`,
+          createdAt: content.createdAt,
+          creatorId: content.userId,
+          creatorName: creatorInfo?.name || "Unknown",
+          creatorAvatar: creatorInfo?.avatar || null,
+          requiredTierId: content.tierId,
+          message: "You need to upgrade your membership to access this content"
+        });
+      }
+
+      // Increment view count
+      await storage.incrementContentViewCount(contentId);
+      
+      // Return full content
+      res.json({
+        ...content,
+        tierName: tier?.name || `Tier ${content.tierId}`,
+        creatorName: creatorInfo?.name || "Unknown",
+        creatorAvatar: creatorInfo?.avatar || null
+      });
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      res.status(500).json({ message: "Failed to get content" });
+    }
+  });
+
+  // Create new community content (only for community owners/admins)
+  app.post("/api/communities/:communityId/content", isAuthenticated, async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const userId = (req.user as any).id;
+      
+      // Check if user is admin or owner of the community
+      const isAdminOrOwner = await storage.isUserCommunityAdminOrOwner(userId, communityId);
+      
+      if (!isAdminOrOwner) {
+        return res.status(403).json({ message: "Only community administrators can add content" });
+      }
+
+      // Validate data
+      const contentData = insertCommunityContentSchema.parse({
+        ...req.body,
+        userId,
+        communityId
+      });
+      
+      // Create new content
+      const newContent = await storage.createCommunityContent(contentData);
+      
+      res.status(201).json(newContent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      console.error("Error creating content:", error);
+      res.status(500).json({ message: "Failed to create content" });
+    }
+  });
+
+  // Update community content (only for content creator or admins)
+  app.patch("/api/community-content/:contentId", isAuthenticated, async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      const userId = (req.user as any).id;
+      
+      // Get the content
+      const content = await storage.getCommunityContent(contentId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const isCreator = content.userId === userId;
+      const isAdmin = await storage.isUserCommunityAdminOrOwner(userId, content.communityId);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to update this content" });
+      }
+
+      // Update content
+      const updatedContent = await storage.updateCommunityContent(contentId, req.body);
+      
+      res.json(updatedContent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      console.error("Error updating content:", error);
+      res.status(500).json({ message: "Failed to update content" });
+    }
+  });
+
+  // Delete community content (only for content creator or admins)
+  app.delete("/api/community-content/:contentId", isAuthenticated, async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      const userId = (req.user as any).id;
+      
+      // Get the content
+      const content = await storage.getCommunityContent(contentId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      // Check if user is the creator or an admin
+      const isCreator = content.userId === userId;
+      const isAdmin = await storage.isUserCommunityAdminOrOwner(userId, content.communityId);
+      
+      if (!isCreator && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to delete this content" });
+      }
+
+      // Delete content
+      await storage.deleteCommunityContent(contentId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      res.status(500).json({ message: "Failed to delete content" });
+    }
+  });
+
+  // Like a content item
+  app.post("/api/community-content/:contentId/like", isAuthenticated, async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      const userId = (req.user as any).id;
+      
+      // Check if content exists and user has access
+      const content = await storage.getCommunityContent(contentId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content not found" });
+      }
+      
+      const hasAccess = await storage.canUserAccessContent(userId, contentId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "You need to upgrade your membership to interact with this content" });
+      }
+
+      // Like the content
+      await storage.likeContent(contentId, userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error liking content:", error);
+      res.status(500).json({ message: "Failed to like content" });
+    }
+  });
+
+  // Unlike a content item
+  app.delete("/api/community-content/:contentId/like", isAuthenticated, async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.contentId);
+      const userId = (req.user as any).id;
+      
+      // Unlike the content
+      await storage.unlikeContent(contentId, userId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unliking content:", error);
+      res.status(500).json({ message: "Failed to unlike content" });
+    }
+  });
+
+  // Get content by tier
+  app.get("/api/communities/:communityId/content/by-tier/:tierId", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const tierId = parseInt(req.params.tierId);
+      
+      // Get content by tier
+      const content = await storage.getCommunityContentByTier(communityId, tierId);
+      
+      // Map to include tier info
+      const contentWithTiers = await Promise.all(content.map(async (item) => {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(item.tierId);
+        return {
+          ...item,
+          tierName: tier?.name || `Tier ${item.tierId}`,
+          // Include creator info
+          creatorName: item.creatorName || (await storage.getUser(item.userId))?.name || "Unknown",
+          creatorAvatar: item.creatorAvatar || (await storage.getUser(item.userId))?.avatar || null,
+        };
+      }));
+      
+      res.json(contentWithTiers);
+    } catch (error) {
+      console.error("Error fetching content by tier:", error);
+      res.status(500).json({ message: "Failed to get content by tier" });
+    }
+  });
+
+  // Get content by type
+  app.get("/api/communities/:communityId/content/by-type/:contentType", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const contentType = req.params.contentType as z.infer<typeof contentTypeEnum>;
+      
+      if (!Object.values(contentTypeEnum.enum).includes(contentType)) {
+        return res.status(400).json({ message: "Invalid content type" });
+      }
+      
+      // Get content by type
+      const content = await storage.getCommunityContentByType(communityId, contentType);
+      
+      // Map to include tier info
+      const contentWithTiers = await Promise.all(content.map(async (item) => {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(item.tierId);
+        return {
+          ...item,
+          tierName: tier?.name || `Tier ${item.tierId}`,
+          // Include creator info
+          creatorName: item.creatorName || (await storage.getUser(item.userId))?.name || "Unknown",
+          creatorAvatar: item.creatorAvatar || (await storage.getUser(item.userId))?.avatar || null,
+        };
+      }));
+      
+      res.json(contentWithTiers);
+    } catch (error) {
+      console.error("Error fetching content by type:", error);
+      res.status(500).json({ message: "Failed to get content by type" });
+    }
+  });
+
+  // Get featured content
+  app.get("/api/communities/:communityId/content/featured", async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Get featured content
+      const content = await storage.getFeaturedCommunityContent(communityId);
+      
+      // Map to include tier info
+      const contentWithTiers = await Promise.all(content.map(async (item) => {
+        // Get the membership tier details
+        const tier = await storage.getMembershipTier(item.tierId);
+        return {
+          ...item,
+          tierName: tier?.name || `Tier ${item.tierId}`,
+          // Include creator info
+          creatorName: item.creatorName || (await storage.getUser(item.userId))?.name || "Unknown",
+          creatorAvatar: item.creatorAvatar || (await storage.getUser(item.userId))?.avatar || null,
+        };
+      }));
+      
+      res.json(contentWithTiers);
+    } catch (error) {
+      console.error("Error fetching featured content:", error);
+      res.status(500).json({ message: "Failed to get featured content" });
+    }
+  });
 }
