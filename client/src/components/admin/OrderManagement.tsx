@@ -80,7 +80,7 @@ export default function OrderManagement() {
   const [selectedShippingAPI, setSelectedShippingAPI] = useState("fedex");
   
   // Fetch orders
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, isError } = useQuery({
     queryKey: ["/api/admin/orders", searchTerm, filterStatus],
     queryFn: async () => {
       let endpoint = "/api/admin/orders";
@@ -98,9 +98,18 @@ export default function OrderManagement() {
         endpoint += `?${params.toString()}`;
       }
       
-      const res = await fetch(endpoint);
-      return res.json();
+      try {
+        const res = await fetch(endpoint);
+        if (!res.ok) {
+          throw new Error('API endpoint not ready');
+        }
+        return res.json();
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+        throw new Error('API endpoint not ready');
+      }
     },
+    retry: false, // Don't retry if the endpoint doesn't exist yet
   });
 
   // Update order status mutation
@@ -228,6 +237,44 @@ export default function OrderManagement() {
               {isLoading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : isError ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 my-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <div className="ml-2">
+                      <h3 className="text-sm font-medium text-amber-800">
+                        The admin API endpoints for this feature are being implemented
+                      </h3>
+                      <div className="mt-2 text-sm text-amber-700">
+                        <p>Check back soon for real-time order management functionality.</p>
+                        <p className="mt-2">
+                          In the meantime, here's a preview of the order management UI with placeholder data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Temporary Order Status UI */}
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <Label className="w-24 flex-shrink-0">Order Status:</Label>
+                      <Select defaultValue="processing">
+                        <SelectTrigger className="w-[200px]">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" className="ml-2">Update Status</Button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="rounded-md border">
