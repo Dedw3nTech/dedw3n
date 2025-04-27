@@ -294,13 +294,13 @@ export default function Home() {
     <div className="container mx-auto px-4 py-6">
       {/* Marketplace Options */}
       <div className="rounded-lg bg-primary p-8 mb-12 text-white">
-        <div className="max-w-3xl">
+        <div className="mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to Dedw3n</h1>
-          <p className="text-lg mb-6">
+          <p className="text-lg mb-6 max-w-3xl mx-auto">
             Discover amazing products and services from your friends, trusted vendors and much more
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-6 max-w-6xl mx-auto">
             <div 
               className="bg-white rounded-lg p-4 text-primary hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center"
               onClick={() => {
