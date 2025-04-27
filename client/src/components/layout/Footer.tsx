@@ -7,25 +7,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <h2 className="text-xl font-bold text-gray-800">SocialMarket</h2>
+              <h2 className="text-xl font-bold text-gray-800">Dedw3n</h2>
             </div>
             <p className="text-gray-600 text-sm mb-4">
               The all-in-one platform to buy, sell, and connect with a community of creators and shoppers.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-500 hover:text-primary">
-                <i className="ri-facebook-fill text-xl"></i>
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary">
-                <i className="ri-twitter-fill text-xl"></i>
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary">
-                <i className="ri-instagram-fill text-xl"></i>
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary">
-                <i className="ri-pinterest-fill text-xl"></i>
-              </a>
-            </div>
+
           </div>
 
           <div>
@@ -63,7 +50,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2023 SocialMarket. All rights reserved.</p>
+          <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 Dedw3n. All rights reserved.</p>
           <div className="flex space-x-4">
             <Link href="#" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</Link>
             <Link href="#" className="text-sm text-gray-600 hover:text-primary">Terms of Service</Link>
