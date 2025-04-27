@@ -7,12 +7,15 @@ import {
   Shield,
   FileWarning,
   ListFilter,
+  User,
+  Users,
 } from "lucide-react";
 import ModeratorDashboard from "./ModeratorDashboard";
 import AIModeratorAssistant from "./AIModeratorAssistant";
 import BatchModeration from "./BatchModeration";
 import ModerationLogs from "./ModerationLogs";
 import ContentModerationTools from "./ContentModerationTools";
+import UserModeration from "./UserModeration";
 
 export default function EnhancedModeration() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -20,7 +23,7 @@ export default function EnhancedModeration() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             <span className="hidden md:inline">Dashboard</span>
@@ -35,7 +38,11 @@ export default function EnhancedModeration() {
           </TabsTrigger>
           <TabsTrigger value="tools" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden md:inline">Moderation Tools</span>
+            <span className="hidden md:inline">Content Tools</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden md:inline">User Moderation</span>
           </TabsTrigger>
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -57,6 +64,10 @@ export default function EnhancedModeration() {
 
         <TabsContent value="tools" className="mt-6 space-y-4">
           <ContentModerationTools />
+        </TabsContent>
+
+        <TabsContent value="users" className="mt-6 space-y-4">
+          <UserModeration />
         </TabsContent>
 
         <TabsContent value="logs" className="mt-6 space-y-4">
