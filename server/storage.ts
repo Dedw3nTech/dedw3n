@@ -1,5 +1,6 @@
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { hashPassword } from "./auth";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -799,6 +800,68 @@ export class MemStorage implements IStorage {
 
   async listUsers(): Promise<User[]> {
     return Array.from(this.users.values());
+  }
+  
+  async searchUsers(searchTerm: string): Promise<User[]> {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    
+    return Array.from(this.users.values()).filter(user => 
+      user.username.toLowerCase().includes(lowerCaseSearchTerm) ||
+      user.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      (user.email && user.email.toLowerCase().includes(lowerCaseSearchTerm))
+    );
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    // First check if user exists
+    if (!this.users.has(id)) {
+      return false;
+    }
+    
+    // Delete the user
+    const deleted = this.users.delete(id);
+    
+    // TODO: In a real implementation, we would need to handle related data
+    // like deleting user's posts, comments, etc. or marking them as deleted
+    
+    return deleted;
+  }
+  
+  async resetUserPassword(id: number, newPassword: string): Promise<User | undefined> {
+    // This method is similar to updateUserPassword but intended for admin use
+    const user = await this.getUser(id);
+    if (!user) {
+      return undefined;
+    }
+    
+    console.log(`[DEBUG] Hashing password with salt length 64`);
+    const hashedPassword = await hashPassword(newPassword);
+    console.log(`[DEBUG] Password hashed successfully, length: ${hashedPassword.length}`);
+    
+    const updatedUser = {
+      ...user,
+      password: hashedPassword,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async getUserCount(): Promise<number> {
+    return this.users.size;
+  }
+  
+  async getProductCount(): Promise<number> {
+    return this.products.size;
+  }
+  
+  async getOrderCount(): Promise<number> {
+    return this.orders.size;
+  }
+  
+  async getCommunityCount(): Promise<number> {
+    return this.communities.size;
   }
 
   // Vendor operations
