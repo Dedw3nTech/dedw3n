@@ -52,18 +52,20 @@ export default function UserMenu() {
         onClick={() => setIsOpen(!isOpen)}
       >
         <Avatar>
-          <AvatarImage
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" 
-            alt="User profile"
-          />
-          <AvatarFallback>UN</AvatarFallback>
+          {user?.avatar ? (
+            <AvatarImage
+              src={user.avatar}
+              alt={user.name || user.username}
+            />
+          ) : null}
+          <AvatarFallback>{getInitials(user?.name || user?.username || '')}</AvatarFallback>
         </Avatar>
         <i className="ri-arrow-down-s-line text-gray-500"></i>
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-          <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          <Link href={user ? `/profile/${user.username}` : "/profile"} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-user-line mr-2"></i> {t('account.profile')}
           </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
