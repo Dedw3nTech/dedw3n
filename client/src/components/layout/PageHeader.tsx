@@ -24,6 +24,11 @@ export default function PageHeader({
               {description && (
                 <p className="text-muted-foreground">{description}</p>
               )}
+              {title === "Dating & Relationships" && (
+                <p className="text-xs text-muted-foreground mt-2 italic">
+                  A gift serves as a token of appreciation and does not impose any obligations on the recipient. Please note that refunds are not applicable.
+                </p>
+              )}
             </div>
           </div>
           {actions && <div className="flex gap-2">{actions}</div>}
