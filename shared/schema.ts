@@ -577,6 +577,24 @@ export const videoEngagements = pgTable("video_engagements", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Video product overlays for live commerce
+export const videoProductOverlays = pgTable("video_product_overlays", {
+  id: serial("id").primaryKey(),
+  videoId: integer("video_id").notNull().references(() => videos.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  positionX: integer("position_x").notNull().default(50), // X position in percentage (0-100)
+  positionY: integer("position_y").notNull().default(50), // Y position in percentage (0-100)
+  size: integer("size").notNull().default(20), // Size in percentage (10-50)
+  startTime: integer("start_time"), // When to show the overlay (seconds from video start)
+  endTime: integer("end_time"), // When to hide the overlay (seconds from video start)
+  displayOrder: integer("display_order").default(0), // Order when multiple products are displayed
+  isActive: boolean("is_active").default(true),
+  clickCount: integer("click_count").default(0), // How many times the overlay was clicked
+  conversionCount: integer("conversion_count").default(0), // How many purchases resulted
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Video analytics model
 export const videoAnalytics = pgTable("video_analytics", {
   id: serial("id").primaryKey(),
@@ -588,6 +606,8 @@ export const videoAnalytics = pgTable("video_analytics", {
   engagementRate: doublePrecision("engagement_rate").default(0), // likes + comments + shares / views
   demographics: json("demographics"), // JSON data for viewer demographics
   viewsByCountry: json("views_by_country"), // JSON data for geographic distribution
+  productClickRate: doublePrecision("product_click_rate").default(0), // Percentage of viewers who clicked on products
+  productConversionRate: doublePrecision("product_conversion_rate").default(0), // Percentage of clicks that led to purchase
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -620,6 +640,8 @@ export const playlistItems = pgTable("playlist_items", {
 // Video schemas
 export const insertVideoSchema = createInsertSchema(videos);
 export const insertVideoEngagementSchema = createInsertSchema(videoEngagements);
+export const insertVideoProductOverlaySchema = createInsertSchema(videoProductOverlays)
+  .omit({ id: true, clickCount: true, conversionCount: true, createdAt: true, updatedAt: true });
 export const insertVideoAnalyticsSchema = createInsertSchema(videoAnalytics);
 export const insertVideoPlaylistSchema = createInsertSchema(videoPlaylists);
 export const insertPlaylistItemSchema = createInsertSchema(playlistItems);
@@ -630,6 +652,9 @@ export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
 export type VideoEngagement = typeof videoEngagements.$inferSelect;
 export type InsertVideoEngagement = z.infer<typeof insertVideoEngagementSchema>;
+
+export type VideoProductOverlay = typeof videoProductOverlays.$inferSelect;
+export type InsertVideoProductOverlay = z.infer<typeof insertVideoProductOverlaySchema>;
 
 export type VideoAnalytics = typeof videoAnalytics.$inferSelect;
 export type InsertVideoAnalytics = z.infer<typeof insertVideoAnalyticsSchema>;
