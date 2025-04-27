@@ -68,13 +68,6 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              href="/upload-product" 
-              className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition"
-            >
-              <i className="ri-add-line mr-1"></i> {t('vendor.add_product')}
-            </Link>
-            
             <div className="flex items-center space-x-2">
               <CurrencySelector />
               <LanguageSelector />
