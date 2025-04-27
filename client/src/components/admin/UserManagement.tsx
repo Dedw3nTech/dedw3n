@@ -231,6 +231,7 @@ export default function UserManagement() {
                             user.role === "admin" ? "bg-blue-100 text-blue-800" : 
                             user.role === "moderator" ? "bg-purple-100 text-purple-800" : 
                             user.role === "vendor" ? "bg-green-100 text-green-800" : 
+                            user.role === "business" ? "bg-amber-100 text-amber-800" : 
                             "bg-gray-100 text-gray-800"
                           }`}>
                             {user.role}
@@ -355,6 +356,7 @@ export default function UserManagement() {
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="vendor">Vendor</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
                     <SelectItem value="moderator">Moderator</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
@@ -443,6 +445,7 @@ export default function UserManagement() {
                     <SelectContent>
                       <SelectItem value="user">User</SelectItem>
                       <SelectItem value="vendor">Vendor</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
                       <SelectItem value="moderator">Moderator</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
