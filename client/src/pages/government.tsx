@@ -63,6 +63,12 @@ const GovernmentPage = () => {
           Select the service you need to get started.
         </p>
         
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+          <p className="text-amber-800 font-medium">
+            This service is only available for the DR CONGO momentarily, please come back later for other countries.
+          </p>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {serviceOptions.map((service) => (
             <Card key={service.id} className={`cursor-pointer transition-all hover:shadow-md ${selectedService === service.id ? 'border-blue-500 shadow-md' : ''}`} 
@@ -150,18 +156,19 @@ const GovernmentPage = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="us">United States</SelectItem>
-                          <SelectItem value="uk">United Kingdom</SelectItem>
-                          <SelectItem value="ca">Canada</SelectItem>
-                          <SelectItem value="au">Australia</SelectItem>
-                          <SelectItem value="fr">France</SelectItem>
-                          <SelectItem value="de">Germany</SelectItem>
-                          <SelectItem value="jp">Japan</SelectItem>
-                          <SelectItem value="cn">China</SelectItem>
-                          <SelectItem value="in">India</SelectItem>
-                          <SelectItem value="br">Brazil</SelectItem>
-                          <SelectItem value="ng">Nigeria</SelectItem>
-                          <SelectItem value="za">South Africa</SelectItem>
+                          <SelectItem value="cd">DR Congo</SelectItem>
+                          <SelectItem value="us" disabled>United States</SelectItem>
+                          <SelectItem value="uk" disabled>United Kingdom</SelectItem>
+                          <SelectItem value="ca" disabled>Canada</SelectItem>
+                          <SelectItem value="au" disabled>Australia</SelectItem>
+                          <SelectItem value="fr" disabled>France</SelectItem>
+                          <SelectItem value="de" disabled>Germany</SelectItem>
+                          <SelectItem value="jp" disabled>Japan</SelectItem>
+                          <SelectItem value="cn" disabled>China</SelectItem>
+                          <SelectItem value="in" disabled>India</SelectItem>
+                          <SelectItem value="br" disabled>Brazil</SelectItem>
+                          <SelectItem value="ng" disabled>Nigeria</SelectItem>
+                          <SelectItem value="za" disabled>South Africa</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
