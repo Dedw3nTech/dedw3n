@@ -101,14 +101,42 @@ export function formatCurrency(
   currencyCode: CurrencyCode,
   includeCode: boolean = false
 ): string {
-  // Use the globally defined currency symbols
-  const symbol = currencySymbols[currencyCode];
+  const currencyLocales: Record<CurrencyCode, string> = {
+    GBP: "en-GB",
+    EUR: "de-DE",
+    USD: "en-US",
+    CNY: "zh-CN",
+    INR: "hi-IN",
+    BRL: "pt-BR",
+  };
   
-  // Format with 2 decimal places and appropriate currency symbol
-  const formattedAmount = `${symbol}${amount.toFixed(2)}`;
+  const locale = currencyLocales[currencyCode] || "en-GB";
   
-  // Optionally include the currency code
+  // Format with appropriate currency locale
+  const formattedAmount = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currencyCode,
+  }).format(amount);
+  
+  // Optionally include the currency code if not already included in the format
   return includeCode ? `${formattedAmount} ${currencyCode}` : formattedAmount;
+}
+
+/**
+ * Format price in specified currency, converting from GBP if needed
+ * @param amount The amount in GBP to convert and format
+ * @param currencyCode The target currency code to display
+ * @returns Formatted currency string after conversion
+ */
+export function formatPriceWithCurrency(
+  amount: number,
+  currencyCode: CurrencyCode
+): string {
+  // Convert the amount from GBP to target currency if needed
+  const convertedAmount = convertCurrency(amount, 'GBP', currencyCode);
+  
+  // Format with appropriate currency locale
+  return formatCurrency(convertedAmount, currencyCode);
 }
 
 /**

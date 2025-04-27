@@ -4,6 +4,8 @@ import { useLocation, Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
+import { useCurrency } from '@/hooks/use-currency';
+import { formatPriceWithCurrency } from '@/lib/currencyConverter';
 import {
   Card,
   CardContent,

@@ -6,10 +6,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-GB", {
+// This is a helper function for components that don't have access to the currency context
+// Dynamic components should use formatPriceWithCurrency from currencyConverter.ts instead
+export function formatPrice(price: number, currencyCode: string = "GBP"): string {
+  const currencyLocales: Record<string, string> = {
+    GBP: "en-GB",
+    EUR: "de-DE",
+    USD: "en-US",
+    CNY: "zh-CN",
+    INR: "hi-IN",
+    BRL: "pt-BR",
+  };
+  
+  const locale = currencyLocales[currencyCode] || "en-GB";
+  
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "GBP",
+    currency: currencyCode,
   }).format(price);
 }
 
