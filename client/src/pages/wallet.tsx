@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -65,6 +66,11 @@ export default function WalletPage() {
   const [targetCurrency, setTargetCurrency] = useState('EUR');
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({});
+  
+  // Top-up card payment dialog state
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedCardValue, setSelectedCardValue] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>('card');
   
   // Redirect if not logged in
   if (!user) {
@@ -217,6 +223,169 @@ export default function WalletPage() {
 
   const handleCreateWallet = () => {
     createWalletMutation.mutate(selectedCurrency);
+  };
+
+  // Handle top-up card selection
+  const handleCardSelection = (value: number) => {
+    setSelectedCardValue(value);
+    setShowPaymentDialog(true);
+  };
+
+  // Handle card payment for top-up
+  const handleCardPayment = async () => {
+    try {
+      // Create a payment intent with Stripe
+      const paymentResponse = await apiRequest('POST', '/api/create-payment-intent', {
+        amount: selectedCardValue
+      });
+
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        
+        // Mock successful payment for now
+        // In a real implementation, we would redirect to a Stripe checkout page or use Stripe Elements
+        toast({
+          title: "Payment Processing",
+          description: `Processing payment for £${selectedCardValue} top-up card...`,
+        });
+
+        // Simulate payment processing
+        setTimeout(() => {
+          // After payment success, create the transaction to add funds to wallet
+          createTransactionMutation.mutate({
+            type: 'deposit',
+            amount: selectedCardValue,
+            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+          });
+          
+          setShowPaymentDialog(false);
+        }, 1500);
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: "Unable to process payment. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "An error occurred while processing your payment.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle mobile money payment for top-up
+  const handleMobileMoneyPayment = async () => {
+    try {
+      // Create a mobile money payment request
+      const paymentResponse = await apiRequest('POST', '/api/mobile-money/initiate', {
+        amount: selectedCardValue,
+        currency: wallet?.currency || 'GBP',
+        description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+      });
+
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        
+        // Mock successful mobile money payment
+        toast({
+          title: "Mobile Money Payment",
+          description: `Processing mobile money payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
+        });
+
+        // Simulate payment processing
+        setTimeout(() => {
+          // After payment success, create the transaction to add funds to wallet
+          createTransactionMutation.mutate({
+            type: 'deposit',
+            amount: selectedCardValue,
+            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - Mobile Money`
+          });
+          
+          setShowPaymentDialog(false);
+        }, 1500);
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: "Unable to process mobile money payment. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Mobile money payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "An error occurred while processing your mobile money payment.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle PayPal payment for top-up
+  const handlePaypalPayment = async () => {
+    try {
+      // Create a PayPal order
+      const paymentResponse = await apiRequest('POST', '/api/create-paypal-order', {
+        amount: selectedCardValue,
+        currency: wallet?.currency || 'GBP',
+        description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card Purchase`
+      });
+
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        
+        // Mock successful PayPal payment
+        toast({
+          title: "PayPal Payment",
+          description: `Processing PayPal payment for ${wallet?.currency || 'GBP'}${selectedCardValue}...`,
+        });
+
+        // Simulate payment processing
+        setTimeout(() => {
+          // After payment success, create the transaction to add funds to wallet
+          createTransactionMutation.mutate({
+            type: 'deposit',
+            amount: selectedCardValue,
+            description: `${wallet?.currency || 'GBP'}${selectedCardValue} Top-up Card - PayPal`
+          });
+          
+          setShowPaymentDialog(false);
+        }, 1500);
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: "Unable to process PayPal payment. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("PayPal payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "An error occurred while processing your PayPal payment.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle the payment based on the selected method
+  const handlePayment = () => {
+    switch (paymentMethod) {
+      case 'card':
+        handleCardPayment();
+        break;
+      case 'mobile':
+        handleMobileMoneyPayment();
+        break;
+      case 'paypal':
+        handlePaypalPayment();
+        break;
+      default:
+        handleCardPayment();
+    }
   };
 
   const handleTransaction = (type: string) => (e: React.FormEvent) => {
@@ -585,10 +754,7 @@ export default function WalletPage() {
                         {[5, 10, 25, 50, 100, 250, 500, 1000].map((value) => (
                           <div 
                             key={value}
-                            onClick={() => {
-                              setAmount(value.toString());
-                              setDescription(`${wallet.currency}${value} Top-up Card`);
-                            }}
+                            onClick={() => handleCardSelection(value)}
                             className="border rounded-lg p-3 text-center hover:border-primary hover:bg-primary/5 cursor-pointer transition-colors"
                           >
                             <p className="text-sm font-medium mb-1">Top-up Card</p>
@@ -1099,6 +1265,98 @@ export default function WalletPage() {
           </Card>
         </div>
       </div>
+
+      {/* Top-up Card Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Top-up Card Payment</DialogTitle>
+            <DialogDescription>
+              Select a payment method to purchase your 
+              {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '£'}{selectedCardValue} top-up card.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Selected Top-up Card</h3>
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Amount:</span>
+                  <span className="text-xl font-bold">
+                    {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '£'}{selectedCardValue}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Payment Method</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <div 
+                  className={`border rounded-lg p-3 text-center cursor-pointer transition-colors ${
+                    paymentMethod === 'card' ? 'border-primary bg-primary/10' : 'hover:border-primary hover:bg-primary/5'
+                  }`}
+                  onClick={() => setPaymentMethod('card')}
+                >
+                  <CreditCardIcon className="h-5 w-5 mx-auto mb-1" />
+                  <span className="text-xs font-medium">Card</span>
+                </div>
+                <div 
+                  className={`border rounded-lg p-3 text-center cursor-pointer transition-colors ${
+                    paymentMethod === 'paypal' ? 'border-primary bg-primary/10' : 'hover:border-primary hover:bg-primary/5'
+                  }`}
+                  onClick={() => setPaymentMethod('paypal')}
+                >
+                  <svg className="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.5 15.5H6.5L5 7.5H9.5C11.5 7.5 12.5 9 12 11C11.5 13 9.5 15.5 9.5 15.5Z" fill="#0070E0" />
+                    <path d="M15.5 12H12.5L11 20H15C17 20 18 18.5 17.5 16.5C17 14.5 15.5 12 15.5 12Z" fill="#0070E0" />
+                  </svg>
+                  <span className="text-xs font-medium">PayPal</span>
+                </div>
+                <div 
+                  className={`border rounded-lg p-3 text-center cursor-pointer transition-colors ${
+                    paymentMethod === 'mobile' ? 'border-primary bg-primary/10' : 'hover:border-primary hover:bg-primary/5'
+                  }`}
+                  onClick={() => setPaymentMethod('mobile')}
+                >
+                  <svg className="h-5 w-5 mx-auto mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 4H9C7.89543 4 7 4.89543 7 6V18C7 19.1046 7.89543 20 9 20H15C16.1046 20 17 19.1046 17 18V6C17 4.89543 16.1046 4 15 4Z" stroke="currentColor" strokeWidth="2" />
+                    <path d="M12 18H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  <span className="text-xs font-medium">Mobile Money</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <p className="text-xs text-muted-foreground">
+                By continuing, you agree to our terms and conditions. Your payment information 
+                is secured with industry-standard encryption.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePayment}
+              disabled={createTransactionMutation.isPending}
+            >
+              {createTransactionMutation.isPending ? (
+                <span className="flex items-center">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                  Processing...
+                </span>
+              ) : (
+                'Purchase Card'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
