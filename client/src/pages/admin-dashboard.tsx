@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import UserManagement from "@/components/admin/UserManagement";
+import PostModeration from "@/components/admin/PostModeration";
 import AIInsights from "@/components/social/AIInsights";
 
 // Import placeholder component for development
@@ -206,7 +207,20 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="moderation" className="space-y-4">
-            <PlaceholderComponent title="Content Moderation" />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Content Moderation
+                </CardTitle>
+                <CardDescription>
+                  Review, approve, flag, or remove user-generated content
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PostModeration />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
