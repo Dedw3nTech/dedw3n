@@ -66,6 +66,12 @@ import {
   ThumbsUp,
   Settings,
   ListFilter,
+  BarChart3,
+  TrendingUp,
+  Lightbulb,
+  MessageSquareText,
+  Brain,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +124,25 @@ type Report = {
   status: string;
   reportedBy: number;
   createdAt: string;
+};
+
+// Types for content analysis
+type Topic = {
+  name: string;
+  count: number;
+  percentage: number;
+};
+
+type Sentiment = {
+  positive: number;
+  neutral: number;
+  negative: number;
+};
+
+type ContentInsight = {
+  type: string;
+  engagement: number;
+  recommendation: string;
 };
 
 export default function ContentModerationTools() {
@@ -348,6 +373,25 @@ export default function ContentModerationTools() {
       ]);
     },
     enabled: activeTab === "reports",
+  });
+  
+  // Content Analysis Tab - Data
+  const { 
+    data: contentAnalysisData,
+    isLoading: isLoadingContentAnalysis,
+    isError: isErrorContentAnalysis,
+    refetch: refetchContentAnalysis
+  } = useQuery({
+    queryKey: ['/api/social/insights'],
+    queryFn: async () => {
+      // This will reuse the data from the AI Insights API
+      const res = await fetch('/api/social/insights');
+      if (!res.ok) {
+        throw new Error('Failed to fetch content analysis data');
+      }
+      return res.json();
+    },
+    enabled: activeTab === "content-analysis",
   });
 
   // Mock mutations for UI development - in a real implementation, these would make API calls
@@ -597,7 +641,7 @@ export default function ContentModerationTools() {
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="content-flagging" className="flex items-center gap-2">
               <FileWarning className="h-4 w-4" />
               <span className="hidden md:inline">Content Flagging</span>
@@ -617,6 +661,10 @@ export default function ContentModerationTools() {
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <Flag className="h-4 w-4" />
               <span className="hidden md:inline">Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="content-analysis" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden md:inline">Content Analysis</span>
             </TabsTrigger>
           </TabsList>
 
