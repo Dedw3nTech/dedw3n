@@ -1280,6 +1280,238 @@ export default function ContentModerationTools() {
               </div>
             )}
           </TabsContent>
+          
+          {/* Content Analysis Tab */}
+          <TabsContent value="content-analysis" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">Content Trend Analysis</h3>
+                <p className="text-sm text-muted-foreground">
+                  AI-powered insights to assist with content moderation
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => refetchContentAnalysis()}
+                className="gap-1"
+              >
+                <Sparkles className="h-4 w-4" />
+                Refresh Analysis
+              </Button>
+            </div>
+
+            {isLoadingContentAnalysis ? (
+              renderLoading()
+            ) : isErrorContentAnalysis ? (
+              renderError(refetchContentAnalysis)
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Topic Trends */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      Topic Trends
+                    </CardTitle>
+                    <CardDescription>
+                      Discover trending topics posted by users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {contentAnalysisData?.topics?.length > 0 ? (
+                        contentAnalysisData.topics.map((topic) => (
+                          <div key={topic.name} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{topic.name}</span>
+                              <span className="font-medium">{topic.percentage}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary" 
+                                style={{ width: `${topic.percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                          <TrendingUp className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-sm">No topic data available</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Sentiment Analysis */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <MessageSquareText className="h-5 w-5 text-primary" />
+                      Sentiment Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Monitor overall user emotions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                            Positive
+                          </span>
+                          <span className="font-medium">{contentAnalysisData?.sentiment?.positive || 0}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-green-500" 
+                            style={{ width: `${contentAnalysisData?.sentiment?.positive || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                            Neutral
+                          </span>
+                          <span className="font-medium">{contentAnalysisData?.sentiment?.neutral || 0}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500" 
+                            style={{ width: `${contentAnalysisData?.sentiment?.neutral || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
+                            Negative
+                          </span>
+                          <span className="font-medium">{contentAnalysisData?.sentiment?.negative || 0}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-red-500" 
+                            style={{ width: `${contentAnalysisData?.sentiment?.negative || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Content Insights */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Lightbulb className="h-5 w-5 text-primary" />
+                      Content Insights
+                    </CardTitle>
+                    <CardDescription>
+                      Get tailored recommendations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {contentAnalysisData?.contentInsights?.length > 0 ? (
+                        contentAnalysisData.contentInsights.map((insight) => (
+                          <div key={insight.type} className="border rounded-lg p-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium">{insight.type}</span>
+                              <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                {insight.engagement}% engagement
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{insight.recommendation}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                          <Lightbulb className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-sm">No insight data available</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Advanced Info Card */}
+                <Card className="col-span-1 md:col-span-3">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Brain className="h-5 w-5 text-primary" />
+                      Moderation Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Tailor moderation actions based on content analysis
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                          <h3 className="font-medium">Trending Topics</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Monitor high-volume topics for potential policy violations. Consider creating custom allow/block lists
+                          for trending topics.
+                        </p>
+                        <div className="pt-2">
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <ListFilter className="h-4 w-4" />
+                            Create Topic Filter
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <MessageSquareText className="h-5 w-5 text-primary" />
+                          <h3 className="font-medium">Sentiment Monitoring</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Analyze changes in sentiment to identify emerging issues. Set up alerts for significant negative 
+                          sentiment shifts.
+                        </p>
+                        <div className="pt-2">
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <AlertTriangle className="h-4 w-4" />
+                            Configure Alerts
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="h-5 w-5 text-primary" />
+                          <h3 className="font-medium">Recommendation Actions</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Apply insights to improve moderation efficiency. Create automated rules based on content 
+                          engagement patterns.
+                        </p>
+                        <div className="pt-2">
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <Settings className="h-4 w-4" />
+                            Configure Rules
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </CardContent>
 
