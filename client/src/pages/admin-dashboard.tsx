@@ -58,6 +58,7 @@ import UserModeration from "@/components/admin/UserModeration";
 import PostModeration from "@/components/admin/PostModeration";
 import EnhancedModeration from "@/components/admin/EnhancedModeration";
 import AIInsights from "@/components/social/AIInsights";
+import OrderManagement from "@/components/admin/OrderManagement";
 
 // Import placeholder component for development
 const PlaceholderComponent = ({ title }: { title: string }) => (
@@ -616,7 +617,7 @@ export default function AdminDashboard() {
           </TabsContent>
           
           <TabsContent value="orders" className="space-y-4">
-            <PlaceholderComponent title="Order Management" />
+            <OrderManagement />
           </TabsContent>
           
           <TabsContent value="communities" className="space-y-4">
