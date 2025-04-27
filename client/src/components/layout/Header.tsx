@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
-import SearchOverlay from "../ui/search-overlay";
 import CurrencyConverter from "../ui/currency-converter";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/popover";
 
 export default function Header() {
-  const [searchOpen, setSearchOpen] = useState(false);
   const { view, setView } = useView();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const [, setLocation] = useLocation();
@@ -70,15 +68,6 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={t('products.search')}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <i className="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
-            </div>
-
             <Link 
               href="/upload-product" 
               className="hidden md:inline-flex items-center px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-blue-600 transition"
@@ -234,7 +223,7 @@ export default function Header() {
         </div>
       </div>
 
-      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+      {/* Search functionality removed */}
     </header>
   );
 }
