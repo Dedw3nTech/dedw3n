@@ -38,25 +38,38 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, Crown, Check, Users, Lock, Zap, Shield } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
-const benefitsTransform = (val: string): string[] => {
-  return val.split('\n').filter(benefit => benefit.trim() !== '');
-};
-
-const tierSchema = z.object({
+// Schema for the form input
+const tierFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
   price: z.coerce.number().min(0, "Price must be a non-negative number"),
   currency: z.string().default("USD"),
   tierType: z.enum(["free", "paid", "premium"]),
-  benefits: z.string().transform(benefitsTransform),
+  benefits: z.string(),
   durationDays: z.coerce.number().min(1, "Duration must be at least 1 day"),
   isActive: z.boolean().default(true),
   maxMembers: z.coerce.number().optional(),
 });
 
+// Type for the form data
+type TierFormValues = z.infer<typeof tierFormSchema>;
+
+// Type for the processed tier data (with benefits as string[])
+type TierData = Omit<TierFormValues, 'benefits'> & {
+  benefits: string[];
+};
+
+// Function to transform form values to tier data
+const transformBenefits = (benefitsText: string): string[] => {
+  return benefitsText
+    .split('\n')
+    .filter(benefit => benefit.trim() !== '');
+};
+
+// Type for the membership tier from the API
 type MembershipTier = {
   id: number;
   communityId: number;
@@ -121,7 +134,7 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
 
   // Create tier mutation
   const createTierMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof tierSchema>) => {
+    mutationFn: async (data: TierData) => {
       const response = await apiRequest(
         "POST",
         `/api/communities/${communityId}/tiers`,
@@ -185,11 +198,9 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
     },
   });
 
-  type FormData = z.infer<typeof tierSchema>;
-
   // Form for creating a new membership tier
-  const form = useForm<FormData>({
-    resolver: zodResolver(tierSchema),
+  const form = useForm<TierFormValues>({
+    resolver: zodResolver(tierFormSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -202,8 +213,13 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    createTierMutation.mutate(data);
+  const onSubmit: SubmitHandler<TierFormValues> = (data) => {
+    // Convert benefits from string to string[]
+    const tierData: TierData = {
+      ...data,
+      benefits: transformBenefits(data.benefits)
+    };
+    createTierMutation.mutate(tierData);
   };
 
   const handleSubscribe = (tier: MembershipTier) => {
@@ -495,69 +511,81 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
             >
               {(tier.tierType === 'premium' || tier.tierType === 'paid') && (
                 <div className={`absolute top-0 right-0 w-20 h-20 overflow-hidden`}>
-                  <div className={`absolute transform rotate-45 translate-x-2 translate-y-0 ${tier.tierType === 'premium' ? 'bg-purple-500' : 'bg-amber-500'} text-white text-xs font-bold py-1 text-center w-28`}>
+                  <div 
+                    className={`absolute transform rotate-45 translate-y-[-50%] w-[141%] text-center text-xs font-semibold py-1 ${
+                      tier.tierType === 'premium' ? 'bg-purple-500' : 'bg-amber-500'
+                    } text-white shadow-md`}
+                    style={{ top: '32px', right: '-20px' }}
+                  >
                     {tier.tierType === 'premium' ? 'PREMIUM' : 'PAID'}
                   </div>
                 </div>
               )}
               
               <CardHeader>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center space-x-2">
                   {getTierIcon(tier.tierType)}
-                  <CardTitle className="text-xl">{tier.name}</CardTitle>
+                  <CardTitle>{tier.name}</CardTitle>
                 </div>
-                <div className="flex items-baseline mt-2">
-                  <span className="text-3xl font-bold">
-                    {tier.price > 0 ? `$${tier.price}` : 'Free'}
+                <CardDescription>{tier.description}</CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-bold">
+                    {tier.price > 0 ? `${tier.price} ${tier.currency}` : 'Free'}
                   </span>
                   {tier.price > 0 && (
-                    <span className="ml-1 text-muted-foreground">
-                      /{tier.durationDays} days
+                    <span className="text-muted-foreground ml-2">
+                      / {tier.durationDays} days
                     </span>
                   )}
                 </div>
-                <CardDescription className="mt-2">
-                  {tier.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <h4 className="font-medium mb-2">Benefits:</h4>
-                <ul className="space-y-2">
-                  {tier.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium">Benefits:</h4>
+                  <ul className="space-y-1">
+                    {tier.benefits.map((benefit, index) => (
+                      <li key={index} className="flex items-start">
+                        <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 
                 {tier.maxMembers && (
-                  <div className="mt-4 flex items-center">
-                    <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Limited to {tier.maxMembers} members
-                    </span>
-                  </div>
+                  <Badge variant="outline" className="mt-2">
+                    <Users className="h-3 w-3 mr-1" />
+                    Limited to {tier.maxMembers} members
+                  </Badge>
                 )}
               </CardContent>
-              <CardFooter className="flex flex-col space-y-4">
-                {/* If user already has this tier */}
-                {userMembership && userMembership.tierId === tier.id ? (
-                  <div className="w-full">
-                    <Badge className="w-full justify-center py-2 bg-primary-foreground text-primary">
-                      Current Membership
-                    </Badge>
-                    <p className="text-xs text-center text-muted-foreground mt-2">
-                      Expires: {new Date(userMembership.endDate).toLocaleDateString()}
-                    </p>
-                  </div>
+              
+              <CardFooter>
+                {userMembership?.tierId === tier.id ? (
+                  <Button disabled className="w-full bg-green-600 hover:bg-green-700">
+                    <Check className="h-4 w-4 mr-2" />
+                    Current Membership
+                  </Button>
+                ) : !tier.isActive ? (
+                  <Button disabled className="w-full">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Currently Unavailable
+                  </Button>
                 ) : (
                   <Button 
+                    variant="default" 
                     className="w-full"
-                    disabled={!tier.isActive}
                     onClick={() => handleSubscribe(tier)}
+                    disabled={subscribeMutation.isPending}
                   >
-                    {tier.price > 0 ? 'Subscribe' : 'Join Free Tier'}
+                    {subscribeMutation.isPending && selectedTier?.id === tier.id && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
+                    Subscribe
                   </Button>
                 )}
               </CardFooter>
@@ -566,45 +594,58 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
         </div>
       )}
 
-      {/* Subscribe Confirmation Dialog */}
       <Dialog open={isSubscribeDialogOpen} onOpenChange={setIsSubscribeDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Subscribe to {selectedTier?.name}</DialogTitle>
             <DialogDescription>
-              {selectedTier && selectedTier.price > 0 
-                ? `You'll be charged $${selectedTier.price} for a ${selectedTier.durationDays}-day subscription.`
-                : 'You\'re joining a free membership tier.'}
+              {selectedTier?.price > 0 
+                ? `You will be charged ${selectedTier?.price} ${selectedTier?.currency} for this membership.`
+                : 'This is a free membership tier.'}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
-            <h4 className="font-medium mb-2">Benefits:</h4>
+          <div className="space-y-4 py-4">
+            <h4 className="font-medium">Benefits:</h4>
             <ul className="space-y-2">
-              {selectedTier?.benefits?.map((benefit, index) => (
+              {selectedTier?.benefits.map((benefit, index) => (
                 <li key={index} className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
                   <span>{benefit}</span>
                 </li>
               ))}
             </ul>
+            
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Duration:</span>
+              <span>{selectedTier?.durationDays} days</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Price:</span>
+              <span className="font-semibold">
+                {selectedTier?.price > 0 ? `${selectedTier?.price} ${selectedTier?.currency}` : 'Free'}
+              </span>
+            </div>
           </div>
           
-          <DialogFooter>
-            <Button 
-              variant="outline" 
+          <DialogFooter className="flex space-x-2 sm:space-x-0">
+            <Button
+              variant="outline"
               onClick={() => setIsSubscribeDialogOpen(false)}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={confirmSubscription}
               disabled={subscribeMutation.isPending}
             >
               {subscribeMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               )}
-              {selectedTier && selectedTier.price > 0 ? 'Pay & Subscribe' : 'Confirm'}
+              Confirm Subscription
             </Button>
           </DialogFooter>
         </DialogContent>
