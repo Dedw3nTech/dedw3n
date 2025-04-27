@@ -27,6 +27,7 @@ type DatingProfile = {
   isActive: boolean;
   interests: string[];
   wishlist: WishlistItem[];
+  isMatch?: boolean; // Added to track match status
 };
 
 type WishlistItem = {
@@ -35,6 +36,19 @@ type WishlistItem = {
   price: number;
   imageUrl: string;
   link: string;
+};
+
+// Match type for when gift is accepted
+type Match = {
+  id: number;
+  userId: number;
+  matchedUserId: number;
+  username: string;
+  name: string;
+  avatar: string | null;
+  matchDate: Date;
+  giftId: number;
+  giftName: string;
 };
 
 // Dummy data for demonstration
@@ -101,6 +115,19 @@ const sampleProfiles: DatingProfile[] = [
   }
 ];
 
+// Example match for demonstration
+const sampleMatch: Match = {
+  id: 1,
+  userId: 2, // Current user's ID
+  matchedUserId: 103,
+  username: "sara_p",
+  name: "Sara Parker",
+  avatar: null,
+  matchDate: new Date(),
+  giftId: 3,
+  giftName: "Art Supplies Set"
+};
+
 export default function DatingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -111,6 +138,7 @@ export default function DatingPage() {
   const [interests, setInterests] = useState("");
   const [wishlistItem, setWishlistItem] = useState("");
   const [wishlistItemPrice, setWishlistItemPrice] = useState("");
+  const [matches, setMatches] = useState<Match[]>([sampleMatch]); // Sample match data
   
   // Handling form submission
   const handleSaveProfile = () => {
@@ -237,20 +265,6 @@ export default function DatingPage() {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter className="border-t pt-4 flex justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleStartConversation(profile.username)}
-                      className="flex-1 mr-2"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Message
-                    </Button>
-                    <Button className="flex-1">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Like Profile
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -366,12 +380,44 @@ export default function DatingPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Heart className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground text-center max-w-sm">
-                    You don't have any matches yet. Browse profiles and send gifts to start making connections!
-                  </p>
-                </div>
+                {matches.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Heart className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-center max-w-sm">
+                      You don't have any matches yet. Browse profiles and send gifts to start making connections!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {matches.map((match) => (
+                      <div key={match.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={match.avatar || ""} alt={match.name} />
+                              <AvatarFallback>{match.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-medium">{match.name}</h3>
+                              <p className="text-sm text-muted-foreground">@{match.username}</p>
+                              <div className="flex items-center mt-1 text-xs text-muted-foreground">
+                                <Gift className="h-3 w-3 mr-1" />
+                                <span>Matched via gift: {match.giftName}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => handleStartConversation(match.username)}
+                            size="sm"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
