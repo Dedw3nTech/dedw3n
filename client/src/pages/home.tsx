@@ -271,9 +271,9 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Marketplace Options */}
-      <div className="rounded-lg bg-gradient-to-r from-primary to-primary-dark p-8 mb-12 text-white">
+      <div className="rounded-lg bg-primary p-8 mb-12 text-white">
         <div className="max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to SocialMarket</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to Dedw3n</h1>
           <p className="text-lg mb-6">
             Discover amazing products from trusted vendors, connect with other shoppers, 
             and enjoy a seamless shopping experience.
