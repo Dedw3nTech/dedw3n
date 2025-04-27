@@ -182,14 +182,15 @@ export default function MultiCarrierShipping({ orderTotal, onShippingMethodChang
       </CardHeader>
       <CardContent>
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="mb-6">
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="all">All Carriers</TabsTrigger>
-            {carriers.slice(0, 4).map(carrierId => (
+            {carriers.slice(0, 5).map(carrierId => (
               <TabsTrigger key={carrierId} value={carrierId}>
                 {carrierId === "fedex" ? "FedEx" : 
                  carrierId === "ups" ? "UPS" : 
                  carrierId === "usps" ? "USPS" : 
                  carrierId === "dhl" ? "DHL" : 
+                 carrierId === "others" ? "Others" :
                  carrierId === "standard" ? "Standard" : carrierId}
               </TabsTrigger>
             ))}

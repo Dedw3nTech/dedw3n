@@ -151,6 +151,45 @@ export const carriers = [
         estimatedDeliveryDays: 1
       }
     ]
+  },
+  {
+    id: "others",
+    name: "Other Carriers",
+    logo: "https://cdn-icons-png.flaticon.com/512/8368/8368550.png",
+    methods: [
+      {
+        id: "aramex_express",
+        name: "Aramex Express",
+        description: "International delivery in 3-5 business days",
+        basePrice: 15.99,
+        freeShippingThreshold: 120,
+        estimatedDeliveryDays: 5
+      },
+      {
+        id: "royal_mail",
+        name: "Royal Mail Tracked",
+        description: "UK delivery in 1-3 business days",
+        basePrice: 6.99,
+        freeShippingThreshold: 50,
+        estimatedDeliveryDays: 3
+      },
+      {
+        id: "australia_post",
+        name: "Australia Post",
+        description: "Australia delivery in 2-5 business days",
+        basePrice: 12.99,
+        freeShippingThreshold: 100,
+        estimatedDeliveryDays: 5
+      },
+      {
+        id: "dpd_classic",
+        name: "DPD Classic",
+        description: "European delivery in 2-4 business days",
+        basePrice: 9.99,
+        freeShippingThreshold: 80,
+        estimatedDeliveryDays: 4
+      }
+    ]
   }
 ];
 
