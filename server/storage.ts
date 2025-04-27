@@ -441,6 +441,7 @@ export class MemStorage implements IStorage {
   private creatorEarnings: Map<number, CreatorEarning>;
   private subscriptions: Map<number, Subscription>;
   private communityContents: Map<number, CommunityContent>;
+  private contentLikes: Map<number, { contentId: number; userId: number }>;
   
   // Video-related maps
   private videos: Map<number, Video>;
@@ -450,6 +451,8 @@ export class MemStorage implements IStorage {
   private videoPlaylists: Map<number, VideoPlaylist>;
   private playlistItems: Map<number, PlaylistItem>;
   private videoPurchases: Map<number, VideoPurchase>;
+  private communityContents: Map<number, CommunityContent>;
+  private contentLikes: Map<number, { contentId: number; userId: number }> = new Map();
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -529,6 +532,7 @@ export class MemStorage implements IStorage {
     this.creatorEarnings = new Map();
     this.subscriptions = new Map();
     this.communityContents = new Map();
+    this.contentLikes = new Map();
     
     // Initialize video-related maps
     this.videos = new Map();
@@ -3155,6 +3159,177 @@ export class MemStorage implements IStorage {
       // A lower id number typically means a higher tier
       return userTier.id <= contentTier.id;
     });
+  }
+
+  // Add community content methods within the class
+  async createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent> {
+    const id = this.communityContentIdCounter++;
+    const newContent: CommunityContent = {
+      id,
+      ...content,
+      viewCount: 0,
+      likeCount: 0,
+      commentCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.communityContents.set(id, newContent);
+    return newContent;
+  }
+
+  async getCommunityContent(contentId: number): Promise<CommunityContent | undefined> {
+    return this.communityContents.get(contentId);
+  }
+
+  async updateCommunityContent(contentId: number, updates: Partial<CommunityContent>): Promise<CommunityContent | undefined> {
+    const content = this.communityContents.get(contentId);
+    if (!content) {
+      return undefined;
+    }
+    const updatedContent = { 
+      ...content, 
+      ...updates,
+      updatedAt: new Date() 
+    };
+    this.communityContents.set(contentId, updatedContent);
+    return updatedContent;
+  }
+
+  async deleteCommunityContent(contentId: number): Promise<boolean> {
+    return this.communityContents.delete(contentId);
+  }
+
+  async listCommunityContent(communityId: number): Promise<CommunityContent[]> {
+    return Array.from(this.communityContents.values())
+      .filter(content => content.communityId === communityId);
+  }
+
+  async getAccessibleCommunityContent(userId: number, communityId: number): Promise<CommunityContent[]> {
+    // Get the user's memberships for this community
+    const userMemberships = Array.from(this.memberships.values())
+      .filter(m => m.userId === userId && m.communityId === communityId && m.status === 'active');
+
+    if (userMemberships.length === 0) {
+      // User is not a member of this community or doesn't have an active membership
+      return [];
+    }
+
+    // Get the highest tier the user has access to
+    const userTierIds = userMemberships.map(m => m.tierId);
+    const userTiers = await Promise.all(userTierIds.map(id => this.getMembershipTier(id)));
+    
+    // Find content that the user can access based on their tier levels
+    const content = Array.from(this.communityContents.values())
+      .filter(content => {
+        // Content from the community user is a member of
+        if (content.communityId !== communityId) return false;
+        
+        // Check if user has access to this content's tier
+        return userTierIds.includes(content.tierId);
+      });
+
+    return content;
+  }
+
+  async canUserAccessContent(userId: number, contentId: number): Promise<boolean> {
+    const content = await this.getCommunityContent(contentId);
+    if (!content) return false;
+
+    // Check if user has an active membership for the content's community and tier
+    const userMemberships = Array.from(this.memberships.values())
+      .filter(m => 
+        m.userId === userId && 
+        m.communityId === content.communityId && 
+        m.status === 'active'
+      );
+
+    // Find if user has tier access
+    for (const membership of userMemberships) {
+      // Get the membership tier details
+      const tier = await this.getMembershipTier(membership.tierId);
+      
+      // If user's tier level is equal or higher than content's tier
+      if (tier && membership.tierId >= content.tierId) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async incrementContentViewCount(contentId: number): Promise<void> {
+    const content = await this.getCommunityContent(contentId);
+    if (content) {
+      content.viewCount = (content.viewCount || 0) + 1;
+      content.updatedAt = new Date();
+      this.communityContents.set(contentId, content);
+    }
+  }
+
+  async likeContent(contentId: number, userId: number): Promise<void> {
+    // Check if user already liked this content
+    const existingLike = Array.from(this.contentLikes.values())
+      .find(like => like.contentId === contentId && like.userId === userId);
+    
+    if (!existingLike) {
+      // Add new like
+      const id = Math.max(0, ...Array.from(this.contentLikes.keys())) + 1;
+      this.contentLikes.set(id, { contentId, userId });
+      
+      // Update content like count
+      const content = await this.getCommunityContent(contentId);
+      if (content) {
+        content.likeCount = (content.likeCount || 0) + 1;
+        this.communityContents.set(contentId, content);
+      }
+    }
+  }
+
+  async unlikeContent(contentId: number, userId: number): Promise<void> {
+    // Find the existing like
+    const likeEntry = Array.from(this.contentLikes.entries())
+      .find(([_, like]) => like.contentId === contentId && like.userId === userId);
+    
+    if (likeEntry) {
+      // Remove the like
+      this.contentLikes.delete(likeEntry[0]);
+      
+      // Update content like count
+      const content = await this.getCommunityContent(contentId);
+      if (content && content.likeCount && content.likeCount > 0) {
+        content.likeCount -= 1;
+        this.communityContents.set(contentId, content);
+      }
+    }
+  }
+
+  async getCommunityContentByTier(communityId: number, tierId: number): Promise<CommunityContent[]> {
+    return Array.from(this.communityContents.values())
+      .filter(content => content.communityId === communityId && content.tierId === tierId);
+  }
+
+  async getCommunityContentByType(communityId: number, contentType: string): Promise<CommunityContent[]> {
+    return Array.from(this.communityContents.values())
+      .filter(content => content.communityId === communityId && content.contentType === contentType);
+  }
+
+  async getFeaturedCommunityContent(communityId: number): Promise<CommunityContent[]> {
+    return Array.from(this.communityContents.values())
+      .filter(content => content.communityId === communityId && content.isFeatured === true);
+  }
+
+  async isUserCommunityAdminOrOwner(userId: number, communityId: number): Promise<boolean> {
+    // Check if user is the owner
+    const community = await this.getCommunity(communityId);
+    if (community && community.ownerId === userId) {
+      return true;
+    }
+
+    // Check if user is an admin
+    const membership = Array.from(this.communityMembers.values())
+      .find(m => m.communityId === communityId && m.userId === userId);
+    
+    return membership?.role === 'admin' || membership?.role === 'owner';
   }
 }
 
