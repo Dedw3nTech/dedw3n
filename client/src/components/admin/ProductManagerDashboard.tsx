@@ -34,7 +34,13 @@ import {
   Loader2,
   Maximize2,
   Download,
-  Share2
+  Share2,
+  Settings,
+  Check,
+  MessageSquareText,
+  Eye,
+  X,
+  Lightbulb
 } from "lucide-react";
 
 // Mock data for product KPIs
