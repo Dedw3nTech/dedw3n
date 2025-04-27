@@ -34,11 +34,14 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
       const wsUrl = `${protocol}//${window.location.host}/ws`;
       
       console.log('Connecting to WebSocket at:', wsUrl);
+      
+      // Create new WebSocket connection
       const ws = new WebSocket(wsUrl);
       
       // Set the socket immediately to keep a reference to it
       setSocket(ws);
 
+      // Handle connection opened
       ws.onopen = () => {
         setIsConnected(true);
         setReconnectAttempt(0);
@@ -51,16 +54,20 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
         }));
       };
 
+      // Handle connection closed
       ws.onclose = (e) => {
         setIsConnected(false);
         console.log('WebSocket connection closed', e.code, e.reason);
 
         // Attempt to reconnect unless maximum attempts reached
         if (reconnectAttempt < maxReconnectAttempts) {
+          const reconnectDelay = reconnectInterval * (Math.pow(1.5, reconnectAttempt) || 1);
+          console.log(`Attempting to reconnect in ${reconnectDelay}ms (attempt ${reconnectAttempt + 1}/${maxReconnectAttempts})`);
+          
           setTimeout(() => {
             setReconnectAttempt((prev) => prev + 1);
             connectWebSocket();
-          }, reconnectInterval);
+          }, reconnectDelay);
         } else {
           toast({
             title: 'Connection lost',
@@ -70,21 +77,40 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
+      // Handle connection errors
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        toast({
-          title: 'Connection error',
-          description: 'There was an error with the messaging service.',
-          variant: 'destructive',
-        });
+        // Don't show toast on every error as they're often followed by onclose events
+        // which will handle reconnection
       };
 
+      // Handle incoming messages
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('WebSocket received:', data.type);
 
           switch (data.type) {
+            case 'new_message':
+              // This is the message type sent by our new server implementation
+              // Invalidate query cache for the conversation and unread count
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.message.senderId] });
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+
+              // Show toast notification for new message if not from current user
+              if (data.message.senderId !== user.id) {
+                toast({
+                  title: data.message.senderName || 'New message',
+                  description: data.message.content.length > 30 
+                    ? data.message.content.substring(0, 30) + '...' 
+                    : data.message.content,
+                });
+              }
+              break;
+              
             case 'message':
+              // Backwards compatibility with old message type
               // Invalidate query cache for the conversation and unread count
               queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.senderId] });
               queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
@@ -93,7 +119,7 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
               // Show toast notification for new message if not from current user
               if (data.senderId !== user.id) {
                 toast({
-                  title: data.senderName,
+                  title: data.senderName || 'New message',
                   description: data.content.length > 30 
                     ? data.content.substring(0, 30) + '...' 
                     : data.content,
@@ -112,9 +138,47 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
               setOnlineUsers(data.users || []);
               break;
 
+            case 'user_online':
+              setOnlineUsers(prev => {
+                if (!prev.includes(data.userId)) {
+                  return [...prev, data.userId];
+                }
+                return prev;
+              });
+              break;
+              
+            case 'user_offline':
+              setOnlineUsers(prev => prev.filter(id => id !== data.userId));
+              break;
+
             case 'read_receipt':
-              // Invalidate query cache for the conversation
-              queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.userId] });
+              // Handle both single messageId and messageIds array
+              if (data.messageId) {
+                queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.userId] });
+              } else if (data.messageIds && data.readBy) {
+                queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.readBy] });
+              }
+              break;
+              
+            case 'message_sent':
+              // Confirmation that a message was sent and saved
+              console.log('Message sent confirmation:', data.messageId);
+              break;
+              
+            case 'ping':
+              // Respond to server ping to keep connection alive
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'pong' }));
+              }
+              break;
+              
+            case 'error':
+              console.error('WebSocket error from server:', data.message);
+              toast({
+                title: 'Messaging error',
+                description: data.message,
+                variant: 'destructive',
+              });
               break;
 
             default:
@@ -133,12 +197,13 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
       });
     }
 
+    // Return cleanup function
     return () => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
       }
     };
-  }, [user, reconnectAttempt, toast, queryClient, socket]);
+  }, [user, reconnectAttempt, toast, queryClient]);
 
   useEffect(() => {
     if (user) {

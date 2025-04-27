@@ -37,160 +37,311 @@ export async function registerRoutes(app: Express): Promise<Server> {
     clientTracking: true 
   });
   
-  // Store active connections with user IDs
-  const connections = new Map<number, WebSocket[]>();
+  // Store active connections with user IDs using a Map with Set for each user
+  // Using Set instead of Array to prevent duplicate connections and easier removal
+  const connections = new Map<number, Set<WebSocket>>();
+  
+  console.log('WebSocket server initialized at /ws path');
   
   wss.on('connection', (ws, req) => {
-    console.log('WebSocket client connected');
+    console.log('WebSocket connection established');
     let userId: number | null = null;
+    let authenticated = false;
     
+    // Setup ping interval to keep connection alive (important for browser WebSockets)
+    const pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        } catch (err) {
+          console.error('Error sending ping:', err);
+          clearInterval(pingInterval);
+        }
+      } else {
+        clearInterval(pingInterval);
+      }
+    }, 30000); // ping every 30 seconds
+    
+    // Handle incoming messages
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
         
-        // Handle authentication
+        // Authentication must come first
         if (data.type === 'auth') {
-          userId = data.userId;
-          console.log('User', userId, 'authenticated on WebSocket');
-          // Store connection by user ID
-          if (!connections.has(userId)) {
-            connections.set(userId, []);
+          // Validate userId
+          if (!data.userId || isNaN(parseInt(data.userId.toString()))) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Invalid userId'
+            }));
+            return;
           }
-          connections.get(userId)?.push(ws);
-          console.log(`User ${userId} authenticated on WebSocket`);
           
-          // Send initial online status of connections
+          userId = parseInt(data.userId.toString());
+          authenticated = true;
+          
+          // Initialize user's connection set if not exists
+          if (!connections.has(userId)) {
+            connections.set(userId, new Set());
+          }
+          
+          // Add this connection to the user's set
+          const userConnections = connections.get(userId);
+          if (userConnections) {
+            userConnections.add(ws);
+            console.log(`User ${userId} authenticated on WebSocket. Active connections: ${userConnections.size}`);
+          }
+          
+          // Send online users list to the newly connected client
           const onlineUsers = Array.from(connections.keys());
           ws.send(JSON.stringify({
             type: 'online_users',
             users: onlineUsers
           }));
-        }
-        
-        // Handle chat message
-        else if (data.type === 'message') {
-          console.log(`Received message: ${JSON.stringify(data)}`);
           
-          // Store message in database
-          if (userId && data.recipientId && data.content) {
-            const messageData = {
-              senderId: userId,
-              receiverId: data.recipientId, // Changed to receiverId to match schema
-              content: data.content,
-              attachmentUrl: data.attachmentUrl || null,
-              attachmentType: data.attachmentType || null
-            };
-            
-            // Save to database
-            const savedMessage = await storage.createMessage(messageData);
-            
-            // Forward message to recipient if online
-            const receiverConnections = connections.get(data.recipientId);
-            if (receiverConnections && receiverConnections.length > 0) {
-              const outgoingMessage = JSON.stringify({
-                type: 'new_message',
-                message: savedMessage
-              });
-              
-              receiverConnections.forEach(conn => {
-                if (conn.readyState === WebSocket.OPEN) {
-                  conn.send(outgoingMessage);
-                }
-              });
-            }
-            
-            // Send confirmation back to sender
-            ws.send(JSON.stringify({
-              type: 'message_sent',
-              messageId: savedMessage.id
-            }));
-          }
+          // Notify other users that this user is online
+          broadcastUserStatus(userId, true);
+          return;
         }
         
-        // Handle typing indicator
-        else if (data.type === 'typing') {
-          if (userId && data.recipientId) {
-            const receiverConnections = connections.get(data.recipientId);
-            if (receiverConnections && receiverConnections.length > 0) {
-              const typingNotification = JSON.stringify({
-                type: 'typing',
-                senderId: userId,
-                receiverId: data.recipientId,
-                isTyping: data.isTyping
-              });
-              
-              receiverConnections.forEach(conn => {
-                if (conn.readyState === WebSocket.OPEN) {
-                  conn.send(typingNotification);
-                }
-              });
-            }
-          }
+        // For all other message types, require authentication
+        if (!authenticated || userId === null) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Not authenticated'
+          }));
+          return;
         }
         
-        // Handle read receipts
-        else if (data.type === 'read_receipt') {
-          if (userId && data.messageIds && Array.isArray(data.messageIds)) {
-            // Update messages as read in database
-            for (const messageId of data.messageIds) {
-              await storage.markMessageAsRead(messageId);
-            }
+        // Handle different message types
+        switch (data.type) {
+          case 'message':
+            await handleChatMessage(userId, ws, data);
+            break;
             
-            // Notify sender that messages were read
-            if (data.senderId) {
-              const senderConnections = connections.get(data.senderId);
-              if (senderConnections && senderConnections.length > 0) {
-                const readReceipt = JSON.stringify({
-                  type: 'read_receipt',
-                  messageIds: data.messageIds,
-                  readBy: userId
-                });
-                
-                senderConnections.forEach(conn => {
-                  if (conn.readyState === WebSocket.OPEN) {
-                    conn.send(readReceipt);
-                  }
-                });
-              }
-            }
-          }
+          case 'typing':
+            handleTypingIndicator(userId, data);
+            break;
+            
+          case 'read_receipt':
+            await handleReadReceipt(userId, data);
+            break;
+            
+          case 'pong':
+            // Client responded to ping, connection is alive
+            break;
+            
+          default:
+            console.log(`Unknown message type: ${data.type}`);
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
       }
     });
     
+    // Handle connection close
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
-      if (userId) {
-        // Remove this connection from user's connections
-        const userConnections = connections.get(userId);
-        if (userConnections) {
-          const index = userConnections.indexOf(ws);
-          if (index !== -1) {
-            userConnections.splice(index, 1);
-          }
-          
-          // If no more connections, remove user from connections map
-          if (userConnections.length === 0) {
-            connections.delete(userId);
-            
-            // Broadcast user offline status
-            for (const userConnections of connections.values()) {
-              userConnections.forEach(conn => {
-                if (conn.readyState === WebSocket.OPEN) {
-                  conn.send(JSON.stringify({
-                    type: 'user_offline',
-                    userId
-                  }));
-                }
-              });
-            }
-          }
-        }
+      clearInterval(pingInterval);
+      
+      if (authenticated && userId !== null) {
+        removeConnection(userId, ws);
+      }
+    });
+    
+    // Handle errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      clearInterval(pingInterval);
+      
+      if (authenticated && userId !== null) {
+        removeConnection(userId, ws);
       }
     });
   });
+  
+  // Helper function to remove a connection and update online status
+  function removeConnection(userId: number, connection: WebSocket) {
+    const userConnections = connections.get(userId);
+    if (!userConnections) return;
+    
+    // Remove this specific connection
+    userConnections.delete(connection);
+    
+    // If user has no more active connections, remove from online users
+    if (userConnections.size === 0) {
+      connections.delete(userId);
+      // Broadcast offline status
+      broadcastUserStatus(userId, false);
+    }
+  }
+  
+  // Helper function to broadcast user status changes
+  function broadcastUserStatus(userId: number, isOnline: boolean) {
+    const statusUpdate = JSON.stringify({
+      type: isOnline ? 'user_online' : 'user_offline',
+      userId: userId,
+      timestamp: Date.now()
+    });
+    
+    // Send to all connected clients except the user
+    for (const [otherUserId, userConnections] of connections.entries()) {
+      if (otherUserId !== userId) {
+        // Using Array.from to avoid TypeScript iteration issues with Set
+        Array.from(userConnections).forEach(conn => {
+          if (conn.readyState === WebSocket.OPEN) {
+            try {
+              conn.send(statusUpdate);
+            } catch (error) {
+              console.error('Error sending status update:', error);
+            }
+          }
+        });
+      }
+    }
+  }
+  
+  // Handle chat messages
+  async function handleChatMessage(senderId: number, senderConnection: WebSocket, data: any) {
+    if (!data.recipientId || !data.content) {
+      console.error('Invalid message data:', data);
+      return;
+    }
+    
+    try {
+      const recipientId = parseInt(data.recipientId.toString());
+      
+      // Create message data object
+      const messageData = {
+        senderId: senderId,
+        receiverId: recipientId,
+        content: data.content,
+        attachmentUrl: data.attachmentUrl || null,
+        attachmentType: data.attachmentType || null
+      };
+      
+      // Save to database
+      const savedMessage = await storage.createMessage(messageData);
+      
+      // Send confirmation to sender
+      if (senderConnection.readyState === WebSocket.OPEN) {
+        try {
+          senderConnection.send(JSON.stringify({
+            type: 'message_sent',
+            messageId: savedMessage.id
+          }));
+        } catch (error) {
+          console.error('Error sending message confirmation:', error);
+        }
+      }
+      
+      // Forward to recipient if online
+      const recipientConnections = connections.get(recipientId);
+      if (recipientConnections && recipientConnections.size > 0) {
+        // Get sender info for the message notification
+        const sender = await storage.getUser(senderId);
+        
+        const messagePayload = JSON.stringify({
+          type: 'new_message',
+          message: {
+            ...savedMessage,
+            senderName: sender?.name || 'Unknown User'
+          }
+        });
+        
+        // Using Array.from to avoid TypeScript iteration issues with Set
+        Array.from(recipientConnections).forEach(conn => {
+          if (conn.readyState === WebSocket.OPEN) {
+            try {
+              conn.send(messagePayload);
+            } catch (error) {
+              console.error('Error forwarding message to recipient:', error);
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling chat message:', error);
+    }
+  }
+  
+  // Handle typing indicators
+  function handleTypingIndicator(senderId: number, data: any) {
+    if (!data.recipientId) return;
+    
+    try {
+      const recipientId = parseInt(data.recipientId.toString());
+      const recipientConnections = connections.get(recipientId);
+      
+      if (recipientConnections && recipientConnections.size > 0) {
+        const typingPayload = JSON.stringify({
+          type: 'typing',
+          senderId: senderId,
+          isTyping: !!data.isTyping
+        });
+        
+        // Using Array.from to avoid TypeScript iteration issues with Set
+        Array.from(recipientConnections).forEach(conn => {
+          if (conn.readyState === WebSocket.OPEN) {
+            try {
+              conn.send(typingPayload);
+            } catch (error) {
+              console.error('Error sending typing indicator:', error);
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling typing indicator:', error);
+    }
+  }
+  
+  // Handle read receipts
+  async function handleReadReceipt(userId: number, data: any) {
+    if (!data.messageIds || !Array.isArray(data.messageIds)) {
+      if (data.messageId) {
+        // Handle single message ID
+        data.messageIds = [data.messageId];
+      } else {
+        return;
+      }
+    }
+    
+    try {
+      // Update messages as read in database
+      for (const messageId of data.messageIds) {
+        await storage.markMessageAsRead(messageId);
+      }
+      
+      // Notify sender that messages were read if senderId is provided
+      if (data.senderId) {
+        const senderId = parseInt(data.senderId.toString());
+        const senderConnections = connections.get(senderId);
+        
+        if (senderConnections && senderConnections.size > 0) {
+          const readReceiptPayload = JSON.stringify({
+            type: 'read_receipt',
+            messageIds: data.messageIds,
+            readBy: userId
+          });
+          
+          // Using Array.from to avoid TypeScript iteration issues with Set
+          Array.from(senderConnections).forEach(conn => {
+            if (conn.readyState === WebSocket.OPEN) {
+              try {
+                conn.send(readReceiptPayload);
+              } catch (error) {
+                console.error('Error sending read receipt:', error);
+              }
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling read receipt:', error);
+    }
+  }
 
   // Seed the database with initial data
   await seedDatabase();
