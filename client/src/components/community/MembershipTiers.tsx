@@ -40,6 +40,7 @@ import { Loader2, Plus, Crown, Check, Users, Lock, Zap, Shield } from "lucide-re
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
+import MembershipPayment from "./MembershipPayment";
 
 // Schema for the form input
 const tierFormSchema = z.object({
@@ -222,6 +223,9 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
     createTierMutation.mutate(tierData);
   };
 
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [requiresPayment, setRequiresPayment] = useState(false);
+
   const handleSubscribe = (tier: MembershipTier) => {
     if (!user) {
       toast({
@@ -234,12 +238,35 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
 
     setSelectedTier(tier);
     setIsSubscribeDialogOpen(true);
+    
+    // Reset payment state when opening dialog
+    setIsProcessingPayment(false);
+    setRequiresPayment(tier.price > 0);
   };
 
   const confirmSubscription = () => {
-    if (selectedTier) {
+    if (!selectedTier) return;
+    
+    // For free tiers, use the direct subscription API
+    if (selectedTier.price <= 0) {
       subscribeMutation.mutate(selectedTier.id);
+    } else {
+      // For paid tiers, show payment options
+      setIsProcessingPayment(true);
     }
+  };
+  
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "Payment Successful",
+      description: "Your membership has been activated!",
+    });
+    setIsSubscribeDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/memberships/user`] });
+  };
+  
+  const handlePaymentCancel = () => {
+    setIsProcessingPayment(false);
   };
 
   // Helper to render tier icon based on tier type
@@ -595,59 +622,72 @@ export default function MembershipTiers({ communityId, isOwner }: MembershipTier
       )}
 
       <Dialog open={isSubscribeDialogOpen} onOpenChange={setIsSubscribeDialogOpen}>
-        <DialogContent>
+        <DialogContent className={isProcessingPayment ? "sm:max-w-[600px]" : ""}>
           <DialogHeader>
             <DialogTitle>Subscribe to {selectedTier?.name}</DialogTitle>
             <DialogDescription>
-              {selectedTier?.price > 0 
-                ? `You will be charged ${selectedTier?.price} ${selectedTier?.currency} for this membership.`
+              {selectedTier?.price && selectedTier.price > 0 
+                ? `You will be charged ${selectedTier.price} ${selectedTier.currency} for this membership.`
                 : 'This is a free membership tier.'}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <h4 className="font-medium">Benefits:</h4>
-            <ul className="space-y-2">
-              {selectedTier?.benefits.map((benefit, index) => (
-                <li key={index} className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>{benefit}</span>
-                </li>
-              ))}
-            </ul>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Duration:</span>
-              <span>{selectedTier?.durationDays} days</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Price:</span>
-              <span className="font-semibold">
-                {selectedTier?.price > 0 ? `${selectedTier?.price} ${selectedTier?.currency}` : 'Free'}
-              </span>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex space-x-2 sm:space-x-0">
-            <Button
-              variant="outline"
-              onClick={() => setIsSubscribeDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={confirmSubscription}
-              disabled={subscribeMutation.isPending}
-            >
-              {subscribeMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
-              Confirm Subscription
-            </Button>
-          </DialogFooter>
+          {isProcessingPayment && selectedTier ? (
+            <MembershipPayment 
+              tier={selectedTier} 
+              communityId={communityId}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          ) : (
+            <>
+              <div className="space-y-4 py-4">
+                <h4 className="font-medium">Benefits:</h4>
+                <ul className="space-y-2">
+                  {selectedTier?.benefits.map((benefit, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Duration:</span>
+                  <span>{selectedTier?.durationDays} days</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Price:</span>
+                  <span className="font-semibold">
+                    {selectedTier?.price && selectedTier.price > 0 
+                      ? `${selectedTier.price} ${selectedTier.currency}` 
+                      : 'Free'}
+                  </span>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex space-x-2 sm:space-x-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSubscribeDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmSubscription}
+                  disabled={subscribeMutation.isPending}
+                >
+                  {subscribeMutation.isPending && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  {requiresPayment ? "Proceed to Payment" : "Confirm Subscription"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
