@@ -95,7 +95,10 @@ export function registerAdminRoutes(app: Express) {
       });
       
       // Return user without sensitive data
-      const { password: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = { 
+        ...user,
+        password: undefined 
+      };
       res.status(201).json(userWithoutPassword);
     } catch (error) {
       console.error('Error creating user:', error);
@@ -158,8 +161,15 @@ export function registerAdminRoutes(app: Express) {
       const updatedUser = await storage.updateUser(userId, updates);
       
       // Return user without sensitive data
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
+      if (updatedUser) {
+        const userWithoutPassword = { 
+          ...updatedUser,
+          password: undefined 
+        };
+        res.json(userWithoutPassword);
+      } else {
+        res.status(404).json({ message: 'User not found or update failed' });
+      }
     } catch (error) {
       console.error('Error updating user:', error);
       res.status(500).json({ message: 'Error updating user' });
@@ -177,12 +187,12 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Don't allow admin users to be deleted (safety measure)
-      if (user.role === 'admin' && user.id !== req.user.id) {
+      if (user.role === 'admin' && user.id !== req.user?.id) {
         return res.status(403).json({ message: 'Cannot delete admin users' });
       }
       
       // Don't allow deleting yourself
-      if (user.id === req.user.id) {
+      if (user.id === req.user?.id) {
         return res.status(403).json({ message: 'Cannot delete your own account' });
       }
       

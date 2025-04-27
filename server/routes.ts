@@ -11,6 +11,7 @@ import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
 import { registerSubscriptionRoutes } from "./subscription";
+import { registerAdminRoutes } from "./admin";
 import { seedDatabase } from "./seed";
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -27,6 +28,9 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication with passport
   setupAuth(app);
+  
+  // Register admin routes
+  registerAdminRoutes(app);
 
   // Create HTTP server from Express
   const httpServer = createServer(app);
