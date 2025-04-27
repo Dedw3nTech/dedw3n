@@ -18,11 +18,10 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Marketplace</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><Link href="#" className="hover:text-primary">All Categories</Link></li>
-              <li><Link href="#" className="hover:text-primary">Featured Products</Link></li>
-              <li><Link href="#" className="hover:text-primary">Popular Vendors</Link></li>
-              <li><Link href="#" className="hover:text-primary">Deals & Discounts</Link></li>
-              <li><Link href="#" className="hover:text-primary">Gift Cards</Link></li>
+              <li><Link href="#" className="hover:text-primary">C2C Marketplace</Link></li>
+              <li><Link href="#" className="hover:text-primary">B2C Marketplace</Link></li>
+              <li><Link href="#" className="hover:text-primary">B2B Marketplace</Link></li>
+              <li><Link href="#" className="hover:text-primary">Governmental Services</Link></li>
             </ul>
           </div>
 
