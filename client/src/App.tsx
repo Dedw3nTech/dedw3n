@@ -37,6 +37,7 @@ import SpendingAnalytics from "@/pages/spending-analytics";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
 import GovernmentPage from "@/pages/government";
+import DatingPage from "@/pages/dating";
 
 // Import community-related components
 import CommunitiesPage from "@/pages/communities";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
       <Route path="/government" component={GovernmentPage} />
+      <ProtectedRoute path="/dating" component={DatingPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={Social} />

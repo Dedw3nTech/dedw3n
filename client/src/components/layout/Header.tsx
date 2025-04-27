@@ -18,7 +18,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Store, Users, Building, Landmark } from "lucide-react";
+import { ChevronDown, Store, Users, Building, Landmark, Heart } from "lucide-react";
 
 export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -154,6 +154,16 @@ export default function Header() {
           </DropdownMenu>
           {/* Social button with integrated navigation and messaging */}
           <SocialNav />
+          
+          {/* Dating button */}
+          <div className="flex-1">
+            <button
+              className="w-full py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary relative"
+              onClick={() => setLocation("/dating")}
+            >
+              <Heart className="inline-block h-4 w-4 mr-1" /> Dating
+            </button>
+          </div>
         </div>
       </div>
 
