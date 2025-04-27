@@ -54,6 +54,7 @@ import TrendingVideosPage from "@/pages/videos/trending";
 import ShortsPage from "@/pages/videos/shorts";
 import StoriesPage from "@/pages/videos/stories";
 import LivePage from "@/pages/videos/live";
+import PremiumVideoPage from "@/pages/premium-video";
 
 function Router() {
   return (
@@ -95,6 +96,10 @@ function Router() {
       <ProtectedRoute path="/videos/live" component={LivePage} />
       <ProtectedRoute path="/videos/upload" component={TrendingVideosPage} />
       <ProtectedRoute path="/videos/:id" component={TrendingVideosPage} />
+      
+      {/* Premium video routes */}
+      <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />
+      <ProtectedRoute path="/premium-videos/:id" component={PremiumVideoPage} />
       
       <Route component={NotFound} />
     </Switch>
