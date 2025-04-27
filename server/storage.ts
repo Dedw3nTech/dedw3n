@@ -385,6 +385,7 @@ export class MemStorage implements IStorage {
   private videoProductOverlays: Map<number, VideoProductOverlay>;
   private videoPlaylists: Map<number, VideoPlaylist>;
   private playlistItems: Map<number, PlaylistItem>;
+  private videoPurchases: Map<number, VideoPurchase>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -469,6 +470,7 @@ export class MemStorage implements IStorage {
     this.videoProductOverlays = new Map();
     this.videoPlaylists = new Map();
     this.playlistItems = new Map();
+    this.videoPurchases = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
@@ -506,6 +508,7 @@ export class MemStorage implements IStorage {
     this.videoProductOverlayIdCounter = 1;
     this.videoPlaylistIdCounter = 1;
     this.playlistItemIdCounter = 1;
+    this.videoPurchaseIdCounter = 1;
 
     this.initDefaultData();
   }
@@ -2879,6 +2882,68 @@ export class MemStorage implements IStorage {
     return [...this.playlistItems.values()]
       .filter(i => i.playlistId === playlistId)
       .sort((a, b) => a.position - b.position);
+  }
+  
+  // Premium video purchase operations
+  async createVideoPurchase(purchase: InsertVideoPurchase): Promise<VideoPurchase> {
+    const id = this.videoPurchaseIdCounter++;
+    const newPurchase: VideoPurchase = {
+      id,
+      ...purchase,
+      createdAt: new Date()
+    };
+    this.videoPurchases.set(id, newPurchase);
+    return newPurchase;
+  }
+
+  async getVideoPurchase(id: number): Promise<VideoPurchase | undefined> {
+    return this.videoPurchases.get(id);
+  }
+
+  async getVideoPurchaseByUserAndVideo(userId: number, videoId: number): Promise<VideoPurchase | undefined> {
+    return [...this.videoPurchases.values()].find(
+      purchase => purchase.userId === userId && purchase.videoId === videoId
+    );
+  }
+
+  async getUserVideoPurchases(userId: number): Promise<VideoPurchase[]> {
+    return [...this.videoPurchases.values()].filter(
+      purchase => purchase.userId === userId
+    );
+  }
+
+  async getVideoRevenue(videoId: number): Promise<number> {
+    const purchases = [...this.videoPurchases.values()].filter(
+      purchase => purchase.videoId === videoId
+    );
+    
+    return purchases.reduce((total, purchase) => total + purchase.amount, 0);
+  }
+
+  async getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }> {
+    // Get all videos by this creator
+    const creatorVideos = await this.getUserVideos(userId);
+    
+    // Filter to only premium videos
+    const premiumVideos = creatorVideos.filter(video => video.isPremium);
+    
+    // Calculate total revenue
+    let totalRevenue = 0;
+    
+    for (const video of premiumVideos) {
+      const videoRevenue = await this.getVideoRevenue(video.id);
+      totalRevenue += videoRevenue;
+    }
+    
+    return {
+      totalRevenue,
+      videoCount: premiumVideos.length
+    };
+  }
+
+  async hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean> {
+    const purchase = await this.getVideoPurchaseByUserAndVideo(userId, videoId);
+    return purchase !== undefined;
   }
 }
 
