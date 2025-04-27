@@ -582,6 +582,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Video product overlay routes
+  
+  // Create a product overlay for a video
+  app.post("/api/videos/:videoId/product-overlays", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Only the video owner can add product overlays
+      if (video.userId !== userId) {
+        return res.status(403).json({ message: "You can only add product overlays to your own videos" });
+      }
+      
+      const validatedData = insertVideoProductOverlaySchema.parse({
+        ...req.body,
+        videoId,
+      });
+      
+      const overlay = await storage.createVideoProductOverlay(validatedData);
+      res.status(201).json(overlay);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create product overlay" });
+    }
+  });
+  
+  // Get all product overlays for a video
+  app.get("/api/videos/:videoId/product-overlays", async (req, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      
+      // Verify video exists
+      const video = await storage.getVideo(videoId);
+      if (!video) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      const overlays = await storage.getVideoProductOverlays(videoId);
+      res.json(overlays);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get product overlays" });
+    }
+  });
+  
+  // Get a specific product overlay
+  app.get("/api/product-overlays/:overlayId", async (req, res) => {
+    try {
+      const overlayId = parseInt(req.params.overlayId);
+      const overlay = await storage.getVideoProductOverlay(overlayId);
+      
+      if (!overlay) {
+        return res.status(404).json({ message: "Product overlay not found" });
+      }
+      
+      res.json(overlay);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get product overlay" });
+    }
+  });
+  
+  // Update a product overlay
+  app.patch("/api/product-overlays/:overlayId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const overlayId = parseInt(req.params.overlayId);
+      
+      // Get the overlay
+      const overlay = await storage.getVideoProductOverlay(overlayId);
+      if (!overlay) {
+        return res.status(404).json({ message: "Product overlay not found" });
+      }
+      
+      // Get the video to check ownership
+      const video = await storage.getVideo(overlay.videoId);
+      if (!video || video.userId !== userId) {
+        return res.status(403).json({ message: "You can only update overlays on your own videos" });
+      }
+      
+      const updatedOverlay = await storage.updateVideoProductOverlay(overlayId, req.body);
+      res.json(updatedOverlay);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update product overlay" });
+    }
+  });
+  
+  // Delete a product overlay
+  app.delete("/api/product-overlays/:overlayId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const overlayId = parseInt(req.params.overlayId);
+      
+      // Get the overlay
+      const overlay = await storage.getVideoProductOverlay(overlayId);
+      if (!overlay) {
+        return res.status(404).json({ message: "Product overlay not found" });
+      }
+      
+      // Get the video to check ownership
+      const video = await storage.getVideo(overlay.videoId);
+      if (!video || video.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete overlays on your own videos" });
+      }
+      
+      const success = await storage.deleteVideoProductOverlay(overlayId);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete product overlay" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete product overlay" });
+    }
+  });
+  
+  // Increment product overlay click count
+  app.post("/api/product-overlays/:overlayId/click", async (req, res) => {
+    try {
+      const overlayId = parseInt(req.params.overlayId);
+      
+      // Get the overlay
+      const overlay = await storage.getVideoProductOverlay(overlayId);
+      if (!overlay) {
+        return res.status(404).json({ message: "Product overlay not found" });
+      }
+      
+      const updatedOverlay = await storage.incrementOverlayClickCount(overlayId);
+      res.json(updatedOverlay);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record click" });
+    }
+  });
+  
+  // Increment product overlay conversion count (when purchase is made)
+  app.post("/api/product-overlays/:overlayId/conversion", async (req, res) => {
+    try {
+      const overlayId = parseInt(req.params.overlayId);
+      
+      // Get the overlay
+      const overlay = await storage.getVideoProductOverlay(overlayId);
+      if (!overlay) {
+        return res.status(404).json({ message: "Product overlay not found" });
+      }
+      
+      const updatedOverlay = await storage.incrementOverlayConversionCount(overlayId);
+      res.json(updatedOverlay);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record conversion" });
+    }
+  });
+  
   // Playlist routes
   
   // Create a playlist
