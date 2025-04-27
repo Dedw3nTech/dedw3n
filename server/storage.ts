@@ -91,6 +91,22 @@ export interface IStorage {
   getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }>;
   hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean>;
   
+  // Community Content operations
+  getCommunityContent(id: number): Promise<CommunityContent | undefined>;
+  createCommunityContent(content: InsertCommunityContent): Promise<CommunityContent>;
+  updateCommunityContent(id: number, data: Partial<InsertCommunityContent>): Promise<CommunityContent | undefined>;
+  deleteCommunityContent(id: number): Promise<boolean>;
+  listCommunityContents(communityId: number, options?: {
+    contentType?: string;
+    tierId?: number;
+    isFeatured?: boolean;
+    creatorId?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<CommunityContent[]>;
+  incrementContentView(id: number): Promise<CommunityContent | undefined>;
+  getUserAccessibleContent(userId: number, communityId: number): Promise<CommunityContent[]>;
+  
   // Playlist operations
   createPlaylist(playlist: InsertVideoPlaylist): Promise<VideoPlaylist>;
   getPlaylist(id: number): Promise<VideoPlaylist | undefined>;
