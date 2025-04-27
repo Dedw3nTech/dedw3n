@@ -632,10 +632,9 @@ export default function WalletPage() {
                     {t('wallet.statistics')}
                   </TabsTrigger>
                 </TabsList>
-                <TabsList className="grid grid-cols-4 w-full">
+                <TabsList className="grid grid-cols-3 w-full">
                   <TabsTrigger value="deposit">{t('wallet.deposit')}</TabsTrigger>
                   <TabsTrigger value="withdraw">{t('wallet.withdraw')}</TabsTrigger>
-                  <TabsTrigger value="transfer">{t('wallet.transfer')}</TabsTrigger>
                   <TabsTrigger value="convert">
                     <ArrowUpDownIcon className="h-4 w-4 mr-1" />
                     {t('wallet.convert')}
@@ -833,71 +832,7 @@ export default function WalletPage() {
                   </form>
                 </TabsContent>
                 
-                <TabsContent value="transfer">
-                  <form onSubmit={handleTransaction('transfer')} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="recipient">{t('wallet.recipient_username')}</Label>
-                      <Input 
-                        id="recipient"
-                        type="text"
-                        placeholder={t('wallet.enter_username')}
-                        value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">{t('wallet.amount')}</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2">
-                          {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
-                        </span>
-                        <Input 
-                          id="amount"
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          max={wallet.balance}
-                          placeholder="0.00"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          className="pl-7"
-                          required
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t('wallet.available')}: {currencySymbols[wallet.currency as keyof typeof currencySymbols] || '$'}
-                        {wallet.balance.toFixed(2)}
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="description">{t('wallet.description')} ({t('wallet.optional')})</Label>
-                      <Input 
-                        id="description"
-                        placeholder={t('wallet.transfer_description')}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={createTransferMutation.isPending || !recipient || Number(amount) > wallet.balance}
-                    >
-                      {createTransferMutation.isPending ? (
-                        <span className="flex items-center">
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                          {t('wallet.processing')}
-                        </span>
-                      ) : (
-                        t('wallet.transfer_funds')
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
+
 
                 <TabsContent value="categories">
                   <div className="space-y-4">
