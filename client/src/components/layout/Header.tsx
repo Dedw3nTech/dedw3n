@@ -19,13 +19,14 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Store, Users, Building, Landmark, Heart, Bell } from "lucide-react";
+import { ChevronDown, Store, Users, Building, Landmark, Heart, Bell, MessageSquare, ShoppingBag } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/queryClient";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Header() {
   const { view, setView } = useView();
@@ -98,6 +99,41 @@ export default function Header() {
   };
 
   const { t } = useTranslation();
+  
+  // Helper functions for notification icons
+  const getNotificationIconStyle = (type: string) => {
+    switch (type) {
+      case 'order':
+        return 'bg-blue-100 text-blue-600';
+      case 'social':
+        return 'bg-green-100 text-green-600';
+      case 'message':
+        return 'bg-purple-100 text-purple-600';
+      case 'payment':
+        return 'bg-yellow-100 text-yellow-600';
+      case 'system':
+        return 'bg-gray-100 text-gray-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'order':
+        return <ShoppingBag className="h-4 w-4" />;
+      case 'social':
+        return <Users className="h-4 w-4" />;
+      case 'message':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'payment':
+        return <i className="ri-wallet-3-line text-sm" />;
+      case 'system':
+        return <i className="ri-information-line text-sm" />;
+      default:
+        return <Bell className="h-4 w-4" />;
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
