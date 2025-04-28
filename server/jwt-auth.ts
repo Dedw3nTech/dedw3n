@@ -1,254 +1,508 @@
-import { Express, Request, Response, NextFunction } from "express";
-import { storage } from "./storage";
-import { hashPassword } from "./auth";
-import { User } from "@shared/schema";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { Request, Response, NextFunction, Express } from 'express';
+import { randomBytes, createHmac } from 'crypto';
+import { storage } from './storage';
+import { InsertAuthToken, User } from '@shared/schema';
 
-const scryptAsync = promisify(scrypt);
+// Environment variable validation
+if (!process.env.TOKEN_SECRET) {
+  console.warn('⚠️ TOKEN_SECRET environment variable not set. Using a random secret (less secure).');
+}
 
-// Simple token-based authentication implementation without JWT for now
-interface TokenData {
+// Default token expiration in seconds (24 hours)
+const TOKEN_EXPIRES_IN = 86400;
+// Token secret from environment or generate a random one (not recommended for production)
+const TOKEN_SECRET = process.env.TOKEN_SECRET || randomBytes(32).toString('hex');
+
+// Declare module express-session with a custom user object
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: TokenPayload | User;
+    token?: string; 
+    authToken?: any;
+  }
+}
+
+export interface TokenPayload {
   userId: number;
-  token: string;
-  expiresAt: Date;
+  role: string;
+  tokenId: string;
+  issuedAt: number;
+  expiresAt: number;
 }
 
-// We'll store tokens in memory for simplicity
-// In production, these should be stored in the database
-const activeTokens: Map<string, TokenData> = new Map();
-
-// Token validity duration in milliseconds (24 hours)
-const TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
-
-// Generate a new token for a user
-async function generateToken(userId: number): Promise<string> {
-  const tokenString = randomBytes(48).toString('hex');
-  const expiresAt = new Date(Date.now() + TOKEN_VALIDITY);
+/**
+ * Generates a secure token string using the crypto module
+ */
+function generateSecureToken(payload: TokenPayload): string {
+  // Convert payload to string
+  const payloadStr = JSON.stringify(payload);
   
-  // Store token in our active tokens map
-  activeTokens.set(tokenString, {
+  // Create a signature using HMAC SHA-256
+  const signature = createHmac('sha256', TOKEN_SECRET)
+    .update(payloadStr)
+    .digest('hex');
+  
+  // Combine payload and signature
+  const base64Payload = Buffer.from(payloadStr).toString('base64');
+  return `${base64Payload}.${signature}`;
+}
+
+/**
+ * Verifies and decodes a token
+ */
+function verifyToken(token: string): TokenPayload | null {
+  try {
+    // Split token into parts
+    const [base64Payload, signature] = token.split('.');
+    
+    // Check if token format is valid
+    if (!base64Payload || !signature) {
+      return null;
+    }
+    
+    // Decode the payload
+    const payloadStr = Buffer.from(base64Payload, 'base64').toString();
+    const payload = JSON.parse(payloadStr) as TokenPayload;
+    
+    // Verify signature
+    const expectedSignature = createHmac('sha256', TOKEN_SECRET)
+      .update(payloadStr)
+      .digest('hex');
+    
+    // Check if signatures match
+    if (signature !== expectedSignature) {
+      return null;
+    }
+    
+    // Check if token has expired
+    if (payload.expiresAt < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+    
+    return payload;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Generate a token for authentication
+ */
+export async function generateToken(
+  userId: number, 
+  role: string, 
+  deviceInfo: { 
+    clientId?: string, 
+    deviceType?: string, 
+    deviceInfo?: string,
+    ipAddress?: string 
+  } = {}
+): Promise<{ token: string, expiresAt: Date }> {
+  // Generate a unique token identifier
+  const tokenId = randomBytes(32).toString('hex');
+  
+  // Set expiration date
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const expiresAt = new Date(Date.now() + TOKEN_EXPIRES_IN * 1000);
+  
+  // Create the token payload
+  const payload: TokenPayload = {
     userId,
-    token: tokenString,
-    expiresAt
-  });
+    role,
+    tokenId,
+    issuedAt,
+    expiresAt: Math.floor(expiresAt.getTime() / 1000)
+  };
   
-  return tokenString;
+  // Generate the token
+  const token = generateSecureToken(payload);
+  
+  // Store token in database for tracking/revocation
+  const tokenData: InsertAuthToken = {
+    userId,
+    token,
+    clientId: deviceInfo.clientId || '',
+    deviceType: deviceInfo.deviceType || 'unknown',
+    deviceInfo: deviceInfo.deviceInfo || '',
+    ipAddress: deviceInfo.ipAddress || '',
+    expiresAt,
+    isRevoked: false,
+  };
+  
+  await storage.createAuthToken(tokenData);
+  
+  return { token, expiresAt };
 }
 
-// Validate a password
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  if (!stored || !supplied) {
-    console.error('[ERROR] Missing password for comparison');
-    return false;
+/**
+ * Middleware to authenticate tokens
+ */
+export function authenticate(req: Request, res: Response, next: NextFunction) {
+  // Get token from Authorization header or query parameter
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') 
+    ? authHeader.substring(7) 
+    : req.query.token as string;
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication token is missing' });
   }
   
-  try {
-    const [hashed, salt] = stored.split(".");
+  // Store raw token for later use
+  req.token = token;
+  
+  // Verify token using our custom verification
+  const payload = verifyToken(token);
+  if (!payload) {
+    return res.status(403).json({ message: 'Invalid token' });
+  }
     
-    if (!hashed || !salt) {
-      console.error('[ERROR] Invalid stored password format');
+  (async () => {
+    try {
+      // Check if token exists in database and is not revoked
+      const authToken = await storage.getAuthToken(token);
+      if (!authToken) {
+        return res.status(401).json({ message: 'Token not found' });
+      }
+      
+      if (authToken.isRevoked) {
+        return res.status(401).json({ message: 'Token has been revoked' });
+      }
+      
+      // Check if the token has expired
+      if (new Date(authToken.expiresAt) < new Date()) {
+        await storage.revokeAuthToken(authToken.id, 'Token expired');
+        return res.status(401).json({ message: 'Token expired' });
+      }
+      
+      // Update token's last active timestamp (don't await to prevent slowing down requests)
+      storage.updateTokenLastActive(authToken.id);
+      
+      // Store payload for route handlers
+      req.user = payload;
+      req.authToken = authToken;
+      
+      next();
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return res.status(500).json({ message: 'Internal server error during authentication' });
+    }
+  })();
+}
+
+/**
+ * Middleware to require specific roles for access
+ */
+export function requireRole(roles: string | string[]) {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Only proceed if authenticate middleware was used before this
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if user's role is in the allowed roles
+    const userRole = (req.user as TokenPayload).role || (req.user as User).role;
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ 
+        message: `Access denied. Required role: ${allowedRoles.join(' or ')}`
+      });
+    }
+    
+    next();
+  };
+}
+
+/**
+ * Revoke a specific token
+ */
+export async function revokeToken(token: string, reason: string = 'User initiated'): Promise<boolean> {
+  try {
+    // Try to verify token but don't throw if invalid
+    const payload = verifyToken(token);
+    
+    // Find and revoke the token
+    const authToken = await storage.getAuthToken(token);
+    if (!authToken) {
       return false;
     }
     
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const keylen = 64;
-    
-    // Use standard parameters to match the hashing function
-    const suppliedBuf = (await scryptAsync(supplied, salt, keylen)) as Buffer;
-    
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    await storage.revokeAuthToken(authToken.id, reason);
+    return true;
   } catch (error) {
-    console.error('[ERROR] Password comparison failed:', error);
+    console.error('Error revoking token:', error);
     return false;
   }
 }
 
-// Middleware to check if request has a valid token
-export function authenticateToken(req: Request, res: Response, next: NextFunction) {
-  // Get authorization header
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN format
-  
-  if (!token) {
-    return res.status(401).json({ message: 'No authentication token provided' });
+/**
+ * Revoke all tokens for a user
+ */
+export async function revokeAllUserTokens(userId: number, reason: string = 'Security measure'): Promise<boolean> {
+  try {
+    await storage.revokeAllUserTokens(userId, reason);
+    return true;
+  } catch (error) {
+    console.error('Error revoking all user tokens:', error);
+    return false;
   }
-  
-  // Check if token exists and is valid
-  const tokenData = activeTokens.get(token);
-  
-  if (!tokenData) {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
-  
-  // Check if token is expired
-  if (new Date() > tokenData.expiresAt) {
-    // Remove expired token
-    activeTokens.delete(token);
-    return res.status(401).json({ message: 'Token expired' });
-  }
-  
-  // Get user from database
-  storage.getUser(tokenData.userId)
-    .then(user => {
-      if (!user) {
-        activeTokens.delete(token);
-        return res.status(401).json({ message: 'User not found' });
-      }
-      
-      // Attach user to request
-      (req as any).user = user;
-      next();
-    })
-    .catch(err => {
-      console.error('[ERROR] Error authenticating token:', err);
-      return res.status(500).json({ message: 'Authentication error' });
-    });
 }
 
-// Register JWT auth routes
-export function setupJwtAuth(app: Express) {
-  // Register user
-  app.post("/api/jwt/register", async (req, res) => {
-    try {
-      console.log(`[DEBUG] JWT Registration attempt for username: ${req.body.username}`);
-      
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        console.log(`[DEBUG] JWT Registration failed: Username ${req.body.username} already exists`);
-        return res.status(400).json({ message: "Username already exists" });
-      }
+/**
+ * Housekeeping function to clean up expired tokens
+ * Call this periodically (e.g., once a day via a cron job)
+ */
+export async function cleanupExpiredTokens(): Promise<void> {
+  try {
+    await storage.cleanupExpiredTokens();
+  } catch (error) {
+    console.error('Error cleaning up expired tokens:', error);
+  }
+}
 
-      // Check if email already exists
-      const existingEmail = await storage.getUserByEmail(req.body.email);
-      if (existingEmail) {
-        console.log(`[DEBUG] JWT Registration failed: Email ${req.body.email} already exists`);
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      // Hash password
-      const hashedPassword = await hashPassword(req.body.password);
-
-      // Create user
-      console.log(`[DEBUG] JWT Creating new user ${req.body.username} in storage`);
-      const user = await storage.createUser({
-        ...req.body,
-        password: hashedPassword,
-      });
-      
-      console.log(`[DEBUG] JWT User created with ID: ${user.id}, username: ${user.username}`);
-
-      // Generate token for new user
-      const token = await generateToken(user.id);
-      
-      // Return user data and token
-      const { password, ...userWithoutPassword } = user;
-      res.status(201).json({
-        user: userWithoutPassword,
-        token
-      });
-    } catch (error) {
-      console.error(`[ERROR] JWT Registration failed:`, error);
-      res.status(500).json({ message: "Registration failed" });
-    }
-  });
-
-  // Login user
-  app.post("/api/jwt/login", async (req, res) => {
+/**
+ * Setup JWT authentication routes
+ * @param app Express application
+ */
+export function setupJwtAuth(app: any): void {
+  // Login route
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
       
       if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+        return res.status(400).json({ message: 'Username and password are required' });
       }
       
-      console.log(`[DEBUG] JWT Login attempt for username: ${username}`);
-      
-      // Get user from database
+      // Validate credentials
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        console.log(`[DEBUG] JWT Login failed: User ${username} not found`);
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: 'Invalid credentials' });
       }
       
       // Check if account is locked
       if (user.isLocked) {
-        console.log(`[DEBUG] JWT Login failed: Account for ${username} is locked`);
-        return res.status(401).json({ message: "Account is locked. Please reset your password or contact support." });
+        return res.status(403).json({ message: 'Account is locked. Please contact support.' });
       }
       
       // Verify password
-      const isValid = await comparePasswords(password, user.password);
-      
-      if (!isValid) {
-        console.log(`[DEBUG] JWT Login failed: Incorrect password for ${username}`);
+      const isPasswordValid = await storage.verifyPassword(username, password);
+      if (!isPasswordValid) {
+        // Increment failed login attempts
+        await storage.incrementFailedLoginAttempts(user.id);
         
-        // Track failed login attempts
-        const failedAttempts = (user.failedLoginAttempts || 0) + 1;
-        const updates: any = { failedLoginAttempts: failedAttempts };
-        
-        // Lock account after 5 failed attempts
-        if (failedAttempts >= 5) {
-          console.log(`[DEBUG] JWT Login: locking account for ${username} after ${failedAttempts} failed attempts`);
-          updates.isLocked = true;
+        // Check if we should lock the account
+        const updatedUser = await storage.getUser(user.id);
+        if (updatedUser && updatedUser.failedLoginAttempts >= 5) {
+          await storage.lockUserAccount(user.id);
+          return res.status(403).json({ 
+            message: 'Account locked due to too many failed attempts. Please contact support.' 
+          });
         }
         
-        await storage.updateUser(user.id, updates);
-        
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: 'Invalid credentials' });
       }
       
-      // Reset failed attempts and update last login on successful login
-      await storage.updateUser(user.id, { 
-        failedLoginAttempts: 0,
-        lastLogin: new Date()
+      // Reset failed login attempts on successful login
+      await storage.resetFailedLoginAttempts(user.id);
+      
+      // Update last login timestamp
+      await storage.updateLastLogin(user.id);
+      
+      // Generate authentication token
+      const deviceInfo = {
+        clientId: req.body.clientId || '',
+        deviceType: req.headers['user-agent'] || 'unknown',
+        ipAddress: req.ip || ''
+      };
+      
+      const { token, expiresAt } = await generateToken(user.id, user.role, deviceInfo);
+      
+      // Return the token
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isVendor: user.isVendor
+        },
+        token,
+        expiresAt
       });
       
-      // Generate token for user
-      const token = await generateToken(user.id);
-      
-      // Return user data and token
-      const { password: pwd, ...userWithoutPassword } = user;
-      res.status(200).json({
-        user: userWithoutPassword,
-        token
-      });
     } catch (error) {
-      console.error(`[ERROR] JWT Login failed:`, error);
-      res.status(500).json({ message: "Login failed" });
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-
-  // Logout user (invalidate token)
-  app.post("/api/jwt/logout", authenticateToken, (req, res) => {
+  
+  // Logout route
+  app.post('/api/auth/logout', authenticate, async (req: Request, res: Response) => {
     try {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-      
-      if (token) {
-        // Remove token from active tokens
-        activeTokens.delete(token);
+      if (!req.token) {
+        return res.status(400).json({ message: 'No active session' });
       }
       
-      res.status(200).json({ message: "Successfully logged out" });
+      const success = await revokeToken(req.token, 'User logout');
+      if (success) {
+        return res.json({ message: 'Logged out successfully' });
+      } else {
+        return res.status(500).json({ message: 'Failed to logout properly' });
+      }
     } catch (error) {
-      console.error(`[ERROR] JWT Logout failed:`, error);
-      res.status(500).json({ message: "Logout failed" });
+      console.error('Logout error:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-
+  
   // Get current user
-  app.get("/api/jwt/me", authenticateToken, (req, res) => {
-    try {
-      const user = (req as any).user as User;
-      
-      // Return user without sensitive data
-      const { password, passwordResetToken, passwordResetExpires, verificationToken, ...safeUserData } = user;
-      res.status(200).json(safeUserData);
-    } catch (error) {
-      console.error(`[ERROR] JWT Get user failed:`, error);
-      res.status(500).json({ message: "Failed to get user data" });
+  app.get('/api/auth/me', authenticate, (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // If the user data comes from token payload
+    if ('userId' in req.user) {
+      // Need to get full user data from DB since token just has basic info
+      storage.getUser(req.user.userId)
+        .then(user => {
+          if (user) {
+            res.json({
+              id: user.id,
+              username: user.username,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              isVendor: user.isVendor,
+              bio: user.bio,
+              avatar: user.avatar
+            });
+          } else {
+            res.status(404).json({ message: 'User not found' });
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching user details:', err);
+          res.status(500).json({ message: 'Internal server error' });
+        });
+    } else {
+      // Already have full user object
+      const user = req.user;
+      res.json({
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVendor: user.isVendor,
+        bio: user.bio,
+        avatar: user.avatar
+      });
     }
   });
+  
+  // Refresh token
+  app.post('/api/auth/refresh', authenticate, async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !('userId' in req.user)) {
+        return res.status(401).json({ message: 'Invalid session' });
+      }
+      
+      // Revoke current token
+      if (req.token) {
+        await revokeToken(req.token, 'Token refresh');
+      }
+      
+      // Generate new token
+      const deviceInfo = {
+        clientId: req.body.clientId || '',
+        deviceType: req.headers['user-agent'] || 'unknown',
+        ipAddress: req.ip || ''
+      };
+      
+      const { token, expiresAt } = await generateToken(
+        req.user.userId, 
+        req.user.role, 
+        deviceInfo
+      );
+      
+      res.json({ token, expiresAt });
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // List active sessions
+  app.get('/api/auth/sessions', authenticate, requireRole('user'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
+      const sessions = await storage.getActiveUserSessions(userId);
+      
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Revoke specific session
+  app.delete('/api/auth/sessions/:tokenId', authenticate, requireRole('user'), async (req: Request, res: Response) => {
+    try {
+      const { tokenId } = req.params;
+      
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
+      
+      const success = await storage.revokeSpecificToken(userId, tokenId);
+      
+      if (success) {
+        res.json({ message: 'Session revoked successfully' });
+      } else {
+        res.status(404).json({ message: 'Session not found or already revoked' });
+      }
+    } catch (error) {
+      console.error('Error revoking session:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Revoke all sessions (except current)
+  app.delete('/api/auth/sessions', authenticate, requireRole('user'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user || !req.token) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
+      
+      // Get the current auth token to exclude it
+      const currentAuthToken = req.authToken;
+      
+      if (!currentAuthToken) {
+        return res.status(400).json({ message: 'Current session not found' });
+      }
+      
+      await storage.revokeAllUserTokensExcept(userId, currentAuthToken.id);
+      
+      res.json({ message: 'All other sessions revoked successfully' });
+    } catch (error) {
+      console.error('Error revoking all sessions:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Schedule cleanup of expired tokens (once a day)
+  setInterval(cleanupExpiredTokens, 24 * 60 * 60 * 1000);
 }

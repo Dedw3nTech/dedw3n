@@ -12,7 +12,7 @@ import {
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
-  videoPurchases, videoProductOverlays, communityContents,
+  videoPurchases, videoProductOverlays, communityContents, authTokens,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -28,13 +28,23 @@ import {
   type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
   type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
   type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase,
-  type CommunityContent, type InsertCommunityContent
+  type CommunityContent, type InsertCommunityContent, type AuthToken, type InsertAuthToken
 } from "@shared/schema";
 
 // Interface for all storage operations
 export interface IStorage {
   // Session store for authentication
   sessionStore: any;
+  
+  // Auth token operations
+  createAuthToken(token: InsertAuthToken): Promise<AuthToken>;
+  getAuthToken(token: string): Promise<AuthToken | undefined>;
+  getAuthTokensByUser(userId: number): Promise<AuthToken[]>;
+  updateAuthToken(id: number, data: Partial<AuthToken>): Promise<AuthToken | undefined>;
+  revokeAuthToken(id: number, reason?: string): Promise<AuthToken | undefined>;
+  revokeAllUserTokens(userId: number, reason?: string): Promise<void>;
+  cleanupExpiredTokens(): Promise<void>;
+  updateTokenLastActive(id: number): Promise<void>;
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -4035,6 +4045,132 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error resetting login attempts:', error);
       return undefined;
+    }
+  }
+
+  // Auth token methods
+  async createAuthToken(token: InsertAuthToken): Promise<AuthToken> {
+    try {
+      const [authToken] = await db.insert(authTokens)
+        .values(token)
+        .returning();
+      return authToken;
+    } catch (error) {
+      console.error('Error creating auth token:', error);
+      throw error;
+    }
+  }
+
+  async getAuthToken(token: string): Promise<AuthToken | undefined> {
+    try {
+      const [authToken] = await db.select()
+        .from(authTokens)
+        .where(
+          and(
+            eq(authTokens.token, token),
+            eq(authTokens.isRevoked, false),
+          )
+        );
+      return authToken;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return undefined;
+    }
+  }
+
+  async getAuthTokensByUser(userId: number): Promise<AuthToken[]> {
+    try {
+      const tokens = await db.select()
+        .from(authTokens)
+        .where(eq(authTokens.userId, userId))
+        .orderBy(desc(authTokens.lastActiveAt));
+      return tokens;
+    } catch (error) {
+      console.error('Error getting user auth tokens:', error);
+      return [];
+    }
+  }
+
+  async updateAuthToken(id: number, data: Partial<AuthToken>): Promise<AuthToken | undefined> {
+    try {
+      const [updatedToken] = await db.update(authTokens)
+        .set(data)
+        .where(eq(authTokens.id, id))
+        .returning();
+      return updatedToken;
+    } catch (error) {
+      console.error('Error updating auth token:', error);
+      return undefined;
+    }
+  }
+
+  async revokeAuthToken(id: number, reason: string = 'User logged out'): Promise<AuthToken | undefined> {
+    try {
+      const [revokedToken] = await db.update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedReason: reason 
+        })
+        .where(eq(authTokens.id, id))
+        .returning();
+      return revokedToken;
+    } catch (error) {
+      console.error('Error revoking auth token:', error);
+      return undefined;
+    }
+  }
+
+  async revokeAllUserTokens(userId: number, reason: string = 'Security action'): Promise<void> {
+    try {
+      await db.update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedReason: reason 
+        })
+        .where(eq(authTokens.userId, userId));
+    } catch (error) {
+      console.error('Error revoking all user tokens:', error);
+      throw error;
+    }
+  }
+
+  async cleanupExpiredTokens(): Promise<void> {
+    try {
+      // Delete expired tokens that are also revoked to keep the table clean
+      await db.delete(authTokens)
+        .where(
+          and(
+            eq(authTokens.isRevoked, true),
+            sql`${authTokens.expiresAt} < NOW()`
+          )
+        );
+      
+      // Mark expired tokens as revoked if they aren't already
+      await db.update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedReason: 'Token expired' 
+        })
+        .where(
+          and(
+            eq(authTokens.isRevoked, false),
+            sql`${authTokens.expiresAt} < NOW()`
+          )
+        );
+    } catch (error) {
+      console.error('Error cleaning up expired tokens:', error);
+      throw error;
+    }
+  }
+
+  async updateTokenLastActive(id: number): Promise<void> {
+    try {
+      await db.update(authTokens)
+        .set({ lastActiveAt: new Date() })
+        .where(eq(authTokens.id, id));
+    } catch (error) {
+      console.error('Error updating token last active time:', error);
+      // Don't throw error for this operation as it's not critical
     }
   }
 
