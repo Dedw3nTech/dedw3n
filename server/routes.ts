@@ -4,6 +4,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs/promises';
 import path from 'path';
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { setupJwtAuth } from "./jwt-auth";
 import { registerPaymentRoutes } from "./payment";
@@ -17,7 +19,7 @@ import { registerAdminRoutes } from "./admin";
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { seedDatabase } from "./seed";
 import { 
-  insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
+  posts, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
   insertTransactionSchema, insertCommunitySchema, insertCommunityMemberSchema,
   insertMembershipTierSchema, insertMembershipSchema, insertEventSchema,
@@ -2174,26 +2176,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         options.tags = (req.query.tags as string).split(',');
       }
       
-      if (req.query.limit) {
-        options.limit = parseInt(req.query.limit as string);
-      }
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      options.limit = limit;
       
       if (req.query.offset) {
         options.offset = parseInt(req.query.offset as string);
       }
       
       // Try a direct query to bypass complex listPosts function
+      let directPosts;
       try {
-        const directPosts = await db.select().from(posts).where(eq(posts.isPublished, true)).limit(5);
+        directPosts = await db.select().from(posts).where(eq(posts.isPublished, true)).limit(limit);
         console.log("Direct DB posts query result:", directPosts);
       } catch (error) {
         console.error("Direct DB query error:", error);
+        directPosts = [];
       }
       
-      const posts = await storage.listPosts(options);
-      console.log("Storage listPosts result:", posts);
+      // If direct query returned posts, use those instead of going through storage
+      if (directPosts && directPosts.length > 0) {
+        console.log("Using direct query results instead of storage (found " + directPosts.length + " posts)");
+        return res.json(directPosts);
+      }
       
-      res.json(posts);
+      // Otherwise fall back to regular storage method
+      const storagePosts = await storage.listPosts(options);
+      console.log("Storage listPosts result:", storagePosts);
+      
+      res.json(storagePosts);
     } catch (error) {
       console.error("Error in /api/posts endpoint:", error);
       res.status(500).json({ message: "Failed to list posts" });
