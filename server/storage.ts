@@ -1134,6 +1134,14 @@ export class MemStorage implements IStorage {
     try {
       console.log("Fetching posts with options:", options);
       
+      // DEBUG: First check if there are any posts in the database at all
+      const allPosts = await db.select().from(posts);
+      console.log("Total posts in database:", allPosts.length);
+      
+      // DEBUG: Directly check published posts
+      const publishedPosts = await db.select().from(posts).where(eq(posts.isPublished, true));
+      console.log("Total published posts:", publishedPosts.length);
+      
       // Initialize the query
       let query = db.select().from(posts);
       
