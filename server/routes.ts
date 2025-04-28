@@ -1129,56 +1129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Notification Endpoints
-  // Get user notifications
-  app.get("/api/notifications", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      
-      const notifications = await storage.getNotifications(userId, limit);
-      res.json(notifications);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      res.status(500).json({ message: "Failed to fetch notifications" });
-    }
-  });
-  
-  // Get unread notification count
-  app.get("/api/notifications/unread/count", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const count = await storage.getUnreadNotificationCount(userId);
-      res.json({ count });
-    } catch (error) {
-      console.error("Error fetching unread notification count:", error);
-      res.status(500).json({ message: "Failed to get unread notification count" });
-    }
-  });
-  
-  // Mark notification as read
-  app.post("/api/notifications/:id/mark-read", isAuthenticated, async (req, res) => {
-    try {
-      const notificationId = parseInt(req.params.id);
-      await storage.markNotificationAsRead(notificationId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      res.status(500).json({ message: "Failed to mark notification as read" });
-    }
-  });
-  
-  // Mark all notifications as read
-  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      await storage.markAllNotificationsAsRead(userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
-      res.status(500).json({ message: "Failed to mark all notifications as read" });
-    }
-  });
+  // Note: Notification endpoints are already defined above
   
   // Group chat and room-based messaging will be implemented in a future update
   // For now, we're focusing on direct user-to-user messaging
