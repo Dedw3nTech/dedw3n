@@ -69,6 +69,16 @@ export interface IStorage {
   getOrderCount(): Promise<number>;
   getCommunityCount(): Promise<number>;
   
+  // Order management operations
+  getAllOrders(): Promise<Order[]>;
+  getOrder(orderId: number): Promise<Order | undefined>;
+  getOrderItems(orderId: number): Promise<OrderItem[]>;
+  updateOrder(orderId: number, updates: Partial<Order>): Promise<Order | undefined>;
+  updateOrderItemsStatus(orderId: number, status: string): Promise<void>;
+  countOrders(filters: { status?: string }): Promise<number>;
+  calculateTotalRevenue(): Promise<number>;
+  calculateAverageOrderValue(): Promise<number>;
+  
   // Community and vendor operations
   getUserCommunities(userId: number): Promise<Community[]>;
   getVendorByUserId(userId: number): Promise<Vendor | undefined>;
