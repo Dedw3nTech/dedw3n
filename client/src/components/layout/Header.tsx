@@ -65,6 +65,7 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-3">
             <Logo size="md" />
+            <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
             <div className="hidden md:flex items-center space-x-1 ml-4">
               <CurrencySelector />
               <LanguageSelector />
