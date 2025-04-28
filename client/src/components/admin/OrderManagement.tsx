@@ -605,7 +605,7 @@ export default function OrderManagement() {
               {/* API Implementation Note */}
               <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
                 <div className="flex items-start">
-                  <Database className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <BarChart3 className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="ml-2">
                     <h3 className="text-sm font-medium text-blue-800">
                       Order Metrics API Connected
