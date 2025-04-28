@@ -2494,10 +2494,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/unread/count-alternative", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const count = await storage.countUnreadMessages(userId);
+      const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
       res.status(500).json({ message: "Failed to count unread messages" });
