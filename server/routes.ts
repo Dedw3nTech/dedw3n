@@ -2147,6 +2147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/posts", async (req, res) => {
     try {
+      console.log("============ GET /api/posts called ============");
       // Extract query parameters for advanced filtering
       const options: {
         userId?: number;
@@ -2181,9 +2182,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         options.offset = parseInt(req.query.offset as string);
       }
       
+      // Try a direct query to bypass complex listPosts function
+      try {
+        const directPosts = await db.select().from(posts).where(eq(posts.isPublished, true)).limit(5);
+        console.log("Direct DB posts query result:", directPosts);
+      } catch (error) {
+        console.error("Direct DB query error:", error);
+      }
+      
       const posts = await storage.listPosts(options);
+      console.log("Storage listPosts result:", posts);
+      
       res.json(posts);
     } catch (error) {
+      console.error("Error in /api/posts endpoint:", error);
       res.status(500).json({ message: "Failed to list posts" });
     }
   });
