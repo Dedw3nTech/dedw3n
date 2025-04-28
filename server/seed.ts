@@ -160,71 +160,8 @@ async function seedDatabase() {
       console.log(`Created ${productData.length} sample products`);
     }
     
-    // Create sample posts for moderation testing
-    const existingPosts = await storage.listPosts();
-    if (existingPosts.length === 0) {
-      console.log('Creating sample posts for moderation testing...');
-      
-      const postData = [
-        {
-          userId: 1,
-          content: "Just launched a new line of eco-friendly products! Check out our store for sustainable options that don't compromise on quality.",
-          title: "New Eco-Friendly Products",
-          contentType: "text",
-          tags: ["eco-friendly", "sustainable", "new-products"],
-          isPublished: true,
-          reviewStatus: "approved",
-        },
-        {
-          userId: 1,
-          content: "We're excited to announce our summer collection is now available! Limited quantities, so shop early.",
-          title: "Summer Collection Launch",
-          contentType: "text",
-          imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500",
-          tags: ["summer", "collection", "new-arrival"],
-          isPublished: true,
-          reviewStatus: "approved",
-        },
-        {
-          userId: 1,
-          content: "This might be inappropriate content that contains offensive language and should be flagged for review by moderators.",
-          title: "Potentially Offensive Content",
-          contentType: "text",
-          tags: ["discussion"],
-          isPublished: true,
-          isFlagged: true,
-          flagReason: "Potentially offensive language",
-          reviewStatus: "pending",
-        },
-        {
-          userId: 1,
-          content: "This is a test post with suspicious external links that might be spam. http://suspicious-link.example.com",
-          title: "Post with Suspicious Links",
-          contentType: "text",
-          tags: ["links", "test"],
-          isPublished: true,
-          isFlagged: true,
-          flagReason: "Suspicious links detected",
-          reviewStatus: "pending",
-        },
-        {
-          userId: 1,
-          content: "This post contains misleading product claims and false information that violates our community guidelines.",
-          title: "Misleading Product Information",
-          contentType: "text",
-          tags: ["product", "information"],
-          isPublished: false,
-          reviewStatus: "rejected",
-          moderationNote: "Post contains false product claims",
-        }
-      ];
-      
-      for (const post of postData) {
-        await storage.createPost(post);
-      }
-      
-      console.log(`Created ${postData.length} sample posts for moderation`);
-    }
+    // We've removed the mock post data to use real API implementation for posts
+    // No posts will be seeded automatically - they will come from the real user interactions
 
     console.log('Database seeding completed successfully!');
   } catch (error) {
