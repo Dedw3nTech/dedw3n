@@ -295,36 +295,9 @@ export default function Social() {
                     
                     {/* Content Feed */}
                     <div className="bg-white rounded-lg shadow-sm">
-                      <Tabs defaultValue="for-you">
-                        <TabsList className="w-full grid grid-cols-3 rounded-t-lg rounded-b-none">
-                          <TabsTrigger value="for-you">For You</TabsTrigger>
-                          <TabsTrigger value="following">Following</TabsTrigger>
-                          <TabsTrigger value="popular">Popular</TabsTrigger>
-                        </TabsList>
-                        
-                        <div className="p-4">
-                          <TabsContent value="for-you" className="m-0">
-                            <ContentFeed />
-                          </TabsContent>
-                          
-                          <TabsContent value="following" className="m-0">
-                            {user ? (
-                              <ContentFeed />
-                            ) : (
-                              <div className="bg-muted/30 rounded-lg p-8 text-center my-4">
-                                <h3 className="text-lg font-medium">Sign in to see posts from people you follow</h3>
-                                <p className="mt-2 text-sm text-muted-foreground">
-                                  Follow people to see their posts in your feed
-                                </p>
-                              </div>
-                            )}
-                          </TabsContent>
-                          
-                          <TabsContent value="popular" className="m-0">
-                            <ContentFeed />
-                          </TabsContent>
-                        </div>
-                      </Tabs>
+                      <div className="p-4">
+                        <ContentFeed />
+                      </div>
                     </div>
                   </div>
                 </div>
