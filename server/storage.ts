@@ -4133,6 +4133,65 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  async revokeAllUserTokensExcept(userId: number, exceptTokenId: number): Promise<void> {
+    try {
+      await db.update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedReason: 'Revoked by user (all other sessions)' 
+        })
+        .where(
+          and(
+            eq(authTokens.userId, userId),
+            sql`${authTokens.id} != ${exceptTokenId}`
+          )
+        );
+    } catch (error) {
+      console.error('Error revoking all user tokens except current:', error);
+      throw error;
+    }
+  }
+  
+  async revokeSpecificToken(userId: number, tokenId: number): Promise<boolean> {
+    try {
+      const [revokedToken] = await db.update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedReason: 'Revoked by user (specific session)' 
+        })
+        .where(
+          and(
+            eq(authTokens.userId, userId),
+            eq(authTokens.id, tokenId)
+          )
+        )
+        .returning();
+      
+      return !!revokedToken;
+    } catch (error) {
+      console.error('Error revoking specific token:', error);
+      return false;
+    }
+  }
+  
+  async getActiveUserSessions(userId: number): Promise<AuthToken[]> {
+    try {
+      return await db.select()
+        .from(authTokens)
+        .where(
+          and(
+            eq(authTokens.userId, userId),
+            eq(authTokens.isRevoked, false),
+            sql`${authTokens.expiresAt} > NOW()`
+          )
+        )
+        .orderBy(desc(authTokens.lastActiveAt));
+    } catch (error) {
+      console.error('Error getting active user sessions:', error);
+      return [];
+    }
+  }
 
   async cleanupExpiredTokens(): Promise<void> {
     try {

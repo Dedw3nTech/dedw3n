@@ -31,6 +31,38 @@ export interface TokenPayload {
 }
 
 /**
+ * Verifies a password against a stored hash
+ * @param plain The plain text password to verify
+ * @param stored The stored hash to verify against
+ * @returns True if the password matches, false otherwise
+ */
+async function verifyPassword(plain: string, stored: string): Promise<boolean> {
+  try {
+    // Extract the salt from the stored hash
+    const [hashedPassword, salt] = stored.split('.');
+    
+    if (!hashedPassword || !salt) {
+      console.error('Invalid stored password format');
+      return false;
+    }
+    
+    // Hash the plain password with the same salt
+    const hashedBuffer = createHmac('sha512', salt)
+      .update(plain)
+      .digest();
+    
+    // Convert the hash to a hex string
+    const hashedInputPassword = hashedBuffer.toString('hex');
+    
+    // Compare the hashed input to the stored hash
+    return hashedInputPassword === hashedPassword;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
+}
+
+/**
  * Generates a secure token string using the crypto module
  */
 function generateSecureToken(payload: TokenPayload): string {
@@ -287,16 +319,17 @@ export function setupJwtAuth(app: any): void {
         return res.status(403).json({ message: 'Account is locked. Please contact support.' });
       }
       
-      // Verify password
-      const isPasswordValid = await storage.verifyPassword(username, password);
+      // Verify password (implement password verification)
+      const isPasswordValid = await verifyPassword(password, user.password);
+      
       if (!isPasswordValid) {
         // Increment failed login attempts
-        await storage.incrementFailedLoginAttempts(user.id);
+        await storage.incrementLoginAttempts(user.id);
         
         // Check if we should lock the account
         const updatedUser = await storage.getUser(user.id);
-        if (updatedUser && updatedUser.failedLoginAttempts >= 5) {
-          await storage.lockUserAccount(user.id);
+        if (updatedUser && updatedUser.failedLoginAttempts && updatedUser.failedLoginAttempts >= 5) {
+          await storage.lockUserAccount(user.id, true);
           return res.status(403).json({ 
             message: 'Account locked due to too many failed attempts. Please contact support.' 
           });
@@ -306,10 +339,10 @@ export function setupJwtAuth(app: any): void {
       }
       
       // Reset failed login attempts on successful login
-      await storage.resetFailedLoginAttempts(user.id);
+      await storage.resetLoginAttempts(user.id);
       
       // Update last login timestamp
-      await storage.updateLastLogin(user.id);
+      await storage.updateUser(user.id, { lastLogin: new Date() });
       
       // Generate authentication token
       const deviceInfo = {
@@ -465,7 +498,13 @@ export function setupJwtAuth(app: any): void {
       
       const userId = 'userId' in req.user ? req.user.userId : req.user.id;
       
-      const success = await storage.revokeSpecificToken(userId, tokenId);
+      // Convert tokenId to number as our storage method requires a number
+      const tokenIdNum = parseInt(tokenId, 10);
+      if (isNaN(tokenIdNum)) {
+        return res.status(400).json({ message: 'Invalid token ID format' });
+      }
+      
+      const success = await storage.revokeSpecificToken(userId, tokenIdNum);
       
       if (success) {
         res.json({ message: 'Session revoked successfully' });
