@@ -64,34 +64,50 @@ export async function fetchPosts(options: {
   isPromoted?: boolean;
   tags?: string[];
 }): Promise<Partial<Post>[]> {
-  // Map our API params to the external API params
-  const apiParams: Record<string, any> = {
-    _limit: options.limit || 10
-  };
-  
-  if (options.offset) {
-    apiParams._start = options.offset;
+  try {
+    // Map our API params to the external API params
+    const apiParams: Record<string, any> = {
+      _limit: options.limit || 10
+    };
+    
+    if (options.offset) {
+      apiParams._start = options.offset;
+    }
+    
+    if (options.userId) {
+      apiParams.userId = options.userId;
+    }
+    
+    // Construct API URL
+    const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+    console.log(`Fetching posts from API with params:`, apiParams);
+    
+    // Using XMLHttpRequest as an alternative to fetch since axios installation failed
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const url = buildUrl(apiUrl, apiParams);
+      
+      xhr.open('GET', url, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const apiPosts = JSON.parse(xhr.responseText);
+          console.log(`Received ${apiPosts.length} posts from API`);
+          resolve(apiPosts.map(convertToAppPost));
+        } else {
+          reject(new Error(`API request failed with status ${xhr.status}`));
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject(new Error('Network error occurred'));
+      };
+      
+      xhr.send();
+    });
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    throw error;
   }
-  
-  if (options.userId) {
-    apiParams.userId = options.userId;
-  }
-  
-  // Fetch from external API
-  const apiUrl = buildUrl('https://jsonplaceholder.typicode.com/posts', apiParams);
-  console.log(`Fetching posts from API: ${apiUrl}`);
-  
-  const response = await fetch(apiUrl);
-  
-  if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
-  }
-  
-  const apiPosts = await response.json();
-  console.log(`Received ${apiPosts.length} posts from API`);
-  
-  // Convert to our application's format
-  return apiPosts.map(convertToAppPost);
 }
 
 /**
@@ -102,19 +118,29 @@ export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
     const apiUrl = `https://jsonplaceholder.typicode.com/posts/${id}`;
     console.log(`Fetching post from API: ${apiUrl}`);
     
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-    
-    const apiPost = await response.json();
-    console.log(`Successfully retrieved post from API:`, apiPost);
-    
-    return convertToAppPost(apiPost);
+    // Using XMLHttpRequest as an alternative to fetch
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('GET', apiUrl, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const apiPost = JSON.parse(xhr.responseText);
+          console.log(`Successfully retrieved post from API:`, apiPost);
+          resolve(convertToAppPost(apiPost));
+        } else if (xhr.status === 404) {
+          resolve(null);
+        } else {
+          reject(new Error(`API request failed with status ${xhr.status}`));
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject(new Error('Network error occurred'));
+      };
+      
+      xhr.send();
+    });
   } catch (error) {
     console.error("Error fetching post by ID:", error);
     throw error;
@@ -133,31 +159,41 @@ export async function createApiPost(postData: any): Promise<Partial<Post> | null
       userId: postData.userId
     };
     
-    // Send post request
-    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(apiRequestData)
+    const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+    console.log("Creating post via API with data:", apiRequestData);
+    
+    // Using XMLHttpRequest as an alternative to fetch
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('POST', apiUrl, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const apiPost = JSON.parse(xhr.responseText);
+          console.log("Post created successfully via API:", apiPost);
+          
+          // Convert response to our format and add additional fields
+          const formattedPost = convertToAppPost(apiPost);
+          
+          // Add any additional fields from the original postData that we want to preserve
+          if (postData.imageUrl) formattedPost.imageUrl = postData.imageUrl;
+          if (postData.videoUrl) formattedPost.videoUrl = postData.videoUrl;
+          if (postData.tags && Array.isArray(postData.tags)) formattedPost.tags = postData.tags;
+          
+          resolve(formattedPost);
+        } else {
+          reject(new Error(`API request failed with status ${xhr.status}`));
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject(new Error('Network error occurred'));
+      };
+      
+      xhr.send(JSON.stringify(apiRequestData));
     });
-    
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-    
-    const apiPost = await response.json();
-    console.log("Post created successfully via API:", apiPost);
-    
-    // Convert response to our format and add additional fields
-    const formattedPost = convertToAppPost(apiPost);
-    
-    // Add any additional fields from the original postData that we want to preserve
-    if (postData.imageUrl) formattedPost.imageUrl = postData.imageUrl;
-    if (postData.videoUrl) formattedPost.videoUrl = postData.videoUrl;
-    if (postData.tags && Array.isArray(postData.tags)) formattedPost.tags = postData.tags;
-    
-    return formattedPost;
   } catch (error) {
     console.error("Error creating post via API:", error);
     throw error;
