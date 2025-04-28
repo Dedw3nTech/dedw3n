@@ -148,7 +148,7 @@ export default function Social() {
       <div className="container mx-auto px-4 py-6">
         {/* User Profile Card removed as requested */}
         
-        {/* Social Navigation with Integrated Tabs */}
+        {/* Social Navigation moved to header */}
         <Card className="shadow-sm mb-6">
           <CardContent className="p-0">
             <Tabs 
@@ -157,58 +157,6 @@ export default function Social() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="w-full grid grid-cols-5 rounded-none px-0 h-auto bg-transparent">
-                <TabsTrigger 
-                  value="wall" 
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Home className="h-4 w-4" />
-                    <span className="text-xs">Wall</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="explore"
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Compass className="h-4 w-4" />
-                    <span className="text-xs">Explore</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="messages"
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary relative"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <MessageCircle className="h-4 w-4" />
-                    <span className="text-xs">Messages</span>
-                    {messageData && messageData.count > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                        {messageData.count}
-                      </Badge>
-                    )}
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="videos"
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Video className="h-4 w-4" />
-                    <span className="text-xs">Videos</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="communities"
-                  className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white py-3 px-3 border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span className="text-xs">Communities</span>
-                  </div>
-                </TabsTrigger>
-              </TabsList>
 
               {/* Wall Tab Content */}
               <TabsContent value="wall" className="mt-0 pt-6 px-4 pb-4">

@@ -19,7 +19,20 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Store, Users, Building, Landmark, Heart, Bell, MessageSquare, ShoppingBag } from "lucide-react";
+import { 
+  ChevronDown, 
+  Store, 
+  Users, 
+  Building, 
+  Landmark, 
+  Heart, 
+  Bell, 
+  MessageSquare, 
+  ShoppingBag, 
+  Home, 
+  Compass,
+  Video
+} from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +44,8 @@ import { formatDistanceToNow } from "date-fns";
 export default function Header() {
   const { view, setView } = useView();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("wall");
 
   // Fetch user data to check if logged in
   const { data: userData } = useQuery({
@@ -290,6 +304,68 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Social tab navigation - shown only when on social page */}
+      {location === '/social' && (
+        <div className="container mx-auto px-4 py-2 border-b border-gray-200">
+          <div className="flex overflow-x-auto">
+            <button 
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "wall" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+              onClick={() => setActiveTab("wall")}
+            >
+              <div className="flex items-center gap-1">
+                <Home className="h-4 w-4" />
+                <span>Wall</span>
+              </div>
+            </button>
+            
+            <button 
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "explore" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+              onClick={() => setActiveTab("explore")}
+            >
+              <div className="flex items-center gap-1">
+                <Compass className="h-4 w-4" />
+                <span>Explore</span>
+              </div>
+            </button>
+            
+            <button 
+              className={`py-2 px-4 text-sm font-medium border-b-2 relative ${activeTab === "messages" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+              onClick={() => setActiveTab("messages")}
+            >
+              <div className="flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" />
+                <span>Messages</span>
+                {messageData && messageData.count > 0 && (
+                  <Badge className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                    {messageData.count}
+                  </Badge>
+                )}
+              </div>
+            </button>
+            
+            <button 
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "videos" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+              onClick={() => setActiveTab("videos")}
+            >
+              <div className="flex items-center gap-1">
+                <Video className="h-4 w-4" />
+                <span>Videos</span>
+              </div>
+            </button>
+            
+            <button 
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "communities" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+              onClick={() => setActiveTab("communities")}
+            >
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>Communities</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search functionality removed */}
     </header>
