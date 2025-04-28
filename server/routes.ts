@@ -6,6 +6,7 @@ import path from 'path';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { posts } from "@shared/schema";
 import { setupAuth } from "./auth";
 import { setupJwtAuth } from "./jwt-auth";
 import { registerPaymentRoutes } from "./payment";

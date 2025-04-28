@@ -67,8 +67,29 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    let url = queryKey[0] as string;
+    
+    // Handle query parameters if present in queryKey
+    if (queryKey.length > 1 && typeof queryKey[1] === 'object') {
+      const params = new URLSearchParams();
+      const queryParams = queryKey[1] as Record<string, any>;
+      
+      Object.keys(queryParams).forEach(key => {
+        if (queryParams[key] !== undefined && queryParams[key] !== null) {
+          params.append(key, queryParams[key].toString());
+        }
+      });
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url = `${url}?${queryString}`;
+      }
+    }
+    
+    console.log('Fetching URL:', url);
+    
     // Use our offline-aware fetch implementation
-    const res = await offlineAwareFetch(queryKey[0] as string, {
+    const res = await offlineAwareFetch(url, {
       credentials: "include",
     });
 
@@ -106,10 +127,9 @@ export const getQueryFn: <T>(options: {
     
     // Cache successful GET responses for offline use
     if (useOfflineStore.getState().isOnline && 
-        typeof queryKey[0] === 'string' && 
         res.status === 200) {
       const data = await res.clone().json();
-      cacheResponse(queryKey[0] as string, data);
+      cacheResponse(url, data);
       return data;
     }
     
