@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { InsertPost, Post } from "@shared/schema";
@@ -15,7 +15,8 @@ import {
   FileText, 
   Tag, 
   Megaphone,
-  X
+  X,
+  Upload
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
@@ -32,6 +33,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [contentType, setContentType] = useState<ContentType>(defaultContentType);
   const [content, setContent] = useState("");
@@ -370,7 +372,41 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             )}
           </div>
           
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                title={t("social.upload_image")}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-5 w-5 text-gray-500" />
+              </Button>
+              <input 
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Create object URL for preview
+                    const objectUrl = URL.createObjectURL(file);
+                    setImageUrl(objectUrl);
+                    
+                    // Switch to image tab if not already there
+                    if (contentType !== "image") {
+                      setContentType("image");
+                    }
+                    
+                    // Reset file input
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </div>
             <Button 
               onClick={handleSubmit}
               disabled={createPostMutation.isPending}
