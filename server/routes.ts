@@ -2091,6 +2091,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.linkUrl) postData.linkUrl = req.body.linkUrl;
       if (req.body.isPromoted !== undefined) postData.isPromoted = req.body.isPromoted;
       
+      // Explicitly set isPublished to true by default, unless specified otherwise
+      postData.isPublished = req.body.isPublished !== undefined ? req.body.isPublished : true;
+      
       console.log("Creating post with data:", postData);
       
       // Validate the data before creating the post
