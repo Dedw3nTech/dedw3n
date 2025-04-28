@@ -4907,6 +4907,73 @@ export class DatabaseStorage implements IStorage {
   async getUserCommunityMembership(userId: number, communityId: number): Promise<Membership | undefined> { return undefined; }
   async getTierMemberCount(tierId: number): Promise<number> { return 0; }
   async createMembership(membership: InsertMembership): Promise<Membership> { throw new Error("Method not implemented."); }
+  
+  // Notification methods
+  async getNotifications(userId: number, limit: number = 10): Promise<any[]> {
+    try {
+      const userNotifications = await db.select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
+        .limit(limit);
+        
+      return userNotifications;
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      return [];
+    }
+  }
+  
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() })
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        ));
+        
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting unread notification count:', error);
+      return 0;
+    }
+  }
+  
+  async createNotification(notification: any): Promise<any> {
+    try {
+      const [result] = await db.insert(notifications)
+        .values(notification)
+        .returning();
+        
+      return result;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw error;
+    }
+  }
+  
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    try {
+      await db.update(notifications)
+        .set({ isRead: true })
+        .where(eq(notifications.id, notificationId));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      throw error;
+    }
+  }
+  
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    try {
+      await db.update(notifications)
+        .set({ isRead: true })
+        .where(eq(notifications.userId, userId));
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      throw error;
+    }
+  }
 }
 
 // Switch to database storage
