@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./use-auth";
 
 export function useFollow() {
   const queryClient = useQueryClient();

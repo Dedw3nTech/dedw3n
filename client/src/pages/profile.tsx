@@ -27,6 +27,9 @@ import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
+import FollowButton from "@/components/social/FollowButton";
+import FollowStats from "@/components/social/FollowStats";
+import SuggestedUsers from "@/components/social/SuggestedUsers";
 import { 
   User as UserIcon,
   Users,
@@ -640,6 +643,12 @@ export default function ProfilePage() {
                           </Button>
                         ) : null}
                         
+                        {/* Follow button */}
+                        <FollowButton 
+                          userId={profileData.id} 
+                          className="flex-1"
+                        />
+                        
                         {/* Message button */}
                         <Button
                           variant={connectionStatus === "connected" ? "default" : "outline"}
@@ -655,6 +664,13 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Follow stats card */}
+            <FollowStats
+              userId={profileData.id}
+              className="w-full"
+              linkToFollowersPage={true}
+            />
             
             {/* Connections card */}
             <ConnectionsCard
@@ -779,11 +795,19 @@ export default function ProfilePage() {
                         : `${profileData.name} hasn't posted anything yet.`}
                     </p>
                     {currentUser?.id === profileData.id && (
-                      <Button 
-                        onClick={() => document.querySelector("textarea")?.focus()}
-                      >
-                        Create a Post
-                      </Button>
+                      <div className="space-y-6">
+                        <Button 
+                          onClick={() => document.querySelector("textarea")?.focus()}
+                        >
+                          Create a Post
+                        </Button>
+                        
+                        {/* Suggested users section for the current user if they have no posts */}
+                        <div className="mt-8">
+                          <h3 className="text-lg font-medium mb-4">People you might want to follow</h3>
+                          <SuggestedUsers limit={3} />
+                        </div>
+                      </div>
                     )}
                   </div>
                 ) : (
