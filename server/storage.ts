@@ -12,7 +12,7 @@ import {
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
-  videoPurchases, videoProductOverlays, communityContents, authTokens,
+  videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -28,7 +28,8 @@ import {
   type VideoEngagement, type InsertVideoEngagement, type VideoAnalytics, type InsertVideoAnalytics,
   type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
   type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase,
-  type CommunityContent, type InsertCommunityContent, type AuthToken, type InsertAuthToken
+  type CommunityContent, type InsertCommunityContent, type AuthToken, type InsertAuthToken,
+  type Follow, type InsertFollow
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -118,6 +119,16 @@ export interface IStorage {
   createNotification(notification: any): Promise<any>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: number): Promise<void>;
+  
+  // Social media operations
+  followUser(followerId: number, followingId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followingId: number): Promise<boolean>;
+  isFollowing(followerId: number, followingId: number): Promise<boolean>;
+  getFollowers(userId: number): Promise<User[]>;
+  getFollowing(userId: number): Promise<User[]>;
+  getFollowersCount(userId: number): Promise<number>;
+  getFollowingCount(userId: number): Promise<number>;
+  getSuggestedUsers(userId: number, limit?: number): Promise<User[]>;
   
   // Video operations
   createVideo(video: InsertVideo): Promise<Video>;

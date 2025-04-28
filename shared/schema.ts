@@ -503,6 +503,9 @@ export const insertConnectionSchema = createInsertSchema(connections)
   
 export const insertLikeSchema = createInsertSchema(likes)
   .omit({ id: true, createdAt: true });
+  
+export const insertFollowSchema = createInsertSchema(follows)
+  .omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -580,6 +583,9 @@ export type InsertConnection = z.infer<typeof insertConnectionSchema>;
 
 export type Like = typeof likes.$inferSelect;
 export type InsertLike = z.infer<typeof insertLikeSchema>;
+
+export type Follow = typeof follows.$inferSelect;
+export type InsertFollow = z.infer<typeof insertFollowSchema>;
 
 // Video model for short-form, stories, live streams, and recorded videos
 export const videos = pgTable("videos", {
