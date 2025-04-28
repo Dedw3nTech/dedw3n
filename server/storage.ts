@@ -5156,6 +5156,204 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // Social media operations
+  async followUser(followerId: number, followingId: number): Promise<Follow> {
+    try {
+      if (followerId === followingId) {
+        throw new Error('Users cannot follow themselves');
+      }
+      
+      // Check if already following
+      const existingFollow = await db.select()
+        .from(follows)
+        .where(and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        ));
+        
+      if (existingFollow.length > 0) {
+        return existingFollow[0];
+      }
+      
+      // Create new follow relationship
+      const [newFollow] = await db.insert(follows)
+        .values({
+          followerId,
+          followingId
+        })
+        .returning();
+        
+      // Create notification for the user being followed
+      await this.createNotification({
+        userId: followingId,
+        type: 'follow',
+        content: `Someone started following you`,
+        sourceId: followerId,
+        sourceType: 'user',
+        isRead: false
+      });
+      
+      return newFollow;
+    } catch (error) {
+      console.error('Error following user:', error);
+      throw error;
+    }
+  }
+
+  async unfollowUser(followerId: number, followingId: number): Promise<boolean> {
+    try {
+      const result = await db.delete(follows)
+        .where(and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        ));
+        
+      return true;
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+      return false;
+    }
+  }
+  
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    try {
+      const existingFollow = await db.select()
+        .from(follows)
+        .where(and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        ));
+        
+      return existingFollow.length > 0;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
+  }
+  
+  async getFollowers(userId: number): Promise<User[]> {
+    try {
+      // Get all users who follow the specified user
+      const userFollowers = await db.select({
+          follower: users
+        })
+        .from(follows)
+        .innerJoin(users, eq(follows.followerId, users.id))
+        .where(eq(follows.followingId, userId));
+        
+      return userFollowers.map(item => item.follower);
+    } catch (error) {
+      console.error('Error getting followers:', error);
+      return [];
+    }
+  }
+  
+  async getFollowing(userId: number): Promise<User[]> {
+    try {
+      // Get all users followed by the specified user
+      const userFollowing = await db.select({
+          following: users
+        })
+        .from(follows)
+        .innerJoin(users, eq(follows.followingId, users.id))
+        .where(eq(follows.followerId, userId));
+        
+      return userFollowing.map(item => item.following);
+    } catch (error) {
+      console.error('Error getting following users:', error);
+      return [];
+    }
+  }
+  
+  async getFollowersCount(userId: number): Promise<number> {
+    try {
+      const result = await db.select({
+          count: sql<number>`count(*)`
+        })
+        .from(follows)
+        .where(eq(follows.followingId, userId));
+        
+      return result[0].count;
+    } catch (error) {
+      console.error('Error getting followers count:', error);
+      return 0;
+    }
+  }
+  
+  async getFollowingCount(userId: number): Promise<number> {
+    try {
+      const result = await db.select({
+          count: sql<number>`count(*)`
+        })
+        .from(follows)
+        .where(eq(follows.followerId, userId));
+        
+      return result[0].count;
+    } catch (error) {
+      console.error('Error getting following count:', error);
+      return 0;
+    }
+  }
+  
+  async getSuggestedUsers(userId: number, limit: number = 10): Promise<User[]> {
+    try {
+      // First try getting "friends of friends" (users followed by people the user follows)
+      const suggestedUsers = await db.select()
+        .from(users)
+        .where(and(
+          // User is not the current user
+          sql`${users.id} != ${userId}`,
+          // User is not already followed by the current user
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${follows} 
+            WHERE ${follows.followerId} = ${userId} 
+            AND ${follows.followingId} = ${users.id}
+          )`,
+          // User is followed by at least one user the current user follows
+          sql`EXISTS (
+            SELECT 1 FROM ${follows} as f1
+            JOIN ${follows} as f2 ON f1.followingId = f2.followerId
+            WHERE f1.followerId = ${userId}
+            AND f2.followingId = ${users.id}
+          )`
+        ))
+        .limit(limit);
+        
+      // If we don't have enough suggested users,
+      // add some active users who are not yet followed
+      if (suggestedUsers.length < limit) {
+        const remainingCount = limit - suggestedUsers.length;
+        
+        // Get IDs of users we already suggested
+        const alreadySuggestedIds = suggestedUsers.map(user => user.id);
+        
+        // Get some active users based on recent activity
+        const activeUsers = await db.select()
+          .from(users)
+          .where(and(
+            sql`${users.id} != ${userId}`,
+            sql`NOT EXISTS (
+              SELECT 1 FROM ${follows} 
+              WHERE ${follows.followerId} = ${userId} 
+              AND ${follows.followingId} = ${users.id}
+            )`,
+            alreadySuggestedIds.length > 0 
+              ? sql`${users.id} NOT IN (${sql.join(alreadySuggestedIds)})` 
+              : sql`TRUE`
+          ))
+          .orderBy(desc(users.lastLogin))
+          .limit(remainingCount);
+          
+        suggestedUsers.push(...activeUsers);
+      }
+      
+      return suggestedUsers;
+    } catch (error) {
+      console.error('Error getting suggested users:', error);
+      return [];
+    }
+  }
 }
 
 // Switch to database storage
