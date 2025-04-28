@@ -659,14 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cart/count", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const carts = await storage.getUserCart(userId);
-      
-      // Calculate total item count
-      let count = 0;
-      if (carts && carts.length > 0) {
-        count = carts.reduce((total, item) => total + (item.quantity || 1), 0);
-      }
-      
+      const count = await storage.countCartItems(userId);
       res.json({ count });
     } catch (error) {
       console.error('Error getting cart count:', error);
@@ -680,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const count = await storage.getUnreadMessageCount(userId);
+      const count = await storage.countUnreadMessages(userId);
       res.json({ count });
     } catch (error) {
       console.error('Error getting unread message count:', error);
