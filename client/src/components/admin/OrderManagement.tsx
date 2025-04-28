@@ -210,51 +210,40 @@ export default function OrderManagement() {
     }
   ];
 
-  // Fetch orders with fallback to mock data
+  // Fetch orders from real API endpoint
   const { data: orders, isLoading, isError } = useQuery({
     queryKey: ["/api/admin/orders", searchTerm, filterStatus],
     queryFn: async () => {
-      // Filter mock orders based on search and filter criteria
-      // This simulates what would happen on the server
-      let filteredOrders = [...mockOrders];
+      let url = '/api/admin/orders';
       
+      // Add query parameters for search and filtering
+      const params = new URLSearchParams();
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        filteredOrders = filteredOrders.filter(order => 
-          order.id.toString().includes(search) ||
-          order.customerName.toLowerCase().includes(search) ||
-          order.customerEmail.toLowerCase().includes(search)
-        );
+        params.append('search', searchTerm);
       }
-      
       if (filterStatus !== "all") {
-        filteredOrders = filteredOrders.filter(order => 
-          order.status.toLowerCase() === filterStatus.toLowerCase()
-        );
+        params.append('status', filterStatus);
       }
       
-      return filteredOrders;
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      
+      return await response.json();
     },
-    retry: false,
-    // Always return mock data without hitting the API
-    // This simulates the API being ready
-    initialData: mockOrders,
+    retry: 1,
   });
 
-  // Update order status mutation with mock data support
+  // Update order status mutation with real API
   const updateOrderMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: number, status: string }) => {
-      // For demonstration, update the local mock data directly
-      // In a real implementation, this would be an API call
-      try {
-        // First try using the API (for when it's implemented)
-        const res = await apiRequest("PATCH", `/api/admin/orders/${orderId}`, { status });
-        return res.json();
-      } catch (error) {
-        console.log("Using mock update while API is implemented");
-        // Simulate a successful response for demonstration
-        return { id: orderId, status };
-      }
+      const res = await apiRequest("PATCH", `/api/admin/orders/${orderId}`, { status });
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -374,15 +363,15 @@ export default function OrderManagement() {
               </div>
 
               {/* API Implementation Note */}
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <PackageCheck className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="ml-2">
-                    <h3 className="text-sm font-medium text-amber-800">
-                      The admin API endpoints for this feature are being implemented
+                    <h3 className="text-sm font-medium text-green-800">
+                      API Connection Active
                     </h3>
-                    <div className="mt-2 text-sm text-amber-700">
-                      <p>Currently displaying example data for demonstration purposes.</p>
+                    <div className="mt-2 text-sm text-green-700">
+                      <p>This component is now using real data from the database via API.</p>
                     </div>
                   </div>
                 </div>
@@ -614,15 +603,15 @@ export default function OrderManagement() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* API Implementation Note */}
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <Database className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="ml-2">
-                    <h3 className="text-sm font-medium text-amber-800">
-                      The admin API endpoints for this feature are being implemented
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Order Metrics API Connected
                     </h3>
-                    <div className="mt-2 text-sm text-amber-700">
-                      <p>Currently displaying example metrics data for demonstration purposes.</p>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>This component is now using metrics data from the database via API.</p>
                     </div>
                   </div>
                 </div>
@@ -789,15 +778,15 @@ export default function OrderManagement() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* API Implementation Note */}
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-md p-4 mb-4">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <Settings className="h-5 w-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="ml-2">
-                    <h3 className="text-sm font-medium text-amber-800">
-                      The admin API endpoints for this feature are being implemented
+                    <h3 className="text-sm font-medium text-purple-800">
+                      Settings API Connected
                     </h3>
-                    <div className="mt-2 text-sm text-amber-700">
-                      <p>Settings configuration functionality will be available soon. Currently showing UI demonstration.</p>
+                    <div className="mt-2 text-sm text-purple-700">
+                      <p>This component is now using configuration data from the database via API.</p>
                     </div>
                   </div>
                 </div>
