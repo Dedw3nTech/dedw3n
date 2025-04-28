@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Tabs,
@@ -165,9 +165,16 @@ export default function AdminDashboard() {
     enabled: user?.role === "admin",
   });
 
-  // If user is not admin, redirect to home
+  // If user is not admin, don't redirect here (it causes React errors)
+  // Instead, we'll handle this with useEffect
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+  
+  // Still return early if user is not an admin
   if (user && user.role !== "admin") {
-    setLocation("/");
     return null;
   }
 
