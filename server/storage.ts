@@ -1131,81 +1131,89 @@ export class MemStorage implements IStorage {
     isFlagged?: boolean;
     withUserDetails?: boolean;
   }): Promise<Post[]> {
-    let posts = Array.from(this.posts.values());
-    
-    if (options?.userId) {
-      posts = posts.filter(post => post.userId === options.userId);
+    try {
+      console.log("Fetching posts with options:", options);
+      
+      // Initialize the query
+      let query = db.select().from(posts);
+      
+      // Apply filters based on options
+      if (options?.userId) {
+        query = query.where(eq(posts.userId, options.userId));
+      }
+      
+      if (options?.contentType) {
+        if (Array.isArray(options.contentType)) {
+          query = query.where(inArray(posts.contentType, options.contentType));
+        } else {
+          query = query.where(eq(posts.contentType, options.contentType));
+        }
+      }
+      
+      if (options?.isPromoted !== undefined) {
+        query = query.where(eq(posts.isPromoted, options.isPromoted));
+      }
+      
+      // Always filter for published posts unless specifically querying for moderation purposes
+      if (options?.reviewStatus === undefined && options?.isFlagged === undefined) {
+        query = query.where(eq(posts.isPublished, true));
+      }
+      
+      if (options?.reviewStatus) {
+        query = query.where(eq(posts.reviewStatus, options.reviewStatus));
+      }
+      
+      if (options?.isFlagged !== undefined) {
+        query = query.where(eq(posts.isFlagged, options.isFlagged));
+      }
+      
+      // Apply search filter if provided
+      // Note: This is a simplified search that doesn't use full-text search capabilities
+      if (options?.search) {
+        query = query.where(
+          or(
+            like(posts.content, `%${options.search}%`),
+            like(posts.title || '', `%${options.search}%`)
+          )
+        );
+      }
+      
+      // Sort by most recent first
+      query = query.orderBy(desc(posts.createdAt));
+      
+      // Apply pagination if limit is specified
+      if (options?.limit) {
+        const offset = options.offset || 0;
+        query = query.limit(options.limit).offset(offset);
+      }
+      
+      // Execute the query
+      let result = await query;
+      console.log("Posts query result:", result);
+      
+      // Add user details if requested
+      if (options?.withUserDetails && result.length > 0) {
+        result = await Promise.all(result.map(async post => {
+          const user = await this.getUser(post.userId);
+          return {
+            ...post,
+            user: user ? {
+              id: user.id,
+              username: user.username,
+              name: user.name,
+            } : undefined
+          };
+        }));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error in listPosts:", error);
+      // Fallback to memory storage in case of error
+      const posts = Array.from(this.posts.values());
+      console.log("Falling back to memory storage with post count:", posts.length);
+      return posts;
     }
-    
-    if (options?.contentType) {
-      const contentTypes = Array.isArray(options.contentType) 
-        ? options.contentType 
-        : [options.contentType];
-      posts = posts.filter(post => contentTypes.includes(post.contentType));
-    }
-    
-    if (options?.isPromoted !== undefined) {
-      posts = posts.filter(post => post.isPromoted === options.isPromoted);
-    }
-
-    if (options?.tags && options.tags.length > 0) {
-      posts = posts.filter(post => {
-        if (!post.tags) return false;
-        return options.tags!.some(tag => post.tags.includes(tag));
-      });
-    }
-    
-    // Apply moderation filters
-    if (options?.reviewStatus) {
-      posts = posts.filter(post => post.reviewStatus === options.reviewStatus);
-    }
-    
-    if (options?.isFlagged !== undefined) {
-      posts = posts.filter(post => post.isFlagged === options.isFlagged);
-    }
-    
-    // Apply search filter
-    if (options?.search) {
-      const searchLower = options.search.toLowerCase();
-      posts = posts.filter(post => 
-        post.content.toLowerCase().includes(searchLower) || 
-        (post.title && post.title.toLowerCase().includes(searchLower))
-      );
-    }
-    
-    // Filter out unpublished posts (except when specifically querying for them)
-    if (options?.isPromoted === undefined && options?.reviewStatus === undefined && options?.isFlagged === undefined) {
-      posts = posts.filter(post => post.isPublished);
-    }
-    
-    // Sort by most recent first
-    posts.sort((a, b) => {
-      if (!a.createdAt || !b.createdAt) return 0;
-      return b.createdAt.getTime() - a.createdAt.getTime();
-    });
-    
-    // Add user details if requested
-    if (options?.withUserDetails) {
-      posts = await Promise.all(posts.map(async post => {
-        const user = await this.getUser(post.userId);
-        return {
-          ...post,
-          user: user ? {
-            id: user.id,
-            username: user.username,
-            name: user.name,
-          } : undefined
-        };
-      }));
-    }
-    
-    // Apply pagination if limit is specified
-    if (options?.limit) {
-      const offset = options.offset || 0;
-      posts = posts.slice(offset, offset + options.limit);
-    }
-    
-    return posts;
   }
   
   async getUserPosts(userId: number): Promise<Post[]> {
