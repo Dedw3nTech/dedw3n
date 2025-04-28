@@ -1156,6 +1156,7 @@ export class MemStorage implements IStorage {
       
       // Always filter for published posts unless specifically querying for moderation purposes
       if (options?.reviewStatus === undefined && options?.isFlagged === undefined) {
+        console.log("Adding isPublished filter to query");
         query = query.where(eq(posts.isPublished, true));
       }
       
@@ -1186,6 +1187,10 @@ export class MemStorage implements IStorage {
         const offset = options.offset || 0;
         query = query.limit(options.limit).offset(offset);
       }
+      
+      // Print the SQL query for debugging
+      const queryStr = query.toSQL();
+      console.log("SQL Query:", queryStr.sql, "with params:", queryStr.params);
       
       // Execute the query
       let result = await query;

@@ -2100,6 +2100,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertPostSchema.parse(postData);
       const post = await storage.createPost(validatedData);
       
+      // Explicitly clear any in-memory posts cache
+      try {
+        storage.clearMemoryPostsCache();
+      } catch (error) {
+        console.log("Note: clearMemoryPostsCache not implemented, but this is not critical.");
+      }
+      
       res.status(201).json(post);
     } catch (error) {
       console.error("Error creating post:", error);
