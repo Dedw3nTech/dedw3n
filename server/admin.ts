@@ -498,4 +498,180 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Error deleting post' });
     }
   });
+  
+  // Order Management Endpoints
+  
+  // Get all orders
+  app.get('/api/admin/orders', isAdmin, async (req, res) => {
+    try {
+      const searchTerm = req.query.search as string;
+      const filterStatus = req.query.status as string;
+      
+      // Get all orders
+      let orders = await storage.getAllOrders();
+      
+      // Apply filters if needed
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        orders = orders.filter(order => 
+          order.id.toString().includes(search) ||
+          order.userId.toString().includes(search)
+        );
+      }
+      
+      if (filterStatus && filterStatus !== 'all') {
+        orders = orders.filter(order => 
+          order.status.toLowerCase() === filterStatus.toLowerCase()
+        );
+      }
+      
+      // Enhance orders with customer details
+      const enhancedOrders = await Promise.all(
+        orders.map(async (order) => {
+          const user = await storage.getUser(order.userId);
+          const orderItems = await storage.getOrderItems(order.id);
+          
+          return {
+            ...order,
+            customerName: user?.name || 'Unknown',
+            customerEmail: user?.email || 'Unknown',
+            items: orderItems,
+            itemCount: orderItems.length
+          };
+        })
+      );
+      
+      res.json(enhancedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      res.status(500).json({ message: 'Error fetching orders' });
+    }
+  });
+  
+  // Get a specific order
+  app.get('/api/admin/orders/:id', isAdmin, async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const order = await storage.getOrder(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      const user = await storage.getUser(order.userId);
+      const orderItems = await storage.getOrderItems(orderId);
+      
+      // Get product details for each item
+      const itemsWithDetails = await Promise.all(
+        orderItems.map(async (item) => {
+          const product = await storage.getProduct(item.productId);
+          const vendor = await storage.getVendor(item.vendorId);
+          
+          return {
+            ...item,
+            productName: product?.name || 'Unknown Product',
+            vendorName: vendor?.storeName || 'Unknown Vendor'
+          };
+        })
+      );
+      
+      const enhancedOrder = {
+        ...order,
+        customer: user ? {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        } : { id: 0, name: 'Unknown', email: 'Unknown' },
+        items: itemsWithDetails
+      };
+      
+      res.json(enhancedOrder);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      res.status(500).json({ message: 'Error fetching order details' });
+    }
+  });
+  
+  // Update order status
+  app.patch('/api/admin/orders/:id', isAdmin, async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const order = await storage.getOrder(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      const { status, paymentStatus, notes } = req.body;
+      const updates: any = {};
+      
+      if (status) {
+        if (!['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+          return res.status(400).json({ message: 'Invalid status value' });
+        }
+        updates.status = status;
+      }
+      
+      if (paymentStatus) {
+        if (!['pending', 'completed', 'failed', 'refunded'].includes(paymentStatus)) {
+          return res.status(400).json({ message: 'Invalid payment status value' });
+        }
+        updates.paymentStatus = paymentStatus;
+      }
+      
+      if (notes !== undefined) {
+        updates.notes = notes;
+      }
+      
+      // Add timestamp
+      updates.updatedAt = new Date();
+      
+      const updatedOrder = await storage.updateOrder(orderId, updates);
+      
+      if (status === 'shipped' || status === 'delivered') {
+        // Update order items status as well
+        await storage.updateOrderItemsStatus(orderId, status);
+      }
+      
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error('Error updating order:', error);
+      res.status(500).json({ message: 'Error updating order' });
+    }
+  });
+  
+  // Get order analytics
+  app.get('/api/admin/orders/analytics', isAdmin, async (req, res) => {
+    try {
+      const period = req.query.period as string || 'week';
+      
+      // Get total counts
+      const pendingOrders = await storage.countOrders({ status: 'pending' });
+      const processingOrders = await storage.countOrders({ status: 'processing' });
+      const shippedOrders = await storage.countOrders({ status: 'shipped' });
+      const deliveredOrders = await storage.countOrders({ status: 'delivered' });
+      const cancelledOrders = await storage.countOrders({ status: 'cancelled' });
+      
+      const totalRevenue = await storage.calculateTotalRevenue();
+      const averageOrderValue = await storage.calculateAverageOrderValue();
+      
+      res.json({
+        counts: {
+          pending: pendingOrders,
+          processing: processingOrders,
+          shipped: shippedOrders,
+          delivered: deliveredOrders,
+          cancelled: cancelledOrders,
+          total: pendingOrders + processingOrders + shippedOrders + deliveredOrders + cancelledOrders
+        },
+        revenue: {
+          total: totalRevenue,
+          averageOrderValue
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching order analytics:', error);
+      res.status(500).json({ message: 'Error fetching order analytics' });
+    }
+  });
 }
