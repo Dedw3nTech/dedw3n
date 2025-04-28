@@ -112,6 +112,13 @@ export interface IStorage {
   getUnreadMessageCount(userId: number): Promise<number>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
   
+  // Notification operations
+  getNotifications(userId: number, limit?: number): Promise<any[]>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  createNotification(notification: any): Promise<any>;
+  markNotificationAsRead(notificationId: number): Promise<void>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
+  
   // Video operations
   createVideo(video: InsertVideo): Promise<Video>;
   getVideo(id: number): Promise<Video | undefined>;

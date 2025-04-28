@@ -4,7 +4,7 @@ import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
 import CurrencyConverter from "../ui/currency-converter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
 import { LanguageSelector } from "../lang/LanguageSelector";
 import { CurrencySelector } from "../lang/CurrencySelector";
@@ -25,6 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Header() {
   const { view, setView } = useView();
@@ -37,6 +38,45 @@ export default function Header() {
   });
   
   const isLoggedIn = !!userData;
+  
+  // Fetch notifications and count if logged in
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["/api/notifications"],
+    enabled: isLoggedIn,
+  });
+  
+  const { data: unreadNotificationsData } = useQuery({
+    queryKey: ["/api/notifications/unread/count"],
+    enabled: isLoggedIn,
+  });
+  
+  const unreadNotificationCount = unreadNotificationsData?.count || 0;
+  
+  // Mark notification as read mutation
+  const markNotificationReadMutation = useMutation({
+    mutationFn: async (notificationId: number) => {
+      await fetch(`/api/notifications/${notificationId}/mark-read`, {
+        method: "POST"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread/count"] });
+    }
+  });
+  
+  // Mark all notifications as read mutation
+  const markAllNotificationsReadMutation = useMutation({
+    mutationFn: async () => {
+      await fetch("/api/notifications/mark-all-read", {
+        method: "POST"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread/count"] });
+    }
+  });
 
   // Fetch cart count
   const { data: cartData } = useQuery<{ count: number }>({
@@ -90,9 +130,11 @@ export default function Header() {
               <PopoverTrigger asChild>
                 <div className="relative p-2 text-gray-600 hover:text-primary cursor-pointer">
                   <Bell className="h-5 w-5" />
-                  <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
-                    3
-                  </Badge>
+                  {unreadNotificationCount > 0 && (
+                    <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                      {unreadNotificationCount}
+                    </Badge>
+                  )}
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end">
@@ -100,45 +142,40 @@ export default function Header() {
                   <h3 className="font-semibold">Notifications</h3>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
-                  <div className="p-3 border-b hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-start">
-                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
-                        <Store className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Order Shipped</p>
-                        <p className="text-xs text-gray-500 mt-1">Your order #12345 has been shipped and will arrive in 2-4 days.</p>
-                        <p className="text-xs text-gray-400 mt-1">10 minutes ago</p>
-                      </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      <p className="text-sm">No notifications yet</p>
                     </div>
-                  </div>
-                  <div className="p-3 border-b hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-start">
-                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
-                        <Users className="h-4 w-4" />
+                  ) : (
+                    notifications.map((notification) => (
+                      <div 
+                        key={notification.id} 
+                        className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-gray-50' : ''}`}
+                        onClick={() => markNotificationReadMutation.mutate(notification.id)}
+                      >
+                        <div className="flex items-start">
+                          <div className={`h-8 w-8 rounded-full ${getNotificationIconStyle(notification.type)} flex items-center justify-center mr-3`}>
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-xs text-gray-500 mt-1">{notification.content}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">New Follower</p>
-                        <p className="text-xs text-gray-500 mt-1">Alice started following your shop.</p>
-                        <p className="text-xs text-gray-400 mt-1">1 hour ago</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-start">
-                      <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
-                        <Heart className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">New Message</p>
-                        <p className="text-xs text-gray-500 mt-1">You have a new message from a dating match.</p>
-                        <p className="text-xs text-gray-400 mt-1">Yesterday</p>
-                      </div>
-                    </div>
-                  </div>
+                    ))
+                  )}
                 </div>
                 <div className="p-2 border-t text-center">
-                  <button className="text-xs text-primary font-medium hover:underline">View all notifications</button>
+                  <button 
+                    className="text-xs text-primary font-medium hover:underline"
+                    onClick={() => markAllNotificationsReadMutation.mutate()}
+                  >
+                    Mark all as read
+                  </button>
                 </div>
               </PopoverContent>
             </Popover>
