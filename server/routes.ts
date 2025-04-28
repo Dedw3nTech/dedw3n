@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { setupJwtAuth } from "./jwt-auth";
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
@@ -30,6 +31,9 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication with passport
   setupAuth(app);
+  
+  // Setup JWT authentication routes
+  setupJwtAuth(app);
   
   // Register admin routes
   registerAdminRoutes(app);
