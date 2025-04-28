@@ -34,7 +34,6 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textFileInputRef = useRef<HTMLInputElement>(null);
   
   const [contentType, setContentType] = useState<ContentType>(defaultContentType);
   const [content, setContent] = useState("");
@@ -385,25 +384,18 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 <Image className="h-5 w-5 text-gray-500" />
                 <span className="text-sm text-gray-500">Upload</span>
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="rounded-full flex items-center gap-1 px-3"
-                title={t("social.upload_text") || "Upload text file"}
-                onClick={() => textFileInputRef.current?.click()}
-              >
-                <FileText className="h-5 w-5 text-gray-500" />
-                <span className="text-sm text-gray-500">Upload</span>
-              </Button>
               <input 
                 type="file"
                 ref={fileInputRef}
-                accept="image/*"
+                accept="image/*,.txt,.md,.doc,.docx"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
-                    // Create object URL for preview
+                  if (!file) return;
+                  
+                  // Check if file is an image
+                  if (file.type.startsWith('image/')) {
+                    // Handle image file
                     const objectUrl = URL.createObjectURL(file);
                     setImageUrl(objectUrl);
                     
@@ -411,21 +403,8 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                     if (contentType !== "image") {
                       setContentType("image");
                     }
-                    
-                    // Reset file input
-                    e.target.value = "";
-                  }
-                }}
-              />
-              <input 
-                type="file"
-                ref={textFileInputRef}
-                accept=".txt,.md,.doc,.docx"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    // Read text file content
+                  } else {
+                    // Handle text file
                     const reader = new FileReader();
                     reader.onload = (event) => {
                       const textContent = event.target?.result as string;
@@ -453,10 +432,10 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                     };
                     
                     reader.readAsText(file);
-                    
-                    // Reset file input
-                    e.target.value = "";
                   }
+                  
+                  // Reset file input
+                  e.target.value = "";
                 }}
               />
             </div>
