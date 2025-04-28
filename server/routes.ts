@@ -596,6 +596,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register exclusive content routes
   registerExclusiveContentRoutes(app);
   
+  // Notification API Routes
+  
+  // Get user notifications
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      const notifications = await storage.getNotifications(userId, limit);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+  
+  // Get unread notification count
+  app.get("/api/notifications/unread/count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread notification count:', error);
+      res.status(500).json({ message: "Failed to get unread notification count" });
+    }
+  });
+  
+  // Mark a notification as read
+  app.post("/api/notifications/:id/mark-read", isAuthenticated, async (req, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      
+      if (isNaN(notificationId)) {
+        return res.status(400).json({ message: "Invalid notification ID" });
+      }
+      
+      await storage.markNotificationAsRead(notificationId);
+      res.status(200).json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+  
+  // Mark all notifications as read
+  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.status(200).json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+  
+  // Cart API Routes
+  
+  // Get cart item count
+  app.get("/api/cart/count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const carts = await storage.getUserCart(userId);
+      
+      // Calculate total item count
+      let count = 0;
+      if (carts && carts.length > 0) {
+        count = carts.reduce((total, item) => total + (item.quantity || 1), 0);
+      }
+      
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting cart count:', error);
+      res.status(500).json({ message: "Failed to get cart count" });
+    }
+  });
+  
+  // Message API Routes
+  
+  // Get unread messages count
+  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      res.status(500).json({ message: "Failed to get unread message count" });
+    }
+  });
+  
+  // Social Media API Routes
+  
+  // Social Tab API Endpoints
+  
+  // Get wall posts (feed content)
+  app.get("/api/social/wall", async (req, res) => {
+    try {
+      // Get most recent posts - either from user's network or all public posts
+      const isAuthenticated = req.isAuthenticated();
+      const userId = isAuthenticated ? req.user!.id : undefined;
+      
+      const posts = await storage.listPosts({
+        // If user is authenticated, prioritize posts from users they follow
+        limit: 10,
+      });
+      
+      res.json(posts);
+    } catch (error) {
+      console.error('Error getting wall posts:', error);
+      res.status(500).json({ message: "Failed to load wall content" });
+    }
+  });
+  
+  // Get explore content (trending, discover)
+  app.get("/api/social/explore", async (req, res) => {
+    try {
+      const trendingVideos = await storage.getTrendingVideos(5);
+      
+      // Get popular posts
+      const popularPosts = await storage.listPosts({
+        limit: 5
+      });
+      
+      // Get popular communities
+      const communities = await storage.listCommunities(5);
+      
+      // Get suggested users to follow
+      const isAuthenticated = req.isAuthenticated();
+      const userId = isAuthenticated ? req.user!.id : undefined;
+      const suggestedUsers = userId ? await storage.getSuggestedUsers(userId, 5) : [];
+      
+      // Only return safe user data (remove passwords)
+      const safeSuggestedUsers = suggestedUsers.map(user => {
+        const { password, ...safeUserData } = user;
+        return safeUserData;
+      });
+      
+      res.json({
+        trendingVideos,
+        popularPosts,
+        communities,
+        suggestedUsers: safeSuggestedUsers
+      });
+    } catch (error) {
+      console.error('Error getting explore content:', error);
+      res.status(500).json({ message: "Failed to load explore content" });
+    }
+  });
+  
+  // Get user's video content
+  app.get("/api/social/videos", async (req, res) => {
+    try {
+      const videos = await storage.listVideos();
+      res.json(videos);
+    } catch (error) {
+      console.error('Error getting videos:', error);
+      res.status(500).json({ message: "Failed to load videos" });
+    }
+  });
+  
+  // Get user's communities
+  app.get("/api/social/communities", async (req, res) => {
+    try {
+      const isAuthenticated = req.isAuthenticated();
+      const userId = isAuthenticated ? req.user!.id : undefined;
+      
+      // Get communities the user is a member of if authenticated
+      let userCommunities = [];
+      if (userId) {
+        userCommunities = await storage.getUserCommunities(userId);
+      }
+      
+      // Get public/featured communities for everyone
+      const publicCommunities = await storage.listCommunities(10);
+      
+      res.json({
+        userCommunities,
+        publicCommunities
+      });
+    } catch (error) {
+      console.error('Error getting communities:', error);
+      res.status(500).json({ message: "Failed to load communities" });
+    }
+  });
+  
+  // Get active tab content based on tab name
+  app.get("/api/social/tab/:tabName", async (req, res) => {
+    try {
+      const { tabName } = req.params;
+      const isAuthenticated = req.isAuthenticated();
+      const userId = isAuthenticated ? req.user!.id : undefined;
+      
+      let data = {};
+      
+      switch(tabName) {
+        case 'wall':
+          const posts = await storage.listPosts({ limit: 10 });
+          data = { posts };
+          break;
+        case 'explore':
+          const trendingVideos = await storage.getTrendingVideos(5);
+          const popularPosts = await storage.listPosts({ limit: 5 });
+          data = { trendingVideos, popularPosts };
+          break;
+        case 'messages':
+          if (!userId) {
+            return res.status(401).json({ message: "Authentication required" });
+          }
+          const conversations = await storage.getUserConversations(userId);
+          data = { conversations };
+          break;
+        case 'videos':
+          const videos = await storage.listVideos();
+          data = { videos };
+          break;
+        case 'communities':
+          const communities = await storage.listCommunities(10);
+          let userCommunities = [];
+          if (userId) {
+            userCommunities = await storage.getUserCommunities(userId);
+          }
+          data = { communities, userCommunities };
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid tab name" });
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error(`Error getting content for tab ${req.params.tabName}:`, error);
+      res.status(500).json({ message: `Failed to load ${req.params.tabName} content` });
+    }
+  });
+  
   // Social Media API Routes - Follow System
   
   // Follow a user
