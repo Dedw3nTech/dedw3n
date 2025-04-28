@@ -254,10 +254,19 @@ export default function UserModeration() {
     isError: isErrorUsers,
     refetch: refetchUsers,
   } = useQuery<User[]>({
-    queryKey: ["/api/admin/users/moderation", searchTerm, filterStatus, filterRole, currentPage],
+    queryKey: ["/api/admin/users", searchTerm, filterStatus, filterRole, currentPage],
     queryFn: async () => {
-      // Mock data for UI development
-      return generateMockUsers();
+      // Use real API endpoint
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (filterStatus && filterStatus !== 'all') queryParams.append('status', filterStatus);
+      if (filterRole && filterRole !== 'all') queryParams.append('role', filterRole);
+      queryParams.append('page', currentPage.toString());
+      queryParams.append('limit', itemsPerPage.toString());
+      
+      const res = await fetch(`/api/admin/users?${queryParams.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch users');
+      return await res.json();
     },
   });
 
@@ -302,6 +311,20 @@ export default function UserModeration() {
     enabled: !!selectedUser && showUserDetailDialog,
   });
 
+  // Fetch user details
+  const {
+    data: userDetail,
+    isLoading: isLoadingUserDetail,
+  } = useQuery<User>({
+    queryKey: ["/api/admin/users/detail", selectedUser?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users/${selectedUser?.id}`);
+      if (!res.ok) throw new Error('Failed to fetch user details');
+      return await res.json();
+    },
+    enabled: !!selectedUser && showUserDetailDialog,
+  });
+  
   // Fetch moderator notes for the selected user
   const {
     data: moderatorNotes = [],
@@ -357,9 +380,17 @@ export default function UserModeration() {
   // Add note mutation
   const addNoteMutation = useMutation({
     mutationFn: async ({ userId, content }: { userId: number; content: string }) => {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true };
+      // Use bio field temporarily to store user notes
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          bio: content 
+        })
+      });
+      
+      if (!res.ok) throw new Error('Failed to add note to user');
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -367,7 +398,7 @@ export default function UserModeration() {
         description: "Moderator note has been added to the user profile",
       });
       setActionNote("");
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/notes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/detail"] });
     },
   });
 
@@ -380,9 +411,71 @@ export default function UserModeration() {
       duration?: string;
       note?: string;
     }) => {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return { success: true };
+      // Handle different action types appropriately
+      if (data.userIds.length === 1) {
+        // Single user actions
+        const userId = data.userIds[0];
+        
+        // Different actions require different API calls
+        switch (data.action) {
+          case "ban":
+          case "mute":
+          case "flag":
+            // Update user with specific status change
+            const updateData: any = {
+              isLocked: data.action === "ban",
+            };
+            
+            if (data.note) {
+              updateData.bio = data.note; // Use bio temporarily for notes
+            }
+            
+            const res = await fetch(`/api/admin/users/${userId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updateData)
+            });
+            
+            if (!res.ok) throw new Error(`Failed to ${data.action} user`);
+            return await res.json();
+            
+          case "unban":
+          case "unmute":
+            // Update user to unlock account
+            const unlockRes = await fetch(`/api/admin/users/${userId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                isLocked: false,
+                failedLoginAttempts: 0
+              })
+            });
+            
+            if (!unlockRes.ok) throw new Error(`Failed to ${data.action} user`);
+            return await unlockRes.json();
+            
+          default:
+            throw new Error(`Unsupported action: ${data.action}`);
+        }
+      } else {
+        // Batch actions aren't implemented yet in the backend
+        // This should be replaced with actual batch endpoint when available
+        const results = await Promise.all(data.userIds.map(async (userId) => {
+          const res = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              isLocked: data.action === "ban",
+              failedLoginAttempts: data.action === "ban" ? 5 : 0,
+            })
+          });
+          
+          if (!res.ok) throw new Error(`Failed to ${data.action} user ${userId}`);
+          return res.json();
+        }));
+        
+        return results;
+      }
     },
     onSuccess: () => {
       toast({
@@ -396,8 +489,8 @@ export default function UserModeration() {
       setActionNote("");
       setSelectedUsers([]);
       setIsBatchAction(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/moderation"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/actions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users/detail"] });
     },
   });
 
