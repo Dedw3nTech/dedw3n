@@ -2151,7 +2151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/posts", async (req, res) => {
     try {
       console.log("============ GET /api/posts called ============");
-      // Extract query parameters for advanced filtering
+      
+      // Extract query parameters for filtering
       const options: {
         userId?: number;
         contentType?: string | string[];
@@ -2184,27 +2185,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
         options.offset = parseInt(req.query.offset as string);
       }
       
-      // Try a direct query to bypass complex listPosts function
-      let directPosts;
+      console.log("Fetching posts from external API with options:", options);
+      
+      // Use external API to get posts - jsonplaceholder API
       try {
-        directPosts = await db.select().from(posts).where(eq(posts.isPublished, true)).limit(limit);
-        console.log("Direct DB posts query result:", directPosts);
-      } catch (error) {
-        console.error("Direct DB query error:", error);
-        directPosts = [];
+        // Build the API URL with parameters
+        const apiUrl = new URL('https://jsonplaceholder.typicode.com/posts');
+        
+        // Add parameters to the URL
+        if (options.limit) {
+          apiUrl.searchParams.append('_limit', options.limit.toString());
+        }
+        
+        if (options.offset) {
+          apiUrl.searchParams.append('_start', options.offset.toString());
+        }
+        
+        if (options.userId) {
+          apiUrl.searchParams.append('userId', options.userId.toString());
+        }
+        
+        console.log(`Fetching from external API: ${apiUrl.toString()}`);
+        
+        // Make the HTTP request to the external API
+        const apiResponse = await fetch(apiUrl.toString());
+        
+        if (!apiResponse.ok) {
+          throw new Error(`API request failed with status ${apiResponse.status}`);
+        }
+        
+        const externalPosts = await apiResponse.json();
+        console.log(`Received ${externalPosts.length} posts from external API`);
+        
+        // Convert the external posts to our application's Post format
+        const formattedPosts = externalPosts.map((apiPost: any) => ({
+          id: apiPost.id,
+          userId: apiPost.userId,
+          content: apiPost.body || '',
+          title: apiPost.title || '',
+          contentType: 'text',
+          imageUrl: null,
+          videoUrl: null,
+          productId: null,
+          likes: Math.floor(Math.random() * 50),
+          comments: Math.floor(Math.random() * 20),
+          shares: Math.floor(Math.random() * 10),
+          views: Math.floor(Math.random() * 100),
+          tags: ['api', 'social'],
+          isPromoted: false,
+          isPublished: true,
+          isFlagged: false,
+          flagReason: null,
+          reviewStatus: 'approved',
+          reviewedAt: null,
+          reviewedBy: null,
+          moderationNote: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
+        
+        return res.json(formattedPosts);
+      } catch (apiError) {
+        console.error("External API error:", apiError);
+        
+        // Fall back to database if external API fails
+        console.log("Falling back to database for posts...");
+        
+        // Try a direct query to bypass complex listPosts function
+        let directPosts;
+        try {
+          directPosts = await db.select().from(posts).where(eq(posts.isPublished, true)).limit(limit);
+          console.log("Direct DB posts query result:", directPosts);
+        } catch (error) {
+          console.error("Direct DB query error:", error);
+          directPosts = [];
+        }
+        
+        // If direct query returned posts, use those instead of going through storage
+        if (directPosts && directPosts.length > 0) {
+          console.log("Using direct query results instead of storage (found " + directPosts.length + " posts)");
+          return res.json(directPosts);
+        }
+        
+        // Otherwise fall back to regular storage method
+        const storagePosts = await storage.listPosts(options);
+        console.log("Storage listPosts result:", storagePosts);
+        
+        return res.json(storagePosts);
       }
       
-      // If direct query returned posts, use those instead of going through storage
-      if (directPosts && directPosts.length > 0) {
-        console.log("Using direct query results instead of storage (found " + directPosts.length + " posts)");
-        return res.json(directPosts);
-      }
-      
-      // Otherwise fall back to regular storage method
-      const storagePosts = await storage.listPosts(options);
-      console.log("Storage listPosts result:", storagePosts);
-      
-      res.json(storagePosts);
     } catch (error) {
       console.error("Error in /api/posts endpoint:", error);
       res.status(500).json({ message: "Failed to list posts" });
@@ -2214,17 +2283,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/posts/:id", async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
-      const post = await storage.getPost(postId);
       
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
+      console.log(`Fetching single post with ID: ${postId}`);
+      
+      // Try fetching from external API first
+      try {
+        const apiUrl = `https://jsonplaceholder.typicode.com/posts/${postId}`;
+        console.log(`Fetching from external API: ${apiUrl}`);
+        
+        const apiResponse = await fetch(apiUrl);
+        
+        if (!apiResponse.ok) {
+          throw new Error(`API request failed with status ${apiResponse.status}`);
+        }
+        
+        const externalPost = await apiResponse.json();
+        console.log(`Received post from external API:`, externalPost);
+        
+        // Convert the external post to our application's Post format
+        const formattedPost = {
+          id: externalPost.id,
+          userId: externalPost.userId,
+          content: externalPost.body || '',
+          title: externalPost.title || '',
+          contentType: 'text',
+          imageUrl: null,
+          videoUrl: null,
+          productId: null,
+          likes: Math.floor(Math.random() * 50), 
+          comments: Math.floor(Math.random() * 20),
+          shares: Math.floor(Math.random() * 10),
+          views: Math.floor(Math.random() * 100),
+          tags: ['api', 'social'],
+          isPromoted: false,
+          isPublished: true,
+          isFlagged: false,
+          flagReason: null,
+          reviewStatus: 'approved',
+          reviewedAt: null,
+          reviewedBy: null,
+          moderationNote: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        return res.json(formattedPost);
+      } catch (apiError) {
+        console.error("External API error for single post:", apiError);
+        
+        // Fall back to database if external API fails
+        console.log("Falling back to database for single post...");
+        
+        // Get post from local database
+        const post = await storage.getPost(postId);
+        
+        if (!post) {
+          return res.status(404).json({ message: "Post not found" });
+        }
+        
+        // Increment view count
+        await storage.incrementPostView(postId);
+        
+        return res.json(post);
       }
-      
-      // Increment view count
-      await storage.incrementPostView(postId);
-      
-      res.json(post);
     } catch (error) {
+      console.error("Error in /api/posts/:id endpoint:", error);
       res.status(500).json({ message: "Failed to get post" });
     }
   });

@@ -5,7 +5,6 @@
  * replacing the mock data previously used in the application.
  */
 
-import axios from 'axios';
 import { Post } from '@shared/schema';
 
 // Social media API endpoints
@@ -38,6 +37,17 @@ function convertToAppPost(apiPost: any): Partial<Post> {
   };
 }
 
+// Construct URL with query parameters
+function buildUrl(baseUrl: string, params: Record<string, any>): string {
+  const url = new URL(baseUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      url.searchParams.append(key, String(value));
+    }
+  });
+  return url.toString();
+}
+
 // Fetch posts from external API
 export async function fetchPosts(options: {
   limit?: number;
@@ -47,7 +57,7 @@ export async function fetchPosts(options: {
 }): Promise<Partial<Post>[]> {
   try {
     // Construct query parameters for the API request
-    const params: any = {};
+    const params: Record<string, any> = {};
     
     if (options.limit) {
       params._limit = options.limit;
@@ -62,10 +72,17 @@ export async function fetchPosts(options: {
     }
     
     // Make API request
-    const response = await axios.get(`${API_BASE_URL}/posts`, { params });
+    const url = buildUrl(`${API_BASE_URL}/posts`, params);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
     
     // Map the API response to our application's Post schema
-    const posts = response.data.map(convertToAppPost);
+    const posts = data.map(convertToAppPost);
     
     // Apply content type filtering if specified
     // (needs to be done here as the external API doesn't support this filter)
@@ -87,8 +104,14 @@ export async function fetchPosts(options: {
 // Fetch a single post by ID
 export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/posts/${id}`);
-    return convertToAppPost(response.data);
+    const response = await fetch(`${API_BASE_URL}/posts/${id}`);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return convertToAppPost(data);
   } catch (error) {
     console.error(`Error fetching post ${id} from external API:`, error);
     return null;
@@ -98,13 +121,24 @@ export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
 // Create a post via the external API
 export async function createApiPost(postData: any): Promise<Partial<Post> | null> {
   try {
-    const response = await axios.post(`${API_BASE_URL}/posts`, {
-      title: postData.title || '',
-      body: postData.content || '',
-      userId: postData.userId || 1
+    const response = await fetch(`${API_BASE_URL}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: postData.title || '',
+        body: postData.content || '',
+        userId: postData.userId || 1
+      })
     });
     
-    return convertToAppPost(response.data);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return convertToAppPost(data);
   } catch (error) {
     console.error('Error creating post via external API:', error);
     return null;
