@@ -110,20 +110,24 @@ export default function Social() {
   });
 
   // Fetch trending posts
-  const { data: trendingPosts = [], isLoading: isLoadingTrending } = useQuery<Post[]>({
-    queryKey: ["/api/posts/trending"],
+  const { data: exploreFeedData, isLoading: isLoadingTrending } = useQuery({
+    queryKey: ["/api/social/explore"],
     enabled: activeTab === "explore",
   });
+  
+  const trendingPosts = exploreFeedData?.popularPosts || [];
 
   // Fetch communities
-  const { data: communities = [], isLoading: isLoadingCommunities } = useQuery<Community[]>({
-    queryKey: ["/api/communities"],
+  const { data: communitiesData, isLoading: isLoadingCommunities } = useQuery({
+    queryKey: ["/api/social/communities"],
     enabled: activeTab === "communities",
   });
+  
+  const communities = communitiesData?.publicCommunities || [];
 
   // Fetch videos
-  const { data: videos = [], isLoading: isLoadingVideos } = useQuery<VideoItem[]>({
-    queryKey: ["/api/videos/trending"],
+  const { data: videos = [], isLoading: isLoadingVideos } = useQuery({
+    queryKey: ["/api/social/videos"],
     enabled: activeTab === "videos",
   });
 

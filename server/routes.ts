@@ -673,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const count = await storage.countUnreadMessages(userId);
+      const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
       console.error('Error getting unread message count:', error);
