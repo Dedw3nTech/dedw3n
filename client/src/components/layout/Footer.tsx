@@ -38,7 +38,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Help & Support</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="/contact" className="hover:text-primary">Contact Us</a></li>
+              <li><Link href="/contact" className="hover:text-primary">Contact Us</Link></li>
               <li><a href="/faq" className="hover:text-primary">FAQ</a></li>
               <li><a href="/shipping" className="hover:text-primary">Shipping & Returns</a></li>
               <li><a href="/privacy" className="hover:text-primary">Privacy Policy</a></li>
