@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -749,3 +749,30 @@ export const insertCommunityContentSchema = createInsertSchema(communityContents
 
 export type CommunityContent = typeof communityContents.$inferSelect;
 export type InsertCommunityContent = z.infer<typeof insertCommunityContentSchema>;
+
+// Auth tokens for token-based authentication (multi-device support)
+export const authTokens = pgTable("auth_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  clientId: varchar("client_id", { length: 100 }), // Client identifier
+  deviceType: varchar("device_type", { length: 50 }), // mobile, tablet, desktop, etc.
+  deviceInfo: varchar("device_info", { length: 512 }), // Browser/device details for security
+  ipAddress: varchar("ip_address", { length: 50 }), // IP address for security logging
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isRevoked: boolean("is_revoked").default(false),
+  revokedReason: varchar("revoked_reason", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdIdx: index("auth_tokens_user_id_idx").on(table.userId),
+    tokenIdx: index("auth_tokens_token_idx").on(table.token),
+  };
+});
+
+export const insertAuthTokenSchema = createInsertSchema(authTokens)
+  .omit({ id: true, createdAt: true });
+
+export type AuthToken = typeof authTokens.$inferSelect;
+export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
