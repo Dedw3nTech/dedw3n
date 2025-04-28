@@ -169,6 +169,18 @@ export const connections = pgTable("connections", {
   };
 });
 
+// Social media follows
+export const follows = pgTable("follows", {
+  id: serial("id").primaryKey(),
+  followerId: integer("follower_id").notNull().references(() => users.id),
+  followingId: integer("following_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueFollow: unique().on(table.followerId, table.followingId),
+  };
+});
+
 // Cart model
 export const carts = pgTable("carts", {
   id: serial("id").primaryKey(),
