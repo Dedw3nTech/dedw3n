@@ -58,6 +58,14 @@ export default function SocialNav() {
               <Button 
                 variant="outline" 
                 className="w-full text-xs mb-2" 
+                onClick={() => setLocation("/profile")}
+              >
+                Your Profile
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full text-xs mb-2" 
                 onClick={() => setLocation("/followers")}
               >
                 Your Followers
@@ -65,11 +73,37 @@ export default function SocialNav() {
               
               <Button 
                 variant="outline" 
-                className="w-full text-xs" 
+                className="w-full text-xs mb-2" 
                 onClick={() => setLocation("/following")}
               >
                 People You Follow
               </Button>
+              
+              <div className="border-t pt-2 mt-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full text-xs mb-2" 
+                  onClick={() => setLocation("/communities")}
+                >
+                  Communities
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full text-xs mb-2" 
+                  onClick={() => setLocation("/messages")}
+                >
+                  Messages
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full text-xs" 
+                  onClick={() => setLocation("/social-insights")}
+                >
+                  Social Insights
+                </Button>
+              </div>
             </div>
           </div>
         </PopoverContent>
