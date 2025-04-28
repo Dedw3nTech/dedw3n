@@ -4672,14 +4672,214 @@ export class DatabaseStorage implements IStorage {
   async listTransactionsByUser(userId: number): Promise<Transaction[]> { return []; }
   async getTransactionsByCategory(walletId: number): Promise<Record<string, Transaction[]>> { return {}; }
   async getTransactionStats(walletId: number): Promise<{ totalIncome: number; totalExpense: number; byCategoryExpense: Record<string, number>; byCategoryIncome: Record<string, number>; }> { return { totalIncome: 0, totalExpense: 0, byCategoryExpense: {}, byCategoryIncome: {} }; }
-  async getOrder(id: number): Promise<Order | undefined> { return undefined; }
-  async getOrdersByUser(userId: number): Promise<Order[]> { return []; }
-  async createOrder(order: InsertOrder): Promise<Order> { throw new Error("Method not implemented."); }
-  async updateOrderStatus(id: number, status: string): Promise<Order> { throw new Error("Method not implemented."); }
-  async getOrderItem(id: number): Promise<OrderItem | undefined> { return undefined; }
-  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> { return []; }
-  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> { throw new Error("Method not implemented."); }
-  async updateOrderItemStatus(id: number, status: string): Promise<OrderItem> { throw new Error("Method not implemented."); }
+  async getOrder(id: number): Promise<Order | undefined> {
+    try {
+      const [order] = await db.select().from(orders).where(eq(orders.id, id));
+      return order;
+    } catch (error) {
+      console.error('Error fetching order:', error);
+      return undefined;
+    }
+  }
+  
+  async getAllOrders(): Promise<Order[]> {
+    try {
+      const allOrders = await db.select().from(orders).orderBy(desc(orders.createdAt));
+      return allOrders;
+    } catch (error) {
+      console.error('Error fetching all orders:', error);
+      return [];
+    }
+  }
+  
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    try {
+      const userOrders = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.userId, userId))
+        .orderBy(desc(orders.createdAt));
+      return userOrders;
+    } catch (error) {
+      console.error('Error fetching user orders:', error);
+      return [];
+    }
+  }
+  
+  async createOrder(order: InsertOrder): Promise<Order> {
+    try {
+      const [newOrder] = await db.insert(orders).values(order).returning();
+      return newOrder;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw new Error("Failed to create order");
+    }
+  }
+  
+  async updateOrderStatus(id: number, status: string): Promise<Order> {
+    try {
+      const [updatedOrder] = await db
+        .update(orders)
+        .set({ 
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(orders.id, id))
+        .returning();
+        
+      if (!updatedOrder) {
+        throw new Error(`Order with ID ${id} not found`);
+      }
+        
+      return updatedOrder;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw new Error("Failed to update order status");
+    }
+  }
+  
+  async updateOrder(orderId: number, updates: Partial<Order>): Promise<Order | undefined> {
+    try {
+      const [updatedOrder] = await db
+        .update(orders)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(orders.id, orderId))
+        .returning();
+        
+      return updatedOrder;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      return undefined;
+    }
+  }
+  
+  async getOrderItem(id: number): Promise<OrderItem | undefined> {
+    try {
+      const [item] = await db.select().from(orderItems).where(eq(orderItems.id, id));
+      return item;
+    } catch (error) {
+      console.error('Error fetching order item:', error);
+      return undefined;
+    }
+  }
+  
+  async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    try {
+      const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      return items;
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      return [];
+    }
+  }
+  
+  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> {
+    try {
+      const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      return items;
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      return [];
+    }
+  }
+  
+  async updateOrderItemsStatus(orderId: number, status: string): Promise<void> {
+    try {
+      await db
+        .update(orderItems)
+        .set({ status })
+        .where(eq(orderItems.orderId, orderId));
+    } catch (error) {
+      console.error('Error updating order items status:', error);
+    }
+  }
+  
+  async updateOrderItemStatus(id: number, status: string): Promise<OrderItem> {
+    try {
+      const [updatedItem] = await db
+        .update(orderItems)
+        .set({ status })
+        .where(eq(orderItems.id, id))
+        .returning();
+        
+      if (!updatedItem) {
+        throw new Error(`Order item with ID ${id} not found`);
+      }
+        
+      return updatedItem;
+    } catch (error) {
+      console.error('Error updating order item status:', error);
+      throw new Error("Failed to update order item status");
+    }
+  }
+  
+  async countOrders(filters: { status?: string }): Promise<number> {
+    try {
+      let query = db.select({ count: count() }).from(orders);
+      
+      if (filters.status) {
+        query = query.where(eq(orders.status, filters.status));
+      }
+      
+      const result = await query;
+      return result[0].count;
+    } catch (error) {
+      console.error('Error counting filtered orders:', error);
+      return 0;
+    }
+  }
+  
+  async calculateTotalRevenue(): Promise<number> {
+    try {
+      const result = await db
+        .select({ 
+          total: sql`COALESCE(sum(${orders.totalAmount}), 0)::float` 
+        })
+        .from(orders)
+        .where(eq(orders.paymentStatus, "completed"));
+        
+      return Number(result[0].total);
+    } catch (error) {
+      console.error('Error calculating total revenue:', error);
+      return 0;
+    }
+  }
+  
+  async calculateAverageOrderValue(): Promise<number> {
+    try {
+      const result = await db
+        .select({ 
+          avg: sql`COALESCE(avg(${orders.totalAmount}), 0)::float` 
+        })
+        .from(orders)
+        .where(eq(orders.paymentStatus, "completed"));
+        
+      return Number(result[0].avg);
+    } catch (error) {
+      console.error('Error calculating average order value:', error);
+      return 0;
+    }
+  }
+  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
+    try {
+      const [newItem] = await db
+        .insert(orderItems)
+        .values({
+          ...orderItem,
+          createdAt: new Date(),
+        })
+        .returning();
+      
+      return newItem;
+    } catch (error) {
+      console.error('Error creating order item:', error);
+      throw new Error("Failed to create order item");
+    }
+  }
+  // Order item operations are implemented above
   async getVendorTotalSales(vendorId: number): Promise<number> { return 0; }
   async getVendorOrderStats(vendorId: number): Promise<{ totalOrders: number; pendingOrders: number; shippedOrders: number; deliveredOrders: number; canceledOrders: number; }> { return { totalOrders: 0, pendingOrders: 0, shippedOrders: 0, deliveredOrders: 0, canceledOrders: 0 }; }
   async getVendorRevenueByPeriod(vendorId: number, period: "daily" | "weekly" | "monthly" | "yearly"): Promise<Record<string, number>> { return {}; }
