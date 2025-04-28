@@ -59,6 +59,7 @@ import {
   PackageCheck, 
   Plus, 
   Search, 
+  Settings,
   Truck, 
   X 
 } from "lucide-react";
