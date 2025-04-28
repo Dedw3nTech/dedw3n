@@ -34,6 +34,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textFileInputRef = useRef<HTMLInputElement>(null);
   
   const [contentType, setContentType] = useState<ContentType>(defaultContentType);
   const [content, setContent] = useState("");
@@ -377,12 +378,22 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
-                className="rounded-full"
-                title={t("social.upload_image")}
+                className="rounded-full flex items-center gap-1 px-3"
+                title={t("social.upload_image") || "Upload image"}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="h-5 w-5 text-gray-500" />
+                <Image className="h-5 w-5 text-gray-500" />
+                <span className="text-sm text-gray-500">Upload</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-full flex items-center gap-1 px-3"
+                title={t("social.upload_text") || "Upload text file"}
+                onClick={() => textFileInputRef.current?.click()}
+              >
+                <FileText className="h-5 w-5 text-gray-500" />
+                <span className="text-sm text-gray-500">Upload</span>
               </Button>
               <input 
                 type="file"
@@ -400,6 +411,48 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                     if (contentType !== "image") {
                       setContentType("image");
                     }
+                    
+                    // Reset file input
+                    e.target.value = "";
+                  }
+                }}
+              />
+              <input 
+                type="file"
+                ref={textFileInputRef}
+                accept=".txt,.md,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Read text file content
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const textContent = event.target?.result as string;
+                      if (textContent) {
+                        setContent(textContent);
+                        
+                        // Switch to text tab if not already there
+                        if (contentType !== "text") {
+                          setContentType("text");
+                        }
+                        
+                        toast({
+                          title: t("social.file_loaded") || "File loaded",
+                          description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+                        });
+                      }
+                    };
+                    
+                    reader.onerror = () => {
+                      toast({
+                        title: t("errors.error") || "Error",
+                        description: t("social.file_read_error") || "Failed to read file",
+                        variant: "destructive",
+                      });
+                    };
+                    
+                    reader.readAsText(file);
                     
                     // Reset file input
                     e.target.value = "";
