@@ -3915,6 +3915,170 @@ export class DatabaseStorage implements IStorage {
       tableName: 'session'
     });
   }
+  
+  // Social media operations
+  async followUser(followerId: number, followingId: number): Promise<Follow> {
+    if (followerId === followingId) {
+      throw new Error('Users cannot follow themselves');
+    }
+    
+    // Check if already following
+    const existingFollow = await db.select()
+      .from(follows)
+      .where(and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      ));
+      
+    if (existingFollow.length > 0) {
+      return existingFollow[0];
+    }
+    
+    // Create new follow relationship
+    const [newFollow] = await db.insert(follows)
+      .values({
+        followerId,
+        followingId
+      })
+      .returning();
+      
+    // Create notification for the user being followed
+    await this.createNotification({
+      userId: followingId,
+      type: 'follow',
+      content: `Someone started following you`,
+      sourceId: followerId,
+      sourceType: 'user'
+    });
+    
+    return newFollow;
+  }
+
+  async unfollowUser(followerId: number, followingId: number): Promise<boolean> {
+    const result = await db.delete(follows)
+      .where(and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      ));
+      
+    return true;
+  }
+  
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    const existingFollow = await db.select()
+      .from(follows)
+      .where(and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      ));
+      
+    return existingFollow.length > 0;
+  }
+  
+  async getFollowers(userId: number): Promise<User[]> {
+    // Get all users who follow the specified user
+    const userFollowers = await db.select({
+        follower: users
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followerId, users.id))
+      .where(eq(follows.followingId, userId));
+      
+    return userFollowers.map(item => item.follower);
+  }
+  
+  async getFollowing(userId: number): Promise<User[]> {
+    // Get all users followed by the specified user
+    const userFollowing = await db.select({
+        following: users
+      })
+      .from(follows)
+      .innerJoin(users, eq(follows.followingId, users.id))
+      .where(eq(follows.followerId, userId));
+      
+    return userFollowing.map(item => item.following);
+  }
+  
+  async getFollowersCount(userId: number): Promise<number> {
+    const result = await db.select({
+        count: sql<number>`count(*)`
+      })
+      .from(follows)
+      .where(eq(follows.followingId, userId));
+      
+    return result[0].count;
+  }
+  
+  async getFollowingCount(userId: number): Promise<number> {
+    const result = await db.select({
+        count: sql<number>`count(*)`
+      })
+      .from(follows)
+      .where(eq(follows.followerId, userId));
+      
+    return result[0].count;
+  }
+  
+  async getSuggestedUsers(userId: number, limit: number = 10): Promise<User[]> {
+    // Get users who are followed by people the user follows
+    // but who the user doesn't follow yet (excluding the user themselves)
+    
+    // First, get all users followed by the user
+    const followingIds = await db.select({ id: follows.followingId })
+      .from(follows)
+      .where(eq(follows.followerId, userId));
+      
+    const followedUserIds = followingIds.map(item => item.id);
+    
+    // Get users followed by the users that this user follows
+    const suggestedUsers = await db.select()
+      .from(users)
+      .where(and(
+        // User is not the current user
+        sql`${users.id} != ${userId}`,
+        // User is not already followed by the current user
+        sql`NOT EXISTS (
+          SELECT 1 FROM ${follows} 
+          WHERE ${follows.followerId} = ${userId} 
+          AND ${follows.followingId} = ${users.id}
+        )`,
+        // User is followed by at least one user the current user follows
+        sql`EXISTS (
+          SELECT 1 FROM ${follows} as f1
+          JOIN ${follows} as f2 ON f1.followingId = f2.followerId
+          WHERE f1.followerId = ${userId}
+          AND f2.followingId = ${users.id}
+        )`
+      ))
+      .limit(limit);
+      
+    // If we don't have enough suggested users,
+    // add some active users who are not yet followed
+    if (suggestedUsers.length < limit) {
+      const remainingCount = limit - suggestedUsers.length;
+      
+      // Get IDs of users we already selected to avoid duplicates
+      const alreadySuggestedIds = suggestedUsers.map(user => user.id);
+      
+      // Get some active users based on post or comment activity
+      const activeUsers = await db.select()
+        .from(users)
+        .where(and(
+          sql`${users.id} != ${userId}`,
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${follows} 
+            WHERE ${follows.followerId} = ${userId} 
+            AND ${follows.followingId} = ${users.id}
+          )`,
+          sql`${users.id} NOT IN (${alreadySuggestedIds.join(',')})`
+        ))
+        .limit(remainingCount);
+        
+      suggestedUsers.push(...activeUsers);
+    }
+    
+    return suggestedUsers;
+  }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
