@@ -7,25 +7,24 @@
 
 import { Post } from '@shared/schema';
 
-// Social media API endpoints
-const API_BASE_URL = 'https://jsonplaceholder.typicode.com';
-
-// Convert external API posts to our application schema
+/**
+ * Convert API response to our application's Post format
+ */
 function convertToAppPost(apiPost: any): Partial<Post> {
-  // Map external API post format to our application's Post schema
   return {
-    userId: apiPost.userId || 1,
+    id: apiPost.id,
+    userId: apiPost.userId,
     content: apiPost.body || '',
-    title: apiPost.title || null,
+    title: apiPost.title || '',
     contentType: 'text',
-    imageUrl: null, // The API doesn't provide images, we could add logic to randomly assign some
+    imageUrl: null,
     videoUrl: null,
     productId: null,
-    likes: Math.floor(Math.random() * 50), // Random number of likes
-    comments: Math.floor(Math.random() * 20), // Random number of comments
-    shares: Math.floor(Math.random() * 10), // Random number of shares
-    views: Math.floor(Math.random() * 100), // Random number of views
-    tags: ['api', 'social'], // Default tags
+    likes: Math.floor(Math.random() * 50),
+    comments: Math.floor(Math.random() * 20),
+    shares: Math.floor(Math.random() * 10),
+    views: Math.floor(Math.random() * 100),
+    tags: ['api', 'social'],
     isPromoted: false,
     isPublished: true,
     isFlagged: false,
@@ -34,113 +33,133 @@ function convertToAppPost(apiPost: any): Partial<Post> {
     reviewedAt: null,
     reviewedBy: null,
     moderationNote: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
   };
 }
 
-// Construct URL with query parameters
+/**
+ * Build URL with query parameters
+ */
 function buildUrl(baseUrl: string, params: Record<string, any>): string {
   const url = new URL(baseUrl);
+  
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined) {
-      url.searchParams.append(key, String(value));
+    if (value !== undefined && value !== null) {
+      url.searchParams.append(key, value.toString());
     }
   });
+  
   return url.toString();
 }
 
-// Fetch posts from external API
+/**
+ * Fetch posts from external API with filtering options
+ */
 export async function fetchPosts(options: {
+  userId?: number;
   limit?: number;
   offset?: number;
-  userId?: number;
   contentType?: string | string[];
+  isPromoted?: boolean;
+  tags?: string[];
 }): Promise<Partial<Post>[]> {
-  try {
-    // Construct query parameters for the API request
-    const params: Record<string, any> = {};
-    
-    if (options.limit) {
-      params._limit = options.limit;
-    }
-    
-    if (options.offset) {
-      params._start = options.offset;
-    }
-    
-    if (options.userId) {
-      params.userId = options.userId;
-    }
-    
-    // Make API request
-    const url = buildUrl(`${API_BASE_URL}/posts`, params);
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // Map the API response to our application's Post schema
-    const posts = data.map(convertToAppPost);
-    
-    // Apply content type filtering if specified
-    // (needs to be done here as the external API doesn't support this filter)
-    if (options.contentType) {
-      const contentTypes = Array.isArray(options.contentType) 
-        ? options.contentType 
-        : [options.contentType];
-      
-      return posts.filter(post => contentTypes.includes(post.contentType || 'text'));
-    }
-    
-    return posts;
-  } catch (error) {
-    console.error('Error fetching posts from external API:', error);
-    return []; // Return empty array on error
+  // Map our API params to the external API params
+  const apiParams: Record<string, any> = {
+    _limit: options.limit || 10
+  };
+  
+  if (options.offset) {
+    apiParams._start = options.offset;
   }
+  
+  if (options.userId) {
+    apiParams.userId = options.userId;
+  }
+  
+  // Fetch from external API
+  const apiUrl = buildUrl('https://jsonplaceholder.typicode.com/posts', apiParams);
+  console.log(`Fetching posts from API: ${apiUrl}`);
+  
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+  
+  const apiPosts = await response.json();
+  console.log(`Received ${apiPosts.length} posts from API`);
+  
+  // Convert to our application's format
+  return apiPosts.map(convertToAppPost);
 }
 
-// Fetch a single post by ID
+/**
+ * Fetch a single post by ID
+ */
 export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/posts/${id}`);
+    const apiUrl = `https://jsonplaceholder.typicode.com/posts/${id}`;
+    console.log(`Fetching post from API: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
       throw new Error(`API request failed with status ${response.status}`);
     }
     
-    const data = await response.json();
-    return convertToAppPost(data);
+    const apiPost = await response.json();
+    console.log(`Successfully retrieved post from API:`, apiPost);
+    
+    return convertToAppPost(apiPost);
   } catch (error) {
-    console.error(`Error fetching post ${id} from external API:`, error);
-    return null;
+    console.error("Error fetching post by ID:", error);
+    throw error;
   }
 }
 
-// Create a post via the external API
+/**
+ * Create a new post via the API
+ */
 export async function createApiPost(postData: any): Promise<Partial<Post> | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/posts`, {
+    // Format data for the external API
+    const apiRequestData = {
+      title: postData.title || '',
+      body: postData.content || '',
+      userId: postData.userId
+    };
+    
+    // Send post request
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        title: postData.title || '',
-        body: postData.content || '',
-        userId: postData.userId || 1
-      })
+      body: JSON.stringify(apiRequestData)
     });
     
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
     
-    const data = await response.json();
-    return convertToAppPost(data);
+    const apiPost = await response.json();
+    console.log("Post created successfully via API:", apiPost);
+    
+    // Convert response to our format and add additional fields
+    const formattedPost = convertToAppPost(apiPost);
+    
+    // Add any additional fields from the original postData that we want to preserve
+    if (postData.imageUrl) formattedPost.imageUrl = postData.imageUrl;
+    if (postData.videoUrl) formattedPost.videoUrl = postData.videoUrl;
+    if (postData.tags && Array.isArray(postData.tags)) formattedPost.tags = postData.tags;
+    
+    return formattedPost;
   } catch (error) {
-    console.error('Error creating post via external API:', error);
-    return null;
+    console.error("Error creating post via API:", error);
+    throw error;
   }
 }

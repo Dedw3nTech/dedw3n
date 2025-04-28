@@ -2099,18 +2099,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Creating post with data:", postData);
       
-      // Validate the data before creating the post
-      const validatedData = insertPostSchema.parse(postData);
-      const post = await storage.createPost(validatedData);
-      
-      // Explicitly clear any in-memory posts cache
+      // Use our centralized API module
       try {
-        storage.clearMemoryPostsCache();
-      } catch (error) {
-        console.log("Note: clearMemoryPostsCache not implemented, but this is not critical.");
+        // Import our social API module
+        const socialApi = await import('./social-api');
+        
+        // Use the createApiPost function from our API module
+        const post = await socialApi.createApiPost(postData);
+        console.log("Post created successfully via API module:", post);
+        
+        return res.status(201).json(post);
+      } catch (apiError) {
+        console.error("API module error when creating post:", apiError);
+        console.log("Falling back to database for post creation...");
+        
+        // If API fails, fall back to database storage
+        // Validate the data before creating the post
+        const validatedData = insertPostSchema.parse(postData);
+        const post = await storage.createPost(validatedData);
+        
+        // Explicitly clear any in-memory posts cache
+        try {
+          storage.clearMemoryPostsCache();
+        } catch (error) {
+          console.log("Note: clearMemoryPostsCache not implemented, but this is not critical.");
+        }
+        
+        return res.status(201).json(post);
       }
-      
-      res.status(201).json(post);
     } catch (error) {
       console.error("Error creating post:", error);
       if (error instanceof z.ZodError) {
@@ -2185,70 +2201,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         options.offset = parseInt(req.query.offset as string);
       }
       
-      console.log("Fetching posts from external API with options:", options);
+      console.log("Fetching posts with options:", options);
       
-      // Use external API to get posts - jsonplaceholder API
+      // Use our centralized API module
       try {
-        // Build the API URL with parameters
-        const apiUrl = new URL('https://jsonplaceholder.typicode.com/posts');
+        // Import our social API module
+        const socialApi = await import('./social-api');
         
-        // Add parameters to the URL
-        if (options.limit) {
-          apiUrl.searchParams.append('_limit', options.limit.toString());
-        }
+        // Use the fetchPosts function from our API module
+        const posts = await socialApi.fetchPosts(options);
+        console.log(`Received ${posts.length} posts from API module`);
         
-        if (options.offset) {
-          apiUrl.searchParams.append('_start', options.offset.toString());
-        }
-        
-        if (options.userId) {
-          apiUrl.searchParams.append('userId', options.userId.toString());
-        }
-        
-        console.log(`Fetching from external API: ${apiUrl.toString()}`);
-        
-        // Make the HTTP request to the external API
-        const apiResponse = await fetch(apiUrl.toString());
-        
-        if (!apiResponse.ok) {
-          throw new Error(`API request failed with status ${apiResponse.status}`);
-        }
-        
-        const externalPosts = await apiResponse.json();
-        console.log(`Received ${externalPosts.length} posts from external API`);
-        
-        // Convert the external posts to our application's Post format
-        const formattedPosts = externalPosts.map((apiPost: any) => ({
-          id: apiPost.id,
-          userId: apiPost.userId,
-          content: apiPost.body || '',
-          title: apiPost.title || '',
-          contentType: 'text',
-          imageUrl: null,
-          videoUrl: null,
-          productId: null,
-          likes: Math.floor(Math.random() * 50),
-          comments: Math.floor(Math.random() * 20),
-          shares: Math.floor(Math.random() * 10),
-          views: Math.floor(Math.random() * 100),
-          tags: ['api', 'social'],
-          isPromoted: false,
-          isPublished: true,
-          isFlagged: false,
-          flagReason: null,
-          reviewStatus: 'approved',
-          reviewedAt: null,
-          reviewedBy: null,
-          moderationNote: null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }));
-        
-        return res.json(formattedPosts);
+        return res.json(posts);
       } catch (apiError) {
-        console.error("External API error:", apiError);
+        console.error("API module error:", apiError);
         
-        // Fall back to database if external API fails
+        // Fall back to database if API fails
         console.log("Falling back to database for posts...");
         
         // Try a direct query to bypass complex listPosts function
@@ -2286,52 +2254,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Fetching single post with ID: ${postId}`);
       
-      // Try fetching from external API first
+      // Use our centralized API module
       try {
-        const apiUrl = `https://jsonplaceholder.typicode.com/posts/${postId}`;
-        console.log(`Fetching from external API: ${apiUrl}`);
+        // Import our social API module
+        const socialApi = await import('./social-api');
         
-        const apiResponse = await fetch(apiUrl);
+        // Use the fetchPostById function from our API module
+        const post = await socialApi.fetchPostById(postId);
         
-        if (!apiResponse.ok) {
-          throw new Error(`API request failed with status ${apiResponse.status}`);
+        if (!post) {
+          throw new Error(`Post with ID ${postId} not found in API`);
         }
         
-        const externalPost = await apiResponse.json();
-        console.log(`Received post from external API:`, externalPost);
-        
-        // Convert the external post to our application's Post format
-        const formattedPost = {
-          id: externalPost.id,
-          userId: externalPost.userId,
-          content: externalPost.body || '',
-          title: externalPost.title || '',
-          contentType: 'text',
-          imageUrl: null,
-          videoUrl: null,
-          productId: null,
-          likes: Math.floor(Math.random() * 50), 
-          comments: Math.floor(Math.random() * 20),
-          shares: Math.floor(Math.random() * 10),
-          views: Math.floor(Math.random() * 100),
-          tags: ['api', 'social'],
-          isPromoted: false,
-          isPublished: true,
-          isFlagged: false,
-          flagReason: null,
-          reviewStatus: 'approved',
-          reviewedAt: null,
-          reviewedBy: null,
-          moderationNote: null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        
-        return res.json(formattedPost);
+        console.log(`Successfully retrieved post from API module:`, post);
+        return res.json(post);
       } catch (apiError) {
-        console.error("External API error for single post:", apiError);
+        console.error("API module error for single post:", apiError);
         
-        // Fall back to database if external API fails
+        // Fall back to database if API fails
         console.log("Falling back to database for single post...");
         
         // Get post from local database
