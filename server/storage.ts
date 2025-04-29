@@ -62,11 +62,10 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
   
   constructor() {
-    const PostgresSessionStore = connectPg(session);
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      tableName: 'sessions',
-      createTableIfMissing: true
+    // Use memory store to avoid DB session issues
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // Prune expired entries every 24h
     });
   }
   
