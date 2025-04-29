@@ -36,6 +36,10 @@ export interface IStorage {
   getUnreadMessagesCount(userId: number): Promise<number>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
+  updateMessageContent(id: number, newContent: string): Promise<Message | undefined>;
+  searchUserMessages(userId: number, query: string): Promise<any[]>;
+  clearConversation(userId1: number, userId2: number): Promise<boolean>;
+  getUserMessagingStats(userId: number): Promise<any>;
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -96,6 +100,22 @@ export class DatabaseStorage implements IStorage {
   
   async getUnreadMessagesCount(userId: number): Promise<number> {
     return messageHelpers.getUnreadMessagesCount(userId);
+  }
+  
+  async updateMessageContent(id: number, newContent: string): Promise<Message | undefined> {
+    return messageHelpers.updateMessageContent(id, newContent);
+  }
+  
+  async searchUserMessages(userId: number, query: string): Promise<any[]> {
+    return messageHelpers.searchUserMessages(userId, query);
+  }
+  
+  async clearConversation(userId1: number, userId2: number): Promise<boolean> {
+    return messageHelpers.clearConversation(userId1, userId2);
+  }
+  
+  async getUserMessagingStats(userId: number): Promise<any> {
+    return messageHelpers.getUserMessagingStats(userId);
   }
   
   // User methods
