@@ -21,7 +21,8 @@ import {
   type Message, type InsertMessage, type Review, type InsertReview,
   type Cart, type InsertCart, type Wallet, type InsertWallet,
   type Transaction, type InsertTransaction, type Order, type InsertOrder,
-  type OrderItem, type InsertOrderItem, type Community, type InsertCommunity
+  type OrderItem, type InsertOrderItem, type Community, type InsertCommunity,
+  type Connection, type InsertConnection
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
