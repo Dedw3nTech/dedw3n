@@ -19,6 +19,7 @@ import { registerSubscriptionRoutes } from "./subscription";
 import { registerAdminRoutes } from "./admin";
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { seedDatabase } from "./seed";
+import { socialMediaSuite } from "./social-media-suite";
 import { 
   posts, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
