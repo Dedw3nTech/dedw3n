@@ -578,11 +578,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(401).json({ message: "Unauthorized" });
   };
   
-  // API endpoint to get user statistics (posts, followers, following counts)
+  // API endpoint to get current user's statistics (posts, followers, following counts)
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      console.log(`[DEBUG] Fetching stats for user ID: ${userId}`);
+      console.log(`[DEBUG] Fetching stats for current user ID: ${userId}`);
       
       // Get post count
       const postCount = await storage.getUserPostCount(userId);
@@ -594,6 +594,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const followingCount = await storage.getFollowingCount(userId);
       
       console.log(`[DEBUG] User stats - Posts: ${postCount}, Followers: ${followerCount}, Following: ${followingCount}`);
+      
+      res.json({
+        postCount,
+        followerCount,
+        followingCount
+      });
+    } catch (error) {
+      console.error(`[ERROR] Failed to get stats for user:`, error);
+      res.status(500).json({ message: "Failed to fetch user statistics" });
+    }
+  });
+  
+  // API endpoint to get any user's statistics (posts, followers, following counts) by user ID
+  app.get("/api/users/:userId/stats", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      console.log(`[DEBUG] Fetching stats for user ID: ${userId}`);
+      
+      // Check if the user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get post count
+      const postCount = await storage.getUserPostCount(userId);
+      
+      // Get follower count
+      const followerCount = await storage.getFollowersCount(userId);
+      
+      // Get following count
+      const followingCount = await storage.getFollowingCount(userId);
+      
+      console.log(`[DEBUG] User ${userId} stats - Posts: ${postCount}, Followers: ${followerCount}, Following: ${followingCount}`);
       
       res.json({
         postCount,
