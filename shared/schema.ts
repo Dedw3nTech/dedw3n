@@ -9,6 +9,10 @@ export const eventTypeEnum = pgEnum('event_type', ['live_stream', 'course', 'wor
 export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['daily', 'weekly', 'monthly', 'yearly', 'one_time']);
 export const videoTypeEnum = pgEnum('video_type', ['short_form', 'story', 'live_stream', 'live_commerce', 'recorded']);
 export const videoVisibilityEnum = pgEnum('video_visibility', ['public', 'followers', 'private']);
+export const moderationMatchTypeEnum = pgEnum('moderation_match_type', ['exact', 'partial', 'regex']);
+export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'medium', 'high']);
+export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
+export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
 
 // Define user roles enum
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor', 'business']);
@@ -794,3 +798,94 @@ export const insertAuthTokenSchema = createInsertSchema(authTokens)
 
 export type AuthToken = typeof authTokens.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
+
+// Content Moderation Tables
+export const allowList = pgTable("allow_list", {
+  id: serial("id").primaryKey(),
+  term: text("term").notNull().unique(),
+  category: text("category").notNull().default("general"),
+  description: text("description"),
+  addedBy: integer("added_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const blockList = pgTable("block_list", {
+  id: serial("id").primaryKey(),
+  term: text("term").notNull().unique(),
+  category: text("category").notNull().default("general"),
+  matchType: moderationMatchTypeEnum("match_type").notNull().default("exact"),
+  severity: moderationSeverityEnum("severity").notNull().default("medium"),
+  description: text("description"),
+  addedBy: integer("added_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const flaggedContent = pgTable("flagged_content", {
+  id: serial("id").primaryKey(),
+  contentType: flaggedContentTypeEnum("content_type").notNull(),
+  contentId: integer("content_id").notNull(),
+  reason: text("reason").notNull(),
+  status: flaggedContentStatusEnum("status").notNull().default("pending"),
+  reportedBy: integer("reported_by").references(() => users.id),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  moderationNote: text("moderation_note"),
+  content: text("content"), // Excerpt of the content being flagged
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const flaggedImages = pgTable("flagged_images", {
+  id: serial("id").primaryKey(),
+  imageUrl: text("image_url").notNull(),
+  contentType: flaggedContentTypeEnum("content_type").notNull(),
+  contentId: integer("content_id").notNull(),
+  reason: text("reason").notNull(),
+  status: flaggedContentStatusEnum("status").notNull().default("pending"),
+  reportedBy: integer("reported_by").references(() => users.id),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  moderationNote: text("moderation_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const moderationReports = pgTable("moderation_reports", {
+  id: serial("id").primaryKey(),
+  reportType: text("report_type").notNull(), // user, post, comment, product, etc.
+  reporterId: integer("reporter_id").references(() => users.id).notNull(),
+  subjectId: integer("subject_id").notNull(), // User ID, Post ID, etc.
+  subjectType: text("subject_type").notNull(), // user, post, comment, etc.
+  reason: text("reason").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("pending"), // pending, reviewed, dismissed
+  reviewedById: integer("reviewed_by_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Schemas
+export const insertAllowListSchema = createInsertSchema(allowList).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBlockListSchema = createInsertSchema(blockList).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertFlaggedContentSchema = createInsertSchema(flaggedContent).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+export const insertFlaggedImageSchema = createInsertSchema(flaggedImages).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+export const insertModerationReportSchema = createInsertSchema(moderationReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+
+// Types
+export type AllowListItem = typeof allowList.$inferSelect;
+export type InsertAllowListItem = z.infer<typeof insertAllowListSchema>;
+
+export type BlockListItem = typeof blockList.$inferSelect;
+export type InsertBlockListItem = z.infer<typeof insertBlockListSchema>;
+
+export type FlaggedContentItem = typeof flaggedContent.$inferSelect;
+export type InsertFlaggedContentItem = z.infer<typeof insertFlaggedContentSchema>;
+
+export type FlaggedImage = typeof flaggedImages.$inferSelect;
+export type InsertFlaggedImage = z.infer<typeof insertFlaggedImageSchema>;
+
+export type ModerationReport = typeof moderationReports.$inferSelect;
+export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
