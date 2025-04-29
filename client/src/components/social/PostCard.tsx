@@ -484,7 +484,7 @@ export default function PostCard({
                     <Badge 
                       variant="outline" 
                       className="text-xs flex items-center cursor-pointer"
-                      onClick={() => setLocation(`/communities/${post.community!.id}`)}
+                      onClick={() => post.community?.id && setLocation(`/communities/${post.community.id}`)}
                     >
                       {post.community.visibility === "public" ? (
                         <Globe className="h-3 w-3 mr-1" />
@@ -695,7 +695,7 @@ export default function PostCard({
             <div className="flex gap-3">
               <div 
                 className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0 cursor-pointer" 
-                onClick={() => setLocation(`/product/${post.product!.id}`)}
+                onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
               >
                 <img 
                   src={post.product.imageUrl} 
@@ -708,7 +708,7 @@ export default function PostCard({
                   <div>
                     <h4 
                       className="font-medium text-base hover:underline cursor-pointer"
-                      onClick={() => setLocation(`/product/${post.product!.id}`)}
+                      onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
                     >
                       {post.product.name}
                     </h4>
@@ -756,7 +756,9 @@ export default function PostCard({
                               return;
                             }
                             
-                            addToCartMutation.mutate(post.product!.id);
+                            if (post.product?.id) {
+                              addToCartMutation.mutate(post.product.id);
+                            }
                           }}
                           disabled={addToCartMutation.isPending}
                         >
@@ -780,7 +782,7 @@ export default function PostCard({
                         <Button 
                           variant="outline" 
                           size="icon"
-                          onClick={() => setLocation(`/product/${post.product!.id}`)}
+                          onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
                         >
                           <Maximize className="h-4 w-4" />
                         </Button>

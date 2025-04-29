@@ -47,7 +47,7 @@ export default function Header() {
   const [activeTab, setActiveTab] = useState("wall");
 
   // Fetch user data to check if logged in
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean; [key: string]: any }>({
     queryKey: ["/api/auth/me"],
   });
   
@@ -59,12 +59,12 @@ export default function Header() {
     enabled: isLoggedIn,
   });
   
-  const { data: unreadNotificationsData } = useQuery({
+  const { data: unreadNotificationsData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread/count"],
     enabled: isLoggedIn,
   });
   
-  const unreadNotificationCount = typeof unreadNotificationsData === 'object' && 'count' in unreadNotificationsData ? unreadNotificationsData.count : 0;
+  const unreadNotificationCount = unreadNotificationsData?.count || 0;
   
   // Mark notification as read mutation
   const markNotificationReadMutation = useMutation({
@@ -166,7 +166,7 @@ export default function Header() {
 
           <div className="flex items-center space-x-4">
             {/* Become a Vendor button - only shown to logged in users who are not vendors */}
-            {isLoggedIn && userData && userData.isVendor !== true && (
+            {isLoggedIn && userData && userData.isVendor === false && (
               <Link href="/become-vendor">
                 <Button size="sm" className="hidden md:flex items-center gap-1 bg-red-600 text-white hover:bg-red-700">
                   <Store className="h-4 w-4" />
@@ -177,7 +177,7 @@ export default function Header() {
             
             <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-shopping-cart-2-line text-xl"></i>
-              {cartData && typeof cartData === 'object' && 'count' in cartData && cartData.count > 0 && (
+              {cartData?.count && cartData.count > 0 && (
                 <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
                   {cartData.count}
                 </Badge>
@@ -356,7 +356,7 @@ export default function Header() {
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
-                {messageData && typeof messageData === 'object' && 'count' in messageData && messageData.count > 0 && (
+                {messageData?.count && messageData.count > 0 && (
                   <Badge className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
                     {messageData.count}
                   </Badge>
