@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Post } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,7 +15,8 @@ import {
   ThumbsUp, 
   Tag,
   BadgeCheck,
-  ImageOff
+  ImageOff,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { UserDisplayName } from "@/components/ui/user-display-name";
+import { Textarea } from "@/components/ui/textarea";
 
 interface EnhancedPostCardProps {
   post: Post;
@@ -54,6 +56,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
   
   // Reset image error state when post changes (using post.id as dependency)
   const [imageError, setImageError] = useState(false);
@@ -61,7 +64,30 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   // Reset image error when post id changes
   useEffect(() => {
     setImageError(false);
-  }, [post.id]);
+    
+    // Check if the post is already liked by the current user
+    if (user) {
+      fetch(`/api/posts/${post.id}/like/check`)
+        .then(res => res.json())
+        .then(data => {
+          setIsLiked(data.isLiked);
+        })
+        .catch(err => {
+          console.error("Error checking like status:", err);
+        });
+    }
+  }, [post.id, user]);
+  
+  // Fetch comments when showComments is true
+  const {
+    data: comments = [],
+    isLoading: isLoadingComments,
+    refetch: refetchComments
+  } = useQuery({
+    queryKey: [`/api/posts/${post.id}/comments`],
+    queryFn: () => fetch(`/api/posts/${post.id}/comments`).then(res => res.json()),
+    enabled: showComments,
+  });
   
   const isOwner = user?.id === post.userId;
   
@@ -134,6 +160,30 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       toast({
         title: t("errors.error"),
         description: t("social.delete_error"),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Add comment mutation
+  const addCommentMutation = useMutation({
+    mutationFn: async (data: { content: string }) => {
+      await apiRequest("POST", `/api/posts/${post.id}/comments`, data);
+      return { success: true };
+    },
+    onSuccess: () => {
+      setCommentText(""); // Clear input after successful comment
+      refetchComments(); // Refetch comments to show the new one
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] }); // Update post count
+      toast({
+        title: t("social.comment_added"),
+        description: t("social.comment_success"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("errors.error"),
+        description: t("social.comment_error"),
         variant: "destructive",
       });
     },
@@ -433,22 +483,63 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         </button>
       </div>
       
-      {/* Comments Section - Placeholder */}
+      {/* Comments Section */}
       {showComments && (
         <div className="mt-4 pt-3 border-t">
-          <div className="flex items-center space-x-3 mb-4">
+          {/* Comment Input */}
+          <div className="flex items-start space-x-3 mb-4">
             {user && <UserAvatar userId={user.id} size="sm" />}
-            <div className="flex-1">
-              <input
-                type="text"
+            <div className="flex-1 relative">
+              <Textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
                 placeholder={t("social.write_comment")}
-                className="w-full p-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white"
+                className="w-full min-h-[60px] p-2 pr-10 bg-gray-50 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white resize-none"
               />
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="absolute right-2 bottom-2 p-1 h-auto text-primary"
+                onClick={() => {
+                  if (commentText.trim()) {
+                    addCommentMutation.mutate({ content: commentText.trim() });
+                  }
+                }}
+                disabled={!commentText.trim() || addCommentMutation.isPending}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           
-          <div className="text-center text-gray-500 text-sm py-4">
-            {t("social.comments_coming_soon")}
+          {/* Comments List */}
+          <div className="space-y-4">
+            {isLoadingComments ? (
+              <div className="text-center text-gray-500 text-sm py-4">
+                {t("social.loading_comments")}
+              </div>
+            ) : comments.length > 0 ? (
+              comments.map((comment: any) => (
+                <div key={comment.id} className="flex items-start space-x-3">
+                  <UserAvatar userId={comment.userId} size="sm" />
+                  <div className="flex-1">
+                    <div className="bg-gray-50 rounded-md p-3">
+                      <div className="font-medium text-sm">
+                        <UserDisplayName userId={comment.userId} />
+                      </div>
+                      <p className="text-sm mt-1">{comment.content}</p>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {comment.createdAt && formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 text-sm py-4">
+                {t("social.no_comments")}
+              </div>
+            )}
           </div>
         </div>
       )}
