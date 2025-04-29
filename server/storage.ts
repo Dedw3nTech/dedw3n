@@ -298,6 +298,7 @@ export interface IStorage {
   updateCartQuantity(id: number, quantity: number): Promise<Cart>;
   removeFromCart(id: number): Promise<boolean>;
   listCartItems(userId: number): Promise<Cart[]>;
+  clearCart(userId: number): Promise<boolean>;
   countCartItems(userId: number): Promise<number>;
   
   // Wallet operations

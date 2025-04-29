@@ -3441,6 +3441,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const transaction = await storage.createTransaction(validatedData);
+      
+      // If this is a payment transaction with order metadata, create an order record
+      if (req.body.type === 'payment' && req.body.metadata) {
+        try {
+          const metadata = typeof req.body.metadata === 'string' 
+            ? JSON.parse(req.body.metadata) 
+            : req.body.metadata;
+            
+          if (metadata.items && metadata.shipping) {
+            // Create order from the payment
+            const items = typeof metadata.items === 'string' 
+              ? JSON.parse(metadata.items) 
+              : metadata.items;
+              
+            const shipping = typeof metadata.shipping === 'string' 
+              ? JSON.parse(metadata.shipping) 
+              : metadata.shipping;
+            
+            // Create order record
+            await storage.createOrder({
+              userId,
+              totalAmount: req.body.amount,
+              status: 'processing',
+              items: JSON.stringify(items),
+              shippingAddress: shipping.address ? JSON.stringify(shipping.address) : null,
+              shippingMethod: shipping.method ? shipping.method.toString() : null,
+              shippingCost: shipping.cost || 0,
+              paymentMethod: 'wallet',
+              paymentId: transaction.id.toString(),
+              notes: `Paid with e-wallet. Transaction ID: ${transaction.id}`,
+              createdAt: new Date()
+            });
+            
+            // Clear user's cart after successful order
+            await storage.clearCart(userId);
+          }
+        } catch (parseError) {
+          console.error("Error processing payment metadata:", parseError);
+          // We don't fail the transaction if the order creation fails
+          // The transaction is already done at this point
+        }
+      }
+      
       res.status(201).json(transaction);
     } catch (error) {
       if (error instanceof z.ZodError) {
