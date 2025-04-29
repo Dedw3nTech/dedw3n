@@ -1068,6 +1068,292 @@ export class MemStorage implements IStorage {
   async listVendors(): Promise<Vendor[]> {
     return Array.from(this.vendors.values());
   }
+  
+  // Vendor analytics methods
+  async getVendorTotalSales(vendorId: number): Promise<number> {
+    // Calculate total sales from order items for this vendor
+    let totalSales = 0;
+    
+    for (const orderItem of this.orderItems.values()) {
+      if (orderItem.vendorId === vendorId) {
+        totalSales += orderItem.totalPrice;
+      }
+    }
+    
+    return totalSales;
+  }
+  
+  async getVendorOrderStats(vendorId: number): Promise<{ 
+    totalOrders: number; 
+    pendingOrders: number; 
+    processingOrders: number; 
+    shippedOrders: number;
+    deliveredOrders: number;
+    canceledOrders: number;
+  }> {
+    // Get all order items for this vendor
+    const vendorOrderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    // Get unique order IDs
+    const orderIds = new Set<number>();
+    for (const item of vendorOrderItems) {
+      orderIds.add(item.orderId);
+    }
+    
+    // Count orders by status
+    let pendingOrders = 0;
+    let processingOrders = 0;
+    let shippedOrders = 0;
+    let deliveredOrders = 0;
+    let canceledOrders = 0;
+    
+    for (const orderId of orderIds) {
+      const order = this.orders.get(orderId);
+      if (order) {
+        switch (order.status) {
+          case 'pending':
+            pendingOrders++;
+            break;
+          case 'processing':
+            processingOrders++;
+            break;
+          case 'shipped':
+            shippedOrders++;
+            break;
+          case 'delivered':
+            deliveredOrders++;
+            break;
+          case 'canceled':
+            canceledOrders++;
+            break;
+        }
+      }
+    }
+    
+    return {
+      totalOrders: orderIds.size,
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveredOrders,
+      canceledOrders
+    };
+  }
+  
+  async getVendorRevenueByPeriod(vendorId: number, period: "daily" | "weekly" | "monthly" | "yearly"): Promise<any[]> {
+    // Get all order items for this vendor
+    const vendorOrderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    // Group by period
+    const revenueByPeriod: Map<string, number> = new Map();
+    
+    for (const item of vendorOrderItems) {
+      const order = this.orders.get(item.orderId);
+      if (order && order.status !== 'canceled') {
+        const date = order.createdAt;
+        let periodKey: string;
+        
+        switch (period) {
+          case 'daily':
+            periodKey = date.toISOString().substring(0, 10); // YYYY-MM-DD
+            break;
+          case 'weekly':
+            // Get the Monday of the week
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
+            const monday = new Date(date);
+            monday.setDate(diff);
+            periodKey = monday.toISOString().substring(0, 10);
+            break;
+          case 'monthly':
+            periodKey = date.toISOString().substring(0, 7); // YYYY-MM
+            break;
+          case 'yearly':
+            periodKey = date.toISOString().substring(0, 4); // YYYY
+            break;
+        }
+        
+        // Add revenue to period
+        const currentRevenue = revenueByPeriod.get(periodKey) || 0;
+        revenueByPeriod.set(periodKey, currentRevenue + item.totalPrice);
+      }
+    }
+    
+    // Convert map to array of objects
+    return Array.from(revenueByPeriod.entries()).map(([period, revenue]) => ({
+      period,
+      revenue
+    }));
+  }
+  
+  async getVendorTopProducts(vendorId: number, limit: number = 5): Promise<any[]> {
+    // Find products by vendor
+    const vendorProducts = Array.from(this.products.values())
+      .filter(product => product.vendorId === vendorId);
+    
+    // Count sales per product
+    const productSales: Map<number, { 
+      productId: number;
+      name: string;
+      totalRevenue: number;
+      unitsSold: number;
+    }> = new Map();
+    
+    for (const item of this.orderItems.values()) {
+      if (item.vendorId === vendorId) {
+        const product = this.products.get(item.productId);
+        if (product) {
+          const existingData = productSales.get(item.productId) || {
+            productId: item.productId,
+            name: product.name,
+            totalRevenue: 0,
+            unitsSold: 0
+          };
+          
+          existingData.totalRevenue += item.totalPrice;
+          existingData.unitsSold += item.quantity;
+          
+          productSales.set(item.productId, existingData);
+        }
+      }
+    }
+    
+    // Sort products by revenue
+    const sortedProducts = Array.from(productSales.values())
+      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+    
+    // Return top N products
+    return sortedProducts.slice(0, limit);
+  }
+  
+  async getVendorProductsCount(vendorId: number): Promise<number> {
+    return Array.from(this.products.values())
+      .filter(product => product.vendorId === vendorId)
+      .length;
+  }
+  
+  async getVendorRecentOrders(vendorId: number, limit: number = 5): Promise<any[]> {
+    // Get all order items for this vendor
+    const vendorOrderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    // Get unique order IDs
+    const orderIds = new Set<number>();
+    for (const item of vendorOrderItems) {
+      orderIds.add(item.orderId);
+    }
+    
+    // Get order details
+    const orders = Array.from(orderIds).map(orderId => {
+      const order = this.orders.get(orderId);
+      if (order) {
+        return {
+          id: order.id,
+          date: order.createdAt,
+          status: order.status,
+          total: order.totalAmount,
+          items: Array.from(this.orderItems.values())
+            .filter(item => item.orderId === orderId && item.vendorId === vendorId)
+            .map(item => ({
+              productId: item.productId,
+              productName: this.products.get(item.productId)?.name || 'Unknown Product',
+              quantity: item.quantity,
+              price: item.unitPrice,
+              total: item.totalPrice
+            }))
+        };
+      }
+      return null;
+    }).filter(Boolean);
+    
+    // Sort by date (newest first) and limit
+    return orders
+      .sort((a: any, b: any) => b.date.getTime() - a.date.getTime())
+      .slice(0, limit);
+  }
+  
+  async getVendorTopBuyers(vendorId: number, limit: number = 5): Promise<any[]> {
+    // Get all order items for this vendor
+    const vendorOrderItems = Array.from(this.orderItems.values())
+      .filter(item => item.vendorId === vendorId);
+    
+    // Get all orders for these items
+    const orderIds = new Set<number>();
+    for (const item of vendorOrderItems) {
+      orderIds.add(item.orderId);
+    }
+    
+    // Group by user and calculate total spent
+    const buyerStats: Map<number, {
+      userId: number;
+      username: string;
+      totalSpent: number;
+      orderCount: number;
+    }> = new Map();
+    
+    for (const orderId of orderIds) {
+      const order = this.orders.get(orderId);
+      if (order && order.status !== 'canceled') {
+        const user = this.users.get(order.userId);
+        if (user) {
+          // Calculate total spent by this user on this vendor's products
+          let totalSpent = 0;
+          for (const item of vendorOrderItems) {
+            if (item.orderId === orderId) {
+              totalSpent += item.totalPrice;
+            }
+          }
+          
+          const existingData = buyerStats.get(user.id) || {
+            userId: user.id,
+            username: user.username,
+            totalSpent: 0,
+            orderCount: 0
+          };
+          
+          existingData.totalSpent += totalSpent;
+          existingData.orderCount += 1;
+          
+          buyerStats.set(user.id, existingData);
+        }
+      }
+    }
+    
+    // Sort by total spent and return top N
+    return Array.from(buyerStats.values())
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, limit);
+  }
+  
+  async getVendorProfitLoss(vendorId: number): Promise<{
+    revenue: number;
+    expenses: number;
+    profit: number;
+    profitMargin: number;
+  }> {
+    // Calculate total revenue
+    const revenue = await this.getVendorTotalSales(vendorId);
+    
+    // For a basic implementation, we'll estimate expenses as 60% of revenue
+    // In a real implementation, this would track actual expenses like product costs,
+    // shipping, taxes, etc.
+    const expenses = revenue * 0.6;
+    
+    // Calculate profit
+    const profit = revenue - expenses;
+    
+    // Calculate profit margin
+    const profitMargin = revenue > 0 ? (profit / revenue) * 100 : 0;
+    
+    return {
+      revenue,
+      expenses,
+      profit,
+      profitMargin
+    };
+  }
 
   // Product operations
   async getProduct(id: number): Promise<Product | undefined> {

@@ -2072,6 +2072,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       if (user) {
         user.isVendor = true;
+        await storage.updateUser(user.id, { isVendor: true });
       }
       
       res.status(201).json(vendor);
@@ -2080,6 +2081,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.errors });
       }
       res.status(500).json({ message: "Failed to create vendor" });
+    }
+  });
+  
+  // Get user's vendor profile
+  app.get("/api/vendors/me", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      console.error("Error getting vendor profile:", error);
+      res.status(500).json({ message: "Failed to get vendor profile" });
+    }
+  });
+  
+  // Get vendor analytics summary
+  app.get("/api/vendors/:vendorId/analytics/summary", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify the vendor exists
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Make sure the user is the vendor or an admin
+      if (vendor.userId !== userId && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ message: "You can only view your own analytics" });
+      }
+      
+      // Get total sales
+      const totalSales = await storage.getVendorTotalSales(vendorId);
+      
+      // Get order stats
+      const orderStats = await storage.getVendorOrderStats(vendorId);
+      
+      // Get revenue data
+      const revenueData = await storage.getVendorRevenueByPeriod(vendorId, "monthly");
+      
+      // Get top products
+      const topProducts = await storage.getVendorTopProducts(vendorId, 5);
+      
+      // Get total products
+      const productsCount = await storage.getVendorProductsCount(vendorId);
+      
+      // Get recent orders
+      const recentOrders = await storage.getVendorRecentOrders(vendorId, 5);
+      
+      res.json({
+        totalRevenue: totalSales || 0,
+        totalOrders: orderStats?.totalOrders || 0,
+        totalProducts: productsCount || 0,
+        revenueData,
+        topProducts,
+        recentOrders,
+      });
+    } catch (error) {
+      console.error("Error getting vendor analytics summary:", error);
+      res.status(500).json({ message: "Failed to get analytics summary" });
     }
   });
 

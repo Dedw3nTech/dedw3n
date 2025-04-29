@@ -1,30 +1,23 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useLocation, Link } from "wouter";
+import { useMutation } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Store, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Define form schema for vendor registration
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, Store } from "lucide-react";
+
 const vendorFormSchema = z.object({
-  storeName: z
-    .string()
-    .min(3, { message: "Store name must be at least 3 characters long" })
-    .max(50, { message: "Store name cannot exceed 50 characters" }),
-  description: z
-    .string()
-    .min(10, { message: "Description must be at least 10 characters long" })
-    .max(500, { message: "Description cannot exceed 500 characters" }),
+  storeName: z.string().min(3, "Store name must be at least 3 characters").max(50, "Store name must be less than 50 characters"),
+  description: z.string().max(500, "Description must be less than 500 characters").optional(),
   logo: z.string().optional(),
 });
 
@@ -33,20 +26,15 @@ type VendorFormValues = z.infer<typeof vendorFormSchema>;
 export default function BecomeVendorPage() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
-  const [submissionStatus, setSubmissionStatus] = useState<"idle" | "success" | "error">("idle");
+  const { user } = useAuth();
 
-  // Check if user is logged in
-  const { data: userData, isLoading: isLoadingUser } = useQuery({
-    queryKey: ["/api/auth/me"],
-  });
-
-  // Redirect if user already is a vendor
-  if (userData && userData.isVendor) {
+  // If user is already a vendor, redirect to vendor dashboard
+  if (user?.isVendor) {
     setLocation("/vendor-dashboard");
     return null;
   }
 
-  // Define form
+  // Initialize form with react-hook-form
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorFormSchema),
     defaultValues: {
@@ -56,41 +44,26 @@ export default function BecomeVendorPage() {
     },
   });
 
-  // Mutation for creating a vendor
-  const createVendorMutation = useMutation({
+  // Create mutation for registering as a vendor
+  const vendorMutation = useMutation({
     mutationFn: async (data: VendorFormValues) => {
-      const response = await fetch("/api/vendors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
+      const response = await apiRequest("POST", "/api/vendors", data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to register as a vendor");
       }
-
-      return await response.json();
+      return response.json();
     },
     onSuccess: () => {
-      setSubmissionStatus("success");
       toast({
-        title: "Registration successful!",
-        description: "You are now a vendor on our platform.",
+        title: "Registration successful",
+        description: "You are now a vendor!",
       });
-      
-      // Invalidate relevant queries
+      // Invalidate user query to refresh the user data (isVendor flag)
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      
-      // Redirect after a short delay to let the user see the success message
-      setTimeout(() => {
-        setLocation("/vendor-dashboard");
-      }, 2000);
+      setLocation("/vendor-dashboard");
     },
-    onError: (error) => {
-      setSubmissionStatus("error");
+    onError: (error: Error) => {
       toast({
         title: "Registration failed",
         description: error.message,
@@ -99,55 +72,22 @@ export default function BecomeVendorPage() {
     },
   });
 
-  // Submit handler
   function onSubmit(data: VendorFormValues) {
-    createVendorMutation.mutate(data);
-  }
-
-  // Redirect if not logged in
-  if (!isLoadingUser && !userData) {
-    setLocation("/auth?redirect=/become-vendor");
-    return null;
+    vendorMutation.mutate(data);
   }
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Become a Vendor</h1>
-          <p className="text-muted-foreground mt-2">
-            Start selling your products on our marketplace
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-primary" />
-              Vendor Registration
-            </CardTitle>
-            <CardDescription>
-              Fill out the form below to register as a vendor. Once approved, you'll be able to list and sell products.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {submissionStatus === "success" ? (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">Registration Successful!</AlertTitle>
-                <AlertDescription className="text-green-700">
-                  You have successfully registered as a vendor. You will be redirected to your vendor dashboard shortly.
-                </AlertDescription>
-              </Alert>
-            ) : submissionStatus === "error" ? (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Registration Failed</AlertTitle>
-                <AlertDescription>
-                  There was an error registering your vendor account. Please try again.
-                </AlertDescription>
-              </Alert>
-            ) : (
+    <div className="container mx-auto py-10 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl lg:text-3xl">Become a Vendor</CardTitle>
+              <CardDescription>
+                Turn your passion into profit by selling your products on our marketplace.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
@@ -160,7 +100,7 @@ export default function BecomeVendorPage() {
                           <Input placeholder="Enter your store name" {...field} />
                         </FormControl>
                         <FormDescription>
-                          This is how your store will appear to customers.
+                          This is how customers will see your store.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -174,14 +114,14 @@ export default function BecomeVendorPage() {
                       <FormItem>
                         <FormLabel>Store Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Describe your store, products, and what makes you unique"
+                          <Textarea 
+                            placeholder="Tell customers about your store and what you sell..." 
                             className="min-h-[120px]"
-                            {...field}
+                            {...field} 
                           />
                         </FormControl>
                         <FormDescription>
-                          A good description helps customers understand what you sell.
+                          Describe what makes your products special.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -193,12 +133,12 @@ export default function BecomeVendorPage() {
                     name="logo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Store Logo URL (Optional)</FormLabel>
+                        <FormLabel>Logo URL (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter logo URL" {...field} />
+                          <Input placeholder="Enter a URL for your store logo" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Add a URL to your store logo. You can update this later.
+                          Add a logo to make your store stand out.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -208,9 +148,9 @@ export default function BecomeVendorPage() {
                   <Button 
                     type="submit" 
                     className="w-full" 
-                    disabled={createVendorMutation.isPending}
+                    disabled={vendorMutation.isPending}
                   >
-                    {createVendorMutation.isPending ? (
+                    {vendorMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Registering...
@@ -221,20 +161,47 @@ export default function BecomeVendorPage() {
                   </Button>
                 </form>
               </Form>
-            )}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4 bg-muted/50 px-6 py-4">
-            <div className="text-sm">
-              <strong>Benefits of becoming a vendor:</strong>
-              <ul className="mt-2 space-y-1 list-disc list-inside text-muted-foreground">
-                <li>Access to millions of potential customers</li>
-                <li>Easy-to-use dashboard for managing products</li>
-                <li>Detailed analytics and reporting</li>
-                <li>Secure payment processing</li>
-              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex flex-col justify-center">
+          <div className="space-y-6">
+            <div className="flex items-center justify-center h-24 w-24 rounded-full bg-primary/10 mx-auto">
+              <Store className="h-12 w-12 text-primary" />
             </div>
-          </CardFooter>
-        </Card>
+            
+            <h2 className="text-2xl font-bold text-center">Why become a vendor?</h2>
+            
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-2">Reach a Global Audience</h3>
+                <p className="text-muted-foreground">Showcase your products to millions of potential customers around the world.</p>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-2">Powerful Analytics</h3>
+                <p className="text-muted-foreground">Get detailed insights about your sales performance and customer behavior.</p>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-2">Secure Payments</h3>
+                <p className="text-muted-foreground">Accept multiple payment methods with our secure payment processing system.</p>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-2">Marketing Tools</h3>
+                <p className="text-muted-foreground">Promote your products with built-in marketing tools and features.</p>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Already a vendor? <Link href="/vendor-dashboard" className="text-primary font-medium">Go to your dashboard</Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

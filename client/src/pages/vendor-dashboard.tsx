@@ -31,7 +31,7 @@ export default function VendorDashboardPage() {
 
   // Fetch vendor data if user is logged in
   const { data: vendorData, isLoading: isLoadingVendor } = useQuery({
-    queryKey: ["/api/vendors/user", userData?.id],
+    queryKey: ["/api/vendors/me"],
     enabled: !!userData?.id && !!userData?.isVendor,
   });
 
