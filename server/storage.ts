@@ -758,6 +758,13 @@ export class MemStorage implements IStorage {
     this.videoPlaylistIdCounter = 1;
     this.playlistItemIdCounter = 1;
     this.videoPurchaseIdCounter = 1;
+    
+    // Initialize content moderation counters
+    this.allowListItemIdCounter = 1;
+    this.blockListItemIdCounter = 1;
+    this.flaggedContentItemIdCounter = 1;
+    this.flaggedImageIdCounter = 1;
+    this.moderationReportIdCounter = 1;
 
     this.initDefaultData();
   }
@@ -6140,6 +6147,518 @@ export class DatabaseStorage implements IStorage {
         },
       ],
     };
+  }
+
+  // Content Moderation operations
+  // Allow list operations
+  async getAllowList(search?: string): Promise<AllowListItem[]> {
+    let items = Array.from(this.allowListItems.values());
+    if (search) {
+      const searchLower = search.toLowerCase();
+      items = items.filter(item => 
+        item.term.toLowerCase().includes(searchLower) || 
+        item.notes?.toLowerCase().includes(searchLower)
+      );
+    }
+    return items;
+  }
+
+  async getAllowListItem(id: number): Promise<AllowListItem | undefined> {
+    return this.allowListItems.get(id);
+  }
+
+  async createAllowListItem(item: InsertAllowListItem): Promise<AllowListItem> {
+    const id = this.allowListItemIdCounter++;
+    const now = new Date();
+    const newItem: AllowListItem = {
+      id,
+      ...item,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.allowListItems.set(id, newItem);
+    return newItem;
+  }
+
+  async updateAllowListItem(id: number, data: Partial<AllowListItem>): Promise<AllowListItem | undefined> {
+    const item = this.allowListItems.get(id);
+    if (!item) {
+      return undefined;
+    }
+    const updatedItem = {
+      ...item,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.allowListItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteAllowListItem(id: number): Promise<boolean> {
+    return this.allowListItems.delete(id);
+  }
+
+  // Block list operations
+  async getBlockList(search?: string): Promise<BlockListItem[]> {
+    let items = Array.from(this.blockListItems.values());
+    if (search) {
+      const searchLower = search.toLowerCase();
+      items = items.filter(item => 
+        item.term.toLowerCase().includes(searchLower) || 
+        item.matchType.includes(searchLower) ||
+        item.notes?.toLowerCase().includes(searchLower)
+      );
+    }
+    return items;
+  }
+
+  async getBlockListItem(id: number): Promise<BlockListItem | undefined> {
+    return this.blockListItems.get(id);
+  }
+
+  async createBlockListItem(item: InsertBlockListItem): Promise<BlockListItem> {
+    const id = this.blockListItemIdCounter++;
+    const now = new Date();
+    const newItem: BlockListItem = {
+      id,
+      ...item,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.blockListItems.set(id, newItem);
+    return newItem;
+  }
+
+  async updateBlockListItem(id: number, data: Partial<BlockListItem>): Promise<BlockListItem | undefined> {
+    const item = this.blockListItems.get(id);
+    if (!item) {
+      return undefined;
+    }
+    const updatedItem = {
+      ...item,
+      ...data,
+      updatedAt: new Date()
+    };
+    this.blockListItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteBlockListItem(id: number): Promise<boolean> {
+    return this.blockListItems.delete(id);
+  }
+
+  // Flagged content operations
+  async getFlaggedContent(options?: {
+    search?: string;
+    status?: string;
+    contentType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<FlaggedContentItem[]> {
+    let items = Array.from(this.flaggedContentItems.values());
+    
+    if (options) {
+      if (options.search) {
+        const searchLower = options.search.toLowerCase();
+        items = items.filter(item => 
+          item.content.toLowerCase().includes(searchLower) || 
+          item.reason.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      if (options.status) {
+        items = items.filter(item => item.status === options.status);
+      }
+      
+      if (options.contentType) {
+        items = items.filter(item => item.contentType === options.contentType);
+      }
+      
+      // Apply sorting - newest first
+      items = items.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      
+      // Apply pagination
+      if (options.offset !== undefined && options.limit !== undefined) {
+        items = items.slice(options.offset, options.offset + options.limit);
+      } else if (options.limit !== undefined) {
+        items = items.slice(0, options.limit);
+      }
+    }
+    
+    return items;
+  }
+
+  async getFlaggedContentItem(id: number): Promise<FlaggedContentItem | undefined> {
+    return this.flaggedContentItems.get(id);
+  }
+
+  async createFlaggedContentItem(item: InsertFlaggedContentItem): Promise<FlaggedContentItem> {
+    const id = this.flaggedContentItemIdCounter++;
+    const now = new Date();
+    const newItem: FlaggedContentItem = {
+      id,
+      ...item,
+      status: item.status || 'pending',
+      createdAt: now,
+      updatedAt: now,
+      reviewedAt: null
+    };
+    this.flaggedContentItems.set(id, newItem);
+    return newItem;
+  }
+
+  async updateFlaggedContentItem(id: number, data: Partial<FlaggedContentItem>): Promise<FlaggedContentItem | undefined> {
+    const item = this.flaggedContentItems.get(id);
+    if (!item) {
+      return undefined;
+    }
+    
+    // If status is changing from pending to approved or rejected, set reviewedAt
+    const isStatusChanging = data.status && data.status !== item.status;
+    const isBeingReviewed = isStatusChanging && item.status === 'pending' && 
+      (data.status === 'approved' || data.status === 'rejected');
+    
+    const updatedItem = {
+      ...item,
+      ...data,
+      reviewedAt: isBeingReviewed ? new Date() : item.reviewedAt,
+      updatedAt: new Date()
+    };
+    
+    this.flaggedContentItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteFlaggedContentItem(id: number): Promise<boolean> {
+    return this.flaggedContentItems.delete(id);
+  }
+
+  // Flagged images operations
+  async getFlaggedImages(options?: {
+    search?: string;
+    status?: string;
+    contentType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<FlaggedImage[]> {
+    let items = Array.from(this.flaggedImages.values());
+    
+    if (options) {
+      if (options.search) {
+        const searchLower = options.search.toLowerCase();
+        items = items.filter(item => 
+          item.reason.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      if (options.status) {
+        items = items.filter(item => item.status === options.status);
+      }
+      
+      if (options.contentType) {
+        items = items.filter(item => item.contentType === options.contentType);
+      }
+      
+      // Apply sorting - newest first
+      items = items.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      
+      // Apply pagination
+      if (options.offset !== undefined && options.limit !== undefined) {
+        items = items.slice(options.offset, options.offset + options.limit);
+      } else if (options.limit !== undefined) {
+        items = items.slice(0, options.limit);
+      }
+    }
+    
+    return items;
+  }
+
+  async getFlaggedImage(id: number): Promise<FlaggedImage | undefined> {
+    return this.flaggedImages.get(id);
+  }
+
+  async createFlaggedImage(item: InsertFlaggedImage): Promise<FlaggedImage> {
+    const id = this.flaggedImageIdCounter++;
+    const now = new Date();
+    const newItem: FlaggedImage = {
+      id,
+      ...item,
+      status: item.status || 'pending',
+      createdAt: now,
+      updatedAt: now,
+      reviewedAt: null
+    };
+    this.flaggedImages.set(id, newItem);
+    return newItem;
+  }
+
+  async updateFlaggedImage(id: number, data: Partial<FlaggedImage>): Promise<FlaggedImage | undefined> {
+    const item = this.flaggedImages.get(id);
+    if (!item) {
+      return undefined;
+    }
+    
+    // If status is changing from pending to approved or rejected, set reviewedAt
+    const isStatusChanging = data.status && data.status !== item.status;
+    const isBeingReviewed = isStatusChanging && item.status === 'pending' && 
+      (data.status === 'approved' || data.status === 'rejected');
+    
+    const updatedItem = {
+      ...item,
+      ...data,
+      reviewedAt: isBeingReviewed ? new Date() : item.reviewedAt,
+      updatedAt: new Date()
+    };
+    
+    this.flaggedImages.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteFlaggedImage(id: number): Promise<boolean> {
+    return this.flaggedImages.delete(id);
+  }
+
+  // Moderation reports operations
+  async getModerationReports(options?: {
+    search?: string;
+    status?: string;
+    reportType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ModerationReport[]> {
+    let items = Array.from(this.moderationReports.values());
+    
+    if (options) {
+      if (options.search) {
+        const searchLower = options.search.toLowerCase();
+        items = items.filter(item => 
+          item.details.toLowerCase().includes(searchLower) || 
+          item.reportedBy.toString().includes(searchLower)
+        );
+      }
+      
+      if (options.status) {
+        items = items.filter(item => item.status === options.status);
+      }
+      
+      if (options.reportType) {
+        items = items.filter(item => item.reportType === options.reportType);
+      }
+      
+      // Apply sorting - newest first
+      items = items.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      
+      // Apply pagination
+      if (options.offset !== undefined && options.limit !== undefined) {
+        items = items.slice(options.offset, options.offset + options.limit);
+      } else if (options.limit !== undefined) {
+        items = items.slice(0, options.limit);
+      }
+    }
+    
+    return items;
+  }
+
+  async getModerationReport(id: number): Promise<ModerationReport | undefined> {
+    return this.moderationReports.get(id);
+  }
+
+  async createModerationReport(report: InsertModerationReport): Promise<ModerationReport> {
+    const id = this.moderationReportIdCounter++;
+    const now = new Date();
+    const newReport: ModerationReport = {
+      id,
+      ...report,
+      status: report.status || 'pending',
+      createdAt: now,
+      updatedAt: now,
+      reviewedAt: null
+    };
+    this.moderationReports.set(id, newReport);
+    return newReport;
+  }
+
+  async updateModerationReport(id: number, data: Partial<ModerationReport>): Promise<ModerationReport | undefined> {
+    const report = this.moderationReports.get(id);
+    if (!report) {
+      return undefined;
+    }
+    
+    // If status is changing from pending to approved or rejected, set reviewedAt
+    const isStatusChanging = data.status && data.status !== report.status;
+    const isBeingReviewed = isStatusChanging && report.status === 'pending' && 
+      (data.status === 'approved' || data.status === 'rejected');
+    
+    const updatedReport = {
+      ...report,
+      ...data,
+      reviewedAt: isBeingReviewed ? new Date() : report.reviewedAt,
+      updatedAt: new Date()
+    };
+    
+    this.moderationReports.set(id, updatedReport);
+    return updatedReport;
+  }
+
+  async deleteModerationReport(id: number): Promise<boolean> {
+    return this.moderationReports.delete(id);
+  }
+
+  // AI content analysis
+  async analyzeUserBehavior(userId: number): Promise<any> {
+    // This would connect to an AI service in a real implementation
+    // For now, return some basic statistics and mock analysis
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const posts = await this.getUserPosts(userId);
+    const comments = Array.from(this.comments.values()).filter(comment => comment.userId === userId);
+    const likes = Array.from(this.likes.values()).filter(like => like.userId === userId);
+    
+    // Calculate activity periods
+    const activityByHour: Record<number, number> = {};
+    const activityByDay: Record<number, number> = {};
+    
+    // Analyze all user actions
+    [...posts, ...comments, ...likes].forEach(item => {
+      const date = new Date(item.createdAt);
+      const hour = date.getHours();
+      const day = date.getDay();
+      
+      activityByHour[hour] = (activityByHour[hour] || 0) + 1;
+      activityByDay[day] = (activityByDay[day] || 0) + 1;
+    });
+    
+    return {
+      userId,
+      username: user.username,
+      totalPosts: posts.length,
+      totalComments: comments.length,
+      totalLikes: likes.length,
+      accountAge: Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)),
+      activityByHour,
+      activityByDay,
+      analysis: {
+        riskLevel: "low",
+        flags: [],
+        insights: [
+          "User shows normal engagement patterns",
+          "No suspicious activity detected",
+          "Activity spread across different content types"
+        ]
+      }
+    };
+  }
+
+  async analyzeContent(content: string): Promise<any> {
+    // This would connect to an AI service in a real implementation
+    // For now, return basic mock analysis
+    const hasOffensiveWords = this.checkOffensiveContent(content);
+    
+    return {
+      content: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+      length: content.length,
+      sentiment: this.mockSentimentAnalysis(content),
+      categories: this.mockCategoryDetection(content),
+      toxicityScore: hasOffensiveWords ? 0.85 : 0.05,
+      flags: hasOffensiveWords ? ['potentially_harmful'] : [],
+      recommendation: hasOffensiveWords ? 'review' : 'approve'
+    };
+  }
+
+  async analyzeImage(imageUrl: string): Promise<any> {
+    // This would connect to an AI vision service in a real implementation
+    // For now, return mock analysis based on URL features
+    const imageName = imageUrl.split('/').pop() || '';
+    const isPossibleNSFW = imageName.toLowerCase().includes('nsfw') || Math.random() < 0.05;
+    
+    return {
+      imageUrl,
+      detectedObjects: ['person', 'clothing', 'background'],
+      detectedFaces: Math.floor(Math.random() * 3),
+      possibleNSFW: isPossibleNSFW,
+      safetyScore: isPossibleNSFW ? 0.25 : 0.95,
+      recommendation: isPossibleNSFW ? 'review' : 'approve'
+    };
+  }
+
+  // Helper methods
+  private checkOffensiveContent(text: string): boolean {
+    const offensiveWords = ['offensive', 'hate', 'explicit', 'inappropriate'];
+    const textLower = text.toLowerCase();
+    return offensiveWords.some(word => textLower.includes(word));
+  }
+
+  private mockSentimentAnalysis(text: string): { score: number, label: string } {
+    // Simplistic sentiment analysis simulation
+    const positiveWords = ['good', 'great', 'excellent', 'happy', 'love', 'wonderful'];
+    const negativeWords = ['bad', 'terrible', 'awful', 'sad', 'hate', 'horrible'];
+    
+    const textLower = text.toLowerCase();
+    let score = 0.5; // Neutral by default
+    
+    // Count positive and negative words
+    let positiveCount = 0;
+    let negativeCount = 0;
+    
+    positiveWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = textLower.match(regex);
+      if (matches) positiveCount += matches.length;
+    });
+    
+    negativeWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const matches = textLower.match(regex);
+      if (matches) negativeCount += matches.length;
+    });
+    
+    // Calculate sentiment score
+    const totalWords = textLower.split(/\s+/).length;
+    if (totalWords > 0) {
+      score = 0.5 + (0.5 * (positiveCount - negativeCount) / totalWords);
+      score = Math.max(0, Math.min(1, score)); // Ensure score is between 0 and 1
+    }
+    
+    // Determine sentiment label
+    let label;
+    if (score > 0.7) label = 'positive';
+    else if (score < 0.4) label = 'negative';
+    else label = 'neutral';
+    
+    return { score, label };
+  }
+
+  private mockCategoryDetection(text: string): string[] {
+    const categories: Record<string, string[]> = {
+      'technology': ['computer', 'tech', 'programming', 'code', 'software', 'hardware'],
+      'finance': ['money', 'bank', 'finance', 'investment', 'stock', 'market'],
+      'health': ['health', 'fitness', 'exercise', 'diet', 'nutrition', 'wellness'],
+      'entertainment': ['movie', 'music', 'tv', 'show', 'film', 'celebrity'],
+      'politics': ['politics', 'government', 'election', 'policy', 'vote', 'candidate']
+    };
+    
+    const textLower = text.toLowerCase();
+    const detectedCategories = [];
+    
+    for (const [category, keywords] of Object.entries(categories)) {
+      for (const keyword of keywords) {
+        if (textLower.includes(keyword)) {
+          detectedCategories.push(category);
+          break;
+        }
+      }
+    }
+    
+    return detectedCategories.length > 0 ? detectedCategories : ['uncategorized'];
   }
 }
 
