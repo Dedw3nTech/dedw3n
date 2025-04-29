@@ -64,7 +64,7 @@ export default function Header() {
     enabled: isLoggedIn,
   });
   
-  const unreadNotificationCount = unreadNotificationsData?.count || 0;
+  const unreadNotificationCount = typeof unreadNotificationsData === 'object' && 'count' in unreadNotificationsData ? unreadNotificationsData.count : 0;
   
   // Mark notification as read mutation
   const markNotificationReadMutation = useMutation({
@@ -166,7 +166,7 @@ export default function Header() {
 
           <div className="flex items-center space-x-4">
             {/* Become a Vendor button - only shown to logged in users who are not vendors */}
-            {isLoggedIn && userData && !userData.isVendor && (
+            {isLoggedIn && userData && userData.isVendor !== true && (
               <Link href="/become-vendor">
                 <Button size="sm" className="hidden md:flex items-center gap-1 bg-red-600 text-white hover:bg-red-700">
                   <Store className="h-4 w-4" />
@@ -177,7 +177,7 @@ export default function Header() {
             
             <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-shopping-cart-2-line text-xl"></i>
-              {cartData && cartData.count > 0 && (
+              {cartData && typeof cartData === 'object' && 'count' in cartData && cartData.count > 0 && (
                 <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
                   {cartData.count}
                 </Badge>
@@ -200,12 +200,12 @@ export default function Header() {
                   <h3 className="font-semibold">Notifications</h3>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
-                  {notifications.length === 0 ? (
+                  {!notifications || !Array.isArray(notifications) || notifications.length === 0 ? (
                     <div className="p-6 text-center text-gray-500">
                       <p className="text-sm">No notifications yet</p>
                     </div>
                   ) : (
-                    notifications.map((notification) => (
+                    notifications.map((notification: any) => (
                       <div 
                         key={notification.id} 
                         className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-gray-50' : ''}`}
@@ -356,7 +356,7 @@ export default function Header() {
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
-                {messageData && messageData.count > 0 && (
+                {messageData && typeof messageData === 'object' && 'count' in messageData && messageData.count > 0 && (
                   <Badge className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
                     {messageData.count}
                   </Badge>
