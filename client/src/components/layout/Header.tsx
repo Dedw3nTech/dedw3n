@@ -311,7 +311,11 @@ export default function Header() {
           <div className="flex overflow-x-auto">
             <button 
               className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "wall" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
-              onClick={() => setActiveTab("wall")}
+              onClick={() => {
+                setActiveTab("wall");
+                setLocation("/wall");
+              }}
+              title="Personal timeline showing posts from you and users you follow - API: /api/feed/personal"
             >
               <div className="flex items-center gap-1">
                 <Home className="h-4 w-4" />
@@ -321,7 +325,11 @@ export default function Header() {
             
             <button 
               className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "explore" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
-              onClick={() => setActiveTab("explore")}
+              onClick={() => {
+                setActiveTab("explore");
+                setLocation("/explore");
+              }}
+              title="Discover trending content and suggested users - API: /api/feed/discover and /api/users/recommendations"
             >
               <div className="flex items-center gap-1">
                 <Compass className="h-4 w-4" />
@@ -331,7 +339,11 @@ export default function Header() {
             
             <button 
               className={`py-2 px-4 text-sm font-medium border-b-2 relative ${activeTab === "messages" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
-              onClick={() => setActiveTab("messages")}
+              onClick={() => {
+                setActiveTab("messages");
+                setLocation("/messages");
+              }}
+              title="Direct messages with other users - API: /api/messages and /api/messages/unread/count"
             >
               <div className="flex items-center gap-1">
                 <MessageSquare className="h-4 w-4" />
@@ -346,7 +358,11 @@ export default function Header() {
             
             <button 
               className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "videos" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
-              onClick={() => setActiveTab("videos")}
+              onClick={() => {
+                setActiveTab("videos");
+                setLocation("/videos/trending");
+              }}
+              title="Video content including trending, shorts, stories and live streams - API: /api/videos"
             >
               <div className="flex items-center gap-1">
                 <Video className="h-4 w-4" />
@@ -356,7 +372,11 @@ export default function Header() {
             
             <button 
               className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "communities" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
-              onClick={() => setActiveTab("communities")}
+              onClick={() => {
+                setActiveTab("communities");
+                setLocation("/communities");
+              }}
+              title="Interest-based groups for discussion and content sharing - API: /api/communities and /api/users/communities"
             >
               <div className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
