@@ -1108,17 +1108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Message API Routes
   
-  // Get unread messages count
-  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const count = await storage.getUnreadMessagesCount(userId);
-      res.json({ count });
-    } catch (error) {
-      console.error('Error getting unread message count:', error);
-      res.status(500).json({ message: "Failed to get unread message count" });
-    }
-  });
+  // Message routes are now handled in message-routes.ts
+  // See registerMessageRoutes(app) above
   
   // Social Media API Routes
   

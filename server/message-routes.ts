@@ -341,4 +341,107 @@ export function registerMessageRoutes(app: Express) {
       res.status(500).json({ message: "Failed to send message with attachment" });
     }
   });
+  
+  // Get messaging statistics for the current user
+  app.get("/api/messages/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const stats = await storage.getUserMessagingStats(userId);
+      
+      // Add additional info
+      const currentTime = new Date();
+      const lastWeekDate = new Date();
+      lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+      
+      // Get recent message count (last 7 days)
+      // This would be more efficient with a direct query counting messages within date range
+      // For now, we'll filter the messages after fetching
+      const allMessages = await storage.getUserMessages(userId);
+      const recentMessages = allMessages.filter(
+        msg => new Date(msg.createdAt) >= lastWeekDate
+      );
+      
+      // Calculate activity metrics
+      const activityData = {
+        totalSent: stats.sentCount,
+        totalReceived: stats.receivedCount,
+        unreadCount: stats.unreadCount,
+        conversationCount: stats.conversationCount,
+        recentMessageCount: recentMessages.length,
+        lastActive: allMessages.length > 0 
+          ? new Date(Math.max(...allMessages.map(m => new Date(m.createdAt).getTime())))
+          : new Date(),
+        mostActiveWith: null as any
+      };
+      
+      // Determine most active conversation partner if there are messages
+      if (allMessages.length > 0) {
+        // Count messages by user
+        const messageCounts = new Map<number, number>();
+        allMessages.forEach(msg => {
+          const otherId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+          messageCounts.set(otherId, (messageCounts.get(otherId) || 0) + 1);
+        });
+        
+        // Find user with most messages
+        let maxCount = 0;
+        let maxUserId = null;
+        messageCounts.forEach((count, id) => {
+          if (count > maxCount) {
+            maxCount = count;
+            maxUserId = id;
+          }
+        });
+        
+        // Get most active user details
+        if (maxUserId) {
+          const mostActiveUser = await storage.getUser(maxUserId);
+          if (mostActiveUser) {
+            const { password, ...safeUser } = mostActiveUser;
+            activityData.mostActiveWith = {
+              ...safeUser,
+              messageCount: maxCount
+            };
+          }
+        }
+      }
+      
+      res.json(activityData);
+    } catch (error) {
+      console.error("Error getting messaging stats:", error);
+      res.status(500).json({ message: "Failed to get messaging statistics" });
+    }
+  });
+  
+  // Clear all messages in a conversation
+  app.delete("/api/messages/conversations/:userId", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = (req.user as any).id;
+      const otherUserId = parseInt(req.params.userId);
+      
+      // Validate the other user exists
+      const otherUser = await storage.getUser(otherUserId);
+      if (!otherUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Clear the conversation
+      const success = await storage.clearConversation(currentUserId, otherUserId);
+      
+      if (success) {
+        res.json({ 
+          success: true, 
+          message: "Conversation cleared successfully" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to clear conversation" 
+        });
+      }
+    } catch (error) {
+      console.error("Error clearing conversation:", error);
+      res.status(500).json({ message: "Failed to clear conversation" });
+    }
+  });
 }
