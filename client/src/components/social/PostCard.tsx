@@ -732,7 +732,7 @@ export default function PostCard({
                     </div>
                     {post.product.discountPrice !== null && (
                       <Badge className="bg-green-500 hover:bg-green-600 mt-1">
-                        {Math.round((1 - post.product.discountPrice / post.product.price) * 100)}% OFF
+                        {post.product.discountPrice !== null && Math.round((1 - (post.product.discountPrice || 0) / post.product.price) * 100)}% OFF
                       </Badge>
                     )}
                   </div>
