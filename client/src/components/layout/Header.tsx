@@ -167,6 +167,16 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Become a Vendor button - only shown to logged in users who are not vendors */}
+            {isLoggedIn && userData && !userData.isVendor && (
+              <Link href="/become-vendor">
+                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1">
+                  <Store className="h-4 w-4" />
+                  <span>Become a Vendor</span>
+                </Button>
+              </Link>
+            )}
+            
             <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
               <i className="ri-shopping-cart-2-line text-xl"></i>
               {cartData && cartData.count > 0 && (

@@ -45,6 +45,8 @@ import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
 import GovernmentPage from "@/pages/government";
 import DatingPage from "@/pages/dating";
+import BecomeVendorPage from "@/pages/become-vendor";
+import VendorDashboardPage from "@/pages/vendor-dashboard";
 
 // Import community-related components
 import CommunitiesPage from "@/pages/communities";
