@@ -286,7 +286,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
     }
     
     // Navigate to the product detail page
-    window.location.href = `/product-detail?id=${linkedProduct.id}`;
+    window.location.href = `/product/${linkedProduct.id}`;
   };
   
   // Render content based on content type
