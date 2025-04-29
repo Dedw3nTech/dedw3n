@@ -308,7 +308,7 @@ export default function ContentModerationTools() {
     enabled: activeTab === "content-analysis",
   });
 
-  // Mock mutations for UI development - in a real implementation, these would make API calls
+  // API mutations for content moderation actions
 
   // Approve flagged item
   const approveMutation = useMutation({
@@ -385,8 +385,19 @@ export default function ContentModerationTools() {
   // Add to allow list
   const addAllowTermMutation = useMutation({
     mutationFn: async (data: { term: string; category: string }) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const res = await fetch('/api/admin/moderation/allow-list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to add term to allow list');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -402,8 +413,15 @@ export default function ContentModerationTools() {
   // Remove from allow list
   const removeAllowTermMutation = useMutation({
     mutationFn: async (id: number) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const res = await fetch(`/api/admin/moderation/allow-list/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to remove term from allow list');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -422,8 +440,19 @@ export default function ContentModerationTools() {
       matchType: string;
       severity: string;
     }) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const res = await fetch('/api/admin/moderation/block-list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to add term to block list');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -439,8 +468,15 @@ export default function ContentModerationTools() {
   // Remove from block list
   const removeBlockTermMutation = useMutation({
     mutationFn: async (id: number) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const res = await fetch(`/api/admin/moderation/block-list/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to remove term from block list');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -454,8 +490,19 @@ export default function ContentModerationTools() {
   // Handle report
   const handleReportMutation = useMutation({
     mutationFn: async (data: { id: number; status: string; note: string }) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const res = await fetch('/api/admin/moderation/reports/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to update report status');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
