@@ -1618,35 +1618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Room-based messaging will be implemented in a future update
   // For now, we're focusing on direct user-to-user messaging
   
-  // Get unread message count
-  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const count = await storage.getUnreadMessagesCount(userId);
-      res.json({ count });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get unread message count" });
-    }
-  });
+  // Get unread message count is now handled in message-routes.ts
   
-  // Mark messages as read
-  app.post("/api/messages/mark-read", isAuthenticated, async (req, res) => {
-    try {
-      const { messageIds } = req.body;
-      
-      if (!messageIds || !Array.isArray(messageIds)) {
-        return res.status(400).json({ message: "Invalid message IDs" });
-      }
-      
-      for (const messageId of messageIds) {
-        await storage.markMessageAsRead(messageId);
-      }
-      
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to mark messages as read" });
-    }
-  });
+  // Mark messages as read is now handled in message-routes.ts
   
   // Note: Notification endpoints are already defined above
   
@@ -3538,15 +3512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/messages/unread/count-alternative", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const count = await storage.getUnreadMessagesCount(userId);
-      res.json({ count });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to count unread messages" });
-    }
-  });
+  // Alternative unread message count endpoint is now handled in message-routes.ts
 
   // Review routes
   app.post("/api/reviews", isAuthenticated, async (req, res) => {
@@ -3988,17 +3954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get unread message count
-  app.get("/api/messages/unread", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const count = await storage.getUnreadMessagesCount(userId);
-      res.json({ count });
-    } catch (error) {
-      console.error("Error getting unread message count:", error);
-      res.status(500).json({ message: "Failed to get unread count" });
-    }
-  });
+  // Unread message count endpoint is now handled in message-routes.ts
 
   app.get("/api/members/:id", async (req, res) => {
     try {
