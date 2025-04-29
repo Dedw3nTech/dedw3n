@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -42,87 +43,111 @@ import {
   X,
   Lightbulb
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for product KPIs
-const productPerformanceData = {
-  conversionRate: {
-    current: 3.8,
-    previous: 3.2,
-    change: 18.75,
-  },
-  averageOrderValue: {
-    current: 78.92,
-    previous: 72.45,
-    change: 8.93,
-  },
-  customerRetention: {
-    current: 42.5,
-    previous: 38.9,
-    change: 9.25,
-  },
-  churnRate: {
-    current: 6.2,
-    previous: 7.4,
-    change: -16.22, // Negative change is good for churn
-  },
-  customerSatisfaction: {
-    current: 4.2,
-    previous: 4.0,
-    change: 5.0,
-  },
-  productViews: {
-    current: 12859,
-    previous: 10234,
-    change: 25.65,
-  },
-  userGrowth: {
-    current: 5482,
-    previous: 4321,
-    change: 26.87,
-  },
-  averageSalesPerDay: {
-    current: 15.3,
-    previous: 12.8,
-    change: 19.53,
-  },
-  customerLifetimeValue: {
-    current: 342.50,
-    previous: 315.75,
-    change: 8.47,
-  },
-  netPromoterScore: {
-    current: 64,
-    previous: 58,
-    change: 10.34,
-  }
+type PerformanceMetric = {
+  current: number;
+  change: number;
 };
 
-// Top performing products data
-const topProductsData = [
-  { id: 1, name: "Premium Wireless Headphones", sales: 128, revenue: 12800, conversion: 5.2 },
-  { id: 3, name: "Smart Home Security System", sales: 89, revenue: 17800, conversion: 4.7 },
-  { id: 5, name: "Professional DSLR Camera", sales: 64, revenue: 57600, conversion: 3.8 },
-  { id: 2, name: "Ergonomic Office Chair", sales: 52, revenue: 10400, conversion: 3.5 },
-  { id: 8, name: "Ultra-thin Laptop", sales: 42, revenue: 29400, conversion: 2.9 },
-];
-
-// Product trend data for categories
-const categoryTrendsData = [
-  { name: "Electronics", growth: 32, sales: 342, views: 4280 },
-  { name: "Home & Kitchen", growth: 18, sales: 213, views: 2860 },
-  { name: "Fashion", growth: 12, sales: 198, views: 3120 },
-  { name: "Beauty & Personal Care", growth: 24, sales: 156, views: 2340 },
-  { name: "Sports & Outdoors", growth: 8, sales: 87, views: 1460 },
-];
+type ProductAnalytics = {
+  productPerformance: {
+    conversionRate: PerformanceMetric;
+    customerRetention: PerformanceMetric;
+    customerSatisfaction: PerformanceMetric;
+    productViews: PerformanceMetric;
+    activeUsers: PerformanceMetric;
+    averageOrderValue: PerformanceMetric;
+    revenue: PerformanceMetric;
+    inventoryTurnover: PerformanceMetric;
+  };
+  topSellingProducts: Array<{
+    id: number;
+    name: string;
+    sales: number;
+    revenue: number;
+    conversion: number;
+  }>;
+  categoryTrends: Array<{
+    name: string;
+    growth: number;
+    sales: number;
+    views: number;
+  }>;
+  revenueByCategory: Record<string, number>;
+  inventoryAlerts: Array<{
+    id: number;
+    name: string;
+    currentStock: number;
+    reorderPoint: number;
+  }>;
+};
 
 export default function ProductManagerDashboard() {
   const [activeTab, setActiveTab] = React.useState("performance");
+  const [timeRange, setTimeRange] = React.useState("30days");
+  
+  // Fetch product analytics data from the API
+  const { data: analyticsData, isLoading } = useQuery<ProductAnalytics>({
+    queryKey: ["/api/admin/analytics/products", timeRange],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/analytics/products?timeRange=${timeRange}`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch product analytics");
+      }
+      return res.json();
+    },
+  });
+  
+  // Extract data from the response with defaults
+  const productPerformance = analyticsData?.productPerformance || {
+    conversionRate: { current: 0, change: 0 },
+    customerRetention: { current: 0, change: 0 },
+    customerSatisfaction: { current: 0, change: 0 },
+    productViews: { current: 0, change: 0 },
+    activeUsers: { current: 0, change: 0 },
+    averageOrderValue: { current: 0, change: 0 },
+    revenue: { current: 0, change: 0 },
+    inventoryTurnover: { current: 0, change: 0 },
+  };
+  
+  const topSellingProducts = analyticsData?.topSellingProducts || [];
+  const categoryTrends = analyticsData?.categoryTrends || [];
+  const inventoryAlerts = analyticsData?.inventoryAlerts || [];
+  
+  // Time range selector for the dashboard
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value);
+  };
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="h-[500px] w-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading product analytics...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Product Manager KPI Dashboard</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Select time period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="90days">Last 90 days</SelectItem>
+              <SelectItem value="1year">Last year</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="sm" className="gap-1">
             <Download className="h-4 w-4" />
             Export
@@ -154,13 +179,13 @@ export default function ProductManagerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Conversion Rate</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.conversionRate.current}%</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.conversionRate.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.conversionRate.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.conversionRate.current}%</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.conversionRate.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.conversionRate.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.conversionRate.change)}%
+                      {Math.abs(productPerformance.conversionRate.change)}%
                     </span>
                   </div>
                 </div>
@@ -169,7 +194,7 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-blue-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${productPerformanceData.conversionRate.current * 10}%` }}></div>
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${productPerformance.conversionRate.current * 10}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Percentage of visitors taking desired actions</p>
             </CardContent>
@@ -182,13 +207,13 @@ export default function ProductManagerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Retention Rate</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.customerRetention.current}%</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.customerRetention.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.customerRetention.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.customerRetention.current}%</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.customerRetention.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.customerRetention.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.customerRetention.change)}%
+                      {Math.abs(productPerformance.customerRetention.change)}%
                     </span>
                   </div>
                 </div>
@@ -197,37 +222,37 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-amber-100 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-600 rounded-full" style={{ width: `${productPerformanceData.customerRetention.current}%` }}></div>
+                <div className="h-full bg-amber-600 rounded-full" style={{ width: `${productPerformance.customerRetention.current}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Customers continuing to use the product over time</p>
             </CardContent>
           </Card>
 
-          {/* Churn Rate */}
+          {/* Customer Satisfaction */}
           <Card className="bg-gradient-to-br from-rose-50 to-white">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium mb-1">Churn Rate</p>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Customer Satisfaction</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.churnRate.current}%</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.churnRate.change < 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.churnRate.change < 0 ? 
-                        <ArrowDownRight className="h-3 w-3 mr-0.5" /> : 
-                        <ArrowUpRight className="h-3 w-3 mr-0.5" />
+                    <span className="text-3xl font-bold">{productPerformance.customerSatisfaction.current}</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.customerSatisfaction.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.customerSatisfaction.change >= 0 ? 
+                        <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
+                        <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.churnRate.change)}%
+                      {Math.abs(productPerformance.customerSatisfaction.change)}%
                     </span>
                   </div>
                 </div>
                 <div className="bg-rose-100 p-2 rounded-full">
-                  <Users className="h-5 w-5 text-rose-700" />
+                  <Star className="h-5 w-5 text-rose-700" />
                 </div>
               </div>
               <div className="mt-3 h-2 bg-rose-100 rounded-full overflow-hidden">
-                <div className="h-full bg-rose-600 rounded-full" style={{ width: `${productPerformanceData.churnRate.current * 2}%` }}></div>
+                <div className="h-full bg-rose-600 rounded-full" style={{ width: `${productPerformance.customerSatisfaction.current * 20}%` }}></div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Percentage of customers who stop using the product</p>
+              <p className="text-xs text-muted-foreground mt-2">Average customer rating out of 5</p>
             </CardContent>
           </Card>
         </div>
