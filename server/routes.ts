@@ -779,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/stats", isAuthenticated, async (req, res) => {
+  app.get("/api/user/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       console.log(`[DEBUG] Fetching stats for current user ID: ${userId}`);

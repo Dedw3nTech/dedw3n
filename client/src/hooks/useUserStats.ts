@@ -14,12 +14,12 @@ export function useUserStats() {
   // Get current user's statistics
   const getCurrentUserStats = () => {
     return useQuery<UserStats>({
-      queryKey: ['/api/users/stats'],
+      queryKey: ['/api/user/stats'],
       queryFn: async () => {
         if (!user) return { postCount: 0, followerCount: 0, followingCount: 0 };
         
         try {
-          const response = await apiRequest('GET', '/api/users/stats');
+          const response = await apiRequest('GET', '/api/user/stats');
           if (!response.ok) {
             throw new Error('Failed to fetch user stats');
           }

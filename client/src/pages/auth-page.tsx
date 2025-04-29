@@ -286,10 +286,26 @@ export default function AuthPage() {
         </div>
       </div>
       
-      {/* Right side - Hero Section */}
+      {/* Right side - Hero Section with Wall */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-dark">
-        <div className="flex flex-col justify-center items-center p-12 text-white">
-          <div className="max-w-md">
+        <div className="flex flex-col justify-center items-center p-12 text-white relative">
+          {/* Wall overlay - only shown if user is not logged in */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-10">
+            <h2 className="text-3xl font-bold mb-4 text-center">Join Dedw3n Today</h2>
+            <p className="text-xl mb-6 text-center">
+              Create an account or log in to access all features
+            </p>
+            <Button 
+              size="lg" 
+              className="bg-white text-primary hover:bg-white/90"
+              onClick={() => setActiveTab("register")}
+            >
+              Sign Up Now
+            </Button>
+          </div>
+          
+          {/* Background content that will be seen through the wall */}
+          <div className="max-w-md relative z-0">
             <h1 className="text-4xl font-bold mb-6">Welcome to Dedw3n</h1>
             <p className="text-xl mb-8">
               The all-in-one platform for buying, selling, and connecting with others.
