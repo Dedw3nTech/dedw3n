@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { 
@@ -31,12 +31,48 @@ import {
   UserPlus,
   Building2,
   ShoppingBag,
+  X,
+  User,
+  MessageCircle,
 } from "lucide-react";
+
+// User type definition
+interface UserProfile {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  bio: string | null;
+  avatar: string | null;
+  isVendor: boolean | null;
+  role: string;
+}
+
+// Custom hook for debouncing values
+function useDebounceValue<T>(value: T, delay: number = 300): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("trending");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  // Debounce the search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounceValue(searchQuery, 300);
 
   // Fetch trending posts
   const {
@@ -112,6 +148,40 @@ export default function ExplorePage() {
       return response.json();
     },
   });
+  
+  // Search for users as user types
+  const {
+    data: searchResults,
+    isLoading: isLoadingSearch,
+  } = useQuery({
+    queryKey: ["/api/users/search", debouncedSearchQuery],
+    queryFn: async () => {
+      if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
+        return [];
+      }
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+      if (!response.ok) {
+        throw new Error("Failed to search users");
+      }
+      return response.json();
+    },
+    enabled: !!debouncedSearchQuery && debouncedSearchQuery.length >= 2,
+  });
+  
+  // Show/hide search results based on query
+  useEffect(() => {
+    if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
+      setShowSearchResults(true);
+    } else {
+      setShowSearchResults(false);
+    }
+  }, [debouncedSearchQuery]);
+  
+  // Clear search input and hide results
+  const clearSearch = () => {
+    setSearchQuery("");
+    setShowSearchResults(false);
+  };
 
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
