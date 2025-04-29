@@ -132,6 +132,29 @@ export const messages = pgTable("messages", {
   attachmentUrl: text("attachment_url"),
   attachmentType: text("attachment_type"),
   isRead: boolean("is_read").default(false),
+  messageType: text("message_type").default("text"), // text, image, video, audio, file, call_request, call_missed, call_ended
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Call sessions for audio/video calls
+export const callSessions = pgTable("call_sessions", {
+  id: serial("id").primaryKey(),
+  callId: text("call_id").notNull(), // Unique identifier for the call session
+  initiatorId: integer("initiator_id").notNull().references(() => users.id),
+  receiverId: integer("receiver_id").notNull().references(() => users.id),
+  callType: text("call_type").notNull(), // audio, video
+  status: text("status").notNull(), // requested, ongoing, declined, ended, missed
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration").default(0), // in seconds
+  quality: text("quality"),
+});
+
+// Call metadata for analytics
+export const callMetadata = pgTable("call_metadata", {
+  id: serial("id").primaryKey(),
+  callSessionId: integer("call_session_id").notNull().references(() => callSessions.id),
+  metadata: json("metadata"), // Additional metadata like network stats, quality metrics
   createdAt: timestamp("created_at").defaultNow(),
 });
 
