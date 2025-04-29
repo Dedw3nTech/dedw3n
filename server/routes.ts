@@ -2702,6 +2702,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Check if user has liked a post
+  app.get("/api/posts/:id/like/check", isAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if like exists
+      const existingLike = await storage.getPostLike(postId, userId);
+      
+      res.json({ isLiked: !!existingLike });
+    } catch (error) {
+      console.error("Error checking post like status:", error);
+      res.status(500).json({ message: "Failed to check like status" });
+    }
+  });
+  
   // Get comments for a post
   app.get("/api/posts/:id/comments", async (req, res) => {
     try {
