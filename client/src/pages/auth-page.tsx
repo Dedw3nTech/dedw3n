@@ -290,7 +290,7 @@ export default function AuthPage() {
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-dark">
         <div className="flex flex-col justify-center items-center p-12 text-white">
           <div className="max-w-md">
-            <h1 className="text-4xl font-bold mb-6">Welcome</h1>
+            <h1 className="text-4xl font-bold mb-6">Welcome to Dedw3n</h1>
             <p className="text-xl mb-8">
               The all-in-one platform for buying, selling, and connecting with others.
             </p>
