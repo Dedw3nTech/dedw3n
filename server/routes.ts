@@ -2618,6 +2618,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Like a post
+  app.post("/api/posts/:id/like", isAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user already liked the post
+      const existingLike = await storage.getPostLike(postId, userId);
+      
+      if (existingLike) {
+        return res.status(400).json({ message: "Post already liked" });
+      }
+      
+      // Add like
+      await storage.createPostLike({
+        postId: postId,
+        userId: userId,
+        createdAt: new Date()
+      });
+      
+      // Increment like count on post
+      const updatedPost = await storage.incrementPostLikeCount(postId);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Post liked successfully",
+        likes: updatedPost.likes
+      });
+    } catch (error) {
+      console.error("Error liking post:", error);
+      res.status(500).json({ message: "Failed to like post" });
+    }
+  });
+  
+  // Unlike a post
+  app.delete("/api/posts/:id/like", isAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if like exists
+      const existingLike = await storage.getPostLike(postId, userId);
+      
+      if (!existingLike) {
+        return res.status(404).json({ message: "Like not found" });
+      }
+      
+      // Remove like
+      await storage.deletePostLike(postId, userId);
+      
+      // Decrement like count on post
+      const updatedPost = await storage.decrementPostLikeCount(postId);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Post unliked successfully",
+        likes: updatedPost.likes
+      });
+    } catch (error) {
+      console.error("Error unliking post:", error);
+      res.status(500).json({ message: "Failed to unlike post" });
+    }
+  });
+  
+  // Get comments for a post
+  app.get("/api/posts/:id/comments", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      // Check if post exists
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const comments = await storage.getPostComments(postId, { limit, offset });
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+  
+  // Add comment to a post
+  app.post("/api/posts/:id/comments", isAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { content } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      if (!content || content.trim() === "") {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Create comment
+      const comment = await storage.createPostComment({
+        postId: postId,
+        userId: userId,
+        content: content.trim(),
+        createdAt: new Date()
+      });
+      
+      // Increment comment count on post
+      await storage.incrementPostCommentCount(postId);
+      
+      // Get user details to add to response
+      const user = await storage.getUser(userId);
+      
+      // Return comment with user details
+      res.status(201).json({
+        ...comment,
+        user: {
+          id: user?.id,
+          username: user?.username,
+          name: user?.name,
+          avatar: user?.avatar
+        }
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+  
   app.put("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;

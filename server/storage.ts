@@ -252,6 +252,18 @@ export interface IStorage {
   incrementPostView(id: number): Promise<Post>;
   promotePost(id: number, endDate: Date): Promise<Post>;
   unpromotePost(id: number): Promise<Post>;
+  
+  // Post like operations
+  getPostLike(postId: number, userId: number): Promise<any | undefined>;
+  createPostLike(data: { postId: number; userId: number; createdAt: Date }): Promise<any>;
+  deletePostLike(postId: number, userId: number): Promise<boolean>;
+  incrementPostLikeCount(postId: number): Promise<Post>;
+  decrementPostLikeCount(postId: number): Promise<Post>;
+  
+  // Post comment operations
+  getPostComments(postId: number, options: { limit?: number; offset?: number }): Promise<Comment[]>;
+  createPostComment(data: InsertComment): Promise<Comment>;
+  incrementPostCommentCount(postId: number): Promise<Post>;
 
   // Comment operations
   getComment(id: number): Promise<Comment | undefined>;
@@ -4599,6 +4611,170 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting community count:', error);
       return 0;
+    }
+  }
+
+  // Post like operations
+  async getPostLike(postId: number, userId: number): Promise<any | undefined> {
+    try {
+      const [like] = await db
+        .select()
+        .from(likes)
+        .where(and(
+          eq(likes.postId, postId),
+          eq(likes.userId, userId)
+        ));
+      return like;
+    } catch (error) {
+      console.error("Error getting post like:", error);
+      return undefined;
+    }
+  }
+
+  async createPostLike(data: { postId: number; userId: number; createdAt: Date }): Promise<any> {
+    try {
+      const [like] = await db
+        .insert(likes)
+        .values(data)
+        .returning();
+      return like;
+    } catch (error) {
+      console.error("Error creating post like:", error);
+      throw error;
+    }
+  }
+
+  async deletePostLike(postId: number, userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(likes)
+        .where(and(
+          eq(likes.postId, postId),
+          eq(likes.userId, userId)
+        ));
+      return true;
+    } catch (error) {
+      console.error("Error deleting post like:", error);
+      return false;
+    }
+  }
+
+  async incrementPostLikeCount(postId: number): Promise<Post> {
+    try {
+      const post = await this.getPost(postId);
+      if (!post) {
+        throw new Error(`Post with id ${postId} not found`);
+      }
+      
+      const [updatedPost] = await db
+        .update(posts)
+        .set({ 
+          likes: (post.likes || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId))
+        .returning();
+      
+      return updatedPost;
+    } catch (error) {
+      console.error("Error incrementing post like count:", error);
+      throw error;
+    }
+  }
+
+  async decrementPostLikeCount(postId: number): Promise<Post> {
+    try {
+      const post = await this.getPost(postId);
+      if (!post) {
+        throw new Error(`Post with id ${postId} not found`);
+      }
+      
+      // Don't go below zero
+      const newLikeCount = Math.max(0, (post.likes || 0) - 1);
+      
+      const [updatedPost] = await db
+        .update(posts)
+        .set({ 
+          likes: newLikeCount,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId))
+        .returning();
+      
+      return updatedPost;
+    } catch (error) {
+      console.error("Error decrementing post like count:", error);
+      throw error;
+    }
+  }
+
+  async getPostComments(postId: number, options: { limit?: number; offset?: number } = {}): Promise<Comment[]> {
+    try {
+      const { limit = 10, offset = 0 } = options;
+      
+      // Get comments with user details
+      const commentsWithUsers = await db
+        .select({
+          comment: comments,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(comments)
+        .innerJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.postId, postId))
+        .orderBy(desc(comments.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      // Transform the result to include user data
+      return commentsWithUsers.map(row => ({
+        ...row.comment,
+        user: row.user
+      })) as Comment[];
+    } catch (error) {
+      console.error("Error getting post comments:", error);
+      return [];
+    }
+  }
+
+  async createPostComment(data: InsertComment): Promise<Comment> {
+    try {
+      const [comment] = await db
+        .insert(comments)
+        .values(data)
+        .returning();
+      
+      return comment;
+    } catch (error) {
+      console.error("Error creating post comment:", error);
+      throw error;
+    }
+  }
+
+  async incrementPostCommentCount(postId: number): Promise<Post> {
+    try {
+      const post = await this.getPost(postId);
+      if (!post) {
+        throw new Error(`Post with id ${postId} not found`);
+      }
+      
+      const [updatedPost] = await db
+        .update(posts)
+        .set({ 
+          comments: (post.comments || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId))
+        .returning();
+      
+      return updatedPost;
+    } catch (error) {
+      console.error("Error incrementing post comment count:", error);
+      throw error;
     }
   }
 

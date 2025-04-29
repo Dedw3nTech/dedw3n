@@ -94,6 +94,29 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
     },
   });
   
+  const unlikeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/posts/${post.id}/like`, {});
+      return { success: true };
+    },
+    onMutate: () => {
+      setIsLiked(false);
+      setLikeCount(prev => Math.max(0, prev - 1));
+    },
+    onError: () => {
+      setIsLiked(true);
+      setLikeCount(prev => prev + 1);
+      toast({
+        title: t("errors.error"),
+        description: t("social.unlike_error"),
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    },
+  });
+  
   // Delete post mutation
   const deletePostMutation = useMutation({
     mutationFn: async () => {
@@ -126,7 +149,9 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       return;
     }
     
-    if (!isLiked) {
+    if (isLiked) {
+      unlikeMutation.mutate();
+    } else {
       likeMutation.mutate();
     }
   };
