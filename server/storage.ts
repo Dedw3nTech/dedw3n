@@ -14,6 +14,7 @@ import {
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
+  callSessions, callMetadata,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -160,7 +161,7 @@ export class DatabaseStorage implements IStorage {
             eq(callSessions.receiverId, userId)
           )
         )
-        .orderBy(desc(callSessions.startTime))
+        .orderBy(desc(callSessions.startedAt))
         .limit(limit);
         
       // Fetch user details for each call
@@ -247,7 +248,7 @@ export class DatabaseStorage implements IStorage {
               eq(callSessions.initiatorId, userId),
               eq(callSessions.receiverId, userId)
             ),
-            eq(callSessions.type, 'video')
+            eq(callSessions.callType, 'video')
           )
         );
       
@@ -261,7 +262,7 @@ export class DatabaseStorage implements IStorage {
               eq(callSessions.initiatorId, userId),
               eq(callSessions.receiverId, userId)
             ),
-            eq(callSessions.type, 'audio')
+            eq(callSessions.callType, 'audio')
           )
         );
       
