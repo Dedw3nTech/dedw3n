@@ -156,6 +156,40 @@ export default function AdminDashboard() {
     }, 1500);
   };
   
+  // Handler for fixing blob avatars
+  const handleFixBlobAvatars = async () => {
+    setIsFixingBlobAvatars(true);
+    try {
+      const response = await fetch('/api/users/fix-blob-avatars', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Avatar URLs Fixed",
+          description: `Fixed ${data.users.length} user avatars with blob URLs.`,
+          variant: "default",
+        });
+      } else {
+        throw new Error(data.error || "Failed to fix avatar URLs");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fix avatar URLs",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingBlobAvatars(false);
+    }
+  };
+  
   const { data: stats = { 
     userCount: 0, 
     productCount: 0, 
