@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
-import fs from 'fs/promises';
+import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import path from 'path';
 import { storage } from "./storage";
 import { db } from "./db";
@@ -2017,6 +2018,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced post routes with direct JSON data for content and file uploads
+  // Feed endpoints for social media functionality
+  app.get("/api/feed/personal", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`[INFO] Fetching personal feed for user ${userId}`);
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      // Use the social media suite to get user's personalized feed
+      // This will include the user's own posts and posts from followed users
+      const feedPosts = await socialMediaSuite.getUserFeed(userId, {
+        limit,
+        offset
+      });
+      
+      console.log(`[INFO] Retrieved ${feedPosts.length} posts for personal feed`);
+      
+      // Filter out any posts from the admin user (user id 1) if they exist
+      const filteredPosts = feedPosts.filter(post => post.userId !== 1);
+      
+      console.log(`[INFO] After filtering user 1: ${filteredPosts.length} posts`);
+      res.json(filteredPosts);
+    } catch (error) {
+      console.error("Error fetching personal feed:", error);
+      res.status(500).json({ message: "Failed to fetch personal feed" });
+    }
+  });
+  
+  app.get("/api/feed/communities", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`[INFO] Fetching communities feed for user ${userId}`);
+      
+      // Get the user's communities
+      const userCommunities = await socialMediaSuite.getUserCommunities(userId);
+      
+      // If the user is not in any communities, return an empty array
+      if (!userCommunities || userCommunities.length === 0) {
+        console.log(`[INFO] User ${userId} is not in any communities`);
+        return res.json([]);
+      }
+      
+      // Get posts from the user's communities
+      const communityIds = userCommunities.map(community => community.id);
+      console.log(`[INFO] User ${userId} is in communities: ${communityIds.join(', ')}`);
+      
+      // Collect posts from each community
+      let allCommunityPosts = [];
+      for (const communityId of communityIds) {
+        const communityPosts = await socialMediaSuite.getCommunityPosts(communityId);
+        allCommunityPosts = [...allCommunityPosts, ...communityPosts];
+      }
+      
+      // Sort by created date (newest first)
+      allCommunityPosts.sort((a, b) => {
+        const dateA = a.createdAt?.getTime() || 0;
+        const dateB = b.createdAt?.getTime() || 0;
+        return dateB - dateA;
+      });
+      
+      // Apply limit and offset
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const paginatedPosts = allCommunityPosts.slice(offset, offset + limit);
+      
+      // Filter out any posts from the admin user (user id 1) if they exist
+      const filteredPosts = paginatedPosts.filter(post => post.userId !== 1);
+      
+      console.log(`[INFO] Retrieved ${filteredPosts.length} posts for communities feed`);
+      res.json(filteredPosts);
+    } catch (error) {
+      console.error("Error fetching communities feed:", error);
+      res.status(500).json({ message: "Failed to fetch communities feed" });
+    }
+  });
+  
+  app.get("/api/feed/recommended", async (req, res) => {
+    try {
+      console.log(`[INFO] Fetching recommended feed`);
+      
+      // Use the social media suite to get trending posts
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const trendingPosts = await socialMediaSuite.getTrendingPosts(limit);
+      
+      // Filter out any posts from the admin user (user id 1) if they exist
+      const filteredPosts = trendingPosts.filter(post => post.userId !== 1);
+      
+      console.log(`[INFO] Retrieved ${filteredPosts.length} posts for recommended feed`);
+      res.json(filteredPosts);
+    } catch (error) {
+      console.error("Error fetching recommended feed:", error);
+      res.status(500).json({ message: "Failed to fetch recommended feed" });
+    }
+  });
+
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
