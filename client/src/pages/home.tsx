@@ -303,7 +303,7 @@ export default function Home() {
           onClick={() => user ? setLocation("/add-product") : setLocation("/auth")}
           className="px-6"
         >
-          {user ? "Start Selling" : "Sign Up & Sell"}
+          {user ? "Start selling" : "Start selling"}
         </Button>
       </div>
       
