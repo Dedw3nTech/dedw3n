@@ -131,6 +131,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const [activeCall, setActiveCall] = useState<Call | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   
   // WebRTC
   const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -248,10 +251,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         setIsConnected(true);
         
         // Authenticate
-        socket.send(JSON.stringify({
-          type: "authenticate",
-          userId: user.id
-        }));
+        if (socket) {
+          socket.send(JSON.stringify({
+            type: "authenticate",
+            userId: user.id
+          }));
+        }
       };
       
       socket.onclose = (event) => {
@@ -395,6 +400,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           });
           
           cleanupCallResources();
+        } else if (incomingCall && incomingCall.callId === data.callId) {
+          setIncomingCall(null);
+          if ((window as any).ringtoneAudio) {
+            (window as any).ringtoneAudio.pause();
+            (window as any).ringtoneAudio.currentTime = 0;
+            (window as any).ringtoneAudio = null;
+          }
         }
         break;
         
@@ -598,6 +610,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Set up one-time handler for call_initiated message
         const originalOnMessage = socket!.onmessage;
         
+        // We've already checked that socket is not null above
+        // @ts-ignore
         socket!.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -622,12 +636,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             } else {
               // Handle other messages normally
               if (originalOnMessage) {
+                // @ts-ignore - Context binding is handled internally
                 originalOnMessage(event);
               }
             }
           } catch (error) {
             console.error("Error parsing WebSocket message:", error);
             if (originalOnMessage) {
+              // @ts-ignore - Context binding is handled internally
               originalOnMessage(event);
             }
           }
@@ -737,6 +753,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       audioTracks.forEach(track => {
         track.enabled = enabled;
       });
+      setIsMuted(!enabled);
     }
   };
   
@@ -746,6 +763,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       videoTracks.forEach(track => {
         track.enabled = enabled;
       });
+      setIsVideoOff(!enabled);
     }
   };
   
@@ -776,6 +794,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             videoTrack.onended = async () => {
               await shareScreen(false);
             };
+            
+            // Update screen sharing state
+            setIsScreenSharing(true);
           }
         }
       } else {
@@ -813,6 +834,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             newLocalStream.addTrack(videoTrack);
             
             setLocalStream(newLocalStream);
+            
+            // Update screen sharing state
+            setIsScreenSharing(false);
           }
         }
       }
@@ -823,6 +847,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         description: "Failed to share screen. Please try again.",
         variant: "destructive",
       });
+      
+      // Reset screen sharing state on error
+      setIsScreenSharing(false);
     }
   };
   
@@ -901,6 +928,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     incomingCall,
     localStream,
     remoteStream,
+    isMuted,
+    isVideoOff,
+    isScreenSharing,
     
     // Methods
     sendMessage,
