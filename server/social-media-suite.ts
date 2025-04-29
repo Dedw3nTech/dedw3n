@@ -5,7 +5,11 @@
  * in a unified, consistent interface replacing the previous fragmented approach.
  */
 
-import { Post, User, Comment, Like, Notification, Message, Community, Video, Follow } from '@shared/schema';
+import { 
+  posts, users, comments, likes, notifications, messages, communities, videos, follows,
+  communityMembers, videoEngagements, videoPlaylists, playlistItems, videoProductOverlays,
+  Post, User, Comment, Like, Message, Community, Video, Follow
+} from '@shared/schema';
 import { db } from './db';
 import { eq, and, or, desc, sql, not, isNull, gt, lt, gte, lte, asc } from 'drizzle-orm';
 
@@ -141,51 +145,39 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       console.log('Getting posts with options:', options);
       
       // Start building our query
-      let query = db.select().from(Post);
+      let query = db.select().from(posts);
       
       // Apply filters
       if (options.userId) {
-        query = query.where(eq(Post.userId, options.userId));
+        query = query.where(eq(posts.userId, options.userId));
       }
       
       if (options.contentType) {
         if (Array.isArray(options.contentType)) {
-          query = query.where(sql`${Post.contentType} IN (${options.contentType.join(',')})`);
+          query = query.where(sql`${posts.contentType} IN (${options.contentType.join(',')})`);
         } else {
-          query = query.where(eq(Post.contentType, options.contentType));
+          query = query.where(eq(posts.contentType, options.contentType));
         }
       }
       
       if (options.isPromoted !== undefined) {
-        query = query.where(eq(Post.isPromoted, options.isPromoted));
+        query = query.where(eq(posts.isPromoted, options.isPromoted));
       }
       
       if (options.tags && options.tags.length > 0) {
         // This is a simplified approach - in production you might use a more sophisticated tags matching
-        query = query.where(sql`${Post.tags} && ARRAY[${options.tags.join(',')}]::text[]`);
+        query = query.where(sql`${posts.tags} && ARRAY[${options.tags.join(',')}]::text[]`);
       }
       
       if (options.excludeIds && options.excludeIds.length > 0) {
-        query = query.where(sql`${Post.id} NOT IN (${options.excludeIds.join(',')})`);
+        query = query.where(sql`${posts.id} NOT IN (${options.excludeIds.join(',')})`);
       }
       
-      // Always filter out unpublished posts unless explicitly requested
-      if (options.includeUserDetails) {
-        // Join with user table to get user details
-        query = query.innerJoin(User, eq(Post.userId, User.id))
-          .select({
-            post: Post,
-            user: {
-              id: User.id,
-              username: User.username,
-              name: User.name,
-              avatar: User.avatar
-            }
-          });
-      }
+      // Filter out unpublished posts by default
+      query = query.where(eq(posts.isPublished, true));
       
       // Order by most recent first
-      query = query.orderBy(desc(Post.createdAt));
+      query = query.orderBy(desc(posts.createdAt));
       
       // Apply pagination
       if (options.limit) {
@@ -196,19 +188,29 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
         query = query.offset(options.offset);
       }
       
-      // Execute the query
-      const results = await query;
+      // If user details are requested, do a separate query to join with users
+      let results = await query;
       
-      // Transform results if we joined with user details
-      if (options.includeUserDetails) {
-        return results.map(result => ({
-          ...result.post,
-          user: {
-            id: result.user.id,
-            username: result.user.username,
-            name: result.user.name,
-            avatar: result.user.avatar
-          }
+      if (options.includeUserDetails && results.length > 0) {
+        // Get all unique user IDs from posts
+        const userIds = [...new Set(results.map(post => post.userId))];
+        
+        // Get user details in a single query
+        const userDetails = await db.select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }).from(users).where(users.id.in(userIds));
+        
+        // Create a map of user IDs to user details for quick lookup
+        const userMap = new Map();
+        userDetails.forEach(user => userMap.set(user.id, user));
+        
+        // Add user details to posts
+        return results.map(post => ({
+          ...post,
+          user: userMap.get(post.userId)
         }));
       }
       
@@ -224,8 +226,25 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getPostById(id: number): Promise<Partial<Post> | null> {
     try {
-      const [post] = await db.select().from(Post).where(eq(Post.id, id)).limit(1);
-      return post || null;
+      const [post] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+      
+      if (post) {
+        // Get user details
+        const [author] = await db.select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }).from(users).where(eq(users.id, post.userId));
+        
+        // Return post with author details
+        return {
+          ...post,
+          user: author
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error(`Error getting post by ID ${id}:`, error);
       throw error;
@@ -245,13 +264,15 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       }
       
       // Prepare data for insertion
-      const insertData: any = {
+      const insertData = {
         userId: postData.userId,
         content: postData.content,
         contentType: postData.contentType || 'text',
         isPublished: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0
       };
       
       // Add optional fields if they exist
@@ -261,12 +282,25 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       if (postData.tags) insertData.tags = postData.tags;
       if (postData.isPromoted !== undefined) insertData.isPromoted = postData.isPromoted;
       if (postData.productId) insertData.productId = postData.productId;
+      if (postData.communityId) insertData.communityId = postData.communityId;
       
       // Insert into database
-      const [newPost] = await db.insert(Post).values(insertData).returning();
+      const [newPost] = await db.insert(posts).values(insertData).returning();
       console.log('Post created successfully:', newPost);
       
-      return newPost;
+      // Get user details for the response
+      const [author] = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar
+      }).from(users).where(eq(users.id, postData.userId));
+      
+      // Return the post with author information
+      return {
+        ...newPost,
+        user: author
+      };
     } catch (error) {
       console.error('Error creating post:', error);
       throw error;
@@ -280,14 +314,36 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       // Remove any properties that shouldn't be updated
       const { id: _, createdAt, userId, ...updateData } = postData;
-      updateData.updatedAt = new Date();
       
-      const [updatedPost] = await db.update(Post)
-        .set(updateData)
-        .where(eq(Post.id, id))
+      // Set updated timestamp
+      const updates = {
+        ...updateData,
+        updatedAt: new Date()
+      };
+      
+      // Update the post
+      const [updatedPost] = await db.update(posts)
+        .set(updates)
+        .where(eq(posts.id, id))
         .returning();
       
-      return updatedPost || null;
+      if (updatedPost) {
+        // Get user details
+        const [author] = await db.select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }).from(users).where(eq(users.id, updatedPost.userId));
+        
+        // Return post with author details
+        return {
+          ...updatedPost,
+          user: author
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error(`Error updating post with ID ${id}:`, error);
       throw error;
@@ -299,7 +355,22 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async deletePost(id: number): Promise<boolean> {
     try {
-      const result = await db.delete(Post).where(eq(Post.id, id));
+      // Check if post exists before deleting
+      const [post] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+      
+      if (!post) {
+        return false;
+      }
+      
+      // Delete any related comments
+      await db.delete(comments).where(eq(comments.postId, id));
+      
+      // Delete any related likes
+      await db.delete(likes).where(eq(likes.postId, id));
+      
+      // Delete the post
+      await db.delete(posts).where(eq(posts.id, id));
+      
       return true;
     } catch (error) {
       console.error(`Error deleting post with ID ${id}:`, error);
@@ -314,22 +385,37 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       // Check if the like already exists
       const existingLike = await db.select()
-        .from(Like)
-        .where(and(eq(Like.postId, postId), eq(Like.userId, userId)))
+        .from(likes)
+        .where(and(eq(likes.postId, postId), eq(likes.userId, userId)))
         .limit(1);
       
       if (existingLike.length === 0) {
         // Create the like if it doesn't exist
-        await db.insert(Like).values({
+        await db.insert(likes).values({
           postId,
           userId,
           createdAt: new Date()
         });
         
         // Increment the post's like count
-        await db.update(Post)
-          .set({ likes: sql`${Post.likes} + 1` })
-          .where(eq(Post.id, postId));
+        await db.update(posts)
+          .set({ likes: sql`${posts.likes} + 1` })
+          .where(eq(posts.id, postId));
+        
+        // Create a notification for the post owner
+        const [post] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
+        
+        if (post && post.userId !== userId) {
+          await db.insert(notifications).values({
+            userId: post.userId,
+            type: 'like',
+            content: `Someone liked your post`,
+            isRead: false,
+            sourceId: postId,
+            sourceType: 'post',
+            createdAt: new Date()
+          });
+        }
       }
     } catch (error) {
       console.error(`Error liking post ${postId} by user ${userId}:`, error);
@@ -344,19 +430,19 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       // Check if the like exists
       const existingLike = await db.select()
-        .from(Like)
-        .where(and(eq(Like.postId, postId), eq(Like.userId, userId)))
+        .from(likes)
+        .where(and(eq(likes.postId, postId), eq(likes.userId, userId)))
         .limit(1);
       
       if (existingLike.length > 0) {
         // Delete the like if it exists
-        await db.delete(Like)
-          .where(and(eq(Like.postId, postId), eq(Like.userId, userId)));
+        await db.delete(likes)
+          .where(and(eq(likes.postId, postId), eq(likes.userId, userId)));
         
         // Decrement the post's like count
-        await db.update(Post)
-          .set({ likes: sql`greatest(${Post.likes} - 1, 0)` })
-          .where(eq(Post.id, postId));
+        await db.update(posts)
+          .set({ likes: sql`greatest(${posts.likes} - 1, 0)` })
+          .where(eq(posts.id, postId));
       }
     } catch (error) {
       console.error(`Error unliking post ${postId} by user ${userId}:`, error);
@@ -370,16 +456,16 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async sharePost(postId: number, userId: number): Promise<Partial<Post>> {
     try {
       // First get the original post
-      const [originalPost] = await db.select().from(Post).where(eq(Post.id, postId)).limit(1);
+      const [originalPost] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
       
       if (!originalPost) {
         throw new Error(`Post with ID ${postId} not found`);
       }
       
       // Increment the shares count on the original post
-      await db.update(Post)
-        .set({ shares: sql`${Post.shares} + 1` })
-        .where(eq(Post.id, postId));
+      await db.update(posts)
+        .set({ shares: sql`${posts.shares} + 1` })
+        .where(eq(posts.id, postId));
       
       // Create a new post that shares the original
       const insertData = {
@@ -387,15 +473,44 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
         content: `Shared: ${originalPost.content?.substring(0, 50)}...`,
         contentType: 'share',
         isPublished: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        // Store reference to the original post in a shared_post_id field
-        // (You might need to add this field to your schema)
-        // sharedPostId: originalPost.id
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0,
+        // Add a field to reference the original post
+        sharedPostId: postId
       };
       
-      const [newPost] = await db.insert(Post).values(insertData).returning();
-      return newPost;
+      // Insert into database
+      const [newPost] = await db.insert(posts).values(insertData).returning();
+      
+      // Create a notification for the original post owner
+      if (originalPost.userId !== userId) {
+        await db.insert(notifications).values({
+          userId: originalPost.userId,
+          type: 'share',
+          content: `Someone shared your post`,
+          isRead: false,
+          sourceId: newPost.id,
+          sourceType: 'post',
+          createdAt: new Date()
+        });
+      }
+      
+      // Get user details for the response
+      const [author] = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar
+      }).from(users).where(eq(users.id, userId));
+      
+      // Return the new post with author info
+      return {
+        ...newPost,
+        user: author,
+        originalPost
+      };
     } catch (error) {
       console.error(`Error sharing post ${postId} by user ${userId}:`, error);
       throw error;
@@ -407,24 +522,25 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getComments(postId: number): Promise<Partial<Comment>[]> {
     try {
-      const comments = await db.select({
-        comment: Comment,
+      const commentsData = await db.select({
+        id: comments.id,
+        userId: comments.userId,
+        postId: comments.postId,
+        content: comments.content,
+        createdAt: comments.createdAt,
         user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
         }
       })
-        .from(Comment)
-        .innerJoin(User, eq(Comment.userId, User.id))
-        .where(eq(Comment.postId, postId))
-        .orderBy(asc(Comment.createdAt));
+        .from(comments)
+        .innerJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.postId, postId))
+        .orderBy(asc(comments.createdAt));
       
-      return comments.map(result => ({
-        ...result.comment,
-        user: result.user
-      }));
+      return commentsData;
     } catch (error) {
       console.error(`Error getting comments for post ${postId}:`, error);
       throw error;
@@ -437,17 +553,47 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async createComment(commentData: CreateCommentData): Promise<Partial<Comment>> {
     try {
       // Insert the comment
-      const [newComment] = await db.insert(Comment).values({
-        ...commentData,
+      const [newComment] = await db.insert(comments).values({
+        userId: commentData.userId,
+        postId: commentData.postId,
+        content: commentData.content,
         createdAt: new Date()
       }).returning();
       
       // Increment the comment count on the post
-      await db.update(Post)
-        .set({ comments: sql`${Post.comments} + 1` })
-        .where(eq(Post.id, commentData.postId));
+      await db.update(posts)
+        .set({ comments: sql`${posts.comments} + 1` })
+        .where(eq(posts.id, commentData.postId));
       
-      return newComment;
+      // Get the post owner for notification
+      const [post] = await db.select().from(posts).where(eq(posts.id, commentData.postId)).limit(1);
+      
+      // Create a notification for the post owner if it's not their own comment
+      if (post && post.userId !== commentData.userId) {
+        await db.insert(notifications).values({
+          userId: post.userId,
+          type: 'comment',
+          content: 'Someone commented on your post',
+          isRead: false,
+          sourceId: commentData.postId,
+          sourceType: 'post',
+          createdAt: new Date()
+        });
+      }
+      
+      // Get user details for the response
+      const [author] = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar
+      }).from(users).where(eq(users.id, commentData.userId));
+      
+      // Return comment with user details
+      return {
+        ...newComment,
+        user: author
+      };
     } catch (error) {
       console.error('Error creating comment:', error);
       throw error;
@@ -460,19 +606,19 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async deleteComment(id: number): Promise<boolean> {
     try {
       // Get the comment to know which post to update
-      const [comment] = await db.select().from(Comment).where(eq(Comment.id, id)).limit(1);
+      const [comment] = await db.select().from(comments).where(eq(comments.id, id)).limit(1);
       
       if (!comment) {
         return false;
       }
       
       // Delete the comment
-      await db.delete(Comment).where(eq(Comment.id, id));
+      await db.delete(comments).where(eq(comments.id, id));
       
       // Decrement the comment count on the post
-      await db.update(Post)
-        .set({ comments: sql`greatest(${Post.comments} - 1, 0)` })
-        .where(eq(Post.id, comment.postId));
+      await db.update(posts)
+        .set({ comments: sql`greatest(${posts.comments} - 1, 0)` })
+        .where(eq(posts.id, comment.postId));
       
       return true;
     } catch (error) {
@@ -488,23 +634,26 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       // Check if already following
       const existingFollow = await db.select()
-        .from(Follow)
-        .where(and(eq(Follow.followerId, followerId), eq(Follow.followingId, followingId)))
+        .from(follows)
+        .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)))
         .limit(1);
       
       if (existingFollow.length === 0) {
         // Create the follow relationship
-        await db.insert(Follow).values({
+        await db.insert(follows).values({
           followerId,
           followingId,
           createdAt: new Date()
         });
         
+        // Get follower info for notification
+        const [follower] = await db.select().from(users).where(eq(users.id, followerId)).limit(1);
+        
         // Create a notification for the followed user
-        await db.insert(Notification).values({
+        await db.insert(notifications).values({
           userId: followingId,
           type: 'follow',
-          content: `A user started following you.`,
+          content: follower ? `${follower.username} started following you` : 'Someone started following you',
           isRead: false,
           sourceId: followerId,
           sourceType: 'user',
@@ -522,8 +671,17 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async unfollowUser(followerId: number, followingId: number): Promise<void> {
     try {
-      await db.delete(Follow)
-        .where(and(eq(Follow.followerId, followerId), eq(Follow.followingId, followingId)));
+      // Check if the follow relationship exists
+      const existingFollow = await db.select()
+        .from(follows)
+        .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)))
+        .limit(1);
+        
+      if (existingFollow.length > 0) {
+        // Delete the follow relationship
+        await db.delete(follows)
+          .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)));
+      }
     } catch (error) {
       console.error(`Error unfollowing user ${followingId} by user ${followerId}:`, error);
       throw error;
@@ -536,19 +694,19 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getFollowers(userId: number): Promise<Partial<User>[]> {
     try {
       const followers = await db.select({
-        user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar,
-          bio: User.bio
-        }
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar,
+        bio: users.bio,
+        isVendor: users.isVendor,
+        role: users.role
       })
-        .from(Follow)
-        .innerJoin(User, eq(Follow.followerId, User.id))
-        .where(eq(Follow.followingId, userId));
+        .from(follows)
+        .innerJoin(users, eq(follows.followerId, users.id))
+        .where(eq(follows.followingId, userId));
       
-      return followers.map(f => f.user);
+      return followers;
     } catch (error) {
       console.error(`Error getting followers for user ${userId}:`, error);
       throw error;
@@ -561,19 +719,19 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getFollowing(userId: number): Promise<Partial<User>[]> {
     try {
       const following = await db.select({
-        user: {
-          id: User.id,
-          username: User.username,
-          name: User.name, 
-          avatar: User.avatar,
-          bio: User.bio
-        }
+        id: users.id,
+        username: users.username,
+        name: users.name, 
+        avatar: users.avatar,
+        bio: users.bio,
+        isVendor: users.isVendor,
+        role: users.role
       })
-        .from(Follow)
-        .innerJoin(User, eq(Follow.followingId, User.id))
-        .where(eq(Follow.followerId, userId));
+        .from(follows)
+        .innerJoin(users, eq(follows.followingId, users.id))
+        .where(eq(follows.followerId, userId));
       
-      return following.map(f => f.user);
+      return following;
     } catch (error) {
       console.error(`Error getting following for user ${userId}:`, error);
       throw error;
@@ -586,8 +744,8 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getFollowerCount(userId: number): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` })
-        .from(Follow)
-        .where(eq(Follow.followingId, userId));
+        .from(follows)
+        .where(eq(follows.followingId, userId));
       
       return result[0]?.count || 0;
     } catch (error) {
@@ -602,8 +760,8 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getFollowingCount(userId: number): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` })
-        .from(Follow)
-        .where(eq(Follow.followerId, userId));
+        .from(follows)
+        .where(eq(follows.followerId, userId));
       
       return result[0]?.count || 0;
     } catch (error) {
@@ -618,26 +776,34 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getSuggestedUsers(userId: number, limit = 10): Promise<Partial<User>[]> {
     try {
       // First, get the list of users the current user is already following
-      const following = await db.select({ followingId: Follow.followingId })
-        .from(Follow)
-        .where(eq(Follow.followerId, userId));
+      const following = await db.select({ followingId: follows.followingId })
+        .from(follows)
+        .where(eq(follows.followerId, userId));
       
       const followingIds = following.map(f => f.followingId);
       followingIds.push(userId); // Add the current user to the exclusion list
       
       // Find users that the current user is not following
-      let query = db.select({
-        id: User.id,
-        username: User.username,
-        name: User.name,
-        avatar: User.avatar,
-        bio: User.bio
+      // Use an array to avoid the 'in' operator issue with PgColumn
+      const excludeIds = [...followingIds];
+      
+      const suggestedUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar,
+        bio: users.bio,
+        isVendor: users.isVendor,
+        role: users.role
       })
-        .from(User)
-        .where(not(User.id.in(followingIds)))
+        .from(users)
+        .where(
+          sql`${users.id} NOT IN (${excludeIds.join(',')})`
+        )
+        .orderBy(desc(users.lastLogin))
         .limit(limit);
       
-      return await query;
+      return suggestedUsers;
     } catch (error) {
       console.error(`Error getting suggested users for user ${userId}:`, error);
       throw error;
@@ -650,57 +816,73 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getUserFeed(userId: number, options: FeedOptions = {}): Promise<Partial<Post>[]> {
     try {
       // Get the list of users the current user is following
-      const following = await db.select({ followingId: Follow.followingId })
-        .from(Follow)
-        .where(eq(Follow.followerId, userId));
+      const following = await db.select({ followingId: follows.followingId })
+        .from(follows)
+        .where(eq(follows.followerId, userId));
       
       const followingIds = following.map(f => f.followingId);
       followingIds.push(userId); // Include the user's own posts in their feed
       
+      // Use an array join for SQL query to avoid 'in' operator issues
+      const includeUserIds = [...followingIds];
+      
       // Query for posts from followed users
-      let query = db.select({
-        post: Post,
+      let postsQuery = db.select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        productId: posts.productId,
+        communityId: posts.communityId,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        isPromoted: posts.isPromoted,
+        isPublished: posts.isPublished,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        // User details joined
         user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          bio: users.bio,
+          isVendor: users.isVendor
         }
       })
-        .from(Post)
-        .innerJoin(User, eq(Post.userId, User.id))
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
         .where(and(
-          Post.userId.in(followingIds),
-          eq(Post.isPublished, true)
+          sql`${posts.userId} IN (${includeUserIds.join(',')})`,
+          eq(posts.isPublished, true)
         ))
-        .orderBy(desc(Post.createdAt));
+        .orderBy(desc(posts.createdAt));
       
       // Apply content type filtering if specified
       if (options.contentTypes && options.contentTypes.length > 0) {
-        query = query.where(Post.contentType.in(options.contentTypes));
+        const contentTypeList = options.contentTypes.map(type => `'${type}'`).join(',');
+        postsQuery = postsQuery.where(
+          sql`${posts.contentType} IN (${contentTypeList})`
+        );
       }
       
       // Apply pagination
       if (options.limit) {
-        query = query.limit(options.limit);
+        postsQuery = postsQuery.limit(options.limit);
       }
       
       if (options.offset) {
-        query = query.offset(options.offset);
+        postsQuery = postsQuery.offset(options.offset);
       }
       
-      const results = await query;
-      
-      // Transform the results
-      return results.map(result => ({
-        ...result.post,
-        user: {
-          id: result.user.id,
-          username: result.user.username,
-          name: result.user.name,
-          avatar: result.user.avatar
-        }
-      }));
+      const feedPosts = await postsQuery;
+      return feedPosts;
     } catch (error) {
       console.error(`Error getting feed for user ${userId}:`, error);
       throw error;
@@ -719,9 +901,20 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       const trendingVideos = await this.getTrendingVideos(5);
       
       // Get popular communities
-      const popularCommunities = await db.select()
-        .from(Community)
-        .orderBy(desc(Community.memberCount))
+      const popularCommunities = await db.select({
+        id: communities.id,
+        name: communities.name,
+        description: communities.description,
+        coverImage: communities.coverImage,
+        icon: communities.icon,
+        memberCount: communities.memberCount,
+        creatorId: communities.creatorId,
+        visibility: communities.visibility,
+        isVerified: communities.isVerified,
+        createdAt: communities.createdAt
+      })
+        .from(communities)
+        .orderBy(desc(communities.memberCount))
         .limit(5);
       
       // Get suggested users
@@ -731,14 +924,16 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       } else {
         // Get some active users if not logged in
         suggestedUsers = await db.select({
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar,
-          bio: User.bio
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          bio: users.bio,
+          isVendor: users.isVendor,
+          role: users.role
         })
-          .from(User)
-          .orderBy(desc(User.lastLogin))
+          .from(users)
+          .orderBy(desc(users.lastLogin))
           .limit(5);
       }
       
@@ -761,29 +956,41 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       // Calculate a trending score based on likes, comments, and views
       const trendingPosts = await db.select({
-        post: Post,
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        productId: posts.productId,
+        communityId: posts.communityId,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        isPromoted: posts.isPromoted,
+        isPublished: posts.isPublished,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        // User details
         user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          bio: users.bio,
+          isVendor: users.isVendor
         }
       })
-        .from(Post)
-        .innerJoin(User, eq(Post.userId, User.id))
-        .where(eq(Post.isPublished, true))
-        .orderBy(desc(sql`${Post.likes} + ${Post.comments} * 2 + ${Post.views} * 0.1`))
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(eq(posts.isPublished, true))
+        .orderBy(desc(sql`${posts.likes} + ${posts.comments} * 2 + ${posts.views} * 0.1`))
         .limit(limit);
       
-      return trendingPosts.map(result => ({
-        ...result.post,
-        user: {
-          id: result.user.id,
-          username: result.user.username,
-          name: result.user.name,
-          avatar: result.user.avatar
-        }
-      }));
+      return trendingPosts;
     } catch (error) {
       console.error('Error getting trending posts:', error);
       throw error;
@@ -795,14 +1002,48 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getUserCommunities(userId: number): Promise<Partial<Community>[]> {
     try {
-      // This implementation would depend on your community membership schema
-      // For now, we'll return a sample implementation
-      const communities = await db.select()
-        .from(Community)
-        .where(eq(Community.creatorId, userId))
-        .orderBy(desc(Community.createdAt));
+      // Get communities created by the user and communities they belong to
+      const userCommunities = await db.select({
+        id: communities.id,
+        name: communities.name,
+        description: communities.description,
+        coverImage: communities.coverImage,
+        icon: communities.icon,
+        memberCount: communities.memberCount,
+        creatorId: communities.creatorId,
+        visibility: communities.visibility,
+        isVerified: communities.isVerified,
+        createdAt: communities.createdAt
+      })
+        .from(communities)
+        .where(eq(communities.creatorId, userId))
+        .orderBy(desc(communities.createdAt));
       
-      return communities;
+      // Also get communities the user is a member of but didn't create
+      const memberCommunities = await db.select({
+        id: communities.id,
+        name: communities.name,
+        description: communities.description,
+        coverImage: communities.coverImage,
+        icon: communities.icon,
+        memberCount: communities.memberCount,
+        creatorId: communities.creatorId,
+        visibility: communities.visibility,
+        isVerified: communities.isVerified,
+        createdAt: communities.createdAt
+      })
+        .from(communityMembers)
+        .innerJoin(communities, eq(communityMembers.communityId, communities.id))
+        .where(
+          and(
+            eq(communityMembers.userId, userId),
+            sql`${communities.creatorId} != ${userId}`
+          )
+        )
+        .orderBy(desc(communities.createdAt));
+      
+      // Combine the two sets
+      return [...userCommunities, ...memberCommunities];
     } catch (error) {
       console.error(`Error getting communities for user ${userId}:`, error);
       throw error;
@@ -814,32 +1055,44 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getCommunityPosts(communityId: number): Promise<Partial<Post>[]> {
     try {
-      const posts = await db.select({
-        post: Post,
+      const communityPosts = await db.select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        productId: posts.productId,
+        communityId: posts.communityId,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        isPromoted: posts.isPromoted,
+        isPublished: posts.isPublished,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt,
+        // User details
         user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          bio: users.bio,
+          isVendor: users.isVendor
         }
       })
-        .from(Post)
-        .innerJoin(User, eq(Post.userId, User.id))
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
         .where(and(
-          eq(Post.communityId, communityId),
-          eq(Post.isPublished, true)
+          eq(posts.communityId, communityId),
+          eq(posts.isPublished, true)
         ))
-        .orderBy(desc(Post.createdAt));
+        .orderBy(desc(posts.createdAt));
       
-      return posts.map(result => ({
-        ...result.post,
-        user: {
-          id: result.user.id,
-          username: result.user.username,
-          name: result.user.name,
-          avatar: result.user.avatar
-        }
-      }));
+      return communityPosts;
     } catch (error) {
       console.error(`Error getting posts for community ${communityId}:`, error);
       throw error;
@@ -851,13 +1104,32 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getNotifications(userId: number, limit = 10): Promise<Partial<Notification>[]> {
     try {
-      const notifications = await db.select()
-        .from(Notification)
-        .where(eq(Notification.userId, userId))
-        .orderBy(desc(Notification.createdAt))
+      const userNotifications = await db.select({
+        id: notifications.id,
+        userId: notifications.userId,
+        type: notifications.type,
+        message: notifications.message,
+        relatedUserId: notifications.relatedUserId,
+        relatedEntityId: notifications.relatedEntityId,
+        relatedEntityType: notifications.relatedEntityType,
+        isRead: notifications.isRead,
+        actionUrl: notifications.actionUrl,
+        createdAt: notifications.createdAt,
+        // Include related user details when available
+        relatedUser: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }
+      })
+        .from(notifications)
+        .leftJoin(users, eq(notifications.relatedUserId, users.id))
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
         .limit(limit);
       
-      return notifications;
+      return userNotifications;
     } catch (error) {
       console.error(`Error getting notifications for user ${userId}:`, error);
       throw error;
@@ -870,10 +1142,10 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getUnreadNotificationCount(userId: number): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` })
-        .from(Notification)
+        .from(notifications)
         .where(and(
-          eq(Notification.userId, userId),
-          eq(Notification.isRead, false)
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
         ));
       
       return result[0]?.count || 0;
@@ -890,9 +1162,11 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       if (notificationIds.length === 0) return;
       
-      await db.update(Notification)
+      // Use SQL template for the IN condition to avoid issues with the typed schema
+      const idList = notificationIds.join(',');
+      await db.update(notifications)
         .set({ isRead: true })
-        .where(Notification.id.in(notificationIds));
+        .where(sql`${notifications.id} IN (${idList})`);
     } catch (error) {
       console.error(`Error marking notifications as read:`, error);
       throw error;
@@ -904,25 +1178,25 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getUserConversations(userId: number): Promise<Conversation[]> {
     try {
-      // This is a more complex query that requires raw SQL in most cases
-      // Here's a simplified version
+      // Get messages sent by user
       const sentMessages = await db.select({
-        partnerId: Message.receiverId,
-        message: Message.content,
-        createdAt: Message.createdAt
+        partnerId: messages.receiverId,
+        message: messages.content,
+        createdAt: messages.createdAt
       })
-        .from(Message)
-        .where(eq(Message.senderId, userId))
-        .orderBy(desc(Message.createdAt));
+        .from(messages)
+        .where(eq(messages.senderId, userId))
+        .orderBy(desc(messages.createdAt));
       
+      // Get messages received by user
       const receivedMessages = await db.select({
-        partnerId: Message.senderId,
-        message: Message.content,
-        createdAt: Message.createdAt
+        partnerId: messages.senderId,
+        message: messages.content,
+        createdAt: messages.createdAt
       })
-        .from(Message)
-        .where(eq(Message.receiverId, userId))
-        .orderBy(desc(Message.createdAt));
+        .from(messages)
+        .where(eq(messages.receiverId, userId))
+        .orderBy(desc(messages.createdAt));
       
       // Combine and sort messages
       const allMessages = [...sentMessages, ...receivedMessages]
@@ -946,15 +1220,15 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       
       // Get unread counts for each conversation
       const unreadCounts = await db.select({
-        senderId: Message.senderId,
+        senderId: messages.senderId,
         count: sql<number>`count(*)`
       })
-        .from(Message)
+        .from(messages)
         .where(and(
-          eq(Message.receiverId, userId),
-          eq(Message.isRead, false)
+          eq(messages.receiverId, userId),
+          eq(messages.isRead, false)
         ))
-        .groupBy(Message.senderId);
+        .groupBy(messages.senderId);
       
       // Create a map of partner ID to unread count
       const unreadCountMap = new Map<number, number>();
@@ -964,14 +1238,17 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       
       // Get user details for each conversation partner
       const partnerIds = Array.from(conversationsMap.keys());
+      
+      // Use raw SQL for IN clause since the typed schema doesn't support it properly
+      const partnerIdsString = partnerIds.join(',');
       const partners = await db.select({
-        id: User.id,
-        name: User.name,
-        username: User.username,
-        avatar: User.avatar
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        avatar: users.avatar
       })
-        .from(User)
-        .where(User.id.in(partnerIds));
+        .from(users)
+        .where(sql`${users.id} IN (${partnerIdsString})`);
       
       // Create a map of partner ID to user details
       const partnerDetailsMap = new Map<number, {
@@ -1018,21 +1295,30 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getConversationMessages(userId: number, partnerId: number): Promise<Partial<Message>[]> {
     try {
-      const messages = await db.select()
-        .from(Message)
+      const conversationMessages = await db.select({
+        id: messages.id,
+        senderId: messages.senderId,
+        receiverId: messages.receiverId,
+        content: messages.content,
+        attachmentUrl: messages.attachmentUrl,
+        attachmentType: messages.attachmentType,
+        isRead: messages.isRead,
+        createdAt: messages.createdAt
+      })
+        .from(messages)
         .where(or(
           and(
-            eq(Message.senderId, userId),
-            eq(Message.receiverId, partnerId)
+            eq(messages.senderId, userId),
+            eq(messages.receiverId, partnerId)
           ),
           and(
-            eq(Message.senderId, partnerId),
-            eq(Message.receiverId, userId)
+            eq(messages.senderId, partnerId),
+            eq(messages.receiverId, userId)
           )
         ))
-        .orderBy(asc(Message.createdAt));
+        .orderBy(asc(messages.createdAt));
       
-      return messages;
+      return conversationMessages;
     } catch (error) {
       console.error(`Error getting conversation messages between users ${userId} and ${partnerId}:`, error);
       throw error;
@@ -1044,11 +1330,28 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async sendMessage(messageData: CreateMessageData): Promise<Partial<Message>> {
     try {
-      const [newMessage] = await db.insert(Message).values({
-        ...messageData,
+      // Add the message to the database
+      const [newMessage] = await db.insert(messages).values({
+        senderId: messageData.senderId,
+        receiverId: messageData.receiverId,
+        content: messageData.content,
+        attachmentUrl: messageData.attachmentUrl,
+        attachmentType: messageData.attachmentType,
         isRead: false,
         createdAt: new Date()
       }).returning();
+      
+      // Create a notification for the recipient
+      await db.insert(notifications).values({
+        userId: messageData.receiverId,
+        type: 'message',
+        message: 'You have a new message',
+        relatedUserId: messageData.senderId,
+        relatedEntityId: newMessage.id,
+        relatedEntityType: 'message',
+        isRead: false,
+        createdAt: new Date()
+      });
       
       return newMessage;
     } catch (error) {
@@ -1064,9 +1367,11 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
     try {
       if (messageIds.length === 0) return;
       
-      await db.update(Message)
+      // Use SQL template for the IN condition to avoid issues with typed schema
+      const idList = messageIds.join(',');
+      await db.update(messages)
         .set({ isRead: true })
-        .where(Message.id.in(messageIds));
+        .where(sql`${messages.id} IN (${idList})`);
     } catch (error) {
       console.error('Error marking messages as read:', error);
       throw error;
@@ -1079,10 +1384,10 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
   async getUnreadMessageCount(userId: number): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` })
-        .from(Message)
+        .from(messages)
         .where(and(
-          eq(Message.receiverId, userId),
-          eq(Message.isRead, false)
+          eq(messages.receiverId, userId),
+          eq(messages.isRead, false)
         ));
       
       return result[0]?.count || 0;
@@ -1097,13 +1402,40 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getTrendingVideos(limit = 5): Promise<Partial<Video>[]> {
     try {
-      // This is a simplified implementation
-      const videos = await db.select()
-        .from(Video)
-        .orderBy(desc(sql`${Video.views} + ${Video.likes} * 2`))
+      // Get posts with video content type and sort by engagement metrics
+      const videoContents = await db.select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        createdAt: posts.createdAt,
+        // Include user details
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }
+      })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(and(
+          eq(posts.contentType, 'video'),
+          eq(posts.isPublished, true),
+          sql`${posts.videoUrl} IS NOT NULL`
+        ))
+        .orderBy(desc(sql`${posts.views} + ${posts.likes} * 2 + ${posts.comments} * 3`))
         .limit(limit);
       
-      return videos;
+      return videoContents;
     } catch (error) {
       console.error('Error getting trending videos:', error);
       throw error;
@@ -1115,12 +1447,46 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getVideo(id: number): Promise<Partial<Video> | null> {
     try {
-      const [video] = await db.select()
-        .from(Video)
-        .where(eq(Video.id, id))
+      // Find a post with video content type by ID
+      const [videoContent] = await db.select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        createdAt: posts.createdAt,
+        // Include user details
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }
+      })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(and(
+          eq(posts.id, id),
+          eq(posts.contentType, 'video'),
+          eq(posts.isPublished, true)
+        ))
         .limit(1);
       
-      return video || null;
+      if (videoContent) {
+        // Update view count
+        await db.update(posts)
+          .set({ views: sql`${posts.views} + 1` })
+          .where(eq(posts.id, id));
+      }
+      
+      return videoContent || null;
     } catch (error) {
       console.error(`Error getting video with ID ${id}:`, error);
       throw error;
@@ -1139,36 +1505,46 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       // Basic search implementation
       const searchText = `%${query.toLowerCase()}%`;
       
-      const posts = await db.select({
-        post: Post,
+      const searchResults = await db.select({
+        id: posts.id,
+        userId: posts.userId,
+        content: posts.content,
+        title: posts.title,
+        contentType: posts.contentType,
+        imageUrl: posts.imageUrl,
+        videoUrl: posts.videoUrl,
+        productId: posts.productId,
+        communityId: posts.communityId,
+        likes: posts.likes,
+        comments: posts.comments,
+        shares: posts.shares,
+        views: posts.views,
+        tags: posts.tags,
+        isPromoted: posts.isPromoted,
+        isPublished: posts.isPublished,
+        createdAt: posts.createdAt,
+        // User details
         user: {
-          id: User.id,
-          username: User.username,
-          name: User.name,
-          avatar: User.avatar
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          bio: users.bio
         }
       })
-        .from(Post)
-        .innerJoin(User, eq(Post.userId, User.id))
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
         .where(and(
-          eq(Post.isPublished, true),
+          eq(posts.isPublished, true),
           or(
-            sql`lower(${Post.content}) LIKE ${searchText}`,
-            sql`lower(${Post.title}) LIKE ${searchText}`,
-            sql`${Post.tags}::text LIKE ${searchText}`
+            sql`lower(${posts.content}) LIKE ${searchText}`,
+            sql`lower(${posts.title}) LIKE ${searchText}`,
+            sql`${posts.tags}::text LIKE ${searchText}`
           )
         ))
-        .orderBy(desc(Post.createdAt));
+        .orderBy(desc(posts.createdAt));
       
-      return posts.map(result => ({
-        ...result.post,
-        user: {
-          id: result.user.id,
-          username: result.user.username,
-          name: result.user.name,
-          avatar: result.user.avatar
-        }
-      }));
+      return searchResults;
     } catch (error) {
       console.error(`Error searching posts with query "${query}":`, error);
       throw error;
@@ -1187,22 +1563,27 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       // Basic search implementation
       const searchText = `%${query.toLowerCase()}%`;
       
-      const users = await db.select({
-        id: User.id,
-        username: User.username,
-        name: User.name,
-        avatar: User.avatar,
-        bio: User.bio
+      const userResults = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        avatar: users.avatar,
+        bio: users.bio,
+        isVendor: users.isVendor,
+        followerCount: users.followerCount,
+        followingCount: users.followingCount,
+        role: users.role,
+        lastLogin: users.lastLogin
       })
-        .from(User)
+        .from(users)
         .where(or(
-          sql`lower(${User.username}) LIKE ${searchText}`,
-          sql`lower(${User.name}) LIKE ${searchText}`,
-          sql`lower(${User.bio}) LIKE ${searchText}`
+          sql`lower(${users.username}) LIKE ${searchText}`,
+          sql`lower(${users.name}) LIKE ${searchText}`,
+          sql`lower(${users.bio}) LIKE ${searchText}`
         ))
         .limit(20);
       
-      return users;
+      return userResults;
     } catch (error) {
       console.error(`Error searching users with query "${query}":`, error);
       throw error;
