@@ -172,81 +172,57 @@ export default function ContentModerationTools() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
 
-  // Content Flagging Tab - Mock Data
+  // Content Flagging Tab - Real Data
   const { 
-    data: flaggedContent = [],
+    data: flaggedContentResponse,
     isLoading: isLoadingFlaggedContent,
     isError: isErrorFlaggedContent,
     refetch: refetchFlaggedContent
   } = useQuery({
     queryKey: ["/api/admin/moderation/flagged-content", searchTerm, filterStatus],
-    queryFn: () => {
-      // In a real implementation, this would be an actual API call
-      // Placeholder response for UI development
-      return Promise.resolve([
-        {
-          id: 1,
-          contentType: "post",
-          contentId: 123,
-          reason: "Hate speech",
-          status: "pending",
-          reportedBy: 456,
-          createdAt: new Date().toISOString(),
-          content: "This is a flagged post that contains potentially problematic content.",
-        },
-        {
-          id: 2,
-          contentType: "comment",
-          contentId: 234,
-          reason: "Harassment",
-          status: "resolved",
-          reportedBy: 567,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          content: "This is a flagged comment that contains potentially harmful language.",
-        },
-      ]);
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      
+      const res = await fetch(`/api/admin/moderation/flagged-content?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch flagged content');
+      }
+      return await res.json();
     },
     enabled: activeTab === "content-flagging",
   });
+  
+  // Extract items from response
+  const flaggedContent = flaggedContentResponse?.items || [];
 
-  // Image Flagging Tab - Mock Data
+  // Image Flagging Tab - Real Data
   const { 
-    data: flaggedImages = [],
+    data: flaggedImagesResponse,
     isLoading: isLoadingFlaggedImages,
     isError: isErrorFlaggedImages,
     refetch: refetchFlaggedImages
   } = useQuery({
     queryKey: ["/api/admin/moderation/flagged-images", searchTerm, filterStatus],
-    queryFn: () => {
-      // In a real implementation, this would be an actual API call
-      // Placeholder response for UI development
-      return Promise.resolve([
-        {
-          id: 1,
-          contentType: "product_image",
-          contentId: 789,
-          reason: "Adult content",
-          status: "pending",
-          reportedBy: 456,
-          createdAt: new Date().toISOString(),
-          imageUrl: "https://placehold.co/300x200?text=Flagged+Image",
-        },
-        {
-          id: 2,
-          contentType: "profile_image",
-          contentId: 891,
-          reason: "Violence",
-          status: "resolved",
-          reportedBy: 567,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          imageUrl: "https://placehold.co/300x200?text=Resolved+Image",
-        },
-      ]);
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      
+      const res = await fetch(`/api/admin/moderation/flagged-images?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch flagged images');
+      }
+      return await res.json();
     },
     enabled: activeTab === "image-flagging",
   });
+  
+  // Extract items from response
+  const flaggedImages = flaggedImagesResponse?.items || [];
 
-  // Allow List Tab - Mock Data
+  // Allow List Tab - Real Data
   const { 
     data: allowList = [],
     isLoading: isLoadingAllowList,
@@ -254,37 +230,20 @@ export default function ContentModerationTools() {
     refetch: refetchAllowList
   } = useQuery({
     queryKey: ["/api/admin/moderation/allow-list", searchTerm],
-    queryFn: () => {
-      // In a real implementation, this would be an actual API call
-      // Placeholder response for UI development
-      return Promise.resolve([
-        {
-          id: 1,
-          term: "analyze",
-          category: "technical",
-          addedBy: "Admin",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          term: "specialist",
-          category: "medical",
-          addedBy: "Admin",
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: 3,
-          term: "basement",
-          category: "construction",
-          addedBy: "Admin",
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-        },
-      ]);
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      
+      const res = await fetch(`/api/admin/moderation/allow-list?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch allow list');
+      }
+      return await res.json();
     },
     enabled: activeTab === "allow-list",
   });
 
-  // Block List Tab - Mock Data
+  // Block List Tab - Real Data
   const { 
     data: blockList = [],
     isLoading: isLoadingBlockList,
@@ -292,88 +251,43 @@ export default function ContentModerationTools() {
     refetch: refetchBlockList
   } = useQuery({
     queryKey: ["/api/admin/moderation/block-list", searchTerm],
-    queryFn: () => {
-      // In a real implementation, this would be an actual API call
-      // Placeholder response for UI development
-      return Promise.resolve([
-        {
-          id: 1,
-          term: "offensive_term_1",
-          category: "profanity",
-          matchType: "exact",
-          severity: "high",
-          addedBy: "Admin",
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          term: "offensive_term_2",
-          category: "hate_speech",
-          matchType: "partial",
-          severity: "medium",
-          addedBy: "Admin",
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: 3,
-          term: "offensive_term_3",
-          category: "harassment",
-          matchType: "regex",
-          severity: "low",
-          addedBy: "Admin",
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-        },
-      ]);
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      
+      const res = await fetch(`/api/admin/moderation/block-list?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch block list');
+      }
+      return await res.json();
     },
     enabled: activeTab === "block-list",
   });
 
-  // Reports Tab - Mock Data
+  // Reports Tab - Real Data
   const { 
-    data: reports = [],
+    data: reportsResponse,
     isLoading: isLoadingReports,
     isError: isErrorReports,
     refetch: refetchReports
   } = useQuery({
     queryKey: ["/api/admin/moderation/reports", searchTerm, filterStatus],
-    queryFn: () => {
-      // In a real implementation, this would be an actual API call
-      // Placeholder response for UI development
-      return Promise.resolve([
-        {
-          id: 1,
-          contentType: "post",
-          contentId: 123,
-          reason: "Inappropriate content",
-          description: "This post contains content that violates community guidelines.",
-          status: "pending",
-          reportedBy: 456,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          contentType: "user",
-          contentId: 234,
-          reason: "Spam",
-          description: "This user is posting spam content across multiple communities.",
-          status: "in_review",
-          reportedBy: 567,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: 3,
-          contentType: "comment",
-          contentId: 345,
-          reason: "Harassment",
-          description: "This comment is targeting and harassing another user.",
-          status: "resolved",
-          reportedBy: 678,
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-        },
-      ]);
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      
+      const res = await fetch(`/api/admin/moderation/reports?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch moderation reports');
+      }
+      return await res.json();
     },
     enabled: activeTab === "reports",
   });
+  
+  // Extract items from response
+  const reports = reportsResponse?.items || [];
   
   // Content Analysis Tab - Data
   const { 
@@ -399,8 +313,26 @@ export default function ContentModerationTools() {
   // Approve flagged item
   const approveMutation = useMutation({
     mutationFn: async (item: FlaggedItem) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const endpoint = item.imageUrl
+        ? '/api/admin/moderation/flagged-images/approve'
+        : '/api/admin/moderation/flagged-content/approve';
+      
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: item.id,
+          note: modNote,
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to approve item');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
@@ -417,8 +349,26 @@ export default function ContentModerationTools() {
   // Reject flagged item
   const rejectMutation = useMutation({
     mutationFn: async (item: FlaggedItem) => {
-      // Mock API call
-      return Promise.resolve({ success: true });
+      const endpoint = item.imageUrl
+        ? '/api/admin/moderation/flagged-images/reject'
+        : '/api/admin/moderation/flagged-content/reject';
+      
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: item.id,
+          note: modNote,
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to reject item');
+      }
+      
+      return await res.json();
     },
     onSuccess: () => {
       toast({
