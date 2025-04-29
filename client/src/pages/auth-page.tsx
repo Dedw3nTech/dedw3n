@@ -317,11 +317,11 @@ export default function AuthPage() {
               
               <div className="flex items-start">
                 <div className="bg-white/20 p-2 rounded-full mr-4">
-                  <i className="ri-shield-check-line text-xl"></i>
+                  <i className="ri-heart-line text-xl"></i>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Secure Transactions</h3>
-                  <p className="text-white/80">Shop with confidence with our secure payment system.</p>
+                  <h3 className="font-semibold text-lg">Dating</h3>
+                  <p className="text-white/80">Find love or your new friend.</p>
                 </div>
               </div>
             </div>
