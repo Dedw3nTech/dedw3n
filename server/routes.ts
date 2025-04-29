@@ -644,6 +644,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user statistics" });
     }
   });
+  
+  // API endpoint to get user profile information by user ID
+  app.get("/api/users/:userId/profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      console.log(`[DEBUG] Fetching profile for user ID: ${userId}`);
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Extract only the necessary profile information (don't send sensitive data)
+      const userProfile = {
+        id: user.id,
+        username: user.username,
+        name: user.name || user.username,
+        bio: user.bio,
+        avatar: user.avatar,
+        isVendor: user.isVendor,
+        createdAt: user.createdAt
+      };
+      
+      res.json(userProfile);
+    } catch (error) {
+      console.error(`[ERROR] Failed to get profile for user ID ${req.params.userId}:`, error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
 
   // Register API Routes
   // All routes should be prefixed with /api

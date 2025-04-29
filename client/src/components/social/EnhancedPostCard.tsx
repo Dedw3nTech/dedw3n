@@ -252,18 +252,14 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         <div className="flex items-center space-x-3">
           <Link href={`/members/${post.userId}`}>
             <a className="block">
-              <img
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
-                alt="User avatar"
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              <UserAvatar userId={post.userId} />
             </a>
           </Link>
           <div>
             <div className="flex items-center">
               <Link href={`/members/${post.userId}`}>
                 <a className="font-medium text-gray-900 hover:underline">
-                  User {post.userId}
+                  <UserDisplayName userId={post.userId} />
                 </a>
               </Link>
               {post.isPromoted && (
@@ -372,11 +368,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       {showComments && (
         <div className="mt-4 pt-3 border-t">
           <div className="flex items-center space-x-3 mb-4">
-            <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
-              alt="User avatar"
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            {req.user && <UserAvatar userId={req.user.id} size="sm" />}
             <div className="flex-1">
               <input
                 type="text"
