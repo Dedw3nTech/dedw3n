@@ -3,15 +3,11 @@ import { randomBytes, createHmac } from 'crypto';
 import { storage } from './storage';
 import { InsertAuthToken, User } from '@shared/schema';
 
-// Environment variable validation
-if (!process.env.TOKEN_SECRET) {
-  console.warn('⚠️ TOKEN_SECRET environment variable not set. Using a random secret (less secure).');
-}
-
 // Default token expiration in seconds (24 hours)
 const TOKEN_EXPIRES_IN = 86400;
-// Token secret from environment or generate a random one (not recommended for production)
-const TOKEN_SECRET = process.env.TOKEN_SECRET || randomBytes(32).toString('hex');
+// Using a hardcoded secret for development purposes
+// In production, this should be set via environment variables
+const TOKEN_SECRET = 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production';
 
 // Declare module express-session with a custom user object
 declare module 'express-serve-static-core' {
