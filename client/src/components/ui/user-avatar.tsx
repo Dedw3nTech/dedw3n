@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
+import { ImageOff } from "lucide-react";
 
 interface UserAvatarProps {
   userId: number;
@@ -8,6 +9,8 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ userId, size = "md" }: UserAvatarProps) {
+  const [imageError, setImageError] = useState(false);
+  
   // Fetch user profile data
   const { data: user, isLoading } = useQuery({
     queryKey: [`/api/users/${userId}/profile`],
@@ -40,23 +43,40 @@ export function UserAvatar({ userId, size = "md" }: UserAvatarProps) {
         .toUpperCase()
         .substring(0, 2);
     }
-    return user.username.substring(0, 2).toUpperCase();
+    return user.username?.substring(0, 2).toUpperCase() || "U";
   };
 
   // Handle avatar URLs that may be blob URLs from client-side uploads
   const getAvatarUrl = () => {
-    if (!user || !user.avatar) return "";
+    if (!user || !user.avatar || imageError) return "";
     
     // If it's a blob URL from a client upload, it won't work directly
     // Return empty string to trigger the fallback
     if (user.avatar.startsWith("blob:")) return "";
     
+    // Skip non-absolute paths that don't start with http or /
+    if (!user.avatar.startsWith("http") && !user.avatar.startsWith("/")) return "";
+    
     return user.avatar;
   };
 
+  // Reset image error state if the user changes
+  const handleImageError = () => {
+    console.log(`Avatar image error for user ${userId}`);
+    setImageError(true);
+  };
+
+  const validAvatarUrl = getAvatarUrl();
+
   return (
     <Avatar className={`${sizeClass} border`}>
-      <AvatarImage src={getAvatarUrl()} alt={user?.name || "User avatar"} />
+      {validAvatarUrl ? (
+        <AvatarImage 
+          src={validAvatarUrl} 
+          alt={user?.name || "User avatar"} 
+          onError={handleImageError}
+        />
+      ) : null}
       <AvatarFallback className="bg-primary-foreground text-primary">
         {isLoading ? "..." : getInitials()}
       </AvatarFallback>

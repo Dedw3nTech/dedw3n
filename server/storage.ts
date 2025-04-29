@@ -4215,10 +4215,30 @@ export class DatabaseStorage implements IStorage {
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     try {
+      // Clean up any blob URLs in the avatar field
+      if (updates.avatar && updates.avatar.startsWith('blob:')) {
+        console.log(`[DEBUG] Cleaning up blob URL in avatar for user ${id}`);
+        // Set to null to avoid storing temporary blob URLs
+        updates.avatar = null;
+      }
+      
+      // Add updated timestamp
+      updates.updatedAt = new Date();
+      
+      // Log the update
+      console.log(`[DEBUG] Updating user ${id} with:`, JSON.stringify(updates));
+      
       const [updatedUser] = await db.update(users)
         .set(updates)
         .where(eq(users.id, id))
         .returning();
+      
+      if (updatedUser) {
+        console.log(`[DEBUG] User ${id} updated successfully`);
+      } else {
+        console.log(`[DEBUG] No user found with ID ${id}`);
+      }
+      
       return updatedUser || undefined;
     } catch (error) {
       console.error('Error updating user:', error);
