@@ -1204,6 +1204,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Upload avatar endpoint
+  app.post("/api/users/avatar", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { imageData } = req.body;
+      
+      if (!imageData) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+      
+      // Check if it's a base64 image
+      if (imageData.startsWith('data:image')) {
+        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+        
+        // Create a unique filename
+        const filename = `avatar_${userId}_${Date.now()}.png`;
+        
+        // Create uploads directory if it doesn't exist
+        if (!fs.existsSync('./public/uploads')) {
+          fs.mkdirSync('./public/uploads', { recursive: true });
+        }
+        if (!fs.existsSync('./public/uploads/avatars')) {
+          fs.mkdirSync('./public/uploads/avatars', { recursive: true });
+        }
+        
+        // Save the file
+        fs.writeFileSync(`./public/uploads/avatars/${filename}`, base64Data, 'base64');
+        
+        // Update user's avatar field
+        const avatarUrl = `/uploads/avatars/${filename}`;
+        const updatedUser = await storage.updateUser(userId, { avatar: avatarUrl });
+        
+        if (!updatedUser) {
+          return res.status(500).json({ message: "Failed to update avatar" });
+        }
+        
+        return res.json({ avatarUrl });
+      } else {
+        return res.status(400).json({ message: "Invalid image format" });
+      }
+    } catch (error) {
+      console.error(`[ERROR] Failed to upload avatar:`, error);
+      res.status(500).json({ message: "Failed to upload avatar" });
+    }
+  });
+  
   // Message routes
   // Get user's conversations
   app.get("/api/messages/conversations", isAuthenticated, async (req, res) => {
