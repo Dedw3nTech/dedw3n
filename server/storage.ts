@@ -14,7 +14,7 @@ import {
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
-  callSessions, callMetadata,
+  callSessions, callMetadata, connections,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -451,6 +451,79 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error('Error connecting users:', error);
+      return false;
+    }
+  }
+  
+  // User follow methods
+  async followUser(followerId: number, followingId: number): Promise<any> {
+    try {
+      // Check if follow already exists
+      const [existingFollow] = await db
+        .select()
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followerId, followerId),
+            eq(follows.followingId, followingId)
+          )
+        );
+      
+      if (existingFollow) {
+        return existingFollow;
+      }
+      
+      // Create a new follow relationship
+      const [newFollow] = await db
+        .insert(follows)
+        .values({
+          followerId,
+          followingId,
+          createdAt: new Date()
+        })
+        .returning();
+      
+      return newFollow;
+    } catch (error) {
+      console.error('Error following user:', error);
+      throw error;
+    }
+  }
+  
+  async unfollowUser(followerId: number, followingId: number): Promise<boolean> {
+    try {
+      // Delete the follow relationship
+      await db
+        .delete(follows)
+        .where(
+          and(
+            eq(follows.followerId, followerId),
+            eq(follows.followingId, followingId)
+          )
+        );
+      
+      return true;
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+      return false;
+    }
+  }
+  
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    try {
+      const [follow] = await db
+        .select()
+        .from(follows)
+        .where(
+          and(
+            eq(follows.followerId, followerId),
+            eq(follows.followingId, followingId)
+          )
+        );
+      
+      return !!follow;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
       return false;
     }
   }
