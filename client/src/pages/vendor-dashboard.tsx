@@ -298,7 +298,7 @@ export default function VendorDashboardPage() {
               </Card>
             </TabsContent>
 
-            {/* Products tab content (just a placeholder for now) */}
+            {/* Products tab content */}
             <TabsContent value="products">
               <Card>
                 <CardHeader>
@@ -307,23 +307,13 @@ export default function VendorDashboardPage() {
                     Manage your product inventory
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="py-6 text-center">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Package className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-medium mb-2">Your Products</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Manage your products, add new ones, and track inventory.
-                  </p>
-                  <Button onClick={() => setLocation("/add-product")}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Product
-                  </Button>
+                <CardContent>
+                  <ProductsList vendorId={vendorData?.id} />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            {/* Placeholder tabs - these would be implemented with actual functionality */}
+            {/* Orders tab content */}
             <TabsContent value="orders">
               <Card>
                 <CardHeader>
@@ -332,38 +322,18 @@ export default function VendorDashboardPage() {
                     View and manage all your orders
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <ShoppingCart className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Orders Management</h3>
-                    <p className="text-muted-foreground">
-                      This section is coming soon. You'll be able to manage all your orders here.
-                    </p>
-                  </div>
+                <CardContent>
+                  <OrdersList vendorId={vendorData?.id} />
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Shipping tab content */}
             <TabsContent value="shipping">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Shipping</CardTitle>
-                  <CardDescription>
-                    Manage shipping options and track deliveries
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <Truck className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Shipping Management</h3>
-                    <p className="text-muted-foreground">
-                      This section is coming soon. You'll be able to manage all your shipping options here.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ShippingManager vendorId={vendorData?.id} />
             </TabsContent>
 
+            {/* Customers tab content */}
             <TabsContent value="customers">
               <Card>
                 <CardHeader>
@@ -372,34 +342,23 @@ export default function VendorDashboardPage() {
                     View customer information and purchase history
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <Users className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Customer Management</h3>
-                    <p className="text-muted-foreground">
-                      This section is coming soon. You'll be able to view all your customers here.
-                    </p>
-                  </div>
+                <CardContent>
+                  <CustomersList vendorId={vendorData?.id} />
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Settings tab content */}
             <TabsContent value="settings">
               <Card>
                 <CardHeader>
-                  <CardTitle>Vendor Settings</CardTitle>
+                  <CardTitle>Store Settings</CardTitle>
                   <CardDescription>
                     Manage your vendor profile and store settings
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <Settings className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Store Settings</h3>
-                    <p className="text-muted-foreground">
-                      This section is coming soon. You'll be able to customize your store settings here.
-                    </p>
-                  </div>
+                <CardContent>
+                  <StoreSettingsForm vendor={vendorData} />
                 </CardContent>
               </Card>
             </TabsContent>
