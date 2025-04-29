@@ -98,6 +98,7 @@ export default function AdminDashboard() {
   const [isResetting, setIsResetting] = useState(false);
   const [isClearingCache, setIsClearingCache] = useState(false);
   const [isRebuildingIndices, setIsRebuildingIndices] = useState(false);
+  const [isFixingBlobAvatars, setIsFixingBlobAvatars] = useState(false);
   
   // Handler for saving settings
   const handleSaveSettings = () => {
