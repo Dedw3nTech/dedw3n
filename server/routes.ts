@@ -1157,10 +1157,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // For now, we're handling just basic profile updates without file uploads
-      // Handle avatar URL if provided as a string (e.g., from an external service)
+      // Handle avatar uploads or external URLs
       if (updates.avatarUrl) {
-        updates.avatar = updates.avatarUrl;
+        // Check if it's a base64 image
+        if (updates.avatarUrl.startsWith('data:image')) {
+          const base64Data = updates.avatarUrl.replace(/^data:image\/\w+;base64,/, '');
+          
+          // Create a unique filename 
+          const filename = `avatar_${userId}_${Date.now()}.png`;
+          
+          // Create uploads directory if it doesn't exist
+          if (!fs.existsSync('./public/uploads')) {
+            fs.mkdirSync('./public/uploads', { recursive: true });
+          }
+          if (!fs.existsSync('./public/uploads/avatars')) {
+            fs.mkdirSync('./public/uploads/avatars', { recursive: true });
+          }
+          
+          // Save the file
+          fs.writeFileSync(`./public/uploads/avatars/${filename}`, base64Data, 'base64');
+          
+          // Set the avatar URL to the saved file path
+          updates.avatar = `/uploads/avatars/${filename}`;
+        } else if (!updates.avatarUrl.startsWith('blob:')) {
+          // Use existing URL if it's not a blob URL
+          updates.avatar = updates.avatarUrl;
+        }
+        // If it's a blob URL, ignore it
         delete updates.avatarUrl; // Remove the temporary field
       }
       
