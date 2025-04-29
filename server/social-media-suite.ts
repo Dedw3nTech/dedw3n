@@ -815,6 +815,8 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getUserFeed(userId: number, options: FeedOptions = {}): Promise<Partial<Post>[]> {
     try {
+      console.log(`Getting feed for user ${userId} with options:`, options);
+      
       // Get the list of users the current user is following
       const following = await db.select({ followingId: follows.followingId })
         .from(follows)
@@ -823,66 +825,120 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
       const followingIds = following.map(f => f.followingId);
       followingIds.push(userId); // Include the user's own posts in their feed
       
-      // Use an array join for SQL query to avoid 'in' operator issues
-      const includeUserIds = [...followingIds];
+      // Configure limit and offset
+      const limit = options.limit || 10;
+      const offset = options.offset || 0;
       
-      // Query for posts from followed users
-      let postsQuery = db.select({
-        id: posts.id,
-        userId: posts.userId,
-        content: posts.content,
-        title: posts.title,
-        contentType: posts.contentType,
-        imageUrl: posts.imageUrl,
-        videoUrl: posts.videoUrl,
-        productId: posts.productId,
-        communityId: posts.communityId,
-        likes: posts.likes,
-        comments: posts.comments,
-        shares: posts.shares,
-        views: posts.views,
-        tags: posts.tags,
-        isPromoted: posts.isPromoted,
-        isPublished: posts.isPublished,
-        createdAt: posts.createdAt,
-        updatedAt: posts.updatedAt,
-        // User details joined
-        user: {
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          avatar: users.avatar,
-          bio: users.bio,
-          isVendor: users.isVendor
-        }
-      })
-        .from(posts)
-        .innerJoin(users, eq(posts.userId, users.id))
-        .where(and(
-          sql`${posts.userId} IN (${includeUserIds.join(',')})`,
-          eq(posts.isPublished, true)
-        ))
-        .orderBy(desc(posts.createdAt));
+      // First check if we have enough from followed users
+      let queryFollowedPosts;
       
-      // Apply content type filtering if specified
-      if (options.contentTypes && options.contentTypes.length > 0) {
-        const contentTypeList = options.contentTypes.map(type => `'${type}'`).join(',');
-        postsQuery = postsQuery.where(
-          sql`${posts.contentType} IN (${contentTypeList})`
-        );
+      if (followingIds.length > 0) {
+        const followedUserIds = followingIds.join(',');
+        console.log(`User ${userId} is following or is these users: ${followedUserIds}`);
+        
+        queryFollowedPosts = db.select()
+          .from(posts)
+          .innerJoin(users, eq(posts.userId, users.id))
+          .where(and(
+            sql`${posts.userId} IN (${followedUserIds})`,
+            eq(posts.isPublished, true)
+          ))
+          .orderBy(desc(posts.createdAt))
+          .limit(limit)
+          .offset(offset);
+      } else {
+        // Empty query to satisfy type checking
+        queryFollowedPosts = db.select()
+          .from(posts)
+          .innerJoin(users, eq(posts.userId, users.id))
+          .where(eq(posts.id, -1)); // This will return no posts
       }
       
-      // Apply pagination
-      if (options.limit) {
-        postsQuery = postsQuery.limit(options.limit);
+      // Get posts from followed users
+      const postsFromFollowing = await queryFollowedPosts;
+      console.log(`Found ${postsFromFollowing.length} posts from followed users and own posts`);
+      
+      // If we have enough posts from following, just return those
+      if (postsFromFollowing.length >= limit) {
+        return postsFromFollowing.map(post => ({
+          ...post.posts,
+          user: post.users
+        }));
       }
       
-      if (options.offset) {
-        postsQuery = postsQuery.offset(options.offset);
+      // If we don't have enough posts, fetch recent posts from all users to supplement
+      const remainingCount = limit - postsFromFollowing.length;
+      console.log(`Not enough posts from followed users. Fetching ${remainingCount} more posts from all users`);
+      
+      // Create arrays of IDs to exclude
+      const excludePostIds = postsFromFollowing.length > 0 
+        ? postsFromFollowing.map(post => post.posts.id).join(',')
+        : '';
+      
+      // Default query for additional posts
+      let queryAdditionalPosts;
+      
+      // If we have posts to exclude and users to exclude
+      if (excludePostIds && followingIds.length > 0) {
+        const followedUserIds = followingIds.join(',');
+        
+        queryAdditionalPosts = db.select()
+          .from(posts)
+          .innerJoin(users, eq(posts.userId, users.id))
+          .where(and(
+            sql`${posts.id} NOT IN (${excludePostIds})`,
+            sql`${posts.userId} NOT IN (${followedUserIds})`,
+            eq(posts.isPublished, true)
+          ))
+          .orderBy(desc(posts.createdAt))
+          .limit(remainingCount);
+      } 
+      // If we only have users to exclude (no posts yet)
+      else if (followingIds.length > 0) {
+        const followedUserIds = followingIds.join(',');
+        
+        queryAdditionalPosts = db.select()
+          .from(posts)
+          .innerJoin(users, eq(posts.userId, users.id))
+          .where(and(
+            sql`${posts.userId} NOT IN (${followedUserIds})`,
+            eq(posts.isPublished, true)
+          ))
+          .orderBy(desc(posts.createdAt))
+          .limit(remainingCount);
+      }
+      // If we're starting from scratch with no followers and no posts
+      else {
+        queryAdditionalPosts = db.select()
+          .from(posts)
+          .innerJoin(users, eq(posts.userId, users.id))
+          .where(eq(posts.isPublished, true))
+          .orderBy(desc(posts.createdAt))
+          .limit(remainingCount);
       }
       
-      const feedPosts = await postsQuery;
-      return feedPosts;
+      // Get additional posts
+      const additionalPosts = await queryAdditionalPosts;
+      console.log(`Found ${additionalPosts.length} additional posts from other users`);
+      
+      // Combine all posts
+      const allPosts = [
+        ...postsFromFollowing.map(post => ({
+          ...post.posts,
+          user: post.users
+        })),
+        ...additionalPosts.map(post => ({
+          ...post.posts,
+          user: post.users
+        }))
+      ];
+      
+      // Sort by created date, most recent first
+      return allPosts.sort((a, b) => {
+        const dateA = a.createdAt?.getTime() || 0;
+        const dateB = b.createdAt?.getTime() || 0;
+        return dateB - dateA;
+      });
     } catch (error) {
       console.error(`Error getting feed for user ${userId}:`, error);
       throw error;
