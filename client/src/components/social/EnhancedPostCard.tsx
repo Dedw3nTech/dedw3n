@@ -549,14 +549,24 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
           <span>{t("social.share")}</span>
         </button>
         
-        {post.productId && (
+        <Link href="/checkout" className="inline-block">
           <button
-            onClick={handleBuy}
             className="flex items-center py-1 px-2 text-green-600 hover:bg-green-50 rounded-md"
           >
             <ShoppingCart className="w-5 h-5 mr-1" />
-            <span>{t("social.buy_now")}</span>
+            <span>{t("social.buy_now") || "Buy Now"}</span>
           </button>
+        </Link>
+        
+        {post.productId && (
+          <Link href={`/checkout?product=${post.productId}`} className="inline-block">
+            <button
+              className="flex items-center py-1 px-2 text-green-600 hover:bg-green-50 rounded-md"
+            >
+              <ShoppingCart className="w-5 h-5 mr-1" />
+              <span>{t("social.buy_now") || "Buy Now"}</span>
+            </button>
+          </Link>
         )}
       </div>
       

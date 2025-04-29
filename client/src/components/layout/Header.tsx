@@ -168,7 +168,7 @@ export default function Header() {
             {/* Become a Vendor button - only shown to logged in users who are not vendors */}
             {isLoggedIn && userData && !userData.isVendor && (
               <Link href="/become-vendor">
-                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1">
+                <Button size="sm" className="hidden md:flex items-center gap-1 bg-red-600 text-white hover:bg-red-700">
                   <Store className="h-4 w-4" />
                   <span>Become a Vendor</span>
                 </Button>
