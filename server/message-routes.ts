@@ -358,19 +358,30 @@ export function registerMessageRoutes(app: Express) {
       // For now, we'll filter the messages after fetching
       const allMessages = await storage.getUserMessages(userId);
       const recentMessages = allMessages.filter(
-        msg => new Date(msg.createdAt) >= lastWeekDate
+        msg => msg.createdAt ? new Date(msg.createdAt) >= lastWeekDate : false
       );
       
       // Calculate activity metrics
+      let lastActiveDate = new Date();
+      if (allMessages.length > 0) {
+        const validDates: number[] = [];
+        allMessages.forEach(msg => {
+          if (msg.createdAt) {
+            validDates.push(new Date(msg.createdAt).getTime());
+          }
+        });
+        if (validDates.length > 0) {
+          lastActiveDate = new Date(Math.max(...validDates));
+        }
+      }
+      
       const activityData = {
         totalSent: stats.sentCount,
         totalReceived: stats.receivedCount,
         unreadCount: stats.unreadCount,
         conversationCount: stats.conversationCount,
         recentMessageCount: recentMessages.length,
-        lastActive: allMessages.length > 0 
-          ? new Date(Math.max(...allMessages.map(m => new Date(m.createdAt).getTime())))
-          : new Date(),
+        lastActive: lastActiveDate,
         mostActiveWith: null as any
       };
       
