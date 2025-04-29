@@ -271,13 +271,13 @@ export default function ProductManagerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Active Users</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.userGrowth.current.toLocaleString()}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.userGrowth.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.userGrowth.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.activeUsers.current.toLocaleString()}</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.activeUsers.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.activeUsers.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.userGrowth.change)}%
+                      {Math.abs(productPerformance.activeUsers.change)}%
                     </span>
                   </div>
                 </div>
@@ -292,59 +292,59 @@ export default function ProductManagerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Traffic */}
+          {/* Product Views */}
           <Card className="bg-gradient-to-br from-red-50 to-white">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Product Views</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.productViews.current.toLocaleString()}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.productViews.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.productViews.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.productViews.current.toLocaleString()}</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.productViews.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.productViews.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.productViews.change)}%
+                      {Math.abs(productPerformance.productViews.change)}%
                     </span>
                   </div>
                 </div>
                 <div className="bg-red-100 p-2 rounded-full">
-                  <Target className="h-5 w-5 text-red-700" />
+                  <Eye className="h-5 w-5 text-red-700" />
                 </div>
               </div>
               <div className="mt-3 h-2 bg-red-100 rounded-full overflow-hidden">
-                <div className="h-full bg-red-600 rounded-full" style={{ width: "80%" }}></div>
+                <div className="h-full bg-red-600 rounded-full" style={{ width: `${Math.min(productPerformance.productViews.current / 1000, 100)}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Number of visitors to product pages</p>
             </CardContent>
           </Card>
 
-          {/* NPS Score */}
+          {/* Inventory Turnover */}
           <Card className="bg-gradient-to-br from-indigo-50 to-white">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium mb-1">NPS Score</p>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Inventory Turnover</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.netPromoterScore.current}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.netPromoterScore.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.netPromoterScore.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.inventoryTurnover.current.toFixed(1)}x</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.inventoryTurnover.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.inventoryTurnover.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.netPromoterScore.change)}%
+                      {Math.abs(productPerformance.inventoryTurnover.change)}%
                     </span>
                   </div>
                 </div>
                 <div className="bg-indigo-100 p-2 rounded-full">
-                  <ThumbsUp className="h-5 w-5 text-indigo-700" />
+                  <Activity className="h-5 w-5 text-indigo-700" />
                 </div>
               </div>
               <div className="mt-3 h-2 bg-indigo-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${productPerformanceData.netPromoterScore.current}%` }}></div>
+                <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${productPerformance.inventoryTurnover.current * 10}%` }}></div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Net Promoter Score measuring customer loyalty</p>
+              <p className="text-xs text-muted-foreground mt-2">Rate at which inventory is sold and replaced</p>
             </CardContent>
           </Card>
         </div>
@@ -363,13 +363,13 @@ export default function ProductManagerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Average Order Value</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">£{productPerformanceData.averageOrderValue.current}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.averageOrderValue.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.averageOrderValue.change >= 0 ? 
+                    <span className="text-3xl font-bold">£{productPerformance.averageOrderValue.current}</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.averageOrderValue.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.averageOrderValue.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.averageOrderValue.change)}%
+                      {Math.abs(productPerformance.averageOrderValue.change)}%
                     </span>
                   </div>
                 </div>
@@ -378,26 +378,26 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-purple-100 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-600 rounded-full" style={{ width: `${(productPerformanceData.averageOrderValue.current / 100) * 80}%` }}></div>
+                <div className="h-full bg-purple-600 rounded-full" style={{ width: `${(productPerformance.averageOrderValue.current / 100) * 80}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Average amount spent per transaction</p>
             </CardContent>
           </Card>
 
-          {/* Customer Lifetime Value */}
+          {/* Revenue */}
           <Card className="bg-gradient-to-br from-lime-50 to-white">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium mb-1">Customer Lifetime Value</p>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Revenue</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">£{productPerformanceData.customerLifetimeValue.current}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.customerLifetimeValue.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.customerLifetimeValue.change >= 0 ? 
+                    <span className="text-3xl font-bold">£{productPerformance.revenue.current.toLocaleString()}</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.revenue.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.revenue.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.customerLifetimeValue.change)}%
+                      {Math.abs(productPerformance.revenue.change)}%
                     </span>
                   </div>
                 </div>
@@ -406,26 +406,26 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-lime-100 rounded-full overflow-hidden">
-                <div className="h-full bg-lime-600 rounded-full" style={{ width: "70%" }}></div>
+                <div className="h-full bg-lime-600 rounded-full" style={{ width: `${Math.min((productPerformance.revenue.current / 10000) * 100, 100)}%` }}></div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Total value a customer brings over their lifetime</p>
+              <p className="text-xs text-muted-foreground mt-2">Total revenue generated for the period</p>
             </CardContent>
           </Card>
 
-          {/* Average Daily Sales */}
+          {/* Product Growth */}
           <Card className="bg-gradient-to-br from-cyan-50 to-white">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium mb-1">Daily Sales</p>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Conversion Growth</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.averageSalesPerDay.current}</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.averageSalesPerDay.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.averageSalesPerDay.change >= 0 ? 
-                        <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
+                    <span className="text-3xl font-bold">{productPerformance.conversionRate.change > 0 ? '+' : ''}{productPerformance.conversionRate.change}%</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.conversionRate.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.conversionRate.change >= 0 ? 
+                        <TrendingUp className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.averageSalesPerDay.change)}%
+                      from last period
                     </span>
                   </div>
                 </div>
@@ -434,9 +434,12 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-cyan-100 rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-600 rounded-full" style={{ width: "65%" }}></div>
+                <div 
+                  className={`h-full ${productPerformance.conversionRate.change >= 0 ? "bg-cyan-600" : "bg-red-600"} rounded-full`} 
+                  style={{ width: `${Math.min(Math.abs(productPerformance.conversionRate.change) * 2, 100)}%` }}
+                ></div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Average number of daily product sales</p>
+              <p className="text-xs text-muted-foreground mt-2">Change in conversion rate over time</p>
             </CardContent>
           </Card>
         </div>
@@ -455,13 +458,13 @@ export default function ProductManagerDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground font-medium mb-1">Customer Satisfaction</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{productPerformanceData.customerSatisfaction.current}/5</span>
-                    <span className={`text-sm font-medium flex items-center ${productPerformanceData.customerSatisfaction.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {productPerformanceData.customerSatisfaction.change >= 0 ? 
+                    <span className="text-3xl font-bold">{productPerformance.customerSatisfaction.current}/5</span>
+                    <span className={`text-sm font-medium flex items-center ${productPerformance.customerSatisfaction.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {productPerformance.customerSatisfaction.change >= 0 ? 
                         <ArrowUpRight className="h-3 w-3 mr-0.5" /> : 
                         <ArrowDownRight className="h-3 w-3 mr-0.5" />
                       }
-                      {Math.abs(productPerformanceData.customerSatisfaction.change)}%
+                      {Math.abs(productPerformance.customerSatisfaction.change)}%
                     </span>
                   </div>
                 </div>
@@ -470,9 +473,66 @@ export default function ProductManagerDashboard() {
                 </div>
               </div>
               <div className="mt-3 h-2 bg-green-100 rounded-full overflow-hidden">
-                <div className="h-full bg-green-600 rounded-full" style={{ width: `${(productPerformanceData.customerSatisfaction.current / 5) * 100}%` }}></div>
+                <div className="h-full bg-green-600 rounded-full" style={{ width: `${(productPerformance.customerSatisfaction.current / 5) * 100}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">CSAT score based on customer feedback</p>
+            </CardContent>
+          </Card>
+          
+          {/* Inventory Status */}
+          <Card className="bg-gradient-to-br from-orange-50 to-white">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Inventory Status</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold">{inventoryAlerts.length}</span>
+                    <span className="text-sm font-medium text-orange-600">
+                      items need attention
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <ShoppingBag className="h-5 w-5 text-orange-700" />
+                </div>
+              </div>
+              <div className="mt-3 text-xs text-slate-500">
+                <div className="grid grid-cols-2 gap-1">
+                  {inventoryAlerts.slice(0, 2).map((item, i) => (
+                    <div key={i} className="flex items-center gap-1 text-xs">
+                      <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                      <span className="truncate">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Low stock items requiring attention</p>
+            </CardContent>
+          </Card>
+          
+          {/* Top Product */}
+          <Card className="bg-gradient-to-br from-purple-50 to-white">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium mb-1">Top Selling Product</p>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold truncate">
+                      {topSellingProducts[0]?.name || "No data available"}
+                    </span>
+                    <span className="text-sm font-medium text-purple-600 flex items-center">
+                      {topSellingProducts[0]?.sales || 0} units sold
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-purple-100 p-2 rounded-full">
+                  <TrendingUp className="h-5 w-5 text-purple-700" />
+                </div>
+              </div>
+              <div className="mt-3 h-2 bg-purple-100 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-600 rounded-full" style={{ width: "90%" }}></div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Bestselling product in this period</p>
             </CardContent>
           </Card>
         </div>
