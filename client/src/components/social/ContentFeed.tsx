@@ -4,14 +4,14 @@ import { Post } from "@shared/schema";
 import EnhancedPostCard from "@/components/social/EnhancedPostCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Sparkles, User } from "lucide-react";
+import { Loader2, Users, Sparkles, User, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface ContentFeedProps {
   initialFeedType?: 'personal' | 'communities' | 'recommended';
-  initialContentType?: string;
+  initialSortType?: 'relevant' | 'recent';
   userId?: number;
   limit?: number;
   userPosts?: boolean;
@@ -21,14 +21,14 @@ const ITEMS_PER_PAGE = 10;
 
 export default function ContentFeed({ 
   initialFeedType = 'personal', 
-  initialContentType, 
+  initialSortType = 'relevant',
   userId, 
   limit, 
   userPosts 
 }: ContentFeedProps) {
   const { t } = useTranslation();
   const [feedType, setFeedType] = useState<'personal' | 'communities' | 'recommended'>(initialFeedType);
-  const [contentType, setContentType] = useState<string | null>(initialContentType || null);
+  const [sortType, setSortType] = useState<'relevant' | 'recent'>(initialSortType);
   const [page, setPage] = useState(1);
   
   // Get the current user ID for user posts
@@ -39,21 +39,24 @@ export default function ContentFeed({
   const itemLimit = limit || ITEMS_PER_PAGE;
   const offset = (page - 1) * itemLimit;
   
-  // Build the API URL based on the feed type
+  // Build the API URL based on the feed type and sort type
   const getFeedEndpoint = () => {
+    // Add sort param based on the selected sort type
+    const sortParam = sortType === 'recent' ? '&sort=recent' : '';
+    
     if (userPosts && currentUserId) {
-      return `/api/posts?userId=${currentUserId}&limit=${itemLimit}&offset=${offset}${contentType ? `&contentType=${contentType}` : ''}`;
+      return `/api/posts?userId=${currentUserId}&limit=${itemLimit}&offset=${offset}${sortParam}`;
     }
     
     switch (feedType) {
       case 'personal':
-        return `/api/feed/personal?limit=${itemLimit}&offset=${offset}${contentType ? `&contentType=${contentType}` : ''}`;
+        return `/api/feed/personal?limit=${itemLimit}&offset=${offset}${sortParam}`;
       case 'communities':
-        return `/api/feed/communities?limit=${itemLimit}&offset=${offset}${contentType ? `&contentType=${contentType}` : ''}`;
+        return `/api/feed/communities?limit=${itemLimit}&offset=${offset}${sortParam}`;
       case 'recommended':
-        return `/api/feed/recommended?limit=${itemLimit}&offset=${offset}${contentType ? `&contentType=${contentType}` : ''}`;
+        return `/api/feed/recommended?limit=${itemLimit}&offset=${offset}${sortParam}`;
       default:
-        return `/api/feed/personal?limit=${itemLimit}&offset=${offset}${contentType ? `&contentType=${contentType}` : ''}`;
+        return `/api/feed/personal?limit=${itemLimit}&offset=${offset}${sortParam}`;
     }
   };
 
@@ -69,9 +72,10 @@ export default function ContentFeed({
     setPage(prevPage => prevPage + 1);
   };
   
-  const handleContentTypeChange = (type: string) => {
-    setContentType(type === "all" ? null : type);
-    setPage(1); // Reset to first page when changing content type
+  const handleSortChange = (type: 'relevant' | 'recent') => {
+    setSortType(type);
+    setPage(1); // Reset to first page when changing sort type
+    refetch(); // Refetch data with the new sort type
   };
   
   const handleFeedTypeChange = (type: 'personal' | 'communities' | 'recommended') => {
@@ -116,17 +120,29 @@ export default function ContentFeed({
         </Card>
       )}
       
-      {/* Content Type Filters */}
-      <Tabs defaultValue={contentType || "all"} onValueChange={handleContentTypeChange}>
-        <TabsList className="w-full grid grid-cols-6">
-          <TabsTrigger value="all">{t("social.all")}</TabsTrigger>
-          <TabsTrigger value="text">{t("social.text")}</TabsTrigger>
-          <TabsTrigger value="image">{t("social.photos")}</TabsTrigger>
-          <TabsTrigger value="video">{t("social.videos")}</TabsTrigger>
-          <TabsTrigger value="article">{t("social.articles")}</TabsTrigger>
-          <TabsTrigger value="advertisement">{t("social.ads")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* Sort Options */}
+      <Card className="mb-4">
+        <CardContent className="p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant={sortType === 'relevant' ? "default" : "outline"} 
+              className="w-full" 
+              onClick={() => handleSortChange('relevant')}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {t("social.most_relevant")}
+            </Button>
+            <Button 
+              variant={sortType === 'recent' ? "default" : "outline"} 
+              className="w-full" 
+              onClick={() => handleSortChange('recent')}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              {t("social.most_recent")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Loading State */}
       {isLoading && (
