@@ -50,6 +50,10 @@ export interface IStorage {
   getUserCallHistory(userId: number, limit?: number): Promise<any[]>;
   getUserCallStats(userId: number): Promise<any>;
   
+  // Subscription operations
+  getUserSubscription(userId: number): Promise<any | null>;
+  createOrUpdateSubscription(subscriptionData: any): Promise<any>;
+  
   // Notification operations
   createNotification(notificationData: any): Promise<any>;
   
@@ -697,6 +701,60 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error checking connection:', error);
       return false;
+    }
+  }
+  
+  // Subscription methods
+  async getUserSubscription(userId: number): Promise<any | null> {
+    try {
+      const [subscription] = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId));
+      
+      return subscription || null;
+    } catch (error) {
+      console.error('Error getting user subscription:', error);
+      return null;
+    }
+  }
+  
+  async createOrUpdateSubscription(subscriptionData: any): Promise<any> {
+    try {
+      // Check if subscription exists
+      const [existingSubscription] = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, subscriptionData.userId));
+      
+      if (existingSubscription) {
+        // Update existing subscription
+        const [updatedSubscription] = await db
+          .update(subscriptions)
+          .set({
+            ...subscriptionData,
+            updatedAt: new Date()
+          })
+          .where(eq(subscriptions.id, existingSubscription.id))
+          .returning();
+        
+        return updatedSubscription;
+      } else {
+        // Create new subscription
+        const [newSubscription] = await db
+          .insert(subscriptions)
+          .values({
+            ...subscriptionData,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        return newSubscription;
+      }
+    } catch (error) {
+      console.error('Error creating/updating subscription:', error);
+      throw new Error('Failed to create or update subscription');
     }
   }
   
