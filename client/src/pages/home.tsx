@@ -292,6 +292,21 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      {/* CTA Section */}
+      <div className="rounded-lg bg-gray-50 p-8 text-center mb-12">
+        <h2 className="text-2xl font-bold mb-4">Ready to Start Selling?</h2>
+        <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+          Join our marketplace and start selling your products to customers all around the world. 
+          It's easy to get started!
+        </p>
+        <Button 
+          onClick={() => user ? setLocation("/add-product") : setLocation("/auth")}
+          className="px-6"
+        >
+          {user ? "Start Selling" : "Sign Up & Sell"}
+        </Button>
+      </div>
+      
       {/* Marketplace Options */}
       <div className="rounded-lg bg-primary p-8 mb-12 text-white">
         <div className="mx-auto text-center">
@@ -508,20 +523,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* CTA Section */}
-      <div className="rounded-lg bg-gray-50 p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Ready to Start Selling?</h2>
-        <p className="text-gray-600 mb-6 max-w-xl mx-auto">
-          Join our marketplace and start selling your products to customers all around the world. 
-          It's easy to get started!
-        </p>
-        <Button 
-          onClick={() => user ? setLocation("/add-product") : setLocation("/auth")}
-          className="px-6"
-        >
-          {user ? "Start Selling" : "Sign Up & Sell"}
-        </Button>
-      </div>
     </div>
   );
 }
