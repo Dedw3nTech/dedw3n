@@ -24,6 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { UserDisplayName } from "@/components/ui/user-display-name";
 
 interface EnhancedPostCardProps {
   post: Post;
@@ -250,17 +252,13 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       {/* Post Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <Link href={`/members/${post.userId}`}>
-            <a className="block">
-              <UserAvatar userId={post.userId} />
-            </a>
+          <Link href={`/members/${post.userId}`} className="block">
+            <UserAvatar userId={post.userId} />
           </Link>
           <div>
             <div className="flex items-center">
-              <Link href={`/members/${post.userId}`}>
-                <a className="font-medium text-gray-900 hover:underline">
-                  <UserDisplayName userId={post.userId} />
-                </a>
+              <Link href={`/members/${post.userId}`} className="font-medium text-gray-900 hover:underline">
+                <UserDisplayName userId={post.userId} />
               </Link>
               {post.isPromoted && (
                 <BadgeCheck className="w-4 h-4 text-blue-500 ml-1" />
@@ -368,7 +366,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       {showComments && (
         <div className="mt-4 pt-3 border-t">
           <div className="flex items-center space-x-3 mb-4">
-            {req.user && <UserAvatar userId={req.user.id} size="sm" />}
+            {user && <UserAvatar userId={user.id} size="sm" />}
             <div className="flex-1">
               <input
                 type="text"
