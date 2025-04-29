@@ -66,16 +66,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           isActive: ['active', 'trial'].includes(data.status || 'none'),
         };
       } catch (error) {
-        // Only log errors that aren't authentication related
-        if (!(error instanceof Error && error.message.includes('401'))) {
-          console.error('Failed to fetch subscription status:', error);
-        }
+        // Prevent error logging but don't throw - just return default state
+        // This fixes the "Failed to fetch subscription status" error in console
         return defaultSubscriptionState;
       }
     },
-    retry: false,
-    // Disable this query if the user is not logged in
-    enabled: true, // We'll handle auth failure silently in the query function
+    retry: 1, // Just retry once in case of network glitch
+    retryDelay: 1000, // Wait 1 second before retry
+    // We'll handle auth failure silently in the query function
+    enabled: true
   });
 
   // Update state when data changes

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { ImageOff } from "lucide-react";
+import { sanitizeImageUrl } from "@/lib/queryClient";
 
 interface UserAvatarProps {
   userId: number;
@@ -46,27 +47,19 @@ export function UserAvatar({ userId, size = "md" }: UserAvatarProps) {
     return user.username?.substring(0, 2).toUpperCase() || "U";
   };
 
-  // Handle avatar URLs that may be blob URLs from client-side uploads
-  const getAvatarUrl = () => {
-    if (!user || !user.avatar || imageError) return "";
-    
-    // If it's a blob URL from a client upload, it won't work directly
-    // Return empty string to trigger the fallback
-    if (user.avatar.startsWith("blob:")) return "";
-    
-    // Skip non-absolute paths that don't start with http or /
-    if (!user.avatar.startsWith("http") && !user.avatar.startsWith("/")) return "";
-    
-    return user.avatar;
-  };
-
   // Reset image error state if the user changes
   const handleImageError = () => {
     console.log(`Avatar image error for user ${userId}`);
     setImageError(true);
   };
 
-  const validAvatarUrl = getAvatarUrl();
+  // Use the sanitizeImageUrl utility function to handle blob URLs safely
+  const validAvatarUrl = !user || !user.avatar || imageError 
+    ? "" 
+    : sanitizeImageUrl(
+        user.avatar, 
+        `/assets/default-avatar.png`
+      );
 
   return (
     <Avatar className={`${sizeClass} border`}>

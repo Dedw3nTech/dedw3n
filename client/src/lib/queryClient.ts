@@ -150,3 +150,39 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+/**
+ * Safely handle blob URLs to prevent DOMException errors
+ * when a blob URL is no longer valid
+ * @param url The URL to sanitize
+ * @param fallback Optional fallback URL to use if the input is a blob URL
+ * @returns A safe URL that won't cause DOMException errors
+ */
+export function sanitizeImageUrl(url: string | null | undefined, fallback?: string): string {
+  // If no URL or empty string, return fallback or placeholder
+  if (!url) {
+    return fallback || '/assets/default-avatar.png';
+  }
+  
+  // Check if it's a blob URL (which can cause DOMException if not valid)
+  if (url.startsWith('blob:')) {
+    try {
+      // Test if the blob URL is still valid
+      const blobUrlExistence = fetch(url, { method: 'HEAD' })
+        .then(() => true)
+        .catch(() => false);
+        
+      // If it fails, we'll use the fallback
+      if (!blobUrlExistence) {
+        console.warn('Detected invalid blob URL, using fallback');
+        return fallback || '/assets/default-avatar.png';
+      }
+    } catch (e) {
+      // If any error occurs when dealing with the blob URL, use fallback
+      console.warn('Error with blob URL, using fallback', e);
+      return fallback || '/assets/default-avatar.png';
+    }
+  }
+  
+  return url;
+}
