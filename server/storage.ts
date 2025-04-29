@@ -1478,6 +1478,22 @@ export class MemStorage implements IStorage {
     return totalCount;
   }
   
+  async clearCart(userId: number): Promise<boolean> {
+    try {
+      const userCartItems = Array.from(this.carts.values())
+        .filter(item => item.userId === userId);
+      
+      for (const item of userCartItems) {
+        this.carts.delete(item.id);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      return false;
+    }
+  }
+  
   // Wallet operations
   async getWallet(id: number): Promise<Wallet | undefined> {
     return this.wallets.get(id);
@@ -5121,6 +5137,17 @@ export class DatabaseStorage implements IStorage {
   async removeFromCart(id: number): Promise<boolean> { return false; }
   async listCartItems(userId: number): Promise<Cart[]> { return []; }
   async countCartItems(userId: number): Promise<number> { return 0; }
+  
+  async clearCart(userId: number): Promise<boolean> { 
+    try {
+      await db.delete(carts)
+        .where(eq(carts.userId, userId));
+      return true;
+    } catch (error) {
+      console.error('Error clearing cart for user:', error);
+      return false;
+    }
+  }
   async getWallet(id: number): Promise<Wallet | undefined> { return undefined; }
   async getWalletByUserId(userId: number): Promise<Wallet | undefined> { return undefined; }
   async createWallet(wallet: InsertWallet): Promise<Wallet> { throw new Error("Method not implemented."); }
