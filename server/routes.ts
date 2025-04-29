@@ -1264,6 +1264,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get posts count
+  app.get("/api/social/posts/count/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Check if the user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get posts count
+      const count = await storage.getUserPostCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting posts count:', error);
+      res.status(500).json({ message: "Failed to get posts count" });
+    }
+  });
+  
   // Get followers count
   app.get("/api/social/followers/count/:userId", async (req, res) => {
     try {
