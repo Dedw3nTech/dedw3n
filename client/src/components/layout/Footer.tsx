@@ -28,10 +28,10 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Community</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="/communities" className="hover:text-primary">Groups</a></li>
-              <li><a href="/communities?filter=events" className="hover:text-primary">Events</a></li>
-              <li><a href="/social" className="hover:text-primary">Creator Spotlights</a></li>
-              <li><a href="/community-detail" className="hover:text-primary">Community Guidelines</a></li>
+              <li><Link href="/communities" className="hover:text-primary">Groups</Link></li>
+              <li><Link href="/communities?filter=events" className="hover:text-primary">Events</Link></li>
+              <li><Link href="/social" className="hover:text-primary">Creator Spotlights</Link></li>
+              <li><Link href="/community-detail" className="hover:text-primary">Community Guidelines</Link></li>
             </ul>
           </div>
 
@@ -39,10 +39,10 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-800 mb-4">Help & Support</h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li><Link href="/contact" className="hover:text-primary">Contact Us</Link></li>
-              <li><a href="/faq" className="hover:text-primary">FAQ</a></li>
-              <li><a href="/shipping" className="hover:text-primary">Shipping & Returns</a></li>
-              <li><a href="/privacy" className="hover:text-primary">Privacy Policy</a></li>
-              <li><a href="/terms" className="hover:text-primary">Terms of Service</a></li>
+              <li><Link href="/faq" className="hover:text-primary">FAQ</Link></li>
+              <li><Link href="/shipping" className="hover:text-primary">Shipping & Returns</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-primary">Terms of Service</Link></li>
             </ul>
           </div>
         </div>
@@ -51,9 +51,9 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 Dedw3n. All rights reserved.</p>
             <div className="flex space-x-4">
-              <a href="/privacy" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</a>
-              <a href="/terms" className="text-sm text-gray-600 hover:text-primary">Terms of Service</a>
-              <a href="/cookies" className="text-sm text-gray-600 hover:text-primary">Cookie Policy</a>
+              <Link href="/privacy" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</Link>
+              <Link href="/terms" className="text-sm text-gray-600 hover:text-primary">Terms of Service</Link>
+              <Link href="/cookies" className="text-sm text-gray-600 hover:text-primary">Cookie Policy</Link>
             </div>
           </div>
           <p className="text-xs text-gray-500 text-center md:text-left">
