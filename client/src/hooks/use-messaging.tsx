@@ -135,7 +135,7 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
                   // Invalidate query cache for the conversation and unread count
                   queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.message.senderId] });
                   queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/messages/unread/count'] });
 
                   // Show toast notification for new message if not from current user
                   if (data.message.senderId !== user.id) {
@@ -159,7 +159,7 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
                   // Invalidate query cache for the conversation and unread count
                   queryClient.invalidateQueries({ queryKey: ['/api/messages/conversation', data.senderId] });
                   queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/messages/unread/count'] });
 
                   // Show toast notification for new message if not from current user
                   if (data.senderId !== user.id) {
@@ -340,7 +340,7 @@ export const MessagingProvider = ({ children }: { children: ReactNode }) => {
 
       // Invalidate query cache for conversations and unread count
       queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/messages/unread'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/unread/count'] });
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
