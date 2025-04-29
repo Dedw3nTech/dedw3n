@@ -2,9 +2,10 @@
 import enCommon from './en/common.json';
 import frCommon from './fr/common.json';
 import ptCommon from './pt/common.json';
-
-// Empty placeholder for languages we'll add later
-const emptyTranslation = {};
+import esCommon from './es/common.json';
+import zhCommon from './zh/common.json';
+import hiCommon from './hi/common.json';
+import arCommon from './ar/common.json';
 
 // Bundle all translations
 export const resources = {
@@ -17,18 +18,17 @@ export const resources = {
   pt: {
     common: ptCommon
   },
-  // Other languages use the English translation as a fallback for now
+  es: {
+    common: esCommon
+  },
   zh: {
-    common: emptyTranslation
+    common: zhCommon
   },
   hi: {
-    common: emptyTranslation
+    common: hiCommon
   },
   ar: {
-    common: emptyTranslation
-  },
-  es: {
-    common: emptyTranslation
+    common: arCommon
   }
 };
 
@@ -37,8 +37,8 @@ export const translationsByLanguage = {
   en: enCommon,
   fr: frCommon,
   pt: ptCommon,
-  zh: emptyTranslation,
-  hi: emptyTranslation,
-  ar: emptyTranslation,
-  es: emptyTranslation
+  es: esCommon,
+  zh: zhCommon,
+  hi: hiCommon,
+  ar: arCommon
 };
