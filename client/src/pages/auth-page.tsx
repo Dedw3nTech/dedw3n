@@ -310,7 +310,7 @@ export default function AuthPage() {
                   <i className="ri-group-line text-xl"></i>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Social Interaction</h3>
+                  <h3 className="font-semibold text-lg">Social</h3>
                   <p className="text-white/80">Connect with friends, share posts, and build your network.</p>
                 </div>
               </div>
