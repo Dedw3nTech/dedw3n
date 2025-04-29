@@ -202,19 +202,136 @@ export default function ExplorePage() {
 
       <div className="container max-w-screen-xl py-6">
         {/* Search bar */}
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <form onSubmit={handleSearch} className="flex gap-2">
-            <Input
-              placeholder="Search for users, communities, or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
+            <div className="flex-1 relative">
+              <Input
+                placeholder="Search for users, communities, or content..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
             <Button type="submit">
               <Search className="h-4 w-4 mr-2" />
               Search
             </Button>
           </form>
+          
+          {/* Real-time search results dropdown */}
+          {showSearchResults && searchResults && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+              <div className="p-3 border-b border-border">
+                <h3 className="text-sm font-medium">Users ({searchResults.length})</h3>
+              </div>
+              <ul className="py-2">
+                {searchResults.map((user: UserProfile) => (
+                  <li key={user.id} className="px-3">
+                    <div 
+                      className="flex items-center gap-3 py-2 hover:bg-accent/50 rounded-md px-2 cursor-pointer"
+                      onClick={() => setLocation(`/profile/${user.username}`)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        {user.avatar ? (
+                          <AvatarImage 
+                            src={user.avatar} 
+                            alt={user.name || user.username} 
+                          />
+                        ) : null}
+                        <AvatarFallback>
+                          {getInitials(user.name || user.username)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">
+                            {user.name || user.username}
+                          </span>
+                          {user.isVendor && (
+                            <Badge variant="outline" className="text-xs">Vendor</Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          @{user.username}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/messages?user=${user.id}`);
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/profile/${user.username}`);
+                          }}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="p-3 border-t border-border">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation(`/search?q=${encodeURIComponent(searchQuery)}`)}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  View all results for "{searchQuery}"
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {/* No results state */}
+          {showSearchResults && searchQuery.length >= 2 && 
+           (!searchResults || searchResults.length === 0) && 
+           !isLoadingSearch && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 py-8 px-4 text-center">
+              <User className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <h3 className="text-sm font-medium mb-1">No users found</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                We couldn't find any users matching "{searchQuery}"
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation('/users')}
+              >
+                Browse all users
+              </Button>
+            </div>
+          )}
+          
+          {/* Loading state */}
+          {showSearchResults && isLoadingSearch && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 py-6 px-4 text-center">
+              <Loader2 className="h-6 w-6 mx-auto text-primary animate-spin mb-2" />
+              <p className="text-sm text-muted-foreground">Searching...</p>
+            </div>
+          )}
         </div>
 
         {/* Main content area */}

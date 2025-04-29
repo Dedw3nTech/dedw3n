@@ -68,6 +68,7 @@ import SettingsPage from "@/pages/settings";
 import WallPage from "@/pages/wall";
 import MessagesPage from "@/pages/messages";
 import ExplorePage from "@/pages/explore";
+import SearchPage from "@/pages/search";
 import SocialConsolePage from "@/pages/social-console";
 
 // Import video pages
@@ -87,6 +88,7 @@ function Router() {
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
       <Route path="/government" component={GovernmentPage} />
+      <Route path="/search" component={SearchPage} />
       <ProtectedRoute path="/dating" component={DatingPage} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />

@@ -403,6 +403,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to search users" });
     }
   });
+  
+  // Search posts API endpoint
+  app.get("/api/posts/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      console.log(`[DEBUG] Searching posts with query: ${query}, limit: ${limit}`);
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      // Return empty array for now until full implementation
+      const posts = [];
+      console.log(`[DEBUG] Returning empty posts array for search query: ${query}`);
+      
+      return res.json(posts);
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      return res.status(500).json({ message: "Failed to search posts" });
+    }
+  });
+  
+  // Search products API endpoint
+  app.get("/api/products/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      console.log(`[DEBUG] Searching products with query: ${query}, limit: ${limit}`);
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      // Return empty array for now until full implementation
+      const products = [];
+      console.log(`[DEBUG] Returning empty products array for search query: ${query}`);
+      
+      return res.json(products);
+    } catch (error) {
+      console.error("Error searching products:", error);
+      return res.status(500).json({ message: "Failed to search products" });
+    }
+  });
+  
+  // Search communities API endpoint
+  app.get("/api/communities/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      console.log(`[DEBUG] Searching communities with query: ${query}, limit: ${limit}`);
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      // Return empty array for now until full implementation
+      const communities = [];
+      console.log(`[DEBUG] Returning empty communities array for search query: ${query}`);
+      
+      return res.json(communities);
+    } catch (error) {
+      console.error("Error searching communities:", error);
+      return res.status(500).json({ message: "Failed to search communities" });
+    }
+  });
 
   app.get("/api/users/:username", async (req, res) => {
     try {
