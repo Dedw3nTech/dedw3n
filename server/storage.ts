@@ -248,6 +248,7 @@ export interface IStorage {
     offset?: number;
   }): Promise<Post[]>;
   getUserPosts(userId: number): Promise<Post[]>;
+  getUserPostCount(userId: number): Promise<number>;
   incrementPostView(id: number): Promise<Post>;
   promotePost(id: number, endDate: Date): Promise<Post>;
   unpromotePost(id: number): Promise<Post>;

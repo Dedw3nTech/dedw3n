@@ -71,6 +71,12 @@ interface VideoItem {
   timestamp: string;
 }
 
+interface UserStats {
+  postCount: number;
+  followerCount: number;
+  followingCount: number;
+}
+
 interface Product {
   id: number;
   name: string;
@@ -136,6 +142,12 @@ export default function Social() {
     queryKey: ["/api/products"],
     enabled: true,
   });
+  
+  // Fetch user statistics (posts, followers, following counts)
+  const { data: userStats } = useQuery<UserStats>({
+    queryKey: ["/api/users/stats", user?.id],
+    enabled: !!user,
+  });
 
   useEffect(() => {
     setView("social");
@@ -188,15 +200,15 @@ export default function Social() {
                           
                           <div className="grid grid-cols-3 gap-2 text-center text-sm mb-3">
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">128</div>
+                              <div className="font-semibold">{userStats?.postCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Posts</div>
                             </div>
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">843</div>
+                              <div className="font-semibold">{userStats?.followingCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Following</div>
                             </div>
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">2.4k</div>
+                              <div className="font-semibold">{userStats?.followerCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Followers</div>
                             </div>
                           </div>

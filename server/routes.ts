@@ -400,6 +400,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+
+  
   app.get("/api/users/:username", async (req, res) => {
     try {
       const username = req.params.username;
@@ -575,6 +577,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(401).json({ message: "Unauthorized" });
   };
+  
+  // API endpoint to get user statistics (posts, followers, following counts)
+  app.get("/api/users/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`[DEBUG] Fetching stats for user ID: ${userId}`);
+      
+      // Get post count
+      const postCount = await storage.getUserPostCount(userId);
+      
+      // Get follower count
+      const followerCount = await storage.getFollowersCount(userId);
+      
+      // Get following count
+      const followingCount = await storage.getFollowingCount(userId);
+      
+      console.log(`[DEBUG] User stats - Posts: ${postCount}, Followers: ${followerCount}, Following: ${followingCount}`);
+      
+      res.json({
+        postCount,
+        followerCount,
+        followingCount
+      });
+    } catch (error) {
+      console.error(`[ERROR] Failed to get stats for user:`, error);
+      res.status(500).json({ message: "Failed to fetch user statistics" });
+    }
+  });
 
   // Register API Routes
   // All routes should be prefixed with /api
