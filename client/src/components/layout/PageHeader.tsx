@@ -22,7 +22,11 @@ export default function PageHeader({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
               {description && (
-                <p className="text-muted-foreground">{description}</p>
+                typeof description === 'string' ? (
+                  <p className="text-muted-foreground">{description}</p>
+                ) : (
+                  <div className="text-muted-foreground">{description}</div>
+                )
               )}
               {title === "Dating & Relationships" && (
                 <p className="text-xs text-muted-foreground mt-2 italic">
