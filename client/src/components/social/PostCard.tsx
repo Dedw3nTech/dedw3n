@@ -433,6 +433,24 @@ export default function PostCard({
     });
   };
 
+  // Early error checking to prevent errors with undefined properties
+  if (!post.user) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-0">
+          <div className="flex justify-between">
+            <div className="flex items-center gap-2">
+              <div className="text-destructive">Error: Missing user data</div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <p>This post cannot be displayed correctly due to missing user information.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-0">
@@ -442,14 +460,14 @@ export default function PostCard({
               className="h-10 w-10 cursor-pointer"
               onClick={() => setLocation(`/profile/${post.user.username}`)}
             >
-              {post.user.avatar ? (
+              {post.user && post.user.avatar ? (
                 <AvatarImage 
                   src={post.user.avatar} 
-                  alt={post.user.name} 
+                  alt={post.user.name || 'User'} 
                 />
               ) : null}
               <AvatarFallback>
-                {getInitials(post.user.name)}
+                {post.user ? getInitials(post.user.name || post.user.username || 'User') : 'U'}
               </AvatarFallback>
             </Avatar>
             <div>

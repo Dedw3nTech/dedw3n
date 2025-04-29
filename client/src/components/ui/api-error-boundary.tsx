@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
-import { useNavigate } from "wouter";
+import { useNavigate } from "@/hooks/use-navigate";
 
 interface ApiErrorProps {
   error: Error;
