@@ -18,8 +18,7 @@ import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
 import { registerSubscriptionRoutes } from "./subscription";
 import { registerAdminRoutes } from "./admin";
-import { registerMessageRoutes } from "./message-routes";
-import * as messageService from "./messages";
+import { registerMessagingSuite } from "./messaging-suite";
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { seedDatabase } from "./seed";
 import { socialMediaSuite } from "./social-media-suite";
@@ -1033,7 +1032,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register exclusive content routes
   registerExclusiveContentRoutes(app);
-  registerMessageRoutes(app);
+  // Register integrated messaging suite with call and video functionality
+  registerMessagingSuite(app, httpServer);
   
   // Notification API Routes
   
@@ -1108,8 +1108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Message API Routes
   
-  // Message routes are now handled in message-routes.ts
-  // See registerMessageRoutes(app) above
+  // Message routes are now handled in messaging-suite.ts
+  // See registerMessagingSuite(app, httpServer) above
   
   // Social Media API Routes
   
