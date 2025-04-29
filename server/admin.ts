@@ -675,6 +675,62 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
+  // Get product analytics for product managers
+  app.get('/api/admin/analytics/products', isAdmin, async (req, res) => {
+    try {
+      const timeRange = req.query.timeRange as string || '30days';
+      
+      // Get product performance metrics
+      const topSellingProducts = await storage.getTopSellingProducts(5); // Top 5 products
+      const productPerformance = await storage.getProductPerformanceMetrics(timeRange);
+      const categoryTrends = await storage.getCategoryTrendsData();
+      const revenueByCategory = await storage.getRevenueByCategory(timeRange);
+      const inventoryAlerts = await storage.getInventoryAlerts();
+      
+      res.json({
+        topSellingProducts,
+        productPerformance,
+        categoryTrends,
+        revenueByCategory,
+        inventoryAlerts
+      });
+    } catch (error) {
+      console.error('Error fetching product analytics:', error);
+      res.status(500).json({ message: 'Error fetching product analytics' });
+    }
+  });
+  
+  // Get overall admin analytics
+  app.get('/api/admin/analytics', isAdmin, async (req, res) => {
+    try {
+      const timeRange = req.query.timeRange as string || '30days';
+      
+      // User data
+      const userRegistrations = await storage.getUserRegistrationTrends(timeRange);
+      const activeUsers = await storage.getActiveUserStats(timeRange);
+      
+      // Sales data
+      const salesData = await storage.getSalesData(timeRange);
+      
+      // Product data
+      const productCategories = await storage.getProductCategoryDistribution();
+      
+      // Traffic sources
+      const trafficSources = await storage.getTrafficSourcesData(timeRange);
+      
+      res.json({
+        userRegistrations,
+        activeUsers,
+        sales: salesData,
+        productCategories,
+        traffic: trafficSources,
+      });
+    } catch (error) {
+      console.error('Error fetching admin analytics:', error);
+      res.status(500).json({ message: 'Error fetching admin analytics' });
+    }
+  });
+  
   // Fix blob URLs in user avatars (maintenance utility)
   app.post('/api/users/fix-blob-avatars', isAdmin, async (req, res) => {
     try {
