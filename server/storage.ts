@@ -61,6 +61,7 @@ export interface IStorage {
   // Category operations
   getCategoryByName(name: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  listCategories(): Promise<Category[]>;
   
   // Vendor operations
   getVendorByUserId(userId: number): Promise<Vendor | undefined>;
@@ -360,6 +361,10 @@ export class DatabaseStorage implements IStorage {
   async createCategory(category: InsertCategory): Promise<Category> {
     const [newCategory] = await db.insert(categories).values(category).returning();
     return newCategory;
+  }
+  
+  async listCategories(): Promise<Category[]> {
+    return await db.select().from(categories);
   }
   
   // Vendor methods
