@@ -14,6 +14,7 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -183,18 +184,22 @@ function App() {
               <MarketTypeProvider>
                 <SubscriptionProvider>
                   <CurrencyProvider>
-                    <div className="flex flex-col min-h-screen">
-                      <Header />
-                      <main className="flex-grow">
-                        <Router />
-                      </main>
-                      <Footer />
-                      <MobileNavigation />
-                      <OfflineIndicator />
-                      {/* Offline simulator hidden as requested */}
-                      {/* Chatbot will be implemented later when API key is available */}
-                      {/* <ChatbotWindow /> */}
-                    </div>
+                    <ErrorBoundary>
+                      <div className="flex flex-col min-h-screen">
+                        <Header />
+                        <main className="flex-grow">
+                          <ErrorBoundary>
+                            <Router />
+                          </ErrorBoundary>
+                        </main>
+                        <Footer />
+                        <MobileNavigation />
+                        <OfflineIndicator />
+                        {/* Offline simulator hidden as requested */}
+                        {/* Chatbot will be implemented later when API key is available */}
+                        {/* <ChatbotWindow /> */}
+                      </div>
+                    </ErrorBoundary>
                     <Toaster />
                   </CurrencyProvider>
                 </SubscriptionProvider>
