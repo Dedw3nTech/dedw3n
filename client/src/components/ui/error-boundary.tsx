@@ -1,20 +1,24 @@
-import { Component, ErrorInfo, ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCcw } from 'lucide-react';
 
-interface ErrorBoundaryProps {
+interface Props {
   children: ReactNode;
   fallback?: ReactNode;
 }
 
-interface ErrorBoundaryState {
+interface State {
   hasError: boolean;
   error: Error | null;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+/**
+ * A generic error boundary component that catches errors in its child component tree.
+ * Renders a fallback UI when an error occurs.
+ */
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       hasError: false,
@@ -22,7 +26,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI
     return {
       hasError: true,
       error
@@ -30,12 +35,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to an error reporting service
-    console.error("Error caught by ErrorBoundary:", error);
-    console.error("Component stack:", errorInfo.componentStack);
+    // You can log the error to an error reporting service here
+    console.error('Error caught by ErrorBoundary:', error);
+    console.error('Component stack:', errorInfo.componentStack);
   }
 
-  handleReset = (): void => {
+  resetError = (): void => {
     this.setState({
       hasError: false,
       error: null
@@ -44,27 +49,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // Custom fallback UI
+      // If a custom fallback is provided, use it
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
+      // Otherwise, render the default error UI
       return (
-        <div className="flex items-center justify-center min-h-[300px] p-6">
-          <div className="w-full max-w-md">
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              <AlertTitle>Something went wrong</AlertTitle>
-              <AlertDescription className="mt-2">
-                {this.state.error?.message || "An unexpected error occurred"}
-              </AlertDescription>
-            </Alert>
-            <div className="flex justify-center mt-4">
-              <Button onClick={this.handleReset} className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Try Again
-              </Button>
-            </div>
+        <div className="p-6 space-y-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>Something went wrong</AlertTitle>
+            <AlertDescription className="mt-2">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </AlertDescription>
+          </Alert>
+          <div className="flex justify-center">
+            <Button 
+              onClick={this.resetError}
+              className="flex items-center gap-2"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Try Again
+            </Button>
           </div>
         </div>
       );
@@ -73,5 +80,3 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
-
-export { ErrorBoundary };

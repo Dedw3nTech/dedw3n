@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -188,9 +189,9 @@ function App() {
                       <div className="flex flex-col min-h-screen">
                         <Header />
                         <main className="flex-grow">
-                          <ErrorBoundary>
+                          <ApiErrorBoundary showHomeButton={false}>
                             <Router />
-                          </ErrorBoundary>
+                          </ApiErrorBoundary>
                         </main>
                         <Footer />
                         <MobileNavigation />

@@ -12,66 +12,43 @@ interface ErrorState {
  * Custom hook for handling errors in a consistent way across the application
  */
 export function useErrorHandler() {
-  const { toast } = useToast();
   const [error, setError] = useState<ErrorState | null>(null);
-  const [isRecovering, setIsRecovering] = useState(false);
+  const { toast } = useToast();
 
   /**
    * Handle an error by setting the error state and showing a toast notification
    */
-  const handleError = useCallback((err: unknown, showToast = true) => {
-    let errorMessage = 'An unexpected error occurred';
-    let errorCode = 'UNKNOWN_ERROR';
-    let errorField = undefined;
-    let errorDetails = undefined;
+  const handleError = useCallback((err: Error | string, options?: { silent?: boolean; field?: string }) => {
+    const errorMessage = typeof err === 'string' ? err : err.message;
+    
+    // Parse error details if available (like from API responses)
+    const errorObj: ErrorState = {
+      message: errorMessage,
+      field: options?.field,
+    };
 
-    // Extract error information based on error type
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      // For axios errors with response data
-      if ('response' in err && err.response && typeof err.response === 'object') {
-        const response = err.response as any;
-        if (response.data) {
-          errorMessage = response.data.message || errorMessage;
-          errorCode = response.data.code || `HTTP_${response.status}`;
-          errorField = response.data.field;
-          errorDetails = response.data.details;
-        }
-      }
-    } else if (typeof err === 'string') {
-      errorMessage = err;
-    } else if (err && typeof err === 'object') {
-      const errorObj = err as any;
-      errorMessage = errorObj.message || errorMessage;
-      errorCode = errorObj.code || errorCode;
-      errorField = errorObj.field;
-      errorDetails = errorObj.details;
+    // Extract error code if available
+    if (typeof err !== 'string' && 'code' in err) {
+      errorObj.code = (err as any).code;
     }
 
-    // Set error state
-    setError({
-      message: errorMessage,
-      code: errorCode,
-      field: errorField,
-      details: errorDetails
-    });
+    // Parse JSON error responses if applicable
+    if (typeof err !== 'string' && 'details' in err) {
+      errorObj.details = (err as any).details;
+    }
 
-    // Show toast notification if requested
-    if (showToast) {
+    setError(errorObj);
+
+    // Show a toast notification unless silent is true
+    if (!options?.silent) {
       toast({
-        title: 'Error',
+        variant: "destructive",
+        title: "Error",
         description: errorMessage,
-        variant: 'destructive',
       });
     }
 
-    // Return formatted error for potential additional handling
-    return {
-      message: errorMessage,
-      code: errorCode,
-      field: errorField,
-      details: errorDetails
-    };
+    return errorObj;
   }, [toast]);
 
   /**
@@ -84,27 +61,22 @@ export function useErrorHandler() {
   /**
    * Attempt to recover from an error
    */
-  const recoverFromError = useCallback(async (recoveryFn?: () => Promise<void>) => {
-    if (!error) return;
-
-    setIsRecovering(true);
-    try {
-      if (recoveryFn) {
-        await recoveryFn();
+  const recover = useCallback((retryFn?: () => void) => {
+    clearError();
+    if (retryFn) {
+      try {
+        retryFn();
+      } catch (recoverErr) {
+        handleError(recoverErr as Error);
       }
-      clearError();
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setIsRecovering(false);
     }
-  }, [error, clearError, handleError]);
+  }, [clearError, handleError]);
 
   return {
     error,
-    isRecovering,
-    handleError,
+    setError: handleError,
     clearError,
-    recoverFromError
+    recover,
+    isError: !!error,
   };
 }

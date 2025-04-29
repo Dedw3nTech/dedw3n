@@ -1,111 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { ReactNode, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
-import { useNavigate } from "@/hooks/use-navigate";
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCcw, Home, Wifi, WifiOff } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
+import { useNavigate } from '@/hooks/use-navigate';
 
-interface ApiErrorProps {
-  error: Error;
-  resetError: () => void;
-  queryKey?: unknown[];
-  className?: string;
-  showHomeButton?: boolean;
-}
-
-function ApiErrorDisplay({
-  error,
-  resetError,
-  queryKey,
-  className = "",
-  showHomeButton = true,
-}: ApiErrorProps) {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  
-  // Function to determine if the error is a network error
-  const isNetworkError = () => {
-    return (
-      error.message.includes("Network Error") ||
-      error.message.includes("Failed to fetch") ||
-      error.message.includes("NetworkError") ||
-      error.message.includes("net::ERR")
-    );
-  };
-
-  // Function to determine if the error is a 401/403 authentication error
-  const isAuthError = () => {
-    return (
-      error.message.includes("401") ||
-      error.message.includes("403") ||
-      error.message.includes("Unauthorized") ||
-      error.message.includes("Forbidden")
-    );
-  };
-
-  // Function to determine if the error is a 404 not found error
-  const isNotFoundError = () => {
-    return error.message.includes("404") || error.message.includes("Not Found");
-  };
-
-  const getErrorTitle = () => {
-    if (isNetworkError()) return "Network Error";
-    if (isAuthError()) return "Authentication Error";
-    if (isNotFoundError()) return "Resource Not Found";
-    return "Error";
-  };
-
-  const getErrorDescription = () => {
-    if (isNetworkError()) {
-      return "Unable to connect to the server. Please check your internet connection and try again.";
-    }
-    if (isAuthError()) {
-      return "You don't have permission to access this resource. Please log in or contact support if you believe this is an error.";
-    }
-    if (isNotFoundError()) {
-      return "The requested resource could not be found. It may have been moved or deleted.";
-    }
-    return error.message || "An unexpected error occurred. Please try again later.";
-  };
-
-  const handleRetry = () => {
-    if (queryKey) {
-      // Invalidate the specific query to force a refetch
-      queryClient.invalidateQueries({ queryKey });
-    }
-    resetError(); // Reset the error state
-  };
-
-  const handleGoHome = () => {
-    navigate("/");
-  };
-
-  return (
-    <div className={`p-6 ${className}`}>
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4 mr-2" />
-        <AlertTitle>{getErrorTitle()}</AlertTitle>
-        <AlertDescription className="mt-2">
-          {getErrorDescription()}
-        </AlertDescription>
-      </Alert>
-      <div className="flex flex-wrap gap-3 justify-center mt-4">
-        <Button onClick={handleRetry} className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Try Again
-        </Button>
-        {showHomeButton && (
-          <Button variant="outline" onClick={handleGoHome} className="flex items-center gap-2">
-            <Home className="h-4 w-4" />
-            Go to Home
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface ApiErrorBoundaryProps {
+interface Props {
   children: ReactNode;
   queryKey?: unknown[];
   className?: string;
@@ -113,59 +13,129 @@ interface ApiErrorBoundaryProps {
   fallback?: ReactNode;
 }
 
-export function ApiErrorBoundary({
-  children,
-  queryKey,
-  className,
-  showHomeButton = true,
-  fallback,
-}: ApiErrorBoundaryProps) {
-  const [error, setError] = useState<Error | null>(null);
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  isOffline: boolean;
+}
 
-  // Set up a global error handler for uncaught errors
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      setError(event.error || new Error("An unknown error occurred"));
+/**
+ * A specialized error boundary for API errors.
+ * Provides functionality to retry API requests and navigate home.
+ */
+export class ApiErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      isOffline: false
     };
-    
-    // Handle unhandled rejections separately
-    const handleRejection = (event: PromiseRejectionEvent) => {
-      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
-    };
-
-    // Add the event listeners
-    window.addEventListener("error", handleError);
-    window.addEventListener("unhandledrejection", handleRejection);
-
-    // Clean up
-    return () => {
-      window.removeEventListener("error", handleError);
-      window.removeEventListener("unhandledrejection", handleRejection);
-    };
-  }, []);
-
-  // Function to reset the error state
-  const resetError = () => {
-    setError(null);
-  };
-
-  // If an error was caught, render the error display
-  if (error) {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-    
-    return (
-      <ApiErrorDisplay
-        error={error}
-        resetError={resetError}
-        queryKey={queryKey}
-        className={className}
-        showHomeButton={showHomeButton}
-      />
-    );
   }
 
-  // If no error, render the children
-  return <>{children}</>;
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    // Update state so the next render will show the fallback UI
+    if (error.message.includes('offline') || error.message.includes('Failed to fetch')) {
+      return {
+        hasError: true,
+        error,
+        isOffline: true
+      };
+    }
+    
+    return {
+      hasError: true,
+      error
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    // You can log the error to an error reporting service here
+    console.error('Error caught by ApiErrorBoundary:', error);
+    console.error('Component stack:', errorInfo.componentStack);
+  }
+
+  resetError = (): void => {
+    this.setState({
+      hasError: false,
+      error: null,
+      isOffline: false
+    });
+  };
+
+  refetchData = (): void => {
+    // If a query key is provided, invalidate it to trigger a refetch
+    if (this.props.queryKey) {
+      queryClient.invalidateQueries({ queryKey: this.props.queryKey });
+    }
+    
+    this.resetError();
+  };
+
+  // Custom component with access to hooks that wraps the NavigateToHome functionality
+  NavigateToHomeComponent = () => {
+    const navigate = useNavigate();
+    
+    const handleClick = () => {
+      this.resetError();
+      navigate('/');
+    };
+    
+    return (
+      <Button 
+        variant="outline" 
+        onClick={handleClick}
+        className="flex items-center gap-2"
+      >
+        <Home className="h-4 w-4" />
+        Go to Home
+      </Button>
+    );
+  };
+
+  render(): ReactNode {
+    const { hasError, error, isOffline } = this.state;
+    const { className, showHomeButton = true, fallback } = this.props;
+    
+    if (hasError) {
+      // If a custom fallback is provided, use it
+      if (fallback) {
+        return fallback;
+      }
+
+      // Otherwise, render the default error UI
+      return (
+        <div className={`p-6 space-y-4 ${className || ''}`}>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>
+              {isOffline ? 'Network Error' : 'API Error'}
+            </AlertTitle>
+            <AlertDescription className="mt-2">
+              {isOffline 
+                ? 'Unable to connect to the server. Please check your internet connection and try again.'
+                : error?.message || 'An unexpected API error occurred'}
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button 
+              onClick={this.refetchData}
+              className="flex items-center gap-2"
+            >
+              {isOffline 
+                ? <WifiOff className="h-4 w-4" />
+                : <RefreshCcw className="h-4 w-4" />
+              }
+              {isOffline ? 'Try Again' : 'Retry Request'}
+            </Button>
+            
+            {showHomeButton && <this.NavigateToHomeComponent />}
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }

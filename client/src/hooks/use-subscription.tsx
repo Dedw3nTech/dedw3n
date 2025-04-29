@@ -45,6 +45,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       try {
         const res = await apiRequest('GET', '/api/subscription/status');
+        
+        // Check if unauthorized (401) or other error status
+        if (!res.ok) {
+          // If unauthorized, return default state silently without error logging
+          if (res.status === 401) {
+            return defaultSubscriptionState;
+          }
+          
+          // For other errors, throw to be caught by the catch block
+          throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
         
         return {
@@ -54,11 +66,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           isActive: ['active', 'trial'].includes(data.status || 'none'),
         };
       } catch (error) {
-        console.error('Failed to fetch subscription status:', error);
+        // Only log errors that aren't authentication related
+        if (!(error instanceof Error && error.message.includes('401'))) {
+          console.error('Failed to fetch subscription status:', error);
+        }
         return defaultSubscriptionState;
       }
     },
     retry: false,
+    // Disable this query if the user is not logged in
+    enabled: true, // We'll handle auth failure silently in the query function
   });
 
   // Update state when data changes
