@@ -20,6 +20,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Import vendor components
+import ProductsList from "@/components/vendor/ProductsList";
+import OrdersList from "@/components/vendor/OrdersList";
+import ShippingManager from "@/components/vendor/ShippingManager";
+import CustomersList from "@/components/vendor/CustomersList";
+import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
+
 export default function VendorDashboardPage() {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
@@ -173,10 +180,12 @@ export default function VendorDashboardPage() {
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
               
-              <Button onClick={() => setLocation("/add-product")}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
+              {activeTab === "products" && (
+                <Button onClick={() => setLocation("/add-product")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Product
+                </Button>
+              )}
             </div>
 
             {/* Overview tab content */}
