@@ -7,6 +7,18 @@ import { apiRequest } from "@/lib/queryClient";
 // WebSocket connection
 let socket: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_INTERVAL = 3000; // 3 seconds
+
+// WebRTC configuration
+const ICE_SERVERS = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+  ],
+};
 
 type MessageType = "text" | "image" | "video" | "audio" | "file" | "call_request" | "call_missed" | "call_ended";
 
@@ -45,6 +57,17 @@ interface Call {
   status: "requested" | "ongoing" | "declined" | "ended" | "missed";
 }
 
+// Define the peer connection state
+interface PeerConnectionState {
+  connection: RTCPeerConnection | null;
+  dataChannel: RTCDataChannel | null;
+  remoteStream: MediaStream | null;
+  localStream: MediaStream | null;
+  isMuted: boolean;
+  isVideoOff: boolean;
+  isScreenSharing: boolean;
+}
+
 // Define messaging context
 interface MessagingContextType {
   // State
@@ -57,6 +80,9 @@ interface MessagingContextType {
   incomingCall: Call | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  isMuted: boolean;
+  isVideoOff: boolean;
+  isScreenSharing: boolean;
   
   // Methods
   sendMessage: (userId: number, content: string, attachmentUrl?: string, attachmentType?: string, messageType?: MessageType) => Promise<void>;
