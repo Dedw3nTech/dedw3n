@@ -16,7 +16,8 @@ import {
   Tag,
   BadgeCheck,
   ImageOff,
-  Send
+  Send,
+  ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,6 +96,16 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const formattedDate = post.createdAt 
     ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) 
     : "";
+    
+  // Fetch linked product if post has a productId
+  const {
+    data: linkedProduct,
+    isLoading: isLoadingProduct
+  } = useQuery({
+    queryKey: [`/api/products/${post.productId}`],
+    queryFn: () => fetch(`/api/products/${post.productId}`).then(res => res.json()),
+    enabled: !!post.productId, // Only run query if post has a productId
+  });
   
   // Like post mutation
   const likeMutation = useMutation({
@@ -253,6 +264,29 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
     if (window.confirm(t("social.confirm_delete"))) {
       deletePostMutation.mutate();
     }
+  };
+  
+  const handleBuy = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!linkedProduct) {
+      toast({
+        title: t("errors.error"),
+        description: t("social.product_not_found"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Navigate to the product detail page
+    window.location.href = `/product-detail?id=${linkedProduct.id}`;
   };
   
   // Render content based on content type
@@ -420,6 +454,39 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       {/* Post Content */}
       {renderContent()}
       
+      {/* Linked Product */}
+      {post.productId && linkedProduct && !isLoadingProduct && (
+        <div className="mb-4 mt-2 p-3 border border-gray-200 rounded-md bg-gray-50">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 mr-3">
+              {linkedProduct.imageUrl && (
+                <img 
+                  src={linkedProduct.imageUrl} 
+                  alt={linkedProduct.name} 
+                  className="w-16 h-16 object-cover rounded-md"
+                  onError={(e) => { 
+                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNOCAxMEMxMC4yMDkxIDEwIDEyIDguMjA5MTQgMTIgNkMxMiAzLjc5MDg2IDEwLjIwOTEgMiA4IDJDNS43OTA4NiAyIDQgMy43OTA4NiA0IDZDNCA4LjIwOTE0IDUuNzkwODYgMTAgOCAxMFoiIGZpbGw9IiM5Q0EzQUYiLz48cGF0aCBkPSJNMTIuNSAxMi43NUMxMi41IDE0Ljk2NDEgMTAuNjk0MSAxNi43NSA4LjUgMTYuNzVINy41QzUuMzA1ODYgMTYuNzUgMy41IDE0Ljk2NDEgMy41IDEyLjc1VjEyLjVDMy41IDExLjEyMTMgNC42MjEzIDEwIDYgMTBIMTBDMTEuMzc4NyAxMCAxMi41IDExLjEyMTMgMTIuNSAxMi41VjEyLjc1WiIgZmlsbD0iIzlDQTNBRiIvPjwvc3ZnPg==' 
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium">{linkedProduct.name}</h4>
+              <div className="flex justify-between items-center mt-1">
+                <div className="text-green-600 font-semibold">
+                  ${linkedProduct.price?.toFixed(2)}
+                </div>
+                {linkedProduct.discountPrice && (
+                  <div className="text-gray-500 line-through text-sm">
+                    ${linkedProduct.discountPrice.toFixed(2)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
         <div className="flex items-center flex-wrap gap-2 mb-4">
@@ -481,6 +548,16 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
           <Share2 className="w-5 h-5 mr-1" />
           <span>{t("social.share")}</span>
         </button>
+        
+        {post.productId && (
+          <button
+            onClick={handleBuy}
+            className="flex items-center py-1 px-2 text-green-600 hover:bg-green-50 rounded-md"
+          >
+            <ShoppingCart className="w-5 h-5 mr-1" />
+            <span>{t("social.buy_now")}</span>
+          </button>
+        )}
       </div>
       
       {/* Comments Section */}
