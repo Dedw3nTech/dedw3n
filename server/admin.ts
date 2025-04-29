@@ -674,4 +674,32 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Error fetching order analytics' });
     }
   });
+  
+  // Fix blob URLs in user avatars (maintenance utility)
+  app.post('/api/users/fix-blob-avatars', isAdmin, async (req, res) => {
+    try {
+      const users = await storage.listUsers();
+      
+      // Filter users with blob: URLs
+      const usersWithBlobUrls = users.filter(user => 
+        user.avatar && user.avatar.startsWith('blob:')
+      );
+      
+      // Update each user with a blob URL, setting avatar to null
+      for (const user of usersWithBlobUrls) {
+        await storage.updateUser(user.id, { avatar: null });
+      }
+      
+      res.json({ 
+        success: true, 
+        users: usersWithBlobUrls.map(u => ({ id: u.id, username: u.username }))
+      });
+    } catch (error) {
+      console.error('Error fixing blob avatars:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fix blob avatars' 
+      });
+    }
+  });
 }
