@@ -13,6 +13,7 @@ import {
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
+  allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -29,7 +30,9 @@ import {
   type VideoPlaylist, type InsertVideoPlaylist, type PlaylistItem, type InsertPlaylistItem,
   type VideoProductOverlay, type InsertVideoProductOverlay, type VideoPurchase, type InsertVideoPurchase,
   type CommunityContent, type InsertCommunityContent, type AuthToken, type InsertAuthToken,
-  type Follow, type InsertFollow
+  type Follow, type InsertFollow, type AllowListItem, type InsertAllowListItem,
+  type BlockListItem, type InsertBlockListItem, type FlaggedContentItem, type InsertFlaggedContentItem,
+  type FlaggedImage, type InsertFlaggedImage, type ModerationReport, type InsertModerationReport
 } from "@shared/schema";
 
 // Interface for all storage operations
@@ -505,6 +508,65 @@ export interface IStorage {
   hasUserPurchasedVideo(userId: number, videoId: number): Promise<boolean>;
   getVideoRevenue(videoId: number): Promise<number>;
   getCreatorVideoRevenue(userId: number): Promise<{ totalRevenue: number; videoCount: number; }>;
+  
+  // Content Moderation operations
+  // Allow list operations
+  getAllowList(search?: string): Promise<AllowListItem[]>;
+  getAllowListItem(id: number): Promise<AllowListItem | undefined>;
+  createAllowListItem(item: InsertAllowListItem): Promise<AllowListItem>;
+  updateAllowListItem(id: number, data: Partial<AllowListItem>): Promise<AllowListItem | undefined>;
+  deleteAllowListItem(id: number): Promise<boolean>;
+  
+  // Block list operations
+  getBlockList(search?: string): Promise<BlockListItem[]>;
+  getBlockListItem(id: number): Promise<BlockListItem | undefined>;
+  createBlockListItem(item: InsertBlockListItem): Promise<BlockListItem>;
+  updateBlockListItem(id: number, data: Partial<BlockListItem>): Promise<BlockListItem | undefined>;
+  deleteBlockListItem(id: number): Promise<boolean>;
+  
+  // Flagged content operations
+  getFlaggedContent(options?: {
+    search?: string;
+    status?: string;
+    contentType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<FlaggedContentItem[]>;
+  getFlaggedContentItem(id: number): Promise<FlaggedContentItem | undefined>;
+  createFlaggedContentItem(item: InsertFlaggedContentItem): Promise<FlaggedContentItem>;
+  updateFlaggedContentItem(id: number, data: Partial<FlaggedContentItem>): Promise<FlaggedContentItem | undefined>;
+  deleteFlaggedContentItem(id: number): Promise<boolean>;
+  
+  // Flagged images operations
+  getFlaggedImages(options?: {
+    search?: string;
+    status?: string;
+    contentType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<FlaggedImage[]>;
+  getFlaggedImage(id: number): Promise<FlaggedImage | undefined>;
+  createFlaggedImage(item: InsertFlaggedImage): Promise<FlaggedImage>;
+  updateFlaggedImage(id: number, data: Partial<FlaggedImage>): Promise<FlaggedImage | undefined>;
+  deleteFlaggedImage(id: number): Promise<boolean>;
+  
+  // Moderation reports operations
+  getModerationReports(options?: {
+    search?: string;
+    status?: string;
+    reportType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ModerationReport[]>;
+  getModerationReport(id: number): Promise<ModerationReport | undefined>;
+  createModerationReport(report: InsertModerationReport): Promise<ModerationReport>;
+  updateModerationReport(id: number, data: Partial<ModerationReport>): Promise<ModerationReport | undefined>;
+  deleteModerationReport(id: number): Promise<boolean>;
+  
+  // AI content analysis
+  analyzeUserBehavior(userId: number): Promise<any>;
+  analyzeContent(content: string): Promise<any>;
+  analyzeImage(imageUrl: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -547,6 +609,13 @@ export class MemStorage implements IStorage {
   private videoPlaylists: Map<number, VideoPlaylist>;
   private playlistItems: Map<number, PlaylistItem>;
   private videoPurchases: Map<number, VideoPurchase>;
+  
+  // Content moderation maps
+  private allowListItems: Map<number, AllowListItem>;
+  private blockListItems: Map<number, BlockListItem>;
+  private flaggedContentItems: Map<number, FlaggedContentItem>;
+  private flaggedImages: Map<number, FlaggedImage>;
+  private moderationReports: Map<number, ModerationReport>;
 
   private userIdCounter: number;
   private vendorIdCounter: number;
@@ -571,6 +640,13 @@ export class MemStorage implements IStorage {
   private transactionIdCounter: number;
   private orderIdCounter: number;
   private orderItemIdCounter: number;
+  
+  // Content moderation counters
+  private allowListItemIdCounter: number;
+  private blockListItemIdCounter: number;
+  private flaggedContentItemIdCounter: number;
+  private flaggedImageIdCounter: number;
+  private moderationReportIdCounter: number;
   
   // Community management and monetization counters
   private communityIdCounter: number;
@@ -636,6 +712,13 @@ export class MemStorage implements IStorage {
     this.videoPlaylists = new Map();
     this.playlistItems = new Map();
     this.videoPurchases = new Map();
+    
+    // Initialize content moderation maps
+    this.allowListItems = new Map();
+    this.blockListItems = new Map();
+    this.flaggedContentItems = new Map();
+    this.flaggedImages = new Map();
+    this.moderationReports = new Map();
 
     this.userIdCounter = 1;
     this.vendorIdCounter = 1;
