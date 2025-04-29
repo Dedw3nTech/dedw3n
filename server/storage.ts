@@ -58,6 +58,11 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
+  
+  // User connection operations
+  connectUsers(userId1: number, userId2: number): Promise<boolean>;
+  disconnectUsers(userId1: number, userId2: number): Promise<boolean>;
+  checkConnection(userId1: number, userId2: number): Promise<boolean>;
   listUsers(): Promise<User[]>;
   searchUsers(query: string, limit?: number): Promise<User[]>;
   
@@ -405,6 +410,106 @@ export class DatabaseStorage implements IStorage {
   async createVendor(vendor: InsertVendor): Promise<Vendor> {
     const [newVendor] = await db.insert(vendors).values(vendor).returning();
     return newVendor;
+  }
+  
+  // User connection methods
+  async connectUsers(userId1: number, userId2: number): Promise<boolean> {
+    try {
+      // Check if connection already exists
+      const [existingConnection] = await db
+        .select()
+        .from(connections)
+        .where(
+          and(
+            eq(connections.userId, userId1),
+            eq(connections.connectedUserId, userId2)
+          )
+        );
+      
+      if (existingConnection) {
+        // If connection exists but status is not 'connected', update it
+        if (existingConnection.status !== 'connected') {
+          await db
+            .update(connections)
+            .set({ 
+              status: 'connected',
+              updatedAt: new Date()
+            })
+            .where(eq(connections.id, existingConnection.id));
+        }
+        return true;
+      }
+      
+      // Create a new connection
+      await db.insert(connections).values({
+        userId: userId1,
+        connectedUserId: userId2,
+        status: 'connected',
+        initiatedBy: userId1
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error connecting users:', error);
+      return false;
+    }
+  }
+
+  async disconnectUsers(userId1: number, userId2: number): Promise<boolean> {
+    try {
+      // Delete the connection
+      await db
+        .delete(connections)
+        .where(
+          and(
+            eq(connections.userId, userId1),
+            eq(connections.connectedUserId, userId2)
+          )
+        );
+      
+      // Also delete the connection in the opposite direction if it exists
+      await db
+        .delete(connections)
+        .where(
+          and(
+            eq(connections.userId, userId2),
+            eq(connections.connectedUserId, userId1)
+          )
+        );
+      
+      return true;
+    } catch (error) {
+      console.error('Error disconnecting users:', error);
+      return false;
+    }
+  }
+
+  async checkConnection(userId1: number, userId2: number): Promise<boolean> {
+    try {
+      // Check if connection exists in either direction
+      const [connection] = await db
+        .select()
+        .from(connections)
+        .where(
+          or(
+            and(
+              eq(connections.userId, userId1),
+              eq(connections.connectedUserId, userId2),
+              eq(connections.status, 'connected')
+            ),
+            and(
+              eq(connections.userId, userId2),
+              eq(connections.connectedUserId, userId1),
+              eq(connections.status, 'connected')
+            )
+          )
+        );
+      
+      return !!connection;
+    } catch (error) {
+      console.error('Error checking connection:', error);
+      return false;
+    }
   }
   
   // Product methods

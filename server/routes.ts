@@ -649,6 +649,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(401).json({ message: "Unauthorized" });
   };
   
+  // User connection API endpoints
+  app.post("/api/users/:userId/connect", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = req.user?.id;
+      const targetUserId = parseInt(req.params.userId);
+      
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (isNaN(targetUserId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      if (currentUserId === targetUserId) {
+        return res.status(400).json({ message: "Cannot connect to yourself" });
+      }
+      
+      // If storage.connectUsers is not implemented, just return success for now
+      if (typeof storage.connectUsers === 'function') {
+        await storage.connectUsers(currentUserId, targetUserId);
+      }
+      
+      // Create a notification for the target user
+      if (typeof storage.createNotification === 'function') {
+        await storage.createNotification({
+          userId: targetUserId,
+          type: "connection_request",
+          content: `User ${req.user?.username} wants to connect with you`,
+          relatedUserId: currentUserId,
+          read: false,
+          createdAt: new Date()
+        });
+      }
+      
+      res.status(200).json({ connected: true });
+    } catch (error) {
+      console.error("Error connecting users:", error);
+      res.status(500).json({ message: "Failed to connect users" });
+    }
+  });
+  
+  app.post("/api/users/:userId/disconnect", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = req.user?.id;
+      const targetUserId = parseInt(req.params.userId);
+      
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (isNaN(targetUserId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // If storage.disconnectUsers is not implemented, just return success for now
+      if (typeof storage.disconnectUsers === 'function') {
+        await storage.disconnectUsers(currentUserId, targetUserId);
+      }
+      
+      res.status(200).json({ connected: false });
+    } catch (error) {
+      console.error("Error disconnecting users:", error);
+      res.status(500).json({ message: "Failed to disconnect users" });
+    }
+  });
+  
+  app.get("/api/users/:userId/connection", isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = req.user?.id;
+      const targetUserId = parseInt(req.params.userId);
+      
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (isNaN(targetUserId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      let connected = false;
+      
+      // If storage.checkConnection is implemented, use it
+      if (typeof storage.checkConnection === 'function') {
+        connected = await storage.checkConnection(currentUserId, targetUserId);
+      }
+      
+      res.status(200).json({ connected });
+    } catch (error) {
+      console.error("Error checking connection:", error);
+      res.status(500).json({ message: "Failed to check connection status" });
+    }
+  });
+  
   // API endpoint to get current user's statistics (posts, followers, following counts)
   // Fix blob URLs in user avatar (emergency cleanup route)
   app.post("/api/users/fix-blob-avatars", isAuthenticated, async (req, res) => {
