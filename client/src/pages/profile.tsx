@@ -291,39 +291,71 @@ export default function ProfilePage() {
     }
     
     setAvatarFile(file);
+    // Create a temporary blob URL for preview purposes only
+    // This will be properly uploaded when the form is submitted
     setAvatarPreview(URL.createObjectURL(file));
   };
 
   // Handle profile update submission
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     if (!currentUser) return;
     
-    // Create a profile update object with the basic data
-    const profileUpdate: ProfileUpdate = {
-      name: editName,
-      bio: editBio
-    };
-    
-    // Only include non-empty fields
-    if (editLocation) {
-      profileUpdate.location = editLocation;
+    try {
+      // Create a profile update object with the basic data
+      const profileUpdate: ProfileUpdate = {
+        name: editName,
+        bio: editBio
+      };
+      
+      // Only include non-empty fields
+      if (editLocation) {
+        profileUpdate.location = editLocation;
+      }
+      
+      if (editWebsite) {
+        profileUpdate.website = editWebsite;
+      }
+      
+      // Handle avatar upload properly
+      if (avatarPreview && avatarPreview !== profileData?.avatar) {
+        // If it's a blob URL (from a new file selection), upload it first
+        if (avatarPreview.startsWith('blob:')) {
+          try {
+            toast({
+              title: "Uploading avatar...",
+              description: "Please wait while we upload your profile picture.",
+            });
+            
+            // Upload the avatar and get back the URL
+            const avatarUrl = await uploadAvatar(avatarPreview);
+            
+            // Update the profile with the new avatar URL
+            profileUpdate.avatar = avatarUrl;
+          } catch (error) {
+            console.error("Avatar upload error:", error);
+            toast({
+              title: "Avatar upload failed",
+              description: "Failed to upload profile picture. Please try again.",
+              variant: "destructive",
+            });
+            return; // Stop the profile update if avatar upload fails
+          }
+        } else if (!avatarPreview.startsWith('blob:')) {
+          // If it's not a blob URL but different from current avatar, use it directly
+          profileUpdate.avatar = avatarPreview;
+        }
+      }
+      
+      console.log("Submitting profile update:", profileUpdate);
+      updateProfileMutation.mutate(profileUpdate);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    if (editWebsite) {
-      profileUpdate.website = editWebsite;
-    }
-    
-    // For now, if the user has selected a new avatar, we'll use a URL approach
-    // later we can implement proper file upload
-    if (avatarPreview && avatarPreview !== profileData?.avatar) {
-      // Temporary solution: just using a placeholder URL
-      // In a real implementation, we would upload the file separately
-      // and get back a URL to store
-      profileUpdate.avatarUrl = avatarPreview;
-    }
-    
-    console.log("Submitting profile update:", profileUpdate);
-    updateProfileMutation.mutate(profileUpdate);
   };
 
   // Handle connection action
