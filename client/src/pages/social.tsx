@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserStats } from "@/hooks/useUserStats";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,11 +144,9 @@ export default function Social() {
     enabled: true,
   });
   
-  // Fetch user statistics (posts, followers, following counts)
-  const { data: userStats } = useQuery<UserStats>({
-    queryKey: ["/api/users/stats", user?.id],
-    enabled: !!user,
-  });
+  // Use the hook to fetch user statistics
+  const { getCurrentUserStats } = useUserStats();
+  const { data: userStats } = getCurrentUserStats();
 
   useEffect(() => {
     setView("social");
