@@ -1,8 +1,9 @@
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUserStats, UserStats } from "@/hooks/useUserStats";
+import { useUserStats } from "@/hooks/useUserStats";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Users, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface FollowStatsProps {
   userId: number;
@@ -15,12 +16,42 @@ export default function FollowStats({
   className = "",
   linkToFollowersPage = true
 }: FollowStatsProps) {
-  const { getUserStats } = useUserStats();
+  const { 
+    getUserStats, 
+    getUserPostCount,
+    getFollowersCount,
+    getFollowingCount 
+  } = useUserStats();
   
+  // We'll use both the combined stats endpoint and individual ones for redundancy
   const { 
     data: userStats, 
-    isLoading
+    isLoading: isLoadingCombinedStats 
   } = getUserStats(userId);
+  
+  const { 
+    data: postCount, 
+    isLoading: isLoadingPostCount 
+  } = getUserPostCount(userId);
+  
+  const { 
+    data: followerCount, 
+    isLoading: isLoadingFollowerCount 
+  } = getFollowersCount(userId);
+  
+  const { 
+    data: followingCount, 
+    isLoading: isLoadingFollowingCount 
+  } = getFollowingCount(userId);
+  
+  // Combined loading state
+  const isLoading = isLoadingCombinedStats && 
+                    (isLoadingPostCount || isLoadingFollowerCount || isLoadingFollowingCount);
+  
+  // Use individual endpoint data if available, fall back to combined data
+  const postCountValue = postCount !== undefined ? postCount : userStats?.postCount || 0;
+  const followerCountValue = followerCount !== undefined ? followerCount : userStats?.followerCount || 0;
+  const followingCountValue = followingCount !== undefined ? followingCount : userStats?.followingCount || 0;
   
   if (isLoading) {
     return (
@@ -46,11 +77,9 @@ export default function FollowStats({
     return num;
   };
   
-  const stats = userStats || { postCount: 0, followerCount: 0, followingCount: 0 };
-  
-  const formattedPostCount = formatNumber(stats.postCount);
-  const formattedFollowersCount = formatNumber(stats.followerCount);
-  const formattedFollowingCount = formatNumber(stats.followingCount);
+  const formattedPostCount = formatNumber(postCountValue);
+  const formattedFollowersCount = formatNumber(followerCountValue);
+  const formattedFollowingCount = formatNumber(followingCountValue);
   
   return (
     <Card className={className}>
