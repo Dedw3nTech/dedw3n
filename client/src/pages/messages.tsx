@@ -1,18 +1,30 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { useMessaging } from "@/hooks/use-messaging";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
-import { Loader2, Search, Settings, Phone, VideoIcon, Info, SendHorizonal, Paperclip, Smile, Plus } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Loader2, Search, Settings, Phone, VideoIcon, Video,
+  Info, SendHorizonal, Paperclip, Smile, Plus, X,
+  Mic, MicOff, Camera, CameraOff, MonitorUp, Volume2, Volume, PhoneOff 
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function MessagesPage() {
   const { username } = useParams();
@@ -22,7 +34,39 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [callType, setCallType] = useState<"audio" | "video">("video");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // Messaging context
+  const {
+    conversations: wsConversations,
+    activeConversation: wsActiveConversation,
+    messages: wsMessages,
+    unreadCount,
+    isConnected,
+    activeCall,
+    incomingCall,
+    localStream,
+    remoteStream,
+    isMuted,
+    isVideoOff,
+    isScreenSharing,
+    connect,
+    disconnect,
+    sendMessage: wsSendMessage,
+    startConversation: wsStartConversation,
+    setActiveConversation: setWsActiveConversation,
+    markAsRead,
+    initiateCall,
+    acceptCall,
+    declineCall,
+    endCall,
+    toggleMicrophone,
+    toggleCamera,
+    shareScreen
+  } = useMessaging();
 
   // Redirect if not logged in
   if (!currentUser) {
@@ -37,7 +81,7 @@ export default function MessagesPage() {
 
   // Fetch user's conversations
   const {
-    data: conversations,
+    data: apiConversations,
     isLoading: isLoadingConversations,
   } = useQuery({
     queryKey: ["/api/messages/conversations"],
@@ -51,18 +95,18 @@ export default function MessagesPage() {
   });
 
   // Find active conversation based on URL params
-  const activeConversation = username && conversations
-    ? conversations.find((convo: any) => 
+  const activeApiConversation = username && apiConversations
+    ? apiConversations.find((convo: any) => 
         convo.participants.some((p: any) => p.username === username)
       )
     : null;
 
   // Set active conversation ID
-  const activeConversationId = activeConversation?.id;
+  const activeConversationId = activeApiConversation?.id;
 
   // Fetch messages for the active conversation
   const {
-    data: messages,
+    data: apiMessages,
     isLoading: isLoadingMessages,
     refetch: refetchMessages,
   } = useQuery({
@@ -78,7 +122,7 @@ export default function MessagesPage() {
   });
 
   // Find the active conversation partner
-  const conversationPartner = activeConversation?.participants?.find(
+  const conversationPartner = activeApiConversation?.participants?.find(
     (p: any) => p.id !== currentUser.id
   );
 
@@ -189,19 +233,54 @@ export default function MessagesPage() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [apiMessages]);
 
   // Filter conversations based on search term
   const filteredConversations = isSearching && searchTerm 
-    ? conversations?.filter((convo: any) => 
+    ? apiConversations?.filter((convo: any) => 
         convo.participants.some((p: any) => 
           p.id !== currentUser.id && 
           (p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
            p.username.toLowerCase().includes(searchTerm.toLowerCase()))
         )
       )
-    : conversations;
+    : apiConversations;
 
+  // Connect to WebSocket on component mount
+  useEffect(() => {
+    if (currentUser) {
+      connect();
+    }
+    
+    return () => {
+      if (currentUser) {
+        disconnect();
+      }
+    };
+  }, [currentUser]);
+  
+  // Set local stream to video element
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+  
+  // Set remote stream to video element
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+  
+  // Handle call button click
+  const handleCall = async (type: "audio" | "video") => {
+    setCallType(type);
+    if (conversationPartner?.id) {
+      await initiateCall(conversationPartner.id, type);
+    }
+  };
+  
   return (
     <div className="container mx-auto py-8">
       {/* Social Header Navigation */}
@@ -222,6 +301,130 @@ export default function MessagesPage() {
           </div>
         </div>
       </div>
+      
+      {/* Active Call Dialog */}
+      <Dialog open={!!activeCall} onOpenChange={(open) => !open && endCall()}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
+          <div className="relative w-full h-full">
+            {/* Remote Video (Full size) */}
+            <div className="w-full h-[600px] bg-black relative">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className={`w-full h-full object-cover ${!remoteStream ? 'hidden' : ''}`}
+              />
+              
+              {!remoteStream && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Avatar className="h-32 w-32">
+                    <AvatarImage src={conversationPartner?.avatar || ""} />
+                    <AvatarFallback>{getInitials(conversationPartner?.name || "")}</AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+              
+              {/* Local Video (Picture-in-picture) */}
+              <div className="absolute bottom-4 right-4 w-1/4 h-1/4 border-2 border-white rounded-md overflow-hidden">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover ${(!localStream || isVideoOff) ? 'hidden' : ''}`}
+                />
+                
+                {(!localStream || isVideoOff) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={currentUser?.avatar || ""} />
+                      <AvatarFallback>{getInitials(currentUser?.name || currentUser?.username || "")}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Call Controls */}
+            <div className="p-4 bg-background flex justify-center gap-4">
+              <Button
+                variant={isMuted ? "destructive" : "secondary"}
+                size="icon"
+                onClick={() => toggleMicrophone(!isMuted)}
+                className="rounded-full h-12 w-12"
+              >
+                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </Button>
+              
+              <Button
+                variant={isVideoOff ? "destructive" : "secondary"}
+                size="icon"
+                onClick={() => toggleCamera(!isVideoOff)}
+                className="rounded-full h-12 w-12"
+              >
+                {isVideoOff ? <CameraOff className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+              </Button>
+              
+              <Button
+                variant={isScreenSharing ? "destructive" : "secondary"}
+                size="icon"
+                onClick={() => shareScreen(!isScreenSharing)}
+                className="rounded-full h-12 w-12"
+              >
+                <MonitorUp className="h-5 w-5" />
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => endCall()}
+                className="rounded-full h-12 w-12"
+              >
+                <PhoneOff className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Incoming Call Dialog */}
+      <Dialog open={!!incomingCall} onOpenChange={(open) => !open && declineCall()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Incoming {incomingCall?.type === "video" ? "Video" : "Audio"} Call</DialogTitle>
+            <DialogDescription>
+              {conversationPartner?.name || "Someone"} is calling you
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-center py-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={conversationPartner?.avatar || ""} />
+              <AvatarFallback>{getInitials(conversationPartner?.name || "")}</AvatarFallback>
+            </Avatar>
+          </div>
+          
+          <DialogFooter className="flex sm:justify-center gap-4">
+            <Button
+              variant="destructive"
+              onClick={() => declineCall()}
+              className="flex-1 sm:flex-initial"
+            >
+              <PhoneOff className="mr-2 h-4 w-4" />
+              Decline
+            </Button>
+            
+            <Button
+              variant="default"
+              onClick={() => acceptCall()}
+              className="flex-1 sm:flex-initial"
+            >
+              <Phone className="mr-2 h-4 w-4" />
+              Accept
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
         {/* Conversations sidebar */}
         <div className="md:col-span-1 border rounded-lg flex flex-col overflow-hidden bg-background">
@@ -386,7 +589,7 @@ export default function MessagesPage() {
                   <div className="h-full flex justify-center items-center">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   </div>
-                ) : !messages || messages.length === 0 ? (
+                ) : !apiMessages || apiMessages.length === 0 ? (
                   <div className="h-full flex flex-col justify-center items-center text-center">
                     <p className="text-muted-foreground mb-2">No messages yet</p>
                     <p className="text-sm text-muted-foreground">
@@ -395,9 +598,9 @@ export default function MessagesPage() {
                   </div>
                 ) : (
                   <>
-                    {messages.map((message: any, index: number) => {
+                    {apiMessages.map((message: any, index: number) => {
                       const isCurrentUser = message.userId === currentUser.id;
-                      const showAvatar = index === 0 || messages[index - 1].userId !== message.userId;
+                      const showAvatar = index === 0 || apiMessages[index - 1].userId !== message.userId;
                       
                       return (
                         <div
