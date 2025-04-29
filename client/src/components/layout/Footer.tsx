@@ -18,10 +18,10 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Marketplace</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li><a href="/products?type=c2c" className="hover:text-primary">C2C Marketplace</a></li>
-              <li><a href="/products?type=b2c" className="hover:text-primary">B2C Marketplace</a></li>
-              <li><a href="/products?type=b2b" className="hover:text-primary">B2B Marketplace</a></li>
-              <li><a href="/government" className="hover:text-primary">Governmental Services</a></li>
+              <li><Link href="/products?type=c2c" className="hover:text-primary">C2C Marketplace</Link></li>
+              <li><Link href="/products?type=b2c" className="hover:text-primary">B2C Marketplace</Link></li>
+              <li><Link href="/products?type=b2b" className="hover:text-primary">B2B Marketplace</Link></li>
+              <li><Link href="/government" className="hover:text-primary">Governmental Services</Link></li>
             </ul>
           </div>
 

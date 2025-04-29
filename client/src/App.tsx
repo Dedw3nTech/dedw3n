@@ -48,6 +48,14 @@ import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
 
+// Import footer pages
+import FAQPage from "@/pages/faq";
+import ShippingPage from "@/pages/shipping";
+import PrivacyPage from "@/pages/privacy";
+import TermsPage from "@/pages/terms";
+import CookiesPage from "@/pages/cookies";
+import ContactPage from "@/pages/contact";
+
 // Import community-related components
 import CommunitiesPage from "@/pages/communities";
 import CreateCommunityPage from "@/pages/create-community";
@@ -82,6 +90,14 @@ function Router() {
       <ProtectedRoute path="/dating" component={DatingPage} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
+      
+      {/* Footer pages - publicly accessible */}
+      <Route path="/faq" component={FAQPage} />
+      <Route path="/shipping" component={ShippingPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/cookies" component={CookiesPage} />
+      <Route path="/contact" component={ContactPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={Social} />
