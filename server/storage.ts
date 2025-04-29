@@ -31,15 +31,25 @@ export interface IStorage {
   // Message operations
   getMessage(id: number): Promise<Message | undefined>;
   getUserMessages(userId: number): Promise<Message[]>;
-  getConversationMessages(userId1: number, userId2: number): Promise<Message[]>;
+  getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
   getUserConversations(userId: number): Promise<any[]>;
-  getUnreadMessagesCount(userId: number): Promise<number>;
+  getUnreadMessageCount(userId: number): Promise<number>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
   updateMessageContent(id: number, newContent: string): Promise<Message | undefined>;
   searchUserMessages(userId: number, query: string): Promise<any[]>;
   clearConversation(userId1: number, userId2: number): Promise<boolean>;
   getUserMessagingStats(userId: number): Promise<any>;
+  deleteMessage(id: number): Promise<boolean>;
+  
+  // Call operations
+  createCallSession(callData: any): Promise<any>;
+  updateCallSession(id: number, updateData: any): Promise<any>;
+  getUserCallHistory(userId: number, limit?: number): Promise<any[]>;
+  getUserCallStats(userId: number): Promise<any>;
+  
+  // Notification operations
+  createNotification(notificationData: any): Promise<any>;
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -82,7 +92,7 @@ export class DatabaseStorage implements IStorage {
     return messageHelpers.getUserMessages(userId);
   }
   
-  async getConversationMessages(userId1: number, userId2: number): Promise<Message[]> {
+  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
     return messageHelpers.getConversationMessages(userId1, userId2);
   }
   
@@ -98,8 +108,193 @@ export class DatabaseStorage implements IStorage {
     return messageHelpers.markMessageAsRead(id);
   }
   
-  async getUnreadMessagesCount(userId: number): Promise<number> {
+  async getUnreadMessageCount(userId: number): Promise<number> {
     return messageHelpers.getUnreadMessagesCount(userId);
+  }
+  
+  async deleteMessage(id: number): Promise<boolean> {
+    try {
+      await db.delete(messages).where(eq(messages.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      return false;
+    }
+  }
+  
+  // Call operations implementation
+  async createCallSession(callData: any): Promise<any> {
+    try {
+      const [newCallSession] = await db.insert(callSessions).values(callData).returning();
+      return newCallSession;
+    } catch (error) {
+      console.error('Error creating call session:', error);
+      throw new Error('Failed to create call session');
+    }
+  }
+  
+  async updateCallSession(id: number, updateData: any): Promise<any> {
+    try {
+      const [updatedCallSession] = await db
+        .update(callSessions)
+        .set(updateData)
+        .where(eq(callSessions.id, id))
+        .returning();
+      return updatedCallSession;
+    } catch (error) {
+      console.error('Error updating call session:', error);
+      throw new Error('Failed to update call session');
+    }
+  }
+  
+  async getUserCallHistory(userId: number, limit: number = 20): Promise<any[]> {
+    try {
+      const calls = await db
+        .select()
+        .from(callSessions)
+        .where(
+          or(
+            eq(callSessions.initiatorId, userId),
+            eq(callSessions.receiverId, userId)
+          )
+        )
+        .orderBy(desc(callSessions.startTime))
+        .limit(limit);
+        
+      // Fetch user details for each call
+      const callsWithUsers = await Promise.all(calls.map(async (call) => {
+        const otherUserId = call.initiatorId === userId ? call.receiverId : call.initiatorId;
+        const otherUser = await this.getUser(otherUserId);
+        
+        return {
+          ...call,
+          otherUser: otherUser ? {
+            id: otherUser.id,
+            username: otherUser.username,
+            name: otherUser.name,
+            avatar: otherUser.avatar
+          } : null,
+          isOutgoing: call.initiatorId === userId
+        };
+      }));
+      
+      return callsWithUsers;
+    } catch (error) {
+      console.error('Error getting user call history:', error);
+      return [];
+    }
+  }
+  
+  async getUserCallStats(userId: number): Promise<any> {
+    try {
+      // Get total calls
+      const [totalResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(
+          or(
+            eq(callSessions.initiatorId, userId),
+            eq(callSessions.receiverId, userId)
+          )
+        );
+      
+      // Get total duration
+      const [durationResult] = await db
+        .select({ totalDuration: sql`SUM(${callSessions.duration})` })
+        .from(callSessions)
+        .where(
+          and(
+            or(
+              eq(callSessions.initiatorId, userId),
+              eq(callSessions.receiverId, userId)
+            ),
+            eq(callSessions.status, 'ended')
+          )
+        );
+      
+      // Get outgoing calls
+      const [outgoingResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(eq(callSessions.initiatorId, userId));
+      
+      // Get incoming calls
+      const [incomingResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(eq(callSessions.receiverId, userId));
+      
+      // Get missed calls
+      const [missedResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(
+          and(
+            eq(callSessions.receiverId, userId),
+            eq(callSessions.status, 'missed')
+          )
+        );
+      
+      // Get video calls
+      const [videoResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(
+          and(
+            or(
+              eq(callSessions.initiatorId, userId),
+              eq(callSessions.receiverId, userId)
+            ),
+            eq(callSessions.type, 'video')
+          )
+        );
+      
+      // Get audio calls
+      const [audioResult] = await db
+        .select({ count: count() })
+        .from(callSessions)
+        .where(
+          and(
+            or(
+              eq(callSessions.initiatorId, userId),
+              eq(callSessions.receiverId, userId)
+            ),
+            eq(callSessions.type, 'audio')
+          )
+        );
+      
+      return {
+        totalCalls: totalResult.count || 0,
+        totalDuration: durationResult.totalDuration || 0,
+        outgoingCalls: outgoingResult.count || 0,
+        incomingCalls: incomingResult.count || 0,
+        missedCalls: missedResult.count || 0,
+        videoCalls: videoResult.count || 0,
+        audioCalls: audioResult.count || 0
+      };
+    } catch (error) {
+      console.error('Error getting user call stats:', error);
+      return {
+        totalCalls: 0,
+        totalDuration: 0,
+        outgoingCalls: 0,
+        incomingCalls: 0,
+        missedCalls: 0,
+        videoCalls: 0,
+        audioCalls: 0
+      };
+    }
+  }
+  
+  // Notification operations
+  async createNotification(notificationData: any): Promise<any> {
+    try {
+      const [newNotification] = await db.insert(notifications).values(notificationData).returning();
+      return newNotification;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw new Error('Failed to create notification');
+    }
   }
   
   async updateMessageContent(id: number, newContent: string): Promise<Message | undefined> {
