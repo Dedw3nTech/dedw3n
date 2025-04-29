@@ -30,33 +30,8 @@ const countryCurrencyMap: Record<string, string> = {
   'DEFAULT': 'GBP', // Default to GBP
 };
 
-// Map of country codes to language codes
-const countryLanguageMap: Record<string, string> = {
-  // Europe
-  'GB': 'en', // United Kingdom - English
-  'DE': 'de', // Germany - German
-  'FR': 'fr', // France - French
-  'IT': 'it', // Italy - Italian
-  'ES': 'es', // Spain - Spanish
-  
-  // Americas
-  'US': 'en', // United States - English
-  'CA': 'en', // Canada - English (could be French too)
-  'BR': 'pt', // Brazil - Portuguese
-  'MX': 'es', // Mexico - Spanish
-  
-  // Asia
-  'CN': 'zh', // China - Chinese
-  'IN': 'hi', // India - Hindi
-  'JP': 'ja', // Japan - Japanese
-  'KR': 'ko', // South Korea - Korean
-  
-  // Default
-  'DEFAULT': 'en', // Default to English
-};
-
-// Languages supported by our application
-export const supportedLanguages = ['en', 'fr', 'pt', 'zh', 'hi', 'ar', 'es'];
+// Only English is supported
+export const supportedLanguages = ['en'];
 
 // Currencies supported by our application
 export const supportedCurrencies = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL'];
@@ -77,13 +52,8 @@ export async function detectUserLocation(): Promise<LocationInfo> {
     // Get currency for the detected country or use default
     const currency = countryCurrencyMap[countryCode] || countryCurrencyMap.DEFAULT;
     
-    // Get language for the detected country or use default
-    let language = countryLanguageMap[countryCode] || countryLanguageMap.DEFAULT;
-    
-    // Check if the language is supported, if not default to English
-    if (!supportedLanguages.includes(language)) {
-      language = 'en';
-    }
+    // English only
+    const language = 'en';
     
     return {
       country,
@@ -104,21 +74,19 @@ export async function detectUserLocation(): Promise<LocationInfo> {
   }
 }
 
-// Get the default language for the browser
+// Always return English
 export function getBrowserLanguage(): string {
-  const browserLanguage = navigator.language.split('-')[0];
-  return supportedLanguages.includes(browserLanguage) ? browserLanguage : 'en';
+  return 'en';
 }
 
-// Get the user's preferred language, either from localStorage or the browser
+// Always return English
 export function getUserPreferredLanguage(): string {
-  const savedLanguage = localStorage.getItem('userLanguage');
-  return savedLanguage || getBrowserLanguage();
+  return 'en';
 }
 
-// Save the user's language preference to localStorage
+// Save English only
 export function saveUserLanguage(language: string): void {
-  localStorage.setItem('userLanguage', language);
+  localStorage.setItem('userLanguage', 'en');
 }
 
 // Save the user's currency preference to localStorage

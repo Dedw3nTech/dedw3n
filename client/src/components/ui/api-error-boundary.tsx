@@ -78,7 +78,7 @@ export class ApiErrorBoundary extends Component<Props, State> {
     
     const handleClick = () => {
       this.resetError();
-      navigate('/');
+      navigate.navigate('/');
     };
     
     return (

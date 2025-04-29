@@ -1,124 +1,46 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import { detectUserLocation, getUserPreferredLanguage, saveUserLanguage, supportedLanguages } from './locationDetection';
 import { resources } from '@/locales';
 
-// Available languages
+// Only English is supported
 export const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
-  { code: 'pt', name: 'Português' },
-  { code: 'zh', name: '中文' },    // Mandarin
-  { code: 'hi', name: 'हिन्दी' },  // Hindi
-  { code: 'ar', name: 'العربية' }, // Arabic
-  { code: 'es', name: 'Español' }  // Spanish
+  { code: 'en', name: 'English' }
 ];
 
-// Get the language from URL parameter or localStorage or default to English
-const getInitialLanguage = () => {
-  // Check URL parameters first (highest priority)
-  const params = new URLSearchParams(window.location.search);
-  const langParam = params.get('lang');
-  if (langParam && supportedLanguages.includes(langParam)) {
-    console.log('Using language from URL parameter:', langParam);
-    return langParam;
-  }
-  
-  // Check localStorage next
-  const storedLang = localStorage.getItem('i18nextLng');
-  if (storedLang && supportedLanguages.includes(storedLang)) {
-    console.log('Using language from localStorage:', storedLang);
-    return storedLang;
-  }
-  
-  // Fallback to English
-  return 'en';
-};
-
-// Determine initial language
-const initialLanguage = getInitialLanguage();
-// Ensure it's saved in localStorage
-localStorage.setItem('i18nextLng', initialLanguage);
+// Set English as the default language
+localStorage.setItem('i18nextLng', 'en');
+localStorage.setItem('userLanguage', 'en');
 
 i18n
-  // Detect user language
-  .use(LanguageDetector)
   // Pass the i18n instance to react-i18next
   .use(initReactI18next)
   // Initialize i18next
   .init({
     resources, // Use the bundled resources instead of HTTP backend
+    lng: 'en', // Use English only
     fallbackLng: 'en',
-    lng: initialLanguage, // Force the initial language
     debug: import.meta.env.DEV,
     interpolation: {
       escapeValue: false, // React already escapes values
     },
-    detection: {
-      order: ['querystring', 'localStorage', 'navigator', 'htmlTag'],
-      lookupQuerystring: 'lang', // Look for the 'lang' parameter in the URL
-      caches: ['localStorage'],
-    },
     ns: 'common',
     defaultNS: 'common',
-    supportedLngs: supportedLanguages,
+    supportedLngs: ['en'],
   });
 
-// Initialize language based on geo-location
+// Initialize language (always English)
 export async function initializeLanguageFromLocation() {
-  try {
-    // Check from multiple sources to ensure we find the saved preference
-    // 1. Check our own localStorage key
-    const customSavedLanguage = localStorage.getItem('userLanguage');
-    
-    // 2. Check i18next's default localStorage key
-    const i18nextSavedLanguage = localStorage.getItem('i18nextLng');
-    
-    // 3. Check our function that reads from application storage
-    const appSavedLanguage = getUserPreferredLanguage();
-    
-    // Use the first valid language we find
-    const savedLanguage = customSavedLanguage || i18nextSavedLanguage || appSavedLanguage;
-    
-    if (savedLanguage && supportedLanguages.includes(savedLanguage)) {
-      console.log('Loading saved language preference:', savedLanguage);
-      await i18n.changeLanguage(savedLanguage);
-      // Make sure language is saved in all places
-      saveUserLanguage(savedLanguage);
-      localStorage.setItem('i18nextLng', savedLanguage);
-      localStorage.setItem('userLanguage', savedLanguage);
-      return;
-    }
-
-    // If no saved preference, detect location and get appropriate language
-    const locationInfo = await detectUserLocation();
-    
-    if (locationInfo && locationInfo.language && supportedLanguages.includes(locationInfo.language)) {
-      console.log('Setting language based on location:', locationInfo.language);
-      // Change the language
-      await i18n.changeLanguage(locationInfo.language);
-      // Save the detected language preference in all places
-      saveUserLanguage(locationInfo.language);
-      localStorage.setItem('i18nextLng', locationInfo.language);
-      localStorage.setItem('userLanguage', locationInfo.language);
-    }
-  } catch (error) {
-    console.error('Error initializing language from location:', error);
-  }
+  // No longer needed - English only
+  return;
 }
 
-// Change language and save preference
+// Change language (for API compatibility, but will always use English)
 export function changeLanguage(languageCode: string) {
-  console.log('Language changing from', i18n.language, 'to', languageCode);
-  const prevLanguage = i18n.language;
-  i18n.changeLanguage(languageCode);
-  saveUserLanguage(languageCode);
-  
-  // Dispatch custom event for language change to force components to update
-  window.dispatchEvent(new CustomEvent('language-changed', { 
-    detail: { from: prevLanguage, to: languageCode } 
-  }));
+  // Ignore other languages, always use English
+  console.log('Language changing to English (only supported language)');
+  i18n.changeLanguage('en');
+  localStorage.setItem('i18nextLng', 'en');
+  localStorage.setItem('userLanguage', 'en');
 }
 
 export default i18n;

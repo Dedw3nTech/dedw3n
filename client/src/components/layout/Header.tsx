@@ -6,7 +6,6 @@ import UserMenu from "../ui/user-menu";
 import CurrencyConverter from "../ui/currency-converter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
-import { LanguageSelector } from "../lang/LanguageSelector";
 import { CurrencySelector } from "../lang/CurrencySelector";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
@@ -158,7 +157,6 @@ export default function Header() {
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
             <div className="hidden md:flex items-center space-x-1 ml-4">
               <CurrencySelector />
-              <LanguageSelector />
             </div>
           </div>
 

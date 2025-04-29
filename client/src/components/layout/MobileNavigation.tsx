@@ -4,7 +4,6 @@ import { useState } from "react";
 import SearchOverlay from "../ui/search-overlay";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
-import { LanguageSelector } from "../lang";
 import Logo from "../ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,9 +30,6 @@ export default function MobileNavigation() {
     <>
       <div className="md:hidden fixed top-3 left-3 z-50 bg-white/80 backdrop-blur-sm rounded-full shadow-md p-1">
         <Logo size="sm" withText={false} />
-      </div>
-      <div className="md:hidden fixed top-3 right-3 z-50">
-        <LanguageSelector className="bg-white shadow-md rounded-full" />
       </div>
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around">

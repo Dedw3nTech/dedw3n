@@ -1,45 +1,58 @@
-import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import React from 'react';
+import { useQueryErrorResetBoundary } from '@tanstack/react-query';
+import { AlertCircle, RefreshCcw } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { ErrorBoundary } from './error-boundary';
 
 interface QueryErrorBoundaryProps {
-  error: Error;
-  queryKey: unknown[];
-  children?: ReactNode;
+  children: React.ReactNode;
+  queryKey?: string;
   className?: string;
+  fallback?: React.ReactNode;
 }
 
+/**
+ * An error boundary specifically for handling React Query errors.
+ * Uses the QueryErrorResetBoundary to provide a clean reset mechanism.
+ */
 export function QueryErrorBoundary({
-  error,
-  queryKey,
   children,
-  className = "",
+  queryKey,
+  className,
+  fallback,
 }: QueryErrorBoundaryProps) {
-  const queryClient = useQueryClient();
-  
-  const handleRetry = () => {
-    // Invalidate the query to force a refetch
-    queryClient.invalidateQueries({ queryKey });
-  };
+  const { reset } = useQueryErrorResetBoundary();
 
-  return (
-    <div className={`p-4 ${className}`}>
-      <Alert variant="destructive" className="mb-4">
+  // Custom fallback UI specifically for query errors
+  const defaultFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => void }) => (
+    <div className={`p-6 space-y-4 ${className || ''}`}>
+      <Alert variant="destructive">
         <AlertCircle className="h-4 w-4 mr-2" />
-        <AlertTitle>Error Loading Data</AlertTitle>
+        <AlertTitle>Data Fetch Error</AlertTitle>
         <AlertDescription className="mt-2">
-          {error?.message || "An unexpected error occurred while fetching data"}
+          We encountered an error while fetching data{queryKey ? ` for ${queryKey}` : ''}.
+          Please try again or reload the page.
         </AlertDescription>
       </Alert>
-      <div className="flex justify-center mt-4">
-        <Button onClick={handleRetry} className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4" />
+      <div className="flex justify-center">
+        <Button 
+          onClick={() => resetErrorBoundary()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCcw className="h-4 w-4" />
           Retry
         </Button>
       </div>
-      {children}
     </div>
+  );
+
+  return (
+    <ErrorBoundary
+      fallback={fallback || defaultFallback({ resetErrorBoundary: reset })}
+      key={`query-error-boundary-${queryKey || 'default'}`}
+    >
+      {children}
+    </ErrorBoundary>
   );
 }

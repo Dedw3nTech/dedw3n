@@ -5,7 +5,9 @@ import { AlertCircle, RefreshCcw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode;
+  fallback?: ReactNode | ((props: { resetErrorBoundary: () => void }) => ReactNode);
+  onReset?: () => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -13,10 +15,6 @@ interface State {
   error: Error | null;
 }
 
-/**
- * A generic error boundary component that catches errors in its child component tree.
- * Renders a fallback UI when an error occurs.
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -26,8 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
       error
@@ -35,12 +32,19 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // You can log the error to an error reporting service here
     console.error('Error caught by ErrorBoundary:', error);
     console.error('Component stack:', errorInfo.componentStack);
+    
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
-  resetError = (): void => {
+  resetErrorBoundary = (): void => {
+    if (this.props.onReset) {
+      this.props.onReset();
+    }
+    
     this.setState({
       hasError: false,
       error: null
@@ -48,25 +52,33 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render(): ReactNode {
-    if (this.state.hasError) {
-      // If a custom fallback is provided, use it
-      if (this.props.fallback) {
-        return this.props.fallback;
+    const { hasError, error } = this.state;
+    const { children, fallback } = this.props;
+    
+    if (hasError) {
+      // If fallback is a function, call it with reset function
+      if (typeof fallback === 'function') {
+        return fallback({ resetErrorBoundary: this.resetErrorBoundary });
       }
-
-      // Otherwise, render the default error UI
+      
+      // If fallback is a ReactNode, render it directly
+      if (fallback) {
+        return fallback;
+      }
+      
+      // Default error UI if no fallback is provided
       return (
         <div className="p-6 space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertTitle>Something went wrong</AlertTitle>
             <AlertDescription className="mt-2">
-              {this.state.error?.message || 'An unexpected error occurred'}
+              {error?.message || 'An unexpected error occurred'}
             </AlertDescription>
           </Alert>
           <div className="flex justify-center">
             <Button 
-              onClick={this.resetError}
+              onClick={this.resetErrorBoundary}
               className="flex items-center gap-2"
             >
               <RefreshCcw className="h-4 w-4" />
@@ -77,6 +89,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }
