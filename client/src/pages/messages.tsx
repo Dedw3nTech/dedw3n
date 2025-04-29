@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
 import { Loader2, Search, Settings, Phone, VideoIcon, Info, SendHorizonal, Paperclip, Smile, Plus } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MessagesPage() {
   const { username } = useParams();
@@ -203,6 +204,24 @@ export default function MessagesPage() {
 
   return (
     <div className="container mx-auto py-8">
+      {/* Social Header Navigation */}
+      <div className="mb-6 border-b pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Messages</h1>
+            <p className="text-muted-foreground">Connect and chat with friends and community members</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Tabs defaultValue="all" className="w-full sm:w-auto">
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="unread">Unread</TabsTrigger>
+                <TabsTrigger value="requests">Requests</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
         {/* Conversations sidebar */}
         <div className="md:col-span-1 border rounded-lg flex flex-col overflow-hidden bg-background">
