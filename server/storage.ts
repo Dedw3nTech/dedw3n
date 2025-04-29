@@ -67,6 +67,14 @@ export interface IStorage {
   listUsers(): Promise<User[]>;
   searchUsers(query: string, limit?: number): Promise<User[]>;
   
+  // User social stats
+  getUserPostCount(userId: number): Promise<number>;
+  getFollowersCount(userId: number): Promise<number>;
+  getFollowingCount(userId: number): Promise<number>;
+  getUserPosts(userId: number, limit?: number, offset?: number): Promise<Post[]>;
+  getFollowers(userId: number, limit?: number, offset?: number): Promise<User[]>;
+  getFollowing(userId: number, limit?: number, offset?: number): Promise<User[]>;
+  
   // Category operations
   getCategoryByName(name: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
@@ -526,6 +534,112 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error checking follow status:', error);
       return false;
+    }
+  }
+  
+  // User stats methods
+  async getUserPostCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(posts)
+        .where(eq(posts.userId, userId));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting user post count:', error);
+      return 0;
+    }
+  }
+  
+  async getFollowersCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(follows)
+        .where(eq(follows.followingId, userId));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting followers count:', error);
+      return 0;
+    }
+  }
+  
+  async getFollowingCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(follows)
+        .where(eq(follows.followerId, userId));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting following count:', error);
+      return 0;
+    }
+  }
+  
+  async getUserPosts(userId: number, limit: number = 10, offset: number = 0): Promise<Post[]> {
+    try {
+      const userPosts = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.userId, userId))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return userPosts;
+    } catch (error) {
+      console.error('Error getting user posts:', error);
+      return [];
+    }
+  }
+  
+  async getFollowers(userId: number, limit: number = 10, offset: number = 0): Promise<User[]> {
+    try {
+      const followers = await db
+        .select({ 
+          user: users
+        })
+        .from(follows)
+        .innerJoin(users, eq(follows.followerId, users.id))
+        .where(eq(follows.followingId, userId))
+        .orderBy(desc(follows.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return followers.map(f => {
+        const { password, ...userData } = f.user;
+        return userData as User;
+      });
+    } catch (error) {
+      console.error('Error getting followers:', error);
+      return [];
+    }
+  }
+  
+  async getFollowing(userId: number, limit: number = 10, offset: number = 0): Promise<User[]> {
+    try {
+      const following = await db
+        .select({ 
+          user: users
+        })
+        .from(follows)
+        .innerJoin(users, eq(follows.followingId, users.id))
+        .where(eq(follows.followerId, userId))
+        .orderBy(desc(follows.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return following.map(f => {
+        const { password, ...userData } = f.user;
+        return userData as User;
+      });
+    } catch (error) {
+      console.error('Error getting following users:', error);
+      return [];
     }
   }
 
