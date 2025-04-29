@@ -988,6 +988,31 @@ export default function AdminDashboard() {
                             Manage system cache and search indices
                           </p>
                         </div>
+
+                        {/* User Data Utilities */}
+                        <div className="space-y-2 mt-4">
+                          <Label htmlFor="user-utilities">User Data Utilities</Label>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={handleFixBlobAvatars}
+                              disabled={isFixingBlobAvatars}
+                            >
+                              {isFixingBlobAvatars ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                  Fixing...
+                                </>
+                              ) : (
+                                "Fix Blob Avatars"
+                              )}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Clean up and fix temporary blob URLs in user avatars
+                          </p>
+                        </div>
                       </div>
                     </div>
 
