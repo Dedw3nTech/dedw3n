@@ -14,7 +14,8 @@ import {
   MoreHorizontal,
   ThumbsUp, 
   Tag,
-  BadgeCheck
+  BadgeCheck,
+  ImageOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,17 @@ interface EnhancedPostCardProps {
   post: Post;
 }
 
+// Function to validate image URLs
+const isValidImageUrl = (url?: string): boolean => {
+  if (!url) return false;
+  
+  // Check if it's a blob URL (these won't work in the feed)
+  if (url.startsWith('blob:')) return false;
+  
+  // Validate that it's a web URL
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
 export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -40,6 +52,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const isOwner = user?.id === post.userId;
   
@@ -164,13 +177,21 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       case "image":
         return (
           <div className="mb-4">
-            {post.imageUrl && (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.post_image")} 
                 className="w-full rounded-md object-contain max-h-[400px]"
+                onError={() => setImageError(true)}
               />
-            )}
+            ) : post.imageUrl ? (
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[400px] p-8">
+                <div className="text-center text-gray-500">
+                  <ImageOff className="h-16 w-16 mx-auto mb-2" />
+                  <p>{t("social.image_unavailable")}</p>
+                </div>
+              </div>
+            ) : null}
             <p className="mt-3 text-gray-700">{post.content}</p>
           </div>
         );
@@ -202,13 +223,21 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
             <div className="prose max-w-none">
               <p className="text-gray-700">{post.content}</p>
             </div>
-            {post.imageUrl && (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.article_image")} 
                 className="w-full rounded-md object-contain mt-4 max-h-[300px]"
+                onError={() => setImageError(true)}
               />
-            )}
+            ) : post.imageUrl ? (
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[300px] mt-4 p-8">
+                <div className="text-center text-gray-500">
+                  <ImageOff className="h-16 w-16 mx-auto mb-2" />
+                  <p>{t("social.image_unavailable")}</p>
+                </div>
+              </div>
+            ) : null}
           </div>
         );
         
@@ -222,13 +251,21 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <h2 className="text-xl font-bold mb-2">{post.title}</h2>
             )}
             <p className="text-gray-700">{post.content}</p>
-            {post.imageUrl && (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.ad_image")} 
                 className="w-full rounded-md object-contain mt-4 max-h-[300px]"
+                onError={() => setImageError(true)}
               />
-            )}
+            ) : post.imageUrl ? (
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[300px] mt-4 p-8">
+                <div className="text-center text-gray-500">
+                  <ImageOff className="h-16 w-16 mx-auto mb-2" />
+                  <p>{t("social.image_unavailable")}</p>
+                </div>
+              </div>
+            ) : null}
             <div className="mt-4">
               <Button size="sm" className="bg-primary hover:bg-primary/90">
                 {t("social.learn_more")}
