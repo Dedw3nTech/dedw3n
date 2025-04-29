@@ -3811,6 +3811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId,
         receiverId: recipient.id,
         content: firstMessage,
+        messageType: 'text',
         isRead: false,
         createdAt: new Date()
       });
