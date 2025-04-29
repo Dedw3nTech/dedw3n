@@ -1,6 +1,15 @@
 import { Express, Request, Response, NextFunction } from "express";
 import { storage } from './storage';
-import { userRoleEnum, posts, users, postReviewStatusEnum } from "@shared/schema";
+import { 
+  userRoleEnum, 
+  posts, 
+  users, 
+  postReviewStatusEnum,
+  flaggedContentStatusEnum,
+  moderationMatchTypeEnum,
+  moderationSeverityEnum,
+  flaggedContentTypeEnum
+} from "@shared/schema";
 import { eq, and, or, like, desc } from "drizzle-orm";
 
 // Middleware to check if user is admin
@@ -756,6 +765,888 @@ export function registerAdminRoutes(app: Express) {
         success: false, 
         error: 'Failed to fix blob avatars' 
       });
+    }
+  });
+
+  // ========== CONTENT MODERATION ENDPOINTS ==========
+
+  // Get moderation stats for the dashboard
+  app.get('/api/admin/moderation/stats', isAdmin, async (req, res) => {
+    try {
+      const timeRange = req.query.timeRange as string || 'week';
+      
+      // Get flagged content count
+      const flaggedContentCount = (await storage.getFlaggedContent({ status: 'pending' })).length;
+      const flaggedImagesCount = (await storage.getFlaggedImages({ status: 'pending' })).length;
+      const moderationReportsCount = (await storage.getModerationReports({ status: 'pending' })).length;
+      
+      // Get total flagged items count
+      const totalFlagged = flaggedContentCount + flaggedImagesCount + moderationReportsCount;
+      
+      // Get resolved today count
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const resolvedToday = [
+        ...(await storage.getFlaggedContent({ 
+          status: 'approved',
+        })),
+        ...(await storage.getFlaggedContent({ 
+          status: 'rejected',
+        })),
+        ...(await storage.getFlaggedImages({ 
+          status: 'approved',
+        })),
+        ...(await storage.getFlaggedImages({ 
+          status: 'rejected',
+        })),
+        ...(await storage.getModerationReports({ 
+          status: 'approved',
+        })),
+        ...(await storage.getModerationReports({ 
+          status: 'rejected',
+        }))
+      ].filter(item => {
+        if (!item.reviewedAt) return false;
+        const reviewDate = new Date(item.reviewedAt);
+        return reviewDate >= today;
+      }).length;
+      
+      // Get content type data
+      const contentTypeCounts = {
+        post: (await storage.getFlaggedContent({ contentType: 'post' })).length,
+        comment: (await storage.getFlaggedContent({ contentType: 'comment' })).length,
+        message: (await storage.getFlaggedContent({ contentType: 'message' })).length,
+        product: (await storage.getFlaggedContent({ contentType: 'product' })).length,
+        profile: (await storage.getFlaggedContent({ contentType: 'profile' })).length,
+        community: (await storage.getFlaggedContent({ contentType: 'community' })).length,
+      };
+      
+      // Return formatted statistics for the dashboard
+      res.json({
+        totalFlagged,
+        pendingReview: totalFlagged, // Same as total flagged for now
+        resolvedToday,
+        // For now, we don't have real AI moderation, so setting this to 0
+        autoModerated: 0,
+        contentTypeData: Object.entries(contentTypeCounts).map(([key, value]) => ({
+          name: key,
+          value
+        })),
+        // Other details we'd include in a real implementation:
+        aiAssistAccuracy: 0, // Not implemented yet
+        averageResponseTime: 0, // Not tracked yet
+      });
+    } catch (error) {
+      console.error('Error fetching moderation stats:', error);
+      res.status(500).json({ message: 'Error fetching moderation stats' });
+    }
+  });
+
+  // Get moderation logs
+  app.get('/api/admin/moderation/logs', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const action = req.query.action as string;
+      const contentType = req.query.contentType as string;
+      const moderator = req.query.moderator as string;
+      const date = req.query.date as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+      
+      // Get all reports that have been reviewed
+      const reportOptions: any = {
+        status: 'approved' // Actually want all reviewed items, but this is a placeholder
+      };
+      
+      if (search) {
+        reportOptions.search = search;
+      }
+      
+      if (action) {
+        // In a real implementation, we'd filter by action type
+      }
+      
+      if (contentType) {
+        reportOptions.contentType = contentType;
+      }
+      
+      if (moderator) {
+        // In a real implementation, we'd filter by moderator
+      }
+      
+      if (date) {
+        // In a real implementation, we'd filter by date
+      }
+      
+      reportOptions.limit = limit;
+      reportOptions.offset = offset;
+      
+      // Get moderation reports
+      const reports = await storage.getModerationReports(reportOptions);
+      
+      // Format reports as logs
+      const logs = await Promise.all(reports.map(async (report) => {
+        // Get user who reported
+        const reportedByUser = await storage.getUser(report.reportedBy);
+        
+        // Get user who reviewed (if any)
+        const reviewedByUser = report.reviewedBy ? await storage.getUser(report.reviewedBy) : null;
+        
+        return {
+          id: report.id,
+          action: report.status === 'approved' ? 'approve' : 'reject',
+          contentType: report.contentType,
+          content: report.details.substring(0, 100) + (report.details.length > 100 ? '...' : ''),
+          reportedBy: reportedByUser ? reportedByUser.username : 'Unknown',
+          moderator: reviewedByUser ? reviewedByUser.username : 'System',
+          timestamp: report.reviewedAt || report.createdAt,
+          reason: report.reviewNote || 'No reason provided'
+        };
+      }));
+      
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching moderation logs:', error);
+      res.status(500).json({ message: 'Error fetching moderation logs' });
+    }
+  });
+
+  // ===== ALLOW LIST ENDPOINTS =====
+  
+  // Get all allow list items
+  app.get('/api/admin/moderation/allow-list', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const items = await storage.getAllowList(search);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching allow list:', error);
+      res.status(500).json({ message: 'Error fetching allow list' });
+    }
+  });
+  
+  // Get a single allow list item
+  app.get('/api/admin/moderation/allow-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getAllowListItem(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Allow list item not found' });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      console.error('Error fetching allow list item:', error);
+      res.status(500).json({ message: 'Error fetching allow list item' });
+    }
+  });
+  
+  // Create a new allow list item
+  app.post('/api/admin/moderation/allow-list', isAdmin, async (req, res) => {
+    try {
+      const { term, context, notes } = req.body;
+      
+      if (!term) {
+        return res.status(400).json({ message: 'Term is required' });
+      }
+      
+      const newItem = await storage.createAllowListItem({
+        term,
+        context,
+        notes
+      });
+      
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating allow list item:', error);
+      res.status(500).json({ message: 'Error creating allow list item' });
+    }
+  });
+  
+  // Update an allow list item
+  app.patch('/api/admin/moderation/allow-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { term, context, notes } = req.body;
+      
+      const item = await storage.getAllowListItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Allow list item not found' });
+      }
+      
+      const updates: any = {};
+      if (term !== undefined) updates.term = term;
+      if (context !== undefined) updates.context = context;
+      if (notes !== undefined) updates.notes = notes;
+      
+      const updatedItem = await storage.updateAllowListItem(id, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating allow list item:', error);
+      res.status(500).json({ message: 'Error updating allow list item' });
+    }
+  });
+  
+  // Delete an allow list item
+  app.delete('/api/admin/moderation/allow-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const item = await storage.getAllowListItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Allow list item not found' });
+      }
+      
+      await storage.deleteAllowListItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting allow list item:', error);
+      res.status(500).json({ message: 'Error deleting allow list item' });
+    }
+  });
+  
+  // ===== BLOCK LIST ENDPOINTS =====
+  
+  // Get all block list items
+  app.get('/api/admin/moderation/block-list', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const items = await storage.getBlockList(search);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching block list:', error);
+      res.status(500).json({ message: 'Error fetching block list' });
+    }
+  });
+  
+  // Get a single block list item
+  app.get('/api/admin/moderation/block-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getBlockListItem(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Block list item not found' });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      console.error('Error fetching block list item:', error);
+      res.status(500).json({ message: 'Error fetching block list item' });
+    }
+  });
+  
+  // Create a new block list item
+  app.post('/api/admin/moderation/block-list', isAdmin, async (req, res) => {
+    try {
+      const { term, matchType, severity, context, notes } = req.body;
+      
+      if (!term) {
+        return res.status(400).json({ message: 'Term is required' });
+      }
+      
+      if (!matchType || !['exact', 'partial', 'regex'].includes(matchType)) {
+        return res.status(400).json({ 
+          message: 'Invalid match type. Must be one of: exact, partial, regex' 
+        });
+      }
+      
+      if (!severity || !['low', 'medium', 'high'].includes(severity)) {
+        return res.status(400).json({ 
+          message: 'Invalid severity. Must be one of: low, medium, high' 
+        });
+      }
+      
+      const newItem = await storage.createBlockListItem({
+        term,
+        matchType,
+        severity,
+        context,
+        notes
+      });
+      
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating block list item:', error);
+      res.status(500).json({ message: 'Error creating block list item' });
+    }
+  });
+  
+  // Update a block list item
+  app.patch('/api/admin/moderation/block-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { term, matchType, severity, context, notes } = req.body;
+      
+      const item = await storage.getBlockListItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Block list item not found' });
+      }
+      
+      const updates: any = {};
+      if (term !== undefined) updates.term = term;
+      
+      if (matchType !== undefined) {
+        if (!['exact', 'partial', 'regex'].includes(matchType)) {
+          return res.status(400).json({ 
+            message: 'Invalid match type. Must be one of: exact, partial, regex' 
+          });
+        }
+        updates.matchType = matchType;
+      }
+      
+      if (severity !== undefined) {
+        if (!['low', 'medium', 'high'].includes(severity)) {
+          return res.status(400).json({ 
+            message: 'Invalid severity. Must be one of: low, medium, high' 
+          });
+        }
+        updates.severity = severity;
+      }
+      
+      if (context !== undefined) updates.context = context;
+      if (notes !== undefined) updates.notes = notes;
+      
+      const updatedItem = await storage.updateBlockListItem(id, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating block list item:', error);
+      res.status(500).json({ message: 'Error updating block list item' });
+    }
+  });
+  
+  // Delete a block list item
+  app.delete('/api/admin/moderation/block-list/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const item = await storage.getBlockListItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Block list item not found' });
+      }
+      
+      await storage.deleteBlockListItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting block list item:', error);
+      res.status(500).json({ message: 'Error deleting block list item' });
+    }
+  });
+  
+  // ===== FLAGGED CONTENT ENDPOINTS =====
+  
+  // Get all flagged content items with pagination and filtering
+  app.get('/api/admin/moderation/flagged-content', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const contentType = req.query.contentType as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const options: any = { 
+        limit, 
+        offset 
+      };
+      
+      if (search) options.search = search;
+      if (status) options.status = status;
+      if (contentType) options.contentType = contentType;
+      
+      const items = await storage.getFlaggedContent(options);
+      
+      // Return with additional count for pagination
+      res.json({
+        items,
+        total: items.length + offset, // This is a simplification, in a real implementation we would need a separate count query
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error('Error fetching flagged content:', error);
+      res.status(500).json({ message: 'Error fetching flagged content' });
+    }
+  });
+  
+  // Get a single flagged content item
+  app.get('/api/admin/moderation/flagged-content/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getFlaggedContentItem(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged content item not found' });
+      }
+      
+      // Get the reporter user details
+      const reporter = await storage.getUser(item.reportedBy);
+      
+      // Format response with reporter details
+      res.json({
+        ...item,
+        reporter: reporter ? {
+          id: reporter.id,
+          username: reporter.username,
+          name: reporter.name,
+        } : undefined
+      });
+    } catch (error) {
+      console.error('Error fetching flagged content item:', error);
+      res.status(500).json({ message: 'Error fetching flagged content item' });
+    }
+  });
+  
+  // Create a new flagged content item
+  app.post('/api/admin/moderation/flagged-content', async (req, res) => {
+    try {
+      // This endpoint can be accessed by regular users, but we need to be authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { contentType, contentId, content, reason } = req.body;
+      const userId = req.user?.id;
+      
+      if (!contentType || !contentId || !content || !reason) {
+        return res.status(400).json({ 
+          message: 'Content type, content ID, content, and reason are required' 
+        });
+      }
+      
+      // Validate content type
+      if (!['post', 'comment', 'message', 'product', 'profile', 'community'].includes(contentType)) {
+        return res.status(400).json({ 
+          message: 'Invalid content type. Must be one of: post, comment, message, product, profile, community' 
+        });
+      }
+      
+      const newItem = await storage.createFlaggedContentItem({
+        contentType,
+        contentId: parseInt(contentId),
+        content,
+        reason,
+        reportedBy: userId!,
+        status: 'pending',
+      });
+      
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating flagged content item:', error);
+      res.status(500).json({ message: 'Error creating flagged content item' });
+    }
+  });
+  
+  // Update a flagged content item (review it)
+  app.patch('/api/admin/moderation/flagged-content/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, reviewNote } = req.body;
+      
+      const item = await storage.getFlaggedContentItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged content item not found' });
+      }
+      
+      if (!status || !['approved', 'rejected', 'pending'].includes(status)) {
+        return res.status(400).json({ 
+          message: 'Invalid status. Must be one of: approved, rejected, pending' 
+        });
+      }
+      
+      const updates: any = {
+        status,
+        reviewedBy: req.user?.id,
+      };
+      
+      if (reviewNote) updates.reviewNote = reviewNote;
+      
+      const updatedItem = await storage.updateFlaggedContentItem(id, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating flagged content item:', error);
+      res.status(500).json({ message: 'Error updating flagged content item' });
+    }
+  });
+  
+  // Delete a flagged content item
+  app.delete('/api/admin/moderation/flagged-content/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const item = await storage.getFlaggedContentItem(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged content item not found' });
+      }
+      
+      await storage.deleteFlaggedContentItem(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting flagged content item:', error);
+      res.status(500).json({ message: 'Error deleting flagged content item' });
+    }
+  });
+  
+  // ===== FLAGGED IMAGES ENDPOINTS =====
+  
+  // Get all flagged images with pagination and filtering
+  app.get('/api/admin/moderation/flagged-images', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const contentType = req.query.contentType as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const options: any = { 
+        limit, 
+        offset 
+      };
+      
+      if (search) options.search = search;
+      if (status) options.status = status;
+      if (contentType) options.contentType = contentType;
+      
+      const items = await storage.getFlaggedImages(options);
+      
+      // Return with additional count for pagination
+      res.json({
+        items,
+        total: items.length + offset, // This is a simplification, in a real implementation we would need a separate count query
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error('Error fetching flagged images:', error);
+      res.status(500).json({ message: 'Error fetching flagged images' });
+    }
+  });
+  
+  // Get a single flagged image
+  app.get('/api/admin/moderation/flagged-images/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.getFlaggedImage(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged image not found' });
+      }
+      
+      // Get the reporter user details
+      const reporter = await storage.getUser(item.reportedBy);
+      
+      // Format response with reporter details
+      res.json({
+        ...item,
+        reporter: reporter ? {
+          id: reporter.id,
+          username: reporter.username,
+          name: reporter.name,
+        } : undefined
+      });
+    } catch (error) {
+      console.error('Error fetching flagged image:', error);
+      res.status(500).json({ message: 'Error fetching flagged image' });
+    }
+  });
+  
+  // Create a new flagged image
+  app.post('/api/admin/moderation/flagged-images', async (req, res) => {
+    try {
+      // This endpoint can be accessed by regular users, but we need to be authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { imageUrl, contentType, contentId, reason } = req.body;
+      const userId = req.user?.id;
+      
+      if (!imageUrl || !contentType || !contentId || !reason) {
+        return res.status(400).json({ 
+          message: 'Image URL, content type, content ID, and reason are required' 
+        });
+      }
+      
+      // Validate content type (same as for flagged content)
+      if (!['post', 'comment', 'message', 'product', 'profile', 'community'].includes(contentType)) {
+        return res.status(400).json({ 
+          message: 'Invalid content type. Must be one of: post, comment, message, product, profile, community' 
+        });
+      }
+      
+      const newItem = await storage.createFlaggedImage({
+        imageUrl,
+        contentType,
+        contentId: parseInt(contentId),
+        reason,
+        reportedBy: userId!,
+        status: 'pending',
+      });
+      
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating flagged image:', error);
+      res.status(500).json({ message: 'Error creating flagged image' });
+    }
+  });
+  
+  // Update a flagged image (review it)
+  app.patch('/api/admin/moderation/flagged-images/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, reviewNote } = req.body;
+      
+      const item = await storage.getFlaggedImage(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged image not found' });
+      }
+      
+      if (!status || !['approved', 'rejected', 'pending'].includes(status)) {
+        return res.status(400).json({ 
+          message: 'Invalid status. Must be one of: approved, rejected, pending' 
+        });
+      }
+      
+      const updates: any = {
+        status,
+        reviewedBy: req.user?.id,
+      };
+      
+      if (reviewNote) updates.reviewNote = reviewNote;
+      
+      const updatedItem = await storage.updateFlaggedImage(id, updates);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating flagged image:', error);
+      res.status(500).json({ message: 'Error updating flagged image' });
+    }
+  });
+  
+  // Delete a flagged image
+  app.delete('/api/admin/moderation/flagged-images/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const item = await storage.getFlaggedImage(id);
+      if (!item) {
+        return res.status(404).json({ message: 'Flagged image not found' });
+      }
+      
+      await storage.deleteFlaggedImage(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting flagged image:', error);
+      res.status(500).json({ message: 'Error deleting flagged image' });
+    }
+  });
+  
+  // ===== AI CONTENT ANALYSIS ENDPOINTS =====
+  
+  // Analyze content
+  app.post('/api/admin/moderation/analyze-content', isAdmin, async (req, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: 'Content is required' });
+      }
+      
+      const analysis = await storage.analyzeContent(content);
+      res.json(analysis);
+    } catch (error) {
+      console.error('Error analyzing content:', error);
+      res.status(500).json({ message: 'Error analyzing content' });
+    }
+  });
+  
+  // Analyze image
+  app.post('/api/admin/moderation/analyze-image', isAdmin, async (req, res) => {
+    try {
+      const { imageUrl } = req.body;
+      
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+      
+      const analysis = await storage.analyzeImage(imageUrl);
+      res.json(analysis);
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      res.status(500).json({ message: 'Error analyzing image' });
+    }
+  });
+  
+  // Analyze user behavior
+  app.get('/api/admin/moderation/analyze-user/:id', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const analysis = await storage.analyzeUserBehavior(userId);
+      res.json(analysis);
+    } catch (error) {
+      console.error('Error analyzing user behavior:', error);
+      res.status(500).json({ message: 'Error analyzing user behavior' });
+    }
+  });
+
+  // ===== MODERATION REPORTS ENDPOINTS =====
+  
+  // Get all moderation reports with pagination and filtering
+  app.get('/api/admin/moderation/reports', isAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const reportType = req.query.reportType as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const options: any = { 
+        limit, 
+        offset 
+      };
+      
+      if (search) options.search = search;
+      if (status) options.status = status;
+      if (reportType) options.reportType = reportType;
+      
+      const reports = await storage.getModerationReports(options);
+      
+      // Return with additional count for pagination
+      res.json({
+        reports,
+        total: reports.length + offset, // This is a simplification, in a real implementation we would need a separate count query
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error('Error fetching moderation reports:', error);
+      res.status(500).json({ message: 'Error fetching moderation reports' });
+    }
+  });
+  
+  // Get a single moderation report
+  app.get('/api/admin/moderation/reports/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const report = await storage.getModerationReport(id);
+      
+      if (!report) {
+        return res.status(404).json({ message: 'Moderation report not found' });
+      }
+      
+      // Get the reporter user details
+      const reporter = await storage.getUser(report.reportedBy);
+      
+      // Format response with reporter details
+      res.json({
+        ...report,
+        reporter: reporter ? {
+          id: reporter.id,
+          username: reporter.username,
+          name: reporter.name,
+        } : undefined
+      });
+    } catch (error) {
+      console.error('Error fetching moderation report:', error);
+      res.status(500).json({ message: 'Error fetching moderation report' });
+    }
+  });
+  
+  // Create a new moderation report
+  app.post('/api/admin/moderation/reports', async (req, res) => {
+    try {
+      // This endpoint can be accessed by regular users, but we need to be authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { reportType, details, contentId, contentType } = req.body;
+      const userId = req.user?.id;
+      
+      if (!reportType || !details || !contentId || !contentType) {
+        return res.status(400).json({ 
+          message: 'Report type, details, content ID, and content type are required' 
+        });
+      }
+      
+      // Validate content type (same as for flagged content)
+      if (!['post', 'comment', 'message', 'product', 'profile', 'community'].includes(contentType)) {
+        return res.status(400).json({ 
+          message: 'Invalid content type. Must be one of: post, comment, message, product, profile, community' 
+        });
+      }
+      
+      const newReport = await storage.createModerationReport({
+        reportType,
+        details,
+        contentId: parseInt(contentId),
+        contentType,
+        reportedBy: userId!,
+        status: 'pending',
+      });
+      
+      res.status(201).json(newReport);
+    } catch (error) {
+      console.error('Error creating moderation report:', error);
+      res.status(500).json({ message: 'Error creating moderation report' });
+    }
+  });
+  
+  // Update a moderation report (review it)
+  app.patch('/api/admin/moderation/reports/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, reviewNote } = req.body;
+      
+      const report = await storage.getModerationReport(id);
+      if (!report) {
+        return res.status(404).json({ message: 'Moderation report not found' });
+      }
+      
+      if (!status || !['approved', 'rejected', 'pending'].includes(status)) {
+        return res.status(400).json({ 
+          message: 'Invalid status. Must be one of: approved, rejected, pending' 
+        });
+      }
+      
+      const updates: any = {
+        status,
+        reviewedBy: req.user?.id,
+      };
+      
+      if (reviewNote) updates.reviewNote = reviewNote;
+      
+      const updatedReport = await storage.updateModerationReport(id, updates);
+      res.json(updatedReport);
+    } catch (error) {
+      console.error('Error updating moderation report:', error);
+      res.status(500).json({ message: 'Error updating moderation report' });
+    }
+  });
+  
+  // Delete a moderation report
+  app.delete('/api/admin/moderation/reports/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const report = await storage.getModerationReport(id);
+      if (!report) {
+        return res.status(404).json({ message: 'Moderation report not found' });
+      }
+      
+      await storage.deleteModerationReport(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting moderation report:', error);
+      res.status(500).json({ message: 'Error deleting moderation report' });
     }
   });
 }
