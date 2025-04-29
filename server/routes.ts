@@ -579,6 +579,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // API endpoint to get current user's statistics (posts, followers, following counts)
+  // Fix blob URLs in user avatar (emergency cleanup route)
+  app.post("/api/users/fix-blob-avatars", isAuthenticated, async (req, res) => {
+    try {
+      // Check if user is admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Only admin can perform this operation" });
+      }
+      
+      // Get all users with blob URLs in avatar
+      const users = await storage.listUsers();
+      const usersWithBlobAvatars = users.filter(u => u.avatar && u.avatar.startsWith('blob:'));
+      
+      console.log(`Found ${usersWithBlobAvatars.length} users with blob avatars`);
+      
+      // Fix each user by setting their avatar to null
+      const fixedUsers = [];
+      for (const user of usersWithBlobAvatars) {
+        console.log(`Fixing user ${user.id} (${user.username}) with avatar ${user.avatar}`);
+        const updated = await storage.updateUser(user.id, { avatar: null });
+        if (updated) {
+          fixedUsers.push({ id: user.id, username: user.username });
+        }
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: `Fixed ${fixedUsers.length} users with blob avatars`,
+        users: fixedUsers
+      });
+    } catch (error) {
+      console.error("Error fixing blob avatars:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/users/stats", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;

@@ -39,8 +39,10 @@ const isValidImageUrl = (url?: string): boolean => {
   // Check if it's a blob URL (these won't work in the feed)
   if (url.startsWith('blob:')) return false;
   
-  // Validate that it's a web URL
-  return url.startsWith('http://') || url.startsWith('https://');
+  // Validate that it's a web URL or an absolute path
+  return url.startsWith('http://') || 
+         url.startsWith('https://') || 
+         url.startsWith('/uploads/');
 };
 
 export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
@@ -52,7 +54,14 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
+  
+  // Reset image error state when post changes (using post.id as dependency)
   const [imageError, setImageError] = useState(false);
+  
+  // Reset image error when post id changes
+  useEffect(() => {
+    setImageError(false);
+  }, [post.id]);
   
   const isOwner = user?.id === post.userId;
   
@@ -177,7 +186,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       case "image":
         return (
           <div className="mb-4">
-            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.post_image")} 
@@ -223,7 +232,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
             <div className="prose max-w-none">
               <p className="text-gray-700">{post.content}</p>
             </div>
-            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.article_image")} 
@@ -251,7 +260,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <h2 className="text-xl font-bold mb-2">{post.title}</h2>
             )}
             <p className="text-gray-700">{post.content}</p>
-            {post.imageUrl && isValidImageUrl(post.imageUrl) ? (
+            {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.ad_image")} 
