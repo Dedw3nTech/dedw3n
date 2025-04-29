@@ -168,7 +168,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.post_image")} 
-                className="w-full rounded-md object-cover max-h-[400px]"
+                className="w-full rounded-md object-contain max-h-[400px]"
               />
             )}
             <p className="mt-3 text-gray-700">{post.content}</p>
@@ -206,7 +206,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.article_image")} 
-                className="w-full rounded-md object-cover mt-4 max-h-[300px]"
+                className="w-full rounded-md object-contain mt-4 max-h-[300px]"
               />
             )}
           </div>
@@ -226,7 +226,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <img 
                 src={post.imageUrl} 
                 alt={post.title || t("social.ad_image")} 
-                className="w-full rounded-md object-cover mt-4 max-h-[300px]"
+                className="w-full rounded-md object-contain mt-4 max-h-[300px]"
               />
             )}
             <div className="mt-4">
