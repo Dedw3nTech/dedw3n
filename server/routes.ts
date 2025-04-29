@@ -33,7 +33,299 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 
+// Content management API endpoints
+interface PageContent {
+  id: string;
+  title: string;
+  content: string;
+  lastUpdated: Date;
+}
+
+// Store static page content
+const pageContents: Record<string, PageContent> = {
+  "faq": {
+    id: "faq",
+    title: "Frequently Asked Questions",
+    content: `
+      <h2>General Questions</h2>
+      <div class="faq-item">
+        <h3>What is Dedw3n?</h3>
+        <p>Dedw3n is a comprehensive multi-vendor social marketplace and dating platform that creates meaningful digital connections through intelligent, adaptive social experiences. Our platform provides advanced financial interactions with seamless payment mechanisms, including e-wallet integration, real-time transaction processing, and intuitive user interfaces for managing digital transactions.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>How do I create an account?</h3>
+        <p>You can create an account by clicking on the "Sign Up" button in the top right corner of the page. Follow the instructions to complete your profile.</p>
+      </div>
+      
+      <h2>Marketplace</h2>
+      <div class="faq-item">
+        <h3>What's the difference between C2C, B2C, and B2B marketplaces?</h3>
+        <p>C2C (Consumer-to-Consumer) is for individual users selling to other individuals. B2C (Business-to-Consumer) is for businesses selling to individual customers. B2B (Business-to-Business) is for businesses selling products or services to other businesses.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>How do I become a vendor?</h3>
+        <p>You can become a vendor by navigating to the "Become a Vendor" page and following the application process. Once approved, you'll be able to list products and manage your store.</p>
+      </div>
+      
+      <h2>Payments & Security</h2>
+      <div class="faq-item">
+        <h3>What payment methods are accepted?</h3>
+        <p>We accept various payment methods including credit/debit cards, PayPal, e-wallet, and for African customers, we support mobile money transactions.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>Is my personal information secure?</h3>
+        <p>Yes, we take security seriously. All personal and payment information is encrypted and processed according to industry-standard security protocols.</p>
+      </div>
+      
+      <h2>Social Features</h2>
+      <div class="faq-item">
+        <h3>How do communities work?</h3>
+        <p>Communities are groups of users with shared interests. You can join existing communities or create your own. Some communities may offer tiered memberships with exclusive content and benefits.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>Can I monetize my content?</h3>
+        <p>Yes, creators can monetize content through various methods including premium subscriptions, direct sales, and exclusive community memberships.</p>
+      </div>
+    `,
+    lastUpdated: new Date("2025-04-10")
+  },
+  "shipping": {
+    id: "shipping",
+    title: "Shipping & Returns Policy",
+    content: `
+      <h2>Shipping Policy</h2>
+      <p>At Dedw3n, we work with multiple carriers to provide flexible shipping options for all marketplace purchases.</p>
+      
+      <h3>Shipping Methods</h3>
+      <ul>
+        <li><strong>Standard Shipping:</strong> 5-7 business days</li>
+        <li><strong>Express Shipping:</strong> 2-3 business days</li>
+        <li><strong>Next Day Delivery:</strong> Available for selected products and locations</li>
+      </ul>
+      
+      <h3>International Shipping</h3>
+      <p>International shipping is available to most countries. Delivery times may vary depending on destination and customs procedures. Additional duties and taxes may apply.</p>
+      
+      <h3>Shipping Costs</h3>
+      <p>Shipping costs are calculated based on the destination, weight, and dimensions of the products. The exact shipping cost will be displayed during checkout.</p>
+      
+      <h2>Returns Policy</h2>
+      <p>We want you to be completely satisfied with your purchase. If you're not completely satisfied, we're here to help.</p>
+      
+      <h3>Return Eligibility</h3>
+      <ul>
+        <li>Items can be returned within 30 days of receipt</li>
+        <li>Items must be in original condition, unworn, unwashed, and with all tags attached</li>
+        <li>Digital products, personalized items, and intimate products are not eligible for return</li>
+      </ul>
+      
+      <h3>Return Process</h3>
+      <ol>
+        <li>Initiate a return request through your account dashboard</li>
+        <li>Follow the instructions to print a return shipping label</li>
+        <li>Package the item securely in its original packaging if possible</li>
+        <li>Attach the return shipping label and drop off at the specified carrier location</li>
+      </ol>
+      
+      <h3>Refunds</h3>
+      <p>Once your return is received and inspected, we will process your refund. The refund will be issued to the original payment method within 5-10 business days, depending on your payment provider.</p>
+      
+      <h3>Exchanges</h3>
+      <p>If you wish to exchange an item for a different size or color, please initiate a return and place a new order for the desired item.</p>
+    `,
+    lastUpdated: new Date("2025-04-12")
+  },
+  "privacy": {
+    id: "privacy",
+    title: "Privacy Policy",
+    content: `
+      <h2>Privacy Policy</h2>
+      <p><strong>Last Updated:</strong> April 10, 2025</p>
+      
+      <p>This Privacy Policy describes how Dedw3n ("we", "our", or "us") collects, uses, and shares your personal information when you visit or make a purchase from our platform.</p>
+      
+      <h3>Information We Collect</h3>
+      <p>When you visit the site, we automatically collect certain information about your device, including information about your web browser, IP address, time zone, and some of the cookies that are installed on your device.</p>
+      
+      <p>When you make a purchase or attempt to make a purchase through the site, we collect certain information from you, including your name, billing address, shipping address, payment information, email address, and phone number.</p>
+      
+      <h3>How We Use Your Information</h3>
+      <p>We use the information that we collect to:</p>
+      <ul>
+        <li>Fulfill orders and process transactions</li>
+        <li>Communicate with you about your orders, products, and services</li>
+        <li>Screen our orders for potential risk or fraud</li>
+        <li>Improve and optimize our site</li>
+        <li>Provide personalized experiences and recommendations</li>
+      </ul>
+      
+      <h3>Sharing Your Information</h3>
+      <p>We share your personal information with service providers to help us provide our services and fulfill our contracts with you. For example, we use payment processors to securely handle payment information.</p>
+      
+      <h3>Behavioral Advertising</h3>
+      <p>We use your personal information to provide you with targeted advertisements or marketing communications we believe may be of interest to you.</p>
+      
+      <h3>Data Retention</h3>
+      <p>We will maintain your order information for our records unless and until you ask us to delete this information.</p>
+      
+      <h3>Your Rights</h3>
+      <p>If you are a resident of the EU, UK, or California, you have specific rights regarding access to your personal data, correction of your personal data, deletion of your personal data, and objection to processing.</p>
+      
+      <h3>Changes to This Privacy Policy</h3>
+      <p>We may update this privacy policy from time to time in order to reflect changes to our practices or for other operational, legal, or regulatory reasons.</p>
+      
+      <h3>Contact Us</h3>
+      <p>For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please contact us by e-mail at privacy@dedw3n.com.</p>
+    `,
+    lastUpdated: new Date("2025-04-10")
+  },
+  "terms": {
+    id: "terms",
+    title: "Terms of Service",
+    content: `
+      <h2>Terms of Service</h2>
+      <p><strong>Last Updated:</strong> April 10, 2025</p>
+      
+      <h3>Overview</h3>
+      <p>This website is operated by Dedw3n. Throughout the site, the terms "we", "us" and "our" refer to Dedw3n. Dedw3n offers this website, including all information, tools and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.</p>
+      
+      <h3>Online Marketplace Terms</h3>
+      <p>By visiting our site and/or purchasing something from us, you engage in our "Service" and agree to be bound by the following terms and conditions ("Terms of Service", "Terms"), including those additional terms and conditions and policies referenced herein and/or available by hyperlink.</p>
+      
+      <h3>User Account</h3>
+      <p>When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our site.</p>
+      
+      <p>You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password, whether your password is with our service or a third-party service.</p>
+      
+      <h3>Products and Services</h3>
+      <p>We have made every effort to display as accurately as possible the colors and images of our products. We cannot guarantee that your computer monitor's display of any color will be accurate.</p>
+      
+      <p>We reserve the right, but are not obligated, to limit the sales of our products or Services to any person, geographic region or jurisdiction.</p>
+      
+      <h3>Vendor Terms</h3>
+      <p>If you register as a vendor on our platform, you agree to provide accurate product information, maintain fair pricing, and fulfill orders promptly. We reserve the right to remove products or suspend vendor accounts that violate our policies.</p>
+      
+      <h3>Social Features and User Content</h3>
+      <p>When you create or make available any content on our platform, you represent and warrant that you own or have the necessary licenses, rights, consents, and permissions to use such content.</p>
+      
+      <h3>Termination</h3>
+      <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+      
+      <h3>Limitation of Liability</h3>
+      <p>In no case shall Dedw3n, our directors, officers, employees, affiliates, agents, contractors, interns, suppliers, service providers or licensors be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind.</p>
+      
+      <h3>Governing Law</h3>
+      <p>These Terms shall be governed and construed in accordance with the laws of England and Wales, without regard to its conflict of law provisions.</p>
+    `,
+    lastUpdated: new Date("2025-04-10")
+  },
+  "cookies": {
+    id: "cookies",
+    title: "Cookie Policy",
+    content: `
+      <h2>Cookie Policy</h2>
+      <p><strong>Last Updated:</strong> April 10, 2025</p>
+      
+      <h3>What Are Cookies</h3>
+      <p>Cookies are small pieces of text sent to your web browser by a website you visit. A cookie file is stored in your web browser and allows the service or a third-party to recognize you and make your next visit easier and the service more useful to you.</p>
+      
+      <h3>How We Use Cookies</h3>
+      <p>We use cookies for the following purposes:</p>
+      <ul>
+        <li><strong>Essential cookies:</strong> These cookies are required for the operation of our website. They include, for example, cookies that enable you to log into secure areas of our website, use a shopping cart, or make use of e-billing services.</li>
+        <li><strong>Analytical/performance cookies:</strong> These allow us to recognize and count the number of visitors and to see how visitors move around our website when they are using it. This helps us to improve the way our website works, for example, by ensuring that users are finding what they are looking for easily.</li>
+        <li><strong>Functionality cookies:</strong> These are used to recognize you when you return to our website. This enables us to personalize our content for you, greet you by name and remember your preferences.</li>
+        <li><strong>Targeting cookies:</strong> These cookies record your visit to our website, the pages you have visited and the links you have followed. We will use this information to make our website and the advertising displayed on it more relevant to your interests.</li>
+      </ul>
+      
+      <h3>Third-Party Cookies</h3>
+      <p>In addition to our own cookies, we may also use various third-party cookies to report usage statistics of the service, deliver advertisements on and through the service, and so on.</p>
+      
+      <h3>Managing Cookies</h3>
+      <p>Most web browsers allow some control of most cookies through the browser settings. Please be aware that if you disable or reject cookies, some features and services on our website may not work properly.</p>
+      
+      <h3>Contact Us</h3>
+      <p>If you have any questions about our Cookie Policy, please contact us at privacy@dedw3n.com.</p>
+    `,
+    lastUpdated: new Date("2025-04-10")
+  },
+};
+
+// FAQ, contact form submissions, etc.
+interface ContactFormSubmission {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  submittedAt: Date;
+  status: 'new' | 'reviewed' | 'responded';
+}
+
+const contactSubmissions: ContactFormSubmission[] = [];
+let submissionId = 1;
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Page content API endpoints
+  app.get('/api/page/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const pageContent = pageContents[id];
+    
+    if (!pageContent) {
+      return res.status(404).json({ message: `Page content for '${id}' not found` });
+    }
+    
+    res.json(pageContent);
+  });
+  
+  // Contact form API endpoint
+  app.post('/api/contact', (req: Request, res: Response) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      
+      // Basic validation
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      // Store the submission
+      const submission: ContactFormSubmission = {
+        id: submissionId++,
+        name,
+        email,
+        subject,
+        message,
+        submittedAt: new Date(),
+        status: 'new'
+      };
+      
+      contactSubmissions.push(submission);
+      
+      // In a real application, we would also send an email notification here
+      
+      return res.status(201).json({ 
+        message: "Your message has been received. We'll get back to you soon.",
+        submissionId: submission.id
+      });
+    } catch (error) {
+      console.error("Error submitting contact form:", error);
+      return res.status(500).json({ message: "An error occurred while submitting your message" });
+    }
+  });
+  
+  // Admin-only endpoint to view contact submissions (would add proper authentication in production)
+  app.get('/api/admin/contact-submissions', (req: Request, res: Response) => {
+    // In production, this would be protected by authentication and authorization
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    
+    res.json(contactSubmissions);
+  });
   // Setup authentication with passport
   setupAuth(app);
   
