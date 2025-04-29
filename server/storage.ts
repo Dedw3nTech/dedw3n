@@ -1240,6 +1240,26 @@ export class MemStorage implements IStorage {
     return posts;
   }
   
+  async getUserPostCount(userId: number): Promise<number> {
+    console.log(`[DEBUG] Getting post count for user ID: ${userId}`);
+    
+    try {
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(posts)
+        .where(eq(posts.userId, userId));
+      
+      const count = result[0]?.count || 0;
+      console.log(`[DEBUG] Found ${count} posts for user ID: ${userId}`);
+      return count;
+    } catch (error) {
+      console.error(`Error getting post count for user ${userId}:`, error);
+      // Fallback to memory storage in case of error
+      const userPosts = Array.from(this.posts.values()).filter(post => post.userId === userId);
+      console.log(`[DEBUG] Falling back to memory storage, found ${userPosts.length} posts`);
+      return userPosts.length;
+    }
+  }
+  
   async incrementPostView(id: number): Promise<Post> {
     const post = this.posts.get(id);
     if (!post) throw new Error(`Post with id ${id} not found`);
@@ -4022,23 +4042,47 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getFollowersCount(userId: number): Promise<number> {
-    const result = await db.select({
+    try {
+      console.log(`[DEBUG] Getting follower count for user ID: ${userId}`);
+      
+      const result = await db.select({
         count: sql<number>`count(*)`
       })
       .from(follows)
       .where(eq(follows.followingId, userId));
       
-    return result[0].count;
+      const count = result[0]?.count || 0;
+      console.log(`[DEBUG] Found ${count} followers for user ID: ${userId}`);
+      return count;
+    } catch (error) {
+      console.error(`Error getting follower count for user ${userId}:`, error);
+      // Fallback to memory storage
+      const followRelations = Array.from(this.follows.values())
+        .filter(follow => follow.followingId === userId);
+      return followRelations.length;
+    }
   }
   
   async getFollowingCount(userId: number): Promise<number> {
-    const result = await db.select({
+    try {
+      console.log(`[DEBUG] Getting following count for user ID: ${userId}`);
+      
+      const result = await db.select({
         count: sql<number>`count(*)`
       })
       .from(follows)
       .where(eq(follows.followerId, userId));
       
-    return result[0].count;
+      const count = result[0]?.count || 0;
+      console.log(`[DEBUG] Found ${count} following for user ID: ${userId}`);
+      return count;
+    } catch (error) {
+      console.error(`Error getting following count for user ${userId}:`, error);
+      // Fallback to memory storage
+      const followRelations = Array.from(this.follows.values())
+        .filter(follow => follow.followerId === userId);
+      return followRelations.length;
+    }
   }
   
   async getSuggestedUsers(userId: number, limit: number = 10): Promise<User[]> {
