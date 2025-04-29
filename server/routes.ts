@@ -2103,6 +2103,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get vendor products
+  app.get("/api/vendors/products", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      // Get products by vendor ID
+      const products = await storage.listProducts({ vendorId: vendor.id });
+      
+      res.json(products);
+    } catch (error) {
+      console.error("Error getting vendor products:", error);
+      res.status(500).json({ message: "Failed to get vendor products" });
+    }
+  });
+  
+  // Get vendor orders
+  app.get("/api/vendors/orders", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const status = req.query.status as string;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      // Get all order items for this vendor
+      const orderItems = await storage.getVendorOrderItems(vendor.id, status);
+      
+      // Get order details for these items
+      const orders = await storage.getOrdersForVendor(vendor.id, status);
+      
+      res.json({
+        orders,
+        orderItems
+      });
+    } catch (error) {
+      console.error("Error getting vendor orders:", error);
+      res.status(500).json({ message: "Failed to get vendor orders" });
+    }
+  });
+  
+  // Get vendor customers
+  app.get("/api/vendors/customers", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      // Get top customers for this vendor
+      const customers = await storage.getVendorTopBuyers(vendor.id, 20);
+      
+      res.json(customers);
+    } catch (error) {
+      console.error("Error getting vendor customers:", error);
+      res.status(500).json({ message: "Failed to get vendor customers" });
+    }
+  });
+  
+  // Update shipping status
+  app.put("/api/vendors/orders/:orderId/shipping", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const orderId = parseInt(req.params.orderId);
+      const { status, trackingNumber } = req.body;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      // Check if the order belongs to this vendor
+      const orderItems = await storage.getVendorOrderItems(vendor.id);
+      const vendorOrderIds = new Set(orderItems.map(item => item.orderId));
+      
+      if (!vendorOrderIds.has(orderId)) {
+        return res.status(403).json({ message: "Order does not belong to this vendor" });
+      }
+      
+      // Update order shipping
+      const updatedOrder = await storage.updateOrderShipping(orderId, vendor.id, status, trackingNumber);
+      
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error("Error updating shipping status:", error);
+      res.status(500).json({ message: "Failed to update shipping status" });
+    }
+  });
+  
+  // Update vendor settings
+  app.put("/api/vendors/settings", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor profile not found" });
+      }
+      
+      // Validate input
+      const validData = vendorUpdateSchema.safeParse(req.body);
+      
+      if (!validData.success) {
+        return res.status(400).json({ message: "Invalid vendor data", errors: validData.error.format() });
+      }
+      
+      // Update vendor settings
+      const updatedVendor = await storage.updateVendorSettings(vendor.id, validData.data);
+      
+      res.json(updatedVendor);
+    } catch (error) {
+      console.error("Error updating vendor settings:", error);
+      res.status(500).json({ message: "Failed to update vendor settings" });
+    }
+  });
+  
   // Get vendor analytics summary
   app.get("/api/vendors/:vendorId/analytics/summary", isAuthenticated, async (req, res) => {
     try {

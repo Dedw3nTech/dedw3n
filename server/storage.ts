@@ -1065,6 +1065,81 @@ export class MemStorage implements IStorage {
     return vendor;
   }
 
+  async updateVendorSettings(id: number, updates: Partial<Vendor>): Promise<Vendor> {
+    const vendor = this.vendors.get(id);
+    if (!vendor) throw new Error(`Vendor with id ${id} not found`);
+
+    const updatedVendor = { ...vendor, ...updates };
+    this.vendors.set(id, updatedVendor);
+    return updatedVendor;
+  }
+
+  async getVendorOrderItems(vendorId: number, status?: string): Promise<OrderItem[]> {
+    const items = Array.from(this.orderItems.values()).filter(item => 
+      item.vendorId === vendorId
+    );
+
+    if (!status) return items;
+
+    // If status is provided, filter by orders with that status
+    const orders = Array.from(this.orders.values());
+    const ordersWithStatus = new Set(
+      orders
+        .filter(order => order.status === status)
+        .map(order => order.id)
+    );
+
+    return items.filter(item => ordersWithStatus.has(item.orderId));
+  }
+
+  async getOrdersForVendor(vendorId: number, status?: string): Promise<Order[]> {
+    // Get all order items for this vendor
+    const orderItems = await this.getVendorOrderItems(vendorId);
+    
+    // Get unique order IDs
+    const orderIds = new Set(orderItems.map(item => item.orderId));
+    
+    // Get order objects
+    let orders = Array.from(this.orders.values()).filter(order => 
+      orderIds.has(order.id)
+    );
+    
+    // Filter by status if provided
+    if (status) {
+      orders = orders.filter(order => order.status === status);
+    }
+    
+    // Sort by date (newest first)
+    return orders.sort((a, b) => {
+      const dateA = a.createdAt?.getTime() || 0;
+      const dateB = b.createdAt?.getTime() || 0;
+      return dateB - dateA;
+    });
+  }
+
+  async updateOrderShipping(orderId: number, vendorId: number, status: string, trackingNumber?: string): Promise<Order> {
+    const order = this.orders.get(orderId);
+    if (!order) throw new Error(`Order with id ${orderId} not found`);
+    
+    // Verify the vendor has items in this order
+    const vendorItems = await this.getVendorOrderItems(vendorId);
+    const hasOrderItem = vendorItems.some(item => item.orderId === orderId);
+    
+    if (!hasOrderItem) {
+      throw new Error(`Vendor ${vendorId} does not have items in order ${orderId}`);
+    }
+    
+    // Update order status
+    const updatedOrder = { 
+      ...order, 
+      status,
+      trackingNumber: trackingNumber || order.trackingNumber
+    };
+    
+    this.orders.set(orderId, updatedOrder);
+    return updatedOrder;
+  }
+
   async listVendors(): Promise<Vendor[]> {
     return Array.from(this.vendors.values());
   }

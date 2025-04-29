@@ -429,6 +429,12 @@ export const insertUserSchema = createInsertSchema(users)
 
 export const insertVendorSchema = createInsertSchema(vendors)
   .omit({ id: true, rating: true, ratingCount: true });
+  
+export const vendorUpdateSchema = z.object({
+  storeName: z.string().min(3).max(100).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  logo: z.string().url().nullable().optional(),
+});
 
 export const insertProductSchema = createInsertSchema(products)
   .omit({ id: true, createdAt: true });
