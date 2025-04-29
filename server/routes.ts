@@ -1147,8 +1147,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[DEBUG] Updating profile for user ID: ${userId}`);
       
       // Handle JSON input
-      const updates = req.body;
+      const updates = req.body || {};
       console.log(`[DEBUG] Update data:`, updates);
+      
+      // Check if updates object is empty (except for avatar)
+      const hasUpdates = Object.keys(updates).filter(key => key !== 'avatarUrl').length > 0 || updates.avatarUrl;
+      
+      if (!hasUpdates) {
+        console.log(`[DEBUG] No updates provided for user ID: ${userId}`);
+        return res.status(400).json({ message: "No updates provided" });
+      }
       
       // Check if the user exists before attempting to update
       const existingUser = await storage.getUser(userId);
@@ -1161,30 +1169,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (updates.avatarUrl) {
         // Check if it's a base64 image
         if (updates.avatarUrl.startsWith('data:image')) {
-          const base64Data = updates.avatarUrl.replace(/^data:image\/\w+;base64,/, '');
-          
-          // Create a unique filename 
-          const filename = `avatar_${userId}_${Date.now()}.png`;
-          
-          // Create uploads directory if it doesn't exist
-          if (!fs.existsSync('./public/uploads')) {
-            fs.mkdirSync('./public/uploads', { recursive: true });
+          try {
+            const base64Data = updates.avatarUrl.replace(/^data:image\/\w+;base64,/, '');
+            
+            // Create a unique filename 
+            const filename = `avatar_${userId}_${Date.now()}.png`;
+            
+            // Create uploads directory if it doesn't exist
+            if (!fs.existsSync('./public/uploads')) {
+              fs.mkdirSync('./public/uploads', { recursive: true });
+            }
+            if (!fs.existsSync('./public/uploads/avatars')) {
+              fs.mkdirSync('./public/uploads/avatars', { recursive: true });
+            }
+            
+            // Save the file
+            fs.writeFileSync(`./public/uploads/avatars/${filename}`, base64Data, 'base64');
+            
+            // Set the avatar URL to the saved file path
+            updates.avatar = `/uploads/avatars/${filename}`;
+            console.log(`[DEBUG] Avatar saved to: /uploads/avatars/${filename}`);
+          } catch (error) {
+            console.error(`[ERROR] Failed to save avatar: ${error}`);
+            return res.status(500).json({ message: "Failed to save avatar image" });
           }
-          if (!fs.existsSync('./public/uploads/avatars')) {
-            fs.mkdirSync('./public/uploads/avatars', { recursive: true });
-          }
-          
-          // Save the file
-          fs.writeFileSync(`./public/uploads/avatars/${filename}`, base64Data, 'base64');
-          
-          // Set the avatar URL to the saved file path
-          updates.avatar = `/uploads/avatars/${filename}`;
         } else if (!updates.avatarUrl.startsWith('blob:')) {
           // Use existing URL if it's not a blob URL
           updates.avatar = updates.avatarUrl;
         }
         // If it's a blob URL, ignore it
         delete updates.avatarUrl; // Remove the temporary field
+      }
+      
+      // If we still have updates, proceed
+      if (Object.keys(updates).length === 0) {
+        console.log(`[DEBUG] No valid updates remain after processing for user ID: ${userId}`);
+        return res.status(400).json({ message: "No valid updates provided" });
       }
       
       const updatedUser = await storage.updateUser(userId, updates);

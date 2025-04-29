@@ -213,17 +213,18 @@ export default function ProfilePage() {
       try {
         console.log("Updating profile with data:", profileData);
         
-        // If avatarUrl is provided, we'll use a different field name than avatar for now
-        // to distinguish it from file uploads (which will be implemented later)
-        if (profileData.avatarUrl) {
-          profileData.avatar = profileData.avatarUrl;
-          delete profileData.avatarUrl;
+        // Make a copy of the profile data to avoid modifying the original
+        const updatedProfile = { ...profileData };
+        
+        // Make sure we have updates to send
+        if (Object.keys(updatedProfile).length === 0 && !updatedProfile.avatarUrl) {
+          throw new Error("No profile changes to update");
         }
         
         const response = await apiRequest(
           "PATCH",
           "/api/users/profile",
-          profileData,
+          updatedProfile,
           false // Using JSON, not FormData
         );
         
