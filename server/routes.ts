@@ -382,6 +382,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
+  // Search users API endpoint for autocomplete
+  app.get("/api/users/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      console.log(`[DEBUG] Searching users with query: ${query}, limit: ${limit}`);
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query, limit);
+      console.log(`[DEBUG] Found ${users.length} users matching query: ${query}`);
+      
+      return res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      return res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   app.get("/api/users/:username", async (req, res) => {
     try {
       const username = req.params.username;

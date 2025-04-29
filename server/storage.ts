@@ -59,6 +59,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   listUsers(): Promise<User[]>;
+  searchUsers(query: string, limit?: number): Promise<User[]>;
   
   // Category operations
   getCategoryByName(name: string): Promise<Category | undefined>;
@@ -357,6 +358,27 @@ export class DatabaseStorage implements IStorage {
   
   async listUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+  
+  async searchUsers(query: string, limit: number = 10): Promise<User[]> {
+    if (!query) return [];
+    const searchUsers = await db.select()
+      .from(users)
+      .where(
+        or(
+          // Search in username
+          sql`LOWER(${users.username}) LIKE ${`%${query.toLowerCase()}%`}`,
+          // Search in name
+          sql`LOWER(${users.name}) LIKE ${`%${query.toLowerCase()}%`}`
+        )
+      )
+      .limit(limit);
+    
+    // Remove sensitive information before returning
+    return searchUsers.map(user => {
+      const { password, ...userData } = user;
+      return userData as User;
+    });
   }
   
   // Category methods
