@@ -5,6 +5,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
+import { sanitizeImageUrl } from "@/lib/queryClient";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,7 +55,7 @@ export default function UserMenu() {
         <Avatar>
           {user?.avatar ? (
             <AvatarImage
-              src={user.avatar}
+              src={sanitizeImageUrl(user.avatar, '/assets/default-avatar.png')}
               alt={user.name || user.username}
             />
           ) : null}
