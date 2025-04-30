@@ -297,8 +297,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             <div className="flex items-center gap-2">
               <Button
                 type="button"
-                variant="ghost"
-                className="rounded-full flex items-center gap-1 px-3 bg-blue-500 hover:bg-blue-600"
+                className="flex items-center gap-1 px-3 bg-primary hover:bg-primary/90"
                 title="Upload image"
                 onClick={() => fileInputRef.current?.click()}
               >
