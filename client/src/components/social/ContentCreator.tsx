@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { 
   Image, 
   Video, 
@@ -16,7 +19,8 @@ import {
   Tag, 
   Megaphone,
   X,
-  Upload
+  Upload,
+  CheckCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
@@ -43,6 +47,8 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isPromoted, setIsPromoted] = useState(false);
+  const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
+  const [selectedPromotionPlan, setSelectedPromotionPlan] = useState("1day");
   
   // Create post mutation
   const createPostMutation = useMutation({
@@ -174,9 +180,122 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     }
   };
   
+  const handlePromotionSelect = () => {
+    // Add promotion to user's cart based on selected plan
+    const promotionDetails: Record<string, { duration: string, price: number }> = {
+      '1day': { duration: '1 Day', price: 2 },
+      '7days': { duration: '7 Days', price: 10 },
+      '30days': { duration: '30 Days', price: 30 }
+    };
+    
+    const selected = promotionDetails[selectedPromotionPlan];
+    
+    // Close dialog and set promoted state
+    setPromotionDialogOpen(false);
+    setIsPromoted(true);
+    
+    // Show confirmation toast
+    toast({
+      title: "Promotion Added",
+      description: `${selected.duration} promotion (£${selected.price}) added to your cart.`,
+    });
+    
+    // Here you would typically call an API to add this to the user's cart
+    // apiRequest("POST", "/api/cart/add", { 
+    //   type: "promotion", 
+    //   plan: selectedPromotionPlan,
+    //   duration: selected.duration,
+    //   price: selected.price
+    // });
+  };
+  
   return (
     <Card>
       <CardContent className="p-4">
+        {/* Promotion Dialog */}
+        <Dialog open={promotionDialogOpen} onOpenChange={setPromotionDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Promote Your Post</DialogTitle>
+              <DialogDescription>
+                Select a promotion plan to increase the visibility of your post.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <RadioGroup 
+                value={selectedPromotionPlan} 
+                onValueChange={setSelectedPromotionPlan}
+                className="space-y-4"
+              >
+                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="1day" id="1day" />
+                  <Label 
+                    htmlFor="1day" 
+                    className="flex-grow flex justify-between cursor-pointer"
+                  >
+                    <div>
+                      <span className="font-medium">1 Day</span>
+                      <p className="text-sm text-muted-foreground">
+                        Short boost for immediate impact.
+                      </p>
+                    </div>
+                    <span className="font-semibold">£2</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="7days" id="7days" />
+                  <Label 
+                    htmlFor="7days" 
+                    className="flex-grow flex justify-between cursor-pointer"
+                  >
+                    <div>
+                      <span className="font-medium">7 Days</span>
+                      <p className="text-sm text-muted-foreground">
+                        Week-long visibility boost. Best value.
+                      </p>
+                    </div>
+                    <span className="font-semibold">£10</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
+                  <RadioGroupItem value="30days" id="30days" />
+                  <Label 
+                    htmlFor="30days" 
+                    className="flex-grow flex justify-between cursor-pointer"
+                  >
+                    <div>
+                      <span className="font-medium">30 Days</span>
+                      <p className="text-sm text-muted-foreground">
+                        Maximum exposure for a full month.
+                      </p>
+                    </div>
+                    <span className="font-semibold">£30</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <DialogFooter className="flex justify-between sm:justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => setPromotionDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handlePromotionSelect}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Add to Cart
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
         <Tabs defaultValue={contentType} onValueChange={(value) => setContentType(value as ContentType)}>
           <TabsList className="w-full mb-4 grid grid-cols-3">
             <TabsTrigger value="text" className="flex items-center gap-1">
@@ -351,7 +470,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             <div className="flex items-center gap-2">
               <Button
                 type="button"
-                onClick={() => setIsPromoted(!isPromoted)}
+                onClick={() => setPromotionDialogOpen(true)}
                 className={`flex items-center gap-1 px-3 ${isPromoted ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'}`}
               >
                 <span className="text-sm text-white font-medium">
