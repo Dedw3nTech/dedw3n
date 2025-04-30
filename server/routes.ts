@@ -342,6 +342,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
   
+  // Development endpoint to get a token for testing
+  if (process.env.NODE_ENV === 'development') {
+    app.get('/api/auth/get-test-token/:userId', async (req: Request, res: Response) => {
+      try {
+        const userId = parseInt(req.params.userId);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Import directly to avoid circular dependencies
+        const { generateToken } = require('./jwt-auth');
+        
+        const deviceInfo = {
+          clientId: 'test-client',
+          deviceType: req.headers['user-agent'] || 'unknown',
+          ipAddress: req.ip || ''
+        };
+        
+        const { token, expiresAt } = await generateToken(user.id, user.role || 'user', deviceInfo);
+        
+        res.json({ token, expiresAt, userId: user.id, username: user.username });
+      } catch (error) {
+        console.error('[ERROR] Error generating test token:', error);
+        res.status(500).json({ message: 'Error generating test token' });
+      }
+    });
+  }
+  
   // Authentication validation endpoints
   app.get('/api/auth/validate', (req, res) => {
     console.log('[DEBUG] /api/auth/validate - Session validation attempt');

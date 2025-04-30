@@ -1,6 +1,34 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from "./offline";
 
+// Auth token management
+const AUTH_TOKEN_KEY = 'dedwen_auth_token';
+
+export function getStoredAuthToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch (e) {
+    console.error('Error accessing localStorage:', e);
+    return null;
+  }
+}
+
+export function setAuthToken(token: string): void {
+  try {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } catch (e) {
+    console.error('Error storing auth token:', e);
+  }
+}
+
+export function clearAuthToken(): void {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  } catch (e) {
+    console.error('Error clearing auth token:', e);
+  }
+}
+
 async function throwIfResNotOk(res: Response) {
   // Special handling for offline mode
   if (res.status === 503 && !useOfflineStore.getState().isOnline) {
@@ -24,7 +52,17 @@ export async function apiRequest(
   const options: RequestInit = {
     method,
     credentials: "include",
+    headers: {}
   };
+
+  // Add authorization header if token exists
+  const authToken = getStoredAuthToken();
+  if (authToken) {
+    options.headers = {
+      ...options.headers,
+      'Authorization': `Bearer ${authToken}`
+    };
+  }
 
   // Handle body and headers based on whether this is FormData or not
   if (data) {
@@ -34,7 +72,10 @@ export async function apiRequest(
       // Don't set Content-Type for FormData
     } else {
       // For JSON data, set Content-Type and stringify
-      options.headers = { "Content-Type": "application/json" };
+      options.headers = { 
+        ...options.headers,
+        "Content-Type": "application/json"
+      };
       options.body = JSON.stringify(data);
     }
   }
@@ -88,10 +129,23 @@ export const getQueryFn: <T>(options: {
     
     console.log('Fetching URL:', url);
     
-    // Use our offline-aware fetch implementation
-    const res = await offlineAwareFetch(url, {
+    // Set up request options
+    const options: RequestInit = {
       credentials: "include",
-    });
+      headers: {}
+    };
+
+    // Add authorization header if token exists
+    const authToken = getStoredAuthToken();
+    if (authToken) {
+      options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${authToken}`
+      };
+    }
+
+    // Use our offline-aware fetch implementation
+    const res = await offlineAwareFetch(url, options);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

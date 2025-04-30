@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from './jwt-auth';
 import { storage } from './storage';
 
+// This token is for development purposes only - it will be replaced in production
+// with a secure token generation system
+const DEVELOPMENT_TOKEN = process.env.TOKEN_SECRET || 'development-token-secret';
+
 /**
  * Unified authentication middleware that checks both Passport session 
  * authentication and JWT token authentication. This resolves conflicts
