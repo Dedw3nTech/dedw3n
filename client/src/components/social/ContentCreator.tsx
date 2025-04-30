@@ -196,7 +196,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Text Content Tab */}
           <TabsContent value="text">
             <Textarea
-              placeholder={t("whats_on_your_mind")}
+              placeholder="What's on your mind? Share with Dedw..."
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -206,7 +206,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Image Content Tab */}
           <TabsContent value="image">
             <Input
-              placeholder={t("image_url")}
+              placeholder="Enter image URL or use upload button below"
               className="mb-4"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
@@ -229,7 +229,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               </div>
             )}
             <Textarea
-              placeholder={t("image_description")}
+              placeholder="Add a description for your image"
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -239,13 +239,13 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Video Content Tab */}
           <TabsContent value="video">
             <Input
-              placeholder={t("video_url")}
+              placeholder="Enter video URL (YouTube, Vimeo, etc.)"
               className="mb-4"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
             />
             <Textarea
-              placeholder={t("video_description")}
+              placeholder="Tell us about this video"
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -273,7 +273,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onBlur={() => tagInput.trim() && handleTagAdd()}
-                  placeholder={t("add_tags")}
+                  placeholder="Add tags..."
                   className="flex-1 border-none shadow-none focus-visible:ring-0 min-w-[100px] h-7 p-0"
                 />
               </div>
@@ -288,7 +288,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 className="rounded text-primary focus:ring-primary/25"
               />
               <label htmlFor="promote-post" className="text-sm text-gray-700">
-                {t("promote_post")}
+                Promote this post
               </label>
             </div>
           </div>
@@ -298,12 +298,12 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-full flex items-center gap-1 px-3"
-                title={t("upload_image") || "Upload image"}
+                className="rounded-full flex items-center gap-1 px-3 hover:bg-blue-50"
+                title="Upload image"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Image className="h-5 w-5 text-gray-500" />
-                <span className="text-sm text-gray-500">Upload</span>
+                <Image className="h-5 w-5 text-blue-500" />
+                <span className="text-sm text-blue-500 font-medium">Upload</span>
               </Button>
               <input 
                 type="file"
@@ -365,7 +365,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               disabled={createPostMutation.isPending}
               className="bg-primary hover:bg-primary/90"
             >
-              {createPostMutation.isPending ? t("posting") : t("post")}
+              {createPostMutation.isPending ? "Posting..." : "Post to Dedw"}
             </Button>
           </div>
         </Tabs>
