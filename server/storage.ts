@@ -71,6 +71,11 @@ export interface IStorage {
   listUsers(): Promise<User[]>;
   searchUsers(query: string, limit?: number): Promise<User[]>;
   
+  // Follow operations
+  followUser(followerId: number, followingId: number): Promise<boolean>;
+  unfollowUser(followerId: number, followingId: number): Promise<boolean>;
+  checkIfUserFollows(followerId: number, followingId: number): Promise<boolean>;
+  
   // User social stats
   getUserPostCount(userId: number): Promise<number>;
   getFollowersCount(userId: number): Promise<number>;
@@ -78,6 +83,7 @@ export interface IStorage {
   getUserPosts(userId: number, limit?: number, offset?: number): Promise<Post[]>;
   getFollowers(userId: number, limit?: number, offset?: number): Promise<User[]>;
   getFollowing(userId: number, limit?: number, offset?: number): Promise<User[]>;
+  getUserStats(userId: number): Promise<{ postCount: number, followerCount: number, followingCount: number }>;
   
   // Category operations
   getCategoryByName(name: string): Promise<Category | undefined>;
@@ -97,17 +103,28 @@ export interface IStorage {
   createPost(post: InsertPost): Promise<Post>;
   updatePost(id: number, postData: Partial<Post>): Promise<Post | undefined>;
   deletePost(id: number): Promise<boolean>;
+  getFeedPosts(userId?: number, sortBy?: string, limit?: number, offset?: number): Promise<Post[]>;
+  getTrendingPosts(limit?: number): Promise<Post[]>;
+  getPopularTags(limit?: number): Promise<{ tag: string, count: number }[]>;
+  getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
   
   // Like operations
   likePost(postId: number, userId: number): Promise<boolean>;
   unlikePost(postId: number, userId: number): Promise<boolean>;
   checkIfUserLikedPost(postId: number, userId: number): Promise<boolean>;
   getPostLikes(postId: number): Promise<any[]>;
+  getPostLike(postId: number, userId: number): Promise<any | undefined>;
   
   // Comment operations
   createComment(comment: InsertComment): Promise<Comment>;
   getPostComments(postId: number, limit?: number, offset?: number): Promise<Comment[]>;
   deleteComment(id: number): Promise<boolean>;
+  getComment(id: number): Promise<Comment | undefined>;
+  updateComment(id: number, content: string): Promise<Comment | undefined>;
+  
+  // Post promotion operations
+  promotePost(postId: number, endDate: Date): Promise<Post | undefined>;
+  unpromotePost(postId: number): Promise<Post | undefined>;
 }
 
 // Database storage implementation
