@@ -80,30 +80,26 @@ export async function fetchPosts(options: {
     
     // Construct API URL
     const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
-    console.log(`Fetching posts from API with params:`, apiParams);
+    const url = buildUrl(apiUrl, apiParams);
+    console.log(`Fetching posts from API with URL: ${url}`);
     
-    // Using XMLHttpRequest as an alternative to fetch since axios installation failed
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const url = buildUrl(apiUrl, apiParams);
+    // Use fetch instead of XMLHttpRequest
+    try {
+      const response = await fetch(url);
       
-      xhr.open('GET', url, true);
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const apiPosts = JSON.parse(xhr.responseText);
-          console.log(`Received ${apiPosts.length} posts from API`);
-          resolve(apiPosts.map(convertToAppPost));
-        } else {
-          reject(new Error(`API request failed with status ${xhr.status}`));
-        }
-      };
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
       
-      xhr.onerror = function() {
-        reject(new Error('Network error occurred'));
-      };
+      const apiPosts = await response.json();
+      console.log(`Received ${apiPosts.length} posts from API`);
       
-      xhr.send();
-    });
+      // Convert API posts to our app format and return
+      return apiPosts.map(convertToAppPost);
+    } catch (fetchError) {
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
+    }
   } catch (error) {
     console.error('Error fetching posts:', error);
     throw error;
@@ -118,29 +114,26 @@ export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
     const apiUrl = `https://jsonplaceholder.typicode.com/posts/${id}`;
     console.log(`Fetching post from API: ${apiUrl}`);
     
-    // Using XMLHttpRequest as an alternative to fetch
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
+    // Use fetch instead of XMLHttpRequest
+    try {
+      const response = await fetch(apiUrl);
       
-      xhr.open('GET', apiUrl, true);
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const apiPost = JSON.parse(xhr.responseText);
-          console.log(`Successfully retrieved post from API:`, apiPost);
-          resolve(convertToAppPost(apiPost));
-        } else if (xhr.status === 404) {
-          resolve(null);
-        } else {
-          reject(new Error(`API request failed with status ${xhr.status}`));
-        }
-      };
+      if (response.status === 404) {
+        return null;
+      }
       
-      xhr.onerror = function() {
-        reject(new Error('Network error occurred'));
-      };
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
       
-      xhr.send();
-    });
+      const apiPost = await response.json();
+      console.log(`Successfully retrieved post from API:`, apiPost);
+      
+      return convertToAppPost(apiPost);
+    } catch (fetchError) {
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
+    }
   } catch (error) {
     console.error("Error fetching post by ID:", error);
     throw error;
