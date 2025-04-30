@@ -901,12 +901,20 @@ export class DatabaseStorage implements IStorage {
         
         // Only add the filter if they follow anyone
         if (followingUserIds.length > 0) {
-          query = query.where(
-            inArray(
-              posts.userId,
-              [userId, ...followingUserIds.map(f => f.followingId)]
-            )
-          );
+          const userIdsToInclude = [userId, ...followingUserIds.map(f => f.followingId)];
+          query = db
+            .select({
+              post: posts,
+              user: {
+                id: users.id,
+                username: users.username,
+                name: users.name,
+                avatar: users.avatar
+              }
+            })
+            .from(posts)
+            .innerJoin(users, eq(posts.userId, users.id))
+            .where(inArray(posts.userId, userIdsToInclude));
         }
       }
       
