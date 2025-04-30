@@ -43,68 +43,8 @@ export default function SocialNav() {
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-2" align="center">
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold mb-2">Social Options</h3>
-            
-            <div className="pt-1">
-              <Button 
-                variant="default" 
-                className="w-full text-xs mb-2" 
-                onClick={() => setLocation("/social")}
-              >
-                Home Feed
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full text-xs mb-2" 
-                onClick={() => setLocation("/profile")}
-              >
-                Your Profile
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full text-xs mb-2" 
-                onClick={() => setLocation("/followers")}
-              >
-                Your Followers
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full text-xs mb-2" 
-                onClick={() => setLocation("/following")}
-              >
-                People You Follow
-              </Button>
-              
-              <div className="border-t pt-2 mt-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full text-xs mb-2" 
-                  onClick={() => setLocation("/communities")}
-                >
-                  Communities
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full text-xs mb-2" 
-                  onClick={() => setLocation("/messages")}
-                >
-                  Messages
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full text-xs" 
-                  onClick={() => setLocation("/social-insights")}
-                >
-                  Social Insights
-                </Button>
-              </div>
-            </div>
+          <div className="p-2 text-center">
+            <p className="text-sm">View your social feed and stay connected with friends.</p>
           </div>
         </PopoverContent>
       </Popover>
