@@ -1689,34 +1689,34 @@ export class DatabaseStorage implements IStorage {
       // Get product counts by category
       const categoryCounts = await db
         .select({
-          categoryId: products.categoryId,
+          category: products.category,
           categoryName: categories.name,
           count: count(products.id)
         })
         .from(products)
-        .leftJoin(categories, eq(products.categoryId, categories.id))
-        .groupBy(products.categoryId, categories.name);
+        .leftJoin(categories, eq(products.category, categories.name))
+        .groupBy(products.category, categories.name);
       
       // Get sales counts by category
       const categorySales = await db
         .select({
-          categoryId: products.categoryId,
+          category: products.category,
           categoryName: categories.name,
           totalSold: sql`SUM(${orderItems.quantity})`,
-          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`
+          revenue: sql`SUM(${orderItems.unitPrice} * ${orderItems.quantity})`
         })
         .from(orderItems)
         .innerJoin(products, eq(orderItems.productId, products.id))
-        .innerJoin(categories, eq(products.categoryId, categories.id))
+        .innerJoin(categories, eq(products.category, categories.name))
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
         .where(eq(orders.paymentStatus, 'completed'))
-        .groupBy(products.categoryId, categories.name);
+        .groupBy(products.category, categories.name);
       
       // Combine the data
       const combinedData = categorySales.map(salesData => {
-        const countData = categoryCounts.find(c => c.categoryId === salesData.categoryId);
+        const countData = categoryCounts.find(c => c.category === salesData.category);
         return {
-          categoryId: salesData.categoryId,
+          category: salesData.category,
           name: salesData.categoryName,
           productCount: countData?.count || 0,
           totalSold: salesData.totalSold,
@@ -1750,13 +1750,13 @@ export class DatabaseStorage implements IStorage {
       // Get revenue by category
       const categoryRevenue = await db
         .select({
-          categoryId: products.categoryId,
+          category: products.category,
           categoryName: categories.name,
-          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`
+          revenue: sql`SUM(${orderItems.unitPrice} * ${orderItems.quantity})`
         })
         .from(orderItems)
         .innerJoin(products, eq(orderItems.productId, products.id))
-        .innerJoin(categories, eq(products.categoryId, categories.id))
+        .innerJoin(categories, eq(products.category, categories.name))
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
         .where(
           and(
@@ -1765,8 +1765,8 @@ export class DatabaseStorage implements IStorage {
             sql`${orders.createdAt} <= ${endDate}`
           )
         )
-        .groupBy(products.categoryId, categories.name)
-        .orderBy(desc(sql`SUM(${orderItems.price} * ${orderItems.quantity})`));
+        .groupBy(products.category, categories.name)
+        .orderBy(desc(sql`SUM(${orderItems.unitPrice} * ${orderItems.quantity})`));
       
       return {
         categories: categoryRevenue.map(c => c.categoryName),
@@ -1790,20 +1790,20 @@ export class DatabaseStorage implements IStorage {
         .select({
           id: products.id,
           name: products.name,
-          stock: products.stock,
+          stock: products.quantity, // Using quantity field instead of stock
           category: categories.name,
           price: products.price,
-          image: products.image
+          thumbnail: products.thumbnail // Using thumbnail field instead of image
         })
         .from(products)
-        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(categories, eq(products.category, categories.name))
         .where(
           or(
-            lte(products.stock, 5), // Low stock threshold
-            eq(products.stock, 0)   // Out of stock
+            lte(products.quantity, 5), // Low stock threshold
+            eq(products.quantity, 0)   // Out of stock
           )
         )
-        .orderBy(asc(products.stock))
+        .orderBy(asc(products.quantity))
         .limit(20);
       
       return lowInventory.map(product => ({
@@ -1997,13 +1997,13 @@ export class DatabaseStorage implements IStorage {
       // Get product counts by category
       const categoryDistribution = await db
         .select({
-          categoryId: products.categoryId,
+          category: products.category,
           categoryName: categories.name,
           count: count()
         })
         .from(products)
-        .leftJoin(categories, eq(products.categoryId, categories.id))
-        .groupBy(products.categoryId, categories.name);
+        .leftJoin(categories, eq(products.category, categories.name))
+        .groupBy(products.category, categories.name);
       
       // Calculate total products
       const totalProducts = categoryDistribution.reduce((sum, category) => sum + category.count, 0);
