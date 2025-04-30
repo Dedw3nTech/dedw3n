@@ -6,9 +6,7 @@ import { isAuthenticated } from "./unified-auth";
  * Check if the user has an active subscription or free trial
  */
 export async function getSubscriptionStatus(req: Request, res: Response) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // Authentication is handled by the isAuthenticated middleware in route definition
 
   try {
     const subscription = await storage.getUserSubscription(req.user.id);
@@ -62,9 +60,7 @@ export async function getSubscriptionStatus(req: Request, res: Response) {
  * Activate a paid subscription
  */
 export async function activateSubscription(req: Request, res: Response) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // Authentication is handled by the isAuthenticated middleware in route definition
 
   try {
     // Create a subscription that lasts 30 days
@@ -94,9 +90,7 @@ export async function activateSubscription(req: Request, res: Response) {
  * Activate a free trial subscription
  */
 export async function activateTrial(req: Request, res: Response) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // Authentication is handled by the isAuthenticated middleware in route definition
 
   try {
     // Check if user already had a trial
@@ -133,9 +127,7 @@ export async function activateTrial(req: Request, res: Response) {
  * Cancel an active subscription
  */
 export async function cancelSubscription(req: Request, res: Response) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // Authentication is handled by the isAuthenticated middleware in route definition
 
   try {
     const subscription = await storage.getUserSubscription(req.user.id);
@@ -165,9 +157,7 @@ export async function cancelSubscription(req: Request, res: Response) {
  * Authentication middleware for subscription-protected routes
  */
 export const hasActiveSubscription = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // Authentication is already verified by isAuthenticated middleware that should be used before this middleware
 
   try {
     const subscription = await storage.getUserSubscription(req.user.id);
@@ -202,15 +192,15 @@ export const hasActiveSubscription = async (req: Request, res: Response, next: N
  * Register subscription routes
  */
 export function registerSubscriptionRoutes(app: Express) {
-  // Get subscription status
-  app.get('/api/subscription/status', getSubscriptionStatus);
+  // Get subscription status - protected by authentication
+  app.get('/api/subscription/status', isAuthenticated, getSubscriptionStatus);
   
   // Activate subscription (in a real app, this would integrate with a payment gateway)
-  app.post('/api/subscription/activate', activateSubscription);
+  app.post('/api/subscription/activate', isAuthenticated, activateSubscription);
   
   // Activate free trial
-  app.post('/api/subscription/activate-trial', activateTrial);
+  app.post('/api/subscription/activate-trial', isAuthenticated, activateTrial);
   
   // Cancel subscription
-  app.post('/api/subscription/cancel', cancelSubscription);
+  app.post('/api/subscription/cancel', isAuthenticated, cancelSubscription);
 }
