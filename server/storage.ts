@@ -92,6 +92,7 @@ export interface IStorage {
   
   // Vendor operations
   getVendorByUserId(userId: number): Promise<Vendor | undefined>;
+  getVendors(limit?: number): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
   
   // Product operations

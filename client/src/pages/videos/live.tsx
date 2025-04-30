@@ -97,8 +97,8 @@ export default function LivePage() {
     // Reset chat messages for the new stream
     setChatMessages([]);
     
-    // Simulate some initial chat messages
-    generateMockChatMessages();
+    // Connect to the real-time chat
+    // The WebSocket connection will be set up in the useEffect
   };
 
   // Function to handle video like
@@ -134,56 +134,173 @@ export default function LivePage() {
     }
   };
 
-  // Function to send a chat message
+  // Reference to the active WebSocket connection
+  const socketRef = useRef<WebSocket | null>(null);
+  
+  // Function to send a chat message via WebSocket
   const handleSendChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!chatMessage.trim() || !user) return;
+    if (!chatMessage.trim() || !user || !activeLiveStream) return;
     
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      userId: user.id,
-      userName: user.name || user.username,
-      message: chatMessage.trim(),
-      timestamp: new Date()
-    };
+    // Get the socket from the ref
+    const socket = socketRef.current;
     
-    setChatMessages(prev => [...prev, newMessage]);
-    setChatMessage('');
-  };
-
-  // Simulate chat messages coming in (for demo purposes)
-  const generateMockChatMessages = () => {
-    // This would be replaced with actual WebSocket messages in a real implementation
-    const mockUsernames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Evan'];
-    const mockMessages = [
-      'Hello everyone!',
-      'This stream is amazing!',
-      'When is the next event?',
-      'Thanks for streaming this!',
-      'How long have you been doing this?',
-      'I love this content!'
-    ];
-    
-    // Generate a random message every 3-5 seconds
-    const interval = setInterval(() => {
-      const randomUserId = Math.floor(Math.random() * 100) + 10;
-      const randomUsername = mockUsernames[Math.floor(Math.random() * mockUsernames.length)];
-      const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
+    // Only proceed if we have an open WebSocket connection
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // Send the message through WebSocket
+      socket.send(JSON.stringify({
+        type: 'chat',
+        action: 'message',
+        room: `live-${activeLiveStream}`,
+        userId: user.id,
+        username: user.name || user.username,
+        message: chatMessage.trim()
+      }));
       
+      // Add to local messages for immediate display
       const newMessage: ChatMessage = {
         id: Date.now(),
-        userId: randomUserId,
-        userName: randomUsername,
-        message: randomMessage,
+        userId: user.id,
+        userName: user.name || user.username,
+        message: chatMessage.trim(),
         timestamp: new Date()
       };
       
       setChatMessages(prev => [...prev, newMessage]);
-    }, Math.random() * 2000 + 3000);
+      setChatMessage('');
+    } else {
+      // Handle case where socket isn't open
+      toast({
+        title: "Connection issue",
+        description: "Couldn't send your message, trying to reconnect...",
+        variant: "destructive"
+      });
+      
+      // Attempt to reconnect
+      setupRealTimeChat();
+    }
+  };
+
+  // Set up real-time chat with WebSocket
+  const setupRealTimeChat = () => {
+    if (!user || !activeLiveStream) return () => {};
     
-    // Clean up the interval when component unmounts or stream changes
-    return () => clearInterval(interval);
+    // Create WebSocket connection
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+    
+    // Store the socket reference for later use in send function
+    socketRef.current = socket;
+    
+    // Connection opened
+    socket.addEventListener('open', (event) => {
+      console.log('WebSocket connected');
+      
+      // Send authentication message
+      socket.send(JSON.stringify({
+        type: 'auth',
+        userId: user.id,
+        username: user.name || user.username,
+        room: `live-${activeLiveStream}`
+      }));
+      
+      // Send joined message
+      socket.send(JSON.stringify({
+        type: 'chat',
+        action: 'join',
+        room: `live-${activeLiveStream}`,
+        userId: user.id,
+        username: user.name || user.username,
+        message: `joined the chat`
+      }));
+      
+      // System message for user joining
+      const joinMsg: ChatMessage = {
+        id: Date.now(),
+        userId: -1, // System user ID
+        userName: "System",
+        message: `${user.name || user.username} joined the chat`,
+        timestamp: new Date()
+      };
+      
+      setChatMessages(prev => [...prev, joinMsg]);
+    });
+    
+    // Listen for messages
+    socket.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'chat' && data.room === `live-${activeLiveStream}`) {
+          // Skip our own messages as they're already added locally
+          if (data.action === 'message' && data.userId === user.id) {
+            return;
+          }
+          
+          // Format based on action
+          let messageContent = data.message;
+          if (data.action === 'join') {
+            messageContent = `${data.username} joined the chat`;
+          } else if (data.action === 'leave') {
+            messageContent = `${data.username} left the chat`;
+          }
+          
+          const chatMessage: ChatMessage = {
+            id: Date.now(),
+            userId: data.userId,
+            userName: data.action === 'join' || data.action === 'leave' ? 'System' : data.username,
+            message: messageContent,
+            timestamp: new Date()
+          };
+          
+          setChatMessages(prev => [...prev, chatMessage]);
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle socket closure
+    socket.addEventListener('close', () => {
+      console.log('WebSocket disconnected');
+      // Clear the reference when closed
+      if (socketRef.current === socket) {
+        socketRef.current = null;
+      }
+    });
+    
+    // Handle errors
+    socket.addEventListener('error', (error) => {
+      console.error('WebSocket error:', error);
+      toast({
+        title: "Connection error",
+        description: "There was an issue with the chat connection",
+        variant: "destructive"
+      });
+    });
+    
+    // Return cleanup function
+    return () => {
+      // Send leave message
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'chat',
+          action: 'leave',
+          room: `live-${activeLiveStream}`,
+          userId: user.id,
+          username: user.name || user.username,
+          message: `left the chat`
+        }));
+        socket.close();
+      }
+      
+      // Clear the reference
+      if (socketRef.current === socket) {
+        socketRef.current = null;
+      }
+    };
   };
 
   // Auto-scroll chat to bottom when new messages come in
@@ -191,11 +308,16 @@ export default function LivePage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // When unmounting or changing streams, clear chat interval
+  // Set up WebSocket connection when stream changes
   useEffect(() => {
-    const cleanup = generateMockChatMessages();
+    if (!activeLiveStream) return;
+    
+    // Set up real-time chat with WebSocket
+    const cleanup = setupRealTimeChat();
+    
+    // Return cleanup function to close WebSocket when unmounting or changing streams
     return cleanup;
-  }, [activeLiveStream]);
+  }, [activeLiveStream, user]);
 
   if (user === null) {
     return (
