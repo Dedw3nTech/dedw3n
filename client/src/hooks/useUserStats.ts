@@ -39,7 +39,14 @@ export function useUserStats() {
           }
           return response.json();
         } catch (error) {
-          console.error('Error fetching current user stats:', error instanceof Error ? error.message : 'Unknown error');
+          if (error instanceof Error) {
+            console.error('Error fetching current user stats:', error.message);
+          } else if (Object.keys(error || {}).length === 0) {
+            // This is likely the unauthorized error case
+            console.error('Error fetching current user stats: User not authenticated');
+          } else {
+            console.error('Error fetching current user stats:', error);
+          }
           // Return default values when there's an error
           return { postCount: 0, followerCount: 0, followingCount: 0 };
         }

@@ -21,7 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 
-type ContentType = "text" | "image" | "video" | "article" | "advertisement";
+type ContentType = "text" | "image" | "video";
 
 interface ContentCreatorProps {
   onSuccess?: () => void;
@@ -121,23 +121,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
       return;
     }
     
-    if (contentType === "article" && (!title.trim() || !content.trim())) {
-      toast({
-        title: t("errors.error"),
-        description: t("title_and_content_required"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (contentType === "advertisement" && (!title.trim() || !content.trim())) {
-      toast({
-        title: t("errors.error"),
-        description: t("ad_title_content_required"),
-        variant: "destructive",
-      });
-      return;
-    }
+    // No additional validations needed for removed content types
     
     // Create post
     const postData: InsertPost = {
@@ -145,11 +129,11 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
       content,
       contentType,
       isPublished: true,
-      isPromoted: contentType === "advertisement" ? true : isPromoted,
+      isPromoted: isPromoted,
     };
     
-    // Add title for content types that need it
-    if (["article", "advertisement"].includes(contentType) || title.trim()) {
+    // Add title if available
+    if (title.trim()) {
       postData.title = title;
     }
     
@@ -194,7 +178,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     <Card>
       <CardContent className="p-4">
         <Tabs defaultValue={contentType} onValueChange={(value) => setContentType(value as ContentType)}>
-          <TabsList className="w-full mb-4 grid grid-cols-5">
+          <TabsList className="w-full mb-4 grid grid-cols-3">
             <TabsTrigger value="text" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">{t("text")}</span>
@@ -206,14 +190,6 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             <TabsTrigger value="video" className="flex items-center gap-1">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">{t("video")}</span>
-            </TabsTrigger>
-            <TabsTrigger value="article" className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("article")}</span>
-            </TabsTrigger>
-            <TabsTrigger value="advertisement" className="flex items-center gap-1">
-              <Megaphone className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("ad")}</span>
             </TabsTrigger>
           </TabsList>
           
@@ -276,60 +252,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             />
           </TabsContent>
           
-          {/* Article Content Tab */}
-          <TabsContent value="article">
-            <Input
-              placeholder={t("article_title")}
-              className="mb-4"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <Textarea
-              placeholder={t("article_content")}
-              className="mb-4 min-h-[200px]"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </TabsContent>
-          
-          {/* Advertisement Content Tab */}
-          <TabsContent value="advertisement">
-            <Input
-              placeholder={t("ad_title")}
-              className="mb-4"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <Textarea
-              placeholder={t("ad_description")}
-              className="mb-4"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <Input
-              placeholder={t("image_url")}
-              className="mb-4"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
-            {imageUrl && (
-              <div className="mb-4 relative">
-                <img 
-                  src={imageUrl} 
-                  alt="Ad preview" 
-                  className="w-full h-48 object-cover rounded-md"
-                  onError={() => {
-                    toast({
-                      title: t("errors.error"),
-                      description: t("invalid_image_url"),
-                      variant: "destructive",
-                    });
-                    setImageUrl("");
-                  }}
-                />
-              </div>
-            )}
-          </TabsContent>
+          {/* No more article or advertisement tabs */}
           
           {/* Common fields for all content types */}
           <div className="mt-4">
@@ -356,20 +279,18 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               </div>
             </div>
             
-            {contentType !== "advertisement" && (
-              <div className="flex items-center space-x-2 mb-4">
-                <input
-                  type="checkbox"
-                  id="promote-post"
-                  checked={isPromoted}
-                  onChange={(e) => setIsPromoted(e.target.checked)}
-                  className="rounded text-primary focus:ring-primary/25"
-                />
-                <label htmlFor="promote-post" className="text-sm text-gray-700">
-                  {t("promote_post")}
-                </label>
-              </div>
-            )}
+            <div className="flex items-center space-x-2 mb-4">
+              <input
+                type="checkbox"
+                id="promote-post"
+                checked={isPromoted}
+                onChange={(e) => setIsPromoted(e.target.checked)}
+                className="rounded text-primary focus:ring-primary/25"
+              />
+              <label htmlFor="promote-post" className="text-sm text-gray-700">
+                {t("promote_post")}
+              </label>
+            </div>
           </div>
           
           <div className="flex justify-between items-center mt-4">
