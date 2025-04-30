@@ -257,7 +257,7 @@ export default function ExplorePage() {
                             {user.name || user.username}
                           </span>
                           {user.isVendor && (
-                            <Badge variant="outline" className="text-xs">Vendor</Badge>
+                            <Badge key={`vendor-${user.id}`} variant="outline" className="text-xs">Vendor</Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">
@@ -450,6 +450,7 @@ export default function ExplorePage() {
                               <h3 className="font-medium">{community.name}</h3>
                               <div className="flex items-center gap-2">
                                 <Badge 
+                                  key={`community-visibility-${community.id}`}
                                   variant="outline" 
                                   className="text-xs"
                                 >
@@ -694,12 +695,12 @@ export default function ExplorePage() {
                   <div className="flex flex-wrap gap-2">
                     {popularTags.map((tag: any) => (
                       <Badge 
-                        key={tag.name} 
+                        key={tag.tag} 
                         variant="secondary"
                         className="px-3 py-1 cursor-pointer"
-                        onClick={() => setLocation(`/search?tag=${encodeURIComponent(tag.name)}`)}
+                        onClick={() => setLocation(`/search?tag=${encodeURIComponent(tag.tag)}`)}
                       >
-                        #{tag.name}
+                        #{tag.tag}
                         <span className="ml-1 text-xs text-muted-foreground">
                           {tag.count}
                         </span>
@@ -838,6 +839,7 @@ export default function ExplorePage() {
                           <p className="font-medium text-sm">{community.name}</p>
                           <div className="flex items-center">
                             <Badge 
+                              key={`visibility-${community.id}`}
                               variant="outline" 
                               className="h-4 text-[10px]"
                             >
