@@ -2993,27 +2993,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
-      // Check if user already liked the post
-      const existingLike = await storage.getPostLike(postId, userId);
+      // Use our new storage method to like the post
+      const success = await storage.likePost(postId, userId);
       
-      if (existingLike) {
-        return res.status(400).json({ message: "Post already liked" });
+      if (!success) {
+        return res.status(500).json({ message: "Failed to like post" });
       }
       
-      // Add like
-      await storage.createPostLike({
-        postId: postId,
-        userId: userId,
-        createdAt: new Date()
-      });
-      
-      // Increment like count on post
-      const updatedPost = await storage.incrementPostLikeCount(postId);
+      // Get the updated post
+      const updatedPost = await storage.getPost(postId);
       
       res.status(201).json({ 
         success: true, 
         message: "Post liked successfully",
-        likes: updatedPost.likes
+        likes: updatedPost?.likes || 0
       });
     } catch (error) {
       console.error("Error liking post:", error);
@@ -3037,23 +3030,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
-      // Check if like exists
-      const existingLike = await storage.getPostLike(postId, userId);
+      // Use our new storage method to unlike the post
+      const success = await storage.unlikePost(postId, userId);
       
-      if (!existingLike) {
-        return res.status(404).json({ message: "Like not found" });
+      if (!success) {
+        return res.status(500).json({ message: "Failed to unlike post" });
       }
       
-      // Remove like
-      await storage.deletePostLike(postId, userId);
-      
-      // Decrement like count on post
-      const updatedPost = await storage.decrementPostLikeCount(postId);
+      // Get the updated post
+      const updatedPost = await storage.getPost(postId);
       
       res.status(200).json({ 
         success: true, 
         message: "Post unliked successfully",
-        likes: updatedPost.likes
+        likes: updatedPost?.likes || 0
       });
     } catch (error) {
       console.error("Error unliking post:", error);
@@ -3077,10 +3067,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
-      // Check if like exists
-      const existingLike = await storage.getPostLike(postId, userId);
+      // Use our new storage method to check if the post is liked by the user
+      const isLiked = await storage.checkIfUserLikedPost(postId, userId);
       
-      res.json({ isLiked: !!existingLike });
+      res.json({ isLiked });
     } catch (error) {
       console.error("Error checking post like status:", error);
       res.status(500).json({ message: "Failed to check like status" });
@@ -3100,7 +3090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
-      const comments = await storage.getPostComments(postId, { limit, offset });
+      const comments = await storage.getPostComments(postId, limit, offset);
       res.json(comments);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -3129,16 +3119,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
-      // Create comment
-      const comment = await storage.createPostComment({
-        postId: postId,
-        userId: userId,
+      // Create comment using our storage method
+      const comment = await storage.createComment({
+        postId,
+        userId,
         content: content.trim(),
         createdAt: new Date()
       });
-      
-      // Increment comment count on post
-      await storage.incrementPostCommentCount(postId);
       
       // Get user details to add to response
       const user = await storage.getUser(userId);
@@ -3187,27 +3174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/posts/:id/like", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const postId = parseInt(req.params.id);
-      
-      // Get the post
-      const post = await storage.getPost(postId);
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-      
-      // Update like count
-      const updatedPost = await storage.updatePostStats(postId, {
-        likes: (post.likes || 0) + 1
-      });
-      
-      res.json(updatedPost);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to like post" });
-    }
-  });
+  // This endpoint was replaced with the one at line ~2980
   
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
@@ -3368,15 +3335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/posts/:postId/comments", async (req, res) => {
-    try {
-      const postId = parseInt(req.params.postId);
-      const comments = await storage.listCommentsByPost(postId);
-      res.json(comments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to list comments" });
-    }
-  });
+  // This endpoint was replaced with the one at line ~3080
 
   // Message routes
   app.post("/api/messages", isAuthenticated, async (req, res) => {
