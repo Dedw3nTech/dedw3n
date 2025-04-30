@@ -315,7 +315,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Text Content Tab */}
           <TabsContent value="text">
             <Textarea
-              placeholder="Send a Dedw..."
+              placeholder="What's on your mind?"
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -482,7 +482,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 disabled={createPostMutation.isPending}
                 className="bg-primary hover:bg-primary/90"
               >
-                {createPostMutation.isPending ? "Sending..." : "Send a Dedw"}
+                {createPostMutation.isPending ? "Sending..." : "Post"}
               </Button>
             </div>
           </div>
