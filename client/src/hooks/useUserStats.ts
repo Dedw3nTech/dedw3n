@@ -20,32 +20,36 @@ export function useUserStats() {
         
         try {
           // Add Authorization header with the user's id to show we're authenticated
-          const response = await apiRequest('GET', '/api/user/stats', null, {
-            credentials: 'include'
-          });
+          const response = await apiRequest('GET', '/api/user/stats');
           
           if (!response.ok) {
             console.warn('Failed to fetch user stats:', response.status, response.statusText);
             // If we're not authenticated for some reason, let's try to get stats from the users endpoint instead
             if (response.status === 401) {
-              const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`, null, {
-                credentials: 'include'
-              });
-              if (userStatsResponse.ok) {
-                return userStatsResponse.json();
+              try {
+                const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`);
+                if (userStatsResponse.ok) {
+                  return userStatsResponse.json();
+                }
+              } catch (fallbackError) {
+                console.warn(`Fallback stats fetch failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
               }
             }
-            throw new Error('Failed to fetch user stats');
+            throw new Error(`Failed to fetch user stats: ${response.status} ${response.statusText}`);
           }
           return response.json();
         } catch (error) {
-          console.error('Error fetching current user stats:', error);
+          console.error('Error fetching current user stats:', error instanceof Error ? error.message : 'Unknown error');
+          // Return default values when there's an error
           return { postCount: 0, followerCount: 0, followingCount: 0 };
         }
       },
       enabled: !!user,
       // Refresh stats every 30 seconds to keep counts updated
       refetchInterval: 30000,
+      // Add retry options for better resilience
+      retry: 1,
+      retryDelay: 2000,
     });
   };
 
@@ -57,17 +61,19 @@ export function useUserStats() {
         try {
           const response = await apiRequest('GET', `/api/users/${userId}/stats`);
           if (!response.ok) {
-            throw new Error('Failed to fetch user stats');
+            throw new Error(`Failed to fetch user stats: ${response.status} ${response.statusText}`);
           }
           return response.json();
         } catch (error) {
-          console.error(`Error fetching stats for user ${userId}:`, error);
+          console.error(`Error fetching stats for user ${userId}:`, error instanceof Error ? error.message : 'Unknown error');
           return { postCount: 0, followerCount: 0, followingCount: 0 };
         }
       },
       enabled: !!userId,
       // Refresh stats every 30 seconds to keep counts updated
       refetchInterval: 30000,
+      retry: 1,
+      retryDelay: 2000,
     });
   };
 
