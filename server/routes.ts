@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import { posts } from "@shared/schema";
 import { setupAuth } from "./auth";
 import { setupJwtAuth, verifyToken } from "./jwt-auth";
+import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
@@ -660,61 +661,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware - combines both Passport and JWT auth systems
-  const isAuthenticated = (req: Request, res: Response, next: Function) => {
-    // First check session-based Passport authentication
-    if (req.isAuthenticated && req.isAuthenticated()) {
-      console.log('[AUTH] User authenticated via session');
-      return next();
-    }
-    
-    // If session auth fails, try checking JWT
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      
-      // Import verifyToken from jwt-auth.ts
-      // This function already does all the validation we need
-      const payload = verifyToken(token);
-      
-      if (payload) {
-        // If we get here, token is valid
-        // We need to get the user from the database using the userId from the payload
-        (async () => {
-          try {
-            // Check if token exists in database and is not revoked
-            const authToken = await storage.getAuthToken(token);
-            if (!authToken || authToken.isRevoked) {
-              console.log('[AUTH] Token not found or revoked');
-              return res.status(401).json({ message: "Unauthorized" });
-            }
-            
-            // Get the user from the database
-            const user = await storage.getUser(payload.userId);
-            if (!user) {
-              console.log('[AUTH] User not found for token');
-              return res.status(401).json({ message: "Unauthorized" });
-            }
-            
-            // Set the user on the request object
-            req.user = user;
-            console.log('[AUTH] User authenticated via JWT');
-            return next();
-          } catch (error) {
-            console.error('[AUTH] Error authenticating via JWT:', error);
-            return res.status(401).json({ message: "Authentication error" });
-          }
-        })();
-        return; // Important: return here to prevent the function from continuing
-      } else {
-        console.log('[AUTH] JWT verification failed');
-      }
-    }
-    
-    // If we get here, both authentication methods failed
-    console.log('[AUTH] Authentication failed - no valid session or JWT');
-    res.status(401).json({ message: "Unauthorized" });
-  };
+  // Using the unified authentication middleware imported from unified-auth.ts
+  const isAuthenticated = unifiedIsAuthenticated;
   
   // User connection API endpoints
   app.post("/api/users/:userId/connect", isAuthenticated, async (req, res) => {
