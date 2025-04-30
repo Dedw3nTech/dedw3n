@@ -42,6 +42,12 @@ const isValidImageUrl = (url?: string): boolean => {
   // Check if it's a blob URL (these won't work in the feed)
   if (url.startsWith('blob:')) return false;
   
+  // Handle base64 encoded images
+  if (url.startsWith('data:image/')) return true;
+  
+  // Handle relative paths for local assets
+  if (url.startsWith('./') || url.startsWith('/')) return true;
+  
   // Validate that it's a web URL or an absolute path
   return url.startsWith('http://') || 
          url.startsWith('https://') || 
