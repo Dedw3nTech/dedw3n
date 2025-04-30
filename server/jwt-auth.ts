@@ -388,7 +388,8 @@ export function setupJwtAuth(app: any): void {
     }
   });
   
-  // Get current user
+  // Get current user - COMMENTED OUT as this is now handled by unified auth in routes.ts
+  /*
   app.get('/api/auth/me', authenticate, (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -433,6 +434,7 @@ export function setupJwtAuth(app: any): void {
       });
     }
   });
+  */
   
   // Refresh token
   app.post('/api/auth/refresh', authenticate, async (req: Request, res: Response) => {
