@@ -365,7 +365,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               disabled={createPostMutation.isPending}
               className="bg-primary hover:bg-primary/90"
             >
-              {createPostMutation.isPending ? "Posting..." : "Post to Dedw"}
+              {createPostMutation.isPending ? "Sending..." : "Send a Dedw"}
             </Button>
           </div>
         </Tabs>
