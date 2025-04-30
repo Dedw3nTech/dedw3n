@@ -56,6 +56,8 @@ export interface IStorage {
   
   // Notification operations
   createNotification(notificationData: any): Promise<any>;
+  getNotifications(userId: number, limit?: number): Promise<any[]>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -98,6 +100,9 @@ export interface IStorage {
   // Product operations
   listProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
+  
+  // Cart operations
+  countCartItems(userId: number): Promise<number>;
   
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
@@ -403,6 +408,41 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async getNotifications(userId: number, limit: number = 20): Promise<any[]> {
+    try {
+      const notificationsList = await db
+        .select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
+        .limit(limit);
+      
+      return notificationsList;
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      return [];
+    }
+  }
+  
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false)
+          )
+        );
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting unread notification count:', error);
+      return 0;
+    }
+  }
+  
   async updateMessageContent(id: number, newContent: string): Promise<Message | undefined> {
     return messageHelpers.updateMessageContent(id, newContent);
   }
@@ -532,6 +572,21 @@ export class DatabaseStorage implements IStorage {
   async createVendor(vendor: InsertVendor): Promise<Vendor> {
     const [newVendor] = await db.insert(vendors).values(vendor).returning();
     return newVendor;
+  }
+  
+  // Cart operations
+  async countCartItems(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(carts)
+        .where(eq(carts.userId, userId));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error counting cart items:', error);
+      return 0;
+    }
   }
   
   // User connection methods
