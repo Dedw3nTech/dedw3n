@@ -78,7 +78,7 @@ function generateSecureToken(payload: TokenPayload): string {
 /**
  * Verifies and decodes a token
  */
-function verifyToken(token: string): TokenPayload | null {
+export function verifyToken(token: string): TokenPayload | null {
   try {
     // Split token into parts
     const [base64Payload, signature] = token.split('.');

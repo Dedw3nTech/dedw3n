@@ -161,6 +161,19 @@ export interface IStorage {
   deleteUser(userId: number): Promise<boolean>;
   resetUserPassword(userId: number, newPassword: string): Promise<boolean>;
   listPosts(options: any): Promise<any[]>;
+  
+  // Auth token operations
+  getAuthToken(token: string): Promise<any | undefined>;
+  createAuthToken(tokenData: any): Promise<any>;
+  revokeAuthToken(id: number, reason?: string): Promise<boolean>;
+  updateTokenLastActive(id: number): Promise<boolean>;
+  revokeAllUserTokens(userId: number, reason?: string): Promise<boolean>;
+  revokeAllUserTokensExcept(userId: number, tokenId: number): Promise<boolean>;
+  revokeSpecificToken(userId: number, tokenId: number): Promise<boolean>;
+  cleanupExpiredTokens(): Promise<void>;
+  incrementLoginAttempts(userId: number): Promise<void>;
+  resetLoginAttempts(userId: number): Promise<void>;
+  lockUserAccount(userId: number, lock: boolean): Promise<void>;
 }
 
 // Database storage implementation
@@ -2296,6 +2309,200 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error listing posts:', error);
       return [];
+    }
+  }
+  
+  // Auth token operations
+  async getAuthToken(token: string): Promise<any | undefined> {
+    try {
+      const [authToken] = await db.select().from(authTokens).where(eq(authTokens.token, token));
+      return authToken;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return undefined;
+    }
+  }
+
+  async createAuthToken(tokenData: any): Promise<any> {
+    try {
+      const [newToken] = await db.insert(authTokens).values(tokenData).returning();
+      return newToken;
+    } catch (error) {
+      console.error('Error creating auth token:', error);
+      throw new Error('Failed to create auth token');
+    }
+  }
+
+  async revokeAuthToken(id: number, reason: string = 'User initiated'): Promise<boolean> {
+    try {
+      await db
+        .update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedAt: new Date(),
+          revocationReason: reason,
+          updatedAt: new Date()
+        })
+        .where(eq(authTokens.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error revoking auth token:', error);
+      return false;
+    }
+  }
+
+  async updateTokenLastActive(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(authTokens)
+        .set({ 
+          lastActiveAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(authTokens.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error updating token last active:', error);
+      return false;
+    }
+  }
+
+  async revokeAllUserTokens(userId: number, reason: string = 'Security measure'): Promise<boolean> {
+    try {
+      await db
+        .update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedAt: new Date(),
+          revocationReason: reason,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(authTokens.userId, userId),
+            eq(authTokens.isRevoked, false)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error('Error revoking all user tokens:', error);
+      return false;
+    }
+  }
+
+  async revokeAllUserTokensExcept(userId: number, tokenId: number): Promise<boolean> {
+    try {
+      await db
+        .update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedAt: new Date(),
+          revocationReason: 'Revoked by user (logout from all other devices)',
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(authTokens.userId, userId),
+            eq(authTokens.isRevoked, false),
+            sql`${authTokens.id} != ${tokenId}`
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error('Error revoking all user tokens except current:', error);
+      return false;
+    }
+  }
+
+  async revokeSpecificToken(userId: number, tokenId: number): Promise<boolean> {
+    try {
+      const [token] = await db
+        .select()
+        .from(authTokens)
+        .where(
+          and(
+            eq(authTokens.id, tokenId),
+            eq(authTokens.userId, userId)
+          )
+        );
+      
+      if (!token) {
+        return false;
+      }
+      
+      return await this.revokeAuthToken(tokenId, 'Revoked by user');
+    } catch (error) {
+      console.error('Error revoking specific token:', error);
+      return false;
+    }
+  }
+
+  async cleanupExpiredTokens(): Promise<void> {
+    try {
+      // Revoke expired tokens
+      await db
+        .update(authTokens)
+        .set({ 
+          isRevoked: true, 
+          revokedAt: new Date(),
+          revocationReason: 'Token expired',
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(authTokens.isRevoked, false),
+            sql`${authTokens.expiresAt} < CURRENT_TIMESTAMP`
+          )
+        );
+      
+      // Optional: delete very old tokens (e.g., more than 30 days old)
+      await db
+        .delete(authTokens)
+        .where(sql`${authTokens.expiresAt} < CURRENT_TIMESTAMP - INTERVAL '30 days'`);
+    } catch (error) {
+      console.error('Error cleaning up expired tokens:', error);
+    }
+  }
+
+  async incrementLoginAttempts(userId: number): Promise<void> {
+    try {
+      await db
+        .update(users)
+        .set((user) => ({ 
+          failedLoginAttempts: sql`COALESCE(${user.failedLoginAttempts}, 0) + 1`,
+          updatedAt: new Date()
+        }))
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error incrementing login attempts:', error);
+    }
+  }
+
+  async resetLoginAttempts(userId: number): Promise<void> {
+    try {
+      await db
+        .update(users)
+        .set({ 
+          failedLoginAttempts: 0,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error resetting login attempts:', error);
+    }
+  }
+
+  async lockUserAccount(userId: number, lock: boolean): Promise<void> {
+    try {
+      await db
+        .update(users)
+        .set({ 
+          isLocked: lock,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error locking/unlocking user account:', error);
     }
   }
 }
