@@ -899,28 +899,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/stats", isAuthenticated, async (req, res) => {
     try {
+      if (!req.user) {
+        console.error(`[ERROR] No user found in request`);
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const userId = (req.user as any).id;
+      if (!userId) {
+        console.error(`[ERROR] User ID missing in authenticated request`);
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       console.log(`[DEBUG] Fetching stats for current user ID: ${userId}`);
       
-      // Get post count
-      const postCount = await storage.getUserPostCount(userId);
-      
-      // Get follower count
-      const followerCount = await storage.getFollowersCount(userId);
-      
-      // Get following count
-      const followingCount = await storage.getFollowingCount(userId);
-      
-      console.log(`[DEBUG] User stats - Posts: ${postCount}, Followers: ${followerCount}, Following: ${followingCount}`);
-      
-      res.json({
-        postCount,
-        followerCount,
-        followingCount
-      });
+      try {
+        // Get post count with timeout handling
+        const postCountPromise = Promise.race([
+          storage.getUserPostCount(userId),
+          new Promise<number>((_, reject) => 
+            setTimeout(() => reject(new Error('Post count timeout')), 3000)
+          )
+        ]);
+        
+        // Get follower count with timeout handling
+        const followerCountPromise = Promise.race([
+          storage.getFollowersCount(userId),
+          new Promise<number>((_, reject) => 
+            setTimeout(() => reject(new Error('Follower count timeout')), 3000)
+          )
+        ]);
+        
+        // Get following count with timeout handling
+        const followingCountPromise = Promise.race([
+          storage.getFollowingCount(userId),
+          new Promise<number>((_, reject) => 
+            setTimeout(() => reject(new Error('Following count timeout')), 3000)
+          )
+        ]);
+        
+        // Run all queries in parallel
+        const [postCount, followerCount, followingCount] = await Promise.all([
+          postCountPromise.catch(e => {
+            console.error(`[ERROR] Post count query failed:`, e);
+            return 0;
+          }),
+          followerCountPromise.catch(e => {
+            console.error(`[ERROR] Follower count query failed:`, e);
+            return 0;
+          }),
+          followingCountPromise.catch(e => {
+            console.error(`[ERROR] Following count query failed:`, e);
+            return 0;
+          })
+        ]);
+        
+        console.log(`[DEBUG] User stats - Posts: ${postCount}, Followers: ${followerCount}, Following: ${followingCount}`);
+        
+        return res.json({
+          postCount,
+          followerCount,
+          followingCount
+        });
+      } catch (queryError) {
+        console.error(`[ERROR] Database query error:`, queryError);
+        return res.status(500).json({ 
+          message: "Database error when fetching user statistics",
+          error: queryError instanceof Error ? queryError.message : 'Unknown error'
+        });
+      }
     } catch (error) {
       console.error(`[ERROR] Failed to get stats for user:`, error);
-      res.status(500).json({ message: "Failed to fetch user statistics" });
+      return res.status(500).json({ 
+        message: "Failed to fetch user statistics",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
   

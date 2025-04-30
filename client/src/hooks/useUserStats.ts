@@ -18,45 +18,114 @@ export function useUserStats() {
       queryFn: async () => {
         if (!user) return { postCount: 0, followerCount: 0, followingCount: 0 };
         
+        // Track if we're using fallback counts
+        let usedFallbackCounts = false;
+        
         try {
-          // Add Authorization header with the user's id to show we're authenticated
-          const response = await apiRequest('GET', '/api/user/stats');
+          // Add timeout to the main request
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
           
-          if (!response.ok) {
-            console.warn('Failed to fetch user stats:', response.status, response.statusText);
-            // If we're not authenticated for some reason, let's try to get stats from the users endpoint instead
-            if (response.status === 401) {
-              try {
-                const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`);
-                if (userStatsResponse.ok) {
-                  return userStatsResponse.json();
-                }
-              } catch (fallbackError) {
-                console.warn(`Fallback stats fetch failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
-              }
+          // First try primary endpoint with a timeout
+          try {
+            const response = await apiRequest('GET', '/api/user/stats', undefined, {
+              signal: controller.signal
+            });
+            
+            // Clear the timeout since request completed
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              return await response.json();
             }
-            throw new Error(`Failed to fetch user stats: ${response.status} ${response.statusText}`);
+            
+            console.warn('Failed to fetch user stats:', response.status, response.statusText);
+            
+            // Handle specific error codes
+            if (response.status === 401) {
+              // Authentication issue, fall back to another endpoint
+            } else if (response.status === 502 || response.status === 504) {
+              console.warn('Server timeout or gateway error when fetching stats');
+            }
+            
+            throw new Error(`Primary stats endpoint failed: ${response.status} ${response.statusText}`);
+          } catch (mainError) {
+            // Clear timeout if it hasn't fired yet
+            clearTimeout(timeoutId);
+            
+            // Log the error details for debugging
+            const errorMessage = mainError instanceof Error ? mainError.message : String(mainError);
+            console.warn(`Primary stats endpoint error: ${errorMessage}`);
+            
+            throw mainError; // Let the fallback logic handle it
           }
-          return response.json();
-        } catch (error) {
-          if (error instanceof Error) {
-            console.error('Error fetching current user stats:', error.message);
-          } else if (Object.keys(error || {}).length === 0) {
-            // This is likely the unauthorized error case
-            console.error('Error fetching current user stats: User not authenticated');
-          } else {
-            console.error('Error fetching current user stats:', error);
+        } catch (primaryError) {
+          usedFallbackCounts = true;
+          console.warn('Using fallback stats endpoints...');
+          
+          // Implement fallback strategy - fetch individual counts separately
+          try {
+            // Try the alternative user stats endpoint first
+            try {
+              const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`, undefined, {
+                // Set shorter timeout for fallback requests
+                signal: AbortSignal.timeout(3000)
+              });
+              
+              if (userStatsResponse.ok) {
+                return await userStatsResponse.json();
+              }
+            } catch (fallbackError) {
+              console.warn(`Fallback user stats failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`);
+            }
+            
+            // If that fails too, try to gather stats from individual endpoints
+            const stats = { postCount: 0, followerCount: 0, followingCount: 0 };
+            
+            // Collect all promises for individual stats
+            const promises = [
+              // Get post count
+              apiRequest('GET', `/api/social/posts/count/${user.id}`)
+                .then(res => res.ok ? res.json().then(data => stats.postCount = data.count) : null)
+                .catch(e => console.warn(`Failed to get post count: ${e}`)),
+                
+              // Get follower count
+              apiRequest('GET', `/api/social/followers/count/${user.id}`)
+                .then(res => res.ok ? res.json().then(data => stats.followerCount = data.count) : null)
+                .catch(e => console.warn(`Failed to get follower count: ${e}`)),
+                
+              // Get following count
+              apiRequest('GET', `/api/social/following/count/${user.id}`)
+                .then(res => res.ok ? res.json().then(data => stats.followingCount = data.count) : null)
+                .catch(e => console.warn(`Failed to get following count: ${e}`))
+            ];
+            
+            // Wait for all to complete (regardless of success/failure)
+            await Promise.allSettled(promises);
+            
+            console.log('Using individually collected stats:', stats);
+            return stats;
+          } catch (completeFailure) {
+            console.error('All stats endpoints failed:', 
+              completeFailure instanceof Error ? completeFailure.message : completeFailure);
+            
+            // Last resort - return zeros
+            return { postCount: 0, followerCount: 0, followingCount: 0 };
           }
-          // Return default values when there's an error
-          return { postCount: 0, followerCount: 0, followingCount: 0 };
+        } finally {
+          if (usedFallbackCounts) {
+            console.log('Used fallback strategy for user stats');
+          }
         }
       },
       enabled: !!user,
-      // Refresh stats every 30 seconds to keep counts updated
-      refetchInterval: 30000,
-      // Add retry options for better resilience
-      retry: 1,
-      retryDelay: 2000,
+      // Refresh stats less frequently when using the improved error handling
+      refetchInterval: 60000, 
+      // Increase retry attempts with the more robust implementation
+      retry: 2,
+      retryDelay: 3000,
+      // Don't show error to user for this non-critical data
+      useErrorBoundary: false,
     });
   };
 
