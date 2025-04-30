@@ -80,6 +80,15 @@ export const sourceLogoMapping = {
   "ars-technica": { name: "Ars Technica", logoUrl: "https://arstechnica.com/favicon.ico" }
 };
 
+// Real sources for API requests (from NewsAPI.org)
+export const newsSources = [
+  { id: "techcrunch", name: "TechCrunch", logoUrl: "https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png" },
+  { id: "bbc-news", name: "BBC News", logoUrl: "https://www.bbc.co.uk/favicon.ico" },
+  { id: "cnn", name: "CNN", logoUrl: "https://www.cnn.com/favicon.ico" },
+  { id: "reuters", name: "Reuters", logoUrl: "https://www.reuters.com/favicon.ico" },
+  { id: "bloomberg", name: "Bloomberg", logoUrl: "https://www.bloomberg.com/favicon.ico" }
+];
+
 // NewsAPI.org response interfaces
 interface NewsAPISource {
   id: string | null;
@@ -172,50 +181,76 @@ export async function getTrendingNews(req: Request, res: Response) {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0;
+    const page = Math.floor(offset / limit) + 1; // NewsAPI uses 1-indexed pages
     
-    // For now, we'll create and return some demo news items
-    // In a real implementation, this would fetch from external news APIs
-    const newsItems: NewsItem[] = [];
+    // Fetch top headlines using the News API
+    const response = await fetchNewsApi('/top-headlines', {
+      country: 'us', // Using US as default
+      pageSize: limit,
+      page
+    });
     
-    // Generate news items for the requested page
-    for (let i = 0; i < limit; i++) {
-      const idx = offset + i;
-      if (idx >= 50) break; // Max 50 dummy items
-      
-      const categoryIndex = idx % newsCategories.length;
-      const sourceIndex = (idx % newsSources.length);
-      const source = newsSources[sourceIndex];
-      
-      const daysAgo = idx % 7;
-      const pubDate = new Date();
-      pubDate.setDate(pubDate.getDate() - daysAgo);
-      
-      newsItems.push({
-        id: `news-${idx + 1}`,
-        title: `Latest developments in ${newsCategories[categoryIndex].charAt(0).toUpperCase() + newsCategories[categoryIndex].slice(1)}`,
-        summary: `This is a summary of the latest news in ${newsCategories[categoryIndex]}.`,
-        content: `This is the full content of the news article about ${newsCategories[categoryIndex]}.`,
-        sourceId: source.id,
-        sourceName: source.name,
-        sourceLogoUrl: source.logoUrl,
-        author: `Reporter ${idx + 1}`,
-        publishedAt: pubDate,
-        url: `https://example.com/news/${idx + 1}`,
-        imageUrl: `/assets/news/image-${(idx % 8) + 1}.jpg`,
-        category: newsCategories[categoryIndex],
-        tags: [newsCategories[categoryIndex], "trending", "news"]
-      });
+    if (!response || !response.articles) {
+      console.error('Invalid response from NewsAPI:', response);
+      return res.status(500).json({ message: "Failed to fetch news from external API" });
     }
+    
+    // Convert API response to our format
+    const newsItems: NewsItem[] = response.articles.map(article => {
+      // For top headlines, we need to infer the category
+      const inferredCategory = inferCategoryFromArticle(article);
+      return convertToNewsItem(article, inferredCategory);
+    });
     
     return res.json({
       items: newsItems,
-      total: 50, // Total number of fake news items
-      hasMore: (offset + limit) < 50
+      total: response.totalResults || newsItems.length,
+      hasMore: (offset + limit) < response.totalResults
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching trending news:", error);
-    return res.status(500).json({ message: "Failed to fetch trending news" });
+    return res.status(500).json({ 
+      message: "Failed to fetch trending news", 
+      details: error.message 
+    });
   }
+}
+
+/**
+ * Helper function to infer article category from its content
+ */
+function inferCategoryFromArticle(article: NewsAPIArticle): string {
+  // Some basic keyword matching to determine category
+  const text = `${article.title} ${article.description || ''} ${article.content || ''}`.toLowerCase();
+  
+  // Check for category keywords
+  if (text.match(/tech|software|digital|ai|robot|cyber|computer|internet|app|smartphone/g)) {
+    return 'technology';
+  } 
+  if (text.match(/business|company|market|stock|economy|economic|finance|investor|profit|startup/g)) {
+    return 'business';
+  }
+  if (text.match(/entertainment|movie|film|celebrity|music|actor|actress|hollywood|tv show|streaming/g)) {
+    return 'entertainment';
+  }
+  if (text.match(/health|medical|doctor|patient|disease|virus|vaccine|hospital|medicine|therapy|covid/g)) {
+    return 'health';
+  }
+  if (text.match(/sport|match|team|player|tournament|championship|league|game|coach|athlete/g)) {
+    return 'sports';
+  }
+  if (text.match(/science|research|scientist|study|discovery|space|nasa|experiment|physics|biology/g)) {
+    return 'science';
+  }
+  if (text.match(/politic|president|government|election|vote|congress|senate|minister|party|democracy|republican|democrat/g)) {
+    return 'politics';
+  }
+  if (text.match(/world|international|global|foreign|nation|country|war|peace|diplomatic|summit/g)) {
+    return 'world';
+  }
+  
+  // Default to general category
+  return 'general';
 }
 
 /**
@@ -226,51 +261,47 @@ export async function getNewsByCategory(req: Request, res: Response) {
     const { category } = req.params;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0;
+    const page = Math.floor(offset / limit) + 1; // NewsAPI uses 1-indexed pages
     
     if (!newsCategories.includes(category)) {
       return res.status(400).json({ message: "Invalid category" });
     }
     
-    // For now, we'll create and return some demo news items for the specified category
-    const newsItems: NewsItem[] = [];
-    
-    // Generate news items for the requested category and page
-    for (let i = 0; i < limit; i++) {
-      const idx = offset + i;
-      if (idx >= 20) break; // Max 20 dummy items per category
-      
-      const sourceIndex = (idx % newsSources.length);
-      const source = newsSources[sourceIndex];
-      
-      const daysAgo = idx % 5;
-      const pubDate = new Date();
-      pubDate.setDate(pubDate.getDate() - daysAgo);
-      
-      newsItems.push({
-        id: `${category}-${idx + 1}`,
-        title: `${category.charAt(0).toUpperCase() + category.slice(1)} news headline ${idx + 1}`,
-        summary: `This is a summary of the news article about ${category}.`,
-        content: `This is the full content of the news article about ${category}.`,
-        sourceId: source.id,
-        sourceName: source.name,
-        sourceLogoUrl: source.logoUrl,
-        author: `${category.charAt(0).toUpperCase() + category.slice(1)} Reporter ${idx + 1}`,
-        publishedAt: pubDate,
-        url: `https://example.com/news/${category}/${idx + 1}`,
-        imageUrl: `/assets/news/${category}-${(idx % 5) + 1}.jpg`,
-        category: category,
-        tags: [category, "news"]
-      });
+    // Map our category to NewsAPI's categories if needed
+    let apiCategory = category;
+    if (category === 'politics') {
+      apiCategory = 'general'; // NewsAPI doesn't have a politics category, use general
     }
+    
+    // Fetch articles from News API
+    const response = await fetchNewsApi('/top-headlines', {
+      country: 'us',
+      category: apiCategory,
+      pageSize: limit,
+      page
+    });
+    
+    if (!response || !response.articles) {
+      console.error('Invalid response from NewsAPI:', response);
+      return res.status(500).json({ message: "Failed to fetch news from external API" });
+    }
+    
+    // Convert API response to our format
+    const newsItems: NewsItem[] = response.articles.map(article => {
+      return convertToNewsItem(article, category);
+    });
     
     return res.json({
       items: newsItems,
-      total: 20, // Total number of fake news items per category
-      hasMore: (offset + limit) < 20
+      total: response.totalResults || newsItems.length,
+      hasMore: (offset + limit) < response.totalResults
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error fetching ${req.params.category} news:`, error);
-    return res.status(500).json({ message: `Failed to fetch ${req.params.category} news` });
+    return res.status(500).json({ 
+      message: `Failed to fetch ${req.params.category} news`,
+      details: error.message
+    });
   }
 }
 
