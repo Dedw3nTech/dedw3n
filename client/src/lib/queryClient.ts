@@ -46,20 +46,24 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  isFormData?: boolean,
+  options?: RequestInit | { isFormData?: boolean, signal?: AbortSignal },
 ): Promise<Response> {
+  // Check if we're using the old format (boolean isFormData) or the new options object
+  const isFormData = typeof options === 'boolean' ? options : options?.isFormData;
+  
   // Set up request options
-  const options: RequestInit = {
+  const requestOptions: RequestInit = {
     method,
     credentials: "include",
-    headers: {}
+    headers: {},
+    ...(typeof options === 'object' && options !== null ? options : {})
   };
 
   // Add authorization header if token exists
   const authToken = getStoredAuthToken();
   if (authToken) {
-    options.headers = {
-      ...options.headers,
+    requestOptions.headers = {
+      ...requestOptions.headers,
       'Authorization': `Bearer ${authToken}`
     };
   }
@@ -68,38 +72,46 @@ export async function apiRequest(
   if (data) {
     if (isFormData) {
       // For FormData, let the browser set the Content-Type with boundary
-      options.body = data as FormData;
+      requestOptions.body = data as FormData;
       // Don't set Content-Type for FormData
     } else {
       // For JSON data, set Content-Type and stringify
-      options.headers = { 
-        ...options.headers,
+      requestOptions.headers = { 
+        ...requestOptions.headers,
         "Content-Type": "application/json"
       };
-      options.body = JSON.stringify(data);
+      requestOptions.body = JSON.stringify(data);
     }
   }
 
-  // Use our offline-aware fetch implementation
-  const res = await offlineAwareFetch(url, options);
+  try {
+    // Use our offline-aware fetch implementation
+    const res = await offlineAwareFetch(url, requestOptions);
 
-  await throwIfResNotOk(res);
-  
-  // If this was a successful mutation (non-GET request), invalidate related caches
-  // This ensures we don't show stale data after mutations
-  if (method !== 'GET' && res.ok && useOfflineStore.getState().isOnline) {
-    // Extract the base path to invalidate related queries
-    const basePath = url.split('?')[0].split('/').slice(0, -1).join('/');
-    if (basePath) {
-      // Clear cache for this endpoint pattern
-      clearCache(basePath);
-      
-      // Invalidate related queries in React Query cache
-      queryClient.invalidateQueries({ queryKey: [basePath] });
+    await throwIfResNotOk(res);
+    
+    // If this was a successful mutation (non-GET request), invalidate related caches
+    // This ensures we don't show stale data after mutations
+    if (method !== 'GET' && res.ok && useOfflineStore.getState().isOnline) {
+      // Extract the base path to invalidate related queries
+      const basePath = url.split('?')[0].split('/').slice(0, -1).join('/');
+      if (basePath) {
+        // Clear cache for this endpoint pattern
+        clearCache(basePath);
+        
+        // Invalidate related queries in React Query cache
+        queryClient.invalidateQueries({ queryKey: [basePath] });
+      }
     }
+    
+    return res;
+  } catch (error) {
+    // Handle AbortError separately so we can provide a clearer message
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      console.warn(`Request to ${url} was aborted (timeout or cancelled)`);
+    }
+    throw error;
   }
-  
-  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

@@ -29,7 +29,8 @@ export function useUserStats() {
           // First try primary endpoint with a timeout
           try {
             const response = await apiRequest('GET', '/api/user/stats', undefined, {
-              signal: controller.signal
+              signal: controller.signal,
+              isFormData: false
             });
             
             // Clear the timeout since request completed
@@ -69,7 +70,8 @@ export function useUserStats() {
             try {
               const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`, undefined, {
                 // Set shorter timeout for fallback requests
-                signal: AbortSignal.timeout(3000)
+                signal: AbortSignal.timeout(3000),
+                isFormData: false
               });
               
               if (userStatsResponse.ok) {
@@ -124,8 +126,6 @@ export function useUserStats() {
       // Increase retry attempts with the more robust implementation
       retry: 2,
       retryDelay: 3000,
-      // Don't show error to user for this non-critical data
-      useErrorBoundary: false,
     });
   };
 
