@@ -53,6 +53,8 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (postData: InsertPost) => {
+      // Add invalidation of personal feed to ensure new posts appear
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
       const response = await apiRequest("POST", "/api/posts", postData);
       return response.json();
     },
@@ -66,8 +68,9 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
       setTagInput("");
       setIsPromoted(false);
       
-      // Refresh posts list
+      // Refresh posts list and feed
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
       
       // Show success toast
       toast({
@@ -324,12 +327,62 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           
           {/* Image Content Tab */}
           <TabsContent value="image">
-            <Input
-              placeholder="Enter image URL or use upload button below"
-              className="mb-4"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <Input
+                  placeholder="Enter image URL or use upload button below"
+                  className="mb-2"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    id="image-upload"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Convert file to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const base64String = reader.result as string;
+                          setImageUrl(base64String);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <Button 
+                    variant="outline" 
+                    type="button"
+                    className="w-full flex items-center gap-2"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Upload Image</span>
+                  </Button>
+                  {imageUrl && (
+                    <Button 
+                      variant="destructive" 
+                      type="button"
+                      onClick={() => setImageUrl("")}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Textarea
+                  placeholder="Add a description for your image"
+                  className="h-full"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+              </div>
+            </div>
             {imageUrl && (
               <div className="mb-4 relative">
                 <img 
@@ -338,8 +391,8 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   className="w-full h-48 object-cover rounded-md"
                   onError={() => {
                     toast({
-                      title: t("errors.error"),
-                      description: t("invalid_image_url"),
+                      title: t("errors.error") || "Error",
+                      description: t("invalid_image_url") || "Invalid image URL",
                       variant: "destructive",
                     });
                     setImageUrl("");
@@ -347,12 +400,6 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 />
               </div>
             )}
-            <Textarea
-              placeholder="Add a description for your image"
-              className="mb-4"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
           </TabsContent>
           
           {/* Video Content Tab */}
