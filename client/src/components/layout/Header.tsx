@@ -30,7 +30,8 @@ import {
   ShoppingBag, 
   Home, 
   Compass,
-  Video
+  Video,
+  User as UserIcon
 } from "lucide-react";
 import {
   Popover,
