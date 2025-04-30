@@ -93,6 +93,46 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     },
   });
   
+  // Direct blob upload mutation for images
+  const uploadImageMutation = useMutation({
+    mutationFn: async (data: { blob: string; description: string; tags: string[] }) => {
+      const response = await apiRequest("POST", "/api/social/upload-image", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Reset form
+      setContent("");
+      setTitle("");
+      setImageUrl("");
+      setVideoUrl("");
+      setTags([]);
+      setTagInput("");
+      setIsPromoted(false);
+      
+      // Refresh posts list and feed
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+      
+      // Show success toast
+      toast({
+        title: t("post_created"),
+        description: t("post_success_message"),
+      });
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("errors.error"),
+        description: error.message || t("image_upload_error") || "Failed to upload image",
+        variant: "destructive",
+      });
+    },
+  });
+  
   const handleSubmit = () => {
     if (!user) {
       toast({
@@ -131,8 +171,17 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
       return;
     }
     
-    // No additional validations needed for removed content types
+    // For image content type with base64 data, use the direct blob upload API
+    if (contentType === "image" && imageUrl.startsWith('data:image/')) {
+      uploadImageMutation.mutate({
+        blob: imageUrl,
+        description: content,
+        tags: tags
+      });
+      return;
+    }
     
+    // For other content types, use the standard post creation API
     // Create post
     const postData: InsertPost = {
       userId: user.id,
