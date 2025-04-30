@@ -784,6 +784,273 @@ export class DatabaseStorage implements IStorage {
     const [newProduct] = await db.insert(products).values(product).returning();
     return newProduct;
   }
+
+  // Post operations
+  async getPost(id: number): Promise<Post | undefined> {
+    try {
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      return post;
+    } catch (error) {
+      console.error('Error getting post:', error);
+      return undefined;
+    }
+  }
+  
+  async createPost(post: InsertPost): Promise<Post> {
+    try {
+      console.log('Creating post with data:', post);
+      const [newPost] = await db.insert(posts).values(post).returning();
+      return newPost;
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw new Error('Failed to create post');
+    }
+  }
+  
+  async updatePost(id: number, postData: Partial<Post>): Promise<Post | undefined> {
+    try {
+      const [updatedPost] = await db
+        .update(posts)
+        .set({
+          ...postData,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, id))
+        .returning();
+      return updatedPost;
+    } catch (error) {
+      console.error('Error updating post:', error);
+      return undefined;
+    }
+  }
+  
+  async deletePost(id: number): Promise<boolean> {
+    try {
+      await db.delete(posts).where(eq(posts.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      return false;
+    }
+  }
+  
+  // Like operations
+  async likePost(postId: number, userId: number): Promise<boolean> {
+    try {
+      // Check if like already exists
+      const [existingLike] = await db
+        .select()
+        .from(likes)
+        .where(
+          and(
+            eq(likes.postId, postId),
+            eq(likes.userId, userId)
+          )
+        );
+      
+      if (existingLike) {
+        // Already liked
+        return true;
+      }
+      
+      // Create a new like
+      await db.insert(likes).values({
+        postId,
+        userId
+      });
+      
+      // Increment the post's like count
+      await db
+        .update(posts)
+        .set({
+          likes: sql`${posts.likes} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error liking post:', error);
+      return false;
+    }
+  }
+  
+  async unlikePost(postId: number, userId: number): Promise<boolean> {
+    try {
+      // Find and delete the like
+      const [existingLike] = await db
+        .select()
+        .from(likes)
+        .where(
+          and(
+            eq(likes.postId, postId),
+            eq(likes.userId, userId)
+          )
+        );
+      
+      if (!existingLike) {
+        // Not liked yet
+        return true;
+      }
+      
+      // Delete the like
+      await db
+        .delete(likes)
+        .where(eq(likes.id, existingLike.id));
+      
+      // Decrement the post's like count
+      await db
+        .update(posts)
+        .set({
+          likes: sql`GREATEST(${posts.likes} - 1, 0)`, // Ensure likes don't go below 0
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error unliking post:', error);
+      return false;
+    }
+  }
+  
+  async checkIfUserLikedPost(postId: number, userId: number): Promise<boolean> {
+    try {
+      const [existingLike] = await db
+        .select()
+        .from(likes)
+        .where(
+          and(
+            eq(likes.postId, postId),
+            eq(likes.userId, userId)
+          )
+        );
+      
+      return !!existingLike;
+    } catch (error) {
+      console.error('Error checking if user liked post:', error);
+      return false;
+    }
+  }
+  
+  async getPostLikes(postId: number): Promise<any[]> {
+    try {
+      const postLikes = await db
+        .select({
+          like: likes,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar,
+            isVendor: users.isVendor
+          }
+        })
+        .from(likes)
+        .leftJoin(users, eq(likes.userId, users.id))
+        .where(eq(likes.postId, postId))
+        .orderBy(desc(likes.createdAt));
+      
+      return postLikes.map(({ like, user }) => ({
+        id: like.id,
+        userId: user.id,
+        username: user.username,
+        name: user.name,
+        avatar: user.avatar,
+        isVendor: user.isVendor,
+        createdAt: like.createdAt
+      }));
+    } catch (error) {
+      console.error('Error getting post likes:', error);
+      return [];
+    }
+  }
+  
+  // Comment operations
+  async createComment(comment: InsertComment): Promise<Comment> {
+    try {
+      const [newComment] = await db.insert(comments).values(comment).returning();
+      
+      // Increment the post's comment count
+      await db
+        .update(posts)
+        .set({
+          comments: sql`${posts.comments} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, newComment.postId));
+      
+      return newComment;
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      throw new Error('Failed to create comment');
+    }
+  }
+  
+  async getPostComments(postId: number, limit: number = 10, offset: number = 0): Promise<Comment[]> {
+    try {
+      const postComments = await db
+        .select({
+          comment: comments,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.postId, postId))
+        .orderBy(desc(comments.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return postComments.map(({ comment, user }) => ({
+        ...comment,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar
+        }
+      })) as Comment[];
+    } catch (error) {
+      console.error('Error getting post comments:', error);
+      return [];
+    }
+  }
+  
+  async deleteComment(id: number): Promise<boolean> {
+    try {
+      // Get the comment first to know which post to update
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, id));
+      
+      if (!comment) {
+        return false;
+      }
+      
+      // Delete the comment
+      await db.delete(comments).where(eq(comments.id, id));
+      
+      // Decrement the post's comment count
+      await db
+        .update(posts)
+        .set({
+          comments: sql`GREATEST(${posts.comments} - 1, 0)`, // Ensure comments don't go below 0
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, comment.postId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
