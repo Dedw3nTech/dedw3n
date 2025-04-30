@@ -368,6 +368,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const { token, expiresAt } = await generateToken(user.id, user.role || 'user', deviceInfo);
         
+    // Add test endpoints for debugging
+    app.get('/api/auth/test-auth', unifiedIsAuthenticated, (req: Request, res: Response) => {
+      console.log('[DEBUG] Authentication successful in test-auth endpoint');
+      res.json({
+        message: 'Authentication successful',
+        user: {
+          id: req.user?.id,
+          username: req.user?.username,
+          role: req.user?.role
+        }
+      });
+    });
+    
+    // Test endpoint to check if image upload will work
+    app.post('/api/upload-test', unifiedIsAuthenticated, (req: Request, res: Response) => {
+      console.log('[DEBUG] Upload test endpoint called with user:', req.user?.id);
+      
+      let filename = null;
+      
+      // Check if there's a base64 image
+      if (req.body.image && req.body.image.startsWith('data:image')) {
+        try {
+          // Extract the base64 data
+          const base64Data = req.body.image.split(',')[1];
+          filename = `test_${Date.now()}.png`;
+          
+          // Create uploads directory if it doesn't exist
+          if (!fs.existsSync('./public/uploads')) {
+            fs.mkdirSync('./public/uploads', { recursive: true });
+          }
+          if (!fs.existsSync('./public/uploads/test')) {
+            fs.mkdirSync('./public/uploads/test', { recursive: true });
+          }
+          
+          // Save the file
+          fs.writeFileSync(`./public/uploads/test/${filename}`, base64Data, 'base64');
+          
+          console.log(`[DEBUG] Test image saved as: /uploads/test/${filename}`);
+        } catch (error) {
+          console.error('[ERROR] Failed to save test image:', error);
+          return res.status(500).json({ message: 'Failed to save test image' });
+        }
+      }
+      
+      res.json({
+        message: 'Upload test successful',
+        user: {
+          id: req.user?.id,
+          username: req.user?.username
+        },
+        imageSaved: filename !== null,
+        imagePath: filename ? `/uploads/test/${filename}` : null
+      });
+    });
+        
         res.json({ token, expiresAt, userId: user.id, username: user.username });
       } catch (error) {
         console.error('[ERROR] Error generating test token:', error);
