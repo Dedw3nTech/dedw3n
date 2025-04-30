@@ -230,7 +230,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Image Content Tab */}
           <TabsContent value="image">
             <Input
-              placeholder={t("social.image_url")}
+              placeholder={t("image_url")}
               className="mb-4"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
@@ -253,7 +253,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               </div>
             )}
             <Textarea
-              placeholder={t("social.image_description")}
+              placeholder={t("image_description")}
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -263,13 +263,13 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Video Content Tab */}
           <TabsContent value="video">
             <Input
-              placeholder={t("social.video_url")}
+              placeholder={t("video_url")}
               className="mb-4"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
             />
             <Textarea
-              placeholder={t("social.video_description")}
+              placeholder={t("video_description")}
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -279,13 +279,13 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Article Content Tab */}
           <TabsContent value="article">
             <Input
-              placeholder={t("social.article_title")}
+              placeholder={t("article_title")}
               className="mb-4"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
             <Textarea
-              placeholder={t("social.article_content")}
+              placeholder={t("article_content")}
               className="mb-4 min-h-[200px]"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -295,19 +295,19 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Advertisement Content Tab */}
           <TabsContent value="advertisement">
             <Input
-              placeholder={t("social.ad_title")}
+              placeholder={t("ad_title")}
               className="mb-4"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
             <Textarea
-              placeholder={t("social.ad_description")}
+              placeholder={t("ad_description")}
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
             <Input
-              placeholder={t("social.image_url")}
+              placeholder={t("image_url")}
               className="mb-4"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
