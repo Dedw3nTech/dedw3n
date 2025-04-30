@@ -503,37 +503,37 @@ export class DatabaseStorage implements IStorage {
   }
   
   // User follow methods
-  async followUser(followerId: number, followingId: number): Promise<any> {
+  async followUser(followerId: number, followingId: number): Promise<boolean> {
     try {
       // Check if follow already exists
-      const [existingFollow] = await db
-        .select()
-        .from(follows)
-        .where(
-          and(
-            eq(follows.followerId, followerId),
-            eq(follows.followingId, followingId)
-          )
-        );
-      
-      if (existingFollow) {
-        return existingFollow;
+      const isAlreadyFollowing = await this.checkIfUserFollows(followerId, followingId);
+      if (isAlreadyFollowing) {
+        return true;
       }
       
       // Create a new follow relationship
-      const [newFollow] = await db
+      await db
         .insert(follows)
         .values({
           followerId,
-          followingId,
+          followingId, // Schema uses followingId
           createdAt: new Date()
-        })
-        .returning();
+        });
       
-      return newFollow;
+      // Create notification for the followed user
+      await this.createNotification({
+        userId: followingId,
+        type: 'follow',
+        content: 'started following you',
+        actorId: followerId,
+        read: false,
+        createdAt: new Date()
+      });
+      
+      return true;
     } catch (error) {
       console.error('Error following user:', error);
-      throw error;
+      return false;
     }
   }
   
@@ -556,7 +556,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+  async checkIfUserFollows(followerId: number, followingId: number): Promise<boolean> {
     try {
       const [follow] = await db
         .select()
@@ -678,6 +678,32 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting following users:', error);
       return [];
+    }
+  }
+  
+  async getUserStats(userId: number): Promise<{ postCount: number, followerCount: number, followingCount: number }> {
+    try {
+      // Get post count
+      const postCount = await this.getUserPostCount(userId);
+      
+      // Get followers count
+      const followerCount = await this.getFollowersCount(userId);
+      
+      // Get following count
+      const followingCount = await this.getFollowingCount(userId);
+      
+      return {
+        postCount,
+        followerCount,
+        followingCount
+      };
+    } catch (error) {
+      console.error('Error getting user stats:', error);
+      return {
+        postCount: 0,
+        followerCount: 0,
+        followingCount: 0
+      };
     }
   }
 
@@ -848,6 +874,160 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting post:', error);
       return false;
+    }
+  }
+  
+  async getFeedPosts(userId?: number, sortBy: string = 'recent', limit: number = 10, offset: number = 0): Promise<Post[]> {
+    try {
+      let query = db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id));
+      
+      // If userId is provided, filter to only show posts from users they follow
+      if (userId) {
+        const followingUserIds = await db
+          .select({ followingId: follows.followingId })
+          .from(follows)
+          .where(eq(follows.followerId, userId));
+        
+        // Only add the filter if they follow anyone
+        if (followingUserIds.length > 0) {
+          query = query.where(
+            inArray(
+              posts.userId,
+              [userId, ...followingUserIds.map(f => f.followingId)]
+            )
+          );
+        }
+      }
+      
+      // Sort by the specified criteria
+      if (sortBy === 'recent') {
+        query = query.orderBy(desc(posts.createdAt));
+      } else if (sortBy === 'popular') {
+        // Sort by a combination of likes, comments, and recency
+        query = query.orderBy(desc(sql`${posts.likes} + ${posts.comments}`));
+      } else if (sortBy === 'trending') {
+        // For trending, prioritize recent posts with engagement
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        query = query
+          .where(sql`${posts.createdAt} > ${oneWeekAgo}`)
+          .orderBy(desc(sql`${posts.likes} + ${posts.comments} * 2`));
+      }
+      
+      const results = await query.limit(limit).offset(offset);
+      
+      return results.map(({ post, user }) => ({
+        ...post,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar
+        }
+      })) as Post[];
+    } catch (error) {
+      console.error('Error getting feed posts:', error);
+      return [];
+    }
+  }
+  
+  async getTrendingPosts(limit: number = 10): Promise<Post[]> {
+    try {
+      // Get posts from the last 7 days with the most engagement
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const trendingPosts = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(sql`${posts.createdAt} > ${oneWeekAgo}`)
+        .orderBy(desc(sql`(${posts.likes} * 1.0) + (${posts.comments} * 2.0)`))
+        .limit(limit);
+      
+      return trendingPosts.map(({ post, user }) => ({
+        ...post,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar
+        }
+      })) as Post[];
+    } catch (error) {
+      console.error('Error getting trending posts:', error);
+      return [];
+    }
+  }
+  
+  async getPopularTags(limit: number = 20): Promise<{ tag: string, count: number }[]> {
+    try {
+      // Get most used tags from posts
+      // Note: This implementation assumes the tags are stored in a string array column
+      // You might need to adjust based on your actual schema
+      const tagCounts = await db
+        .select({
+          tag: sql<string>`unnest(${posts.tags})`,
+          count: count()
+        })
+        .from(posts)
+        .where(sql`${posts.tags} IS NOT NULL AND array_length(${posts.tags}, 1) > 0`)
+        .groupBy(sql`unnest(${posts.tags})`)
+        .orderBy(desc(count()))
+        .limit(limit);
+      
+      return tagCounts.map(tc => ({
+        tag: tc.tag,
+        count: Number(tc.count)
+      }));
+    } catch (error) {
+      console.error('Error getting popular tags:', error);
+      return [];
+    }
+  }
+  
+  async getSuggestedUsers(limit: number = 10, currentUserId?: number): Promise<User[]> {
+    try {
+      let query = db
+        .select()
+        .from(users)
+        .where(
+          // Exclude the current user
+          currentUserId ? sql`${users.id} <> ${currentUserId}` : sql`1=1`
+        )
+        .orderBy(sql`RANDOM()`) // Simple random suggestion for now
+        .limit(limit);
+      
+      const suggestedUsers = await query;
+      
+      // Remove sensitive information
+      return suggestedUsers.map(user => {
+        const { password, ...userData } = user;
+        return userData as User;
+      });
+    } catch (error) {
+      console.error('Error getting suggested users:', error);
+      return [];
     }
   }
   
@@ -1066,6 +1246,134 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting comment:', error);
       return false;
+    }
+  }
+  
+  async getComment(id: number): Promise<Comment | undefined> {
+    try {
+      const [comment] = await db
+        .select({
+          comment: comments,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.id, id));
+      
+      if (!comment) {
+        return undefined;
+      }
+      
+      return {
+        ...comment.comment,
+        user: {
+          id: comment.user.id,
+          username: comment.user.username,
+          name: comment.user.name,
+          avatar: comment.user.avatar
+        }
+      } as Comment;
+    } catch (error) {
+      console.error('Error getting comment:', error);
+      return undefined;
+    }
+  }
+  
+  async updateComment(id: number, content: string): Promise<Comment | undefined> {
+    try {
+      const [updatedComment] = await db
+        .update(comments)
+        .set({
+          content,
+          updatedAt: new Date()
+        })
+        .where(eq(comments.id, id))
+        .returning();
+      
+      if (!updatedComment) {
+        return undefined;
+      }
+      
+      // Get the user information to include in the response
+      const [user] = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(eq(users.id, updatedComment.userId));
+      
+      return {
+        ...updatedComment,
+        user
+      } as Comment;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      return undefined;
+    }
+  }
+  
+  async getPostLike(postId: number, userId: number): Promise<any | undefined> {
+    try {
+      const [like] = await db
+        .select()
+        .from(likes)
+        .where(
+          and(
+            eq(likes.postId, postId),
+            eq(likes.userId, userId)
+          )
+        );
+      
+      return like;
+    } catch (error) {
+      console.error('Error getting post like:', error);
+      return undefined;
+    }
+  }
+  
+  async promotePost(postId: number, endDate: Date): Promise<Post | undefined> {
+    try {
+      const [promotedPost] = await db
+        .update(posts)
+        .set({
+          isPromoted: true,
+          promotionEndDate: endDate,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId))
+        .returning();
+      
+      return promotedPost;
+    } catch (error) {
+      console.error('Error promoting post:', error);
+      return undefined;
+    }
+  }
+  
+  async unpromotePost(postId: number): Promise<Post | undefined> {
+    try {
+      const [unpromoted] = await db
+        .update(posts)
+        .set({
+          isPromoted: false,
+          promotionEndDate: null,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId))
+        .returning();
+      
+      return unpromoted;
+    } catch (error) {
+      console.error('Error un-promoting post:', error);
+      return undefined;
     }
   }
 }
