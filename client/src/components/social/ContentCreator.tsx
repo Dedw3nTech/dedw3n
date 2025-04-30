@@ -315,7 +315,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Text Content Tab */}
           <TabsContent value="text">
             <Textarea
-              placeholder="What's on your mind?"
+              placeholder="Write a Dedw"
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
