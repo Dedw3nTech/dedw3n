@@ -244,7 +244,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   onError={() => {
                     toast({
                       title: t("errors.error"),
-                      description: t("social.invalid_image_url"),
+                      description: t("invalid_image_url"),
                       variant: "destructive",
                     });
                     setImageUrl("");
@@ -321,7 +321,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   onError={() => {
                     toast({
                       title: t("errors.error"),
-                      description: t("social.invalid_image_url"),
+                      description: t("invalid_image_url"),
                       variant: "destructive",
                     });
                     setImageUrl("");
@@ -350,7 +350,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onBlur={() => tagInput.trim() && handleTagAdd()}
-                  placeholder={t("social.add_tags")}
+                  placeholder={t("add_tags")}
                   className="flex-1 border-none shadow-none focus-visible:ring-0 min-w-[100px] h-7 p-0"
                 />
               </div>
@@ -366,7 +366,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   className="rounded text-primary focus:ring-primary/25"
                 />
                 <label htmlFor="promote-post" className="text-sm text-gray-700">
-                  {t("social.promote_post")}
+                  {t("promote_post")}
                 </label>
               </div>
             )}
@@ -378,7 +378,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 type="button"
                 variant="ghost"
                 className="rounded-full flex items-center gap-1 px-3"
-                title={t("social.upload_image") || "Upload image"}
+                title={t("upload_image") || "Upload image"}
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Image className="h-5 w-5 text-gray-500" />
@@ -417,7 +417,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                         }
                         
                         toast({
-                          title: t("social.file_loaded") || "File loaded",
+                          title: t("file_loaded") || "File loaded",
                           description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
                         });
                       }
@@ -426,7 +426,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                     reader.onerror = () => {
                       toast({
                         title: t("errors.error") || "Error",
-                        description: t("social.file_read_error") || "Failed to read file",
+                        description: t("file_read_error") || "Failed to read file",
                         variant: "destructive",
                       });
                     };
