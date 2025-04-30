@@ -376,7 +376,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           {/* Common fields for all content types */}
           <div className="mt-4">
             <div className="flex items-center space-x-2 mb-4">
-              <Tag className="w-4 h-4 text-gray-500" />
+              <Tag className="w-4 h-4 text-black" />
               <div className="flex-1 flex flex-wrap gap-2 items-center border rounded-md p-2">
                 {tags.map((tag) => (
                   <Badge key={tag} className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200">
