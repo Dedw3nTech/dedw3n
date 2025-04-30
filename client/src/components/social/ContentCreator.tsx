@@ -20,7 +20,8 @@ import {
   Megaphone,
   X,
   Upload,
-  CheckCircle
+  CheckCircle,
+  Trash
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
