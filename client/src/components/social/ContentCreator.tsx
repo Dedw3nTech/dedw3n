@@ -279,18 +279,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 mb-4">
-              <input
-                type="checkbox"
-                id="promote-post"
-                checked={isPromoted}
-                onChange={(e) => setIsPromoted(e.target.checked)}
-                className="rounded text-primary focus:ring-primary/25"
-              />
-              <label htmlFor="promote-post" className="text-sm text-gray-700">
-                Promote this post
-              </label>
-            </div>
+            {/* Promotion checkbox moved to button next to Submit */}
           </div>
           
           <div className="flex justify-between items-center mt-4">
@@ -359,13 +348,24 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                 }}
               />
             </div>
-            <Button 
-              onClick={handleSubmit}
-              disabled={createPostMutation.isPending}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {createPostMutation.isPending ? "Sending..." : "Send a Dedw"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => setIsPromoted(!isPromoted)}
+                className={`flex items-center gap-1 px-3 ${isPromoted ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'}`}
+              >
+                <span className="text-sm text-white font-medium">
+                  {isPromoted ? 'Promoted ✓' : 'Promote'}
+                </span>
+              </Button>
+              <Button 
+                onClick={handleSubmit}
+                disabled={createPostMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {createPostMutation.isPending ? "Sending..." : "Send a Dedw"}
+              </Button>
+            </div>
           </div>
         </Tabs>
       </CardContent>
