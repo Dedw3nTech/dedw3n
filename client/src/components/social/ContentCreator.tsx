@@ -197,30 +197,30 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           <TabsList className="w-full mb-4 grid grid-cols-5">
             <TabsTrigger value="text" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("social.text")}</span>
+              <span className="hidden sm:inline">{t("text")}</span>
             </TabsTrigger>
             <TabsTrigger value="image" className="flex items-center gap-1">
               <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("social.image")}</span>
+              <span className="hidden sm:inline">{t("image")}</span>
             </TabsTrigger>
             <TabsTrigger value="video" className="flex items-center gap-1">
               <Video className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("social.video")}</span>
+              <span className="hidden sm:inline">{t("video")}</span>
             </TabsTrigger>
             <TabsTrigger value="article" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("social.article")}</span>
+              <span className="hidden sm:inline">{t("article")}</span>
             </TabsTrigger>
             <TabsTrigger value="advertisement" className="flex items-center gap-1">
               <Megaphone className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("social.ad")}</span>
+              <span className="hidden sm:inline">{t("ad")}</span>
             </TabsTrigger>
           </TabsList>
           
           {/* Text Content Tab */}
           <TabsContent value="text">
             <Textarea
-              placeholder={t("social.whats_on_your_mind")}
+              placeholder={t("whats_on_your_mind")}
               className="mb-4"
               value={content}
               onChange={(e) => setContent(e.target.value)}
