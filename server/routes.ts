@@ -5,12 +5,13 @@ import { WebSocket } from 'ws';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import path from 'path';
+// Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts } from "@shared/schema";
 import { setupAuth } from "./auth";
-import { setupJwtAuth } from "./jwt-auth";
+import { setupJwtAuth, verifyToken } from "./jwt-auth";
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
@@ -334,6 +335,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup JWT authentication routes
   setupJwtAuth(app);
   
+  // Authentication validation endpoints
+  app.get('/api/auth/validate', (req, res) => {
+    console.log('[DEBUG] /api/auth/validate - Session validation attempt');
+    if (req.isAuthenticated()) {
+      console.log('[DEBUG] /api/auth/validate - User authenticated via session');
+      return res.status(200).json({ message: 'Session authentication validated' });
+    }
+    console.log('[DEBUG] /api/auth/validate - Session validation failed');
+    return res.status(401).json({ message: 'Not authenticated' });
+  });
+  
+  // JWT validation - implemented in jwt-auth.ts but added here for consistency
+  app.get('/api/auth/jwt/validate', (req, res) => {
+    // This will be intercepted by the JWT middleware and only succeed if the JWT is valid
+    console.log('[DEBUG] /api/auth/jwt/validate - JWT validation successful');
+    return res.status(200).json({ message: 'JWT authentication validated' });
+  });
+  
   // Register admin routes
   registerAdminRoutes(app);
   
@@ -641,11 +660,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware
+  // Auth middleware - combines both Passport and JWT auth systems
   const isAuthenticated = (req: Request, res: Response, next: Function) => {
-    if (req.isAuthenticated()) {
+    // First check session-based Passport authentication
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      console.log('[AUTH] User authenticated via session');
       return next();
     }
+    
+    // If session auth fails, try checking JWT
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      
+      // Import verifyToken from jwt-auth.ts
+      // This function already does all the validation we need
+      const payload = verifyToken(token);
+      
+      if (payload) {
+        // If we get here, token is valid
+        // We need to get the user from the database using the userId from the payload
+        (async () => {
+          try {
+            // Check if token exists in database and is not revoked
+            const authToken = await storage.getAuthToken(token);
+            if (!authToken || authToken.isRevoked) {
+              console.log('[AUTH] Token not found or revoked');
+              return res.status(401).json({ message: "Unauthorized" });
+            }
+            
+            // Get the user from the database
+            const user = await storage.getUser(payload.userId);
+            if (!user) {
+              console.log('[AUTH] User not found for token');
+              return res.status(401).json({ message: "Unauthorized" });
+            }
+            
+            // Set the user on the request object
+            req.user = user;
+            console.log('[AUTH] User authenticated via JWT');
+            return next();
+          } catch (error) {
+            console.error('[AUTH] Error authenticating via JWT:', error);
+            return res.status(401).json({ message: "Authentication error" });
+          }
+        })();
+        return; // Important: return here to prevent the function from continuing
+      } else {
+        console.log('[AUTH] JWT verification failed');
+      }
+    }
+    
+    // If we get here, both authentication methods failed
+    console.log('[AUTH] Authentication failed - no valid session or JWT');
     res.status(401).json({ message: "Unauthorized" });
   };
   
