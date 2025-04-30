@@ -193,21 +193,21 @@ export default function Social() {
                             </Avatar>
                             <div>
                               <h3 className="font-medium">{user.name}</h3>
-                              <p className="text-sm text-muted-foreground">@{user.username}</p>
+                              <p className="text-sm text-blue-500">@{user.username}</p>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-3 gap-2 text-center text-sm mb-3">
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">{userStats?.postCount || 0}</div>
+                              <div className="font-semibold text-blue-500">{userStats?.postCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Posts</div>
                             </div>
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">{userStats?.followingCount || 0}</div>
+                              <div className="font-semibold text-blue-500">{userStats?.followingCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Following</div>
                             </div>
                             <div className="bg-muted rounded-md p-2">
-                              <div className="font-semibold">{userStats?.followerCount || 0}</div>
+                              <div className="font-semibold text-blue-500">{userStats?.followerCount || 0}</div>
                               <div className="text-xs text-muted-foreground">Followers</div>
                             </div>
                           </div>
