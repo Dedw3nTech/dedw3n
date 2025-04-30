@@ -17,15 +17,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { storage } from "./storage";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { messages, callSessions, callMetadata, users } from "@shared/schema";
-
-// Authentication middleware
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    next();
-  } else {
-    res.status(401).json({ message: "Not authenticated" });
-  }
-};
+import { isAuthenticated } from "./unified-auth";
 
 // WebSocket connections
 interface Connection {
