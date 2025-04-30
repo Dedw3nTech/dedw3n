@@ -65,8 +65,8 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
       
       // Show success toast
       toast({
-        title: t("social.post_created"),
-        description: t("social.post_success_message"),
+        title: t("post_created"),
+        description: t("post_success_message"),
       });
       
       // Call onSuccess callback if provided
@@ -77,7 +77,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     onError: (error: any) => {
       toast({
         title: t("errors.error"),
-        description: error.message || t("social.post_error"),
+        description: error.message || t("post_error"),
         variant: "destructive",
       });
     },
@@ -97,7 +97,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     if (contentType === "text" && !content.trim()) {
       toast({
         title: t("errors.error"),
-        description: t("social.content_required"),
+        description: t("content_required"),
         variant: "destructive",
       });
       return;
@@ -106,7 +106,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     if (contentType === "image" && !imageUrl.trim()) {
       toast({
         title: t("errors.error"),
-        description: t("social.image_required"),
+        description: t("image_required"),
         variant: "destructive",
       });
       return;
@@ -115,7 +115,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     if (contentType === "video" && !videoUrl.trim()) {
       toast({
         title: t("errors.error"),
-        description: t("social.video_required"),
+        description: t("video_required"),
         variant: "destructive",
       });
       return;
@@ -124,7 +124,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     if (contentType === "article" && (!title.trim() || !content.trim())) {
       toast({
         title: t("errors.error"),
-        description: t("social.title_and_content_required"),
+        description: t("title_and_content_required"),
         variant: "destructive",
       });
       return;
@@ -133,7 +133,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     if (contentType === "advertisement" && (!title.trim() || !content.trim())) {
       toast({
         title: t("errors.error"),
-        description: t("social.ad_title_content_required"),
+        description: t("ad_title_content_required"),
         variant: "destructive",
       });
       return;
@@ -444,7 +444,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               disabled={createPostMutation.isPending}
               className="bg-primary hover:bg-primary/90"
             >
-              {createPostMutation.isPending ? t("social.posting") : t("social.post")}
+              {createPostMutation.isPending ? t("posting") : t("post")}
             </Button>
           </div>
         </Tabs>
