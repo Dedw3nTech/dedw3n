@@ -132,6 +132,7 @@ export interface IStorage {
   getProductCount(): Promise<number>;
   getOrderCount(): Promise<number>;
   getCommunityCount(): Promise<number>;
+  getUserCommunities(userId: number): Promise<any[]>;
   countPosts(options: any): Promise<number>;
   
   // Order analytics
@@ -1496,6 +1497,56 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting community count:', error);
       return 0;
+    }
+  }
+  
+  async getUserCommunities(userId: number): Promise<any[]> {
+    try {
+      // Get communities created by the user
+      const userCommunities = await db.select({
+        id: communities.id,
+        name: communities.name,
+        description: communities.description,
+        coverImage: communities.coverImage,
+        icon: communities.icon,
+        memberCount: communities.memberCount,
+        creatorId: communities.creatorId,
+        visibility: communities.visibility,
+        isVerified: communities.isVerified,
+        createdAt: communities.createdAt
+      })
+        .from(communities)
+        .where(eq(communities.creatorId, userId))
+        .orderBy(desc(communities.createdAt));
+      
+      // Also get communities the user is a member of but didn't create
+      const memberCommunities = await db.select({
+        id: communities.id,
+        name: communities.name,
+        description: communities.description,
+        coverImage: communities.coverImage,
+        icon: communities.icon,
+        memberCount: communities.memberCount,
+        creatorId: communities.creatorId,
+        visibility: communities.visibility,
+        isVerified: communities.isVerified,
+        createdAt: communities.createdAt
+      })
+        .from(communityMembers)
+        .innerJoin(communities, eq(communityMembers.communityId, communities.id))
+        .where(
+          and(
+            eq(communityMembers.userId, userId),
+            sql`${communities.creatorId} != ${userId}`
+          )
+        )
+        .orderBy(desc(communities.createdAt));
+      
+      // Combine the two sets
+      return [...userCommunities, ...memberCommunities];
+    } catch (error) {
+      console.error('Error getting user communities:', error);
+      return [];
     }
   }
   
