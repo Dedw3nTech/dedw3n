@@ -336,6 +336,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup JWT authentication routes
   setupJwtAuth(app);
   
+  // Unified auth endpoint for getting current user
+  app.get('/api/auth/me', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    console.log('[DEBUG] /api/auth/me - Authenticated with unified auth');
+    res.json(req.user);
+  });
+  
   // Authentication validation endpoints
   app.get('/api/auth/validate', (req, res) => {
     console.log('[DEBUG] /api/auth/validate - Session validation attempt');
@@ -370,7 +376,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/register", (req, res) => res.redirect(307, "/api/auth/register"));
   app.post("/api/login", (req, res) => res.redirect(307, "/api/auth/login"));
   app.post("/api/logout", (req, res) => res.redirect(307, "/api/auth/logout"));
-  app.get("/api/user", (req, res) => res.redirect(307, "/api/auth/me"));
+  
+  // This is the endpoint called by useAuth() in client code - we need direct implementation, not redirect
+  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
+    console.log('[DEBUG] /api/user - Authenticated with unified auth');
+    res.json(req.user);
+  });
   
   // User profile routes
   app.get("/api/users/id/:userId", async (req, res) => {

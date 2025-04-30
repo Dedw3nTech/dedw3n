@@ -1,5 +1,6 @@
 import { Request, Response, Express, NextFunction } from "express";
 import { storage } from "./storage";
+import { isAuthenticated } from "./unified-auth";
 
 /**
  * Check if the user has an active subscription or free trial
