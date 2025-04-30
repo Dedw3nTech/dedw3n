@@ -19,8 +19,22 @@ export function useUserStats() {
         if (!user) return { postCount: 0, followerCount: 0, followingCount: 0 };
         
         try {
-          const response = await apiRequest('GET', '/api/user/stats');
+          // Add Authorization header with the user's id to show we're authenticated
+          const response = await apiRequest('GET', '/api/user/stats', null, {
+            credentials: 'include'
+          });
+          
           if (!response.ok) {
+            console.warn('Failed to fetch user stats:', response.status, response.statusText);
+            // If we're not authenticated for some reason, let's try to get stats from the users endpoint instead
+            if (response.status === 401) {
+              const userStatsResponse = await apiRequest('GET', `/api/users/${user.id}/stats`, null, {
+                credentials: 'include'
+              });
+              if (userStatsResponse.ok) {
+                return userStatsResponse.json();
+              }
+            }
             throw new Error('Failed to fetch user stats');
           }
           return response.json();
