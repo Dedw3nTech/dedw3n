@@ -306,14 +306,27 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         return (
           <div className="mb-4">
             {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
-              <img 
-                src={post.imageUrl} 
-                alt={post.title || t("social.post_image")} 
-                className="w-full rounded-md object-contain max-h-[400px]"
-                onError={() => setImageError(true)}
-              />
+              <div className="w-full rounded-md overflow-hidden">
+                <img 
+                  src={post.imageUrl} 
+                  alt={post.title || t("social.post_image")} 
+                  className="w-full h-auto rounded-md object-contain"
+                  style={{ maxHeight: "calc(100vh - 200px)" }}
+                  onError={() => setImageError(true)}
+                  onLoad={(e) => {
+                    // Adjust container height based on image aspect ratio
+                    const img = e.target as HTMLImageElement;
+                    if (img.naturalHeight > 0 && img.naturalWidth > 0) {
+                      // Apply any additional adjustments if needed
+                      if (img.naturalHeight > 800) {
+                        img.style.maxHeight = "800px";
+                      }
+                    }
+                  }}
+                />
+              </div>
             ) : post.imageUrl ? (
-              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[400px] p-8">
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
                   <p>{t("social.image_unavailable")}</p>
@@ -328,14 +341,29 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         return (
           <div className="mb-4">
             {post.videoUrl && (
-              <div className="aspect-video rounded-md overflow-hidden bg-gray-100">
-                <iframe
-                  src={post.videoUrl}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+              <div className="w-full rounded-md overflow-hidden bg-gray-100">
+                <div 
+                  className="relative video-container" 
+                  style={{ 
+                    paddingBottom: "56.25%", // 16:9 aspect ratio by default
+                    height: 0 
+                  }}
+                >
+                  <iframe
+                    src={post.videoUrl}
+                    className="absolute top-0 left-0 w-full h-full"
+                    style={{ maxHeight: "calc(100vh - 200px)" }}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    onLoad={(e) => {
+                      // Optional: You could add additional responsive height adjustments here
+                      // For example, detecting video dimensions through JS, if possible
+                      const frame = e.target as HTMLIFrameElement;
+                      console.log("Video iframe loaded", frame);
+                    }}
+                  ></iframe>
+                </div>
               </div>
             )}
             <p className="mt-3 text-gray-700">{post.content}</p>
@@ -352,14 +380,27 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
               <p className="text-gray-700">{post.content}</p>
             </div>
             {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
-              <img 
-                src={post.imageUrl} 
-                alt={post.title || t("social.article_image")} 
-                className="w-full rounded-md object-contain mt-4 max-h-[300px]"
-                onError={() => setImageError(true)}
-              />
+              <div className="w-full rounded-md overflow-hidden mt-4">
+                <img 
+                  src={post.imageUrl} 
+                  alt={post.title || t("social.article_image")} 
+                  className="w-full h-auto rounded-md object-contain"
+                  style={{ maxHeight: "calc(100vh - 300px)" }}
+                  onError={() => setImageError(true)}
+                  onLoad={(e) => {
+                    // Adjust container height based on image aspect ratio
+                    const img = e.target as HTMLImageElement;
+                    if (img.naturalHeight > 0 && img.naturalWidth > 0) {
+                      // Apply any additional adjustments if needed
+                      if (img.naturalHeight > 800) {
+                        img.style.maxHeight = "800px";
+                      }
+                    }
+                  }}
+                />
+              </div>
             ) : post.imageUrl ? (
-              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[300px] mt-4 p-8">
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] mt-4 p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
                   <p>{t("social.image_unavailable")}</p>
@@ -372,7 +413,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       case "advertisement":
         return (
           <div className="mb-4 relative">
-            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md">
+            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md z-10">
               {t("social.sponsored")}
             </div>
             {post.title && (
@@ -380,14 +421,27 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
             )}
             <p className="text-gray-700">{post.content}</p>
             {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
-              <img 
-                src={post.imageUrl} 
-                alt={post.title || t("social.ad_image")} 
-                className="w-full rounded-md object-contain mt-4 max-h-[300px]"
-                onError={() => setImageError(true)}
-              />
+              <div className="w-full rounded-md overflow-hidden mt-4">
+                <img 
+                  src={post.imageUrl} 
+                  alt={post.title || t("social.ad_image")} 
+                  className="w-full h-auto rounded-md object-contain"
+                  style={{ maxHeight: "calc(100vh - 300px)" }}
+                  onError={() => setImageError(true)}
+                  onLoad={(e) => {
+                    // Adjust container height based on image aspect ratio
+                    const img = e.target as HTMLImageElement;
+                    if (img.naturalHeight > 0 && img.naturalWidth > 0) {
+                      // Apply any additional adjustments if needed
+                      if (img.naturalHeight > 800) {
+                        img.style.maxHeight = "800px";
+                      }
+                    }
+                  }}
+                />
+              </div>
             ) : post.imageUrl ? (
-              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center max-h-[300px] mt-4 p-8">
+              <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] mt-4 p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
                   <p>{t("social.image_unavailable")}</p>
