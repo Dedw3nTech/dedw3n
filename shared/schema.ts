@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum, index, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -194,6 +194,42 @@ export const connections = pgTable("connections", {
   return {
     uniqueConnection: unique().on(table.userId, table.connectedUserId),
   };
+});
+
+// User sessions for tracking user activity
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  sessionId: text("session_id").notNull(),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  deviceType: varchar("device_type", { length: 20 }),
+  browser: varchar("browser", { length: 50 }),
+  operatingSystem: varchar("operating_system", { length: 50 }),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+// Traffic analytics for tracking website traffic sources
+export const trafficAnalytics = pgTable("traffic_analytics", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(),
+  source: varchar("source", { length: 50 }).notNull(), // direct, social, search, referral
+  campaign: varchar("campaign", { length: 100 }),
+  medium: varchar("medium", { length: 50 }),
+  referrer: text("referrer"),
+  landingPage: text("landing_page"),
+  exitPage: text("exit_page"),
+  deviceType: varchar("device_type", { length: 20 }),
+  sessions: integer("sessions").notNull().default(0),
+  users: integer("users").notNull().default(0),
+  pageviews: integer("pageviews").notNull().default(0),
+  bounceRate: doublePrecision("bounce_rate").default(0),
+  avgSessionDuration: doublePrecision("avg_session_duration").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: doublePrecision("revenue").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Social media follows
@@ -918,3 +954,14 @@ export type InsertFlaggedImage = z.infer<typeof insertFlaggedImageSchema>;
 
 export type ModerationReport = typeof moderationReports.$inferSelect;
 export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
+
+// Add schemas for new tables
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, createdAt: true });
+export const insertTrafficAnalyticsSchema = createInsertSchema(trafficAnalytics).omit({ id: true, createdAt: true });
+
+// Add types for new tables
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+
+export type TrafficAnalytic = typeof trafficAnalytics.$inferSelect;
+export type InsertTrafficAnalytic = z.infer<typeof insertTrafficAnalyticsSchema>;

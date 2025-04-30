@@ -3,7 +3,7 @@ import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
-import { eq, like, and, or, desc, sql, count, inArray } from "drizzle-orm";
+import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-orm";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -14,7 +14,7 @@ import {
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
-  callSessions, callMetadata, connections,
+  callSessions, callMetadata, connections, userSessions, trafficAnalytics,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -126,6 +126,40 @@ export interface IStorage {
   // Post promotion operations
   promotePost(postId: number, endDate: Date): Promise<Post | undefined>;
   unpromotePost(postId: number): Promise<Post | undefined>;
+  
+  // Admin analytics operations
+  getUserCount(): Promise<number>;
+  getProductCount(): Promise<number>;
+  getOrderCount(): Promise<number>;
+  getCommunityCount(): Promise<number>;
+  countPosts(options: any): Promise<number>;
+  
+  // Order analytics
+  countOrders(options: any): Promise<number>;
+  calculateTotalRevenue(): Promise<number>;
+  calculateAverageOrderValue(): Promise<number>;
+  
+  // Product analytics
+  getTopSellingProducts(limit: number): Promise<any[]>;
+  getProductPerformanceMetrics(timeRange: string): Promise<any>;
+  getCategoryTrendsData(): Promise<any>;
+  getRevenueByCategory(timeRange: string): Promise<any>;
+  getInventoryAlerts(): Promise<any[]>;
+  
+  // Admin analytics
+  getUserRegistrationTrends(timeRange: string): Promise<any>;
+  getActiveUserStats(timeRange: string): Promise<any>;
+  getSalesData(timeRange: string): Promise<any>;
+  getProductCategoryDistribution(): Promise<any>;
+  getTrafficSourcesData(timeRange: string): Promise<any>;
+  
+  // Order operations
+  getOrder(id: number): Promise<any>;
+  updateOrder(id: number, updates: any): Promise<any>;
+  updateOrderItemsStatus(orderId: number, status: string): Promise<boolean>;
+  deleteUser(userId: number): Promise<boolean>;
+  resetUserPassword(userId: number, newPassword: string): Promise<boolean>;
+  listPosts(options: any): Promise<any[]>;
 }
 
 // Database storage implementation
@@ -1409,6 +1443,808 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error un-promoting post:', error);
       return undefined;
+    }
+  }
+  
+  // Admin analytics methods
+  async getUserCount(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(users);
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting user count:', error);
+      return 0;
+    }
+  }
+  
+  async getProductCount(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(products);
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting product count:', error);
+      return 0;
+    }
+  }
+  
+  async getOrderCount(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(orders);
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting order count:', error);
+      return 0;
+    }
+  }
+  
+  async getCommunityCount(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(communities);
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting community count:', error);
+      return 0;
+    }
+  }
+  
+  async countPosts(options: any): Promise<number> {
+    try {
+      let query = db.select({ count: count() }).from(posts);
+      
+      if (options.isFlagged !== undefined) {
+        query = query.where(eq(posts.isFlagged, options.isFlagged));
+      }
+      
+      if (options.reviewStatus) {
+        query = query.where(eq(posts.reviewStatus, options.reviewStatus));
+      }
+      
+      const [result] = await query;
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error counting posts:', error);
+      return 0;
+    }
+  }
+  
+  // Order analytics
+  async countOrders(options: any): Promise<number> {
+    try {
+      let query = db.select({ count: count() }).from(orders);
+      
+      if (options.status) {
+        query = query.where(eq(orders.status, options.status));
+      }
+      
+      const [result] = await query;
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error counting orders:', error);
+      return 0;
+    }
+  }
+  
+  async calculateTotalRevenue(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ total: sql`SUM(${orders.totalAmount})` })
+        .from(orders)
+        .where(eq(orders.paymentStatus, 'completed'));
+      
+      return result?.total || 0;
+    } catch (error) {
+      console.error('Error calculating total revenue:', error);
+      return 0;
+    }
+  }
+  
+  async calculateAverageOrderValue(): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ avg: sql`AVG(${orders.totalAmount})` })
+        .from(orders)
+        .where(eq(orders.paymentStatus, 'completed'));
+      
+      return result?.avg || 0;
+    } catch (error) {
+      console.error('Error calculating average order value:', error);
+      return 0;
+    }
+  }
+  
+  // Product analytics
+  async getTopSellingProducts(limit: number): Promise<any[]> {
+    try {
+      // Join order items with products to get the top selling products
+      const topProducts = await db
+        .select({
+          productId: orderItems.productId,
+          productName: products.name,
+          totalSold: sql`SUM(${orderItems.quantity})`,
+          totalRevenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`,
+          productImage: products.image
+        })
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(eq(orders.paymentStatus, 'completed'))
+        .groupBy(orderItems.productId, products.name, products.image)
+        .orderBy(desc(sql`SUM(${orderItems.quantity})`))
+        .limit(limit);
+      
+      return topProducts;
+    } catch (error) {
+      console.error('Error getting top selling products:', error);
+      return [];
+    }
+  }
+  
+  async getProductPerformanceMetrics(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+      }
+      
+      // Get product performance metrics
+      const totalSold = await db
+        .select({
+          count: sql`SUM(${orderItems.quantity})`,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orders.paymentStatus, 'completed'),
+            sql`${orders.createdAt} >= ${startDate}`,
+            sql`${orders.createdAt} <= ${endDate}`
+          )
+        );
+      
+      const totalRevenue = await db
+        .select({
+          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orders.paymentStatus, 'completed'),
+            sql`${orders.createdAt} >= ${startDate}`,
+            sql`${orders.createdAt} <= ${endDate}`
+          )
+        );
+      
+      // Get growth compared to previous period
+      const previousStartDate = new Date(startDate);
+      const previousPeriodLength = endDate.getTime() - startDate.getTime();
+      previousStartDate.setTime(previousStartDate.getTime() - previousPeriodLength);
+      
+      const previousPeriod = await db
+        .select({
+          count: sql`SUM(${orderItems.quantity})`,
+          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orders.paymentStatus, 'completed'),
+            sql`${orders.createdAt} >= ${previousStartDate}`,
+            sql`${orders.createdAt} < ${startDate}`
+          )
+        );
+      
+      // Calculate growth percentages
+      const salesGrowth = previousPeriod[0]?.count > 0 
+        ? ((totalSold[0]?.count || 0) - (previousPeriod[0]?.count || 0)) / (previousPeriod[0]?.count || 1) * 100 
+        : 0;
+      
+      const revenueGrowth = previousPeriod[0]?.revenue > 0 
+        ? ((totalRevenue[0]?.revenue || 0) - (previousPeriod[0]?.revenue || 0)) / (previousPeriod[0]?.revenue || 1) * 100 
+        : 0;
+      
+      return {
+        totalSold: totalSold[0]?.count || 0,
+        totalRevenue: totalRevenue[0]?.revenue || 0,
+        salesGrowth: salesGrowth,
+        revenueGrowth: revenueGrowth,
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting product performance metrics:', error);
+      return {
+        totalSold: 0,
+        totalRevenue: 0,
+        salesGrowth: 0,
+        revenueGrowth: 0,
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  async getCategoryTrendsData(): Promise<any> {
+    try {
+      // Get product counts by category
+      const categoryCounts = await db
+        .select({
+          categoryId: products.categoryId,
+          categoryName: categories.name,
+          count: count(products.id)
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .groupBy(products.categoryId, categories.name);
+      
+      // Get sales counts by category
+      const categorySales = await db
+        .select({
+          categoryId: products.categoryId,
+          categoryName: categories.name,
+          totalSold: sql`SUM(${orderItems.quantity})`,
+          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`
+        })
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .innerJoin(categories, eq(products.categoryId, categories.id))
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(eq(orders.paymentStatus, 'completed'))
+        .groupBy(products.categoryId, categories.name);
+      
+      // Combine the data
+      const combinedData = categorySales.map(salesData => {
+        const countData = categoryCounts.find(c => c.categoryId === salesData.categoryId);
+        return {
+          categoryId: salesData.categoryId,
+          name: salesData.categoryName,
+          productCount: countData?.count || 0,
+          totalSold: salesData.totalSold,
+          revenue: salesData.revenue
+        };
+      });
+      
+      return combinedData;
+    } catch (error) {
+      console.error('Error getting category trends data:', error);
+      return [];
+    }
+  }
+  
+  async getRevenueByCategory(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+      }
+      
+      // Get revenue by category
+      const categoryRevenue = await db
+        .select({
+          categoryId: products.categoryId,
+          categoryName: categories.name,
+          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`
+        })
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .innerJoin(categories, eq(products.categoryId, categories.id))
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orders.paymentStatus, 'completed'),
+            sql`${orders.createdAt} >= ${startDate}`,
+            sql`${orders.createdAt} <= ${endDate}`
+          )
+        )
+        .groupBy(products.categoryId, categories.name)
+        .orderBy(desc(sql`SUM(${orderItems.price} * ${orderItems.quantity})`));
+      
+      return {
+        categories: categoryRevenue.map(c => c.categoryName),
+        data: categoryRevenue.map(c => c.revenue),
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting revenue by category:', error);
+      return {
+        categories: [],
+        data: [],
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  async getInventoryAlerts(): Promise<any[]> {
+    try {
+      // Get products with low inventory
+      const lowInventory = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          stock: products.stock,
+          category: categories.name,
+          price: products.price,
+          image: products.image
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .where(
+          or(
+            lte(products.stock, 5), // Low stock threshold
+            eq(products.stock, 0)   // Out of stock
+          )
+        )
+        .orderBy(asc(products.stock))
+        .limit(20);
+      
+      return lowInventory.map(product => ({
+        ...product,
+        status: product.stock === 0 ? 'Out of stock' : 'Low stock',
+        alertLevel: product.stock === 0 ? 'high' : 'medium'
+      }));
+    } catch (error) {
+      console.error('Error getting inventory alerts:', error);
+      return [];
+    }
+  }
+  
+  // Admin dashboard analytics
+  async getUserRegistrationTrends(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      let interval = 'day'; // SQL interval type - day, week, month
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+        interval = 'day';
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+        interval = 'day';
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+        interval = 'week';
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+        interval = 'month';
+      }
+      
+      // Get user registration counts by interval
+      const registrations = await db
+        .select({
+          date: sql`date_trunc(${interval}, ${users.createdAt})`,
+          count: count()
+        })
+        .from(users)
+        .where(
+          and(
+            sql`${users.createdAt} >= ${startDate}`,
+            sql`${users.createdAt} <= ${endDate}`
+          )
+        )
+        .groupBy(sql`date_trunc(${interval}, ${users.createdAt})`)
+        .orderBy(sql`date_trunc(${interval}, ${users.createdAt})`);
+      
+      return {
+        labels: registrations.map(r => r.date.toISOString().split('T')[0]),
+        data: registrations.map(r => r.count),
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting user registration trends:', error);
+      return {
+        labels: [],
+        data: [],
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  async getActiveUserStats(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+      }
+      
+      // Count active users based on login activity
+      const [activeUsers] = await db
+        .select({ count: count() })
+        .from(userSessions)
+        .where(
+          and(
+            sql`${userSessions.lastActiveAt} >= ${startDate}`,
+            sql`${userSessions.lastActiveAt} <= ${endDate}`
+          )
+        )
+        .groupBy(userSessions.userId);
+      
+      // Count active users based on recent post activity
+      const [activePosters] = await db
+        .select({ count: count() })
+        .from(posts)
+        .where(
+          and(
+            sql`${posts.createdAt} >= ${startDate}`,
+            sql`${posts.createdAt} <= ${endDate}`
+          )
+        )
+        .groupBy(posts.userId);
+      
+      // Get total users count
+      const [totalUsers] = await db
+        .select({ count: count() })
+        .from(users);
+      
+      return {
+        activeUsers: activeUsers?.count || 0,
+        activePosters: activePosters?.count || 0,
+        totalUsers: totalUsers?.count || 0,
+        activePercentage: totalUsers?.count > 0
+          ? (activeUsers?.count || 0) / totalUsers.count * 100
+          : 0,
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting active user stats:', error);
+      return {
+        activeUsers: 0,
+        activePosters: 0,
+        totalUsers: 0,
+        activePercentage: 0,
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  async getSalesData(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      let interval = 'day'; // SQL interval type - day, week, month
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+        interval = 'day';
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+        interval = 'day';
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+        interval = 'week';
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+        interval = 'month';
+      }
+      
+      // Get sales data by interval
+      const salesData = await db
+        .select({
+          date: sql`date_trunc(${interval}, ${orders.createdAt})`,
+          orderCount: count(),
+          revenue: sql`SUM(${orders.totalAmount})`
+        })
+        .from(orders)
+        .where(
+          and(
+            eq(orders.paymentStatus, 'completed'),
+            sql`${orders.createdAt} >= ${startDate}`,
+            sql`${orders.createdAt} <= ${endDate}`
+          )
+        )
+        .groupBy(sql`date_trunc(${interval}, ${orders.createdAt})`)
+        .orderBy(sql`date_trunc(${interval}, ${orders.createdAt})`);
+      
+      return {
+        labels: salesData.map(d => d.date.toISOString().split('T')[0]),
+        orderCounts: salesData.map(d => d.orderCount),
+        revenue: salesData.map(d => d.revenue),
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting sales data:', error);
+      return {
+        labels: [],
+        orderCounts: [],
+        revenue: [],
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  async getProductCategoryDistribution(): Promise<any> {
+    try {
+      // Get product counts by category
+      const categoryDistribution = await db
+        .select({
+          categoryId: products.categoryId,
+          categoryName: categories.name,
+          count: count()
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .groupBy(products.categoryId, categories.name);
+      
+      // Calculate total products
+      const totalProducts = categoryDistribution.reduce((sum, category) => sum + category.count, 0);
+      
+      // Calculate percentages
+      const distribution = categoryDistribution.map(category => ({
+        name: category.categoryName,
+        value: category.count,
+        percentage: totalProducts > 0 ? (category.count / totalProducts * 100).toFixed(2) : 0
+      }));
+      
+      return {
+        labels: distribution.map(d => d.name),
+        data: distribution.map(d => d.value),
+        percentages: distribution.map(d => d.percentage)
+      };
+    } catch (error) {
+      console.error('Error getting product category distribution:', error);
+      return {
+        labels: [],
+        data: [],
+        percentages: []
+      };
+    }
+  }
+  
+  async getTrafficSourcesData(timeRange: string): Promise<any> {
+    try {
+      // Calculate time period for the query
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (timeRange === '7days') {
+        startDate.setDate(endDate.getDate() - 7);
+      } else if (timeRange === '30days') {
+        startDate.setDate(endDate.getDate() - 30);
+      } else if (timeRange === '90days') {
+        startDate.setDate(endDate.getDate() - 90);
+      } else if (timeRange === '12months') {
+        startDate.setMonth(endDate.getMonth() - 12);
+      }
+      
+      // Get traffic sources from analytics table
+      const trafficSources = await db
+        .select({
+          source: trafficAnalytics.source,
+          sessions: sql`SUM(${trafficAnalytics.sessions})`,
+          conversions: sql`SUM(${trafficAnalytics.conversions})`,
+          revenue: sql`SUM(${trafficAnalytics.revenue})`
+        })
+        .from(trafficAnalytics)
+        .where(
+          and(
+            sql`${trafficAnalytics.date} >= ${startDate}`,
+            sql`${trafficAnalytics.date} <= ${endDate}`
+          )
+        )
+        .groupBy(trafficAnalytics.source)
+        .orderBy(desc(sql`SUM(${trafficAnalytics.sessions})`));
+      
+      return {
+        sources: trafficSources.map(s => s.source),
+        sessions: trafficSources.map(s => s.sessions),
+        conversions: trafficSources.map(s => s.conversions),
+        revenue: trafficSources.map(s => s.revenue),
+        timeRange: timeRange
+      };
+    } catch (error) {
+      console.error('Error getting traffic sources data:', error);
+      return {
+        sources: ['Direct', 'Social', 'Search', 'Referral'],
+        sessions: [0, 0, 0, 0],
+        conversions: [0, 0, 0, 0],
+        revenue: [0, 0, 0, 0],
+        timeRange: timeRange
+      };
+    }
+  }
+  
+  // Order operations
+  async getOrder(id: number): Promise<any> {
+    try {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, id));
+      
+      if (!order) {
+        return undefined;
+      }
+      
+      // Get order items
+      const orderItems = await db
+        .select({
+          item: orderItems,
+          product: {
+            id: products.id,
+            name: products.name,
+            image: products.image
+          }
+        })
+        .from(orderItems)
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(orderItems.orderId, id));
+      
+      // Get user details
+      const user = await this.getUser(order.userId);
+      
+      return {
+        ...order,
+        items: orderItems.map(item => ({
+          ...item.item,
+          product: item.product
+        })),
+        user: user ? {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          email: user.email
+        } : null
+      };
+    } catch (error) {
+      console.error('Error getting order:', error);
+      return undefined;
+    }
+  }
+  
+  async updateOrder(id: number, updates: any): Promise<any> {
+    try {
+      const [updatedOrder] = await db
+        .update(orders)
+        .set(updates)
+        .where(eq(orders.id, id))
+        .returning();
+      
+      return updatedOrder;
+    } catch (error) {
+      console.error('Error updating order:', error);
+      return undefined;
+    }
+  }
+  
+  async updateOrderItemsStatus(orderId: number, status: string): Promise<boolean> {
+    try {
+      await db
+        .update(orderItems)
+        .set({ status })
+        .where(eq(orderItems.orderId, orderId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating order items status:', error);
+      return false;
+    }
+  }
+  
+  async deleteUser(userId: number): Promise<boolean> {
+    try {
+      await db.delete(users).where(eq(users.id, userId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
+  
+  async resetUserPassword(userId: number, newPassword: string): Promise<boolean> {
+    try {
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error resetting user password:', error);
+      return false;
+    }
+  }
+  
+  async listPosts(options: any): Promise<any[]> {
+    try {
+      let query = db.select({
+        post: posts,
+        user: {
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        }
+      })
+      .from(posts)
+      .leftJoin(users, eq(posts.userId, users.id));
+      
+      // Apply filters
+      if (options.isFlagged !== undefined) {
+        query = query.where(eq(posts.isFlagged, options.isFlagged));
+      }
+      
+      if (options.reviewStatus) {
+        query = query.where(eq(posts.reviewStatus, options.reviewStatus));
+      }
+      
+      if (options.search) {
+        query = query.where(
+          or(
+            like(posts.content, `%${options.search}%`),
+            like(posts.title, `%${options.search}%`)
+          )
+        );
+      }
+      
+      // Apply pagination
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      if (options.offset) {
+        query = query.offset(options.offset);
+      }
+      
+      // Order by creation date (newest first)
+      query = query.orderBy(desc(posts.createdAt));
+      
+      const result = await query;
+      
+      // Format the results
+      return result.map(item => ({
+        ...item.post,
+        user: item.user
+      }));
+    } catch (error) {
+      console.error('Error listing posts:', error);
+      return [];
     }
   }
 }
