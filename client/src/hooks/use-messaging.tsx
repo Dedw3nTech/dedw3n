@@ -243,12 +243,18 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const connect = () => {
     if (!user || socket) return;
     
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
+      return;
+    }
+    
     try {
       socket = new WebSocket(getWebSocketUrl());
       
       socket.onopen = () => {
         console.log("WebSocket connected");
         setIsConnected(true);
+        reconnectAttempts = 0; // Reset reconnect attempts on successful connection
         
         // Authenticate
         if (socket) {
@@ -264,16 +270,26 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         setIsConnected(false);
         socket = null;
         
-        // Try to reconnect after delay
+        // Try to reconnect after delay with backoff
         if (reconnectTimer) clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(() => {
-          if (user) connect();
-        }, 5000);
+        
+        reconnectAttempts++;
+        const backoffDelay = Math.min(30000, RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 1));
+        
+        console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${backoffDelay}ms`);
+        
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          reconnectTimer = setTimeout(() => {
+            if (user) connect();
+          }, backoffDelay);
+        } else {
+          console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
+        }
       };
       
       socket.onerror = (error) => {
         console.error("WebSocket error:", error);
-        socket?.close();
+        // Don't call close here as it will be handled by onclose event
       };
       
       socket.onmessage = (event) => {
