@@ -2,12 +2,59 @@
  * News Feed API Integration
  * 
  * This file implements the backend API for fetching and integrating news content
- * from various sources into the social media platform.
+ * from NewsAPI.org.
  */
 import { Request, Response, NextFunction } from "express";
 import { db } from "./db";
 import { posts, users } from "@shared/schema";
 import { and, eq, like, desc, sql } from "drizzle-orm";
+import https from 'https';
+
+// News API configuration
+const NEWS_API_KEY = process.env.NEWS_API_KEY;
+const NEWS_API_BASE_URL = 'https://newsapi.org/v2';
+
+if (!NEWS_API_KEY) {
+  console.error('NEWS_API_KEY is not defined in the environment variables');
+}
+
+// Helper function to make a GET request to the News API
+function fetchNewsApi(endpoint: string, params: Record<string, string | number>): Promise<any> {
+  return new Promise((resolve, reject) => {
+    // Construct query string from params
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      queryParams.append(key, String(value));
+    }
+    // Always add the API key
+    queryParams.append('apiKey', NEWS_API_KEY as string);
+    
+    const url = `${NEWS_API_BASE_URL}${endpoint}?${queryParams.toString()}`;
+    
+    https.get(url, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          const parsedData = JSON.parse(data);
+          if (parsedData.status === 'error') {
+            reject(new Error(parsedData.message || 'News API error'));
+          } else {
+            resolve(parsedData);
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }).on('error', (error) => {
+      reject(error);
+    });
+  });
+}
 
 // News categories
 export const newsCategories = [
@@ -21,16 +68,44 @@ export const newsCategories = [
   "world"
 ];
 
-// Sample news sources
-export const newsSources = [
-  { id: "dedwen-news", name: "Dedwen News", logoUrl: "/assets/news/dedwen-news.png" },
-  { id: "techcrunch", name: "TechCrunch", logoUrl: "/assets/news/techcrunch.png" },
-  { id: "bbc", name: "BBC", logoUrl: "/assets/news/bbc.png" },
-  { id: "cnn", name: "CNN", logoUrl: "/assets/news/cnn.png" },
-  { id: "reuters", name: "Reuters", logoUrl: "/assets/news/reuters.png" }
-];
+// News sources mapping (to display logos)
+export const sourceLogoMapping = {
+  "techcrunch": { name: "TechCrunch", logoUrl: "https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png" },
+  "bbc-news": { name: "BBC News", logoUrl: "https://www.bbc.co.uk/favicon.ico" },
+  "cnn": { name: "CNN", logoUrl: "https://www.cnn.com/favicon.ico" },
+  "reuters": { name: "Reuters", logoUrl: "https://www.reuters.com/favicon.ico" },
+  "bloomberg": { name: "Bloomberg", logoUrl: "https://www.bloomberg.com/favicon.ico" },
+  "the-verge": { name: "The Verge", logoUrl: "https://www.theverge.com/favicon.ico" },
+  "wired": { name: "Wired", logoUrl: "https://www.wired.com/favicon.ico" },
+  "ars-technica": { name: "Ars Technica", logoUrl: "https://arstechnica.com/favicon.ico" }
+};
 
-// Structure for news items
+// NewsAPI.org response interfaces
+interface NewsAPISource {
+  id: string | null;
+  name: string;
+}
+
+interface NewsAPIArticle {
+  source: NewsAPISource;
+  author: string | null;
+  title: string;
+  description: string;
+  url: string;
+  urlToImage: string | null;
+  publishedAt: string;
+  content: string | null;
+}
+
+interface NewsAPIResponse {
+  status: string;
+  totalResults: number;
+  articles: NewsAPIArticle[];
+  code?: string;
+  message?: string;
+}
+
+// Our application's news item structure
 export interface NewsItem {
   id: string;
   title: string;
@@ -54,6 +129,41 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   }
   return res.status(401).json({ message: "Unauthorized" });
 };
+
+// Helper function to convert NewsAPI articles to our app format
+function convertToNewsItem(article: NewsAPIArticle, category: string): NewsItem {
+  // Create a unique ID based on the article URL
+  const id = Buffer.from(article.url).toString('base64').replace(/[+/=]/g, '').substring(0, 24);
+  
+  // Find source logo if available
+  const sourceId = article.source.id || article.source.name.toLowerCase().replace(/\s+/g, '-');
+  let sourceLogoUrl = undefined;
+  
+  // Try to find a logo for this source in our mapping
+  const normalizedSourceId = sourceId.toLowerCase();
+  for (const [mappedId, sourceInfo] of Object.entries(sourceLogoMapping)) {
+    if (normalizedSourceId.includes(mappedId) || mappedId.includes(normalizedSourceId)) {
+      sourceLogoUrl = sourceInfo.logoUrl;
+      break;
+    }
+  }
+  
+  return {
+    id,
+    title: article.title || 'Untitled',
+    summary: article.description || 'No description available',
+    content: article.content || 'No content available',
+    sourceId,
+    sourceName: article.source.name,
+    sourceLogoUrl,
+    author: article.author || undefined,
+    publishedAt: new Date(article.publishedAt),
+    url: article.url,
+    imageUrl: article.urlToImage || undefined,
+    category,
+    tags: [category, 'news']
+  };
+}
 
 /**
  * Get trending news from all categories
