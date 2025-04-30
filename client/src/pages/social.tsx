@@ -224,29 +224,7 @@ export default function Social() {
                       </Card>
                     )}
                     
-                    {/* Product Recommendations */}
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base">Trending Topics</CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="space-y-3">
-                          {["#Technology", "#Fashion", "#Health", "#Travel", "#Finance"].map((tag, i) => (
-                            <div key={i} className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-primary">{tag}</span>
-                              <span className="text-xs text-muted-foreground">{(10 - i) * 1000}+ posts</span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                      <CardFooter>
-                        <Button variant="ghost" size="sm" className="w-full" onClick={() => setActiveTab("explore")}>
-                          See More
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                    
-                    {/* Trending Shop */}
+                    {/* Shop Trending */}
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">Shop Trending</CardTitle>
@@ -294,6 +272,28 @@ export default function Social() {
                         >
                           <ShoppingBag className="h-4 w-4 mr-2" />
                           View All Products
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                    
+                    {/* Trending Topics */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Trending Topics</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <div className="space-y-3">
+                          {["#Technology", "#Fashion", "#Health", "#Travel", "#Finance"].map((tag, i) => (
+                            <div key={i} className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-primary">{tag}</span>
+                              <span className="text-xs text-muted-foreground">{(10 - i) * 1000}+ posts</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="ghost" size="sm" className="w-full" onClick={() => setActiveTab("explore")}>
+                          See More
                         </Button>
                       </CardFooter>
                     </Card>
