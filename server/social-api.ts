@@ -162,38 +162,40 @@ export async function createApiPost(postData: any): Promise<Partial<Post> | null
     const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
     console.log("Creating post via API with data:", apiRequestData);
     
-    // Using XMLHttpRequest as an alternative to fetch
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
+    // Using node-fetch instead of XMLHttpRequest (which is not available in Node.js)
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiRequestData)
+      });
       
-      xhr.open('POST', apiUrl, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
       
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          const apiPost = JSON.parse(xhr.responseText);
-          console.log("Post created successfully via API:", apiPost);
-          
-          // Convert response to our format and add additional fields
-          const formattedPost = convertToAppPost(apiPost);
-          
-          // Add any additional fields from the original postData that we want to preserve
-          if (postData.imageUrl) formattedPost.imageUrl = postData.imageUrl;
-          if (postData.videoUrl) formattedPost.videoUrl = postData.videoUrl;
-          if (postData.tags && Array.isArray(postData.tags)) formattedPost.tags = postData.tags;
-          
-          resolve(formattedPost);
-        } else {
-          reject(new Error(`API request failed with status ${xhr.status}`));
-        }
-      };
+      const apiPost = await response.json();
+      console.log("Post created successfully via API:", apiPost);
       
-      xhr.onerror = function() {
-        reject(new Error('Network error occurred'));
-      };
+      // Convert response to our format and add additional fields
+      const formattedPost = convertToAppPost(apiPost);
       
-      xhr.send(JSON.stringify(apiRequestData));
-    });
+      // Add any additional fields from the original postData that we want to preserve
+      if (postData.imageUrl) formattedPost.imageUrl = postData.imageUrl;
+      if (postData.videoUrl) formattedPost.videoUrl = postData.videoUrl;
+      if (postData.contentType) formattedPost.contentType = postData.contentType;
+      if (postData.tags && Array.isArray(postData.tags)) formattedPost.tags = postData.tags;
+      if (postData.isPromoted !== undefined) formattedPost.isPromoted = postData.isPromoted;
+      if (postData.isPublished !== undefined) formattedPost.isPublished = postData.isPublished;
+      if (postData.productId) formattedPost.productId = postData.productId;
+      
+      return formattedPost;
+    } catch (fetchError) {
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
+    }
   } catch (error) {
     console.error("Error creating post via API:", error);
     throw error;

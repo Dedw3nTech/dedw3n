@@ -45,8 +45,12 @@ const isValidImageUrl = (url?: string): boolean => {
   // Handle base64 encoded images
   if (url.startsWith('data:image/')) return true;
   
-  // Handle relative paths for local assets
-  if (url.startsWith('./') || url.startsWith('/')) return true;
+  // Handle relative paths for local assets (including uploads)
+  if (url.startsWith('./') || url.startsWith('/uploads/') || url.startsWith('/')) return true;
+  
+  // Check for common file extensions
+  const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.avif'];
+  if (extensions.some(ext => url.toLowerCase().endsWith(ext))) return true;
   
   // Validate that it's a web URL or an absolute path
   return url.startsWith('http://') || 
