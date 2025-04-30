@@ -409,7 +409,8 @@ export function setupAuth(app: Express) {
     }
   });
   
-  // Get current user
+  // Get current user - COMMENTED OUT as this is now handled by unified auth in routes.ts
+  /*
   app.get("/api/auth/me", (req, res) => {
     console.log(`[DEBUG] /api/auth/me - isAuthenticated: ${req.isAuthenticated()}`);
     
@@ -425,6 +426,7 @@ export function setupAuth(app: Express) {
     const { password, passwordResetToken, passwordResetExpires, verificationToken, ...safeUserData } = req.user as SelectUser;
     res.json(safeUserData);
   });
+  */
   
   // Debug endpoint to check user credentials - FOR DEVELOPMENT ONLY
   app.get("/api/auth/test-login", async (req, res) => {
