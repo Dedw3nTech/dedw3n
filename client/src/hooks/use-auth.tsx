@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
 import {
   useQuery,
   useMutation,
@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient, getStoredAuthToken, setAuthToken, clearAuthToken } from "../lib/queryClient";
+import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -23,21 +24,88 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const tokenCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Query for getting the current user
   const {
     data: user,
     error,
     isLoading,
+    refetch
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  // Verify token on component mount and set up periodic checks
+  useEffect(() => {
+    // Verify token on startup
+    verifyTokenValidity();
+    
+    // Set up periodic token verification (every 5 minutes)
+    tokenCheckIntervalRef.current = setInterval(() => {
+      verifyTokenValidity();
+    }, 5 * 60 * 1000);
+    
+    // Clean up on unmount
+    return () => {
+      if (tokenCheckIntervalRef.current) {
+        clearInterval(tokenCheckIntervalRef.current);
+      }
+    };
+  }, []);
+  
+  // Function to verify token validity
+  const verifyTokenValidity = () => {
+    const token = getStoredAuthToken();
+    
+    if (!token) {
+      // No token stored, nothing to validate
+      return;
+    }
+    
+    // Check if token has valid structure
+    if (!hasValidStructure(token)) {
+      console.error('Invalid token structure detected');
+      clearAuthToken();
+      queryClient.setQueryData(["/api/auth/me"], null);
+      return;
+    }
+    
+    // Check if token is expired
+    if (isTokenExpired(token)) {
+      console.warn('Token has expired, logging out');
+      clearAuthToken();
+      queryClient.setQueryData(["/api/auth/me"], null);
+      // Silently handle expiration without showing error toast
+      return;
+    }
+    
+    // Token is valid, ensure we have user data
+    if (!user) {
+      refetch();
+    }
+  };
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      const data = await res.json();
+      
+      // Check if the response contains a token
+      if (data.token) {
+        // Store the token in localStorage
+        setAuthToken(data.token);
+        console.log('Auth token stored successfully');
+      } else {
+        console.warn('No token received from login response');
+      }
+      
+      return data;
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (response) => {
+      // Extract user from response (might be nested in user property or directly in response)
+      const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
       toast({
         title: "Login successful",
@@ -45,6 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      // Clear any existing token on login failure
+      clearAuthToken();
       toast({
         title: "Login failed",
         description: error.message,
@@ -56,9 +126,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       const res = await apiRequest("POST", "/api/auth/register", credentials);
-      return await res.json();
+      const data = await res.json();
+      
+      // Check if the response contains a token
+      if (data.token) {
+        // Store the token in localStorage
+        setAuthToken(data.token);
+        console.log('Auth token stored successfully after registration');
+      } else {
+        console.warn('No token received from registration response');
+      }
+      
+      return data;
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (response) => {
+      // Extract user from response (might be nested in user property or directly in response)
+      const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
       toast({
         title: "Registration successful",
@@ -66,6 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      // Clear any existing token on registration failure
+      clearAuthToken();
       toast({
         title: "Registration failed",
         description: error.message,
@@ -79,7 +164,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
+      // Clear the JWT token from storage
+      clearAuthToken();
       queryClient.setQueryData(["/api/auth/me"], null);
+      // Invalidate all queries to force refetch when user logs back in
+      queryClient.invalidateQueries();
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -91,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message,
         variant: "destructive",
       });
+      // Attempt to clear token even on error, as a safety measure
+      clearAuthToken();
     },
   });
 
