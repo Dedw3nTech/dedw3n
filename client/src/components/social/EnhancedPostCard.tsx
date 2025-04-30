@@ -39,8 +39,8 @@ interface EnhancedPostCardProps {
 const isValidImageUrl = (url?: string): boolean => {
   if (!url) return false;
   
-  // Check if it's a blob URL (these won't work in the feed)
-  if (url.startsWith('blob:')) return false;
+  // Accept blob URLs in development (these might not work in production)
+  if (url.startsWith('blob:')) return true;
   
   // Handle base64 encoded images
   if (url.startsWith('data:image/')) return true;

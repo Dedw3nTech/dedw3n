@@ -423,14 +423,34 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
                   
                   // Check if file is an image
                   if (file.type.startsWith('image/')) {
-                    // Handle image file
-                    const objectUrl = URL.createObjectURL(file);
-                    setImageUrl(objectUrl);
+                    // Convert file to Base64 instead of using blob URL
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      if (event.target?.result) {
+                        // Set the Base64 data URL 
+                        setImageUrl(event.target.result as string);
+                        
+                        // Switch to image tab if not already there
+                        if (contentType !== "image") {
+                          setContentType("image");
+                        }
+                        
+                        toast({
+                          title: t("image_loaded") || "Image loaded",
+                          description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+                        });
+                      }
+                    };
                     
-                    // Switch to image tab if not already there
-                    if (contentType !== "image") {
-                      setContentType("image");
-                    }
+                    reader.onerror = () => {
+                      toast({
+                        title: t("errors.error") || "Error",
+                        description: t("image_load_error") || "Failed to load image",
+                        variant: "destructive",
+                      });
+                    };
+                    
+                    reader.readAsDataURL(file);
                   } else {
                     // Handle text file
                     const reader = new FileReader();
