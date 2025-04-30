@@ -298,12 +298,12 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-full flex items-center gap-1 px-3 hover:bg-blue-50"
+                className="rounded-full flex items-center gap-1 px-3 bg-blue-500 hover:bg-blue-600"
                 title="Upload image"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Image className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-blue-500 font-medium">Upload</span>
+                <Image className="h-5 w-5 text-white" />
+                <span className="text-sm text-white font-medium">Upload</span>
               </Button>
               <input 
                 type="file"
