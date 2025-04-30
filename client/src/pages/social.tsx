@@ -224,7 +224,7 @@ export default function Social() {
                       </Card>
                     )}
                     
-                    {/* Trending Topics */}
+                    {/* Product Recommendations */}
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">Trending Topics</CardTitle>
@@ -246,7 +246,7 @@ export default function Social() {
                       </CardFooter>
                     </Card>
                     
-                    {/* Product Recommendations */}
+                    {/* Trending Shop */}
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-base">Shop Trending</CardTitle>
