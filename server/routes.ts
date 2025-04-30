@@ -23,6 +23,7 @@ import { registerSubscriptionRoutes } from "./subscription";
 import { registerAdminRoutes } from "./admin";
 import { registerMessagingSuite } from "./messaging-suite";
 import { registerAIInsightsRoutes } from "./ai-insights";
+import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
 import { socialMediaSuite } from "./social-media-suite";
 import { 
@@ -400,6 +401,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAIInsightsRoutes(app);
 
   // Create HTTP server from Express
+  // Register news feed routes
+  registerNewsFeedRoutes(app);
+  
   const httpServer = createServer(app);
   
   // Seed the database with initial data

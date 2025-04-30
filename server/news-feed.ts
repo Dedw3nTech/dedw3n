@@ -193,7 +193,9 @@ export function getNewsCategories(req: Request, res: Response) {
  */
 export async function getSavedNews(req: Request, res: Response) {
   try {
-    if (!req.user) {
+    // Make sure there's a user with an id
+    const userId = (req.user as any)?.id;
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -215,7 +217,9 @@ export async function getSavedNews(req: Request, res: Response) {
  */
 export async function saveNewsItem(req: Request, res: Response) {
   try {
-    if (!req.user) {
+    // Make sure there's a user with an id
+    const userId = (req.user as any)?.id;
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -235,7 +239,9 @@ export async function saveNewsItem(req: Request, res: Response) {
  */
 export async function removeSavedNewsItem(req: Request, res: Response) {
   try {
-    if (!req.user) {
+    // Make sure there's a user with an id
+    const userId = (req.user as any)?.id;
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -255,12 +261,13 @@ export async function removeSavedNewsItem(req: Request, res: Response) {
  */
 export async function shareNewsAsPost(req: Request, res: Response) {
   try {
-    if (!req.user) {
+    // Make sure there's a user with an id
+    const userId = (req.user as any)?.id;
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { title, url, summary, imageUrl, sourceId, sourceName } = req.body;
-    const userId = req.user.id;
     
     if (!title || !url || !sourceId) {
       return res.status(400).json({ message: "Missing required fields" });
