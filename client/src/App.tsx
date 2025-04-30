@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "next-themes";
 import { ViewProvider } from "@/hooks/use-view";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MessagingProvider } from "@/hooks/use-messaging";
@@ -178,37 +179,39 @@ function App() {
   // Using forceRefresh in a key forces re-rendering when language changes
   return (
     <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
-      <TooltipProvider>
-        <AuthProvider>
-          <MessagingProvider>
-            <ViewProvider>
-              <MarketTypeProvider>
-                <SubscriptionProvider>
-                  <CurrencyProvider>
-                    <ErrorBoundary>
-                      <div className="flex flex-col min-h-screen">
-                        <Header />
-                        <main className="flex-grow">
-                          <ApiErrorBoundary showHomeButton={false}>
-                            <Router />
-                          </ApiErrorBoundary>
-                        </main>
-                        <Footer />
-                        <MobileNavigation />
-                        <OfflineIndicator />
-                        {/* Offline simulator hidden as requested */}
-                        {/* Chatbot will be implemented later when API key is available */}
-                        {/* <ChatbotWindow /> */}
-                      </div>
-                    </ErrorBoundary>
-                    <Toaster />
-                  </CurrencyProvider>
-                </SubscriptionProvider>
-              </MarketTypeProvider>
-            </ViewProvider>
-          </MessagingProvider>
-        </AuthProvider>
-      </TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <TooltipProvider>
+          <AuthProvider>
+            <MessagingProvider>
+              <ViewProvider>
+                <MarketTypeProvider>
+                  <SubscriptionProvider>
+                    <CurrencyProvider>
+                      <ErrorBoundary>
+                        <div className="flex flex-col min-h-screen">
+                          <Header />
+                          <main className="flex-grow">
+                            <ApiErrorBoundary showHomeButton={false}>
+                              <Router />
+                            </ApiErrorBoundary>
+                          </main>
+                          <Footer />
+                          <MobileNavigation />
+                          <OfflineIndicator />
+                          {/* Offline simulator hidden as requested */}
+                          {/* Chatbot will be implemented later when API key is available */}
+                          {/* <ChatbotWindow /> */}
+                        </div>
+                      </ErrorBoundary>
+                      <Toaster />
+                    </CurrencyProvider>
+                  </SubscriptionProvider>
+                </MarketTypeProvider>
+              </ViewProvider>
+            </MessagingProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
