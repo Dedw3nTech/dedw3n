@@ -44,7 +44,22 @@ export default function Header() {
   const { view, setView } = useView();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const [location, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("wall");
+  // Determine active tab based on current location
+  const getCurrentTab = () => {
+    if (location === '/wall') return "wall";
+    if (location === '/explore') return "explore";
+    if (location === '/messages') return "messages";
+    if (location.startsWith('/videos')) return "videos";
+    if (location === '/communities') return "communities";
+    return "wall"; // default
+  };
+  
+  const [activeTab, setActiveTab] = useState(getCurrentTab());
+  
+  // Update active tab when location changes
+  useEffect(() => {
+    setActiveTab(getCurrentTab());
+  }, [location]);
 
   // Fetch user data to check if logged in
   const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean; [key: string]: any }>({
@@ -313,8 +328,13 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Social tab navigation - shown only when on social page */}
-      {location === '/social' && (
+      {/* Social tab navigation - shown on social pages */}
+      {(location === '/social' || 
+        location === '/wall' || 
+        location === '/explore' || 
+        location === '/messages' || 
+        location.startsWith('/videos') ||
+        location === '/communities') && (
         <div className="container mx-auto px-4 py-2 border-b border-gray-200">
           <div className="flex overflow-x-auto">
             <button 
