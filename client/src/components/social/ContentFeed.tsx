@@ -93,7 +93,7 @@ export default function ContentFeed({
             <div className="grid grid-cols-3 gap-2">
               <Button 
                 variant={feedType === 'personal' ? "default" : "outline"} 
-                className="w-full" 
+                className={`w-full ${feedType === 'personal' ? "bg-black hover:bg-black/90 text-white" : ""}`} 
                 onClick={() => handleFeedTypeChange('personal')}
               >
                 <User className="h-4 w-4 mr-2" />
@@ -101,7 +101,7 @@ export default function ContentFeed({
               </Button>
               <Button 
                 variant={feedType === 'communities' ? "default" : "outline"} 
-                className="w-full" 
+                className={`w-full ${feedType === 'communities' ? "bg-black hover:bg-black/90 text-white" : ""}`} 
                 onClick={() => handleFeedTypeChange('communities')}
               >
                 <Users className="h-4 w-4 mr-2" />
@@ -109,7 +109,7 @@ export default function ContentFeed({
               </Button>
               <Button 
                 variant={feedType === 'recommended' ? "default" : "outline"} 
-                className="w-full" 
+                className={`w-full ${feedType === 'recommended' ? "bg-black hover:bg-black/90 text-white" : ""}`} 
                 onClick={() => handleFeedTypeChange('recommended')}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
@@ -126,7 +126,7 @@ export default function ContentFeed({
           <div className="grid grid-cols-2 gap-2">
             <Button 
               variant={sortType === 'relevant' ? "default" : "outline"} 
-              className="w-full" 
+              className={`w-full ${sortType === 'relevant' ? "bg-black hover:bg-black/90 text-white" : ""}`} 
               onClick={() => handleSortChange('relevant')}
             >
               <Sparkles className="h-4 w-4 mr-2" />
@@ -134,7 +134,7 @@ export default function ContentFeed({
             </Button>
             <Button 
               variant={sortType === 'recent' ? "default" : "outline"} 
-              className="w-full" 
+              className={`w-full ${sortType === 'recent' ? "bg-black hover:bg-black/90 text-white" : ""}`} 
               onClick={() => handleSortChange('recent')}
             >
               <Clock className="h-4 w-4 mr-2" />
