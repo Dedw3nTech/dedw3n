@@ -51,6 +51,7 @@ export default function Header() {
     if (location === '/messages') return "messages";
     if (location.startsWith('/videos')) return "videos";
     if (location === '/communities') return "communities";
+    if (location === '/profile' || location.startsWith('/profile/')) return "profile";
     return "wall"; // default
   };
   
@@ -59,6 +60,22 @@ export default function Header() {
   // Update active tab when location changes
   useEffect(() => {
     setActiveTab(getCurrentTab());
+    
+    // Listen for custom locationchange events from other components
+    const handleLocationChange = (event: CustomEvent) => {
+      if (event.detail?.path) {
+        const newPath = event.detail.path;
+        if (newPath === '/profile') {
+          setActiveTab('profile');
+        }
+      }
+    };
+    
+    window.addEventListener('locationchange', handleLocationChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('locationchange', handleLocationChange as EventListener);
+    };
   }, [location]);
 
   // Fetch user data to check if logged in
@@ -334,7 +351,9 @@ export default function Header() {
         location === '/explore' || 
         location === '/messages' || 
         location.startsWith('/videos') ||
-        location === '/communities') && (
+        location === '/communities' ||
+        location === '/profile' ||
+        location.startsWith('/profile/')) && (
         <div className="container mx-auto px-4 py-2 border-b border-gray-200">
           <div className="flex overflow-x-auto">
             <button 
@@ -411,6 +430,22 @@ export default function Header() {
                 <span>Communities</span>
               </div>
             </button>
+            
+            {userData && (
+              <button 
+                className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-gray-600 hover:text-primary"}`}
+                onClick={() => {
+                  setActiveTab("profile");
+                  setLocation(`/profile/${userData.username}`);
+                }}
+                title="View your personal profile - API: /api/users/:username"
+              >
+                <div className="flex items-center gap-1">
+                  <UserIcon className="h-4 w-4" />
+                  <span>Profile</span>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       )}

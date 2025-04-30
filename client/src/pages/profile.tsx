@@ -458,6 +458,18 @@ export default function ProfilePage() {
 
   const connectionStatus = getConnectionStatus();
 
+  // This useEffect will update Header's location state for proper tab highlighting
+  useEffect(() => {
+    // This will be read by the Header component to determine which tab to highlight
+    const urlParts = window.location.pathname.split('/');
+    if (urlParts[1] === 'profile') {
+      // Force the location to be recognized as the profile page in the Header component
+      // This will be picked up by the useEffect in the Header that's monitoring the location
+      const event = new CustomEvent('locationchange', { detail: { path: '/profile' }});
+      window.dispatchEvent(event);
+    }
+  }, []);
+
   return (
     <div className="bg-background min-h-screen">
       <PageHeader
