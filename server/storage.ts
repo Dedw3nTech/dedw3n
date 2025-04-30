@@ -91,6 +91,23 @@ export interface IStorage {
   // Product operations
   listProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
+  
+  // Post operations
+  getPost(id: number): Promise<Post | undefined>;
+  createPost(post: InsertPost): Promise<Post>;
+  updatePost(id: number, postData: Partial<Post>): Promise<Post | undefined>;
+  deletePost(id: number): Promise<boolean>;
+  
+  // Like operations
+  likePost(postId: number, userId: number): Promise<boolean>;
+  unlikePost(postId: number, userId: number): Promise<boolean>;
+  checkIfUserLikedPost(postId: number, userId: number): Promise<boolean>;
+  getPostLikes(postId: number): Promise<any[]>;
+  
+  // Comment operations
+  createComment(comment: InsertComment): Promise<Comment>;
+  getPostComments(postId: number, limit?: number, offset?: number): Promise<Comment[]>;
+  deleteComment(id: number): Promise<boolean>;
 }
 
 // Database storage implementation
