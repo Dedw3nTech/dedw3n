@@ -969,6 +969,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API ping endpoint for testing connectivity before uploads
+  app.post("/api/posts/ping", unifiedIsAuthenticated, (req, res) => {
+    console.log("[DEBUG] Received ping request from client for upload test");
+    return res.json({ success: true, message: "API is reachable" });
+  });
+  
+  // API ping endpoint (general version) for testing connectivity
+  app.post("/api/ping", (req, res) => {
+    console.log("[DEBUG] Received general ping request from client");
+    return res.json({ success: true, message: "API is reachable" });
+  });
+  
   // Search communities API endpoint
   app.get("/api/communities/search", async (req, res) => {
     try {
