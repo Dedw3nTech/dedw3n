@@ -29,6 +29,7 @@ import LogoutSuccess from "@/pages/logout-success";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
+import ApiTestPage from "@/pages/api-test";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -106,6 +107,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/api-test" component={ApiTestPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={Social} />
