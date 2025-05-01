@@ -137,10 +137,22 @@
     "have_account": "Already have an account?",
     "sign_up": "Sign Up",
     "sign_in": "Sign In",
+    "sign_in_again": "Sign in again",
     "reset_password": "Reset Password",
     "logout": "Logout",
+    "logout_success": "Log out success",
+    "logout_message": "Together for a prosperious and green planet",
+    "logging_out": "Logging out",
+    "please_wait": "Please wait...",
+    "logout_error": "Logout Error",
+    "try_again": "Please try again",
     "welcome": "Welcome back",
-    "register_success": "Registration successful! Please check your email to verify your account."
+    "register_success": "Registration successful! Please check your email to verify your account.",
+    "login_successful": "Login successful",
+    "welcome_back": "Welcome back, {{name}}!",
+    "login_failed": "Login failed",
+    "registration_successful": "Registration successful",
+    "registration_failed": "Registration failed"
   },
   "social": {
     "post": "Post",
@@ -267,6 +279,9 @@
     "previous": "Previous",
     "more": "More",
     "all": "All",
-    "none": "None"
+    "none": "None",
+    "questions": "Questions or concerns?",
+    "contact_us": "contact us",
+    "back_to_home": "Back to home"
   }
 }
