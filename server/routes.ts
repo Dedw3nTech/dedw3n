@@ -592,12 +592,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/register", async (req, res, next) => {
     console.log("[DEBUG] Register request received at /api/register");
     try {
+      // Import the required dependencies
+      const { promisify } = await import('util');
+      const { scrypt, randomBytes } = await import('crypto');
+      
       // Define scryptAsync function
       const scryptAsync = promisify(scrypt);
       
       // Check for existing user
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log('[DEBUG] Username already exists:', req.body.username);
         return res.status(400).json({ message: "Username already exists" });
       }
       
@@ -606,11 +611,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buf = (await scryptAsync(req.body.password, salt, 64)) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
+      console.log('[DEBUG] Creating new user:', req.body.username);
+      
       // Create user
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
       });
+      
+      console.log('[DEBUG] User created successfully:', user.id);
       
       // Login the user
       req.login(user, (err) => {
@@ -631,30 +640,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/login", (req, res, next) => {
     console.log("[DEBUG] Login request received at /api/login");
     try {
-      const passport = require('passport');
-      passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
-        console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
-        
-        if (err) {
-          console.error(`[ERROR] Login authentication error:`, err);
-          return next(err);
-        }
-        
-        if (!user) {
-          console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
-          return res.status(401).json({ message: info?.message || "Authentication failed" });
-        }
-        
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            console.error('[ERROR] Session login error:', loginErr);
-            return next(loginErr);
+      // Import passport from the express app instance
+      const passport = req.app.get('passport');
+      
+      if (!passport) {
+        // If passport is not available on the app, use it directly from the import
+        import('passport').then(module => {
+          const passport = module.default;
+          
+          passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
+            console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
+            
+            if (err) {
+              console.error(`[ERROR] Login authentication error:`, err);
+              return next(err);
+            }
+            
+            if (!user) {
+              console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+              return res.status(401).json({ message: info?.message || "Authentication failed" });
+            }
+            
+            req.login(user, (loginErr) => {
+              if (loginErr) {
+                console.error('[ERROR] Session login error:', loginErr);
+                return next(loginErr);
+              }
+              
+              console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
+              return res.json(user);
+            });
+          })(req, res, next);
+        }).catch(error => {
+          console.error('[ERROR] Passport import error:', error);
+          res.status(500).json({ message: "Login failed due to server error" });
+        });
+      } else {
+        // Use passport from the app
+        passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
+          console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
+          
+          if (err) {
+            console.error(`[ERROR] Login authentication error:`, err);
+            return next(err);
           }
           
-          console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
-          return res.json(user);
-        });
-      })(req, res, next);
+          if (!user) {
+            console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+            return res.status(401).json({ message: info?.message || "Authentication failed" });
+          }
+          
+          req.login(user, (loginErr) => {
+            if (loginErr) {
+              console.error('[ERROR] Session login error:', loginErr);
+              return next(loginErr);
+            }
+            
+            console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
+            return res.json(user);
+          });
+        })(req, res, next);
+      }
     } catch (error) {
       console.error('[ERROR] Login processing error:', error);
       res.status(500).json({ message: "Login failed due to server error" });
