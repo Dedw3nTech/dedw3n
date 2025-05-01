@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 
@@ -8,13 +7,11 @@ import { motion } from "framer-motion";
 import dedwenLogo from "@assets/WHITE BG DEDWEN LOGO (320 x 132 px).png";
 
 export default function LogoutSuccess() {
-  const { t } = useTranslation();
-  
   useEffect(() => {
-    // Set page title and add cache-busting meta tags
-    document.title = t('auth.logout_success') || 'Log out success';
+    // Force page title to be exactly as requested
+    document.title = 'Log out success';
     
-    // Add cache control meta tags to prevent caching
+    // Force clear any caches
     const metaCache = document.createElement('meta');
     metaCache.httpEquiv = 'Cache-Control';
     metaCache.content = 'no-cache, no-store, must-revalidate';
@@ -30,13 +27,24 @@ export default function LogoutSuccess() {
     metaExpires.content = '0';
     document.head.appendChild(metaExpires);
     
+    // Clear localStorage translations if they exist
+    try {
+      localStorage.removeItem('i18nextLng');
+    } catch (e) {
+      console.error('Failed to remove i18nextLng from localStorage:', e);
+    }
+    
     // Clean up function to remove meta tags when component unmounts
     return () => {
-      document.head.removeChild(metaCache);
-      document.head.removeChild(metaPragma);
-      document.head.removeChild(metaExpires);
+      try {
+        document.head.removeChild(metaCache);
+        document.head.removeChild(metaPragma);
+        document.head.removeChild(metaExpires);
+      } catch (e) {
+        console.error('Failed to remove meta tags:', e);
+      }
     };
-  }, [t]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-gradient-to-b from-white to-gray-50">
@@ -75,11 +83,11 @@ export default function LogoutSuccess() {
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('auth.logout_success') || 'Log out success'}
+            Log out success
           </h1>
           
           <p className="text-gray-600">
-            {t('auth.logout_message') || 'Together for a prosperious and green planet'}
+            Together for a prosperious and green planet
           </p>
           
           <div className="pt-4">
@@ -88,7 +96,7 @@ export default function LogoutSuccess() {
               className="w-full bg-primary hover:bg-primary/90 text-white"
             >
               <Link href="/auth">
-                {t('auth.sign_in_again') || 'Sign in again'}
+                Sign in again
               </Link>
             </Button>
           </div>
@@ -100,7 +108,7 @@ export default function LogoutSuccess() {
               className="w-full"
             >
               <Link href="/">
-                {t('misc.back_to_home') || 'Back to home'}
+                Back to home
               </Link>
             </Button>
           </div>
@@ -109,9 +117,9 @@ export default function LogoutSuccess() {
       
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>
-          {t('misc.questions') || 'Questions or concerns?'}{' '}
+          Questions or concerns?{' '}
           <Link href="/contact" className="text-blue-500 hover:underline">
-            {t('misc.contact_us') || 'contact us'}
+            contact us
           </Link>
         </p>
       </div>
