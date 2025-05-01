@@ -1,50 +1,100 @@
 import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { queryClient } from "@/lib/queryClient";
 
 // Import the Dedwen logo
 import dedwenLogo from "@assets/WHITE BG DEDWEN LOGO (320 x 132 px).png";
 
 export default function LogoutSuccess() {
+  const [, setLocation] = useLocation();
+
   useEffect(() => {
     // Force page title to be exactly as requested
     document.title = 'Log out success';
     
-    // Force clear any caches
-    const metaCache = document.createElement('meta');
-    metaCache.httpEquiv = 'Cache-Control';
-    metaCache.content = 'no-cache, no-store, must-revalidate';
-    document.head.appendChild(metaCache);
+    // Set all anti-caching headers via meta tags
+    const metaTags = [
+      { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate, private' },
+      { httpEquiv: 'Pragma', content: 'no-cache' },
+      { httpEquiv: 'Expires', content: '0' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' },
+    ];
     
-    const metaPragma = document.createElement('meta');
-    metaPragma.httpEquiv = 'Pragma';
-    metaPragma.content = 'no-cache';
-    document.head.appendChild(metaPragma);
+    // Create and append all meta tags
+    const addedMetaTags = metaTags.map(tagProps => {
+      const metaTag = document.createElement('meta');
+      Object.entries(tagProps).forEach(([key, value]) => {
+        metaTag.setAttribute(key, value);
+      });
+      document.head.appendChild(metaTag);
+      return metaTag;
+    });
     
-    const metaExpires = document.createElement('meta');
-    metaExpires.httpEquiv = 'Expires';
-    metaExpires.content = '0';
-    document.head.appendChild(metaExpires);
-    
-    // Clear localStorage translations if they exist
+    // Additional security measures
     try {
-      localStorage.removeItem('i18nextLng');
+      // Clear all auth-related localStorage items
+      const keysToRemove = [
+        'dedwen_auth_token',  // Main auth token
+        'i18nextLng',         // Language settings
+        'user_session',       // Any session data
+        'last_login',         // Login timestamps
+        'auth_state',         // Auth state management
+      ];
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error(`Failed to remove ${key} from localStorage:`, e);
+        }
+      });
+      
+      // Clear session storage as well
+      sessionStorage.clear();
+      
+      // Forcefully clear React Query cache for all auth endpoints
+      queryClient.clear();
+      
+      // Clear any cookies that might be auth-related
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        
+        // Only attempt to clear cookies that might be auth related
+        if (name.includes('token') || name.includes('auth') || name.includes('session') || name.includes('sid')) {
+          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure; SameSite=Strict;`;
+        }
+      }
+      
+      // Force browser history manipulation to prevent back-button issues
+      if (typeof window.history.pushState === 'function') {
+        window.history.pushState(null, '', window.location.pathname);
+        window.addEventListener('popstate', () => {
+          // If user tries to go back, redirect to home
+          setLocation('/');
+        }, { once: true });
+      }
+      
+      console.log('Logout success page: Applied comprehensive security and anti-caching measures');
     } catch (e) {
-      console.error('Failed to remove i18nextLng from localStorage:', e);
+      console.error('Error during logout security cleanup:', e);
     }
     
     // Clean up function to remove meta tags when component unmounts
     return () => {
       try {
-        document.head.removeChild(metaCache);
-        document.head.removeChild(metaPragma);
-        document.head.removeChild(metaExpires);
+        addedMetaTags.forEach(tag => {
+          document.head.removeChild(tag);
+        });
       } catch (e) {
         console.error('Failed to remove meta tags:', e);
       }
     };
-  }, []);
+  }, [setLocation]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-gradient-to-b from-white to-gray-50">
