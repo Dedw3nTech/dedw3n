@@ -93,10 +93,20 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     },
   });
   
-  // Direct blob upload mutation for images
+  // Enhanced image upload with error handling for HTML responses
   const uploadImageMutation = useMutation({
     mutationFn: async (data: { blob: string; description: string; tags: string[] }) => {
       try {
+        // First check API connection with ping endpoint
+        const pingResponse = await apiRequest("POST", "/api/posts/ping", { test: true });
+        
+        // Check ping content type to ensure API is responding with JSON
+        const pingContentType = pingResponse.headers.get("content-type");
+        if (!pingContentType?.includes("application/json")) {
+          throw new Error("API server is not returning JSON responses. Please refresh the page and try again.");
+        }
+        
+        // If ping succeeds, proceed with the actual upload
         const response = await apiRequest("POST", "/api/social/upload-image", data);
         
         // First check if response is OK before trying to parse JSON
@@ -113,6 +123,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
           // Handle non-JSON responses by throwing an appropriate error
           const text = await response.text();
           if (text.includes("<!DOCTYPE html>")) {
+            console.error("Received HTML instead of JSON:", text.substring(0, 500));
             throw new Error("Received HTML instead of JSON. Server might be redirecting to an error page.");
           } else {
             throw new Error(`Unexpected response format: ${contentType || "unknown"}`);
@@ -197,11 +208,31 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
     
     // For image content type with base64 data, use the direct blob upload API
     if (contentType === "image" && imageUrl.startsWith('data:image/')) {
-      uploadImageMutation.mutate({
-        blob: imageUrl,
-        description: content,
-        tags: tags
-      });
+      // Enhanced error handling for image uploads
+      try {
+        // Perform the image upload with better error handling
+        uploadImageMutation.mutate({
+          blob: imageUrl,
+          description: content,
+          tags: tags
+        }, {
+          onError: (error) => {
+            console.error("Upload image error:", error);
+            toast({
+              title: t("errors.error") || "Error",
+              description: "Upload failed. Please try refreshing the page and try again.",
+              variant: "destructive",
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Upload preparation failed:", error);
+        toast({
+          title: t("errors.error") || "Error",
+          description: "Upload failed. Please try refreshing the page and try again.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     

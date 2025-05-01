@@ -475,6 +475,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // API connection test endpoint
+    app.post('/api/posts/ping', unifiedIsAuthenticated, (req: Request, res: Response) => {
+      console.log('[DEBUG] API connection test called with user:', req.user?.id);
+      
+      // Set content type to JSON for all responses from this endpoint
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Return a simple JSON response to confirm the API is working correctly
+      return res.json({ success: true, message: "API connection test successful", contentType: "json" });
+    });
+    
     // Legacy test endpoint kept for backward compatibility
     app.post('/api/upload-test', unifiedIsAuthenticated, (req: Request, res: Response) => {
       console.log('[DEBUG] Upload test endpoint called with user:', req.user?.id);
