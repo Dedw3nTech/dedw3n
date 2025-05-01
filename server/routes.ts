@@ -11,7 +11,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts } from "@shared/schema";
 import { setupAuth } from "./auth";
-import { setupJwtAuth, verifyToken } from "./jwt-auth";
+import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
 import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
@@ -558,7 +558,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Backward compatibility for client-side code
   app.post("/api/register", (req, res) => res.redirect(307, "/api/auth/register"));
   app.post("/api/login", (req, res) => res.redirect(307, "/api/auth/login"));
-  app.post("/api/logout", (req, res) => res.redirect(307, "/api/auth/logout"));
+  // Updated logout endpoint that handles both authentication methods
+  app.post("/api/logout", async (req, res) => {
+    try {
+      // Clear test user from debug mode
+      if (req.user && !req.isAuthenticated()) {
+        console.log('[DEBUG] Clearing debug-mode test user');
+        req.user = undefined;
+        return res.status(200).json({ message: "Successfully logged out" });
+      }
+      
+      // 1. Handle Passport.js session-based logout first
+      if (req.isAuthenticated()) {
+        console.log('[DEBUG] Logging out authenticated session user');
+        req.logout((err) => {
+          if (err) {
+            console.error('[ERROR] Session logout failed:', err);
+            // Continue anyway to try JWT logout
+          } else {
+            console.log('[DEBUG] Session logout successful');
+          }
+        });
+      }
+      
+      // 2. Handle JWT token-based logout
+      const authHeader = req.headers.authorization;
+      let token: string | undefined;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      } else if (req.query.token) {
+        token = req.query.token as string;
+      } else if (req.cookies && req.cookies.token) {
+        token = req.cookies.token;
+      }
+      
+      if (token) {
+        try {
+          console.log('[DEBUG] Revoking JWT token');
+          
+          // Call revoke token function if it exists in storage
+          if (storage.revokeAuthToken) {
+            const authToken = await storage.getAuthToken(token);
+            if (authToken) {
+              await storage.revokeAuthToken(authToken.id, 'User logout');
+              console.log('[DEBUG] JWT token revoked');
+            }
+          } else if (typeof revokeToken === 'function') {
+            // Use imported function if available
+            await revokeToken(token, 'User logout');
+            console.log('[DEBUG] JWT token revoked via revokeToken function');
+          }
+          
+          // Clear token cookie
+          if (req.cookies && req.cookies.token) {
+            res.clearCookie('token');
+            console.log('[DEBUG] Token cookie cleared');
+          }
+        } catch (error) {
+          console.error('[ERROR] JWT logout error:', error);
+          // Continue anyway
+        }
+      }
+      
+      // Clear session entirely
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('[ERROR] Session destroy failed:', err);
+          return res.status(500).json({ message: "Logout partially completed" });
+        }
+        
+        console.log('[DEBUG] Session destroyed successfully');
+        return res.status(200).json({ message: "Successfully logged out" });
+      });
+    } catch (error) {
+      console.error('[ERROR] Logout error:', error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
   
   // This is the endpoint called by useAuth() in client code - we need direct implementation, not redirect
   app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
