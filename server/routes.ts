@@ -479,13 +479,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // API connection test endpoint
     app.post('/api/posts/ping', unifiedIsAuthenticated, (req: Request, res: Response) => {
-      console.log('[DEBUG] API connection test called with user:', req.user?.id);
+      console.log('[DEBUG] Direct API ping endpoint called');
+      console.log('[DEBUG] Request headers:', JSON.stringify(req.headers));
+      console.log('[DEBUG] Request user:', req.user ? `ID: ${req.user.id}, Username: ${req.user.username}` : 'No user found');
+      console.log('[DEBUG] Request authentication status:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
       
       // Set content type to JSON for all responses from this endpoint
       res.setHeader('Content-Type', 'application/json');
       
       // Return a simple JSON response to confirm the API is working correctly
-      return res.json({ success: true, message: "API connection test successful", contentType: "json" });
+      return res.json({ 
+        success: true, 
+        message: "API connection test successful", 
+        contentType: "json",
+        authenticated: !!req.user,
+        sessionAuth: req.isAuthenticated()
+      });
     });
     
     // Legacy test endpoint kept for backward compatibility

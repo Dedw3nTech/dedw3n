@@ -54,21 +54,33 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   if (!token) {
     console.log('[AUTH] No authentication token provided');
     
-    // For API ping endpoint, allow without authentication for testing
+    // For API ping endpoint, always allow without authentication for testing
     if (req.path === '/api/posts/ping') {
       console.log('[AUTH] Allowing access to ping endpoint without authentication');
       return next();
     }
     
     // Check if this is an image upload request from a logged-in session user
-    // This handles the case where a user is logged in via session but doesn't have a JWT token
-    if (req.path === '/api/social/upload-image' && req.method === 'POST') {
+    if ((req.path === '/api/social/upload-image' || req.path === '/api/upload-test') && req.method === 'POST') {
       console.log('[AUTH] Image upload request detected - checking for user in session');
+      
       if (req.user) {
-        console.log('[AUTH] User found in session for image upload');
+        console.log('[AUTH] User found in session for image upload:', req.user.id);
         return next();
       }
+      
+      // For testing purposes, we'll also log information about the request body
+      if (req.body && req.body.blob) {
+        console.log('[AUTH] Image upload request contains blob data of length:', 
+          req.body.blob.substring(0, 50) + '... (truncated)');
+      } else {
+        console.log('[AUTH] Image upload request missing blob data in the body');
+      }
     }
+    
+    // Log all headers for debugging auth issues
+    console.log('[AUTH] Request headers:', JSON.stringify(req.headers));
+    console.log('[AUTH] Session info:', req.session ? 'Session exists' : 'No session');
     
     return res.status(401).json({ message: 'Unauthorized - No valid authentication token' });
   }
