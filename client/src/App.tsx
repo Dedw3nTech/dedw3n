@@ -25,6 +25,7 @@ import AuthPage from "@/pages/auth-page";
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
+import LogoutSuccess from "@/pages/logout-success";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
@@ -86,6 +87,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/products" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/vendors" component={VendorsPage} />

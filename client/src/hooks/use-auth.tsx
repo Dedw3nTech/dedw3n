@@ -171,8 +171,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       // Invalidate all queries to force refetch when user logs back in
       queryClient.invalidateQueries();
-      // Redirect to home page
-      window.location.href = "/";
+      // Redirect to logout success page
+      window.location.href = "/logout-success";
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -184,12 +184,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logout completed",
         description: "You have been logged out.",
       });
-      // Even on error, clear everything and redirect to home
+      // Even on error, clear everything and redirect to logout success page
       clearAuthToken();
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
-      // Redirect to home page
-      window.location.href = "/";
+      // Redirect to logout success page
+      window.location.href = "/logout-success";
     },
   });
 
