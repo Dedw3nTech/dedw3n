@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch
   } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/auth/me"],
+    queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!hasValidStructure(token)) {
       console.error('Invalid token structure detected');
       clearAuthToken();
-      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.setQueryData(["/api/user"], null);
       return;
     }
     
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isTokenExpired(token)) {
       console.warn('Token has expired, logging out');
       clearAuthToken();
-      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.setQueryData(["/api/user"], null);
       // Silently handle expiration without showing error toast
       return;
     }
@@ -101,24 +101,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      const data = await res.json();
-      
-      // Check if the response contains a token
-      if (data.token) {
-        // Store the token in localStorage
-        setAuthToken(data.token);
-        console.log('Auth token stored successfully');
-      } else {
-        console.warn('No token received from login response');
+      try {
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
+        
+        // Ensure session cookies are saved by the browser
+        if (res.ok) {
+          // For session-based auth, clear any logged out flags
+          setLoggedOutFlag(false);
+          
+          // Try to parse the response as JSON
+          const data = await res.json();
+          
+          // If using JWT tokens and the response contains a token
+          if (data.token) {
+            // Store the token in localStorage
+            setAuthToken(data.token);
+            console.log('Auth token stored successfully');
+          }
+          
+          return data;
+        } else {
+          const errorText = await res.text();
+          throw new Error(errorText || `Login failed with status: ${res.status}`);
+        }
+      } catch (error: any) {
+        console.error("Login error:", error);
+        throw new Error(error.message || "Login failed. Please try again.");
       }
-      
-      return data;
     },
     onSuccess: (response) => {
+      // Clear any logged out flags
+      setLoggedOutFlag(false);
+      
       // Extract user from response (might be nested in user property or directly in response)
       const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
+      
+      // Immediately refetch user data to ensure we have the latest
+      refetch();
+      
       toast({
         title: t('auth.login_successful') || "Login successful",
         description: t('auth.welcome_back', { name: user.name || user.username }) || `Welcome back, ${user.name || user.username}!`,
@@ -137,24 +158,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/auth/register", credentials);
-      const data = await res.json();
-      
-      // Check if the response contains a token
-      if (data.token) {
-        // Store the token in localStorage
-        setAuthToken(data.token);
-        console.log('Auth token stored successfully after registration');
-      } else {
-        console.warn('No token received from registration response');
+      try {
+        const res = await apiRequest("POST", "/api/auth/register", credentials);
+        
+        // Ensure session cookies are saved by the browser
+        if (res.ok) {
+          // For session-based auth, clear any logged out flags
+          setLoggedOutFlag(false);
+          
+          // Try to parse the response as JSON
+          const data = await res.json();
+          
+          // If using JWT tokens and the response contains a token
+          if (data.token) {
+            // Store the token in localStorage
+            setAuthToken(data.token);
+            console.log('Auth token stored successfully after registration');
+          }
+          
+          return data;
+        } else {
+          const errorText = await res.text();
+          throw new Error(errorText || `Registration failed with status: ${res.status}`);
+        }
+      } catch (error: any) {
+        console.error("Registration error:", error);
+        throw new Error(error.message || "Registration failed. Please try again.");
       }
-      
-      return data;
     },
     onSuccess: (response) => {
+      // Clear any logged out flags
+      setLoggedOutFlag(false);
+      
       // Extract user from response (might be nested in user property or directly in response)
       const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
+      
+      // Immediately refetch user data to ensure we have the latest
+      refetch();
+      
       toast({
         title: t('auth.registration_successful') || "Registration successful",
         description: t('auth.welcome', { name: user.name || user.username }) || `Welcome, ${user.name || user.username}!`,
