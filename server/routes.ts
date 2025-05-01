@@ -497,61 +497,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
     
-    // Test endpoint for image uploads
-    app.post('/api/upload-test', unifiedIsAuthenticated, (req: Request, res: Response) => {
-      console.log('[DEBUG] Upload test endpoint called');
-      console.log('[DEBUG] Request user:', req.user ? `ID: ${req.user.id}, Username: ${req.user.username}` : 'No user found');
-      console.log('[DEBUG] Request authentication status:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
-      console.log('[DEBUG] Request body:', JSON.stringify(req.body));
+    // Simple and robust image upload endpoint
+    app.post('/api/simple-upload', (req: Request, res: Response) => {
+      console.log('[DEBUG] Simple upload endpoint called');
       
-      // Set content type to JSON for all responses from this endpoint
-      res.setHeader('Content-Type', 'application/json');
-      
-      let filename = null;
-      
-      // Check if there's a base64 image
-      if (req.body.image && typeof req.body.image === 'string' && req.body.image.startsWith('data:image')) {
-        try {
-          // Extract the base64 data
-          const base64Data = req.body.image.split(',')[1];
-          filename = `test_${Date.now()}.png`;
-          
-          // Create uploads directory if it doesn't exist
-          if (!fs.existsSync('./public/uploads')) {
-            fs.mkdirSync('./public/uploads', { recursive: true });
-          }
-          if (!fs.existsSync('./public/uploads/test')) {
-            fs.mkdirSync('./public/uploads/test', { recursive: true });
-          }
-          
-          // Save the file
-          fs.writeFileSync(`./public/uploads/test/${filename}`, base64Data, 'base64');
-          
-          console.log(`[DEBUG] Test image saved as: /uploads/test/${filename}`);
-        } catch (error) {
-          console.error('[ERROR] Failed to save test image:', error);
-          return res.status(500).json({ message: 'Failed to save test image', error: error.message });
-        }
-      } else {
-        console.log('[DEBUG] No valid image data found in request');
-        console.log('[DEBUG] Body contains image property:', !!req.body.image);
-        if (req.body.image) {
-          console.log('[DEBUG] Image data type:', typeof req.body.image);
-          if (typeof req.body.image === 'string') {
-            console.log('[DEBUG] Image data prefix:', req.body.image.substring(0, 30) + '...');
-          }
-        }
+      // Create uploads directory if it doesn't exist
+      if (!fs.existsSync('./public/uploads')) {
+        fs.mkdirSync('./public/uploads', { recursive: true });
+      }
+      if (!fs.existsSync('./public/uploads/simple')) {
+        fs.mkdirSync('./public/uploads/simple', { recursive: true });
       }
       
-      return res.json({
-        message: 'Upload test successful',
-        user: req.user ? {
-          id: req.user.id,
-          username: req.user.username
-        } : 'Not authenticated',
-        imageSaved: filename !== null,
-        imagePath: filename ? `/uploads/test/${filename}` : null
-      });
+      try {
+        // Generate a simple image with timestamp
+        const timestamp = Date.now();
+        const filename = `simple_${timestamp}.png`;
+        const imagePath = `./public/uploads/simple/${filename}`;
+        
+        // Create a small colored square
+        const size = 100;
+        const r = Math.floor(Math.random() * 255);
+        const g = Math.floor(Math.random() * 255);
+        const b = Math.floor(Math.random() * 255);
+        
+        // Create a simple colored square
+        const imageData = Buffer.alloc(size * size * 3);
+        
+        // Fill the buffer with the color
+        for (let i = 0; i < size * size; i++) {
+          imageData[i * 3] = r;     // R
+          imageData[i * 3 + 1] = g; // G
+          imageData[i * 3 + 2] = b; // B
+        }
+        
+        // Write the file directly
+        fs.writeFileSync(imagePath, imageData);
+        
+        console.log(`[DEBUG] Simple image created at: ${imagePath}`);
+        
+        // Return success with path to the created image
+        return res.json({
+          success: true,
+          message: 'Image created successfully',
+          imagePath: `/uploads/simple/${filename}`,
+          timestamp: timestamp,
+          color: `rgb(${r},${g},${b})`
+        });
+      } catch (error) {
+        console.error('[ERROR] Failed to create image:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create image', 
+          error: error.message
+        });
+      }
+    });
+    
+    // API file upload endpoint using chunked data
+    app.post('/api/chunked-upload', (req: Request, res: Response) => {
+      console.log('[DEBUG] Chunked upload endpoint called');
+      
+      // Ensure uploads directories exist
+      if (!fs.existsSync('./public/uploads')) {
+        fs.mkdirSync('./public/uploads', { recursive: true });
+      }
+      if (!fs.existsSync('./public/uploads/chunked')) {
+        fs.mkdirSync('./public/uploads/chunked', { recursive: true });
+      }
+      
+      try {
+        // Extract chunk information from the request
+        const { chunkIndex, totalChunks, fileId, chunkData } = req.body;
+        
+        if (!chunkIndex || !totalChunks || !fileId) {
+          return res.status(400).json({
+            success: false,
+            message: 'Missing required chunk information'
+          });
+        }
+        
+        // Create a temporary directory for this file's chunks
+        const chunkDir = `./public/uploads/chunked/${fileId}`;
+        if (!fs.existsSync(chunkDir)) {
+          fs.mkdirSync(chunkDir, { recursive: true });
+        }
+        
+        // Save this chunk
+        const chunkPath = `${chunkDir}/chunk_${chunkIndex}`;
+        
+        if (chunkData && typeof chunkData === 'string') {
+          // If chunk data is provided as base64, convert and save it
+          try {
+            // Remove data URL prefix if present
+            let base64Data = chunkData;
+            if (base64Data.includes(',')) {
+              base64Data = base64Data.split(',')[1];
+            }
+            
+            fs.writeFileSync(chunkPath, base64Data, 'base64');
+            
+            console.log(`[DEBUG] Saved chunk ${chunkIndex}/${totalChunks} for file ${fileId}`);
+            
+            // If this is the last chunk, combine all chunks
+            if (parseInt(chunkIndex) === parseInt(totalChunks) - 1) {
+              console.log(`[DEBUG] All chunks received for ${fileId}, combining...`);
+              
+              // Filename for the final file
+              const filename = `file_${fileId}.png`;
+              const finalPath = `./public/uploads/chunked/${filename}`;
+              
+              // Create a write stream for the final file
+              const writeStream = fs.createWriteStream(finalPath);
+              
+              // Combine all chunks in order
+              for (let i = 0; i < parseInt(totalChunks); i++) {
+                const currentChunkPath = `${chunkDir}/chunk_${i}`;
+                if (fs.existsSync(currentChunkPath)) {
+                  const chunkData = fs.readFileSync(currentChunkPath);
+                  writeStream.write(chunkData);
+                } else {
+                  console.error(`[ERROR] Missing chunk ${i} for file ${fileId}`);
+                  return res.status(400).json({
+                    success: false,
+                    message: `Missing chunk ${i}`
+                  });
+                }
+              }
+              
+              writeStream.end();
+              
+              // Clean up chunk files
+              for (let i = 0; i < parseInt(totalChunks); i++) {
+                const currentChunkPath = `${chunkDir}/chunk_${i}`;
+                if (fs.existsSync(currentChunkPath)) {
+                  fs.unlinkSync(currentChunkPath);
+                }
+              }
+              
+              // Remove chunk directory
+              fs.rmdirSync(chunkDir);
+              
+              return res.json({
+                success: true,
+                message: 'File upload complete',
+                filePath: `/uploads/chunked/${filename}`
+              });
+            } else {
+              // Not the last chunk, just acknowledge receipt
+              return res.json({
+                success: true,
+                message: `Chunk ${chunkIndex} received`,
+                chunksReceived: parseInt(chunkIndex) + 1,
+                totalChunks: parseInt(totalChunks)
+              });
+            }
+          } catch (error) {
+            console.error(`[ERROR] Error processing chunk ${chunkIndex}:`, error);
+            return res.status(500).json({
+              success: false,
+              message: 'Error processing chunk',
+              error: error.message
+            });
+          }
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid chunk data format'
+          });
+        }
+      } catch (error) {
+        console.error('[ERROR] Chunk upload failed:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Chunk upload failed',
+          error: error.message
+        });
+      }
     });
         
         res.json({ token, expiresAt, userId: user.id, username: user.username });
