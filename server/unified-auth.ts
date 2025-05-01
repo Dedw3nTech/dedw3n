@@ -50,9 +50,26 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     return res.status(401).json({ message: 'Unauthorized - User logged out via cookie' });
   }
   
-  // No token found, return unauthorized
+  // No token found
   if (!token) {
     console.log('[AUTH] No authentication token provided');
+    
+    // For API ping endpoint, allow without authentication for testing
+    if (req.path === '/api/posts/ping') {
+      console.log('[AUTH] Allowing access to ping endpoint without authentication');
+      return next();
+    }
+    
+    // Check if this is an image upload request from a logged-in session user
+    // This handles the case where a user is logged in via session but doesn't have a JWT token
+    if (req.path === '/api/social/upload-image' && req.method === 'POST') {
+      console.log('[AUTH] Image upload request detected - checking for user in session');
+      if (req.user) {
+        console.log('[AUTH] User found in session for image upload');
+        return next();
+      }
+    }
+    
     return res.status(401).json({ message: 'Unauthorized - No valid authentication token' });
   }
 
