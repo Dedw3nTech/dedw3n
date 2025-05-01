@@ -11,8 +11,31 @@ export default function LogoutSuccess() {
   const { t } = useTranslation();
   
   useEffect(() => {
-    // Set page title
+    // Set page title and add cache-busting meta tags
     document.title = t('auth.logout_success') || 'Log out success';
+    
+    // Add cache control meta tags to prevent caching
+    const metaCache = document.createElement('meta');
+    metaCache.httpEquiv = 'Cache-Control';
+    metaCache.content = 'no-cache, no-store, must-revalidate';
+    document.head.appendChild(metaCache);
+    
+    const metaPragma = document.createElement('meta');
+    metaPragma.httpEquiv = 'Pragma';
+    metaPragma.content = 'no-cache';
+    document.head.appendChild(metaPragma);
+    
+    const metaExpires = document.createElement('meta');
+    metaExpires.httpEquiv = 'Expires';
+    metaExpires.content = '0';
+    document.head.appendChild(metaExpires);
+    
+    // Clean up function to remove meta tags when component unmounts
+    return () => {
+      document.head.removeChild(metaCache);
+      document.head.removeChild(metaPragma);
+      document.head.removeChild(metaExpires);
+    };
   }, [t]);
 
   return (
