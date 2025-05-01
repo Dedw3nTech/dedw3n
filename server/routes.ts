@@ -18,6 +18,7 @@ import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unifie
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
+import { registerImageRoutes } from "./image-handler";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
@@ -707,6 +708,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register AI insights routes
   registerAIInsightsRoutes(app);
+
+  // Register image handling routes
+  registerImageRoutes(app);
 
   // Create HTTP server from Express
   // Register news feed routes
