@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import passport from "passport";
+import { verifyToken } from "./jwt-auth";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -71,22 +72,35 @@ app.use((req, res, next) => {
     console.log('[DEBUG] Direct image upload endpoint called');
     req._handledByApi = true;
     
-    // Check authentication first
-    if (!req.isAuthenticated() && (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer '))) {
-      console.log('[DEBUG] Authentication failed in upload endpoint');
+    // Set content type to JSON for all responses from this endpoint
+    res.setHeader('Content-Type', 'application/json');
+    
+    // Manual JWT token check
+    let userId = null;
+    
+    // Check for Bearer token in Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      const token = req.headers.authorization.split(' ')[1];
+      console.log('[DEBUG] Found JWT token in Authorization header');
+      
+      try {
+        const tokenPayload = verifyToken(token);
+        if (tokenPayload) {
+          userId = tokenPayload.userId;
+        }
+      } catch (error) {
+        console.error('[ERROR] Invalid JWT token:', error);
+      }
+    }
+    
+    // If no valid user ID from JWT, return authentication error
+    if (!userId) {
+      console.log('[DEBUG] Authentication failed - no valid user ID from JWT');
       return res.status(401).json({ message: "Authentication required" });
     }
     
     try {
-      // Set content type to JSON for all responses from this endpoint
-      res.setHeader('Content-Type', 'application/json');
-      
-      // Get user ID from session or token
-      const userId = req.user?.id || (req.user as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      console.log(`[DEBUG] Authenticated user ID: ${userId}`);
       
       // Check if there's a blob image data
       if (!req.body.blob) {
