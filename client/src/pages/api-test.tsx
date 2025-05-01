@@ -1,4 +1,4 @@
-import { ApiTester } from '@/components/api-tester';
+import { ApiTesterSimple } from '@/components/api-tester-simple';
 
 export default function ApiTestPage() {
   return (
@@ -9,7 +9,7 @@ export default function ApiTestPage() {
           <p className="text-gray-500">Test API endpoints including image uploads</p>
         </div>
         
-        <ApiTester />
+        <ApiTesterSimple />
       </div>
     </div>
   );
