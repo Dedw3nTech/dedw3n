@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       try {
-        const res = await apiRequest("POST", "/api/auth/login", credentials);
+        const res = await apiRequest("POST", "/api/login", credentials);
         
         // Ensure session cookies are saved by the browser
         if (res.ok) {
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Extract user from response (might be nested in user property or directly in response)
       const user = response.user || response;
-      queryClient.setQueryData(["/api/auth/me"], user);
+      queryClient.setQueryData(["/api/user"], user);
       
       // Immediately refetch user data to ensure we have the latest
       refetch();
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       try {
-        const res = await apiRequest("POST", "/api/auth/register", credentials);
+        const res = await apiRequest("POST", "/api/register", credentials);
         
         // Ensure session cookies are saved by the browser
         if (res.ok) {
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Extract user from response (might be nested in user property or directly in response)
       const user = response.user || response;
-      queryClient.setQueryData(["/api/auth/me"], user);
+      queryClient.setQueryData(["/api/user"], user);
       
       // Immediately refetch user data to ensure we have the latest
       refetch();
@@ -269,7 +269,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       // Clear user data from all possible auth caches
-      queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
       
       // Clear websocket connection if it exists
@@ -317,7 +316,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       // Clear all API caches on error too
-      queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       
