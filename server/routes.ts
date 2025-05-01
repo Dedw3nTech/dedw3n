@@ -384,6 +384,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Blob-integrated image upload API for social feed
     app.post('/api/social/upload-image', unifiedIsAuthenticated, async (req: Request, res: Response) => {
       try {
+        // Set content type to JSON for all responses from this endpoint
+        res.setHeader('Content-Type', 'application/json');
+        
         const userId = req.user?.id;
         
         if (!userId) {
@@ -475,6 +478,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Legacy test endpoint kept for backward compatibility
     app.post('/api/upload-test', unifiedIsAuthenticated, (req: Request, res: Response) => {
       console.log('[DEBUG] Upload test endpoint called with user:', req.user?.id);
+      
+      // Set content type to JSON for all responses from this endpoint
+      res.setHeader('Content-Type', 'application/json');
       
       let filename = null;
       

@@ -96,8 +96,32 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
   // Direct blob upload mutation for images
   const uploadImageMutation = useMutation({
     mutationFn: async (data: { blob: string; description: string; tags: string[] }) => {
-      const response = await apiRequest("POST", "/api/social/upload-image", data);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/social/upload-image", data);
+        
+        // First check if response is OK before trying to parse JSON
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Server error: ${response.status}`);
+        }
+        
+        // Check content type to make sure we're getting JSON back
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          return response.json();
+        } else {
+          // Handle non-JSON responses by throwing an appropriate error
+          const text = await response.text();
+          if (text.includes("<!DOCTYPE html>")) {
+            throw new Error("Received HTML instead of JSON. Server might be redirecting to an error page.");
+          } else {
+            throw new Error(`Unexpected response format: ${contentType || "unknown"}`);
+          }
+        }
+      } catch (err: any) {
+        console.error("Upload image error:", err);
+        throw new Error(err.message || "Failed to upload image");
+      }
     },
     onSuccess: (data) => {
       // Reset form
