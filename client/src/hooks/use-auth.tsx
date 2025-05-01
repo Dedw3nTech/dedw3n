@@ -16,7 +16,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
-  logoutMutation: UseMutationResult<Response, Error, void>;
+  logoutMutation: UseMutationResult<any, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
@@ -111,15 +111,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
       toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.name || user.username}!`,
+        title: t('auth.login_successful') || "Login successful",
+        description: t('auth.welcome_back', { name: user.name || user.username }) || `Welcome back, ${user.name || user.username}!`,
       });
     },
     onError: (error: Error) => {
       // Clear any existing token on login failure
       clearAuthToken();
       toast({
-        title: "Login failed",
+        title: t('auth.login_failed') || "Login failed",
         description: error.message,
         variant: "destructive",
       });
@@ -147,15 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = response.user || response;
       queryClient.setQueryData(["/api/auth/me"], user);
       toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.name || user.username}!`,
+        title: t('auth.registration_successful') || "Registration successful",
+        description: t('auth.welcome', { name: user.name || user.username }) || `Welcome, ${user.name || user.username}!`,
       });
     },
     onError: (error: Error) => {
       // Clear any existing token on registration failure
       clearAuthToken();
       toast({
-        title: "Registration failed",
+        title: t('auth.registration_failed') || "Registration failed",
         description: error.message,
         variant: "destructive",
       });
