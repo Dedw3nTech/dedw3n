@@ -173,14 +173,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: t('auth.please_wait') || "Please wait...",
       });
       
-      // Call the real API endpoint for logout
-      return await apiRequest("POST", "/api/logout");
+      // Add cache-busting parameter to prevent issues with caching
+      const timestamp = new Date().getTime();
+      const cacheBuster = `?_cb=${timestamp}`;
+      
+      // Call the real API endpoint for logout with options for network-level debugging
+      const response = await apiRequest("POST", `/api/logout${cacheBuster}`, undefined, {
+        // Set cache-control headers explicitly
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
+      
+      // Special handling for 204 status (No Content)
+      if (response.status === 204) {
+        console.log('Logout successful with 204 status');
+        return null;
+      }
+      
+      return response;
     },
     onSuccess: () => {
+      console.log('Logout mutation successful, cleaning up client state');
+      
       // Clear the JWT token from storage
       clearAuthToken();
       
-      // Clear user data from cache
+      // Clear authentication-specific cookies directly if possible
+      // Note: This is a best-effort approach as it requires same-site/origin
+      if (document.cookie) {
+        document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+      
+      // Clear user data from all possible auth caches
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
       
@@ -201,22 +230,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Invalidate all queries to force refetch when user logs back in
       queryClient.invalidateQueries();
       
-      // Use wouter navigation for client-side routing
-      setLocation("/logout-success");
+      // Reset application state completely by killing all prior API caches
+      queryClient.clear();
+      
+      // Use wouter navigation for client-side routing with no-cache headers
+      // Add cache buster to URL to avoid any cache issues
+      const timestamp = new Date().getTime();
+      setLocation(`/logout-success?_cb=${timestamp}`);
+      
+      // Post-logout cleanup
+      console.log('Client-side logout completed');
     },
     onError: (error: Error) => {
       console.error("Logout error:", error);
       
       // Even on error, clear user data for security
       clearAuthToken();
+      
+      // Handle cookie clearing directly
+      if (document.cookie) {
+        document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+      
+      // Clear all API caches on error too
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.clear();
       
       // Log the error but still redirect to logout success
       console.error("Logout process error:", error);
       
-      // Redirect to logout success page anyway
-      setLocation("/logout-success");
+      // Redirect to logout success page anyway with cache busting
+      const timestamp = new Date().getTime();
+      setLocation(`/logout-success?_cb=${timestamp}`);
     },
   });
 

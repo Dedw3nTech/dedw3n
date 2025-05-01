@@ -561,23 +561,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Updated logout endpoint that handles both authentication methods
   app.post("/api/logout", async (req, res) => {
     try {
+      console.log('[DEBUG] Processing logout request');
+      
+      // Explicitly set auth related headers to prevent caching
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('Surrogate-Control', 'no-store');
+      
       // Clear test user from debug mode
       if (req.user && !req.isAuthenticated()) {
         console.log('[DEBUG] Clearing debug-mode test user');
         req.user = undefined;
-        return res.status(200).json({ message: "Successfully logged out" });
       }
       
       // 1. Handle Passport.js session-based logout first
       if (req.isAuthenticated()) {
         console.log('[DEBUG] Logging out authenticated session user');
-        req.logout((err) => {
-          if (err) {
-            console.error('[ERROR] Session logout failed:', err);
-            // Continue anyway to try JWT logout
-          } else {
-            console.log('[DEBUG] Session logout successful');
-          }
+        // Convert req.logout with callback to Promise
+        await new Promise<void>((resolve) => {
+          req.logout((err) => {
+            if (err) {
+              console.error('[ERROR] Session logout failed:', err);
+            } else {
+              console.log('[DEBUG] Session logout successful');
+            }
+            resolve(); // Always resolve to continue
+          });
         });
       }
       
@@ -587,71 +597,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
+        console.log('[DEBUG] Found token in Authorization header');
       } else if (req.query.token) {
         token = req.query.token as string;
+        console.log('[DEBUG] Found token in query parameters');
       } else if (req.cookies && req.cookies.token) {
         token = req.cookies.token;
+        console.log('[DEBUG] Found token in cookies');
       }
       
       if (token) {
         try {
-          console.log('[DEBUG] Revoking JWT token');
+          console.log('[DEBUG] Processing token revocation');
           
           // Call revoke token function if it exists in storage
           if (storage.revokeAuthToken) {
             const authToken = await storage.getAuthToken(token);
             if (authToken) {
               await storage.revokeAuthToken(authToken.id, 'User logout');
-              console.log('[DEBUG] JWT token revoked');
+              console.log('[DEBUG] JWT token revoked successfully');
+            } else {
+              console.log('[DEBUG] Auth token not found in database');
             }
           } else if (typeof revokeToken === 'function') {
             // Use imported function if available
             await revokeToken(token, 'User logout');
             console.log('[DEBUG] JWT token revoked via revokeToken function');
+          } else {
+            console.log('[WARNING] No token revocation mechanism available');
           }
           
-          // Clear token cookie
-          if (req.cookies && req.cookies.token) {
+          // Clear all possible auth cookies
+          if (req.cookies) {
+            // Clear token cookie with all possible options
+            res.clearCookie('token', { 
+              path: '/', 
+              httpOnly: true,
+              secure: true,
+              sameSite: 'strict'
+            });
             res.clearCookie('token');
-            console.log('[DEBUG] Token cookie cleared');
+            
+            // Also clear any other auth-related cookies
+            res.clearCookie('connect.sid', { path: '/' });
+            res.clearCookie('auth', { path: '/' });
+            
+            console.log('[DEBUG] All auth cookies cleared');
           }
         } catch (error) {
           console.error('[ERROR] JWT logout error:', error);
-          // Continue anyway
         }
+      } else {
+        console.log('[DEBUG] No auth token found during logout');
       }
       
       // Handle session cleanup more gracefully
-      // First, make sure we have a session to destroy
       if (req.session) {
         try {
+          console.log('[DEBUG] Attempting to destroy session');
           // Use Promise to handle session destroy
-          await new Promise<void>((resolve, reject) => {
+          await new Promise<void>((resolve) => {
             req.session.destroy((err) => {
               if (err) {
                 console.error('[ERROR] Session destroy failed:', err);
-                // Don't reject, just log and continue
+              } else {
+                console.log('[DEBUG] Session destroyed successfully');
               }
-              resolve();
+              resolve(); // Always resolve to continue
             });
           });
-          
-          console.log('[DEBUG] Session destroyed or destruction attempted');
         } catch (sessionError) {
           console.error('[ERROR] Error during session destroy:', sessionError);
-          // Continue despite errors to ensure client can still logout
         }
       } else {
         console.log('[DEBUG] No session to destroy');
       }
       
-      // Always return success to client to prevent UI getting stuck
-      return res.status(200).json({ message: "Successfully logged out" });
+      // Force session regeneration for extra security
+      if (req.session) {
+        try {
+          // @ts-ignore - Some types may be missing
+          req.session.regenerate((err: Error) => {
+            if (err) {
+              console.error('[ERROR] Session regeneration failed:', err);
+            } else {
+              console.log('[DEBUG] Session regenerated successfully');
+            }
+          });
+        } catch (regError) {
+          console.error('[ERROR] Error during session regeneration:', regError);
+        }
+      }
+      
+      // Clear req.user - sometimes Passport.js can leave this
+      req.user = undefined;
+      
+      // Return 204 status (No Content) as recommended for logout operations
+      return res.status(204).end();
     } catch (error) {
       console.error('[ERROR] Logout error:', error);
-      // Even on error, tell the client logout was successful
-      // This prevents the UI from getting stuck in a bad state
-      return res.status(200).json({ message: "Successfully logged out" });
+      // Even on error, return success to prevent UI getting stuck
+      return res.status(204).end();
     }
   });
   
