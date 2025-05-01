@@ -74,14 +74,18 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+export interface ApiRequestOptions extends RequestInit {
+  isFormData?: boolean;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: RequestInit | { isFormData?: boolean, signal?: AbortSignal },
+  options?: ApiRequestOptions,
 ): Promise<Response> {
-  // Check if we're using the old format (boolean isFormData) or the new options object
-  const isFormData = typeof options === 'boolean' ? options : options?.isFormData;
+  // Extract isFormData from options
+  const isFormData = options?.isFormData;
   
   // Set up request options
   const requestOptions: RequestInit = {
@@ -91,8 +95,13 @@ export async function apiRequest(
     ...(typeof options === 'object' && options !== null ? options : {})
   };
 
-  // Add headers for logout state
-  if (isUserLoggedOut()) {
+  // Special handling for login/register routes to ensure we can login even when logged out flag is set
+  if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register') {
+    // Clear the logged out flag for login/register attempts
+    setLoggedOutFlag(false);
+  } 
+  // Add headers for logout state - but not for login/register endpoints
+  else if (isUserLoggedOut()) {
     requestOptions.headers = {
       ...requestOptions.headers,
       'X-User-Logged-Out': 'true',
@@ -190,8 +199,13 @@ export const getQueryFn: <T>(options: {
       headers: {}
     };
 
-    // Add headers for logout state
-    if (isUserLoggedOut()) {
+    // Special handling for login/register routes
+    if (url.includes('/api/login') || url.includes('/api/register') || url.includes('/api/auth/login') || url.includes('/api/auth/register')) {
+      // Clear the logged out flag for login/register attempts
+      setLoggedOutFlag(false);
+    } 
+    // Add headers for logout state - but not for login/register endpoints
+    else if (isUserLoggedOut()) {
       options.headers = {
         ...options.headers,
         'X-User-Logged-Out': 'true',
