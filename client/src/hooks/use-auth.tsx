@@ -8,13 +8,15 @@ import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient, getStoredAuthToken, setAuthToken, clearAuthToken } from "../lib/queryClient";
 import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
+  logoutMutation: UseMutationResult<Response, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
@@ -24,6 +26,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const tokenCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Query for getting the current user
@@ -159,37 +162,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Get location setter from wouter for proper navigation
+  const [, setLocation] = useLocation();
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Show toast notification that logout is in progress
+      toast({
+        title: t('auth.logging_out') || "Logging out",
+        description: t('auth.please_wait') || "Please wait...",
+      });
+      
+      // Call the real API endpoint for logout
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
       // Clear the JWT token from storage
       clearAuthToken();
+      
+      // Clear user data from cache
       queryClient.setQueryData(["/api/auth/me"], null);
-      // Set user to null explicitly
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Clear websocket connection if it exists
+      try {
+        // Access socket only if it exists as a global variable
+        if (typeof window !== 'undefined' && (window as any).socket) {
+          const socket = (window as any).socket;
+          if (typeof socket.close === 'function') {
+            socket.close();
+            console.log('WebSocket connection closed during logout');
+          }
+        }
+      } catch (e) {
+        console.error("Error closing websocket:", e);
+      }
+      
       // Invalidate all queries to force refetch when user logs back in
       queryClient.invalidateQueries();
-      // Redirect to logout success page
-      window.location.href = "/logout-success";
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
+      
+      // Use wouter navigation for client-side routing
+      setLocation("/logout-success");
     },
     onError: (error: Error) => {
       console.error("Logout error:", error);
-      toast({
-        title: "Logout completed",
-        description: "You have been logged out.",
-      });
-      // Even on error, clear everything and redirect to logout success page
+      
+      // Even on error, clear user data for security
       clearAuthToken();
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.setQueryData(["/api/user"], null);
-      // Redirect to logout success page
-      window.location.href = "/logout-success";
+      
+      // Log the error but still redirect to logout success
+      console.error("Logout process error:", error);
+      
+      // Redirect to logout success page anyway
+      setLocation("/logout-success");
     },
   });
 

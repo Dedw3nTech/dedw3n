@@ -60,19 +60,26 @@ export default function LogoutSuccess() {
           </p>
           
           <div className="pt-4">
-            <Link href="/auth">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white">
+            <Button 
+              asChild
+              className="w-full bg-primary hover:bg-primary/90 text-white"
+            >
+              <Link href="/auth">
                 {t('auth.sign_in_again') || 'Sign In Again'}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
           
           <div className="pt-2">
-            <Link href="/">
-              <Button variant="outline" className="w-full">
+            <Button 
+              asChild
+              variant="outline" 
+              className="w-full"
+            >
+              <Link href="/">
                 {t('misc.back_to_home') || 'Back to Home'}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </motion.div>
@@ -80,8 +87,8 @@ export default function LogoutSuccess() {
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>
           {t('misc.questions') || 'Questions or concerns?'}{' '}
-          <Link href="/contact">
-            <a className="text-primary hover:underline">{t('misc.contact_us') || 'Contact Us'}</a>
+          <Link href="/contact" className="text-primary hover:underline">
+            {t('misc.contact_us') || 'Contact Us'}
           </Link>
         </p>
       </div>
