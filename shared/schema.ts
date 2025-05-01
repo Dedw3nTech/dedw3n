@@ -465,7 +465,7 @@ export const subscriptions = pgTable("subscriptions", {
   userId: integer("user_id").notNull().references(() => users.id),
   creatorId: integer("creator_id").references(() => users.id),
   planName: varchar("plan_name", { length: 50 }).default("premium"),
-  plan: varchar("plan", { length: 50 }), // For backward compatibility
+  // Removed 'plan' field since it doesn't exist in the actual database
   amount: doublePrecision("amount").default(20),
   currency: varchar("currency", { length: 3 }).default("GBP"),
   interval: subscriptionIntervalEnum("interval").default("monthly"),

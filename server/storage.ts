@@ -897,15 +897,30 @@ export class DatabaseStorage implements IStorage {
   // Subscription methods
   async getUserSubscription(userId: number): Promise<any | null> {
     try {
-      // Print the SQL being generated for debugging
-      const query = db
-        .select()
+      // Get only fields that exist in the database schema
+      const [subscription] = await db
+        .select({
+          id: subscriptions.id,
+          userId: subscriptions.userId,
+          creatorId: subscriptions.creatorId,
+          planName: subscriptions.planName,
+          amount: subscriptions.amount,
+          currency: subscriptions.currency,
+          interval: subscriptions.interval,
+          status: subscriptions.status,
+          currentPeriodStart: subscriptions.currentPeriodStart,
+          currentPeriodEnd: subscriptions.currentPeriodEnd,
+          expiresAt: subscriptions.expiresAt,
+          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+          tier: subscriptions.tier,
+          stripeCustomerId: subscriptions.stripeCustomerId,
+          stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+          paypalSubscriptionId: subscriptions.paypalSubscriptionId,
+          createdAt: subscriptions.createdAt,
+          updatedAt: subscriptions.updatedAt
+        })
         .from(subscriptions)
         .where(eq(subscriptions.userId, userId));
-      
-      console.log("SQL Query:", query.toSQL());
-      
-      const [subscription] = await query;
       
       return subscription || null;
     } catch (error) {
@@ -916,9 +931,18 @@ export class DatabaseStorage implements IStorage {
   
   async createOrUpdateSubscription(subscriptionData: any): Promise<any> {
     try {
+      // Make sure to rename "plan" to "planName" if it exists
+      if (subscriptionData.plan && !subscriptionData.planName) {
+        subscriptionData.planName = subscriptionData.plan;
+        delete subscriptionData.plan; // Remove the plan field since it doesn't exist in the database
+      }
+      
       // Check if subscription exists
       const [existingSubscription] = await db
-        .select()
+        .select({
+          id: subscriptions.id,
+          userId: subscriptions.userId
+        })
         .from(subscriptions)
         .where(eq(subscriptions.userId, subscriptionData.userId));
       

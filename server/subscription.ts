@@ -70,7 +70,7 @@ export async function activateSubscription(req: Request, res: Response) {
     const subscription = await storage.createOrUpdateSubscription({
       userId: req.user.id,
       status: 'active',
-      plan: 'premium',
+      planName: 'premium', // Use planName instead of plan
       expiresAt,
       createdAt: new Date()
     });
@@ -106,7 +106,7 @@ export async function activateTrial(req: Request, res: Response) {
     const subscription = await storage.createOrUpdateSubscription({
       userId: req.user.id,
       status: 'trial',
-      plan_name: 'premium',  // Use plan_name instead of plan
+      planName: 'premium',  // Use planName to match the schema property name
       expiresAt,
       createdAt: new Date()
     });
