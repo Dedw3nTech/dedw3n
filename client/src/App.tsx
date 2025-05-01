@@ -74,6 +74,7 @@ import MessagesPage from "@/pages/messages";
 import ExplorePage from "@/pages/explore";
 import SearchPage from "@/pages/search";
 import SocialConsolePage from "@/pages/social-console";
+import NotificationsPage from "@/pages/notifications";
 
 // Import video pages
 import TrendingVideosPage from "@/pages/videos/trending";
@@ -131,6 +132,7 @@ function Router() {
       <ProtectedRoute path="/wall" component={WallPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/explore" component={ExplorePage} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
       
       {/* Protected video routes */}
       <ProtectedRoute path="/videos/trending" component={TrendingVideosPage} />

@@ -262,13 +262,23 @@ export default function Header() {
                     ))
                   )}
                 </div>
-                <div className="p-2 border-t text-center">
+                <div className="p-2 border-t flex justify-between items-center">
                   <button 
                     className="text-xs text-primary font-medium hover:underline"
                     onClick={() => markAllNotificationsReadMutation.mutate()}
                   >
                     Mark all as read
                   </button>
+                  <Link 
+                    href="/notifications" 
+                    className="text-xs text-primary font-medium hover:underline"
+                    onClick={() => {
+                      // Close the popover when navigating
+                      document.body.click();
+                    }}
+                  >
+                    View all notifications
+                  </Link>
                 </div>
               </PopoverContent>
             </Popover>
