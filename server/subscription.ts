@@ -106,7 +106,7 @@ export async function activateTrial(req: Request, res: Response) {
     const subscription = await storage.createOrUpdateSubscription({
       userId: req.user.id,
       status: 'trial',
-      plan: 'premium',
+      plan_name: 'premium',  // Use plan_name instead of plan
       expiresAt,
       createdAt: new Date()
     });
