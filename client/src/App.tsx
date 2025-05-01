@@ -184,10 +184,10 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
           <AuthProvider>
-            <MessagingProvider>
-              <ViewProvider>
-                <MarketTypeProvider>
-                  <SubscriptionProvider>
+            <ViewProvider>
+              <MarketTypeProvider>
+                <SubscriptionProvider>
+                  <MessagingProvider>
                     <CurrencyProvider>
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
@@ -207,10 +207,10 @@ function App() {
                       </ErrorBoundary>
                       <Toaster />
                     </CurrencyProvider>
-                  </SubscriptionProvider>
-                </MarketTypeProvider>
-              </ViewProvider>
-            </MessagingProvider>
+                  </MessagingProvider>
+                </SubscriptionProvider>
+              </MarketTypeProvider>
+            </ViewProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
