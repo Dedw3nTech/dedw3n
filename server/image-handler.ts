@@ -235,12 +235,191 @@ export const handleChunkedUpload = (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Generate a test image (for internal use in the API)
+ */
+export const generateTestImage = (): { path: string, color: string } => {
+  // Generate a test image (colored square)
+  const size = 100;
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  
+  // Generate filename and path
+  const filename = `test_${Date.now()}.png`;
+  const filePath = path.join('./public/uploads/test', filename);
+  
+  // Create test directory if it doesn't exist
+  if (!fs.existsSync('./public/uploads/test')) {
+    fs.mkdirSync('./public/uploads/test', { recursive: true });
+  }
+  
+  // Create a buffer for the image data (simple RGB colored square)
+  const imageData = Buffer.alloc(size * size * 3);
+  
+  // Fill the buffer with the random color
+  for (let i = 0; i < size * size; i++) {
+    imageData[i * 3] = r;
+    imageData[i * 3 + 1] = g;
+    imageData[i * 3 + 2] = b;
+  }
+  
+  // Write the file
+  fs.writeFileSync(filePath, imageData);
+  
+  return {
+    path: `/uploads/test/${filename}`,
+    color: `rgb(${r},${g},${b})`
+  };
+};
+
 // Register the image upload routes
 export function registerImageRoutes(app: any) {
   console.log('[IMAGE] Registering image upload routes');
   
   // Create upload directories on startup
   ensureUploadDirs();
+  
+  // API documentation endpoint
+  app.get('/api/image', (req: Request, res: Response) => {
+    console.log('[IMAGE] Documentation requested');
+    
+    // Return API documentation as JSON
+    return res.status(200).json({
+      success: true,
+      message: 'Dedw Ltd. Image Upload API',
+      version: '1.0.0',
+      endpoints: [
+        {
+          path: '/api/image',
+          method: 'GET',
+          description: 'Fetch API documentation for image upload endpoints',
+          requiresAuth: false,
+          parameters: []
+        },
+        {
+          path: '/api/image/upload',
+          method: 'POST',
+          description: 'Upload a single image using base64 encoding (recommended for images <1MB)',
+          requiresAuth: false,
+          parameters: [
+            {
+              name: 'imageData',
+              type: 'string',
+              format: 'data:image/[format];base64,[data]',
+              required: true,
+              description: 'Base64-encoded image data with data URI prefix'
+            },
+            {
+              name: 'imageType',
+              type: 'string',
+              enum: ['product', 'profile', 'post'],
+              default: 'product',
+              required: false,
+              description: 'The category/type of image being uploaded'
+            }
+          ]
+        },
+        {
+          path: '/api/image/chunked-upload',
+          method: 'POST',
+          description: 'Upload a large image in chunks (recommended for images >1MB)',
+          requiresAuth: false,
+          parameters: [
+            {
+              name: 'fileId',
+              type: 'string',
+              required: true,
+              description: 'A unique ID for the file being uploaded (must be consistent across chunks)'
+            },
+            {
+              name: 'chunkIndex',
+              type: 'number',
+              required: true,
+              description: 'The index of the current chunk (starting from 0)'
+            },
+            {
+              name: 'totalChunks',
+              type: 'number',
+              required: true,
+              description: 'The total number of chunks for this file'
+            },
+            {
+              name: 'chunk',
+              type: 'string',
+              format: 'base64',
+              required: true,
+              description: 'Base64-encoded chunk of the image'
+            },
+            {
+              name: 'imageType',
+              type: 'string',
+              enum: ['product', 'profile', 'post'],
+              default: 'product',
+              required: false,
+              description: 'The category/type of image being uploaded'
+            }
+          ]
+        },
+        {
+          path: '/api/image/test',
+          method: 'POST',
+          description: 'Generate a test image for development purposes',
+          requiresAuth: false,
+          parameters: []
+        }
+      ],
+      examples: {
+        singleUpload: {
+          request: {
+            method: 'POST',
+            url: '/api/image/upload',
+            body: {
+              imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH...',
+              imageType: 'product'
+            }
+          },
+          response: {
+            success: true,
+            message: 'Image uploaded successfully',
+            imageUrl: '/uploads/product/product_1734567890_123.png',
+            imageType: 'product',
+            mimeType: 'image/png',
+            timestamp: 1734567890123,
+            filename: 'product_1734567890_123.png'
+          }
+        },
+        chunkedUpload: {
+          note: 'For chunked uploads, send multiple requests with the same fileId but incrementing chunkIndex',
+          firstChunkRequest: {
+            method: 'POST',
+            url: '/api/image/chunked-upload',
+            body: {
+              fileId: 'unique-file-id-123',
+              chunkIndex: 0,
+              totalChunks: 3,
+              chunk: 'base64data...',
+              imageType: 'product'
+            }
+          },
+          firstChunkResponse: {
+            success: true,
+            message: 'Chunk 0 of 3 received',
+            progress: 33.33,
+            remainingChunks: 2
+          },
+          finalChunkResponse: {
+            success: true,
+            message: 'Chunked upload completed successfully',
+            imageUrl: '/uploads/product/product_1734567890_123.png',
+            imageType: 'product',
+            timestamp: 1734567890123,
+            filename: 'product_1734567890_123.png'
+          }
+        }
+      }
+    });
+  });
   
   // Standard image upload endpoint
   app.post('/api/image/upload', handleImageUpload);
@@ -252,47 +431,22 @@ export function registerImageRoutes(app: any) {
   app.post('/api/image/test', (req: Request, res: Response) => {
     console.log('[IMAGE] Test image requested');
     
-    // Ensure upload directories exist
-    ensureUploadDirs();
-    
     try {
-      // Generate a test image (colored square)
-      const size = 100;
-      const r = Math.floor(Math.random() * 255);
-      const g = Math.floor(Math.random() * 255);
-      const b = Math.floor(Math.random() * 255);
+      // Ensure upload directories exist
+      ensureUploadDirs();
       
-      // Generate filename and path
-      const filename = `test_${Date.now()}.png`;
-      const filePath = path.join('./public/uploads/test', filename);
+      // Generate test image
+      const testImage = generateTestImage();
       
-      // Create test directory if it doesn't exist
-      if (!fs.existsSync('./public/uploads/test')) {
-        fs.mkdirSync('./public/uploads/test', { recursive: true });
-      }
-      
-      // Create a buffer for the image data (simple RGB colored square)
-      const imageData = Buffer.alloc(size * size * 3);
-      
-      // Fill the buffer with the random color
-      for (let i = 0; i < size * size; i++) {
-        imageData[i * 3] = r;
-        imageData[i * 3 + 1] = g;
-        imageData[i * 3 + 2] = b;
-      }
-      
-      // Write the file
-      fs.writeFileSync(filePath, imageData);
-      
-      console.log(`[IMAGE] Test image created at ${filePath}`);
+      console.log(`[IMAGE] Test image created at ${testImage.path}`);
       
       // Return success with image path
       return res.status(200).json({
         success: true,
         message: 'Test image created successfully',
-        imageUrl: `/uploads/test/${filename}`,
+        imageUrl: testImage.path,
         imageType: 'test',
-        color: `rgb(${r},${g},${b})`,
+        color: testImage.color,
         timestamp: Date.now()
       });
     } catch (error) {
