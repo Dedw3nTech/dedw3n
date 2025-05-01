@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -225,7 +225,7 @@ export default function ProfilePage() {
           "PATCH",
           "/api/users/profile",
           updatedProfile,
-          false // Using JSON, not FormData
+          { isFormData: false } // Using JSON, not FormData
         );
         
         if (!response.ok) {
@@ -374,8 +374,8 @@ export default function ProfilePage() {
     connectionMutation.mutate(action);
   };
 
-  // Determine connection status
-  const getConnectionStatus = () => {
+  // Define connection status determination as a useMemo hook
+  const connectionStatus = React.useMemo(() => {
     if (!currentUser || !profileData) return "not_connected";
     
     // Can't connect to self
@@ -383,7 +383,7 @@ export default function ProfilePage() {
     
     // Check if connected
     return profileData.isConnected ? "connected" : "not_connected";
-  };
+  }, [currentUser, profileData]);
 
   // Handle post creation success
   const handlePostSuccess = () => {
@@ -467,9 +467,6 @@ export default function ProfilePage() {
       window.dispatchEvent(event);
     }
   }, []);
-  
-  // Now we can safely call the function after all hooks
-  const connectionStatus = getConnectionStatus();
 
   return (
     <div className="bg-background min-h-screen">
