@@ -10,8 +10,10 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts } from "@shared/schema";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
+import { promisify } from "util";
+import { scrypt, randomBytes } from "crypto";
 import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
@@ -572,19 +574,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed the database with initial data
   await seedDatabase();
 
-  // Direct handling of register instead of redirect to prevent Vite middleware issues
-  app.post("/api/register", (req, res, next) => {
-    console.log("[DEBUG] Register request received directly at /api/register");
-    // Forward to auth register handler directly
-    req.url = "/api/auth/register";
-    next();
+  // Import the login and register handlers from auth.ts
+  const importAuth = async () => {
+    try {
+      const { setupAuth } = await import('./auth');
+      return setupAuth;
+    } catch (error) {
+      console.error('[ERROR] Failed to import auth.ts:', error);
+      return null;
+    }
+  };
+  
+  // Get the setupAuth function
+  const setupAuthFn = await importAuth();
+  
+  // Direct handling of auth endpoints without redirects
+  app.post("/api/register", async (req, res, next) => {
+    console.log("[DEBUG] Register request received at /api/register");
+    try {
+      // Define scryptAsync function
+      const scryptAsync = promisify(scrypt);
+      
+      // Check for existing user
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Hash password
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(req.body.password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      // Create user
+      const user = await storage.createUser({
+        ...req.body,
+        password: hashedPassword,
+      });
+      
+      // Login the user
+      req.login(user, (err) => {
+        if (err) {
+          console.error('[ERROR] Login after register failed:', err);
+          return next(err);
+        }
+        console.log('[DEBUG] User registered and logged in successfully:', user.id);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error('[ERROR] Registration failed:', error);
+      res.status(500).json({ message: "Registration failed" });
+    }
   });
-  // Direct handling of login instead of redirect to prevent Vite middleware issues
+  
+  // Direct handling of login to prevent redirect issues
   app.post("/api/login", (req, res, next) => {
-    console.log("[DEBUG] Login request received directly at /api/login");
-    // Forward to auth login handler directly
-    req.url = "/api/auth/login";
-    next();
+    console.log("[DEBUG] Login request received at /api/login");
+    try {
+      const passport = require('passport');
+      passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
+        console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
+        
+        if (err) {
+          console.error(`[ERROR] Login authentication error:`, err);
+          return next(err);
+        }
+        
+        if (!user) {
+          console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+          return res.status(401).json({ message: info?.message || "Authentication failed" });
+        }
+        
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            console.error('[ERROR] Session login error:', loginErr);
+            return next(loginErr);
+          }
+          
+          console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
+          return res.json(user);
+        });
+      })(req, res, next);
+    } catch (error) {
+      console.error('[ERROR] Login processing error:', error);
+      res.status(500).json({ message: "Login failed due to server error" });
+    }
   });
   // Updated logout endpoint that handles both authentication methods
   app.post("/api/logout", async (req, res) => {
