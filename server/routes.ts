@@ -572,9 +572,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed the database with initial data
   await seedDatabase();
 
-  // Backward compatibility for client-side code
-  app.post("/api/register", (req, res) => res.redirect(307, "/api/auth/register"));
-  app.post("/api/login", (req, res) => res.redirect(307, "/api/auth/login"));
+  // Direct handling of register instead of redirect to prevent Vite middleware issues
+  app.post("/api/register", (req, res, next) => {
+    console.log("[DEBUG] Register request received directly at /api/register");
+    // Forward to auth register handler directly
+    req.url = "/api/auth/register";
+    next();
+  });
+  // Direct handling of login instead of redirect to prevent Vite middleware issues
+  app.post("/api/login", (req, res, next) => {
+    console.log("[DEBUG] Login request received directly at /api/login");
+    // Forward to auth login handler directly
+    req.url = "/api/auth/login";
+    next();
+  });
   // Updated logout endpoint that handles both authentication methods
   app.post("/api/logout", async (req, res) => {
     try {
