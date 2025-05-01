@@ -497,9 +497,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
     
-    // Legacy test endpoint kept for backward compatibility
+    // Test endpoint for image uploads
     app.post('/api/upload-test', unifiedIsAuthenticated, (req: Request, res: Response) => {
-      console.log('[DEBUG] Upload test endpoint called with user:', req.user?.id);
+      console.log('[DEBUG] Upload test endpoint called');
+      console.log('[DEBUG] Request user:', req.user ? `ID: ${req.user.id}, Username: ${req.user.username}` : 'No user found');
+      console.log('[DEBUG] Request authentication status:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
+      console.log('[DEBUG] Request body:', JSON.stringify(req.body));
       
       // Set content type to JSON for all responses from this endpoint
       res.setHeader('Content-Type', 'application/json');
@@ -507,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let filename = null;
       
       // Check if there's a base64 image
-      if (req.body.image && req.body.image.startsWith('data:image')) {
+      if (req.body.image && typeof req.body.image === 'string' && req.body.image.startsWith('data:image')) {
         try {
           // Extract the base64 data
           const base64Data = req.body.image.split(',')[1];
@@ -527,16 +530,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`[DEBUG] Test image saved as: /uploads/test/${filename}`);
         } catch (error) {
           console.error('[ERROR] Failed to save test image:', error);
-          return res.status(500).json({ message: 'Failed to save test image' });
+          return res.status(500).json({ message: 'Failed to save test image', error: error.message });
+        }
+      } else {
+        console.log('[DEBUG] No valid image data found in request');
+        console.log('[DEBUG] Body contains image property:', !!req.body.image);
+        if (req.body.image) {
+          console.log('[DEBUG] Image data type:', typeof req.body.image);
+          if (typeof req.body.image === 'string') {
+            console.log('[DEBUG] Image data prefix:', req.body.image.substring(0, 30) + '...');
+          }
         }
       }
       
-      res.json({
+      return res.json({
         message: 'Upload test successful',
-        user: {
-          id: req.user?.id,
-          username: req.user?.username
-        },
+        user: req.user ? {
+          id: req.user.id,
+          username: req.user.username
+        } : 'Not authenticated',
         imageSaved: filename !== null,
         imagePath: filename ? `/uploads/test/${filename}` : null
       });
