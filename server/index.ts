@@ -2,6 +2,15 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Extend Express Request type to include our custom properties
+declare global {
+  namespace Express {
+    interface Request {
+      _handledByApi?: boolean;
+    }
+  }
+}
+
 const app = express();
 // Increase JSON body size limit to 50MB for image uploads
 app.use(express.json({ limit: '50mb' }));
@@ -38,12 +47,31 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Flag all API requests
+  app.use('/api', (req, res, next) => {
+    console.log(`[DEBUG] Flagging API request: ${req.method} ${req.path}`);
+    req._handledByApi = true;
+    next();
+  });
+  
+  // Register all API routes first
   const server = await registerRoutes(app);
-
+  
+  // Handler that terminates API requests already handled by our route handlers
+  app.use('/api', (req, res, next) => {
+    // If this middleware is reached for an API request, it means no route handler matched
+    if (!res.headersSent) {
+      console.log(`[DEBUG] API route not found: ${req.method} ${req.path}`);
+      return res.status(404).json({ message: "API endpoint not found" });
+    }
+    next();
+  });
+  
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
+    
     res.status(status).json({ message });
     throw err;
   });
