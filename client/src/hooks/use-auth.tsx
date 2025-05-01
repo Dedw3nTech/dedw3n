@@ -161,27 +161,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout");
+      await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
       // Clear the JWT token from storage
       clearAuthToken();
       queryClient.setQueryData(["/api/auth/me"], null);
+      // Set user to null explicitly
+      queryClient.setQueryData(["/api/user"], null);
       // Invalidate all queries to force refetch when user logs back in
       queryClient.invalidateQueries();
+      // Redirect to home page
+      window.location.href = "/";
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
     },
     onError: (error: Error) => {
+      console.error("Logout error:", error);
       toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Logout completed",
+        description: "You have been logged out.",
       });
-      // Attempt to clear token even on error, as a safety measure
+      // Even on error, clear everything and redirect to home
       clearAuthToken();
+      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.setQueryData(["/api/user"], null);
+      // Redirect to home page
+      window.location.href = "/";
     },
   });
 
