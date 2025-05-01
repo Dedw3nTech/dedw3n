@@ -32,45 +32,71 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     token = req.cookies.token;
   }
   
-  // Check if we're in a logout state by looking for a special flag in the session
-  if (req.session && req.session.userLoggedOut) {
-    console.log('[AUTH] User has explicitly logged out, not using auto-login');
-    return res.status(401).json({ message: 'Unauthorized - User logged out' });
+  // STEP 1: Check for logout conditions that should prevent auto-login
+
+  // First, check for explicit "X-User-Logged-Out" header that the client sends after logout
+  if (req.headers['x-user-logged-out'] === 'true') {
+    console.log('[AUTH] X-User-Logged-Out header detected, disabling auto-login');
+    return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
   }
   
-  // Check for explicit logout URL path - never auto-login on logout page
-  const isLogoutRelatedPath = req.path.includes('logout') || 
-                              req.originalUrl.includes('logout-success') ||
-                              req.originalUrl.includes('logout_success');
+  // Next, check for the userLoggedOut flag in the session
+  // @ts-ignore: Property may not exist on session type
+  if (req.session && req.session.userLoggedOut === true) {
+    console.log('[AUTH] Session logout flag detected, disabling auto-login');
+    return res.status(401).json({ message: 'Unauthorized - User logged out via session flag' });
+  }
+  
+  // Check for logout-related URL paths
+  const isLogoutRelatedPath = 
+    req.path.includes('logout') || 
+    req.originalUrl.includes('logout') ||
+    req.path.includes('auth') ||
+    req.originalUrl.includes('auth');
                               
   if (isLogoutRelatedPath) {
-    console.log('[AUTH] Logout-related path detected, skipping auto-login');
-    return res.status(401).json({ message: 'Unauthorized - Logout context' });
+    console.log('[AUTH] Authentication or logout-related path detected, skipping auto-login');
+    return res.status(401).json({ message: 'Unauthorized - Auth/logout context' });
   }
   
-  // Only proceed with auto-login if in development mode and not in logout context
+  // STEP 2: Check for special cookie that persists logout state across requests
+  // This addresses issues with session storage being cleared or not persisting
+  const cookies = req.headers.cookie || '';
+  if (cookies.includes('user_logged_out=true')) {
+    console.log('[AUTH] Logout cookie detected, disabling auto-login');
+    return res.status(401).json({ message: 'Unauthorized - User logged out via cookie' });
+  }
+  
+  // STEP 3: Only proceed with auto-login if development mode AND all logout conditions are false
   const isDev = process.env.NODE_ENV === 'development';
-  if (!token && isDev && !req.get('x-prevent-autologin')) {
-    console.log('[DEBUG] Creating temporary user for debugging (development only)');
-    // Fetch a real user from the database for debugging purposes
+  // Disable auto-login feature completely to fix logout issues
+  const autoLoginDisabled = true; // Setting to true to fix logout issues
+  
+  if (!token && isDev && !autoLoginDisabled && !req.get('x-prevent-autologin')) {
+    console.log('[DEBUG] ⚠️ Auto-login disabled to fix logout issues');
+    
+    // Automatic login with test user is disabled to fix logout issues
+    /*
     try {
-      const user = await storage.getUser(4); // Get user with ID 4 from the database
+      const user = await storage.getUser(4);
       if (user) {
         req.user = user;
         console.log(`[DEBUG] Using test user: ${user.username} (ID: ${user.id})`);
         return next();
-      } else {
-        console.log('[AUTH] Authentication failed - test user not found');
-        return res.status(401).json({ message: 'Unauthorized' });
       }
     } catch (error) {
       console.error('[AUTH] Error fetching test user:', error);
-      return res.status(500).json({ message: 'Internal server error during authentication' });
     }
-  } else if (!token) {
-    // No token and we're not doing auto-login
-    console.log('[AUTH] No authentication token provided and auto-login disabled');
-    return res.status(401).json({ message: 'Unauthorized - No auth token' });
+    */
+    
+    // Instead of auto-login, return unauthorized
+    return res.status(401).json({ message: 'Unauthorized - Auto-login disabled' });
+  } 
+  
+  // No token found, return unauthorized
+  if (!token) {
+    console.log('[AUTH] No authentication token provided');
+    return res.status(401).json({ message: 'Unauthorized - No valid authentication token' });
   }
 
   // Verify JWT token

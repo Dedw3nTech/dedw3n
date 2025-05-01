@@ -5,7 +5,16 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient, getStoredAuthToken, setAuthToken, clearAuthToken } from "../lib/queryClient";
+import { 
+  getQueryFn, 
+  apiRequest, 
+  queryClient, 
+  getStoredAuthToken, 
+  setAuthToken, 
+  clearAuthToken,
+  setLoggedOutFlag,
+  isUserLoggedOut 
+} from "../lib/queryClient";
 import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -173,6 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: t('auth.please_wait') || "Please wait...",
       });
       
+      // Set the logged out flag before making the request to prevent auto-login
+      setLoggedOutFlag(true);
+      
       // Add cache-busting parameter to prevent issues with caching
       const timestamp = new Date().getTime();
       const cacheBuster = `?_cb=${timestamp}`;
@@ -184,6 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0',
+          // Add special header to prevent auto-login
+          'X-Prevent-Autologin': 'true'
         }
       });
       
@@ -197,6 +211,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       console.log('Logout mutation successful, cleaning up client state');
+      
+      // Ensure the logged out flag is set
+      setLoggedOutFlag(true);
       
       // Clear the JWT token from storage
       clearAuthToken();
@@ -243,6 +260,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error) => {
       console.error("Logout error:", error);
+      
+      // Even on error, ensure the logged out flag is set
+      setLoggedOutFlag(true);
       
       // Even on error, clear user data for security
       clearAuthToken();

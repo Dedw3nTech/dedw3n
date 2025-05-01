@@ -3,9 +3,37 @@ import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from ".
 
 // Auth token management
 const AUTH_TOKEN_KEY = 'dedwen_auth_token';
+const LOGGED_OUT_FLAG_KEY = 'dedwen_logged_out';
+
+// Check if user is logged out
+export function isUserLoggedOut(): boolean {
+  try {
+    return localStorage.getItem(LOGGED_OUT_FLAG_KEY) === 'true';
+  } catch (e) {
+    console.error('Error accessing localStorage:', e);
+    return false;
+  }
+}
+
+// Set the logged out flag
+export function setLoggedOutFlag(isLoggedOut: boolean): void {
+  try {
+    if (isLoggedOut) {
+      localStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
+    } else {
+      localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
+    }
+  } catch (e) {
+    console.error('Error setting logged out flag:', e);
+  }
+}
 
 export function getStoredAuthToken(): string | null {
   try {
+    // If user explicitly logged out, don't return token
+    if (isUserLoggedOut()) {
+      return null;
+    }
     return localStorage.getItem(AUTH_TOKEN_KEY);
   } catch (e) {
     console.error('Error accessing localStorage:', e);
@@ -15,6 +43,8 @@ export function getStoredAuthToken(): string | null {
 
 export function setAuthToken(token: string): void {
   try {
+    // When setting a token, clear the logged out flag
+    setLoggedOutFlag(false);
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   } catch (e) {
     console.error('Error storing auth token:', e);
@@ -23,6 +53,8 @@ export function setAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   try {
+    // When clearing token, set the logged out flag
+    setLoggedOutFlag(true);
     localStorage.removeItem(AUTH_TOKEN_KEY);
   } catch (e) {
     console.error('Error clearing auth token:', e);
@@ -58,6 +90,17 @@ export async function apiRequest(
     headers: {},
     ...(typeof options === 'object' && options !== null ? options : {})
   };
+
+  // Add headers for logout state
+  if (isUserLoggedOut()) {
+    requestOptions.headers = {
+      ...requestOptions.headers,
+      'X-User-Logged-Out': 'true',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+  }
 
   // Add authorization header if token exists
   const authToken = getStoredAuthToken();
@@ -146,6 +189,17 @@ export const getQueryFn: <T>(options: {
       credentials: "include",
       headers: {}
     };
+
+    // Add headers for logout state
+    if (isUserLoggedOut()) {
+      options.headers = {
+        ...options.headers,
+        'X-User-Logged-Out': 'true',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      };
+    }
 
     // Add authorization header if token exists
     const authToken = getStoredAuthToken();
