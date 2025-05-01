@@ -32,9 +32,26 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     token = req.cookies.token;
   }
   
-  // If no JWT token found in any source, use a test user for debugging
-  if (!token) {
-    console.log('[DEBUG] Creating temporary user for debugging');
+  // Check if we're in a logout state by looking for a special flag in the session
+  if (req.session && req.session.userLoggedOut) {
+    console.log('[AUTH] User has explicitly logged out, not using auto-login');
+    return res.status(401).json({ message: 'Unauthorized - User logged out' });
+  }
+  
+  // Check for explicit logout URL path - never auto-login on logout page
+  const isLogoutRelatedPath = req.path.includes('logout') || 
+                              req.originalUrl.includes('logout-success') ||
+                              req.originalUrl.includes('logout_success');
+                              
+  if (isLogoutRelatedPath) {
+    console.log('[AUTH] Logout-related path detected, skipping auto-login');
+    return res.status(401).json({ message: 'Unauthorized - Logout context' });
+  }
+  
+  // Only proceed with auto-login if in development mode and not in logout context
+  const isDev = process.env.NODE_ENV === 'development';
+  if (!token && isDev && !req.get('x-prevent-autologin')) {
+    console.log('[DEBUG] Creating temporary user for debugging (development only)');
     // Fetch a real user from the database for debugging purposes
     try {
       const user = await storage.getUser(4); // Get user with ID 4 from the database
@@ -50,6 +67,10 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       console.error('[AUTH] Error fetching test user:', error);
       return res.status(500).json({ message: 'Internal server error during authentication' });
     }
+  } else if (!token) {
+    // No token and we're not doing auto-login
+    console.log('[AUTH] No authentication token provided and auto-login disabled');
+    return res.status(401).json({ message: 'Unauthorized - No auth token' });
   }
 
   // Verify JWT token

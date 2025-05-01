@@ -676,18 +676,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Force session regeneration for extra security
       if (req.session) {
         try {
+          // Set a flag in the session indicating explicit logout
+          // This will be checked in unified-auth.ts to prevent auto-login
+          req.session.userLoggedOut = true;
+          req.session.save(() => {
+            console.log('[DEBUG] Set userLoggedOut flag in session');
+          });
+          
           // @ts-ignore - Some types may be missing
           req.session.regenerate((err: Error) => {
             if (err) {
               console.error('[ERROR] Session regeneration failed:', err);
             } else {
               console.log('[DEBUG] Session regenerated successfully');
+              
+              // Set the flag again after regeneration for certainty
+              if (req.session) {
+                req.session.userLoggedOut = true;
+                req.session.save();
+              }
             }
           });
         } catch (regError) {
           console.error('[ERROR] Error during session regeneration:', regError);
         }
       }
+      
+      // Set header to signal client to prevent auto-login
+      res.setHeader('X-Auth-Logged-Out', 'true');
       
       // Clear req.user - sometimes Passport.js can leave this
       req.user = undefined;
