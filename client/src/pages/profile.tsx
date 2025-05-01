@@ -456,8 +456,6 @@ export default function ProfilePage() {
     );
   }
 
-  const connectionStatus = getConnectionStatus();
-
   // This useEffect will update Header's location state for proper tab highlighting
   useEffect(() => {
     // This will be read by the Header component to determine which tab to highlight
@@ -469,6 +467,9 @@ export default function ProfilePage() {
       window.dispatchEvent(event);
     }
   }, []);
+  
+  // Now we can safely call the function after all hooks
+  const connectionStatus = getConnectionStatus();
 
   return (
     <div className="bg-background min-h-screen">
