@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Call the real API endpoint for logout
-      await apiRequest("POST", "/api/logout");
+      return await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
       // Clear the JWT token from storage
