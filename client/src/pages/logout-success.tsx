@@ -12,7 +12,7 @@ export default function LogoutSuccess() {
   
   useEffect(() => {
     // Set page title
-    document.title = t('auth.logout_success') || 'Logout Successful';
+    document.title = t('auth.logout_success') || 'Log out success';
   }, [t]);
 
   return (
@@ -52,11 +52,11 @@ export default function LogoutSuccess() {
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            {t('auth.logout_success') || 'You have been logged out successfully'}
+            {t('auth.logout_success') || 'Log out success'}
           </h1>
           
           <p className="text-gray-600">
-            {t('auth.logout_message') || 'Thank you for using Dedwen. We hope to see you again soon!'}
+            {t('auth.logout_message') || 'Together for a prosperious and green planet'}
           </p>
           
           <div className="pt-4">
@@ -65,7 +65,7 @@ export default function LogoutSuccess() {
               className="w-full bg-primary hover:bg-primary/90 text-white"
             >
               <Link href="/auth">
-                {t('auth.sign_in_again') || 'Sign In Again'}
+                {t('auth.sign_in_again') || 'Sign in again'}
               </Link>
             </Button>
           </div>
@@ -77,7 +77,7 @@ export default function LogoutSuccess() {
               className="w-full"
             >
               <Link href="/">
-                {t('misc.back_to_home') || 'Back to Home'}
+                {t('misc.back_to_home') || 'Back to home'}
               </Link>
             </Button>
           </div>
@@ -87,8 +87,8 @@ export default function LogoutSuccess() {
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>
           {t('misc.questions') || 'Questions or concerns?'}{' '}
-          <Link href="/contact" className="text-primary hover:underline">
-            {t('misc.contact_us') || 'Contact Us'}
+          <Link href="/contact" className="text-blue-500 hover:underline">
+            {t('misc.contact_us') || 'contact us'}
           </Link>
         </p>
       </div>
