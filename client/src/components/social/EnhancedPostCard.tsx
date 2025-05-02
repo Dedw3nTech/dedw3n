@@ -683,7 +683,7 @@ export default function EnhancedPostCard({
                 className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
               >
                 <ShoppingCart className="w-5 h-5 mr-1" />
-                <span>Buy Now</span>
+                <span>Purchase</span>
               </button>
             </Link>
           ) : (
@@ -692,7 +692,7 @@ export default function EnhancedPostCard({
                 className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
               >
                 <ShoppingCart className="w-5 h-5 mr-1" />
-                <span>Buy Now</span>
+                <span>Purchase</span>
               </button>
             </Link>
           )}
