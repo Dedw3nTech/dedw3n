@@ -67,7 +67,85 @@ app.use((req, res, next) => {
     return res.json({ success: true, message: "API connection test successful", contentType: "json" });
   });
   
-  // Direct implementation of the image upload endpoint
+  // Direct implementation of the test image upload endpoint - no auth required for testing
+  app.post('/api/image/upload-test', (req, res) => {
+    console.log('[IMAGE] Test image upload API called');
+    req._handledByApi = true;
+    
+    // Set content type to JSON for all responses from this endpoint
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      // Check if there's image data
+      if (!req.body.imageData) {
+        return res.status(400).json({ 
+          success: false,
+          message: "No image data provided"
+        });
+      }
+      
+      // Process the image data
+      const imageData = req.body.imageData;
+      
+      // Validate that it's an image
+      if (!imageData.startsWith('data:image/')) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid image format"
+        });
+      }
+      
+      // Extract the base64 data and file type
+      const base64Data = imageData.split(',')[1];
+      const mimeType = imageData.split(';')[0].split(':')[1];
+      let fileExtension = 'png'; // Default
+      
+      // Try to get file extension from mime type
+      if (mimeType) {
+        const parts = mimeType.split('/');
+        if (parts.length > 1) {
+          fileExtension = parts[1] === 'jpeg' ? 'jpg' : parts[1];
+        }
+      }
+      
+      const filename = `test_${Date.now()}.${fileExtension}`;
+      
+      // Import fs module
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Create uploads directory if it doesn't exist
+      if (!fs.existsSync('./public/uploads')) {
+        fs.mkdirSync('./public/uploads', { recursive: true });
+      }
+      if (!fs.existsSync('./public/uploads/test')) {
+        fs.mkdirSync('./public/uploads/test', { recursive: true });
+      }
+      
+      // Save the file
+      fs.writeFileSync(`./public/uploads/test/${filename}`, base64Data, 'base64');
+      const imageUrl = `/uploads/test/${filename}`;
+      
+      console.log(`[IMAGE] Test image successfully uploaded: ${imageUrl}`);
+      
+      // Return simple success response with image URL
+      return res.status(200).json({
+        success: true,
+        message: 'Image uploaded successfully',
+        imageUrl: imageUrl,
+        filename: filename
+      });
+      
+    } catch (error) {
+      console.error('[ERROR] Failed to save test image:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to save image' 
+      });
+    }
+  });
+  
+  // Direct implementation of the social image upload endpoint
   app.post('/api/social/upload-image', (req, res) => {
     console.log('[DEBUG] Direct image upload endpoint called');
     req._handledByApi = true;
