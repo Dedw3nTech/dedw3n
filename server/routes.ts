@@ -384,36 +384,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
     
-    // Blob-integrated image upload API for social feed - temporarily not requiring auth for testing
-    app.post('/api/social/upload-image', async (req: Request, res: Response) => {
+    // Simple image upload API - no auth required for testing
+    app.post('/api/image/upload-test', async (req: Request, res: Response) => {
       try {
         // Set content type to JSON for all responses from this endpoint
         res.setHeader('Content-Type', 'application/json');
         
-        // Use a default test user ID if not authenticated (for testing only)
-        const userId = req.user?.id || 1; // Use ID 1 as a fallback for testing
+        console.log('[IMAGE] Test image upload API called');
         
-        // Check if there's a blob image data
-        if (!req.body.blob) {
-          return res.status(400).json({ message: "No image data provided" });
+        // Check if there's image data
+        if (!req.body.imageData) {
+          return res.status(400).json({ 
+            success: false,
+            message: "No image data provided"
+          });
         }
         
-        let imageUrl = '';
-        const description = req.body.description || '';
-        const tags = req.body.tags || [];
-        
         try {
-          // Process the blob data
-          const blobData = req.body.blob;
+          // Process the image data
+          const imageData = req.body.imageData;
           
-          // Validate that it's an image blob
-          if (!blobData.startsWith('data:image/')) {
-            return res.status(400).json({ message: "Invalid image format" });
+          // Validate that it's an image
+          if (!imageData.startsWith('data:image/')) {
+            return res.status(400).json({
+              success: false,
+              message: "Invalid image format"
+            });
           }
           
           // Extract the base64 data and file type
-          const base64Data = blobData.split(',')[1];
-          const mimeType = blobData.split(';')[0].split(':')[1];
+          const base64Data = imageData.split(',')[1];
+          const mimeType = imageData.split(';')[0].split(':')[1];
           let fileExtension = 'png'; // Default
           
           // Try to get file extension from mime type
@@ -424,54 +425,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          const filename = `image_${Date.now()}.${fileExtension}`;
+          const filename = `test_${Date.now()}.${fileExtension}`;
           
           // Create uploads directory if it doesn't exist
           if (!fs.existsSync('./public/uploads')) {
             fs.mkdirSync('./public/uploads', { recursive: true });
           }
-          if (!fs.existsSync('./public/uploads/images')) {
-            fs.mkdirSync('./public/uploads/images', { recursive: true });
+          if (!fs.existsSync('./public/uploads/test')) {
+            fs.mkdirSync('./public/uploads/test', { recursive: true });
           }
           
           // Save the file
-          fs.writeFileSync(`./public/uploads/images/${filename}`, base64Data, 'base64');
-          imageUrl = `/uploads/images/${filename}`;
+          fs.writeFileSync(`./public/uploads/test/${filename}`, base64Data, 'base64');
+          const imageUrl = `/uploads/test/${filename}`;
           
-          console.log(`[DEBUG] Image successfully uploaded: ${imageUrl}`);
+          console.log(`[IMAGE] Test image successfully uploaded: ${imageUrl}`);
           
-          // Create post with the uploaded image
-          const postData = {
-            userId,
-            content: description,
-            contentType: 'image' as const,
-            imageUrl,
-            isPublished: true,
-            isPromoted: false,
-          };
-          
-          // Add tags if provided
-          if (tags && Array.isArray(tags) && tags.length > 0) {
-            postData.tags = tags;
-          }
-          
-          // Create the post in the database
-          const newPost = await storage.createPost(postData);
-          
-          // Return the newly created post
-          return res.status(201).json({
+          // Return simple success response with image URL
+          return res.status(200).json({
             success: true,
-            imageUrl,
-            post: newPost
+            message: 'Image uploaded successfully',
+            imageUrl: imageUrl,
+            filename: filename
           });
           
         } catch (error) {
-          console.error('[ERROR] Failed to save image or create post:', error);
-          return res.status(500).json({ message: 'Failed to save image' });
+          console.error('[ERROR] Failed to save test image:', error);
+          return res.status(500).json({ 
+            success: false,
+            message: 'Failed to save image' 
+          });
         }
       } catch (error) {
-        console.error('[ERROR] Image upload failed:', error);
-        res.status(500).json({ message: 'Image upload failed' });
+        console.error('[ERROR] Test image upload failed:', error);
+        res.status(500).json({ 
+          success: false,
+          message: 'Test image upload failed' 
+        });
       }
     });
     
