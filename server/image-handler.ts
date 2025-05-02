@@ -235,43 +235,7 @@ export const handleChunkedUpload = (req: Request, res: Response) => {
   }
 };
 
-/**
- * Generate a test image (for internal use in the API)
- */
-export const generateTestImage = (): { path: string, color: string } => {
-  // Generate a test image (colored square)
-  const size = 100;
-  const r = Math.floor(Math.random() * 255);
-  const g = Math.floor(Math.random() * 255);
-  const b = Math.floor(Math.random() * 255);
-  
-  // Generate filename and path
-  const filename = `test_${Date.now()}.png`;
-  const filePath = path.join('./public/uploads/test', filename);
-  
-  // Create test directory if it doesn't exist
-  if (!fs.existsSync('./public/uploads/test')) {
-    fs.mkdirSync('./public/uploads/test', { recursive: true });
-  }
-  
-  // Create a buffer for the image data (simple RGB colored square)
-  const imageData = Buffer.alloc(size * size * 3);
-  
-  // Fill the buffer with the random color
-  for (let i = 0; i < size * size; i++) {
-    imageData[i * 3] = r;
-    imageData[i * 3 + 1] = g;
-    imageData[i * 3 + 2] = b;
-  }
-  
-  // Write the file
-  fs.writeFileSync(filePath, imageData);
-  
-  return {
-    path: `/uploads/test/${filename}`,
-    color: `rgb(${r},${g},${b})`
-  };
-};
+// No test image generator in production
 
 // Register the image upload routes
 export function registerImageRoutes(app: any) {
