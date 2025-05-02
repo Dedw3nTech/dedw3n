@@ -385,6 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     // Blob-integrated image upload API for social feed
+    // NOTE: This endpoint requires authentication
     app.post('/api/social/upload-image', unifiedIsAuthenticated, async (req: Request, res: Response) => {
       try {
         // Set content type to JSON for all responses from this endpoint
