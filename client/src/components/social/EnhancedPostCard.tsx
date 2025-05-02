@@ -34,6 +34,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface EnhancedPostCardProps {
   post: Post;
+  showActions?: boolean;
+  showBookmarkButton?: boolean;
 }
 
 // Function to validate image URLs
@@ -59,7 +61,11 @@ const isValidImageUrl = (url?: string): boolean => {
          url.startsWith('/uploads/');
 };
 
-export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
+export default function EnhancedPostCard({ 
+  post, 
+  showActions = true, 
+  showBookmarkButton = true 
+}: EnhancedPostCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -668,64 +674,68 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       </div>
       
       {/* Post Actions */}
-      <div className="flex justify-between pt-2">
-        {/* Buy Now Button - Positioned BEFORE Like button */}
-        {post.productId ? (
-          <Link href={`/checkout?product=${post.productId}`} className="inline-block mr-2">
+      {showActions && (
+        <div className="flex justify-between pt-2">
+          {/* Buy Now Button - Positioned BEFORE Like button */}
+          {post.productId ? (
+            <Link href={`/checkout?product=${post.productId}`} className="inline-block mr-2">
+              <button
+                className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              >
+                <ShoppingCart className="w-5 h-5 mr-1" />
+                <span>Buy Now</span>
+              </button>
+            </Link>
+          ) : (
+            <Link href="/checkout" className="inline-block mr-2">
+              <button
+                className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              >
+                <ShoppingCart className="w-5 h-5 mr-1" />
+                <span>Buy Now</span>
+              </button>
+            </Link>
+          )}
+          
+          <button
+            onClick={handleLike}
+            className={`flex items-center py-1 px-2 rounded-md ${
+              isLiked ? "text-blue-500" : "text-gray-500 hover:bg-gray-100"
+            }`}
+          >
+            <Heart className={`w-5 h-5 mr-1 ${isLiked ? "fill-current" : ""}`} />
+            <span>{t("social.like")}</span>
+          </button>
+          
+          <button
+            onClick={handleComment}
+            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+          >
+            <MessageSquare className="w-5 h-5 mr-1" />
+            <span>{t("social.comment")}</span>
+          </button>
+          
+          <button
+            onClick={handleShare}
+            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+          >
+            <Share2 className="w-5 h-5 mr-1" />
+            <span>{t("social.share")}</span>
+          </button>
+          
+          {showBookmarkButton && (
             <button
-              className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              onClick={handleSave}
+              className={`flex items-center py-1 px-2 rounded-md ${
+                isSaved ? "text-yellow-500" : "text-gray-500 hover:bg-gray-100"
+              }`}
             >
-              <ShoppingCart className="w-5 h-5 mr-1" />
-              <span>Buy Now</span>
+              <Bookmark className={`w-5 h-5 mr-1 ${isSaved ? "fill-current" : ""}`} />
+              <span>{isSaved ? "Saved" : "Save"}</span>
             </button>
-          </Link>
-        ) : (
-          <Link href="/checkout" className="inline-block mr-2">
-            <button
-              className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
-            >
-              <ShoppingCart className="w-5 h-5 mr-1" />
-              <span>Buy Now</span>
-            </button>
-          </Link>
-        )}
-        
-        <button
-          onClick={handleLike}
-          className={`flex items-center py-1 px-2 rounded-md ${
-            isLiked ? "text-blue-500" : "text-gray-500 hover:bg-gray-100"
-          }`}
-        >
-          <Heart className={`w-5 h-5 mr-1 ${isLiked ? "fill-current" : ""}`} />
-          <span>{t("social.like")}</span>
-        </button>
-        
-        <button
-          onClick={handleComment}
-          className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
-        >
-          <MessageSquare className="w-5 h-5 mr-1" />
-          <span>{t("social.comment")}</span>
-        </button>
-        
-        <button
-          onClick={handleShare}
-          className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
-        >
-          <Share2 className="w-5 h-5 mr-1" />
-          <span>{t("social.share")}</span>
-        </button>
-        
-        <button
-          onClick={handleSave}
-          className={`flex items-center py-1 px-2 rounded-md ${
-            isSaved ? "text-yellow-500" : "text-gray-500 hover:bg-gray-100"
-          }`}
-        >
-          <Bookmark className={`w-5 h-5 mr-1 ${isSaved ? "fill-current" : ""}`} />
-          <span>{isSaved ? "Saved" : "Save"}</span>
-        </button>
-      </div>
+          )}
+        </div>
+      )}
       
       {/* Comments Section */}
       {showComments && (

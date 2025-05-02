@@ -38,8 +38,12 @@ export default function SavedPosts() {
     );
   }
 
+  const [, setLocation] = useLocation();
+  
   if (!user) {
-    return <Navigate to="/auth" />;
+    // Redirect to auth page if not logged in
+    setLocation("/auth");
+    return null;
   }
 
   if (isError) {
