@@ -121,6 +121,12 @@ export interface IStorage {
   getPostLikes(postId: number): Promise<any[]>;
   getPostLike(postId: number, userId: number): Promise<any | undefined>;
   
+  // Saved posts operations
+  savePost(postId: number, userId: number): Promise<void>;
+  unsavePost(postId: number, userId: number): Promise<boolean>;
+  checkSavedPost(postId: number, userId: number): Promise<boolean>;
+  getSavedPosts(userId: number, options: { limit: number, offset: number }): Promise<Post[]>;
+  
   // Comment operations
   createComment(comment: InsertComment): Promise<Comment>;
   getPostComments(postId: number, limit?: number, offset?: number): Promise<Comment[]>;
