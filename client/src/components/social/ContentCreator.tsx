@@ -410,14 +410,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">{t("text")}</span>
             </TabsTrigger>
-            <TabsTrigger value="image" className="flex items-center gap-1">
-              <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("image")}</span>
-            </TabsTrigger>
-            <TabsTrigger value="video" className="flex items-center gap-1">
-              <Video className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("video")}</span>
-            </TabsTrigger>
+
           </TabsList>
           
           {/* Text Content Tab */}
@@ -430,98 +423,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             />
           </TabsContent>
           
-          {/* Image Content Tab */}
-          <TabsContent value="image">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <Input
-                  placeholder="Enter image URL or use upload button below"
-                  className="mb-2"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-                <div className="flex gap-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    id="image-upload"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // Convert file to base64
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          const base64String = reader.result as string;
-                          setImageUrl(base64String);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                  />
-                  <Button 
-                    variant="outline" 
-                    type="button"
-                    className="w-full flex items-center gap-2"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Upload Image</span>
-                  </Button>
-                  {imageUrl && (
-                    <Button 
-                      variant="destructive" 
-                      type="button"
-                      onClick={() => setImageUrl("")}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Textarea
-                  placeholder="Add a description for your image"
-                  className="h-full"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                />
-              </div>
-            </div>
-            {imageUrl && (
-              <div className="mb-4 relative">
-                <img 
-                  src={imageUrl} 
-                  alt="Post preview" 
-                  className="w-full h-48 object-cover rounded-md"
-                  onError={() => {
-                    toast({
-                      title: t("errors.error") || "Error",
-                      description: t("invalid_image_url") || "Invalid image URL",
-                      variant: "destructive",
-                    });
-                    setImageUrl("");
-                  }}
-                />
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Video Content Tab */}
-          <TabsContent value="video">
-            <Input
-              placeholder="Enter video URL (YouTube, Vimeo, etc.)"
-              className="mb-4"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-            />
-            <Textarea
-              placeholder="Tell us about this video"
-              className="mb-4"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-          </TabsContent>
+
           
           {/* No more article or advertisement tabs */}
           
@@ -553,92 +455,7 @@ export default function ContentCreator({ onSuccess, defaultContentType = "text" 
             {/* Promotion checkbox moved to button next to Submit */}
           </div>
           
-          <div className="flex justify-between items-center mt-4">
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                className="flex items-center gap-1 px-3 bg-primary hover:bg-primary/90"
-                title="Upload image"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Image className="h-5 w-5 text-white" />
-                <span className="text-sm text-white font-medium">Upload</span>
-              </Button>
-              <input 
-                type="file"
-                ref={fileInputRef}
-                accept="image/*,.txt,.md,.doc,.docx"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  
-                  // Check if file is an image
-                  if (file.type.startsWith('image/')) {
-                    // Convert file to Base64 instead of using blob URL
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      if (event.target?.result) {
-                        // Set the Base64 data URL 
-                        setImageUrl(event.target.result as string);
-                        
-                        // Switch to image tab if not already there
-                        if (contentType !== "image") {
-                          setContentType("image");
-                        }
-                        
-                        toast({
-                          title: t("image_loaded") || "Image loaded",
-                          description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
-                        });
-                      }
-                    };
-                    
-                    reader.onerror = () => {
-                      toast({
-                        title: t("errors.error") || "Error",
-                        description: t("image_load_error") || "Failed to load image",
-                        variant: "destructive",
-                      });
-                    };
-                    
-                    reader.readAsDataURL(file);
-                  } else {
-                    // Handle text file
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const textContent = event.target?.result as string;
-                      if (textContent) {
-                        setContent(textContent);
-                        
-                        // Switch to text tab if not already there
-                        if (contentType !== "text") {
-                          setContentType("text");
-                        }
-                        
-                        toast({
-                          title: t("file_loaded") || "File loaded",
-                          description: `${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
-                        });
-                      }
-                    };
-                    
-                    reader.onerror = () => {
-                      toast({
-                        title: t("errors.error") || "Error",
-                        description: t("file_read_error") || "Failed to read file",
-                        variant: "destructive",
-                      });
-                    };
-                    
-                    reader.readAsText(file);
-                  }
-                  
-                  // Reset file input
-                  e.target.value = "";
-                }}
-              />
-            </div>
+          <div className="flex justify-end items-center mt-4">
             <div className="flex items-center gap-2">
               <Button
                 type="button"
