@@ -587,6 +587,27 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       
       {/* Post Actions */}
       <div className="flex justify-between pt-2">
+        {/* Buy Now Button - Positioned BEFORE Like button */}
+        {post.productId ? (
+          <Link href={`/checkout?product=${post.productId}`} className="inline-block mr-2">
+            <button
+              className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+            >
+              <ShoppingCart className="w-5 h-5 mr-1" />
+              <span>Buy Now</span>
+            </button>
+          </Link>
+        ) : (
+          <Link href="/checkout" className="inline-block mr-2">
+            <button
+              className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+            >
+              <ShoppingCart className="w-5 h-5 mr-1" />
+              <span>Buy Now</span>
+            </button>
+          </Link>
+        )}
+        
         <button
           onClick={handleLike}
           className={`flex items-center py-1 px-2 rounded-md ${
@@ -612,26 +633,6 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
           <Share2 className="w-5 h-5 mr-1" />
           <span>{t("social.share")}</span>
         </button>
-        
-        <Link href="/checkout" className="inline-block">
-          <button
-            className="flex items-center py-1 px-2 text-green-600 hover:bg-green-50 rounded-md"
-          >
-            <ShoppingCart className="w-5 h-5 mr-1" />
-            <span>{t("social.buy_now") || "Buy Now"}</span>
-          </button>
-        </Link>
-        
-        {post.productId && (
-          <Link href={`/checkout?product=${post.productId}`} className="inline-block">
-            <button
-              className="flex items-center py-1 px-2 text-green-600 hover:bg-green-50 rounded-md"
-            >
-              <ShoppingCart className="w-5 h-5 mr-1" />
-              <span>{t("social.buy_now") || "Buy Now"}</span>
-            </button>
-          </Link>
-        )}
       </div>
       
       {/* Comments Section */}
