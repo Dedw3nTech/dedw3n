@@ -4,7 +4,7 @@ import { Loader2, BookmarkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedPostCard from "@/components/social/EnhancedPostCard";
 import { useAuth } from "@/hooks/use-auth";
-import { Navigate } from "wouter";
+import { useLocation } from "wouter";
 
 export default function SavedPosts() {
   const { user, isLoading: isAuthLoading } = useAuth();

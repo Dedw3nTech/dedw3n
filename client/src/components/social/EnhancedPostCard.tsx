@@ -78,8 +78,8 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   useEffect(() => {
     setImageError(false);
     
-    // Check if the post is already liked by the current user
     if (user) {
+      // Check if the post is already liked by the current user
       fetch(`/api/posts/${post.id}/like/check`)
         .then(res => res.json())
         .then(data => {
@@ -87,6 +87,16 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         })
         .catch(err => {
           console.error("Error checking like status:", err);
+        });
+      
+      // Check if the post is already saved by the current user
+      fetch(`/api/posts/${post.id}/save/check`)
+        .then(res => res.json())
+        .then(data => {
+          setIsSaved(data.isSaved);
+        })
+        .catch(err => {
+          console.error("Error checking save status:", err);
         });
     }
   }, [post.id, user]);
@@ -271,6 +281,58 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       });
   };
   
+  // Save post mutation
+  const savePostMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/posts/${post.id}/save`, {});
+      return { success: true };
+    },
+    onMutate: () => {
+      setIsSaved(true);
+    },
+    onError: () => {
+      setIsSaved(false);
+      toast({
+        title: t("errors.error"),
+        description: t("social.save_error") || "Failed to save post",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] });
+      toast({
+        title: t("social.post_saved") || "Post Saved",
+        description: t("social.save_success") || "Post saved to your collection",
+      });
+    },
+  });
+  
+  // Unsave post mutation
+  const unsavePostMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/posts/${post.id}/save`, {});
+      return { success: true };
+    },
+    onMutate: () => {
+      setIsSaved(false);
+    },
+    onError: () => {
+      setIsSaved(true);
+      toast({
+        title: t("errors.error"),
+        description: t("social.unsave_error") || "Failed to remove saved post",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] });
+      toast({
+        title: t("social.post_removed") || "Post Removed",
+        description: t("social.unsave_success") || "Post removed from your saved items",
+      });
+    },
+  });
+  
   // Handle save/bookmark post
   const handleSave = () => {
     if (!user) {
@@ -282,23 +344,11 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
       return;
     }
     
-    // Toggle saved state
-    setIsSaved(!isSaved);
-    
-    toast({
-      title: isSaved ? "Post Removed" : "Post Saved",
-      description: isSaved ? "Post removed from your saved items" : "Post saved to your collection",
-    });
-    
-    // In a real implementation, you would call an API endpoint to save/unsave the post
-    // For example:
-    // if (!isSaved) {
-    //   apiRequest("POST", `/api/posts/${post.id}/save`, {})
-    //     .then(() => queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] }));
-    // } else {
-    //   apiRequest("DELETE", `/api/posts/${post.id}/save`, {})
-    //     .then(() => queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] }));
-    // }
+    if (isSaved) {
+      unsavePostMutation.mutate();
+    } else {
+      savePostMutation.mutate();
+    }
   };
   
   const handleDelete = () => {
