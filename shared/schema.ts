@@ -244,6 +244,18 @@ export const follows = pgTable("follows", {
   };
 });
 
+// Saved posts (bookmarks)
+export const savedPosts = pgTable("saved_posts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  postId: integer("post_id").notNull().references(() => posts.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueSavedPost: unique().on(table.userId, table.postId),
+  };
+});
+
 // Cart model
 export const carts = pgTable("carts", {
   id: serial("id").primaryKey(),
@@ -965,3 +977,8 @@ export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 
 export type TrafficAnalytic = typeof trafficAnalytics.$inferSelect;
 export type InsertTrafficAnalytic = z.infer<typeof insertTrafficAnalyticsSchema>;
+
+// Saved posts schema and types
+export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({ id: true, createdAt: true });
+export type SavedPost = typeof savedPosts.$inferSelect;
+export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;

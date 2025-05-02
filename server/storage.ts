@@ -1512,6 +1512,127 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // Saved posts operations
+  async savePost(postId: number, userId: number): Promise<void> {
+    try {
+      // Check if already saved
+      const alreadySaved = await this.checkSavedPost(postId, userId);
+      
+      if (alreadySaved) {
+        return; // Already saved
+      }
+      
+      // Save the post
+      await db.insert(savedPosts).values({
+        postId,
+        userId
+      });
+    } catch (error) {
+      console.error('Error saving post:', error);
+      throw new Error('Failed to save post');
+    }
+  }
+  
+  async unsavePost(postId: number, userId: number): Promise<boolean> {
+    try {
+      // Delete the saved post record
+      const result = await db
+        .delete(savedPosts)
+        .where(
+          and(
+            eq(savedPosts.postId, postId),
+            eq(savedPosts.userId, userId)
+          )
+        );
+      
+      // Return true if at least one record was deleted
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error unsaving post:', error);
+      return false;
+    }
+  }
+  
+  async checkSavedPost(postId: number, userId: number): Promise<boolean> {
+    try {
+      const [savedPost] = await db
+        .select()
+        .from(savedPosts)
+        .where(
+          and(
+            eq(savedPosts.postId, postId),
+            eq(savedPosts.userId, userId)
+          )
+        );
+      
+      return !!savedPost; // Return true if savedPost exists, false otherwise
+    } catch (error) {
+      console.error('Error checking saved post:', error);
+      return false;
+    }
+  }
+  
+  async getSavedPosts(userId: number, options: { limit: number, offset: number }): Promise<Post[]> {
+    try {
+      // First, get the saved post IDs for this user
+      const savedPostItems = await db
+        .select()
+        .from(savedPosts)
+        .where(eq(savedPosts.userId, userId))
+        .orderBy(desc(savedPosts.createdAt))
+        .limit(options.limit)
+        .offset(options.offset);
+      
+      if (savedPostItems.length === 0) {
+        return [];
+      }
+      
+      // Get the post IDs
+      const postIds = savedPostItems.map(item => item.postId);
+      
+      // Fetch the actual posts with these IDs
+      const postsData = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          },
+          savedAt: savedPosts.createdAt
+        })
+        .from(posts)
+        .innerJoin(savedPosts, eq(posts.id, savedPosts.postId))
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(
+          and(
+            inArray(posts.id, postIds),
+            eq(savedPosts.userId, userId)
+          )
+        )
+        .orderBy(desc(savedPosts.createdAt));
+      
+      // Format the posts for the response
+      return postsData.map(data => {
+        const { post, user, savedAt } = data;
+        return {
+          ...post,
+          user: {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            avatar: user.avatar
+          },
+          savedAt
+        } as Post;
+      });
+    } catch (error) {
+      console.error('Error getting saved posts:', error);
+      return [];
+    }
+  }
+  
   async promotePost(postId: number, endDate: Date): Promise<Post | undefined> {
     try {
       const [promotedPost] = await db
