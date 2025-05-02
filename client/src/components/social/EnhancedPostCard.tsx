@@ -17,7 +17,8 @@ import {
   BadgeCheck,
   ImageOff,
   Send,
-  ShoppingCart
+  ShoppingCart,
+  Bookmark
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +66,7 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
   const queryClient = useQueryClient();
   
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -267,6 +269,36 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
           variant: "destructive",
         });
       });
+  };
+  
+  // Handle save/bookmark post
+  const handleSave = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Toggle saved state
+    setIsSaved(!isSaved);
+    
+    toast({
+      title: isSaved ? "Post Removed" : "Post Saved",
+      description: isSaved ? "Post removed from your saved items" : "Post saved to your collection",
+    });
+    
+    // In a real implementation, you would call an API endpoint to save/unsave the post
+    // For example:
+    // if (!isSaved) {
+    //   apiRequest("POST", `/api/posts/${post.id}/save`, {})
+    //     .then(() => queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] }));
+    // } else {
+    //   apiRequest("DELETE", `/api/posts/${post.id}/save`, {})
+    //     .then(() => queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] }));
+    // }
   };
   
   const handleDelete = () => {
@@ -632,6 +664,16 @@ export default function EnhancedPostCard({ post }: EnhancedPostCardProps) {
         >
           <Share2 className="w-5 h-5 mr-1" />
           <span>{t("social.share")}</span>
+        </button>
+        
+        <button
+          onClick={handleSave}
+          className={`flex items-center py-1 px-2 rounded-md ${
+            isSaved ? "text-yellow-500" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          <Bookmark className={`w-5 h-5 mr-1 ${isSaved ? "fill-current" : ""}`} />
+          <span>{isSaved ? "Saved" : "Save"}</span>
         </button>
       </div>
       
