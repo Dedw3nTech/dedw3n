@@ -14,7 +14,7 @@ import {
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
-  callSessions, callMetadata, connections, userSessions, trafficAnalytics,
+  callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
