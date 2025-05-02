@@ -25,7 +25,8 @@ import {
   Film,
   Clock,
   Radio,
-  Upload
+  Upload,
+  Bookmark
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -181,6 +182,14 @@ export default function WallPage() {
                 >
                   <i className="ri-message-3-line mr-2"></i>
                   Messages
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation("/saved-posts")}
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Saved Posts
                 </Button>
                 <Button 
                   variant="ghost" 
