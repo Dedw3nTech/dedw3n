@@ -112,6 +112,7 @@
   "account": {
     "my_account": "My Account",
     "profile": "Profile",
+    "profile_settings": "Profile Settings",
     "orders": "Orders",
     "addresses": "Addresses",
     "payment_methods": "Payment Methods",
@@ -190,7 +191,10 @@
     "delete": "Delete",
     "image_unavailable": "Image Unavailable",
     "like": "Like",
-    "comment": "Comment"
+    "comment": "Comment",
+    "hide": "Hide",
+    "post_image": "Post Image",
+    "saved_posts": "Saved Posts"
   },
   "vendor": {
     "dashboard": "Vendor Dashboard",
