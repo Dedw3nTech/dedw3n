@@ -7,6 +7,9 @@ import { verifyToken } from "./jwt-auth";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { registerImageRoutes } from "./image-handler";
+import { registerMediaRoutes } from "./media-handler";
+import { registerMulterRoutes } from "./multer-media-handler";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -91,6 +94,11 @@ app.use((req, res, next) => {
   });
   
 
+  
+  // Register media handling routes
+  registerImageRoutes(app);
+  registerMediaRoutes(app);
+  registerMulterRoutes(app);
   
   // Register all API routes first
   const server = await registerRoutes(app);
