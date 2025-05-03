@@ -20,6 +20,7 @@ import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
 import { registerShippingRoutes } from "./shipping";
 import { registerImageRoutes } from "./image-handler";
+import { registerMediaRoutes } from "./media-handler";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
@@ -699,6 +700,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register image handling routes
   registerImageRoutes(app);
+  
+  // Register media handling routes for images and videos
+  registerMediaRoutes(app);
 
   // Create HTTP server from Express
   // Register news feed routes
