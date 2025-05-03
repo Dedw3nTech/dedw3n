@@ -51,12 +51,14 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   
   // Upload media mutation
   const uploadMediaMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async ({ file, type }: { file: string, type: "image" | "video" }) => {
       const endpoint = '/api/media/upload';
       const response = await fetch(endpoint, {
         method: 'POST',
-        body: formData,
-        // Don't set Content-Type header, it will be set automatically with boundary for multipart/form-data
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ file, type }),
       });
       
       if (!response.ok) {
@@ -183,19 +185,45 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       return;
     }
     
-    // Create a preview
-    const fileUrl = URL.createObjectURL(file);
-    setMediaPreview(fileUrl);
     setMediaType(type);
     setUploadingMedia(true);
     
-    // Prepare for upload
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    
-    // Perform upload
-    uploadMediaMutation.mutate(formData);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target?.result as string;
+        
+        // Set preview with local object URL for immediate display
+        const fileUrl = URL.createObjectURL(file);
+        setMediaPreview(fileUrl);
+        
+        // Upload the base64 data
+        uploadMediaMutation.mutate({
+          file: base64Data,
+          type: type
+        });
+      };
+      
+      reader.onerror = () => {
+        setUploadingMedia(false);
+        toast({
+          title: "File Read Error",
+          description: "Failed to process the selected file. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
+      // Start reading the file as base64
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setUploadingMedia(false);
+      toast({
+        title: "File Processing Error",
+        description: "Failed to process the selected file. Please try again.",
+        variant: "destructive",
+      });
+    }
     
     // Reset the input value to allow selecting the same file again
     if (event.target) {
