@@ -57,20 +57,28 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       
       // Create FormData object for the multipart/form-data upload
       const formData = new FormData();
-      formData.append('media', file);
+      formData.append('file', file); // 'file' matches the expected field name
       formData.append('type', type);
       
       // Use the media upload endpoint
       const endpoint = '/api/media/upload';
       
+      // Set custom headers for better debugging on the server
+      const headers = new Headers();
+      // We don't set Content-Type explicitly - browser will set it with boundary for FormData
+      
+      console.log(`[DEBUG] Uploading file of type ${file.type}, size ${file.size} bytes`);
+      
       // First try the FormData upload
       try {
         const response = await fetch(endpoint, {
           method: 'POST',
+          headers,
           body: formData,
         });
         
         if (!response.ok) {
+          console.warn(`Upload failed with status: ${response.status}`);
           throw new Error(`Upload failed with status: ${response.status}`);
         }
         
@@ -83,6 +91,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
           const reader = new FileReader();
           reader.onload = async (e) => {
             const base64Data = e.target?.result as string;
+            console.log('[DEBUG] Falling back to base64 upload, data length:', base64Data.length);
             
             try {
               const response = await fetch(endpoint, {
