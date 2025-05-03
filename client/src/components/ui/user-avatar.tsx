@@ -12,6 +12,13 @@ interface UserAvatarProps {
   onClick?: () => void;
 }
 
+interface AvatarData {
+  url?: string;
+  username?: string;
+  userId?: number;
+  initials?: string;
+}
+
 export function UserAvatar({ userId, username, size = "md", className = "", onClick }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   
@@ -23,11 +30,11 @@ export function UserAvatar({ userId, username, size = "md", className = "", onCl
     xl: "w-24 h-24 text-xl"
   }[size];
 
-  // Use the new profile picture API endpoint that supports both userId and username
+  // Use the profile picture API endpoint that supports both userId and username
   const identifier = username || userId;
   
-  // Fetch profile picture data using the new dedicated endpoint
-  const { data: avatarData, isLoading } = useQuery({
+  // Fetch profile picture data using the dedicated endpoint
+  const { data: avatarData, isLoading } = useQuery<AvatarData>({
     queryKey: [`/api/users/${identifier}/profilePicture`],
     enabled: !!identifier,
     staleTime: 300000, // 5 minutes caching

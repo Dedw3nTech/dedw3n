@@ -62,8 +62,12 @@ export default function ProfileSettingsPage() {
     }));
     
     // Invalidate any queries that might use the user avatar
-    queryClient.invalidateQueries([`/api/users/${user.id}/profilePicture`]);
-    queryClient.invalidateQueries([`/api/users/${user.username}/profilePicture`]);
+    queryClient.invalidateQueries({ 
+      queryKey: [`/api/users/${user.id}/profilePicture`]
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: [`/api/users/${user.username}/profilePicture`]
+    });
   };
 
   const handleProfileUpdate = async () => {
@@ -81,7 +85,7 @@ export default function ProfileSettingsPage() {
       const updatedUser = await response.json();
       
       // Update query cache
-      queryClient.setQueryData(['/api/user'], updatedUser);
+      queryClient.setQueryData({ queryKey: ['/api/user'] }, updatedUser);
       
       toast({
         title: t('profile.update_success') || 'Profile updated',

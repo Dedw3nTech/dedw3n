@@ -294,21 +294,18 @@ export const queryClient = new QueryClient({
  */
 export function sanitizeImageUrl(url: string | null | undefined, fallback?: string): string {
   // If no URL or empty string, return fallback or placeholder
-  if (!url) {
+  if (!url || url.trim() === '') {
     return fallback || '/assets/default-avatar.png';
   }
   
   // Check if it's a blob URL (which can cause DOMException if not valid)
   if (url.startsWith('blob:')) {
     try {
-      // Test if the blob URL is still valid
-      const blobUrlExistence = fetch(url, { method: 'HEAD' })
-        .then(() => true)
-        .catch(() => false);
-        
-      // If it fails, we'll use the fallback
-      if (!blobUrlExistence) {
-        console.warn('Detected invalid blob URL, using fallback');
+      // Instead of fetching the blob URL, which might not work in all contexts,
+      // we use a check to see if the URL is at least reasonably formatted
+      const isBlobUrl = url.match(/^blob:https?:\/\//i);
+      if (!isBlobUrl) {
+        console.warn('Detected potentially invalid blob URL, using fallback');
         return fallback || '/assets/default-avatar.png';
       }
     } catch (e) {
@@ -316,6 +313,11 @@ export function sanitizeImageUrl(url: string | null | undefined, fallback?: stri
       console.warn('Error with blob URL, using fallback', e);
       return fallback || '/assets/default-avatar.png';
     }
+  }
+  
+  // If it's a relative URL, ensure it starts with a slash
+  if (url && !url.startsWith('http') && !url.startsWith('/') && !url.startsWith('data:')) {
+    url = '/' + url;
   }
   
   return url;
