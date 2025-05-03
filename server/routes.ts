@@ -3647,6 +3647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      console.log('[POST API] Creating post with user ID:', userId);
       
       // Create a post data object from the JSON request
       const postData: any = {
@@ -3666,56 +3667,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle media URLs
       if (req.body.imageUrl) {
+        console.log('[POST API] Processing image URL for post');
+        
         // Check if it's a base64 image
         if (req.body.imageUrl.startsWith('data:image')) {
-          // Convert base64 to URL by storing it as an asset
-          // This is a simplified approach - in production you would save to cloud storage
-          const base64Data = req.body.imageUrl.split(',')[1];
-          const filename = `image_${Date.now()}.png`;
+          console.log('[POST API] Detected base64 image, converting to file');
           
-          // Create uploads directory if it doesn't exist
-          if (!fs.existsSync('./public/uploads')) {
-            fs.mkdirSync('./public/uploads', { recursive: true });
+          // Use the media handler for consistent processing
+          try {
+            // Convert base64 to URL by storing it as an asset
+            const base64Data = req.body.imageUrl;
+            
+            // Create a temporary request object to pass to media handler
+            const mediaRequest: any = { 
+              body: { 
+                file: base64Data, 
+                type: 'image' 
+              },
+              protocol: req.protocol,
+              get: (name: string) => req.get(name)
+            };
+            const mediaResponse: any = { 
+              status: function(code: number) { this.statusCode = code; return this; },
+              json: function(data: any) { this.data = data; return this; }
+            };
+            
+            // Use the media handler function directly
+            const { handleMediaUpload } = await import('./media-handler');
+            handleMediaUpload(mediaRequest, mediaResponse);
+            
+            if (mediaResponse.statusCode === 200 && mediaResponse.data.success) {
+              // Set the image URL to the saved file path from media handler
+              postData.imageUrl = mediaResponse.data.mediaUrl;
+              console.log('[POST API] Image saved successfully at:', postData.imageUrl);
+            } else {
+              console.error('[POST API] Failed to process image:', mediaResponse.data);
+              throw new Error('Failed to process image upload');
+            }
+          } catch (mediaError) {
+            console.error('[POST API] Error processing media:', mediaError);
+            throw new Error('Error processing media upload');
           }
-          if (!fs.existsSync('./public/uploads/images')) {
-            fs.mkdirSync('./public/uploads/images', { recursive: true });
-          }
-          
-          // Save the file
-          fs.writeFileSync(`./public/uploads/images/${filename}`, base64Data, 'base64');
-          
-          // Set the image URL to the saved file
-          postData.imageUrl = `/uploads/images/${filename}`;
         } else {
           // Use existing URL (for post editing)
           postData.imageUrl = req.body.imageUrl;
+          console.log('[POST API] Using provided image URL:', postData.imageUrl);
         }
       }
       
       // Handle video URLs
       if (req.body.videoUrl) {
+        console.log('[POST API] Processing video URL for post');
+        
         // Check if it's a base64 video
         if (req.body.videoUrl.startsWith('data:video')) {
-          // Convert base64 to URL by storing it as an asset
-          const base64Data = req.body.videoUrl.split(',')[1];
-          const filename = `video_${Date.now()}.mp4`;
+          console.log('[POST API] Detected base64 video, converting to file');
           
-          // Create uploads directory if it doesn't exist
-          if (!fs.existsSync('./public/uploads')) {
-            fs.mkdirSync('./public/uploads', { recursive: true });
+          // Use the media handler for consistent processing
+          try {
+            // Convert base64 to URL by storing it as an asset
+            const base64Data = req.body.videoUrl;
+            
+            // Create a temporary request object to pass to media handler
+            const mediaRequest: any = { 
+              body: { 
+                file: base64Data, 
+                type: 'video' 
+              },
+              protocol: req.protocol,
+              get: (name: string) => req.get(name)
+            };
+            const mediaResponse: any = { 
+              status: function(code: number) { this.statusCode = code; return this; },
+              json: function(data: any) { this.data = data; return this; }
+            };
+            
+            // Use the media handler function directly
+            const { handleMediaUpload } = await import('./media-handler');
+            handleMediaUpload(mediaRequest, mediaResponse);
+            
+            if (mediaResponse.statusCode === 200 && mediaResponse.data.success) {
+              // Set the video URL to the saved file path from media handler
+              postData.videoUrl = mediaResponse.data.mediaUrl;
+              console.log('[POST API] Video saved successfully at:', postData.videoUrl);
+            } else {
+              console.error('[POST API] Failed to process video:', mediaResponse.data);
+              throw new Error('Failed to process video upload');
+            }
+          } catch (mediaError) {
+            console.error('[POST API] Error processing media:', mediaError);
+            throw new Error('Error processing media upload');
           }
-          if (!fs.existsSync('./public/uploads/videos')) {
-            fs.mkdirSync('./public/uploads/videos', { recursive: true });
-          }
-          
-          // Save the file
-          fs.writeFileSync(`./public/uploads/videos/${filename}`, base64Data, 'base64');
-          
-          // Set the video URL to the saved file
-          postData.videoUrl = `/uploads/videos/${filename}`;
         } else {
           // Use existing URL (for post editing)
           postData.videoUrl = req.body.videoUrl;
+          console.log('[POST API] Using provided video URL:', postData.videoUrl);
         }
       }
       
