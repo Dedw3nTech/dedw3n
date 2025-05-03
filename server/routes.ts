@@ -1599,6 +1599,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const size = req.query.size as string || 'original'; // Get requested size parameter (e.g., 48x48, 96x96)
       let user;
 
+      // Validate input
+      if (!identifier || identifier.trim() === '') {
+        return res.status(400).json({ message: 'User identifier is required' });
+      }
+
       console.log(`[DEBUG] Fetching profile picture for identifier: ${identifier}, size: ${size}`);
       
       // Check if identifier is a number (userId) or string (username)
@@ -1611,31 +1616,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        console.log(`[DEBUG] User not found for identifier: ${identifier}`);
+        return res.status(404).json({ 
+          message: 'User not found',
+          url: '/assets/default-avatar.png'
+        });
       }
 
       if (!user.avatar) {
         // If user has no avatar, return information for default avatar generation
         console.log(`[DEBUG] No avatar found for user ${identifier}, returning default avatar info`);
+        
+        // Calculate initials
+        let initials = "";
+        if (user.name && user.name.trim().length > 0) {
+          // Get first letter of first name
+          initials = user.name.charAt(0).toUpperCase();
+          
+          // If there's a space, get first letter of last name
+          const spaceIndex = user.name.indexOf(' ');
+          if (spaceIndex > 0 && spaceIndex < user.name.length - 1) {
+            initials += user.name.charAt(spaceIndex + 1).toUpperCase();
+          }
+        } else if (user.username) {
+          // Fallback to first letter of username
+          initials = user.username.charAt(0).toUpperCase();
+        }
+        
         return res.json({ 
           url: '/assets/default-avatar.png',
           username: user.username,
-          initials: user.name 
-            ? `${user.name.charAt(0).toUpperCase()}${user.name.indexOf(' ') > 0 ? user.name.charAt(user.name.indexOf(' ') + 1).toUpperCase() : ''}`
-            : user.username.charAt(0).toUpperCase()
+          userId: user.id,
+          initials: initials
         });
       }
 
+      // Normalize avatar URL
+      let avatarUrl = user.avatar;
+      
+      // Ensure URL starts with / if it's a relative path
+      if (!avatarUrl.startsWith('/') && !avatarUrl.startsWith('http')) {
+        avatarUrl = '/' + avatarUrl;
+      }
+      
       // Return the avatar URL (could be a relative URL or absolute URL)
-      console.log(`[DEBUG] Returning avatar URL for user ${identifier}: ${user.avatar}`);
+      console.log(`[DEBUG] Returning avatar URL for user ${identifier}: ${avatarUrl}`);
       res.json({ 
-        url: user.avatar,
+        url: avatarUrl,
         username: user.username,
-        userId: user.id
+        userId: user.id,
+        // Include initials as a fallback
+        initials: user.name 
+          ? `${user.name.charAt(0).toUpperCase()}${user.name.indexOf(' ') > 0 ? user.name.charAt(user.name.indexOf(' ') + 1).toUpperCase() : ''}`
+          : user.username.charAt(0).toUpperCase()
       });
     } catch (error) {
       console.error('Error fetching user profile picture:', error);
-      res.status(500).json({ message: 'Failed to fetch profile picture' });
+      res.status(500).json({ 
+        message: 'Failed to fetch profile picture',
+        url: '/assets/default-avatar.png'  // Always include a fallback URL even in error cases
+      });
     }
   });
   
@@ -1680,32 +1720,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the imageData is a URL or base64 data
       if (imageData.startsWith('data:image/')) {
-        // This is a base64 encoded image
-        // Extract the data part (remove the prefix)
-        const base64Data = imageData.split(',')[1];
-        const imageBuffer = Buffer.from(base64Data, 'base64');
-        
-        // Generate a unique filename
-        const filename = `profile_${targetUser.id}_${Date.now()}.png`;
-        const imagePath = `./public/uploads/${filename}`;
-        
-        // Ensure uploads directory exists
-        const dir = './public/uploads';
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
+        try {
+          // This is a base64 encoded image
+          // Extract the data part (remove the prefix)
+          const base64Data = imageData.split(',')[1];
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          
+          // Basic validation - check minimum size
+          if (imageBuffer.length < 100) {
+            return res.status(400).json({ message: 'Image file is too small or corrupt' });
+          }
+          
+          // Check maximum size (5MB)
+          const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+          if (imageBuffer.length > MAX_SIZE) {
+            return res.status(400).json({ message: 'Image file is too large (max 5MB)' });
+          }
+          
+          // Generate unique filenames for original and optimized versions
+          const timestamp = Date.now();
+          const baseFilename = `profile_${targetUser.id}_${timestamp}`;
+          const optimizedFilename = `${baseFilename}.jpg`; // Always save as jpg for consistency
+          
+          // Ensure upload directories exist
+          const uploadDir = './public/uploads';
+          const avatarsDir = './public/uploads/avatars';
+          
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+          
+          if (!fs.existsSync(avatarsDir)) {
+            fs.mkdirSync(avatarsDir, { recursive: true });
+          }
+          
+          // Save the original file
+          const imagePath = `${avatarsDir}/${optimizedFilename}`;
+          fs.writeFileSync(imagePath, imageBuffer);
+          console.log(`[DEBUG] Saved profile image to: ${imagePath}`);
+          
+          // Set the URL to the new image path (relative to the public directory)
+          imageUrl = `/uploads/avatars/${optimizedFilename}`;
+          
+        } catch (err) {
+          console.error('Error processing image data:', err);
+          return res.status(400).json({ message: 'Failed to process image data' });
+        }
+      } else if (imageData.startsWith('http')) {
+        // This is already a URL, validate and store it directly
+        // Make sure it's a valid image URL (basic check)
+        if (!/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(imageData)) {
+          return res.status(400).json({ message: 'Invalid image URL format' });
         }
         
-        // Save the file
-        fs.writeFileSync(imagePath, imageBuffer);
-        console.log(`[DEBUG] Saved profile image to: ${imagePath}`);
-        
-        // Set the URL to the new image path (relative to the public directory)
-        imageUrl = `/uploads/${filename}`;
-      } else if (imageData.startsWith('http')) {
-        // This is already a URL, store it directly
         imageUrl = imageData;
       } else {
         return res.status(400).json({ message: 'Invalid image data format' });
+      }
+      
+      // Delete old avatar file if it exists and is a local file
+      if (targetUser.avatar && targetUser.avatar.startsWith('/uploads/')) {
+        try {
+          const oldAvatarPath = `./public${targetUser.avatar}`;
+          if (fs.existsSync(oldAvatarPath)) {
+            fs.unlinkSync(oldAvatarPath);
+            console.log(`[DEBUG] Deleted old avatar file: ${oldAvatarPath}`);
+          }
+        } catch (err) {
+          console.error('Error deleting old avatar file:', err);
+          // Continue with the update even if deleting the old file fails
+        }
       }
       
       // Update the user profile with the new avatar URL
