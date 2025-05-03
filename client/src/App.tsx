@@ -70,6 +70,7 @@ import CommunityManagePage from "@/pages/community-manage";
 // Import social networking and user components
 import ProfilePage from "@/pages/profile";
 import SettingsPage from "@/pages/settings";
+import ProfileSettingsPage from "@/pages/profile-settings";
 import WallPage from "@/pages/wall";
 import MessagesPage from "@/pages/messages";
 import ExplorePage from "@/pages/explore";
@@ -131,6 +132,7 @@ function Router() {
       <ProtectedRoute path="/communities/:id/manage" component={CommunityManagePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
+      <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />

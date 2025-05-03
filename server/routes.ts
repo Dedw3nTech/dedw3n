@@ -1638,6 +1638,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch profile picture' });
     }
   });
+  
+  // Update user profile picture by ID or username
+  app.post("/api/users/:identifier/profilePicture", isAuthenticated, async (req, res) => {
+    try {
+      const { identifier } = req.params;
+      const currentUser = req.user!;
+      let targetUser;
+      
+      console.log(`[DEBUG] Updating profile picture for identifier: ${identifier}`);
+      
+      // Check if identifier is a number (userId) or string (username)
+      if (!isNaN(Number(identifier))) {
+        // It's a user ID
+        targetUser = await storage.getUser(Number(identifier));
+      } else {
+        // It's a username
+        targetUser = await storage.getUserByUsername(identifier);
+      }
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Security check: users can only update their own profile picture unless they're admins
+      // To access user ID appropriately based on different auth methods
+      const currentUserId = 'id' in currentUser ? currentUser.id : currentUser.userId;
+      
+      if (targetUser.id !== currentUserId && currentUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Unauthorized to update this user\'s profile picture' });
+      }
+      
+      // If no image data was provided in the request
+      if (!req.body.imageData) {
+        return res.status(400).json({ message: 'No image data provided' });
+      }
+      
+      // Process the image data: handle base64 encoded images
+      let imageUrl = '';
+      const imageData = req.body.imageData;
+      
+      // Check if the imageData is a URL or base64 data
+      if (imageData.startsWith('data:image/')) {
+        // This is a base64 encoded image
+        // Extract the data part (remove the prefix)
+        const base64Data = imageData.split(',')[1];
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate a unique filename
+        const filename = `profile_${targetUser.id}_${Date.now()}.png`;
+        const imagePath = `./public/uploads/${filename}`;
+        
+        // Ensure uploads directory exists
+        const dir = './public/uploads';
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        
+        // Save the file
+        fs.writeFileSync(imagePath, imageBuffer);
+        console.log(`[DEBUG] Saved profile image to: ${imagePath}`);
+        
+        // Set the URL to the new image path (relative to the public directory)
+        imageUrl = `/uploads/${filename}`;
+      } else if (imageData.startsWith('http')) {
+        // This is already a URL, store it directly
+        imageUrl = imageData;
+      } else {
+        return res.status(400).json({ message: 'Invalid image data format' });
+      }
+      
+      // Update the user profile with the new avatar URL
+      await storage.updateUser(targetUser.id, { avatar: imageUrl });
+      console.log(`[DEBUG] Updated avatar URL for user ${targetUser.id} to: ${imageUrl}`);
+      
+      res.status(200).json({ 
+        message: 'Profile picture updated successfully',
+        avatarUrl: imageUrl 
+      });
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      res.status(500).json({ message: 'Failed to update profile picture' });
+    }
+  });
 
   // Register API Routes
   // All routes should be prefixed with /api
