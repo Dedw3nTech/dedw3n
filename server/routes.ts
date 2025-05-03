@@ -778,72 +778,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Direct handling of login to prevent redirect issues
   app.post("/api/login", (req, res, next) => {
     console.log("[DEBUG] Login request received at /api/login");
-    try {
-      // Import passport from the express app instance
-      const passport = req.app.get('passport');
+    
+    // Import passport directly to ensure it's available
+    import('passport').then(passportModule => {
+      const passport = passportModule.default;
       
-      if (!passport) {
-        // If passport is not available on the app, use it directly from the import
-        import('passport').then(module => {
-          const passport = module.default;
+      // Use authenticate without custom callback first to handle the authentication
+      passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
+        console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
+        
+        if (err) {
+          console.error(`[ERROR] Login authentication error:`, err);
+          return next(err);
+        }
+        
+        if (!user) {
+          console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+          return res.status(401).json({ message: info?.message || "Authentication failed" });
+        }
+        
+        // Log the user in using the session
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            console.error('[ERROR] Session login error:', loginErr);
+            return next(loginErr);
+          }
           
-          passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
-            console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
-            
-            if (err) {
-              console.error(`[ERROR] Login authentication error:`, err);
-              return next(err);
-            }
-            
-            if (!user) {
-              console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
-              return res.status(401).json({ message: info?.message || "Authentication failed" });
-            }
-            
-            req.login(user, (loginErr) => {
-              if (loginErr) {
-                console.error('[ERROR] Session login error:', loginErr);
-                return next(loginErr);
-              }
-              
-              console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
-              return res.json(user);
-            });
-          })(req, res, next);
-        }).catch(error => {
-          console.error('[ERROR] Passport import error:', error);
-          res.status(500).json({ message: "Login failed due to server error" });
+          // Remove sensitive data before sending the response
+          const { password, ...userWithoutPassword } = user;
+          
+          console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
+          
+          // Return the user object without the password
+          return res.json(userWithoutPassword);
         });
-      } else {
-        // Use passport from the app
-        passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
-          console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
-          
-          if (err) {
-            console.error(`[ERROR] Login authentication error:`, err);
-            return next(err);
-          }
-          
-          if (!user) {
-            console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
-            return res.status(401).json({ message: info?.message || "Authentication failed" });
-          }
-          
-          req.login(user, (loginErr) => {
-            if (loginErr) {
-              console.error('[ERROR] Session login error:', loginErr);
-              return next(loginErr);
-            }
-            
-            console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
-            return res.json(user);
-          });
-        })(req, res, next);
-      }
-    } catch (error) {
-      console.error('[ERROR] Login processing error:', error);
+      })(req, res, next);
+    }).catch(error => {
+      console.error('[ERROR] Passport import error:', error);
       res.status(500).json({ message: "Login failed due to server error" });
-    }
+    });
   });
   // Updated logout endpoint that handles both authentication methods
   app.post("/api/logout", async (req, res) => {
