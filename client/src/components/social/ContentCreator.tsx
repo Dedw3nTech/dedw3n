@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { InsertPost, Post } from "@shared/schema";
@@ -14,7 +14,9 @@ import { Label } from "@/components/ui/label";
 import { 
   Tag, 
   X,
-  CheckCircle
+  CheckCircle, 
+  Image as ImageIcon,
+  Video as VideoIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
@@ -38,6 +40,58 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [selectedPromotionPlan, setSelectedPromotionPlan] = useState("1day");
   
+  // Media state
+  const [mediaType, setMediaType] = useState<"none" | "image" | "video">("none");
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  
+  // File input references
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  
+  // Upload media mutation
+  const uploadMediaMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const endpoint = '/api/media/upload';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header, it will be set automatically with boundary for multipart/form-data
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload media');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      // Show success toast
+      toast({
+        title: "Media Uploaded",
+        description: "Your media has been uploaded successfully",
+      });
+      
+      // Update post with media URL
+      if (data.mediaUrl) {
+        setMediaPreview(data.mediaUrl);
+        setUploadingMedia(false);
+      }
+    },
+    onError: (error: any) => {
+      setUploadingMedia(false);
+      setMediaType("none");
+      setMediaPreview(null);
+      
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload media. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (postData: InsertPost) => {
@@ -53,6 +107,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       setTags([]);
       setTagInput("");
       setIsPromoted(false);
+      setMediaType("none");
+      setMediaPreview(null);
       
       // Refresh posts list and feed
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
@@ -78,6 +134,75 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     },
   });
   
+  // Handle image upload button click
+  const handleShareImage = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.click();
+    }
+  };
+  
+  // Handle video upload button click
+  const handleShareVideo = () => {
+    if (videoInputRef.current) {
+      videoInputRef.current.click();
+    }
+  };
+  
+  // Handle media file selection
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Basic validation
+    if (type === "image" && !file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select a valid image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (type === "video" && !file.type.startsWith("video/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select a valid video file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Size check - limit to 10MB for images, 50MB for videos
+    const maxSize = type === "image" ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: `Please select a ${type} file less than ${maxSize / (1024 * 1024)}MB.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create a preview
+    const fileUrl = URL.createObjectURL(file);
+    setMediaPreview(fileUrl);
+    setMediaType(type);
+    setUploadingMedia(true);
+    
+    // Prepare for upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    
+    // Perform upload
+    uploadMediaMutation.mutate(formData);
+    
+    // Reset the input value to allow selecting the same file again
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+  
   // Handle form submission
   const handleSubmit = () => {
     if (!user) {
@@ -90,20 +215,35 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     }
     
     // Basic validation
-    if (!content.trim()) {
+    if (!content.trim() && !mediaPreview) {
       toast({
         title: t("errors.error") || "Error",
-        description: t("content_required") || "Please add some content to your post",
+        description: "Please add some content or media to your post",
         variant: "destructive",
       });
       return;
     }
     
+    // Check if media is still uploading
+    if (uploadingMedia) {
+      toast({
+        title: "Media Still Uploading",
+        description: "Please wait for your media to finish uploading before posting",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Determine content type based on media
+    let contentType = "text";
+    if (mediaType === "image") contentType = "image";
+    if (mediaType === "video") contentType = "video";
+    
     // Create post
     const postData: InsertPost = {
       userId: user.id,
       content,
-      contentType: "text",
+      contentType,
       isPublished: true,
       isPromoted: isPromoted,
     };
@@ -116,6 +256,11 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     // Add tags if any
     if (tags.length > 0) {
       postData.tags = tags;
+    }
+    
+    // Add media URL if available
+    if (mediaPreview && mediaType !== "none") {
+      postData.mediaUrl = mediaPreview;
     }
     
     // Submit post
@@ -284,6 +429,80 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
             </div>
           </div>
           
+          {/* Media preview */}
+          {mediaPreview && (
+            <div className="relative rounded-md overflow-hidden border max-h-[300px] mt-2">
+              {mediaType === "image" && (
+                <img 
+                  src={mediaPreview} 
+                  alt="Selected image" 
+                  className="w-full h-auto max-h-[300px] object-contain"
+                />
+              )}
+              {mediaType === "video" && (
+                <video 
+                  src={mediaPreview} 
+                  controls 
+                  className="w-full h-auto max-h-[300px]"
+                />
+              )}
+              {uploadingMedia && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full"></div>
+                </div>
+              )}
+              {!uploadingMedia && (
+                <Button
+                  onClick={() => {
+                    setMediaPreview(null);
+                    setMediaType("none");
+                  }}
+                  className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full bg-black/70 hover:bg-black"
+                >
+                  <X className="h-4 w-4 text-white" />
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Media upload buttons */}
+          <div className="flex space-x-2">
+            <input 
+              type="file" 
+              ref={imageInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={(e) => handleFileChange(e, "image")}
+            />
+            <input 
+              type="file" 
+              ref={videoInputRef} 
+              className="hidden" 
+              accept="video/*" 
+              onChange={(e) => handleFileChange(e, "video")}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleShareImage}
+              className="flex items-center gap-1 border-blue-400 text-blue-600 hover:bg-blue-50"
+              disabled={uploadingMedia}
+            >
+              <ImageIcon className="h-4 w-4" />
+              <span>Share Picture</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleShareVideo}
+              className="flex items-center gap-1 border-purple-400 text-purple-600 hover:bg-purple-50"
+              disabled={uploadingMedia}
+            >
+              <VideoIcon className="h-4 w-4" />
+              <span>Share Video</span>
+            </Button>
+          </div>
+          
           {/* Action buttons */}
           <div className="flex justify-end items-center space-x-2">
             <Button
@@ -297,10 +516,10 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
             </Button>
             <Button 
               onClick={handleSubmit}
-              disabled={createPostMutation.isPending}
+              disabled={createPostMutation.isPending || uploadingMedia}
               className="bg-primary hover:bg-primary/90"
             >
-              {createPostMutation.isPending ? "Posting..." : "Post"}
+              {createPostMutation.isPending ? "Posting..." : (uploadingMedia ? "Uploading..." : "Post")}
             </Button>
           </div>
         </div>
