@@ -39,7 +39,7 @@ export function UserAvatar({ userId, username, size = "md", className = "", onCl
     setImageError(true);
   };
 
-  // Use the sanitizeImageUrl utility function to handle blob URLs safely
+  // Get avatar URL safely
   const validAvatarUrl = !avatarData || !avatarData.url || imageError 
     ? "" 
     : sanitizeImageUrl(
@@ -47,24 +47,31 @@ export function UserAvatar({ userId, username, size = "md", className = "", onCl
         `/assets/default-avatar.png`
       );
 
+  // Get initials for fallback
+  const getInitials = () => {
+    if (avatarData?.initials) {
+      return avatarData.initials;
+    } else if (avatarData?.username) {
+      return avatarData.username.charAt(0).toUpperCase();
+    } else {
+      return username ? username.charAt(0).toUpperCase() : "U";
+    }
+  };
+
   return (
     <Avatar className={`${sizeClass} border ${className}`} onClick={onClick}>
       {validAvatarUrl ? (
         <AvatarImage 
           src={validAvatarUrl} 
-          alt={avatarData?.username || "User avatar"} 
+          alt={avatarData?.username || username || "User avatar"} 
           onError={handleImageError}
         />
       ) : null}
       <AvatarFallback className="bg-primary-foreground text-primary">
         {isLoading ? (
           "..."
-        ) : avatarData?.initials ? (
-          avatarData.initials
-        ) : avatarData?.username ? (
-          avatarData.username.charAt(0).toUpperCase()
         ) : (
-          <User className="h-4 w-4" />
+          getInitials()
         )}
       </AvatarFallback>
     </Avatar>

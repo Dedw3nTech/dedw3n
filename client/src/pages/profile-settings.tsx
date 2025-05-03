@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProfilePictureUploader from '@/components/user/ProfilePictureUploader';
@@ -10,19 +10,41 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileSettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    bio: user?.bio || '',
-    avatar: user?.avatar || ''
+    name: '',
+    bio: '',
+    avatar: ''
   });
 
+  // Update form data when user data is available
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        bio: user.bio || '',
+        avatar: user.avatar || ''
+      });
+    }
+  }, [user]);
+
   if (!user) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-2 text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -38,6 +60,10 @@ export default function ProfileSettingsPage() {
       ...prev,
       avatar: newAvatarUrl
     }));
+    
+    // Invalidate any queries that might use the user avatar
+    queryClient.invalidateQueries([`/api/users/${user.id}/profilePicture`]);
+    queryClient.invalidateQueries([`/api/users/${user.username}/profilePicture`]);
   };
 
   const handleProfileUpdate = async () => {
@@ -58,14 +84,14 @@ export default function ProfileSettingsPage() {
       queryClient.setQueryData(['/api/user'], updatedUser);
       
       toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
+        title: t('profile.update_success') || 'Profile updated',
+        description: t('profile.update_success_desc') || 'Your profile has been updated successfully',
       });
       
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: 'Update failed',
+        title: t('profile.update_error') || 'Update failed',
         description: error instanceof Error ? error.message : 'Failed to update profile',
         variant: 'destructive'
       });
@@ -76,13 +102,13 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="container max-w-3xl pt-6 pb-16">
-      <h1 className="text-3xl font-bold mb-6">Profile Settings</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('profile.settings') || 'Profile Settings'}</h1>
       
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="profile" className="flex-1">Profile</TabsTrigger>
-          <TabsTrigger value="account" className="flex-1">Account</TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-1">Notifications</TabsTrigger>
+          <TabsTrigger value="profile" className="flex-1">{t('profile.info') || 'Profile'}</TabsTrigger>
+          <TabsTrigger value="account" className="flex-1">{t('profile.account') || 'Account'}</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-1">{t('profile.notifications') || 'Notifications'}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -90,16 +116,16 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Picture</CardTitle>
+                  <CardTitle>{t('profile.picture') || 'Profile Picture'}</CardTitle>
                   <CardDescription>
-                    Update your profile picture
+                    {t('profile.picture_desc') || 'Update your profile picture'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
                   <ProfilePictureUploader
                     userId={user.id}
                     username={user.username}
-                    currentAvatar={user.avatar}
+                    currentAvatar={user.avatar || ''}
                     onUploadSuccess={handleAvatarUpdate}
                   />
                 </CardContent>
@@ -109,31 +135,31 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
+                  <CardTitle>{t('profile.personal_info') || 'Personal Information'}</CardTitle>
                   <CardDescription>
-                    Update your personal details
+                    {t('profile.personal_info_desc') || 'Update your personal details'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Display Name</Label>
+                    <Label htmlFor="name">{t('profile.display_name') || 'Display Name'}</Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="Your display name"
+                      placeholder={t('profile.display_name_placeholder') || 'Your display name'}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio">{t('profile.bio') || 'Bio'}</Label>
                     <Textarea
                       id="bio"
                       name="bio"
-                      value={formData.bio}
+                      value={formData.bio || ''}
                       onChange={handleInputChange}
-                      placeholder="Write a short bio about yourself"
+                      placeholder={t('profile.bio_placeholder') || 'Write a short bio about yourself'}
                       rows={4}
                     />
                   </div>
@@ -146,10 +172,10 @@ export default function ProfileSettingsPage() {
                     {isUpdating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
+                        {t('profile.updating') || 'Updating...'}
                       </>
                     ) : (
-                      'Save Changes'
+                      t('profile.save_changes') || 'Save Changes'
                     )}
                   </Button>
                 </CardContent>
@@ -161,14 +187,14 @@ export default function ProfileSettingsPage() {
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
+              <CardTitle>{t('profile.account_settings') || 'Account Settings'}</CardTitle>
               <CardDescription>
-                Manage your account settings
+                {t('profile.account_settings_desc') || 'Manage your account settings'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Account settings will be implemented in a future update.
+                {t('profile.account_future') || 'Account settings will be implemented in a future update.'}
               </p>
             </CardContent>
           </Card>
@@ -177,14 +203,14 @@ export default function ProfileSettingsPage() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
+              <CardTitle>{t('profile.notification_preferences') || 'Notification Preferences'}</CardTitle>
               <CardDescription>
-                Control how you receive notifications
+                {t('profile.notification_preferences_desc') || 'Control how you receive notifications'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Notification settings will be implemented in a future update.
+                {t('profile.notification_future') || 'Notification settings will be implemented in a future update.'}
               </p>
             </CardContent>
           </Card>
