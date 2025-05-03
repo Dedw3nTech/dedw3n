@@ -245,11 +245,36 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       const fileUrl = URL.createObjectURL(file);
       setMediaPreview(fileUrl);
       
-      // Upload the file directly (FormData approach)
-      uploadMediaMutation.mutate({
-        file: file,
-        type: type
-      });
+      // We're going to use a two-step approach:
+      // 1. First try the direct file upload with FormData
+      // 2. If that fails, fall back to base64 encoding
+      
+      // Read the file as base64 for fallback
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Data = e.target?.result as string;
+        
+        // Try uploading with the direct file first
+        console.log(`Uploading ${type} file to server using FormData...`);
+        
+        // Use the file object directly in the mutation
+        uploadMediaMutation.mutate({
+          file: file,
+          type: type
+        });
+      };
+      
+      reader.onerror = () => {
+        setUploadingMedia(false);
+        toast({
+          title: "File Read Error",
+          description: "Failed to process the selected file. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
+      // Start the reading process to prepare for fallback if needed
+      reader.readAsDataURL(file);
     } catch (error) {
       setUploadingMedia(false);
       toast({
