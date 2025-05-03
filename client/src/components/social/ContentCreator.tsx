@@ -44,6 +44,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   const [mediaType, setMediaType] = useState<"none" | "image" | "video">("none");
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaData, setMediaData] = useState<any | null>(null);
   
   // File input references
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   // Upload media mutation
   const uploadMediaMutation = useMutation({
     mutationFn: async ({ file, type }: { file: string, type: "image" | "video" }) => {
+      console.log(`Uploading ${type} file to server...`);
       const endpoint = '/api/media/upload';
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -69,22 +71,33 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log('Media upload success data:', data);
+      
       // Show success toast
       toast({
         title: "Media Uploaded",
         description: "Your media has been uploaded successfully",
       });
       
-      // Update post with media URL
+      // Store both the media URL and original data for use later in form submission
+      // We keep the local preview URL for display during editing
       if (data.mediaUrl) {
-        setMediaPreview(data.mediaUrl);
+        // For server-side we want to use the full URL with proper server path
+        // This will help ensure the media is correctly associated with the post
+        const serverMediaUrl = data.fullUrl || data.mediaUrl;
+        console.log('Setting media URL for post:', serverMediaUrl);
+        
+        // Store the media data in a ref or state for use during submission
+        setMediaData(data);
         setUploadingMedia(false);
       }
     },
     onError: (error: any) => {
+      console.error('Media upload failed:', error);
       setUploadingMedia(false);
       setMediaType("none");
       setMediaPreview(null);
+      setMediaData(null);
       
       toast({
         title: "Upload Failed",
@@ -111,6 +124,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       setIsPromoted(false);
       setMediaType("none");
       setMediaPreview(null);
+      setMediaData(null);
       
       // Refresh posts list and feed
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
@@ -287,7 +301,19 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     }
     
     // Add media URL if available
-    if (mediaPreview && mediaType !== "none") {
+    if (mediaType !== "none" && mediaData) {
+      // Use the server-provided URLs from the uploaded media
+      const serverMediaUrl = mediaData.fullUrl || mediaData.mediaUrl;
+      console.log('Using server media URL for post:', serverMediaUrl);
+      
+      if (mediaType === "image") {
+        postData.imageUrl = serverMediaUrl;
+      } else if (mediaType === "video") {
+        postData.videoUrl = serverMediaUrl;
+      }
+    } else if (mediaPreview && mediaType !== "none") {
+      // Fallback to preview URL if mediaData is somehow missing
+      console.warn('Using preview URL as fallback - media data missing');
       if (mediaType === "image") {
         postData.imageUrl = mediaPreview;
       } else if (mediaType === "video") {
@@ -488,6 +514,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                   onClick={() => {
                     setMediaPreview(null);
                     setMediaType("none");
+                    setMediaData(null);
                   }}
                   className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full bg-black/70 hover:bg-black"
                 >
