@@ -52,23 +52,61 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   
   // Upload media mutation
   const uploadMediaMutation = useMutation({
-    mutationFn: async ({ file, type }: { file: string, type: "image" | "video" }) => {
+    mutationFn: async ({ file, type }: { file: File, type: "image" | "video" }) => {
       console.log(`Uploading ${type} file to server...`);
+      
+      // Create FormData object for the multipart/form-data upload
+      const formData = new FormData();
+      formData.append('media', file);
+      formData.append('type', type);
+      
+      // Use the media upload endpoint
       const endpoint = '/api/media/upload';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ file, type }),
-      });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload media');
+      // First try the FormData upload
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed with status: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (formError) {
+        console.warn('FormData upload failed, falling back to base64:', formError);
+        
+        // Fallback to base64 if FormData fails
+        return new Promise<any>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64Data = e.target?.result as string;
+            
+            try {
+              const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ file: base64Data, type }),
+              });
+              
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to upload media');
+              }
+              
+              resolve(await response.json());
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
       }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
       console.log('Media upload success data:', data);
@@ -203,33 +241,15 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     setUploadingMedia(true);
     
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Data = e.target?.result as string;
-        
-        // Set preview with local object URL for immediate display
-        const fileUrl = URL.createObjectURL(file);
-        setMediaPreview(fileUrl);
-        
-        // Upload the base64 data
-        uploadMediaMutation.mutate({
-          file: base64Data,
-          type: type
-        });
-      };
+      // Create a local preview URL for immediate display
+      const fileUrl = URL.createObjectURL(file);
+      setMediaPreview(fileUrl);
       
-      reader.onerror = () => {
-        setUploadingMedia(false);
-        toast({
-          title: "File Read Error",
-          description: "Failed to process the selected file. Please try again.",
-          variant: "destructive",
-        });
-      };
-      
-      // Start reading the file as base64
-      reader.readAsDataURL(file);
+      // Upload the file directly (FormData approach)
+      uploadMediaMutation.mutate({
+        file: file,
+        type: type
+      });
     } catch (error) {
       setUploadingMedia(false);
       toast({
