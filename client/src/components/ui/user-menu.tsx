@@ -84,6 +84,9 @@ export default function UserMenu() {
           <Link href={user ? `/profile/${user.username}` : "/profile"} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-user-line mr-2"></i> {t('account.profile')}
           </Link>
+          <Link href="/profile-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Profile Settings'}
+          </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
           </Link>
