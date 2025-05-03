@@ -118,7 +118,8 @@ export const handleMediaUpload = (req: Request, res: Response) => {
       mediaType: mediaType,
       mimeType: `${mediaType}/${fileExtension}`,
       timestamp: Date.now(),
-      filename: finalFilename
+      filename: finalFilename,
+      fullUrl: `${req.protocol}://${req.get('host')}/uploads/${uploadDir}/${finalFilename}`
     });
   } catch (error) {
     console.error('[MEDIA] Error processing media upload:', error);
