@@ -713,19 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed the database with initial data
   await seedDatabase();
 
-  // Import the login and register handlers from auth.ts
-  const importAuth = async () => {
-    try {
-      const { setupAuth } = await import('./auth');
-      return setupAuth;
-    } catch (error) {
-      console.error('[ERROR] Failed to import auth.ts:', error);
-      return null;
-    }
-  };
-  
-  // Get the setupAuth function
-  const setupAuthFn = await importAuth();
+  // Authentication already set up earlier with setupAuth(app)
   
   // Direct handling of auth endpoints without redirects
   app.post("/api/register", async (req, res, next) => {
@@ -779,11 +767,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/login", (req, res, next) => {
     console.log("[DEBUG] Login request received at /api/login");
     
-    // Import passport directly to ensure it's available
+    // Use already-set-up passport directly from the import at the top of the file
     import('passport').then(passportModule => {
+      // Get passport instance that was already configured by setupAuth(app)
       const passport = passportModule.default;
       
-      // Use authenticate without custom callback first to handle the authentication
+      // Use the configured passport with the local strategy
       passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
         console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
         
@@ -805,9 +794,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Remove sensitive data before sending the response
-          const { password, ...userWithoutPassword } = user;
+          const { password, passwordResetToken, passwordResetExpires, verificationToken, ...userWithoutPassword } = user;
           
           console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
+          console.log(`[DEBUG] Session ID after login: ${req.sessionID}`);
+          console.log(`[DEBUG] isAuthenticated after login: ${req.isAuthenticated()}`);
           
           // Return the user object without the password
           return res.json(userWithoutPassword);
