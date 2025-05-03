@@ -5,6 +5,7 @@ import { WebSocket } from 'ws';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
@@ -1742,16 +1743,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const baseFilename = `profile_${targetUser.id}_${timestamp}`;
           const optimizedFilename = `${baseFilename}.jpg`; // Always save as jpg for consistency
           
+          // Get current file directory (ES modules replacement for __dirname)
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = path.dirname(__filename);
+          
           // Ensure upload directories exist
-          const uploadDir = './public/uploads';
-          const avatarsDir = './public/uploads/avatars';
+          const rootDir = path.resolve(__dirname, '..');
+          const uploadDir = path.join(rootDir, 'public/uploads');
+          const avatarsDir = path.join(uploadDir, 'avatars');
           
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
+            console.log(`Created uploads directory: ${uploadDir}`);
           }
           
           if (!fs.existsSync(avatarsDir)) {
             fs.mkdirSync(avatarsDir, { recursive: true });
+            console.log(`Created avatars directory: ${avatarsDir}`);
           }
           
           // Save the original file
@@ -1781,7 +1789,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete old avatar file if it exists and is a local file
       if (targetUser.avatar && targetUser.avatar.startsWith('/uploads/')) {
         try {
-          const oldAvatarPath = `./public${targetUser.avatar}`;
+          // Get current file directory (ES modules replacement for __dirname)
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = path.dirname(__filename);
+          const rootDir = path.resolve(__dirname, '..');
+          
+          const oldAvatarPath = path.join(rootDir, 'public', targetUser.avatar);
           if (fs.existsSync(oldAvatarPath)) {
             fs.unlinkSync(oldAvatarPath);
             console.log(`[DEBUG] Deleted old avatar file: ${oldAvatarPath}`);

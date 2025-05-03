@@ -4,6 +4,9 @@ import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import passport from "passport";
 import { verifyToken } from "./jwt-auth";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -18,6 +21,26 @@ const app = express();
 // Increase JSON body size limit to 50MB for image uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Get current file directory (ES modules replacement for __dirname)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure uploads directories exist
+const uploadsDir = path.join(__dirname, '../public/uploads');
+const avatarsDir = path.join(uploadsDir, 'avatars');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory: ${uploadsDir}`);
+}
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+  console.log(`Created avatars directory: ${avatarsDir}`);
+}
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+console.log(`Serving uploads from: ${path.join(__dirname, '../public/uploads')}`);
 
 app.use((req, res, next) => {
   const start = Date.now();
