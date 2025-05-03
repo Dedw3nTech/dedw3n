@@ -260,7 +260,11 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     
     // Add media URL if available
     if (mediaPreview && mediaType !== "none") {
-      postData.mediaUrl = mediaPreview;
+      if (mediaType === "image") {
+        postData.imageUrl = mediaPreview;
+      } else if (mediaType === "video") {
+        postData.videoUrl = mediaPreview;
+      }
     }
     
     // Submit post
