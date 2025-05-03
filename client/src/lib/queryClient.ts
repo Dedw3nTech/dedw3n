@@ -286,39 +286,74 @@ export const queryClient = new QueryClient({
 });
 
 /**
- * Safely handle blob URLs to prevent DOMException errors
- * when a blob URL is no longer valid
+ * Safely handle image URLs to prevent errors related to invalid or malformed URLs
+ * 
+ * This function handles various URL formats:
+ * - Blob URLs (temporary in-memory objects that may become invalid)
+ * - Data URLs (base64 encoded images)
+ * - Relative paths to server resources
+ * - Absolute URLs to external resources
+ * 
  * @param url The URL to sanitize
- * @param fallback Optional fallback URL to use if the input is a blob URL
- * @returns A safe URL that won't cause DOMException errors
+ * @param fallback Optional fallback URL to use if the input URL is invalid
+ * @returns A safe URL that won't cause errors or a fallback if needed
  */
 export function sanitizeImageUrl(url: string | null | undefined, fallback?: string): string {
-  // If no URL or empty string, return fallback or placeholder
+  const defaultFallback = '/assets/default-avatar.png';
+  const effectiveFallback = fallback || defaultFallback;
+  
+  // If no URL or empty string, return fallback
   if (!url || url.trim() === '') {
-    return fallback || '/assets/default-avatar.png';
+    return effectiveFallback;
   }
   
-  // Check if it's a blob URL (which can cause DOMException if not valid)
-  if (url.startsWith('blob:')) {
-    try {
-      // Instead of fetching the blob URL, which might not work in all contexts,
-      // we use a check to see if the URL is at least reasonably formatted
+  try {
+    // Handle blob URLs (which can cause DOMException if no longer valid)
+    if (url.startsWith('blob:')) {
+      // Check if it's at least a properly formatted blob URL
       const isBlobUrl = url.match(/^blob:https?:\/\//i);
       if (!isBlobUrl) {
-        console.warn('Detected potentially invalid blob URL, using fallback');
-        return fallback || '/assets/default-avatar.png';
+        console.warn('Detected invalid blob URL format, using fallback');
+        return effectiveFallback;
       }
-    } catch (e) {
-      // If any error occurs when dealing with the blob URL, use fallback
-      console.warn('Error with blob URL, using fallback', e);
-      return fallback || '/assets/default-avatar.png';
+      
+      // Even with valid format, blob URLs might be temporary
+      // Browser behavior: If the blob is no longer available, the image will fail to load
+      // but at least we won't throw an error
+      return url;
     }
+    
+    // Handle data URLs (base64 encoded images)
+    if (url.startsWith('data:image/')) {
+      // Basic validation that it's a properly formatted data URL
+      if (!url.includes(';base64,')) {
+        console.warn('Detected invalid data URL format, using fallback');
+        return effectiveFallback;
+      }
+      return url;
+    }
+    
+    // Handle relative URLs: normalize them to always start with a slash
+    if (!url.startsWith('http') && !url.startsWith('/') && !url.startsWith('data:')) {
+      return '/' + url;
+    }
+    
+    // Handle absolute URLs
+    if (url.startsWith('http')) {
+      // Basic check for URLs that at least seem to point to image files
+      const isLikelyImageUrl = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(url);
+      if (!isLikelyImageUrl) {
+        // We still accept it, but log a warning
+        console.warn('URL doesn\'t appear to be an image file:', url);
+      }
+      return url;
+    }
+    
+    // For other URLs (like relative paths starting with /)
+    return url;
+  } catch (e) {
+    // Handle any unexpected errors in URL processing
+    console.error('Error processing image URL:', e);
+    return effectiveFallback;
   }
-  
-  // If it's a relative URL, ensure it starts with a slash
-  if (url && !url.startsWith('http') && !url.startsWith('/') && !url.startsWith('data:')) {
-    url = '/' + url;
-  }
-  
-  return url;
 }
