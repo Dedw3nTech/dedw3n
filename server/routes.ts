@@ -1591,6 +1591,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user profile" });
     }
   });
+  
+  // Get user profile picture by ID or username
+  app.get("/api/users/:identifier/profilePicture", async (req, res) => {
+    try {
+      const { identifier } = req.params;
+      const size = req.query.size as string || 'original'; // Get requested size parameter (e.g., 48x48, 96x96)
+      let user;
+
+      console.log(`[DEBUG] Fetching profile picture for identifier: ${identifier}, size: ${size}`);
+      
+      // Check if identifier is a number (userId) or string (username)
+      if (!isNaN(Number(identifier))) {
+        // It's a user ID
+        user = await storage.getUser(Number(identifier));
+      } else {
+        // It's a username
+        user = await storage.getUserByUsername(identifier);
+      }
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (!user.avatar) {
+        // If user has no avatar, return information for default avatar generation
+        console.log(`[DEBUG] No avatar found for user ${identifier}, returning default avatar info`);
+        return res.json({ 
+          url: '/assets/default-avatar.png',
+          username: user.username,
+          initials: user.name 
+            ? `${user.name.charAt(0).toUpperCase()}${user.name.indexOf(' ') > 0 ? user.name.charAt(user.name.indexOf(' ') + 1).toUpperCase() : ''}`
+            : user.username.charAt(0).toUpperCase()
+        });
+      }
+
+      // Return the avatar URL (could be a relative URL or absolute URL)
+      console.log(`[DEBUG] Returning avatar URL for user ${identifier}: ${user.avatar}`);
+      res.json({ 
+        url: user.avatar,
+        username: user.username,
+        userId: user.id
+      });
+    } catch (error) {
+      console.error('Error fetching user profile picture:', error);
+      res.status(500).json({ message: 'Failed to fetch profile picture' });
+    }
+  });
 
   // Register API Routes
   // All routes should be prefixed with /api
