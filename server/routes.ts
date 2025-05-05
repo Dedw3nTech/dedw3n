@@ -4473,19 +4473,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cart", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      console.log("Adding to cart for user:", userId);
+      console.log("Request body:", req.body);
       
       const validatedData = insertCartSchema.parse({
         ...req.body,
         userId,
       });
       
+      console.log("Validated data:", validatedData);
       const cartItem = await storage.addToCart(validatedData);
+      console.log("Added to cart:", cartItem);
       res.status(201).json(cartItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("Validation error:", error.errors);
         return res.status(400).json({ message: error.errors });
       }
-      res.status(500).json({ message: "Failed to add to cart" });
+      console.error("Error adding to cart:", error);
+      res.status(500).json({ message: "Failed to add to cart", error: String(error) });
     }
   });
 
