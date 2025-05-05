@@ -105,6 +105,11 @@ export interface IStorage {
   
   // Cart operations
   countCartItems(userId: number): Promise<number>;
+  addToCart(cartItem: InsertCartItem): Promise<CartItem>;
+  listCartItems(userId: number): Promise<CartItem[]>;
+  getCartItem(id: number): Promise<CartItem | undefined>;
+  updateCartItem(id: number, update: Partial<CartItem>): Promise<CartItem | undefined>;
+  removeCartItem(id: number): Promise<boolean>;
   
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
