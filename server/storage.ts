@@ -100,6 +100,8 @@ export interface IStorage {
   // Product operations
   listProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
+  getProduct(id: number): Promise<Product | undefined>;
+  deleteProduct(id: number): Promise<boolean>;
   
   // Cart operations
   countCartItems(userId: number): Promise<number>;
@@ -991,6 +993,30 @@ export class DatabaseStorage implements IStorage {
   async createProduct(product: InsertProduct): Promise<Product> {
     const [newProduct] = await db.insert(products).values(product).returning();
     return newProduct;
+  }
+  
+  async getProduct(id: number): Promise<Product | undefined> {
+    try {
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id))
+        .limit(1);
+      return product;
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteProduct(id: number): Promise<boolean> {
+    try {
+      await db.delete(products).where(eq(products.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return false;
+    }
   }
 
   // Post operations
