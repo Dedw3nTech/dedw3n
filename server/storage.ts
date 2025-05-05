@@ -602,6 +602,143 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async addToCart(cartItem: { userId: number, productId: number, quantity: number }): Promise<Cart> {
+    try {
+      // Check if product exists
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, cartItem.productId));
+      
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      
+      // Check if item already exists in cart
+      const [existingCartItem] = await db
+        .select()
+        .from(carts)
+        .where(
+          and(
+            eq(carts.userId, cartItem.userId),
+            eq(carts.productId, cartItem.productId)
+          )
+        );
+      
+      if (existingCartItem) {
+        // Update quantity instead of creating a new item
+        const [updatedCartItem] = await db
+          .update(carts)
+          .set({ 
+            quantity: existingCartItem.quantity + cartItem.quantity
+          })
+          .where(eq(carts.id, existingCartItem.id))
+          .returning();
+        
+        return updatedCartItem;
+      }
+      
+      // Create new cart item
+      const [newCartItem] = await db
+        .insert(carts)
+        .values(cartItem)
+        .returning();
+      
+      return newCartItem;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw new Error('Failed to add to cart');
+    }
+  }
+  
+  async listCartItems(userId: number): Promise<any[]> {
+    try {
+      const cartItemsWithProducts = await db
+        .select({
+          cart: carts,
+          product: products
+        })
+        .from(carts)
+        .innerJoin(products, eq(carts.productId, products.id))
+        .where(eq(carts.userId, userId))
+        .orderBy(desc(carts.createdAt));
+      
+      return cartItemsWithProducts.map(({ cart, product }) => ({
+        ...cart,
+        product
+      })) as any;
+    } catch (error) {
+      console.error('Error listing cart items:', error);
+      return [];
+    }
+  }
+  
+  async getCartItem(id: number): Promise<any | undefined> {
+    try {
+      const [item] = await db
+        .select({
+          cart: carts,
+          product: products
+        })
+        .from(carts)
+        .innerJoin(products, eq(carts.productId, products.id))
+        .where(eq(carts.id, id));
+      
+      if (!item) {
+        return undefined;
+      }
+      
+      return {
+        ...item.cart,
+        product: item.product
+      } as any;
+    } catch (error) {
+      console.error('Error getting cart item:', error);
+      return undefined;
+    }
+  }
+  
+  async updateCartItem(id: number, update: Partial<any>): Promise<any | undefined> {
+    try {
+      const [updatedItem] = await db
+        .update(carts)
+        .set(update)
+        .where(eq(carts.id, id))
+        .returning();
+      
+      if (!updatedItem) {
+        return undefined;
+      }
+      
+      // Get the product details
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, updatedItem.productId));
+      
+      return {
+        ...updatedItem,
+        product
+      } as any;
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      return undefined;
+    }
+  }
+  
+  async removeCartItem(id: number): Promise<boolean> {
+    try {
+      await db
+        .delete(carts)
+        .where(eq(carts.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error removing cart item:', error);
+      return false;
+    }
+  }
+  
   // User connection methods
   async connectUsers(userId1: number, userId2: number): Promise<boolean> {
     try {
