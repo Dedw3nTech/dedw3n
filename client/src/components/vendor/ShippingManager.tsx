@@ -339,7 +339,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
                       <TableCell>
                         {order.trackingNumber ? (
                           <div className="flex items-center">
-                            <BarCode className="mr-1 h-3 w-3 text-muted-foreground" />
+                            <Barcode className="mr-1 h-3 w-3 text-muted-foreground" />
                             <span className="text-sm font-mono">{order.trackingNumber}</span>
                           </div>
                         ) : (

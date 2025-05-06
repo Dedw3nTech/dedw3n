@@ -1,368 +1,343 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Store, 
-  Plus, 
-  BarChart4, 
-  Package, 
-  Truck, 
-  ShoppingCart, 
-  Settings, 
-  Users,
-  DollarSign,
-  Loader2
-} from "lucide-react";
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  LayoutDashboard, 
+  Package, 
+  Users, 
+  Truck, 
+  Settings, 
+  BarChart,
+  Store,
+  Loader2,
+  PlusCircle
+} from "lucide-react";
 
 // Import vendor components
 import ProductsList from "@/components/vendor/ProductsList";
+import VendorAnalytics from "@/components/vendor/VendorAnalytics";
 import OrdersList from "@/components/vendor/OrdersList";
-import ShippingManager from "@/components/vendor/ShippingManager";
 import CustomersList from "@/components/vendor/CustomersList";
+import ShippingManager from "@/components/vendor/ShippingManager";
 import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
 
-export default function VendorDashboardPage() {
-  const [location, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // Check if user is logged in
-  const { data: userData, isLoading: isLoadingUser } = useQuery({
-    queryKey: ["/api/auth/me"],
-  });
-
-  // Fetch vendor data if user is logged in
-  const { data: vendorData, isLoading: isLoadingVendor } = useQuery({
+export default function VendorDashboard() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [vendorId, setVendorId] = useState<number | null>(null);
+  
+  // Fetch vendor profile
+  const { data: vendor, isLoading: isLoadingVendor } = useQuery({
     queryKey: ["/api/vendors/me"],
-    enabled: !!userData?.id && !!userData?.isVendor,
+    queryFn: async () => {
+      const response = await fetch("/api/vendors/me");
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Not a vendor yet
+          return null;
+        }
+        throw new Error("Failed to fetch vendor profile");
+      }
+      return response.json();
+    },
+    enabled: !!user,
   });
 
-  // Fetch analytics data for the vendor
-  const { data: analyticsSummary, isLoading: isLoadingAnalytics } = useQuery({
-    queryKey: ["/api/vendors", vendorData?.id, "analytics/summary"],
-    enabled: !!vendorData?.id,
+  // Fetch summary data
+  const { data: summary, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ["/api/vendors/summary"],
+    queryFn: async () => {
+      const response = await fetch("/api/vendors/summary");
+      if (!response.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+      return response.json();
+    },
+    enabled: !!vendorId,
   });
 
-  // Redirect if not logged in
-  if (!isLoadingUser && !userData) {
-    setLocation("/auth?redirect=/vendor-dashboard");
-    return null;
+  // Set vendor ID when data is loaded
+  useEffect(() => {
+    if (vendor && vendor.id) {
+      setVendorId(vendor.id);
+    }
+  }, [vendor]);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!user) {
+      setLocation('/auth');
+    }
+  }, [user, setLocation]);
+
+  // Handle becoming a vendor
+  const handleBecomeVendor = () => {
+    setLocation('/become-vendor');
+  };
+
+  // Loading state
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  // Redirect if not a vendor
-  if (!isLoadingUser && userData && !userData.isVendor) {
-    setLocation("/become-vendor");
-    return null;
+  // Not a vendor yet
+  if (!isLoadingVendor && !vendor) {
+    return (
+      <div className="container max-w-6xl mx-auto py-12 px-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Become a Vendor</CardTitle>
+            <CardDescription>
+              Start selling your products on our marketplace
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <Store className="h-8 w-8 text-primary mb-2" />
+                  <CardTitle>Create Your Store</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  Set up your own branded storefront with custom logo and description.
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <Package className="h-8 w-8 text-primary mb-2" />
+                  <CardTitle>Sell Your Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  List and sell your products to customers around the world.
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <BarChart className="h-8 w-8 text-primary mb-2" />
+                  <CardTitle>Grow Your Business</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  Access analytics and tools to help your business grow.
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="flex justify-center mt-6">
+              <Button size="lg" onClick={handleBecomeVendor}>
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Become a Vendor
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
-
-  const isLoading = isLoadingUser || isLoadingVendor || isLoadingAnalytics;
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row items-start gap-8">
-        {/* Sidebar */}
-        <div className="w-full md:w-64 space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              {isLoading ? (
-                <div className="space-y-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div>
-                      <Skeleton className="h-4 w-36" />
-                      <Skeleton className="h-3 w-24 mt-2" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={vendorData?.logo || "/placeholder-logo.png"} alt={vendorData?.storeName} />
-                      <AvatarFallback>
-                        <Store className="h-6 w-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-base font-semibold">{vendorData?.storeName}</h3>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                          <span className="text-yellow-500 mr-1">
-                            <i className="ri-star-fill"></i>
-                          </span>
-                          <span>{vendorData?.rating || 0}</span>
-                        </div>
-                        <span className="mx-1">•</span>
-                        <span>{vendorData?.ratingCount || 0} reviews</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {vendorData?.description || "No description available"}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    <div className="container max-w-7xl mx-auto py-8 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
+        {/* Sidebar Navigation */}
+        <div className="space-y-4">
+          <div className="mb-4">
+            <div className="font-medium text-xl flex items-center">
+              <Store className="mr-2 h-5 w-5" />
+              {vendor?.storeName || "Vendor Dashboard"}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {user?.username || ""}
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <nav className="flex flex-col">
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "overview" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("overview")}
-                >
-                  <BarChart4 className="mr-2 h-4 w-4" />
-                  Overview
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "products" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("products")}
-                >
-                  <Package className="mr-2 h-4 w-4" />
-                  Products
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "orders" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("orders")}
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Orders
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "shipping" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("shipping")}
-                >
-                  <Truck className="mr-2 h-4 w-4" />
-                  Shipping
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "customers" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("customers")}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Customers
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className={`justify-start rounded-none px-4 py-2 text-left ${activeTab === "settings" ? "bg-muted" : ""}`}
-                  onClick={() => setActiveTab("settings")}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Button>
-              </nav>
-            </CardContent>
-          </Card>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            orientation="vertical"
+            className="space-y-2"
+          >
+            <TabsList className="flex flex-col h-auto bg-transparent justify-start space-y-1">
+              <TabsTrigger
+                value="dashboard"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger
+                value="products"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Products
+              </TabsTrigger>
+              <TabsTrigger
+                value="orders"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <BarChart className="h-4 w-4 mr-2" />
+                Orders
+              </TabsTrigger>
+              <TabsTrigger
+                value="customers"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Customers
+              </TabsTrigger>
+              <TabsTrigger
+                value="shipping"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <Truck className="h-4 w-4 mr-2" />
+                Shipping
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 w-full">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex items-center justify-between mb-4">
-              <TabsList className="hidden">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="products">Products</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-                <TabsTrigger value="shipping">Shipping</TabsTrigger>
-                <TabsTrigger value="customers">Customers</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              
-              {activeTab === "products" && (
-                <Button onClick={() => setLocation("/add-product")}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Product
-                </Button>
-              )}
+        {/* Main Content */}
+        <div className="space-y-6">
+          <TabsContent value="dashboard" className="mt-0 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+              <Button onClick={() => setLocation('/add-product')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
             </div>
 
-            {/* Overview tab content */}
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-28" />
+            {/* Dashboard Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {isLoadingSummary ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <div className="text-2xl font-bold">
-                        ${analyticsSummary?.totalRevenue?.toFixed(2) || "0.00"}
-                      </div>
+                      summary?.productCount || 0
                     )}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Orders</CardTitle>
-                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-20" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Orders
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {isLoadingSummary ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <div className="text-2xl font-bold">
-                        {analyticsSummary?.totalOrders || "0"}
-                      </div>
+                      summary?.orderCount || 0
                     )}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Products</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-20" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Revenue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {isLoadingSummary ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <div className="text-2xl font-bold">
-                        {analyticsSummary?.totalProducts || "0"}
-                      </div>
+                      `$${(summary?.totalRevenue || 0).toFixed(2)}`
                     )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Orders</CardTitle>
-                  <CardDescription>
-                    Your most recent orders and their status
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                          <Skeleton className="h-12 w-12" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-48" />
-                            <Skeleton className="h-3 w-32" />
-                          </div>
-                          <div className="ml-auto">
-                            <Skeleton className="h-8 w-24" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : analyticsSummary?.recentOrders?.length ? (
-                    <div className="space-y-4">
-                      {analyticsSummary.recentOrders.map((order) => (
-                        <div key={order.id} className="flex items-center gap-4 border-b pb-4">
-                          <div className="flex-1">
-                            <div className="font-medium">Order #{order.id}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {new Date(order.date).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className="text-sm">${order.total.toFixed(2)}</div>
-                          <div>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              order.status === "delivered" ? "bg-green-100 text-green-800" :
-                              order.status === "shipped" ? "bg-blue-100 text-blue-800" :
-                              order.status === "processing" ? "bg-yellow-100 text-yellow-800" :
-                              "bg-gray-100 text-gray-800"
-                            }`}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                        <ShoppingCart className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <h3 className="font-medium mb-1">No orders yet</h3>
-                      <p className="text-sm">You haven't received any orders yet.</p>
-                    </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-
-            {/* Products tab content */}
-            <TabsContent value="products">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Products</CardTitle>
-                  <CardDescription>
-                    Manage your product inventory
-                  </CardDescription>
+              <Card className="shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Pending Orders
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ProductsList vendorId={vendorData?.id} />
+                  <div className="text-2xl font-bold">
+                    {isLoadingSummary ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      summary?.pendingOrderCount || 0
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
 
-            {/* Orders tab content */}
-            <TabsContent value="orders">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Orders</CardTitle>
-                  <CardDescription>
-                    View and manage all your orders
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <OrdersList vendorId={vendorData?.id} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* Analytics */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium">Analytics Overview</h3>
+              {vendorId && <VendorAnalytics vendorId={vendorId} />}
+            </div>
+          </TabsContent>
 
-            {/* Shipping tab content */}
-            <TabsContent value="shipping">
-              <ShippingManager vendorId={vendorData?.id} />
-            </TabsContent>
+          {/* Products Tab */}
+          <TabsContent value="products" className="mt-0 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold tracking-tight">Products</h2>
+              <Button onClick={() => setLocation('/add-product')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            </div>
+            <ProductsList vendorId={vendorId || undefined} />
+          </TabsContent>
 
-            {/* Customers tab content */}
-            <TabsContent value="customers">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customers</CardTitle>
-                  <CardDescription>
-                    View customer information and purchase history
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CustomersList vendorId={vendorData?.id} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="mt-0 space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Orders</h2>
+            <OrdersList vendorId={vendorId || undefined} />
+          </TabsContent>
 
-            {/* Settings tab content */}
-            <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Store Settings</CardTitle>
-                  <CardDescription>
-                    Manage your vendor profile and store settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <StoreSettingsForm vendor={vendorData} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          {/* Customers Tab */}
+          <TabsContent value="customers" className="mt-0 space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Customers</h2>
+            <CustomersList vendorId={vendorId || undefined} />
+          </TabsContent>
+
+          {/* Shipping Tab */}
+          <TabsContent value="shipping" className="mt-0 space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Shipping</h2>
+            <ShippingManager vendorId={vendorId || undefined} />
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="mt-0 space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Store Settings</h2>
+            <StoreSettingsForm vendor={vendor} />
+          </TabsContent>
         </div>
       </div>
     </div>
