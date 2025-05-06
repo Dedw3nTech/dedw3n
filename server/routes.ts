@@ -3218,6 +3218,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get vendor customers
+  // Get vendor dashboard summary
+  app.get("/api/vendors/summary", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get the vendor data for this user
+      const vendor = await storage.getVendorByUserId(userId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      // Get counts and totals
+      const products = await storage.listProducts({ vendorId: vendor.id });
+      const orders = await storage.getOrdersForVendor(vendor.id);
+      const pendingOrders = orders.filter(order => order.status === "pending");
+      
+      // Calculate total revenue
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      
+      res.json({
+        productCount: products.length,
+        orderCount: orders.length,
+        pendingOrderCount: pendingOrders.length,
+        totalRevenue: totalRevenue
+      });
+      
+    } catch (error) {
+      console.error("Error getting vendor summary:", error);
+      res.status(500).json({ message: "Failed to get vendor summary" });
+    }
+  });
+
   app.get("/api/vendors/customers", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;

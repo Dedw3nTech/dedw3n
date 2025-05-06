@@ -40,10 +40,7 @@ export default function UserMenu() {
   };
 
   const handleSwitchToDashboard = () => {
-    toast({
-      title: t('vendor.dashboard'),
-      description: t('vendor.dashboard') + " " + t('misc.success').toLowerCase(),
-    });
+    setLocation('/vendor-dashboard');
     setIsOpen(false);
   };
 
