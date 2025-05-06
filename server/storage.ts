@@ -602,7 +602,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async addToCart(cartItem: { userId: number, productId: number, quantity: number }): Promise<Cart> {
+  async addToCart(cartItem: InsertCart): Promise<Cart> {
     try {
       // Check if product exists
       const [product] = await db
@@ -627,10 +627,11 @@ export class DatabaseStorage implements IStorage {
       
       if (existingCartItem) {
         // Update quantity instead of creating a new item
+        const newQuantity = existingCartItem.quantity + (cartItem.quantity || 1);
         const [updatedCartItem] = await db
           .update(carts)
           .set({ 
-            quantity: existingCartItem.quantity + cartItem.quantity
+            quantity: newQuantity
           })
           .where(eq(carts.id, existingCartItem.id))
           .returning();
@@ -638,10 +639,15 @@ export class DatabaseStorage implements IStorage {
         return updatedCartItem;
       }
       
-      // Create new cart item
+      // Create new cart item with default quantity if not provided
+      const cartItemWithDefaults = {
+        ...cartItem,
+        quantity: cartItem.quantity || 1
+      };
+      
       const [newCartItem] = await db
         .insert(carts)
-        .values(cartItem)
+        .values(cartItemWithDefaults)
         .returning();
       
       return newCartItem;
@@ -651,7 +657,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async listCartItems(userId: number): Promise<any[]> {
+  async listCartItems(userId: number): Promise<(Cart & { product: Product })[]> {
     try {
       const cartItemsWithProducts = await db
         .select({
@@ -666,14 +672,14 @@ export class DatabaseStorage implements IStorage {
       return cartItemsWithProducts.map(({ cart, product }) => ({
         ...cart,
         product
-      })) as any;
+      }));
     } catch (error) {
       console.error('Error listing cart items:', error);
       return [];
     }
   }
   
-  async getCartItem(id: number): Promise<any | undefined> {
+  async getCartItem(id: number): Promise<(Cart & { product: Product }) | undefined> {
     try {
       const [item] = await db
         .select({
@@ -691,14 +697,14 @@ export class DatabaseStorage implements IStorage {
       return {
         ...item.cart,
         product: item.product
-      } as any;
+      };
     } catch (error) {
       console.error('Error getting cart item:', error);
       return undefined;
     }
   }
   
-  async updateCartItem(id: number, update: Partial<any>): Promise<any | undefined> {
+  async updateCartItem(id: number, update: Partial<Cart>): Promise<(Cart & { product: Product }) | undefined> {
     try {
       const [updatedItem] = await db
         .update(carts)
@@ -719,7 +725,7 @@ export class DatabaseStorage implements IStorage {
       return {
         ...updatedItem,
         product
-      } as any;
+      };
     } catch (error) {
       console.error('Error updating cart item:', error);
       return undefined;
