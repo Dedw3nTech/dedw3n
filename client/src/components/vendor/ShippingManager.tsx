@@ -1,20 +1,34 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Truck, Package, CheckCircle2, AlertCircle, Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { 
+  Truck, 
+  Package, 
+  Search, 
+  Loader2,
+  PackageCheck,
+  Map,
+  Barcode
+} from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -22,298 +36,437 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ShippingManagerProps {
   vendorId?: number;
 }
 
 export default function ShippingManager({ vendorId }: ShippingManagerProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [shippingStatusFilter, setShippingStatusFilter] = useState("all");
   const { toast } = useToast();
-  
-  // Fetch vendor orders
-  const { data, isLoading } = useQuery({
-    queryKey: ["/api/vendors/orders"],
+  const [searchQuery, setSearchQuery] = useState("");
+  const [shippingProvider, setShippingProvider] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Fetch pending shipments (orders that are paid but not shipped)
+  const { data: pendingShipments, isLoading: isLoadingPending } = useQuery({
+    queryKey: ["/api/vendors/orders", "processing"],
+    queryFn: async () => {
+      const response = await fetch("/api/vendors/orders?status=processing");
+      if (!response.ok) {
+        throw new Error("Failed to fetch pending shipments");
+      }
+      return response.json();
+    },
     enabled: !!vendorId,
   });
 
-  const updateShippingStatus = async (orderId: number, status: string, trackingNumber?: string) => {
-    try {
-      await apiRequest("PUT", `/api/vendors/orders/${orderId}/shipping`, {
-        status,
-        trackingNumber,
+  // Fetch shipped orders
+  const { data: shippedOrders, isLoading: isLoadingShipped } = useQuery({
+    queryKey: ["/api/vendors/orders", "shipped"],
+    queryFn: async () => {
+      const response = await fetch("/api/vendors/orders?status=shipped");
+      if (!response.ok) {
+        throw new Error("Failed to fetch shipped orders");
+      }
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  // Update shipping info mutation
+  const updateShippingMutation = useMutation({
+    mutationFn: async ({ orderId, trackingNumber, provider }: { orderId: number, trackingNumber: string, provider: string }) => {
+      const response = await apiRequest("PUT", `/api/vendors/orders/${orderId}/shipping`, { 
+        tracking: trackingNumber,
+        provider: provider
       });
-      
-      // Show success message
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Shipping updated",
-        description: `The order shipping status has been updated to ${status}.`,
+        title: "Shipping Updated",
+        description: "Order has been marked as shipped with tracking information.",
       });
       
-      // Invalidate orders cache
+      // Clear form
+      setTrackingNumber("");
+      setShippingProvider("");
+      setIsDialogOpen(false);
+      
+      // Invalidate queries to refetch the data
       queryClient.invalidateQueries({ queryKey: ["/api/vendors/orders"] });
-    } catch (error) {
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update shipping status. Please try again.",
+        description: `Failed to update shipping: ${error.message}`,
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  // Filter and sort orders
-  const getFilteredOrders = () => {
-    if (!data || !data.orders) return [];
+  // Filter orders based on search query
+  const filteredPendingShipments = pendingShipments?.filter((order: any) => {
+    if (!searchQuery) return true;
     
-    const filtered = data.orders.filter((order: any) => {
-      // Filter by shipping status
-      if (shippingStatusFilter !== "all" && order.status !== shippingStatusFilter) {
-        return false;
-      }
-      
-      // Filter by search term
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          order.id.toString().includes(searchLower) ||
-          (order.trackingNumber && order.trackingNumber.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      return true;
-    });
-    
-    // Sort orders by date (newest first)
-    return filtered.sort((a: any, b: any) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA;
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            Pending
-          </Badge>
-        );
-      case "processing":
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
-            <Package className="h-3 w-3" />
-            Processing
-          </Badge>
-        );
-      case "shipped":
-        return (
-          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 flex items-center gap-1">
-            <Truck className="h-3 w-3" />
-            Shipped
-          </Badge>
-        );
-      case "delivered":
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3" />
-            Delivered
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </Badge>
-        );
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading shipping information...</div>;
-  }
-
-  const filteredOrders = getFilteredOrders();
-
-  // Group orders by status for dashboard
-  const pendingOrders = data.orders.filter((o: any) => o.status === "pending").length;
-  const processingOrders = data.orders.filter((o: any) => o.status === "processing").length;
-  const shippedOrders = data.orders.filter((o: any) => o.status === "shipped").length;
-  const deliveredOrders = data.orders.filter((o: any) => o.status === "delivered").length;
-
-  if (!data.orders || data.orders.length === 0) {
+    const query = searchQuery.toLowerCase();
     return (
-      <div className="text-center py-6 text-muted-foreground">
-        <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-          <Truck className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="font-medium mb-1">No shipments yet</h3>
-        <p className="text-sm">You haven't shipped any orders yet.</p>
+      order.id.toString().includes(query) ||
+      order.customerName?.toLowerCase().includes(query) ||
+      order.customerEmail?.toLowerCase().includes(query)
+    );
+  });
+
+  const filteredShippedOrders = shippedOrders?.filter((order: any) => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      order.id.toString().includes(query) ||
+      order.customerName?.toLowerCase().includes(query) ||
+      order.customerEmail?.toLowerCase().includes(query) ||
+      order.trackingNumber?.toLowerCase().includes(query)
+    );
+  });
+
+  // Handle ship now
+  const handleShipNow = (order: any) => {
+    setSelectedOrder(order);
+    setTrackingNumber(order.trackingNumber || "");
+    setShippingProvider(order.shippingProvider || "");
+    setIsDialogOpen(true);
+  };
+
+  // Handle submit shipping
+  const handleSubmitShipping = () => {
+    if (!selectedOrder) return;
+    if (!trackingNumber) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a tracking number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateShippingMutation.mutate({
+      orderId: selectedOrder.id,
+      trackingNumber,
+      provider: shippingProvider
+    });
+  };
+
+  // Loading state
+  if (isLoadingPending || isLoadingShipped) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Shipping Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-lg font-medium">Pending Shipments</CardTitle>
+            <CardDescription>
+              Orders that need to be shipped
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingOrders}</div>
+            <div className="text-3xl font-bold">
+              {pendingShipments?.length || 0}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
+            <CardTitle className="text-lg font-medium">Shipped Today</CardTitle>
+            <CardDescription>
+              Orders shipped in the last 24 hours
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{processingOrders}</div>
+            <div className="text-3xl font-bold">
+              {shippedOrders?.filter((order: any) => {
+                const orderDate = new Date(order.shippedDate || order.updatedAt);
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                return orderDate >= yesterday;
+              }).length || 0}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Shipped</CardTitle>
+            <CardTitle className="text-lg font-medium">Total Shipped</CardTitle>
+            <CardDescription>
+              All-time shipped orders
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{shippedOrders}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{deliveredOrders}</div>
+            <div className="text-3xl font-bold">
+              {shippedOrders?.length || 0}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Shipping Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Shipments</CardTitle>
-          <CardDescription>Update shipping status and tracking information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by order ID or tracking number"
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select
-              defaultValue={shippingStatusFilter}
-              onValueChange={setShippingStatusFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Shipments</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="relative mb-4">
+        <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search orders..."
+          className="pl-8"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Search className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <h3 className="font-medium mb-1">No shipments found</h3>
-              <p className="text-sm">Try adjusting your filters</p>
+      <Tabs defaultValue="pending">
+        <TabsList>
+          <TabsTrigger value="pending">
+            Pending Shipments ({pendingShipments?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="shipped">
+            Shipped Orders ({shippedOrders?.length || 0})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Pending Shipments Tab */}
+        <TabsContent value="pending" className="space-y-4">
+          {filteredPendingShipments?.length === 0 ? (
+            <div className="text-center py-10">
+              <Package className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+              <h3 className="mt-4 text-lg font-medium">No pending shipments</h3>
+              <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+                All orders have been shipped or there are no processed orders yet.
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredOrders.map((order: any) => (
-                <Card key={order.id} className="overflow-hidden">
-                  <CardHeader className="pb-2 bg-muted/30">
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <div>
-                        <CardTitle className="text-base">Order #{order.id}</CardTitle>
-                        <CardDescription>
-                          {order.createdAt ? format(new Date(order.createdAt), "MMM d, yyyy") : "Date unavailable"}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(order.status)}
-                        <div className="text-sm font-medium">
-                          ${order.totalAmount?.toFixed(2) || "0.00"}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPendingShipments?.map((order: any) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">#{order.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.customerName}</div>
+                          <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
                         </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm font-medium mb-1">Shipping Address</div>
-                        <div className="text-sm">{order.shippingAddress || "Not available"}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium mb-1">Items</div>
-                        <div className="text-sm">
-                          {data.orderItems
-                            .filter((item: any) => item.orderId === order.id)
-                            .map((item: any, index: number) => (
-                              <div key={item.id} className="flex justify-between items-center">
-                                <span>
-                                  {item.product?.name || `Product #${item.productId}`}
-                                  <span className="text-muted-foreground"> × {item.quantity}</span>
-                                </span>
-                                <span>${item.totalPrice?.toFixed(2) || "0.00"}</span>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t bg-muted/30 flex flex-col sm:flex-row gap-2">
-                    <Select 
-                      defaultValue={order.status}
-                      onValueChange={(value) => updateShippingStatus(order.id, value, order.trackingNumber)}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Input 
-                      placeholder="Add tracking number"
-                      defaultValue={order.trackingNumber || ""}
-                      className="flex-1"
-                      onChange={(e) => {
-                        const trackingNumber = e.target.value;
-                        if (trackingNumber && trackingNumber !== order.trackingNumber) {
-                          updateShippingStatus(order.id, order.status, trackingNumber);
-                        }
-                      }}
-                    />
-                  </CardFooter>
-                </Card>
-              ))}
+                      </TableCell>
+                      <TableCell>{order.date ? format(new Date(order.date), "MMM d, yyyy") : "—"}</TableCell>
+                      <TableCell>{order.items?.length || 0} items</TableCell>
+                      <TableCell>${order.total?.toFixed(2) || "0.00"}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          onClick={() => handleShipNow(order)}
+                        >
+                          <Truck className="mr-2 h-4 w-4" />
+                          Ship Now
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        {/* Shipped Orders Tab */}
+        <TabsContent value="shipped" className="space-y-4">
+          {filteredShippedOrders?.length === 0 ? (
+            <div className="text-center py-10">
+              <Truck className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+              <h3 className="mt-4 text-lg font-medium">No shipped orders</h3>
+              <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+                You haven't shipped any orders yet.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Shipped Date</TableHead>
+                    <TableHead>Tracking #</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredShippedOrders?.map((order: any) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">#{order.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.customerName}</div>
+                          <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {order.shippedDate ? format(new Date(order.shippedDate), "MMM d, yyyy") : 
+                         order.updatedAt ? format(new Date(order.updatedAt), "MMM d, yyyy") : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {order.trackingNumber ? (
+                          <div className="flex items-center">
+                            <BarCode className="mr-1 h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm font-mono">{order.trackingNumber}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No tracking</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {order.shippingProvider ? (
+                          <Badge variant="outline">
+                            {order.shippingProvider}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleShipNow(order)}
+                        >
+                          <PackageCheck className="mr-2 h-4 w-4" />
+                          Update
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Shipping Details Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Shipping Details</DialogTitle>
+            <DialogDescription>
+              Enter shipping information for order #{selectedOrder?.id}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="provider" className="text-right text-sm font-medium">
+                Shipping Provider
+              </label>
+              <div className="col-span-3">
+                <Select 
+                  value={shippingProvider} 
+                  onValueChange={setShippingProvider}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select shipping provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FedEx">FedEx</SelectItem>
+                    <SelectItem value="UPS">UPS</SelectItem>
+                    <SelectItem value="USPS">USPS</SelectItem>
+                    <SelectItem value="DHL">DHL</SelectItem>
+                    <SelectItem value="Royal Mail">Royal Mail</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="tracking" className="text-right text-sm font-medium">
+                Tracking Number
+              </label>
+              <div className="col-span-3">
+                <Input
+                  id="tracking"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="Enter tracking number"
+                />
+              </div>
+            </div>
+            
+            {selectedOrder?.shippingAddress && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium mb-2 flex items-center">
+                  <Map className="mr-2 h-4 w-4" /> 
+                  Shipping Address
+                </h4>
+                <div className="rounded-lg border p-3 text-sm">
+                  <div>{selectedOrder.shippingAddress.line1}</div>
+                  {selectedOrder.shippingAddress.line2 && <div>{selectedOrder.shippingAddress.line2}</div>}
+                  <div>
+                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.postalCode}
+                  </div>
+                  <div>{selectedOrder.shippingAddress.country}</div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitShipping}
+              disabled={updateShippingMutation.isPending}
+            >
+              {updateShippingMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Truck className="mr-2 h-4 w-4" />
+                  {selectedOrder?.status === "shipped" ? "Update Shipping" : "Mark as Shipped"}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
