@@ -219,7 +219,8 @@ export default function VendorDashboard() {
 
         {/* Main Content */}
         <div className="space-y-6">
-          <TabsContent value="dashboard" className="mt-0 space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="dashboard" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
               <Button onClick={() => setLocation('/add-product')}>
@@ -338,6 +339,7 @@ export default function VendorDashboard() {
             <h2 className="text-2xl font-bold tracking-tight">Store Settings</h2>
             <StoreSettingsForm vendor={vendor} />
           </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
