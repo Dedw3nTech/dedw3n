@@ -18,6 +18,7 @@ import { scrypt, randomBytes } from "crypto";
 import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
 import { registerPaypalRoutes } from "./paypal";
+import { fraudRiskMiddleware, highRiskActionMiddleware, registerFraudPreventionRoutes } from "./fraud-prevention";
 import { registerShippingRoutes } from "./shipping";
 import { registerImageRoutes } from "./image-handler";
 import { registerMediaRoutes } from "./media-handler";
@@ -341,6 +342,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup JWT authentication routes
   setupJwtAuth(app);
+  
+  // Apply fraud prevention middleware globally
+  app.use(fraudRiskMiddleware);
+  
+  // Register fraud prevention routes
+  registerFraudPreventionRoutes(app);
   
   // Unified auth endpoint for getting current user
   app.get('/api/auth/me', unifiedIsAuthenticated, (req: Request, res: Response) => {
