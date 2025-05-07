@@ -281,6 +281,12 @@ const contactSubmissions: ContactFormSubmission[] = [];
 let submissionId = 1;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply fraud risk middleware to all routes
+  app.use(fraudRiskMiddleware);
+  
+  // Register fraud prevention routes
+  registerFraudPreventionRoutes(app);
+  
   // Page content API endpoints
   app.get('/api/page/:id', (req: Request, res: Response) => {
     const { id } = req.params;
