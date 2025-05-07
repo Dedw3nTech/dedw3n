@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import Stripe from "stripe";
 import { storage } from "./storage";
+import { highRiskActionMiddleware } from "./fraud-prevention";
 
 // Initialize Stripe with the secret key
 // We'll use a placeholder configuration for now
@@ -156,8 +157,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
  * Register payment-related routes to the Express app
  */
 export function registerPaymentRoutes(app: any) {
-  app.post("/api/payments/create-intent", createPaymentIntent);
-  app.post("/api/payments/success", handlePaymentSuccess);
-  app.post("/api/payments/create-customer", createStripeCustomer);
+  // Apply high risk fraud protection to payment operations
+  app.post("/api/payments/create-intent", highRiskActionMiddleware, createPaymentIntent);
+  app.post("/api/payments/success", highRiskActionMiddleware, handlePaymentSuccess);
+  app.post("/api/payments/create-customer", highRiskActionMiddleware, createStripeCustomer);
+  // Webhook doesn't need fraud protection as it comes from Stripe
   app.post("/api/payments/webhook", handleStripeWebhook);
 }

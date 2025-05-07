@@ -5146,8 +5146,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Wallet transfers route
-  app.post("/api/transfers", isAuthenticated, async (req, res) => {
+  // Wallet transfers route - apply high risk middleware for fraud prevention
+  app.post("/api/transfers", isAuthenticated, highRiskActionMiddleware, async (req, res) => {
     try {
       const senderId = (req.user as any).id;
       const { recipientUsername, amount, description } = req.body;

@@ -1,6 +1,7 @@
 import { Request, Response, Express, NextFunction } from "express";
 import { storage } from "./storage";
 import { isAuthenticated } from "./unified-auth";
+import { highRiskActionMiddleware } from "./fraud-prevention";
 
 /**
  * Check if the user has an active subscription or free trial
@@ -192,15 +193,15 @@ export const hasActiveSubscription = async (req: Request, res: Response, next: N
  * Register subscription routes
  */
 export function registerSubscriptionRoutes(app: Express) {
-  // Get subscription status - protected by authentication
+  // Get subscription status - protected by authentication but low risk
   app.get('/api/subscription/status', isAuthenticated, getSubscriptionStatus);
   
-  // Activate subscription (in a real app, this would integrate with a payment gateway)
-  app.post('/api/subscription/activate', isAuthenticated, activateSubscription);
+  // Activate subscription with high-risk fraud protection
+  app.post('/api/subscription/activate', isAuthenticated, highRiskActionMiddleware, activateSubscription);
   
-  // Activate free trial
-  app.post('/api/subscription/activate-trial', isAuthenticated, activateTrial);
+  // Activate free trial with high-risk fraud protection
+  app.post('/api/subscription/activate-trial', isAuthenticated, highRiskActionMiddleware, activateTrial);
   
-  // Cancel subscription
-  app.post('/api/subscription/cancel', isAuthenticated, cancelSubscription);
+  // Cancel subscription with high-risk fraud protection
+  app.post('/api/subscription/cancel', isAuthenticated, highRiskActionMiddleware, cancelSubscription);
 }
