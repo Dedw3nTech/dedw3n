@@ -3,7 +3,7 @@ import { storage } from "./storage";
 import { getUserAgent, getClientIp, getDeviceInfo } from "./utils";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
-import { fraudRiskAssessments } from "@shared/fraud-schema";
+import { fraudRiskAssessments } from "@shared/schema";
 import { hashPassword } from "./auth"; // Use the hashPassword function instead of generateHash
 
 // Risk levels for different fraud signals
@@ -538,7 +538,7 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
         requestPath: req.path,
         requestMethod: req.method,
         anonymousFingerprint: hashOnly,
-        assessmentData: assessment as any
+        assessmentData: JSON.stringify(assessment)
       });
     } else {
       await db.insert(fraudRiskAssessments).values({
@@ -550,7 +550,7 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
         riskLevel: overallRisk,
         requestPath: req.path,
         requestMethod: req.method,
-        assessmentData: assessment as any
+        assessmentData: JSON.stringify(assessment)
       });
     }
   } catch (error) {
@@ -637,9 +637,9 @@ export function highRiskActionMiddleware(req: Request, res: Response, next: Next
 /**
  * Register fraud prevention routes for the API
  */
-export function registerFraudPreventionRoutes(app: Express) {
+export function registerFraudPreventionRoutes(app: any) {
   // Get risk assessment for current request
-  app.get("/api/fraud/assess", async (req, res) => {
+  app.get("/api/fraud/assess", async (req: Request, res: Response) => {
     try {
       const assessment = await assessFraudRisk(req);
       
@@ -659,7 +659,7 @@ export function registerFraudPreventionRoutes(app: Express) {
   });
   
   // Admin endpoint to get detailed risk assessment
-  app.get("/api/admin/fraud/assessment/:requestId", async (req, res) => {
+  app.get("/api/admin/fraud/assessment/:requestId", async (req: Request, res: Response) => {
     try {
       // Ensure user is admin
       if (req.user?.role !== 'admin') {
