@@ -1,10 +1,19 @@
 import type { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { getUserAgent, getClientIp, getDeviceInfo } from "./utils";
+import { safeJsonStringify, getErrorMessage } from "./utils";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { fraudRiskAssessments } from "@shared/schema";
 import { hashPassword } from "./auth"; // Use the hashPassword function instead of generateHash
+import { TokenPayload } from "./jwt-auth"; // Import TokenPayload type
+
+// Update TokenPayload interface to include id property needed for fraud prevention
+declare module "./jwt-auth" {
+  interface TokenPayload {
+    id?: number; // Optional ID to match with User interface
+    userId: number; // Already exists in TokenPayload
+  }
+}
 
 // Risk levels for different fraud signals
 enum RiskLevel {
@@ -125,6 +134,13 @@ async function evaluateIpRisk(ip: string): Promise<{
   };
   
   return { riskLevel, details, signals };
+}
+
+/**
+ * Get user agent string from request
+ */
+function getUserAgent(req: Request): string {
+  return req.headers['user-agent'] as string || 'Unknown';
 }
 
 /**
@@ -283,12 +299,13 @@ async function evaluateUserRisk(userId: number | null, email?: string, phone?: s
     // 3. Check for past fraudulent activity
     // 4. Verify email and phone are confirmed
     
-  } catch (error) {
-    console.error("Error evaluating user risk:", error);
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
+    console.error("Error evaluating user risk:", errorMessage);
     signals.push({
       type: 'user',
       name: 'user_check_error',
-      value: error.message,
+      value: errorMessage,
       riskLevel: RiskLevel.MEDIUM,
       confidence: 0.5,
       description: 'Error while checking user data'
@@ -637,7 +654,7 @@ export function highRiskActionMiddleware(req: Request, res: Response, next: Next
 /**
  * Register fraud prevention routes for the API
  */
-export function registerFraudPreventionRoutes(app: any) {
+export function registerFraudPreventionRoutes(app: Express) {
   // Get risk assessment for current request
   app.get("/api/fraud/assess", async (req: Request, res: Response) => {
     try {

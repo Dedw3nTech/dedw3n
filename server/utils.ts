@@ -1,139 +1,175 @@
 /**
- * Server utility functions
+ * Utility functions for the server
  */
-import type { Request } from "express";
 
 /**
- * Get the user agent from the request
+ * Safely stringifies an object to JSON, handling circular references
+ * @param obj The object to stringify
+ * @returns JSON string representation of the object
  */
-export function getUserAgent(req: Request): string {
-  return req.headers['user-agent'] || 'Unknown';
+export function safeJsonStringify(obj: any): string {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular Reference]';
+      }
+      seen.add(value);
+    }
+    return value;
+  });
 }
 
 /**
- * Get the client IP address, handling proxies and load balancers
+ * Parse a JSON string safely, returning null if parsing fails
+ * @param str The string to parse
+ * @returns Parsed object or null if parsing fails
  */
-export function getClientIp(req: Request): string {
-  const forwardedFor = req.headers['x-forwarded-for'];
-  
-  if (typeof forwardedFor === 'string') {
-    return forwardedFor.split(',')[0].trim();
-  }
-  
-  return req.ip || '0.0.0.0';
-}
-
-/**
- * Get device info from the request
- */
-export function getDeviceInfo(req: Request): any {
-  const userAgent = getUserAgent(req);
-  
-  // Extract browser and OS info from user agent
-  let browser = 'Unknown';
-  let os = 'Unknown';
-  let isMobile = false;
-  
-  // Basic browser detection
-  if (/firefox/i.test(userAgent)) browser = 'Firefox';
-  else if (/chrome/i.test(userAgent)) browser = 'Chrome';
-  else if (/safari/i.test(userAgent)) browser = 'Safari';
-  else if (/msie|trident/i.test(userAgent)) browser = 'Internet Explorer';
-  else if (/edge/i.test(userAgent)) browser = 'Edge';
-  
-  // Basic OS detection
-  if (/windows/i.test(userAgent)) os = 'Windows';
-  else if (/mac os/i.test(userAgent)) os = 'macOS';
-  else if (/android/i.test(userAgent)) {
-    os = 'Android';
-    isMobile = true;
-  }
-  else if (/iphone|ipad/i.test(userAgent)) {
-    os = 'iOS';
-    isMobile = true;
-  }
-  else if (/linux/i.test(userAgent)) os = 'Linux';
-  
-  // Mobile detection
-  if (!isMobile) {
-    isMobile = /mobile/i.test(userAgent);
-  }
-  
-  return {
-    browser,
-    os,
-    isMobile,
-    userAgent
-  };
-}
-
-/**
- * Generate a unique ID for tracking requests
- */
-export function generateUniqueId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
-
-/**
- * Parse Pagination Parameters from the request
- */
-export function parsePaginationParams(req: Request): { 
-  limit: number; 
-  offset: number;
-  page: number;
-} {
-  // Default values
-  const defaultLimit = 10;
-  const maxLimit = 100;
-  
-  // Parse query parameters
-  const queryLimit = req.query.limit ? parseInt(req.query.limit as string) : defaultLimit;
-  const queryPage = req.query.page ? parseInt(req.query.page as string) : 1;
-  const queryOffset = req.query.offset ? parseInt(req.query.offset as string) : (queryPage - 1) * queryLimit;
-  
-  // Apply constraints
-  const limit = Math.min(Math.max(1, queryLimit), maxLimit);
-  const page = Math.max(1, queryPage);
-  const offset = Math.max(0, queryOffset);
-  
-  return { limit, offset, page };
-}
-
-/**
- * Safely parse JSON with error handling
- */
-export function safeJsonParse(jsonString: string, fallback: any = {}): any {
+export function safeJsonParse(str: string): any {
   try {
-    return JSON.parse(jsonString);
+    return JSON.parse(str);
   } catch (error) {
-    console.error("Error parsing JSON:", error);
-    return fallback;
+    console.error('Failed to parse JSON:', error);
+    return null;
   }
 }
 
 /**
- * Check if a string is a valid URL
+ * Safely converts an unknown error to a string message
+ * @param error The error object
+ * @returns Error message as string
  */
-export function isValidUrl(url: string): boolean {
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
   try {
-    new URL(url);
-    return true;
-  } catch (error) {
-    return false;
+    return safeJsonStringify(error);
+  } catch {
+    return 'Unknown error';
   }
 }
 
 /**
- * Sanitize a string to prevent injection attacks
- * This is a very basic implementation - in production use a proper library
+ * Truncates a string to a maximum length, adding ellipsis if truncated
+ * @param str The string to truncate
+ * @param maxLength Maximum length of the string
+ * @returns Truncated string
  */
-export function sanitizeString(input: string): string {
-  // Remove HTML tags
-  return input
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+export function truncateString(str: string, maxLength: number = 100): string {
+  if (!str) return '';
+  
+  if (str.length <= maxLength) {
+    return str;
+  }
+  
+  return str.substring(0, maxLength) + '...';
+}
+
+/**
+ * Creates a deep clone of an object
+ * @param obj The object to clone
+ * @returns Cloned object
+ */
+export function deepClone<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch {
+    // Fallback for objects that can't be stringified
+    const clone: any = Array.isArray(obj) ? [] : {};
+    
+    Object.keys(obj as object).forEach((key) => {
+      clone[key] = deepClone((obj as any)[key]);
+    });
+    
+    return clone as T;
+  }
+}
+
+/**
+ * Removes sensitive information from an object
+ * @param obj The object to sanitize
+ * @param sensitiveKeys Array of sensitive key names to remove
+ * @returns Sanitized object
+ */
+export function sanitizeObject<T extends object>(obj: T, sensitiveKeys: string[] = ['password', 'token', 'secret']): T {
+  const sanitized = { ...obj };
+  
+  sensitiveKeys.forEach(key => {
+    if (key in sanitized) {
+      (sanitized as any)[key] = '[REDACTED]';
+    }
+  });
+  
+  return sanitized;
+}
+
+/**
+ * Creates a random ID string
+ * @param length Length of the ID
+ * @returns Random ID string
+ */
+export function generateRandomId(length: number = 16): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return result;
+}
+
+/**
+ * Checks if an object is empty
+ * @param obj The object to check
+ * @returns True if the object has no properties
+ */
+export function isEmptyObject(obj: object): boolean {
+  return Object.keys(obj).length === 0;
+}
+
+/**
+ * Groups an array of objects by a key
+ * @param array Array to group
+ * @param key Property to group by
+ * @returns Object with groups
+ */
+export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
+  return array.reduce((result, item) => {
+    const groupKey = String(item[key]);
+    
+    if (!result[groupKey]) {
+      result[groupKey] = [];
+    }
+    
+    result[groupKey].push(item);
+    return result;
+  }, {} as Record<string, T[]>);
+}
+
+/**
+ * Formats a date to ISO string or falls back to current date
+ * @param date Date to format
+ * @returns ISO date string
+ */
+export function formatDateOrNow(date?: Date | string | null): string {
+  if (!date) {
+    return new Date().toISOString();
+  }
+  
+  if (typeof date === 'string') {
+    return new Date(date).toISOString();
+  }
+  
+  return date.toISOString();
 }
