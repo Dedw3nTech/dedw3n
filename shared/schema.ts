@@ -14,6 +14,9 @@ export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'med
 export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
 export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
 
+// Fraud prevention enums
+export const riskLevelEnum = pgEnum('risk_level', ['low', 'medium', 'high', 'critical']);
+
 // Define user roles enum
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor', 'business']);
 
