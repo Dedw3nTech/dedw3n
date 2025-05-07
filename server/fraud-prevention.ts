@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { getUserAgent } from "./utils";
+import { getUserAgent, getClientIp, getDeviceInfo } from "./utils";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
-import { fraudRiskAssessments } from "@shared/schema";
-import { generateHash } from "./auth";
+import { fraudRiskAssessments } from "@shared/fraud-schema";
+import { hashPassword } from "./auth"; // Use the hashPassword function instead of generateHash
 
 // Risk levels for different fraud signals
 enum RiskLevel {
@@ -524,7 +524,10 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
     const userIdString = userId ? userId.toString() : null;
     if (!userId) {
       // For anonymous users, create a simpler fingerprint
-      const fingerprint = await generateHash(`${ipAddress}|${req.headers['user-agent'] || ''}`);
+      const fingerprint = await hashPassword(`${ipAddress}|${req.headers['user-agent'] || ''}`);
+      // Extract hash without salt for fingerprinting
+      const hashOnly = fingerprint.split('.')[0];
+      
       await db.insert(fraudRiskAssessments).values({
         requestId,
         userId: null,
@@ -534,7 +537,7 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
         riskLevel: overallRisk,
         requestPath: req.path,
         requestMethod: req.method,
-        anonymousFingerprint: fingerprint,
+        anonymousFingerprint: hashOnly,
         assessmentData: assessment as any
       });
     } else {
