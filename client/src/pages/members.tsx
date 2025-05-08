@@ -159,6 +159,17 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
       
       newSocket.onopen = () => {
         console.log('WebSocket connected');
+        
+        // Send authentication message once connection is open
+        const authToken = localStorage.getItem('dedwen_auth_token');
+        const authMessage = {
+          type: 'authenticate',
+          userId: user.id,
+          token: authToken
+        };
+        
+        console.log('Sent authentication request to WebSocket server with token');
+        newSocket.send(JSON.stringify(authMessage));
       };
       
       newSocket.onmessage = (event) => {
@@ -166,14 +177,28 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
           const data = JSON.parse(event.data);
           console.log('Received message:', data);
           
-          // Handle chat messages
-          if (data.type === 'chat' && data.senderId === member.id) {
+          // Handle authentication confirmation
+          if (data.type === 'authenticated') {
+            console.log('Successfully authenticated with WebSocket server');
+          }
+          // Handle error messages
+          else if (data.type === 'error') {
+            console.error('WebSocket error message:', data.message);
+          }
+          // Handle incoming messages
+          else if ((data.type === 'chat' || data.type === 'message' || data.type === 'new_message') && 
+                   (data.senderId === member.id || data.message?.senderId === member.id)) {
+            
+            // Handle the different message formats
+            const messageData = data.type === 'new_message' ? data.message : data;
+            
             setChatMessages(prev => [...prev, {
-              id: data.messageId || Date.now(),
-              content: data.content,
-              senderId: data.senderId,
-              timestamp: new Date(data.timestamp)
+              id: messageData.messageId || messageData.id || Date.now(),
+              content: messageData.content,
+              senderId: messageData.senderId,
+              timestamp: new Date(messageData.timestamp || Date.now())
             }]);
+            console.log('Added message to chat:', messageData);
           }
           
           // Handle incoming call request
@@ -245,13 +270,16 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
   const sendMessage = () => {
     if (!message.trim() || !socket || !member || !user) return;
     
+    // Make sure to use 'message' type which the server is expecting
     const messageData = {
-      type: 'chat',
+      type: 'message',
       receiverId: member.id,
-      content: message
+      content: message,
+      senderId: user.id
     };
     
     socket.send(JSON.stringify(messageData));
+    console.log('Sending message:', messageData);
     
     // Optimistically add message to UI
     setChatMessages(prev => [...prev, {
@@ -441,6 +469,17 @@ const MembersPage = () => {
     
     ws.onopen = () => {
       console.log('WebSocket connection established');
+      
+      // Send authentication message once connection is open
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      const authMessage = {
+        type: 'authenticate',
+        userId: user.id,
+        token: authToken
+      };
+      
+      console.log('Sent authentication request to WebSocket server with token');
+      ws.send(JSON.stringify(authMessage));
     };
     
     ws.onmessage = (event) => {
