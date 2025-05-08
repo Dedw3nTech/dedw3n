@@ -33,6 +33,7 @@ import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
 import { socialMediaSuite } from "./social-media-suite";
 import { registerMessageRoutes } from "./message-routes";
+import { setupInstagramApi } from "./instagram-api/setup";
 import { 
   posts, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 

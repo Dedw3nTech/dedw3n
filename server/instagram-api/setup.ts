@@ -32,10 +32,8 @@ export async function setupInstagramApi(app: Express): Promise<void> {
       next();
     });
     
-    // Register the routes on the /api/instagram path
-    const instagramRouter = express.Router();
-    registerInstagramApiRoutes(instagramRouter);
-    app.use('/api/instagram', instagramRouter);
+    // Register the API routes directly on the /api/instagram path
+    registerInstagramApiRoutes(app);
     
     console.log('[INSTAGRAM API] Setup complete.');
   } catch (error) {

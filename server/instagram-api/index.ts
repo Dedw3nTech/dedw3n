@@ -189,7 +189,7 @@ export const handleMediaPublish = async (req: Request, res: Response) => {
         status: 'PUBLISHED',
         updatedAt: new Date()
       })
-      .where(({ id }) => id.equals(containerId));
+      .where(sql`${media_containers.id} = ${containerId}`);
     
     // Insert post_media record
     const mediaPost = {
@@ -244,7 +244,7 @@ export const handleMediaStatus = async (req: Request, res: Response) => {
     const [container] = await db
       .select()
       .from(media_containers)
-      .where(({ id }) => id.equals(containerId));
+      .where(sql`${media_containers.id} = ${containerId}`);
     
     if (!container) {
       return res.status(404).json({
