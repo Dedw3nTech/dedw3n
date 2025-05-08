@@ -908,13 +908,28 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     attachmentType?: string,
     messageType: MessageType = "text"
   ) => {
-    await sendMessageMutation.mutateAsync({ 
+    // Create the message via HTTP API
+    const result = await sendMessageMutation.mutateAsync({ 
       userId, 
       content, 
       attachmentUrl, 
       attachmentType,
       messageType
     });
+    
+    // Also send via WebSocket for real-time delivery
+    if (socket && isConnected) {
+      socket.send(JSON.stringify({
+        type: "chat", // Important: This must match the type expected in server's handleChatMessage function
+        receiverId: userId,
+        content,
+        attachmentUrl,
+        attachmentType,
+        messageType
+      }));
+    }
+    
+    return result;
   };
   
   const startConversation = async (username: string, message: string) => {

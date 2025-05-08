@@ -557,7 +557,9 @@ function setupWebSockets(server: Server) {
         let response;
         switch (data.type) {
           case 'message':
+          case 'chat': // Support both 'message' and 'chat' types for compatibility
             response = await handleChatMessage(userId!, data);
+            console.log(`Message handled from user ${userId}:`, JSON.stringify(data).substring(0, 100));
             break;
             
           case 'typing':
