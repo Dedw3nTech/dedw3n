@@ -95,6 +95,28 @@ export async function apiRequest(
     ...(typeof options === 'object' && options !== null ? options : {})
   };
 
+  // For development: handle test user ID query parameter
+  const urlObj = new URL(window.location.origin + url);
+  const testUserID = urlObj.searchParams.get('test_user_id');
+  const autoLogin = urlObj.searchParams.get('auto_login');
+  
+  if (testUserID) {
+    console.log(`Development mode - using test user ID: ${testUserID}`);
+    // Add test user ID to request for development/testing
+    requestOptions.headers = {
+      ...requestOptions.headers,
+      'X-Test-User-ID': testUserID
+    };
+  }
+  
+  if (autoLogin === 'true') {
+    console.log('Development mode - auto login enabled');
+    requestOptions.headers = {
+      ...requestOptions.headers,
+      'X-Auto-Login': 'true'
+    };
+  }
+
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
   if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register') {
     // Clear the logged out flag for login/register attempts
@@ -198,6 +220,28 @@ export const getQueryFn: <T>(options: {
       credentials: "include",
       headers: {}
     };
+
+    // For development: handle test user ID query parameter
+    const urlObj = new URL(window.location.origin + url);
+    const testUserID = urlObj.searchParams.get('test_user_id');
+    const autoLogin = urlObj.searchParams.get('auto_login');
+    
+    if (testUserID) {
+      console.log(`Development mode - using test user ID: ${testUserID}`);
+      // Add test user ID to request for development/testing
+      options.headers = {
+        ...options.headers,
+        'X-Test-User-ID': testUserID
+      };
+    }
+    
+    if (autoLogin === 'true') {
+      console.log('Development mode - auto login enabled');
+      options.headers = {
+        ...options.headers,
+        'X-Auto-Login': 'true'
+      };
+    }
 
     // Special handling for login/register routes
     if (url.includes('/api/login') || url.includes('/api/register') || url.includes('/api/auth/login') || url.includes('/api/auth/register')) {

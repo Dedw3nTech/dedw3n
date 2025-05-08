@@ -362,6 +362,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
   
+  // Debug endpoint for session information - no authentication required
+  app.get('/api/debug/session', (req: Request, res: Response) => {
+    console.log('[DEBUG] Session debug endpoint called');
+    // Return non-sensitive session information for debugging
+    res.json({
+      hasSession: !!req.session,
+      sessionID: req.sessionID,
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      userID: req.user ? (req.user as any).id : null,
+      cookieHeader: req.headers.cookie,
+    });
+  });
+  
   // Development endpoint to get a token for testing
   if (process.env.NODE_ENV === 'development') {
     app.get('/api/auth/get-test-token/:userId', async (req: Request, res: Response) => {

@@ -85,6 +85,23 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       // @ts-ignore: Property may not exist on session type
       const sessionUserId = req.session?.passport?.user;
       console.log('[AUTH] Session passport data:', req.session?.passport);
+      console.log('[AUTH] Full session data:', req.session);
+      
+      // If testing mode is enabled, provide a test user for development
+      if (process.env.NODE_ENV === 'development' && req.query.test_user_id) {
+        console.log(`[AUTH] Development mode - using test user ID: ${req.query.test_user_id}`);
+        try {
+          const testUserId = parseInt(req.query.test_user_id as string);
+          const user = await storage.getUser(testUserId);
+          if (user) {
+            console.log(`[AUTH] Test user found in database: ${user.id}`);
+            req.user = user;
+            return next();
+          }
+        } catch (error) {
+          console.error('[AUTH] Error retrieving test user:', error);
+        }
+      }
       
       if (sessionUserId) {
         console.log(`[AUTH] User ID found in session: ${sessionUserId}`);
@@ -97,6 +114,20 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
           }
         } catch (error) {
           console.error('[AUTH] Error retrieving user from session ID:', error);
+        }
+      }
+      
+      // For demo/testing purposes - auto-login with user ID 1 if in development
+      if (process.env.NODE_ENV === 'development' && req.query.auto_login === 'true') {
+        try {
+          const user = await storage.getUser(1); // User ID 1 is typically admin
+          if (user) {
+            console.log(`[AUTH] Auto-login with admin user ID: ${user.id}`);
+            req.user = user;
+            return next();
+          }
+        } catch (error) {
+          console.error('[AUTH] Error with auto-login:', error);
         }
       }
       
