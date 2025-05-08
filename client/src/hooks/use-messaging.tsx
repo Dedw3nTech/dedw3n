@@ -256,12 +256,19 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         setIsConnected(true);
         reconnectAttempts = 0; // Reset reconnect attempts on successful connection
         
-        // Authenticate
+        // Authenticate with both userId and token
         if (socket) {
+          // Import needed functions from queryClient
+          const { getStoredAuthToken } = require("../lib/queryClient");
+          const token = getStoredAuthToken();
+          
           socket.send(JSON.stringify({
             type: "authenticate",
-            userId: user.id
+            userId: user.id,
+            token: token  // Include the JWT token for authentication
           }));
+          
+          console.log("Sent authentication request to WebSocket server with token");
         }
       };
       
