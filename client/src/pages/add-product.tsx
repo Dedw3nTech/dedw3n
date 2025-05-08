@@ -173,7 +173,8 @@ export default function AddProduct() {
 
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
-    if (!isVendor) {
+    // Check if user has isVendor flag set to true (system-level vendor status)
+    if (!isVendor && !(user && user.isVendor === true)) {
       toast({
         title: 'Error',
         description: 'You need to create a vendor account first.',
@@ -182,6 +183,8 @@ export default function AddProduct() {
       return;
     }
     
+    // If user has isVendor but no vendorId, we'll handle this on the server side
+    // The server will create a temporary vendor profile if needed
     createProductMutation.mutate(values);
   };
 
@@ -219,8 +222,8 @@ export default function AddProduct() {
     );
   }
 
-  // Display vendor registration prompt if user is not a vendor
-  if (!isVendor && !createVendorMutation.isPending) {
+  // Display vendor registration prompt if user is not a vendor and doesn't have isVendor flag
+  if (!isVendor && !(user && user.isVendor === true) && !createVendorMutation.isPending) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card>

@@ -95,8 +95,11 @@ export default function VendorDashboard() {
     );
   }
 
-  // Not a vendor yet
-  if (!isLoadingVendor && !vendor) {
+  // Check if user is a vendor based on the user object's isVendor flag
+  const isUserVendor = user && user.isVendor === true;
+
+  // Not a vendor yet - but allow direct product listing if user.isVendor is true even if vendor profile is missing
+  if (!isLoadingVendor && !vendor && !isUserVendor) {
     return (
       <div className="container max-w-6xl mx-auto py-12 px-4">
         <Card>
@@ -141,6 +144,31 @@ export default function VendorDashboard() {
               <Button size="lg" onClick={handleBecomeVendor}>
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Become a Vendor
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // If user is a vendor but doesn't have a vendor profile yet, show simplified dashboard with "Add Product" button
+  if (!isLoadingVendor && !vendor && isUserVendor) {
+    return (
+      <div className="container max-w-7xl mx-auto py-8 px-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Vendor Dashboard</CardTitle>
+            <CardDescription>
+              Your vendor account is active. You can add products directly.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <p>Your vendor profile is being set up. In the meantime, you can start adding products to your store.</p>
+              <Button onClick={() => setLocation('/add-product')} size="lg">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add Product
               </Button>
             </div>
           </CardContent>
