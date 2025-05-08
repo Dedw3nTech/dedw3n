@@ -378,6 +378,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Development endpoint to get a token for testing
   if (process.env.NODE_ENV === 'development') {
+    // Endpoint for simplified test user login - sets session directly
+    app.get('/api/auth/test-login/:userId', async (req: Request, res: Response) => {
+      try {
+        const userId = parseInt(req.params.userId);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Set the user in the session
+        req.login(user, (err) => {
+          if (err) {
+            console.error('Error logging in test user:', err);
+            return res.status(500).json({ message: 'Error logging in test user', error: err.message });
+          }
+          
+          console.log(`[DEBUG] Test user ${userId} logged in successfully via session`);
+          return res.json({ 
+            success: true, 
+            message: `Test user ${userId} logged in successfully`,
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+              isVendor: user.isVendor
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Error in test login endpoint:', error);
+        return res.status(500).json({ message: 'Server error during test login' });
+      }
+    });
+    
     app.get('/api/auth/get-test-token/:userId', async (req: Request, res: Response) => {
       try {
         const userId = parseInt(req.params.userId);
@@ -1003,6 +1042,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
     console.log('[DEBUG] /api/user - Authenticated with unified auth');
     res.json(req.user);
+  });
+  
+  // Additional endpoint for auth testing
+  app.get("/api/auth/me", unifiedIsAuthenticated, (req, res) => {
+    console.log('[DEBUG] /api/auth/me - Authentication check with details');
+    res.json({
+      user: req.user,
+      isAuthenticated: req.isAuthenticated(),
+      authType: req.isAuthenticated() ? 'session' : req.user ? 'token' : 'none',
+      session: req.session ? { 
+        id: req.sessionID,
+        cookie: req.session.cookie,
+        // Don't include sensitive data
+      } : null
+    });
   });
   
   // User profile routes

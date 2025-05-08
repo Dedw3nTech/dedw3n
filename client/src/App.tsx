@@ -17,6 +17,10 @@ import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -89,6 +93,9 @@ import PremiumVideoPage from "@/pages/premium-video";
 function Router() {
   return (
     <Switch>
+      <Route path="/test-auth">
+        <TestAuthPage />
+      </Route>
       <Route path="/" component={Home} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
@@ -223,6 +230,245 @@ function App() {
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+// Test Auth Page component for debugging authentication
+function TestAuthPage() {
+  const [message, setMessage] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  
+  // Query for testing authentication status
+  const { data: authData, isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/auth/test-auth'],
+    retry: false,
+    enabled: false,
+  });
+  
+  // Query to get current user
+  const { data: user, isLoading: userLoading, refetch: refetchUser } = useQuery({
+    queryKey: ['/api/user'],
+    retry: false,
+  });
+  
+  // Test direct login with session-based auth
+  const handleDirectLogin = async (userId: number) => {
+    setLoading(true);
+    setMessage("");
+    
+    try {
+      const response = await fetch(`/api/auth/test-login/${userId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setMessage(`Login successful: ${JSON.stringify(data, null, 2)}`);
+        await refetchUser();
+      } else {
+        setMessage(`Login failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setMessage(`Error: ${(err as Error).message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Get a JWT token for testing
+  const handleGetToken = async (userId: number) => {
+    setLoading(true);
+    setMessage("");
+    
+    try {
+      const response = await fetch(`/api/auth/get-test-token/${userId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Store token in localStorage
+        localStorage.setItem('auth_token', data.token);
+        setMessage(`Token generated: ${data.token.substring(0, 20)}... (expires: ${new Date(data.expiresAt).toLocaleString()})`);
+        await refetchUser();
+      } else {
+        setMessage(`Token generation failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setMessage(`Error: ${(err as Error).message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Check authentication status
+  const handleCheckAuth = async () => {
+    setLoading(true);
+    await refetch();
+    setLoading(false);
+  };
+  
+  // Logout
+  const handleLogout = async () => {
+    setLoading(true);
+    setMessage("");
+    
+    try {
+      const response = await apiRequest("POST", "/api/logout");
+      
+      if (response.ok) {
+        localStorage.removeItem('auth_token');
+        setMessage("Logged out successfully");
+        await refetchUser();
+      } else {
+        const data = await response.json();
+        setMessage(`Logout failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setMessage(`Error: ${(err as Error).message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Authentication Testing Page</h1>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Authentication Actions</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Session Authentication</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={() => handleDirectLogin(1)} 
+                  disabled={loading}
+                  variant="default"
+                >
+                  Login as User ID 1
+                </Button>
+                <Button 
+                  onClick={() => handleDirectLogin(2)} 
+                  disabled={loading}
+                  variant="default"
+                >
+                  Login as User ID 2
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">JWT Authentication</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={() => handleGetToken(1)} 
+                  disabled={loading}
+                  variant="secondary"
+                >
+                  Get Token for User 1
+                </Button>
+                <Button 
+                  onClick={() => handleGetToken(2)} 
+                  disabled={loading}
+                  variant="secondary"
+                >
+                  Get Token for User 2
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Auth Operations</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={handleCheckAuth} 
+                  disabled={loading}
+                  variant="outline"
+                >
+                  Check Auth Status
+                </Button>
+                <Button 
+                  onClick={handleLogout} 
+                  disabled={loading}
+                  variant="destructive"
+                >
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {loading && (
+            <div className="mt-4 text-center">
+              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-sm text-muted-foreground mt-2">Processing...</p>
+            </div>
+          )}
+          
+          {message && (
+            <div className="mt-4 p-3 bg-muted rounded-md">
+              <pre className="whitespace-pre-wrap text-sm">{message}</pre>
+            </div>
+          )}
+        </Card>
+        
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Current Authentication Status</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Auth Check Response</h3>
+              {isLoading ? (
+                <p>Checking authentication...</p>
+              ) : error ? (
+                <p className="text-destructive">Error: {(error as Error).message}</p>
+              ) : authData ? (
+                <pre className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">
+                  {JSON.stringify(authData, null, 2)}
+                </pre>
+              ) : (
+                <p className="text-muted-foreground">Click "Check Auth Status" to verify authentication</p>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Current User</h3>
+              {userLoading ? (
+                <p>Loading user data...</p>
+              ) : user ? (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="inline-block w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span className="font-medium">Authenticated as: {user.username || user.email || `User ${user.id}`}</span>
+                  </div>
+                  <pre className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">
+                    {JSON.stringify(user, null, 2)}
+                  </pre>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span>Not authenticated</span>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Local Storage Token</h3>
+              <div className="p-3 bg-muted rounded-md text-sm font-mono">
+                {localStorage.getItem('auth_token') ? (
+                  <>
+                    <p className="mb-1">Token found:</p>
+                    <p className="truncate">{localStorage.getItem('auth_token')}</p>
+                  </>
+                ) : (
+                  <p>No token in localStorage</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 }
 
