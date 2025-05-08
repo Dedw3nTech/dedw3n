@@ -6,7 +6,7 @@
  * 2. Registration of API routes
  */
 
-import express, { Express } from 'express';
+import express, { Express, Router } from 'express';
 import { db } from '../db';
 import { registerInstagramApiRoutes } from './index';
 import * as fs from 'fs';

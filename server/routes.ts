@@ -289,8 +289,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register fraud prevention routes
   registerFraudPreventionRoutes(app);
   
-  // Setup Instagram-like API for social media sharing
-  await setupInstagramApi(app);
+  try {
+    // Setup Instagram-like API for social media sharing
+    await setupInstagramApi(app);
+    console.log('[ROUTES] Instagram API setup successful');
+  } catch (error) {
+    console.error('[ROUTES] Instagram API setup failed:', error);
+    // Continue with other routes even if Instagram API setup fails
+  }
   
   // Page content API endpoints
   app.get('/api/page/:id', (req: Request, res: Response) => {
