@@ -11,10 +11,16 @@ import { Request, Response } from 'express';
 import { Express } from 'express';
 import path from 'path';
 import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { promisify } from 'util';
 import { db } from '../db';
 import { post_media, media_containers } from './schema';
+import { sql } from 'drizzle-orm';
+
+// Generate a UUID without using the uuid package
+function generateUUID(): string {
+  return crypto.randomBytes(16).toString('hex');
+}
 
 // Ensure uploads directory exists
 const ensureUploadDirs = () => {
@@ -53,7 +59,7 @@ export const handleMediaUpload = async (req: Request, res: Response) => {
     }
     
     // Generate a container ID
-    const containerId = uuidv4();
+    const containerId = generateUUID();
     
     // If we have a base64 file, process it
     let finalMediaUrl = mediaUrl;
@@ -165,12 +171,9 @@ export const handleMediaPublish = async (req: Request, res: Response) => {
     }
     
     // Find the container record
-    const [container] = await db
-      .select()
-      .from(media_containers)
-      .where(({ id, userId: userId_ }) => 
-        id.equals(containerId).and(userId_.equals(Number(userId)))
-      );
+    const containerResult = await db.select().from(media_containers)
+      .where(sql`${media_containers.id} = ${containerId} AND ${media_containers.userId} = ${Number(userId)}`);
+    const [container] = containerResult;
     
     if (!container) {
       return res.status(404).json({
