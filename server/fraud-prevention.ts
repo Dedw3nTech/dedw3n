@@ -550,7 +550,7 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
         userId: null,
         ipAddress,
         userAgent: req.headers['user-agent'] as string,
-        riskScore,
+        riskScore: Math.round(riskScore), // Ensure riskScore is an integer to avoid database type error
         riskLevel: overallRisk,
         requestPath: req.path,
         requestMethod: req.method,
@@ -563,7 +563,7 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
         userId: userIdString,
         ipAddress,
         userAgent: req.headers['user-agent'] as string,
-        riskScore,
+        riskScore: Math.round(riskScore), // Ensure riskScore is an integer to avoid database type error
         riskLevel: overallRisk,
         requestPath: req.path,
         requestMethod: req.method,
