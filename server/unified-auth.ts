@@ -9,8 +9,15 @@ import { storage } from './storage';
  */
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   // First check Passport session authentication
-  if (req.isAuthenticated()) {
-    console.log('[DEBUG] Request authenticated via session');
+  if (req.isAuthenticated() && req.user) {
+    console.log('[DEBUG] Request authenticated via session for user:', (req.user as any).id);
+    return next();
+  }
+  
+  // If we have a user in the request but isAuthenticated() returns false, 
+  // this might be due to session configuration issues
+  if (req.user) {
+    console.log('[DEBUG] Found user in request but not authenticated via session, user ID:', (req.user as any).id);
     return next();
   }
 
@@ -60,21 +67,47 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       return next();
     }
     
-    // Check if this is an image upload request from a logged-in session user
-    if ((req.path === '/api/social/upload-image' || req.path === '/api/upload-test') && req.method === 'POST') {
-      console.log('[AUTH] Image upload request detected - checking for user in session');
+    // Check if this is an image upload or specific API request that can bypass token auth
+    const specialRoutes = [
+      '/api/social/upload-image',
+      '/api/upload-test',
+      '/api/messages/conversations',
+      '/api/messages/unread/count',
+      '/api/messages/search',
+      '/api/auth/me',
+      '/api/user'
+    ];
+    
+    if ((specialRoutes.includes(req.path) || req.path.startsWith('/api/messages/')) && req.session) {
+      console.log(`[AUTH] Special route detected: ${req.path} - checking for user in session`);
+      
+      // Try to extract user ID from session directly
+      // @ts-ignore: Property may not exist on session type
+      const sessionUserId = req.session?.passport?.user;
+      
+      if (sessionUserId) {
+        console.log(`[AUTH] User ID found in session: ${sessionUserId}`);
+        try {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            console.log(`[AUTH] Session user found in database: ${user.id}`);
+            req.user = user;
+            return next();
+          }
+        } catch (error) {
+          console.error('[AUTH] Error retrieving user from session ID:', error);
+        }
+      }
       
       if (req.user) {
-        console.log('[AUTH] User found in session for image upload:', req.user.id);
+        console.log(`[AUTH] User found in req.user: ${(req.user as any).id}`);
         return next();
       }
       
-      // For testing purposes, we'll also log information about the request body
+      // For debugging purposes
       if (req.body && req.body.blob) {
-        console.log('[AUTH] Image upload request contains blob data of length:', 
+        console.log('[AUTH] Request contains blob data of length:', 
           req.body.blob.substring(0, 50) + '... (truncated)');
-      } else {
-        console.log('[AUTH] Image upload request missing blob data in the body');
       }
     }
     
