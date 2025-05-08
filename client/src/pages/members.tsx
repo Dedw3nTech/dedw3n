@@ -421,12 +421,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
 const MembersPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeChatMember, setActiveChatMember] = useState<UserWithoutPassword | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('all');
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   
   // Connect to WebSocket when component mounts
   useEffect(() => {
@@ -461,7 +463,7 @@ const MembersPage = () => {
           // If in chat with this user, update the chat
           if (activeChatMember && activeChatMember.id === data.message.senderId) {
             // Add message to current chat
-            setChatMessages(prev => [...prev, data.message]);
+            setChatMessages((prev: any[]) => [...prev, data.message]);
           }
         } else if (data.type === 'notification') {
           // Show notification for any other notification type
@@ -488,7 +490,7 @@ const MembersPage = () => {
     return () => {
       ws.close();
     };
-  }, [user]);
+  }, [user, toast, activeChatMember]);
   
   const membersPerPage = 12;
   
