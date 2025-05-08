@@ -4,7 +4,7 @@ import { z } from "zod";
 import { insertMessageSchema, notifications } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
 import { db } from "./db";
-import { isAuthenticated } from "./unified-auth";
+import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth";
 
 // Use the unified authentication middleware
 

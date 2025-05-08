@@ -15,8 +15,8 @@ import type { Express, Request, Response } from "express";
 import { Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { authenticate } from "./jwt-auth";
 import { verifyToken } from "./jwt-auth"; // Import for token verification
+import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth";
 
 // Connection management
 const connections = new Map<number, Set<WebSocket>>();
@@ -645,7 +645,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   // Message APIs
   
   // Get messages between users
-  app.get("/api/messages/:userId", authenticate, async (req: Request, res: Response) => {
+  app.get("/api/messages/:userId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const currentUserId = req.user!.id;
       const otherUserId = parseInt(req.params.userId);
@@ -679,7 +679,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Get conversations list
-  app.get("/api/conversations", authenticate, async (req: Request, res: Response) => {
+  app.get("/api/conversations", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const conversations = await storage.getUserConversations(userId);
@@ -691,7 +691,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Send a message
-  app.post("/api/messages", authenticate, async (req: Request, res: Response) => {
+  app.post("/api/messages", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const senderId = req.user!.id;
       const { receiverId, content, attachmentUrl, attachmentType, messageType } = req.body;
@@ -731,7 +731,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Return connection status
-  app.get("/api/users/status", authenticate, async (req: Request, res: Response) => {
+  app.get("/api/users/status", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const onlineUsers: number[] = [];
       
@@ -750,7 +750,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Check status of specific users
-  app.post("/api/users/status", authenticate, async (req: Request, res: Response) => {
+  app.post("/api/users/status", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { userIds } = req.body;
       
@@ -773,7 +773,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Get unread message count
-  app.get("/api/messages/unread/count", authenticate, async (req: Request, res: Response) => {
+  app.get("/api/messages/unread/count", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const count = await storage.getUnreadMessageCount(userId);
