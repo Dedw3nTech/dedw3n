@@ -3439,10 +3439,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
-      // Check if user is a vendor
-      const vendor = await storage.getVendorByUserId(userId);
-      if (!vendor) {
+      // Get user details to check isVendor flag
+      const user = await storage.getUser(userId);
+      
+      // Check if user has vendor permissions
+      if (!user || !user.isVendor) {
         return res.status(403).json({ message: "Only vendors can create products" });
+      }
+      
+      // Check if user already has a vendor profile
+      let vendor = await storage.getVendorByUserId(userId);
+      
+      // If user is a vendor (based on isVendor flag) but doesn't have a vendor profile yet,
+      // create a temporary vendor profile for them
+      if (!vendor) {
+        try {
+          // Create a default vendor profile
+          vendor = await storage.createVendor({
+            userId: userId,
+            storeName: `${user.username}'s Store`,
+            description: `Products from ${user.username}`,
+          });
+          
+          console.log(`Created default vendor profile for user ${userId}`);
+        } catch (vendorError) {
+          console.error("Error creating vendor profile:", vendorError);
+          return res.status(500).json({ message: "Failed to create vendor profile" });
+        }
       }
       
       const validatedData = insertProductSchema.parse({
@@ -3456,6 +3479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors });
       }
+      console.error("Error creating product:", error);
       res.status(500).json({ message: "Failed to create product" });
     }
   });
@@ -3499,6 +3523,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const productId = parseInt(req.params.id);
       
+      // Get user details to check isVendor flag
+      const user = await storage.getUser(userId);
+      
       // Get the product
       const product = await storage.getProduct(productId);
       if (!product) {
@@ -3507,7 +3534,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the vendor
       const vendor = await storage.getVendor(product.vendorId);
-      if (!vendor || vendor.userId !== userId) {
+      
+      // Check if user is authorized to update this product
+      // They can update if they are the vendor owner OR if they have isVendor=true and created a product
+      // with a temporary vendor profile (with the same user ID)
+      const isAuthorized = vendor && (
+        vendor.userId === userId || 
+        (user && user.isVendor === true && vendor.userId === userId)
+      );
+      
+      if (!isAuthorized) {
         return res.status(403).json({ message: "You can only update your own products" });
       }
       
@@ -3519,6 +3555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors });
       }
+      console.error("Error updating product:", error);
       res.status(500).json({ message: "Failed to update product" });
     }
   });
@@ -3528,6 +3565,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const productId = parseInt(req.params.id);
       
+      // Get user details to check isVendor flag
+      const user = await storage.getUser(userId);
+      
       // Get the product
       const product = await storage.getProduct(productId);
       if (!product) {
@@ -3536,13 +3576,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the vendor
       const vendor = await storage.getVendor(product.vendorId);
-      if (!vendor || vendor.userId !== userId) {
+      
+      // Check if user is authorized to delete this product
+      // They can delete if they are the vendor owner OR if they have isVendor=true and created a product
+      // with a temporary vendor profile (with the same user ID)
+      const isAuthorized = vendor && (
+        vendor.userId === userId || 
+        (user && user.isVendor === true && vendor.userId === userId)
+      );
+      
+      if (!isAuthorized) {
         return res.status(403).json({ message: "You can only delete your own products" });
       }
       
       await storage.deleteProduct(productId);
       res.json({ message: "Product deleted successfully" });
     } catch (error) {
+      console.error("Error deleting product:", error);
       res.status(500).json({ message: "Failed to delete product" });
     }
   });
