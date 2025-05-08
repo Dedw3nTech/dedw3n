@@ -113,7 +113,7 @@ export default function MessagesPage() {
 
   // Fetch messages for the active conversation
   const {
-    data: apiMessages,
+    data: messagesResponse,
     isLoading: isLoadingMessages,
     refetch: refetchMessages,
   } = useQuery({
@@ -123,11 +123,16 @@ export default function MessagesPage() {
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
-      const messages = await response.json();
-      return Array.isArray(messages) ? messages : []; // Ensure we always have an array
+      return await response.json();
     },
     enabled: !!conversationUserId,
   });
+  
+  // Extract messages and conversationPartner from response
+  const apiMessages = messagesResponse?.messages || [];
+  
+  // If we have otherUser in the response, use it to enhance the conversation partner info
+  const responseOtherUser = messagesResponse?.otherUser;
 
   // Find the active conversation partner
   const conversationPartner = activeApiConversation?.participants?.find(
@@ -613,6 +618,9 @@ export default function MessagesPage() {
                       const isCurrentUser = messageUserId === currentUser.id;
                       const showAvatar = index === 0 || 
                         (apiMessages[index - 1].senderId || apiMessages[index - 1].userId) !== messageUserId;
+                      
+                      // Log message details for debugging
+                      console.log(`Message ${index}:`, message);
                       
                       return (
                         <div
