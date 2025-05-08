@@ -8,53 +8,73 @@ import { storage } from './storage';
  * between the two authentication systems.
  */
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
+  // Improved logging for test-auth debugging
+  console.log(`[AUTH TEST] Authentication attempt for path: ${req.path}`);
+  console.log(`[AUTH TEST] HTTP Method: ${req.method}`);
+  console.log(`[AUTH TEST] Query params:`, req.query);
+  
   // For development: Check for test user headers
   const testUserId = req.headers['x-test-user-id'];
   const autoLogin = req.headers['x-auto-login'];
   
   // Handle test user ID from header
   if (testUserId && typeof testUserId === 'string') {
-    console.log(`[AUTH] Development mode - using test user ID from header: ${testUserId}`);
+    console.log(`[AUTH TEST] Development mode - using test user ID from header: ${testUserId}`);
     try {
       const userId = parseInt(testUserId);
       const user = await storage.getUser(userId);
       if (user) {
-        console.log(`[AUTH] Test user found in database: ${user.id}`);
+        console.log(`[AUTH TEST] Test user found in database: ID=${user.id}, Username=${user.username}`);
         req.user = user;
         return next();
       } else {
-        console.log(`[AUTH] Test user ID ${userId} not found in database`);
+        console.log(`[AUTH TEST] Test user ID ${userId} not found in database`);
       }
     } catch (error) {
-      console.error('[AUTH] Error retrieving test user from header:', error);
+      console.error('[AUTH TEST] Error retrieving test user from header:', error);
     }
   }
   
   // Handle auto login from header
   if (autoLogin === 'true') {
-    console.log('[AUTH] Development mode - auto login enabled from header');
+    console.log('[AUTH TEST] Development mode - auto login enabled from header');
     try {
       const user = await storage.getUser(1); // User ID 1 is typically admin
       if (user) {
-        console.log(`[AUTH] Auto-login with admin user ID: ${user.id}`);
+        console.log(`[AUTH TEST] Auto-login with admin user ID: ${user.id}, Username=${user.username}`);
         req.user = user;
         return next();
       }
     } catch (error) {
-      console.error('[AUTH] Error with auto-login from header:', error);
+      console.error('[AUTH TEST] Error with auto-login from header:', error);
     }
   }
 
   // First check Passport session authentication
-  if (req.isAuthenticated() && req.user) {
-    console.log('[DEBUG] Request authenticated via session for user:', (req.user as any).id);
-    return next();
+  if (req.isAuthenticated()) {
+    if (req.user) {
+      console.log('[AUTH TEST] Request authenticated via session:', {
+        userId: (req.user as any).id,
+        username: (req.user as any).username,
+        sessionID: req.sessionID
+      });
+      return next();
+    } else {
+      console.log('[AUTH TEST] isAuthenticated() is true, but no user in request');
+    }
+  } else {
+    console.log('[AUTH TEST] Session authentication failed - not authenticated');
   }
   
   // If we have a user in the request but isAuthenticated() returns false, 
   // this might be due to session configuration issues
   if (req.user) {
-    console.log('[DEBUG] Found user in request but not authenticated via session, user ID:', (req.user as any).id);
+    console.log('[AUTH TEST] Found user in request but not authenticated via session:', {
+      userId: (req.user as any).id,
+      username: (req.user as any).username,
+      sessionID: req.sessionID
+    });
+    console.log('[AUTH TEST] Session data:', req.session);
     return next();
   }
 

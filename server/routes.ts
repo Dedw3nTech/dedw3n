@@ -377,10 +377,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Development endpoint to get a token for testing
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     // Endpoint for simplified test user login - sets session directly
     app.get('/api/auth/test-login/:userId', async (req: Request, res: Response) => {
       try {
+        console.log(`[AUTH TEST] Test login request for user ID: ${req.params.userId}`);
+        
         const userId = parseInt(req.params.userId);
         if (isNaN(userId)) {
           return res.status(400).json({ message: 'Invalid user ID' });
@@ -388,37 +390,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const user = await storage.getUser(userId);
         if (!user) {
+          console.log(`[AUTH TEST] User with ID ${userId} not found`);
           return res.status(404).json({ message: 'User not found' });
         }
         
-        // Set the user in the session
-        req.login(user, (err) => {
-          if (err) {
-            console.error('Error logging in test user:', err);
-            return res.status(500).json({ message: 'Error logging in test user', error: err.message });
+        console.log(`[AUTH TEST] Found user for login:`, { 
+          id: user.id, 
+          username: user.username,
+          role: user.role
+        });
+        
+        // Manually regenerate session to avoid any conflicts
+        req.session.regenerate((regErr) => {
+          if (regErr) {
+            console.error('[AUTH TEST] Error regenerating session:', regErr);
+            return res.status(500).json({ message: 'Error regenerating session' });
           }
           
-          console.log(`[DEBUG] Test user ${userId} logged in successfully via session`);
-          return res.json({ 
-            success: true, 
-            message: `Test user ${userId} logged in successfully`,
-            user: {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              role: user.role,
-              isVendor: user.isVendor
+          // Set the user in the session
+          req.login(user, (loginErr) => {
+            if (loginErr) {
+              console.error('[AUTH TEST] Error logging in test user:', loginErr);
+              return res.status(500).json({ message: 'Error logging in test user', error: loginErr.message });
             }
+            
+            // Save the session with the new login state
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                console.error('[AUTH TEST] Error saving session:', saveErr);
+                return res.status(500).json({ message: 'Error saving session' });
+              }
+              
+              console.log(`[AUTH TEST] Test user ${userId} logged in successfully via session`);
+              console.log(`[AUTH TEST] Session ID: ${req.sessionID}`);
+              console.log(`[AUTH TEST] Session data:`, req.session);
+              console.log(`[AUTH TEST] Is authenticated:`, req.isAuthenticated());
+              
+              return res.json({ 
+                success: true, 
+                message: `Test user ${userId} logged in successfully`,
+                sessionId: req.sessionID,
+                isAuthenticated: req.isAuthenticated(),
+                user: {
+                  id: user.id,
+                  username: user.username,
+                  email: user.email,
+                  role: user.role,
+                  isVendor: user.isVendor
+                }
+              });
+            });
           });
         });
       } catch (error) {
-        console.error('Error in test login endpoint:', error);
+        console.error('[AUTH TEST] Error in test login endpoint:', error);
         return res.status(500).json({ message: 'Server error during test login' });
       }
     });
     
     app.get('/api/auth/get-test-token/:userId', async (req: Request, res: Response) => {
       try {
+        console.log(`[AUTH TEST] Test token request for user ID: ${req.params.userId}`);
+      
         const userId = parseInt(req.params.userId);
         if (isNaN(userId)) {
           return res.status(400).json({ message: 'Invalid user ID' });
@@ -426,8 +459,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const user = await storage.getUser(userId);
         if (!user) {
+          console.log(`[AUTH TEST] User with ID ${userId} not found for token generation`);
           return res.status(404).json({ message: 'User not found' });
         }
+        
+        console.log(`[AUTH TEST] Found user for token:`, { 
+          id: user.id, 
+          username: user.username,
+          role: user.role
+        });
         
         // Import directly to avoid circular dependencies
         const { generateToken } = require('./jwt-auth');
@@ -438,7 +478,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ipAddress: req.ip || ''
         };
         
+        console.log(`[AUTH TEST] Generating token with device info:`, deviceInfo);
+        
         const { token, expiresAt } = await generateToken(user.id, user.role || 'user', deviceInfo);
+        console.log(`[AUTH TEST] Generated token for user ${userId} (expires: ${new Date(expiresAt).toISOString()})`);
+        
+        return res.json({
+          success: true,
+          message: `Test token generated for user ${userId}`,
+          token,
+          expiresAt,
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role
+          },
+          usage: {
+            headers: "Add the token to API requests as: Authorization: Bearer " + token,
+            fetch: `fetch('/api/your-endpoint', { headers: { 'Authorization': 'Bearer ${token}' } })`,
+            curl: `curl -H "Authorization: Bearer ${token}" https://${req.headers.host}/api/your-endpoint`
+          }
+        });
         
     // Add test endpoints for debugging
     app.get('/api/auth/test-auth', unifiedIsAuthenticated, (req: Request, res: Response) => {
@@ -1046,11 +1107,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Additional endpoint for auth testing
   app.get("/api/auth/me", unifiedIsAuthenticated, (req, res) => {
-    console.log('[DEBUG] /api/auth/me - Authentication check with details');
+    console.log('[AUTH TEST] /api/auth/me endpoint called');
+    console.log('[AUTH TEST] Authentication state:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
+    console.log('[AUTH TEST] User object:', req.user ? `Present (ID: ${(req.user as any).id})` : 'Not present');
+    console.log('[AUTH TEST] Session ID:', req.sessionID || 'No session ID');
+    
     res.json({
+      authenticated: !!req.user,
       user: req.user,
+      method: req.isAuthenticated() ? 'session' : req.user ? 'token' : 'none',
+      sessionID: req.sessionID || null,
       isAuthenticated: req.isAuthenticated(),
       authType: req.isAuthenticated() ? 'session' : req.user ? 'token' : 'none',
+      debug: {
+        sessionExists: !!req.session,
+        timestamp: new Date().toISOString(),
+        headers: {
+          authorization: req.headers.authorization ? 'present (not shown)' : 'not present',
+          cookie: req.headers.cookie ? 'present (not shown)' : 'not present'
+        }
+      },
       session: req.session ? { 
         id: req.sessionID,
         cookie: req.session.cookie,
