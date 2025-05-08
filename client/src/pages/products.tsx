@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share, Mail, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -154,9 +154,7 @@ export default function Products() {
   
   // Share functions
   const shareByEmail = (product: any) => {
-    const subject = encodeURIComponent(`Check out this product: ${product.name}`);
-    const body = encodeURIComponent(`I found this amazing product and thought you might like it:\n\n${product.name}\n\n${window.location.origin}/product/${product.id}`);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+    window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.origin}/product/${product.id}`)}`, '_blank');
   };
   
   const copyLinkToClipboard = (product: any) => {
@@ -164,8 +162,8 @@ export default function Products() {
     navigator.clipboard.writeText(productUrl)
       .then(() => {
         toast({
-          title: "Link copied!",
-          description: "Product link has been copied to clipboard",
+          title: "Link Copied",
+          description: "Product link copied to clipboard",
         });
       })
       .catch(() => {
@@ -178,21 +176,13 @@ export default function Products() {
   };
   
   const shareOnFeed = (product: any) => {
-    // This would normally navigate to the post creation page with prefilled product info
-    toast({
-      title: "Share on Feed",
-      description: "This will open the post creation interface with product details prefilled",
-    });
-    // Example: setLocation(`/social?share=${product.id}`);
+    // Navigate to social feed with prefilled share content
+    setLocation(`/social?share=${product.id}`);
   };
   
   const shareViaMessage = (product: any) => {
-    // This would normally open the messaging interface
-    toast({
-      title: "Share via Message",
-      description: "This will open the messaging interface to share this product",
-    });
-    // Example: setLocation(`/messages?share=${product.id}`);
+    // Navigate to messages with prefilled share content
+    setLocation(`/messages?share=${product.id}`);
   };
 
   // Render product grid
@@ -332,27 +322,31 @@ export default function Products() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Share className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Share Product</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => shareByEmail(product)}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  <span>Email</span>
+                  <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                  Share via Email
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
-                  <LinkIcon className="mr-2 h-4 w-4" />
-                  <span>Copy Link</span>
+                  <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
+                  Copy Link
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => shareOnFeed(product)}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Share on Feed</span>
+                  <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                  Share on Feed
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => shareViaMessage(product)}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Send via Message</span>
+                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                  Send via Message
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}`)}>
+                  <Users className="h-4 w-4 mr-2 text-blue-600" />
+                  Share with Member
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
