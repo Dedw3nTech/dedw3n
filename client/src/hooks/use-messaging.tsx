@@ -258,9 +258,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         
         // Authenticate with both userId and token
         if (socket) {
-          // Import needed functions from queryClient
-          const { getStoredAuthToken } = require("../lib/queryClient");
-          const token = getStoredAuthToken();
+          // Use import at top of file instead of require
+          const token = localStorage.getItem('dedwen_auth_token');
           
           socket.send(JSON.stringify({
             type: "authenticate",
