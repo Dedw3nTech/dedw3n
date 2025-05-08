@@ -249,7 +249,7 @@ export function registerMessageRoutes(app: Express) {
       const otherUserId = parseInt(req.params.userId);
       
       // Get all unread messages from the other user
-      const messages = await storage.getConversationMessages(currentUserId, otherUserId);
+      const messages = await storage.getMessagesBetweenUsers(currentUserId, otherUserId);
       const unreadMessages = messages.filter(
         msg => msg.senderId === otherUserId && !msg.isRead
       );
