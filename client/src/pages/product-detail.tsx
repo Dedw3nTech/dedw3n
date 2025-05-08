@@ -20,6 +20,7 @@ import {
   Mail, 
   Link as LinkIcon,
   MessageCircle,
+  MessageSquare,
   Users
 } from 'lucide-react';
 import { 
@@ -516,6 +517,10 @@ export default function ProductDetail() {
                 </DropdownMenuItem>
                 {user && (
                   <>
+                    <DropdownMenuItem onClick={() => setLocation(`/social?share=${productId}`)}>
+                      <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                      Share on Feed
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLocation(`/messages?share=${productId}`)}>
                       <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
                       Share in Messages
