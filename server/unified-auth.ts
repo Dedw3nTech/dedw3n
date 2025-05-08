@@ -84,6 +84,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       // Try to extract user ID from session directly
       // @ts-ignore: Property may not exist on session type
       const sessionUserId = req.session?.passport?.user;
+      console.log('[AUTH] Session passport data:', req.session?.passport);
       
       if (sessionUserId) {
         console.log(`[AUTH] User ID found in session: ${sessionUserId}`);
