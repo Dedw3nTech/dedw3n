@@ -395,7 +395,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
                   : 'bg-muted self-start'
               }`}
             >
-              <p className="text-sm">{msg.content}</p>
+              <p className="text-sm text-black">{msg.content}</p>
               <span className="text-xs text-muted-foreground">
                 {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
