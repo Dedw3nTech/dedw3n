@@ -104,21 +104,29 @@ export default function MessagesPage() {
   // Set active conversation ID
   const activeConversationId = activeApiConversation?.id;
 
+  // Find the active conversation partner from the username param
+  const conversationUserId = username && apiConversations 
+    ? apiConversations.find((convo: any) => 
+        convo.participants.some((p: any) => p.username === username)
+      )?.participants.find((p: any) => p.username === username)?.id
+    : null;
+
   // Fetch messages for the active conversation
   const {
     data: apiMessages,
     isLoading: isLoadingMessages,
     refetch: refetchMessages,
   } = useQuery({
-    queryKey: [`/api/messages/conversations/${activeConversationId}`],
+    queryKey: [`/api/messages/conversations/${conversationUserId}`],
     queryFn: async () => {
-      const response = await fetch(`/api/messages/conversations/${activeConversationId}`);
+      const response = await fetch(`/api/messages/conversations/${conversationUserId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
-      return response.json();
+      const messages = await response.json();
+      return Array.isArray(messages) ? messages : []; // Ensure we always have an array
     },
-    enabled: !!activeConversationId,
+    enabled: !!conversationUserId,
   });
 
   // Find the active conversation partner
@@ -213,14 +221,14 @@ export default function MessagesPage() {
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
 
-    if (activeConversationId) {
-      // Send to existing conversation
+    if (conversationUserId) {
+      // Send to existing conversation partner by ID
       sendMessageMutation.mutate({
         message: messageText,
-        conversationId: activeConversationId,
+        conversationId: conversationUserId,
       });
     } else if (username) {
-      // Start new conversation
+      // Start new conversation with username
       startConversationMutation.mutate({
         username,
         message: messageText,
@@ -599,8 +607,11 @@ export default function MessagesPage() {
                 ) : (
                   <>
                     {apiMessages.map((message: any, index: number) => {
-                      const isCurrentUser = message.userId === currentUser.id;
-                      const showAvatar = index === 0 || apiMessages[index - 1].userId !== message.userId;
+                      // Handle both senderId and userId for compatibility
+                      const messageUserId = message.senderId || message.userId;
+                      const isCurrentUser = messageUserId === currentUser.id;
+                      const showAvatar = index === 0 || 
+                        (apiMessages[index - 1].senderId || apiMessages[index - 1].userId) !== messageUserId;
                       
                       return (
                         <div
