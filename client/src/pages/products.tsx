@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useLocation, Link } from 'wouter';
+import { useLocation, Link as WouterLink } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Copy } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share, Mail, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -31,6 +31,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 
@@ -341,7 +343,7 @@ export default function Products() {
                   <span>Email</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
-                  <Link className="mr-2 h-4 w-4" />
+                  <LinkIcon className="mr-2 h-4 w-4" />
                   <span>Copy Link</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => shareOnFeed(product)}>
@@ -349,7 +351,7 @@ export default function Products() {
                   <span>Share on Feed</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => shareViaMessage(product)}>
-                  <MessagesSquare className="mr-2 h-4 w-4" />
+                  <MessageSquare className="mr-2 h-4 w-4" />
                   <span>Send via Message</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
