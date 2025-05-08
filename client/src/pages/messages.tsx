@@ -134,9 +134,10 @@ export default function MessagesPage() {
     (p: any) => p.id !== currentUser.id
   );
 
-  // Send message mutation
+  // Send message mutation (sends a message to a user by their ID)
   const sendMessageMutation = useMutation({
     mutationFn: async ({ message, conversationId }: { message: string; conversationId: number }) => {
+      // Here, conversationId is actually the recipient's userId
       const response = await apiRequest(
         "POST",
         `/api/messages/conversations/${conversationId}`,
