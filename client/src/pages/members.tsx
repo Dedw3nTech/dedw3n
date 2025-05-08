@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { UserWithoutPassword } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from 'wouter';
 import {
   Card,
@@ -441,8 +442,37 @@ const MembersPage = () => {
     };
     
     ws.onmessage = (event) => {
-      // This would process incoming messages when not in a chat
       console.log('Received message:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Handle different message types
+        if (data.type === 'new_message') {
+          // Show notification for new message
+          toast({
+            title: "New Message",
+            description: `You have a new message from ${data.message.senderName || 'someone'}`,
+          });
+          
+          // Play notification sound if available
+          const notificationSound = new Audio('/notification.mp3');
+          notificationSound.play().catch(e => console.log('Could not play notification sound'));
+          
+          // If in chat with this user, update the chat
+          if (activeChatMember && activeChatMember.id === data.message.senderId) {
+            // Add message to current chat
+            setChatMessages(prev => [...prev, data.message]);
+          }
+        } else if (data.type === 'notification') {
+          // Show notification for any other notification type
+          toast({
+            title: "New Notification",
+            description: data.message,
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
     };
     
     ws.onerror = (error) => {

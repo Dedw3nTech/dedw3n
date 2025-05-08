@@ -1,8 +1,9 @@
 import { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertMessageSchema } from "@shared/schema";
+import { insertMessageSchema, notifications } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
+import { db } from "./db";
 
 // Middleware for authentication check
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
@@ -124,6 +125,26 @@ export function registerMessageRoutes(app: Express) {
       // Create the message
       const newMessage = await storage.createMessage(validatedData);
       
+      // Get sender for notification
+      const sender = await storage.getUser(senderId);
+      const senderName = sender ? sender.name || sender.username : 'Someone';
+      
+      // Create notification for the receiver
+      try {
+        await db.insert(notifications).values({
+          userId: receiverId,
+          type: 'message',
+          content: `${senderName} sent you a message: "${validatedData.content.length > 30 ? validatedData.content.substring(0, 30) + '...' : validatedData.content}"`,
+          isRead: false,
+          sourceId: newMessage.id,
+          sourceType: 'message',
+          createdAt: new Date()
+        });
+        console.log(`Created notification for HTTP message ${newMessage.id} to user ${receiverId}`);
+      } catch (notifError) {
+        console.error('Failed to create message notification:', notifError);
+      }
+      
       // Return enhanced response
       res.status(201).json({
         message: newMessage,
@@ -175,6 +196,23 @@ export function registerMessageRoutes(app: Express) {
       
       // Get sender details
       const sender = await storage.getUser(senderId);
+      const senderName = sender ? sender.name || sender.username : 'Someone';
+      
+      // Create notification for new conversation
+      try {
+        await db.insert(notifications).values({
+          userId: recipient.id,
+          type: 'conversation',
+          content: `${senderName} started a conversation with you: "${firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage}"`,
+          isRead: false,
+          sourceId: newMessage.id,
+          sourceType: 'message',
+          createdAt: new Date()
+        });
+        console.log(`Created notification for new conversation with message ${newMessage.id} to user ${recipient.id}`);
+      } catch (notifError) {
+        console.error('Failed to create conversation notification:', notifError);
+      }
       
       res.status(201).json({
         message: newMessage,
@@ -321,6 +359,26 @@ export function registerMessageRoutes(app: Express) {
       
       // Create the message with attachment
       const newMessage = await storage.createMessage(validatedData);
+      
+      // Get sender for notification
+      const sender = await storage.getUser(senderId);
+      const senderName = sender ? sender.name || sender.username : 'Someone';
+      
+      // Create notification for the receiver
+      try {
+        await db.insert(notifications).values({
+          userId: receiverId,
+          type: 'message',
+          content: `${senderName} sent you a message with attachment`,
+          isRead: false,
+          sourceId: newMessage.id,
+          sourceType: 'message',
+          createdAt: new Date()
+        });
+        console.log(`Created notification for message with attachment ${newMessage.id} to user ${receiverId}`);
+      } catch (notifError) {
+        console.error('Failed to create message notification:', notifError);
+      }
       
       // Return enhanced response
       res.status(201).json({

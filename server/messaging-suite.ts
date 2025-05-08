@@ -16,8 +16,9 @@ import { Server } from "http";
 import { WebSocketServer, WebSocket } from 'ws';
 import { storage } from "./storage";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { messages, callSessions, callMetadata, users } from "@shared/schema";
+import { messages, callSessions, callMetadata, users, notifications } from "@shared/schema";
 import { isAuthenticated } from "./unified-auth";
+import { db } from "./db";
 
 // WebSocket connections
 interface Connection {
@@ -115,10 +116,40 @@ async function handleChatMessage(senderId: number, data: any) {
     
     const message = await storage.createMessage(messageData);
     
+    // Get sender info for notification
+    const sender = await storage.getUser(senderId);
+    const senderName = sender ? sender.name || sender.username : 'Someone';
+    
+    // Create notification for the receiver
+    try {
+      await db.insert(notifications).values({
+        userId: data.receiverId,
+        type: 'message',
+        content: `${senderName} sent you a message: "${data.content.length > 30 ? data.content.substring(0, 30) + '...' : data.content}"`,
+        isRead: false,
+        sourceId: message.id,
+        sourceType: 'message',
+        createdAt: new Date()
+      });
+      console.log(`Created notification for message ${message.id} to user ${data.receiverId}`);
+    } catch (notifError) {
+      console.error('Failed to create message notification:', notifError);
+    }
+    
     // Send message to recipient if they're online
     const delivered = sendToUser(data.receiverId, {
       type: 'new_message',
       message: message
+    });
+    
+    // Also send notification update if they're online
+    sendToUser(data.receiverId, {
+      type: 'notification',
+      notificationType: 'message',
+      message: `${senderName} sent you a message`,
+      senderId,
+      messageId: message.id,
+      timestamp: new Date().toISOString()
     });
     
     // Send delivery confirmation to sender
