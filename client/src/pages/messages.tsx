@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -651,7 +651,63 @@ export default function MessagesPage() {
                                   : "bg-muted"
                               }`}
                             >
-                              <p>{message.content}</p>
+                              <p className="break-words">
+                                {message.content.split(/\s+/).map((word: string, i: number) => {
+                                  // Check for URLs with http/https/www
+                                  if (word.match(/^(https?:\/\/|www\.)/i)) {
+                                    const url = word.startsWith('http') ? word : `https://${word}`;
+                                    return (
+                                      <span key={i}>
+                                        <a 
+                                          href={url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {word}
+                                        </a>
+                                        {' '}
+                                      </span>
+                                    );
+                                  }
+                                  // Check for domains without http/www (e.g. example.com)
+                                  else if (word.includes('.') && word.match(/^[a-z0-9][\w\.-]*\.[a-z]{2,}$/i)) {
+                                    return (
+                                      <span key={i}>
+                                        <a 
+                                          href={`https://${word}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {word}
+                                        </a>
+                                        {' '}
+                                      </span>
+                                    );
+                                  }
+                                  // Check for product links
+                                  else if (word.match(/^product\/\d+$/i)) {
+                                    return (
+                                      <span key={i}>
+                                        <a 
+                                          href={`/${word}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {word}
+                                        </a>
+                                        {' '}
+                                      </span>
+                                    );
+                                  }
+                                  return <span key={i}>{word} </span>;
+                                })}
+                              </p>
                             </div>
                             <div
                               className={`text-xs text-muted-foreground mt-1 ${
