@@ -479,13 +479,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    // Use SQL LOWER function to perform case-insensitive username lookup
+    // This will help with login issues where username case doesn't match exactly
+    try {
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
+      console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
+      return undefined;
+    }
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    // Use SQL LOWER function to perform case-insensitive email lookup
+    try {
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
+      console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
+      return undefined;
+    }
   }
   
   async createUser(user: InsertUser): Promise<User> {
