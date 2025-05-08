@@ -289,6 +289,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register fraud prevention routes
   registerFraudPreventionRoutes(app);
   
+  // Setup Instagram-like API for social media sharing
+  await setupInstagramApi(app);
+  
   // Page content API endpoints
   app.get('/api/page/:id', (req: Request, res: Response) => {
     const { id } = req.params;

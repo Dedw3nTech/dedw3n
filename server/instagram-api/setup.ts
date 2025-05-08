@@ -26,14 +26,20 @@ export async function setupInstagramApi(app: Express): Promise<void> {
     // Register API routes
     console.log('[INSTAGRAM API] Registering API routes...');
     
-    // Create a router prefix for Instagram-like API
-    app.use('/api/instagram', (req, res, next) => {
+    // Create a router for Instagram-like API
+    const instagramRouter = express.Router();
+    
+    // Add logging middleware to the router
+    instagramRouter.use((req, res, next) => {
       console.log(`[INSTAGRAM API] Request: ${req.method} ${req.path}`);
       next();
     });
     
-    // Register the API routes directly on the /api/instagram path
-    registerInstagramApiRoutes(app);
+    // Register the API routes on the router
+    registerInstagramApiRoutes(instagramRouter);
+    
+    // Mount the router on the /api/instagram path
+    app.use('/api/instagram', instagramRouter);
     
     console.log('[INSTAGRAM API] Setup complete.');
   } catch (error) {
@@ -49,8 +55,8 @@ async function createDatabaseTables(): Promise<void> {
   try {
     console.log('[INSTAGRAM API] Creating database tables...');
     
-    // Read the SQL file
-    const sqlFilePath = path.join(__dirname, 'migrations', 'create-tables.sql');
+    // Read the SQL file using relative path
+    const sqlFilePath = path.join(process.cwd(), 'server', 'instagram-api', 'migrations', 'create-tables.sql');
     const sql = fs.readFileSync(sqlFilePath, 'utf8');
     
     // Execute the SQL

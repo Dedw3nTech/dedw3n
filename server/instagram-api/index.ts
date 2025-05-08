@@ -7,8 +7,7 @@
  * - GET /{ig-container-id}?fields=status_code - for checking media status
  */
 
-import { Request, Response } from 'express';
-import { Express } from 'express';
+import { Request, Response, Router } from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -293,18 +292,18 @@ export const handleMediaStatus = async (req: Request, res: Response) => {
 /**
  * Register Instagram-like API routes
  */
-export function registerInstagramApiRoutes(app: Express) {
+export function registerInstagramApiRoutes(router: Router) {
   console.log('[INSTAGRAM API] Registering Instagram-like API routes');
   
   // Create upload directories on startup
   ensureUploadDirs();
   
   // Media upload endpoint
-  app.post('/:userId/media', handleMediaUpload);
+  router.post('/:userId/media', handleMediaUpload);
   
   // Media publish endpoint
-  app.post('/:userId/media_publish', handleMediaPublish);
+  router.post('/:userId/media_publish', handleMediaPublish);
   
   // Media status endpoint
-  app.get('/:containerId', handleMediaStatus);
+  router.get('/:containerId', handleMediaStatus);
 }
