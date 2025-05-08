@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Copy } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -26,6 +26,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +44,7 @@ export default function Products() {
   const { marketType, marketTypeLabel } = useMarketType();
   const { currency } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
+  const { toast } = useToast();
   
   // Force rerender when currency changes
   useEffect(() => {
@@ -141,6 +149,49 @@ export default function Products() {
   useEffect(() => {
     setPriceRange([0, maxPrice]);
   }, [maxPrice]);
+  
+  // Share functions
+  const shareByEmail = (product: any) => {
+    const subject = encodeURIComponent(`Check out this product: ${product.name}`);
+    const body = encodeURIComponent(`I found this amazing product and thought you might like it:\n\n${product.name}\n\n${window.location.origin}/product/${product.id}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
+  
+  const copyLinkToClipboard = (product: any) => {
+    const productUrl = `${window.location.origin}/product/${product.id}`;
+    navigator.clipboard.writeText(productUrl)
+      .then(() => {
+        toast({
+          title: "Link copied!",
+          description: "Product link has been copied to clipboard",
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          title: "Copy failed",
+          description: "Could not copy link to clipboard",
+        });
+      });
+  };
+  
+  const shareOnFeed = (product: any) => {
+    // This would normally navigate to the post creation page with prefilled product info
+    toast({
+      title: "Share on Feed",
+      description: "This will open the post creation interface with product details prefilled",
+    });
+    // Example: setLocation(`/social?share=${product.id}`);
+  };
+  
+  const shareViaMessage = (product: any) => {
+    // This would normally open the messaging interface
+    toast({
+      title: "Share via Message",
+      description: "This will open the messaging interface to share this product",
+    });
+    // Example: setLocation(`/messages?share=${product.id}`);
+  };
 
   // Render product grid
   const renderProductGrid = () => {
@@ -275,14 +326,43 @@ export default function Products() {
               </div>
             )}
           </div>
-          <Button 
-            variant={marketType === 'c2c' ? 'outline' : 'default'} 
-            size="sm" 
-            onClick={() => setLocation(`/product/${product.id}`)}
-            className={marketType === 'b2c' ? 'bg-green-600 hover:bg-green-700' : marketType === 'b2b' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-          >
-            {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Shop' : 'Bulk Buy'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Share className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Share Product</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => shareByEmail(product)}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  <span>Email</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
+                  <Link className="mr-2 h-4 w-4" />
+                  <span>Copy Link</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => shareOnFeed(product)}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Share on Feed</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => shareViaMessage(product)}>
+                  <MessagesSquare className="mr-2 h-4 w-4" />
+                  <span>Send via Message</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button 
+              variant={marketType === 'c2c' ? 'outline' : 'default'} 
+              size="sm" 
+              onClick={() => setLocation(`/product/${product.id}`)}
+              className={marketType === 'b2c' ? 'bg-green-600 hover:bg-green-700' : marketType === 'b2b' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+            >
+              {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Shop' : 'Bulk Buy'}
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     ));
