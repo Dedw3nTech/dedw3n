@@ -23,7 +23,7 @@ const startConversationSchema = z.object({
 
 export function registerMessageRoutes(app: Express) {
   // Get conversations for the current user
-  app.get("/api/messages/conversations", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/conversations", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const conversations = await storage.getUserConversations(userId);
@@ -55,7 +55,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Get messages for a specific conversation
-  app.get("/api/messages/conversations/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/conversations/:userId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const currentUserId = (req.user as any).id;
       const otherUserId = parseInt(req.params.userId);
@@ -99,7 +99,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Send a message to an existing conversation
-  app.post("/api/messages/conversations/:userId", isAuthenticated, async (req, res) => {
+  app.post("/api/messages/conversations/:userId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const senderId = (req.user as any).id;
       const receiverId = parseInt(req.params.userId);
@@ -161,7 +161,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Start a new conversation
-  app.post("/api/messages/conversations", isAuthenticated, async (req, res) => {
+  app.post("/api/messages/conversations", unifiedIsAuthenticated, async (req, res) => {
     try {
       const senderId = (req.user as any).id;
       
@@ -231,7 +231,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Get unread message count
-  app.get("/api/messages/unread/count", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/unread/count", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const count = await storage.getUnreadMessageCount(userId);
@@ -243,7 +243,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Mark all messages as read in a conversation
-  app.post("/api/messages/mark-read/:userId", isAuthenticated, async (req, res) => {
+  app.post("/api/messages/mark-read/:userId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const currentUserId = (req.user as any).id;
       const otherUserId = parseInt(req.params.userId);
@@ -270,7 +270,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Delete a message (soft delete or hide for the user)
-  app.delete("/api/messages/:messageId", isAuthenticated, async (req, res) => {
+  app.delete("/api/messages/:messageId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const messageId = parseInt(req.params.messageId);
@@ -309,7 +309,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Search messages
-  app.get("/api/messages/search", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/search", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const query = req.query.q as string;
@@ -327,7 +327,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Send message with attachment
-  app.post("/api/messages/with-attachment/:userId", isAuthenticated, async (req, res) => {
+  app.post("/api/messages/with-attachment/:userId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const senderId = (req.user as any).id;
       const receiverId = parseInt(req.params.userId);
@@ -396,7 +396,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Get messaging statistics for the current user
-  app.get("/api/messages/stats", isAuthenticated, async (req, res) => {
+  app.get("/api/messages/stats", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const stats = await storage.getUserMessagingStats(userId);
@@ -478,7 +478,7 @@ export function registerMessageRoutes(app: Express) {
   });
   
   // Clear all messages in a conversation
-  app.delete("/api/messages/conversations/:userId", isAuthenticated, async (req, res) => {
+  app.delete("/api/messages/conversations/:userId", unifiedIsAuthenticated, async (req, res) => {
     try {
       const currentUserId = (req.user as any).id;
       const otherUserId = parseInt(req.params.userId);
