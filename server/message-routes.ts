@@ -67,7 +67,7 @@ export function registerMessageRoutes(app: Express) {
       }
       
       // Get messages between these users
-      const messages = await storage.getConversationMessages(currentUserId, otherUserId);
+      const messages = await storage.getMessagesBetweenUsers(currentUserId, otherUserId);
       
       // Mark messages from the other user as read
       const unreadMessages = messages.filter(
@@ -234,7 +234,7 @@ export function registerMessageRoutes(app: Express) {
   app.get("/api/messages/unread/count", authenticate, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const count = await storage.getUnreadMessagesCount(userId);
+      const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
       console.error("Error getting unread message count:", error);

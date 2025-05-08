@@ -524,10 +524,10 @@ const MembersPage = () => {
           
           // Show notification if not in active chat
           if (!activeChatMember || activeChatMember.id !== data.senderId) {
-            const senderName = members.find(m => m.id === data.senderId)?.name || 'Someone';
+            // Use a generic name since we might not have members loaded yet
             toast({
               title: "New Message",
-              description: `${senderName}: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
+              description: `${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
             });
           }
         }
@@ -565,7 +565,7 @@ const MembersPage = () => {
     return () => {
       ws.close();
     };
-  }, [user, toast, activeChatMember, members]);
+  }, [user, toast, activeChatMember]);
   
   const membersPerPage = 12;
   
