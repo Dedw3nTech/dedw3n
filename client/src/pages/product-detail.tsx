@@ -515,22 +515,51 @@ export default function ProductDetail() {
                   <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
                   Copy Link
                 </DropdownMenuItem>
-                {user && (
-                  <>
-                    <DropdownMenuItem onClick={() => setLocation(`/social?share=${productId}`)}>
-                      <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                      Share on Feed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setLocation(`/messages?share=${productId}`)}>
-                      <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                      Share in Messages
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setLocation(`/members?share=${productId}`)}>
-                      <Users className="h-4 w-4 mr-2 text-blue-600" />
-                      Share with Member
-                    </DropdownMenuItem>
-                  </>
-                )}
+                <DropdownMenuItem onClick={() => {
+                  if (user) {
+                    setLocation(`/social?share=${productId}`);
+                  } else {
+                    toast({
+                      title: "Login Required",
+                      description: "Please log in to share on feed",
+                      variant: "destructive"
+                    });
+                    setLocation('/auth');
+                  }
+                }}>
+                  <Share2 className="h-4 w-4 mr-2 text-blue-600" />
+                  Share on Feed
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  if (user) {
+                    setLocation(`/messages?share=${productId}`);
+                  } else {
+                    toast({
+                      title: "Login Required",
+                      description: "Please log in to share via messages",
+                      variant: "destructive"
+                    });
+                    setLocation('/auth');
+                  }
+                }}>
+                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                  Send via Message
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  if (user) {
+                    setLocation(`/members?share=${productId}`);
+                  } else {
+                    toast({
+                      title: "Login Required",
+                      description: "Please log in to share with members",
+                      variant: "destructive"
+                    });
+                    setLocation('/auth');
+                  }
+                }}>
+                  <Users className="h-4 w-4 mr-2 text-blue-600" />
+                  Share with Member
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
