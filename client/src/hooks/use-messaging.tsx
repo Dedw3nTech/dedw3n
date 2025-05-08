@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getStoredAuthToken } from "@/lib/queryClient";
 
 // WebSocket connection
 let socket: WebSocket | null = null;
@@ -258,8 +258,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         
         // Authenticate with both userId and token
         if (socket && user) {
-          // Get token from localStorage directly
-          const token = localStorage.getItem('dedwen_auth_token');
+          // Get token using the proper function instead of direct localStorage access
+          const token = getStoredAuthToken();
           
           socket.send(JSON.stringify({
             type: "authenticate",
