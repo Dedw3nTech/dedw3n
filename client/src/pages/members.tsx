@@ -487,8 +487,12 @@ const MembersPage = () => {
       try {
         const data = JSON.parse(event.data);
         
+        // Handle authentication confirmation
+        if (data.type === 'authenticated') {
+          console.log('Successfully authenticated with WebSocket server');
+        }
         // Handle different message types
-        if (data.type === 'new_message') {
+        else if (data.type === 'new_message') {
           // Show notification for new message
           toast({
             title: "New Message",
@@ -504,11 +508,43 @@ const MembersPage = () => {
             // Add message to current chat
             setChatMessages((prev: any[]) => [...prev, data.message]);
           }
-        } else if (data.type === 'notification') {
+        } 
+        // Handle chat message type (direct format)
+        else if (data.type === 'chat' || data.type === 'message') {
+          // If in chat with this user, update the chat
+          if (activeChatMember && activeChatMember.id === data.senderId) {
+            // Add message to current chat
+            setChatMessages((prev: any[]) => [...prev, {
+              id: data.messageId || data.id || Date.now(),
+              content: data.content,
+              senderId: data.senderId,
+              timestamp: new Date(data.timestamp || Date.now())
+            }]);
+          }
+          
+          // Show notification if not in active chat
+          if (!activeChatMember || activeChatMember.id !== data.senderId) {
+            const senderName = members.find(m => m.id === data.senderId)?.name || 'Someone';
+            toast({
+              title: "New Message",
+              description: `${senderName}: ${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}`,
+            });
+          }
+        }
+        else if (data.type === 'notification') {
           // Show notification for any other notification type
           toast({
             title: "New Notification",
             description: data.message,
+          });
+        }
+        // Handle error messages
+        else if (data.type === 'error') {
+          console.error('WebSocket error message:', data.message);
+          toast({
+            title: "Connection Error",
+            description: data.message,
+            variant: "destructive"
           });
         }
       } catch (error) {
@@ -529,7 +565,7 @@ const MembersPage = () => {
     return () => {
       ws.close();
     };
-  }, [user, toast, activeChatMember]);
+  }, [user, toast, activeChatMember, members]);
   
   const membersPerPage = 12;
   
