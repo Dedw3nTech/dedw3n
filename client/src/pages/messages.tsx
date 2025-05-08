@@ -663,7 +663,7 @@ export default function MessagesPage() {
                                           target="_blank" 
                                           rel="noopener noreferrer"
                                           className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
-                                          onClick={(e) => e.stopPropagation()}
+                                          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
                                         >
                                           {word}
                                         </a>
@@ -680,7 +680,7 @@ export default function MessagesPage() {
                                           target="_blank" 
                                           rel="noopener noreferrer"
                                           className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
-                                          onClick={(e) => e.stopPropagation()}
+                                          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
                                         >
                                           {word}
                                         </a>
@@ -697,7 +697,7 @@ export default function MessagesPage() {
                                           target="_blank" 
                                           rel="noopener noreferrer"
                                           className={`${isCurrentUser ? 'text-blue-200 hover:text-blue-100' : 'text-blue-600 hover:text-blue-800'} hover:underline font-medium`}
-                                          onClick={(e) => e.stopPropagation()}
+                                          onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
                                         >
                                           {word}
                                         </a>
