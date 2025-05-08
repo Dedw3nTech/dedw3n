@@ -154,7 +154,9 @@ export default function Products() {
   
   // Share functions
   const shareByEmail = (product: any) => {
-    window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.origin}/product/${product.id}`)}`, '_blank');
+    const productUrl = `${window.location.origin}/product/${product.id}`;
+    const emailBody = `I thought you might be interested in this: ${productUrl}\n\n${product.name}\n\n${product.description}`;
+    window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(emailBody)}`, '_blank');
   };
   
   const copyLinkToClipboard = (product: any) => {
@@ -177,12 +179,14 @@ export default function Products() {
   
   const shareOnFeed = (product: any) => {
     // Navigate to social feed with prefilled share content
-    setLocation(`/social?share=${product.id}`);
+    const productUrl = `/product/${product.id}`;
+    setLocation(`/social?share=${product.id}&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&content=${encodeURIComponent(`Check out this product: ${product.name}`)}`);
   };
   
   const shareViaMessage = (product: any) => {
     // Navigate to messages with prefilled share content
-    setLocation(`/messages?share=${product.id}`);
+    const productUrl = `/product/${product.id}`;
+    setLocation(`/messages?share=${product.id}&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&content=${encodeURIComponent(`Check out this product: ${product.name}`)}`);
   };
 
   // Render product grid
@@ -344,7 +348,7 @@ export default function Products() {
                   <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
                   Send via Message
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}`)}>
+                <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
                   <Users className="h-4 w-4 mr-2 text-blue-600" />
                   Share with Member
                 </DropdownMenuItem>
