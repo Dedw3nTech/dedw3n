@@ -722,6 +722,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register news feed routes
   registerNewsFeedRoutes(app);
   
+  // Register message routes for direct messaging API
+  registerMessageRoutes(app);
+  
   const httpServer = createServer(app);
   
   // Seed the database with initial data
