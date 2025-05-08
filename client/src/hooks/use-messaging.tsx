@@ -257,8 +257,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         reconnectAttempts = 0; // Reset reconnect attempts on successful connection
         
         // Authenticate with both userId and token
-        if (socket) {
-          // Use import at top of file instead of require
+        if (socket && user) {
+          // Get token from localStorage directly
           const token = localStorage.getItem('dedwen_auth_token');
           
           socket.send(JSON.stringify({
