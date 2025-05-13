@@ -12,6 +12,11 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_INTERVAL = 3000; // 3 seconds
 const MAX_RECONNECT_INTERVAL = 30000; // 30 seconds maximum reconnect interval
 
+// WebSocket connection health check
+let healthCheckTimer: NodeJS.Timeout | null = null;
+const HEALTH_CHECK_INTERVAL = 10000; // 10 seconds
+const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds timeout for health check
+
 // WebRTC configuration
 const ICE_SERVERS = {
   iceServers: [
