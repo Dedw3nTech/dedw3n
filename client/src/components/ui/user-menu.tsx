@@ -16,6 +16,20 @@ export default function UserMenu() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // If user is not logged in, don't render the dropdown menu at all
   if (!user) {
     return null;
@@ -48,20 +62,6 @@ export default function UserMenu() {
     setLocation('/vendor-dashboard');
     setIsOpen(false);
   };
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className="relative" ref={menuRef}>
