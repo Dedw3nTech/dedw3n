@@ -203,6 +203,20 @@ export default function CreatePost({
         refetchType: 'all'
       });
       
+      // Invalidate user stats queries to refresh post count
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/user/stats'],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/users/${user?.id}/stats`],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/social/posts/count'],
+        refetchType: 'all'
+      });
+      
       if (communityId) {
         queryClient.invalidateQueries({ 
           queryKey: [`/api/communities/${communityId}/posts`],
