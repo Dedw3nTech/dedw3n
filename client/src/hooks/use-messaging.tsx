@@ -1341,8 +1341,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             reconnectAttempts++;
             
             if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-              // Apply jitter to prevent reconnection storms (thundering herd problem)
-              const jitteredDelay = abnormalReconnectDelay * (0.9 + (Math.random() * 0.2));
+              // Apply full jitter to prevent reconnection storms (thundering herd problem)
+              // This is better than percentage-based jitter for large-scale deployments
+              const jitteredDelay = Math.floor(Math.random() * abnormalReconnectDelay);
               
               reconnectTimer = setTimeout(() => {
                 if (user) {
@@ -1424,13 +1425,17 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             console.warn(`WebSocket closed with code ${event.code} - will try to reconnect`);
         }
         
-        // Apply increasing backoff
-        const backoffDelay = Math.min(
-          RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts),
-          MAX_RECONNECT_INTERVAL
-        );
+        // Apply increasing backoff with full jitter
+        // Calculate base backoff delay
+        let baseDelay = RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts);
+        baseDelay = Math.min(baseDelay, MAX_RECONNECT_INTERVAL);
         
-        console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${backoffDelay}ms (Code: ${event.code})`);
+        // Apply full jitter - randomize between 0 and the maximum delay
+        // This is better than just adding jitter to prevent "thundering herd" problems
+        // Where many clients reconnect simultaneously after service disruption
+        const jitteredDelay = Math.floor(Math.random() * baseDelay);
+        
+        console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${jitteredDelay}ms (base: ${baseDelay}ms, Code: ${event.code})`);
         
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           reconnectTimer = setTimeout(() => {
@@ -1439,7 +1444,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
               socket = null;
               connect();
             }
-          }, backoffDelay);
+          }, jitteredDelay);
         } else {
           console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
           // Notify the user of connection issues only if not a temporary disconnect during navigation
