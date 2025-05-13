@@ -486,6 +486,10 @@ function setupWebSockets(server: Server) {
     let userId: number | null = null;
     let authenticated = false;
     
+    // Enhanced connection tracking with detailed metadata
+    const connectionId = crypto.randomUUID();
+    const startTime = Date.now();
+    
     // Setup ping interval to keep connection alive
     // Lower ping interval for better connection reliability (15 seconds)
     const PING_INTERVAL = 15000;
