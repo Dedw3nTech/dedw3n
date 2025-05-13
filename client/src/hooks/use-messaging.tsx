@@ -334,6 +334,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     const now = Date.now();
     const connectionAge = connectionDetails.startTime ? now - connectionDetails.startTime : null;
     const lastActivityTime = connectionDetails.lastActivity ? now - connectionDetails.lastActivity : null;
+    const isAuthenticated = connectionStatus === 'authenticated';
+    
+    // Track zombie detection for logging
+    let zombieDetectionReason = '';
     
     // If socket doesn't exist or is in closing/closed state, reconnect
     if (!socket || 
@@ -350,7 +354,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     if (socket && socket.readyState !== WebSocket.OPEN) {
       // If socket is in CONNECTING state for too long, force reconnect
       if (socket.readyState === WebSocket.CONNECTING && connectionAge && connectionAge > 10000) {
-        console.warn("WebSocket health check: Connection stuck in CONNECTING state for 10+ seconds, resetting...");
+        zombieDetectionReason = 'Stuck in CONNECTING state for 10+ seconds';
+        console.warn(`WebSocket health check: ${zombieDetectionReason}, resetting...`);
         socket.close();
         socket = null;
         connectRef.current();
@@ -367,9 +372,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     
     // Socket is OPEN but check if it's actually working
     if (socket && socket.readyState === WebSocket.OPEN) {
-      // If not authenticated after a reasonable time, force authentication
+      // Zombie Detection #1: Not authenticated after a reasonable time
       if (!isAuthenticated && connectionAge && connectionAge > 5000) {
-        console.warn("WebSocket health check: Connection open but not authenticated after 5 seconds");
+        zombieDetectionReason = 'Connection open but not authenticated after 5 seconds';
+        console.warn(`WebSocket health check: ${zombieDetectionReason}`);
         
         try {
           // Try to authenticate directly
@@ -380,9 +386,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             token,
             connectionId: connectionDetails.id || generateConnectionId(),
             retryAttempt: reconnectAttempts,
+            timestamp: Date.now(),
             clientInfo: {
-              userAgent: navigator.userAgent,
-              platform: navigator.platform
+              userAgent: navigator.userAgent.substring(0, 100), // Truncate to avoid large payloads
+              platform: navigator.platform,
+              url: window.location.href,
+              connectionAge
             }
           };
           socket.send(JSON.stringify(authMessage));
@@ -390,7 +399,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           
           // If still not authenticated after another few seconds, reconnect
           setTimeout(() => {
-            if (socket && !isAuthenticated) {
+            const stillAuthenticated = connectionStatus === 'authenticated';
+            if (socket && !stillAuthenticated) {
               console.warn("WebSocket health check: Authentication retry failed, resetting connection");
               socket.close();
               socket = null;
@@ -408,14 +418,50 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // If authenticated but no activity for a long time, send a ping
-      if (isAuthenticated && lastActivityTime && lastActivityTime > 30000) {
-        console.log("WebSocket health check: No activity for 30+ seconds, sending ping");
+      // Zombie Detection #2: No activity for a long time, send a ping
+      if (lastActivityTime && lastActivityTime > 30000) {
+        zombieDetectionReason = `No activity for ${Math.round(lastActivityTime/1000)} seconds`;
+        console.log(`WebSocket health check: ${zombieDetectionReason}, sending ping`);
+        
         try {
+          // Track ping time for measuring latency
+          const pingStartTime = Date.now();
+          
+          // Create a ping timeout to detect dead connections
+          const pingTimeout = setTimeout(() => {
+            // If ping hasn't returned in 5 seconds, connection is probably dead
+            if (socket) {
+              console.error("WebSocket health check: Ping timeout after 5 seconds, connection may be dead");
+              socket.close();
+              socket = null;
+              reconnectAttempts++;
+              connectRef.current();
+            }
+          }, 5000);
+          
+          // Store the ping timeout ID on the socket instance to clear it when we get a response
+          (socket as any)._currentPingTimeout = pingTimeout;
+          
+          // Store the ping start time on the socket instance for latency calculation
+          (socket as any)._lastPingTime = pingStartTime;
+          
+          // Send ping with a unique ID so we can match the response
+          const pingId = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+          (socket as any)._lastPingId = pingId;
+          
+          // Send ping message
           socket.send(JSON.stringify({
             type: 'ping',
             timestamp: now,
-            userId: user.id
+            userId: user.id,
+            pingId,
+            connectionDetails: {
+              id: connectionDetails.id,
+              startTime: connectionDetails.startTime, 
+              age: connectionAge,
+              lastActivity: connectionDetails.lastActivity,
+              inactiveTime: lastActivityTime
+            }
           }));
           
           // Update last activity time
@@ -430,6 +476,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           reconnectAttempts++;
           connectRef.current();
         }
+        return;
+      }
+      
+      // Zombie Detection #3: Connection has been open for too long without reestablishment
+      // Most WebSocket implementations should be reestablished periodically
+      if (connectionAge && connectionAge > 3600000) { // 1 hour
+        zombieDetectionReason = 'Connection age exceeds 1 hour, refreshing as preventative measure';
+        console.log(`WebSocket health check: ${zombieDetectionReason}`);
+        
+        try {
+          // Gracefully close existing connection
+          socket.close(1000, "Scheduled connection refresh");
+          socket = null;
+          // Don't increment reconnect attempts for scheduled refresh
+          connectRef.current();
+        } catch (error) {
+          console.error("WebSocket health check: Error during scheduled connection refresh", error);
+          socket = null;
+          connectRef.current();
+        }
+        return;
       }
     }
   };
@@ -534,6 +601,54 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.log(`User ${data.userId} is now ${data.status}`);
         // Update the conversations list to reflect new status
         queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
+        break;
+        
+      case "ping":
+        // Server is sending us a ping, respond with pong
+        console.log("Received ping from server, responding with pong");
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          try {
+            socket.send(JSON.stringify({
+              type: "pong",
+              timestamp: Date.now(),
+              userId: user.id,
+              pingId: data.pingId || 'server-ping',
+              originalTimestamp: data.timestamp
+            }));
+          } catch (error) {
+            console.error("Error sending pong response:", error);
+          }
+        }
+        break;
+        
+      case "pong":
+        // Received pong response from server, calculate latency
+        const now = Date.now();
+        const pingId = data.pingId || '';
+        const lastPingId = (socket as any)?._lastPingId;
+        const lastPingTime = (socket as any)?._lastPingTime;
+        
+        // If we have a matching ping ID and start time, calculate latency
+        if (pingId && lastPingId === pingId && lastPingTime) {
+          const latency = now - lastPingTime;
+          console.log(`WebSocket ping latency: ${latency}ms`);
+          
+          // Store latency in connection details
+          setConnectionDetails(prev => ({
+            ...prev,
+            pingLatency: latency,
+            lastActivity: now
+          }));
+          
+          // Clear any ping timeout since we got a response
+          const pingTimeout = (socket as any)?._currentPingTimeout;
+          if (pingTimeout) {
+            clearTimeout(pingTimeout);
+            (socket as any)._currentPingTimeout = null;
+          }
+        } else {
+          console.log("Received pong response (unknown or server-initiated)");
+        }
         break;
         
       case "call_request":
