@@ -147,7 +147,6 @@ function Router() {
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
-      <ProtectedRoute path="/saved-posts" component={SavedPostsPage} />
       
       {/* Protected video routes */}
       <ProtectedRoute path="/videos/trending" component={TrendingVideosPage} />
