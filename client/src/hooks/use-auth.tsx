@@ -102,7 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       try {
+        // Add debugger statement before login request
+        debugger; // For Node.js debugging as suggested in nodejs.org/api/debugger.html
+        console.log('Login attempt with credentials (username only):', credentials.username);
+        
         const res = await apiRequest("POST", "/api/login", credentials);
+        
+        // Add debugger to inspect response
+        debugger; // For Node.js debugging
+        console.log('Login response status:', res.status);
         
         // Ensure session cookies are saved by the browser
         if (res.ok) {
@@ -110,10 +118,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoggedOutFlag(false);
           
           // Try to parse the response as JSON
-          const data = await res.json();
+          let data;
+          try {
+            const responseText = await res.text();
+            console.log('Raw response text:', responseText);
+            
+            // Only try to parse as JSON if the response is not empty
+            if (responseText && responseText.trim()) {
+              try {
+                data = JSON.parse(responseText);
+                console.log('Parsed response data:', data);
+              } catch (parseError) {
+                console.error('Error parsing JSON response:', parseError);
+                // If parsing fails, use the response text as a string value
+                data = { message: responseText };
+              }
+            } else {
+              // Handle empty response by creating a basic user object
+              console.log('Empty response from server, using default success value');
+              data = { success: true };
+            }
+          } catch (textError) {
+            console.error('Error reading response text:', textError);
+            // Fallback for when we can't read the response body
+            data = { success: true };
+          }
           
           // If using JWT tokens and the response contains a token
-          if (data.token) {
+          if (data && data.token) {
             // Store the token in localStorage
             setAuthToken(data.token);
             console.log('Auth token stored successfully');
@@ -125,16 +157,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error(errorText || `Login failed with status: ${res.status}`);
         }
       } catch (error: any) {
+        // Add debugger on error
+        debugger; // For Node.js debugging
         console.error("Login error:", error);
         throw new Error(error.message || "Login failed. Please try again.");
       }
     },
     onSuccess: (response) => {
+      // Add debugger to inspect response data in the success callback
+      debugger; // For Node.js debugging
+      console.log('Login success, response data:', response);
+      
       // Clear any logged out flags
       setLoggedOutFlag(false);
       
       // Extract user from response (might be nested in user property or directly in response)
-      const user = response.user || response;
+      // Handle various response structures safely
+      let user;
+      
+      if (response) {
+        if (response.user) {
+          user = response.user;
+        } else if (response.id) { 
+          // Response is the user object directly
+          user = response;
+        } else {
+          // We need to refetch the user data as the response doesn't contain user info
+          console.log('Response does not contain user data, refetching...');
+          refetch();
+          return; // Exit early and let the refetch handle updating the UI
+        }
+      } else {
+        console.warn('Empty response in onSuccess handler');
+        refetch();
+        return;
+      }
+      
+      // Update the user data in the cache
       queryClient.setQueryData(["/api/user"], user);
       
       // Immediately refetch user data to ensure we have the latest
@@ -142,7 +201,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: t('auth.login_successful') || "Login successful",
-        description: t('auth.welcome_back', { name: user.name || user.username }) || `Welcome back, ${user.name || user.username}!`,
+        description: t('auth.welcome_back', { name: user?.name || user?.username || 'user' }) || 
+          `Welcome back, ${user?.name || user?.username || 'user'}!`,
       });
     },
     onError: (error: Error) => {
@@ -159,7 +219,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       try {
+        // Add debugger statement before registration request
+        debugger; // For Node.js debugging
+        console.log('Registration attempt with credentials (username only):', credentials.username);
+        
         const res = await apiRequest("POST", "/api/register", credentials);
+        
+        // Add debugger to inspect response
+        debugger; // For Node.js debugging
+        console.log('Registration response status:', res.status);
         
         // Ensure session cookies are saved by the browser
         if (res.ok) {
@@ -167,10 +235,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoggedOutFlag(false);
           
           // Try to parse the response as JSON
-          const data = await res.json();
+          let data;
+          try {
+            const responseText = await res.text();
+            console.log('Raw registration response text:', responseText);
+            
+            // Only try to parse as JSON if the response is not empty
+            if (responseText && responseText.trim()) {
+              try {
+                data = JSON.parse(responseText);
+                console.log('Parsed registration response data:', data);
+              } catch (parseError) {
+                console.error('Error parsing JSON response:', parseError);
+                // If parsing fails, use the response text as a string value
+                data = { message: responseText };
+              }
+            } else {
+              // Handle empty response by creating a basic user object
+              console.log('Empty response from server, using default success value');
+              data = { success: true };
+            }
+          } catch (textError) {
+            console.error('Error reading response text:', textError);
+            // Fallback for when we can't read the response body
+            data = { success: true };
+          }
           
           // If using JWT tokens and the response contains a token
-          if (data.token) {
+          if (data && data.token) {
             // Store the token in localStorage
             setAuthToken(data.token);
             console.log('Auth token stored successfully after registration');
@@ -182,16 +274,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error(errorText || `Registration failed with status: ${res.status}`);
         }
       } catch (error: any) {
+        // Add debugger on error
+        debugger; // For Node.js debugging
         console.error("Registration error:", error);
         throw new Error(error.message || "Registration failed. Please try again.");
       }
     },
     onSuccess: (response) => {
+      // Add debugger to inspect response data in the success callback
+      debugger; // For Node.js debugging
+      console.log('Registration success, response data:', response);
+      
       // Clear any logged out flags
       setLoggedOutFlag(false);
       
       // Extract user from response (might be nested in user property or directly in response)
-      const user = response.user || response;
+      // Handle various response structures safely
+      let user;
+      
+      if (response) {
+        if (response.user) {
+          user = response.user;
+        } else if (response.id) { 
+          // Response is the user object directly
+          user = response;
+        } else {
+          // We need to refetch the user data as the response doesn't contain user info
+          console.log('Response does not contain user data, refetching...');
+          refetch();
+          return; // Exit early and let the refetch handle updating the UI
+        }
+      } else {
+        console.warn('Empty response in onSuccess handler');
+        refetch();
+        return;
+      }
+      
+      // Update the user data in the cache
       queryClient.setQueryData(["/api/user"], user);
       
       // Immediately refetch user data to ensure we have the latest
@@ -199,7 +318,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: t('auth.registration_successful') || "Registration successful",
-        description: t('auth.welcome', { name: user.name || user.username }) || `Welcome, ${user.name || user.username}!`,
+        description: t('auth.welcome', { name: user?.name || user?.username || 'user' }) || 
+          `Welcome, ${user?.name || user?.username || 'user'}!`,
       });
     },
     onError: (error: Error) => {

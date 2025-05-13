@@ -76,25 +76,61 @@ export default function AuthPage() {
   // Handle login submission
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
-      await loginMutation.mutateAsync(values);
-      // Redirect will happen automatically in the useEffect
+      // Add debugger statement before login submission
+      debugger; // For Node.js debugging
+      console.log("Submitting login form with username:", values.username);
+      
+      // Track the start time for login response time measurement
+      const startTime = performance.now();
+      
+      // Call the mutation and await the response
+      const response = await loginMutation.mutateAsync(values);
+      
+      // Add debugger statement to examine the response
+      debugger; // For Node.js debugging
+      console.log("Login successful, response:", response);
+      console.log("Login response time:", performance.now() - startTime, "ms");
+      
+      // Redirect will happen automatically in the useEffect if there's a user
     } catch (error) {
+      // Add debugger statement on error
+      debugger; // For Node.js debugging
       console.error("Login failed:", error);
+      
+      // We could show additional error UI here if needed
     }
   };
 
   // Handle registration submission
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     try {
+      // Add debugger statement before registration submission
+      debugger; // For Node.js debugging
+      
       const { confirmPassword, ...userData } = values;
       console.log("Attempting to register with:", userData);
-      await registerMutation.mutateAsync({
+      
+      // Track the start time for registration response time measurement
+      const startTime = performance.now();
+      
+      // Call the mutation and await the response
+      const response = await registerMutation.mutateAsync({
         ...userData,
         isVendor: false, // Set default values that might be required by the schema
       });
-      // Redirect will happen automatically in the useEffect
+      
+      // Add debugger statement to examine the response
+      debugger; // For Node.js debugging
+      console.log("Registration successful, response:", response);
+      console.log("Registration response time:", performance.now() - startTime, "ms");
+      
+      // Redirect will happen automatically in the useEffect if there's a user
     } catch (error) {
+      // Add debugger statement on error
+      debugger; // For Node.js debugging
       console.error("Registration failed:", error);
+      
+      // We could show additional error UI here if needed
     }
   };
 
