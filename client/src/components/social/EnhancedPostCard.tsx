@@ -547,15 +547,13 @@ export default function EnhancedPostCard({
                   <iframe
                     src={post.videoUrl}
                     className="absolute top-0 left-0 w-full h-full"
-                    style={{ maxHeight: "calc(100vh - 200px)" }}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     onLoad={(e) => {
-                      // Optional: You could add additional responsive height adjustments here
-                      // For example, detecting video dimensions through JS, if possible
+                      // No height restrictions needed
                       const frame = e.target as HTMLIFrameElement;
-                      console.log("Video iframe loaded", frame);
+                      // Keep any necessary video processing logic
                     }}
                   ></iframe>
                 </div>
@@ -580,18 +578,12 @@ export default function EnhancedPostCard({
                   src={post.imageUrl} 
                   alt={post.title || t("social.article_image")} 
                   className="w-full h-auto rounded-md object-contain cursor-pointer"
-                  style={{ maxHeight: "calc(100vh - 300px)" }}
                   onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
                   onLoad={(e) => {
-                    // Adjust container height based on image aspect ratio
+                    // No need to restrict height - show full image
                     const img = e.target as HTMLImageElement;
-                    if (img.naturalHeight > 0 && img.naturalWidth > 0) {
-                      // Apply any additional adjustments if needed
-                      if (img.naturalHeight > 800) {
-                        img.style.maxHeight = "800px";
-                      }
-                    }
+                    // Retain any needed image processing logic here
                   }}
                 />
               </div>
