@@ -337,7 +337,7 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {personalFeed.map((post: any) => (
+                    {(personalFeed as Post[]).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
                   </div>
@@ -363,7 +363,7 @@ export default function WallPage() {
                       </div>
                     ))}
                   </div>
-                ) : !communitiesFeed || communitiesFeed.length === 0 ? (
+                ) : !communitiesFeed || (communitiesFeed as Post[]).length === 0 ? (
                   <div className="text-center py-10">
                     <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <h3 className="text-lg font-medium mb-2">No community posts yet</h3>
@@ -381,7 +381,7 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {communitiesFeed.map((post: any) => (
+                    {(communitiesFeed as Post[]).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
                   </div>
@@ -407,7 +407,7 @@ export default function WallPage() {
                       </div>
                     ))}
                   </div>
-                ) : !recommendedFeed || recommendedFeed.length === 0 ? (
+                ) : !recommendedFeed || (recommendedFeed as Post[]).length === 0 ? (
                   <div className="text-center py-10">
                     <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <h3 className="text-lg font-medium mb-2">We're finding content for you</h3>
@@ -425,7 +425,7 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {recommendedFeed.map((post: any) => (
+                    {(recommendedFeed as Post[]).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
                   </div>
