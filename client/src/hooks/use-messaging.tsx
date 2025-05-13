@@ -113,6 +113,14 @@ interface MessagingContextType {
     connectionDuration?: number;
     errorCount?: number;
     authRetry?: boolean;
+    clockDrift?: number | null;
+    consecutiveSuccessfulPings?: number;
+    unidentifiedPongs?: number;
+    pingStats?: {
+      min: number;
+      max: number;
+      recent: number[];
+    };
     lastError?: {
       time: number;
       type: string;
@@ -202,7 +210,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       type: string;
       url: string;
     };
-  }>({});
+    clockDrift?: number | null;
+    consecutiveSuccessfulPings?: number;
+    unidentifiedPongs?: number;
+    pingStats?: {
+      min: number;
+      max: number;
+      recent: number[];
+    };
+  }>({
+    id: generateConnectionId(),
+    startTime: Date.now(),
+    reconnects: 0,
+    errorCount: 0,
+    consecutiveSuccessfulPings: 0,
+    unidentifiedPongs: 0,
+    pingStats: { 
+      min: Infinity, 
+      max: 0, 
+      recent: [] 
+    }
+  });
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
   const [activeCall, setActiveCall] = useState<Call | null>(null);
@@ -1328,17 +1356,21 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             }));
             
             // Fix: Properly clean up the socket connection
-            if (isWebSocket(socket)) {
+            if (socket) {
               try {
+                // Using explicit type checking to avoid TypeScript errors
+                const ws = socket as WebSocket;
+                
                 // Clean up event handlers to prevent memory leaks
-                socket.onclose = null;
-                socket.onerror = null;
-                socket.onmessage = null;
-                socket.onopen = null;
+                if ('onclose' in ws) ws.onclose = null;
+                if ('onerror' in ws) ws.onerror = null;
+                if ('onmessage' in ws) ws.onmessage = null;
+                if ('onopen' in ws) ws.onopen = null;
                 
                 // If still in open or connecting state, attempt to close it properly
-                if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-                  socket.close(1000, "Clean shutdown before reconnect");
+                if ('readyState' in ws && 
+                    (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                  ws.close(1000, "Clean shutdown before reconnect");
                 }
               } catch (e) {
                 console.warn("Error while cleaning up socket:", e);
