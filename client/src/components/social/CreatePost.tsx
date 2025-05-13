@@ -516,10 +516,10 @@ export default function CreatePost({
                       value={postToVisibility}
                       onValueChange={setPostToVisibility}
                     >
-                      <Button variant="outline" className="h-7 w-[130px] flex justify-between items-center">
+                      <div className="h-7 w-[130px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
                         <span>{postToVisibility === "public" ? "Public" : "Community"}</span>
                         <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
+                      </div>
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Post to</SelectLabel>
@@ -552,7 +552,7 @@ export default function CreatePost({
                           onValueChange={(value) => setSelectedCommunityId(Number(value))}
                           disabled={!!communityId}
                         >
-                          <Button variant="outline" className="h-7 w-[180px] flex justify-between items-center">
+                          <div className="h-7 w-[180px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
                             <span>
                               {selectedCommunityId && userCommunities ? 
                                 userCommunities.find((c: any) => c.id === selectedCommunityId)?.name || "Select a community" : 
@@ -560,7 +560,7 @@ export default function CreatePost({
                               }
                             </span>
                             <ChevronDown className="h-4 w-4 opacity-50" />
-                          </Button>
+                          </div>
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>Your communities</SelectLabel>
