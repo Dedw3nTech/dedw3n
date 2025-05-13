@@ -66,7 +66,7 @@ export default function PostDetailPage() {
     data: post, 
     isLoading: isPostLoading, 
     error: postError 
-  } = useQuery({
+  } = useQuery<Post>({
     queryKey: [`/api/posts/${numericId}`],
     enabled: !!numericId,
   });
@@ -77,7 +77,7 @@ export default function PostDetailPage() {
     isLoading: isCommentsLoading, 
     error: commentsError,
     refetch: refetchComments
-  } = useQuery({
+  } = useQuery<Comment[]>({
     queryKey: [`/api/posts/${numericId}/comments`],
     enabled: !!numericId,
   });
@@ -197,7 +197,7 @@ export default function PostDetailPage() {
         Back to Feed
       </Button>
       
-      {post && (
+      {post ? (
         <div className="mb-8">
           <PostCard 
             post={post} 
@@ -205,7 +205,7 @@ export default function PostDetailPage() {
             onDelete={() => setLocation("/wall")} 
           />
         </div>
-      )}
+      ) : null}
       
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Comments</h2>

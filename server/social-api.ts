@@ -34,7 +34,14 @@ function convertToAppPost(apiPost: any): Partial<Post> {
     reviewedBy: apiPost.reviewedBy || null,
     moderationNote: apiPost.moderationNote || null,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    // Add user information - needed for post detail page
+    user: {
+      id: apiPost.userId,
+      username: `user${apiPost.userId}`,
+      name: `User ${apiPost.userId}`,
+      avatar: null
+    }
   };
 }
 

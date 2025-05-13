@@ -113,6 +113,7 @@ export interface IStorage {
   
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
+  incrementPostView(id: number): Promise<boolean>;
   createPost(post: InsertPost): Promise<Post>;
   updatePost(id: number, postData: Partial<Post>): Promise<Post | undefined>;
   deletePost(id: number): Promise<boolean>;
@@ -1185,11 +1186,77 @@ export class DatabaseStorage implements IStorage {
   // Post operations
   async getPost(id: number): Promise<Post | undefined> {
     try {
+      // First get the post
       const [post] = await db.select().from(posts).where(eq(posts.id, id));
-      return post;
+      
+      if (!post) {
+        return undefined;
+      }
+      
+      // Then get the user
+      const [user] = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(eq(users.id, post.userId));
+      
+      // Get comment count
+      const [commentCount] = await db
+        .select({ count: count() })
+        .from(comments)
+        .where(eq(comments.postId, id));
+      
+      // Get like count
+      const [likeCount] = await db
+        .select({ count: count() })
+        .from(likes)
+        .where(
+          and(
+            eq(likes.entityId, id),
+            eq(likes.entityType, 'post')
+          )
+        );
+      
+      return {
+        ...post,
+        user,
+        comments: commentCount.count || 0,
+        likes: likeCount.count || 0
+      };
     } catch (error) {
       console.error('Error getting post:', error);
       return undefined;
+    }
+  }
+  
+  async incrementPostView(id: number): Promise<boolean> {
+    try {
+      // Get current post
+      const [post] = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.id, id));
+      
+      if (!post) {
+        return false;
+      }
+      
+      // Increment views
+      const currentViews = post.views || 0;
+      
+      await db
+        .update(posts)
+        .set({ views: currentViews + 1 })
+        .where(eq(posts.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error incrementing post view:', error);
+      return false;
     }
   }
   
