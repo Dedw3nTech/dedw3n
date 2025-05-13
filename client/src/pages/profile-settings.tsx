@@ -64,18 +64,57 @@ export default function ProfileSettingsPage() {
     }));
     
     // Invalidate any queries that might use the user avatar
-    queryClient.invalidateQueries({ 
-      queryKey: [`/api/users/${user.id}/profilePicture`]
-    });
-    queryClient.invalidateQueries({ 
-      queryKey: [`/api/users/${user.username}/profilePicture`]
-    });
+    invalidateUserRelatedQueries();
+  };
+
+  // Function to invalidate all user-related queries to ensure data consistency
+  const invalidateUserRelatedQueries = () => {
+    // User profile queries
+    queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.username}`] });
+    
+    // Profile picture queries
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/profilePicture`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.username}/profilePicture`] });
+    
+    // Social queries
+    queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
+    
+    // Comments
+    queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+    
+    // User stats
+    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/stats`] });
+    queryClient.invalidateQueries({ queryKey: ['/api/user/stats'] });
+    
+    // For username changes - invalidate any endpoint that might reference the username
+    if (formData.username !== user.username) {
+      queryClient.invalidateQueries(); // Invalidate all queries if username changes
+    }
   };
 
   const handleProfileUpdate = async () => {
     try {
       setIsUpdating(true);
       console.log('Submitting profile update:', formData);
+      
+      // Check if there are any changes
+      if (
+        formData.name === user.name && 
+        formData.username === user.username && 
+        formData.bio === user.bio && 
+        formData.avatar === user.avatar
+      ) {
+        toast({
+          title: 'No changes detected',
+          description: 'No changes were made to your profile',
+        });
+        setIsUpdating(false);
+        return;
+      }
       
       const response = await apiRequest('PATCH', '/api/users/profile', formData);
       
@@ -86,8 +125,19 @@ export default function ProfileSettingsPage() {
       
       const updatedUser = await response.json();
       
-      // Update query cache
+      // Update query cache with new user data to ensure it's immediately available
       queryClient.setQueryData({ queryKey: ['/api/user'] }, updatedUser);
+      
+      // Also update user data in specific endpoints
+      queryClient.setQueryData({ queryKey: [`/api/users/${updatedUser.id}`] }, updatedUser);
+      
+      if (user.username !== updatedUser.username) {
+        // If username changed, update that specific endpoint too
+        queryClient.setQueryData({ queryKey: [`/api/users/${updatedUser.username}`] }, updatedUser);
+      }
+      
+      // Invalidate all related queries to ensure data consistency across the app
+      invalidateUserRelatedQueries();
       
       toast({
         title: t('profile.update_success') || 'Profile updated',
