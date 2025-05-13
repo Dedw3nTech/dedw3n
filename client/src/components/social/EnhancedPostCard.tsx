@@ -18,7 +18,8 @@ import {
   ImageOff,
   Send,
   ShoppingCart,
-  Bookmark
+  Bookmark,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -285,6 +286,26 @@ export default function EnhancedPostCard({
           variant: "destructive",
         });
       });
+  };
+  
+  const handleBoost = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show a success message for now
+    toast({
+      title: "Post Boosted",
+      description: "Your post has been boosted and will reach more users",
+    });
+    
+    // In a real implementation, we would call an API to boost the post
+    console.log('Boosting post', post.id);
   };
   
   // Save post mutation
@@ -721,6 +742,14 @@ export default function EnhancedPostCard({
           >
             <Share2 className="w-5 h-5 mr-1" />
             <span>{t("social.share")}</span>
+          </button>
+          
+          <button
+            onClick={handleBoost}
+            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+          >
+            <Zap className="w-5 h-5 mr-1" />
+            <span>Boost</span>
           </button>
           
           {showBookmarkButton && (
