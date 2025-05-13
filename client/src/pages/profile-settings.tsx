@@ -106,13 +106,13 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="container max-w-3xl pt-6 pb-16">
-      <h1 className="text-3xl font-bold mb-6">{t('profile.settings') || 'Profile Settings'}</h1>
+      <h1 className="text-3xl font-bold mb-6"></h1>
       
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="profile" className="flex-1">{t('profile.info') || 'Profile'}</TabsTrigger>
-          <TabsTrigger value="account" className="flex-1">{t('profile.account') || 'Account'}</TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-1">{t('profile.notifications') || 'Notifications'}</TabsTrigger>
+          <TabsTrigger value="profile" className="flex-1"></TabsTrigger>
+          <TabsTrigger value="account" className="flex-1"></TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-1"></TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -120,9 +120,8 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('profile.picture') || 'Profile Picture'}</CardTitle>
+                  <CardTitle></CardTitle>
                   <CardDescription>
-                    {t('profile.picture_desc') || 'Update your profile picture'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
@@ -139,31 +138,30 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('profile.personal_info') || 'Personal Information'}</CardTitle>
+                  <CardTitle></CardTitle>
                   <CardDescription>
-                    {t('profile.personal_info_desc') || 'Update your personal details'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">{t('profile.display_name') || 'Display Name'}</Label>
+                    <Label htmlFor="name"></Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder={t('profile.display_name_placeholder') || 'Your display name'}
+                      placeholder=""
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio">{t('profile.bio') || 'Bio'}</Label>
+                    <Label htmlFor="bio"></Label>
                     <Textarea
                       id="bio"
                       name="bio"
                       value={formData.bio || ''}
                       onChange={handleInputChange}
-                      placeholder={t('profile.bio_placeholder') || 'Write a short bio about yourself'}
+                      placeholder=""
                       rows={4}
                     />
                   </div>
@@ -176,10 +174,9 @@ export default function ProfileSettingsPage() {
                     {isUpdating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('profile.updating') || 'Updating...'}
                       </>
                     ) : (
-                      t('profile.save_changes') || 'Save Changes'
+                      ""
                     )}
                   </Button>
                 </CardContent>
@@ -191,14 +188,12 @@ export default function ProfileSettingsPage() {
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.account_settings') || 'Account Settings'}</CardTitle>
+              <CardTitle></CardTitle>
               <CardDescription>
-                {t('profile.account_settings_desc') || 'Manage your account settings'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {t('profile.account_future') || 'Account settings will be implemented in a future update.'}
               </p>
             </CardContent>
           </Card>
@@ -207,14 +202,12 @@ export default function ProfileSettingsPage() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.notification_preferences') || 'Notification Preferences'}</CardTitle>
+              <CardTitle></CardTitle>
               <CardDescription>
-                {t('profile.notification_preferences_desc') || 'Control how you receive notifications'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {t('profile.notification_future') || 'Notification settings will be implemented in a future update.'}
               </p>
             </CardContent>
           </Card>
