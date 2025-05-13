@@ -155,7 +155,6 @@ export default function ProfileSettingsPage() {
                       onChange={handleInputChange}
                       placeholder="Your unique username"
                       className="text-black font-medium border-2 border-gray-300"
-                      readOnly
                     />
                     <p className="text-xs text-gray-600">This is your unique username used to identify you on the platform.</p>
                   </div>
