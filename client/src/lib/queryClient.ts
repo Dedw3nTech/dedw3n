@@ -190,14 +190,46 @@ export async function apiRequest(
             console.warn('Authentication error detected during post creation. Attempting to refresh session...');
             // Try to refresh the session by fetching the user endpoint
             try {
-              await fetch('/api/auth/me', { 
+              // Attempt to refresh auth session
+              const refreshResponse = await fetch('/api/auth/me', { 
                 method: 'GET',
                 credentials: 'include',
                 headers: {
                   'Authorization': `Bearer ${getStoredAuthToken()}`,
-                  'Cache-Control': 'no-cache'
+                  'Cache-Control': 'no-cache',
+                  'X-Auth-Refresh': 'true'
                 }
               });
+              
+              // Look for WWW-Authenticate header for debugging
+              const authHeader = refreshResponse.headers.get('WWW-Authenticate');
+              if (authHeader) {
+                console.log('WWW-Authenticate header received:', authHeader);
+              }
+              
+              // If refresh succeeded, retry the original post request
+              if (refreshResponse.ok) {
+                console.log('Session refreshed successfully, retrying post creation...');
+                
+                // Retry the original request with fresh credentials
+                const retryResponse = await fetch(url, {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getStoredAuthToken()}`,
+                    'X-Retry-After-Auth-Refresh': 'true'
+                  },
+                  body: options?.body
+                });
+                
+                if (retryResponse.ok) {
+                  console.log('Post creation retry successful after auth refresh!');
+                  return retryResponse; // Return the successful retry response instead
+                } else {
+                  console.error('Post creation retry failed after auth refresh:', await retryResponse.text());
+                }
+              }
             } catch (e) {
               console.error('Failed to refresh session:', e);
             }

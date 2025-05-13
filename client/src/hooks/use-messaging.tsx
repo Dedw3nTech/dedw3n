@@ -352,8 +352,20 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     
     // Handle different message types
     switch (data.type) {
-      case "auth_success":
-        console.log("WebSocket authenticated successfully");
+      case "authenticated":
+        console.log("WebSocket authenticated successfully with server ID:", data.connectionId);
+        setConnectionStatus('authenticated');
+        setConnectionDetails(prev => ({
+          ...prev,
+          authenticated: true,
+          serverConnectionId: data.connectionId,
+          tokenAuth: !!data.tokenAuth,
+          serverTime: data.serverTime
+        }));
+        break;
+      
+      case "auth_success": // Legacy support
+        console.log("WebSocket authenticated successfully (legacy message)");
         setConnectionStatus('authenticated');
         setConnectionDetails(prev => ({
           ...prev,
@@ -770,19 +782,30 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           // Log token presence for debugging (but not the actual token)
           console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}, connectionId: ${connectionId}`);
           
+          // Debug URL parameters
+          try {
+            if (wsUrl) {
+              const urlParts = new URL(wsUrl);
+              console.log(`WebSocket connection URL parsing: host=${urlParts.host}, pathname=${urlParts.pathname}, params=`, 
+                Object.fromEntries(urlParts.searchParams.entries()));
+            }
+          } catch (e) {
+            console.error('Error parsing WebSocket URL:', e);
+          }
+          
           if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
-            type: "authenticate",
-            userId: user.id,
-            token: token,  // Include the JWT token for authentication
-            connectionId: connectionId, // Send connection ID for tracing
-            clientInfo: {
-              timestamp: new Date().toISOString(),
-              reconnectAttempts,
-              url: window.location.pathname,
-              userAgent: navigator.userAgent.substring(0, 100) // Truncate user agent to avoid large payloads
-            }
-          }));
+              type: "authenticate",
+              userId: user.id,
+              token: token,  // Include the JWT token for authentication
+              connectionId: connectionId, // Send connection ID for tracing
+              clientInfo: {
+                timestamp: new Date().toISOString(),
+                reconnectAttempts,
+                url: window.location.pathname,
+                userAgent: navigator.userAgent.substring(0, 100) // Truncate user agent to avoid large payloads
+              }
+            }));
           }
           
           console.log("Sent authentication request to WebSocket server with token");
@@ -798,7 +821,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
                 userId: user.id,
                 token: freshToken,
                 connectionId: connectionId,
-                retryAttempt: true // Mark as retry for server logging
+                retryAttempt: true, // Mark as retry for server logging
+                timestamp: Date.now() // Add timestamp for debugging
               }));
               console.log("Sent follow-up authentication request to WebSocket server");
             }
