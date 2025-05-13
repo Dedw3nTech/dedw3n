@@ -631,17 +631,46 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         const pingId = data.pingId || '';
         const lastPingId = (socket as any)?._lastPingId;
         const lastPingTime = (socket as any)?._lastPingTime;
+        const serverTimestamp = data.serverTimestamp;
         
         // If we have a matching ping ID and start time, calculate latency
         if (pingId && lastPingId === pingId && lastPingTime) {
           const latency = now - lastPingTime;
-          console.log(`WebSocket ping latency: ${latency}ms`);
           
-          // Store latency in connection details
+          // Log different levels based on latency thresholds
+          if (latency < 100) {
+            console.log(`✅ WebSocket ping latency: ${latency}ms (excellent)`);
+          } else if (latency < 300) {
+            console.log(`✓ WebSocket ping latency: ${latency}ms (good)`);
+          } else if (latency < 1000) {
+            console.warn(`⚠️ WebSocket ping latency: ${latency}ms (slow)`);
+          } else {
+            console.warn(`⚠️ WebSocket ping latency: ${latency}ms (very slow, potential issues)`);
+          }
+          
+          // Calculate clock drift if server sent its timestamp
+          let clockDrift = null;
+          if (serverTimestamp) {
+            clockDrift = (now - serverTimestamp);
+            if (Math.abs(clockDrift) > 10000) { // 10 seconds
+              console.warn(`⚠️ Large clock drift detected: ${clockDrift}ms between client and server`);
+            }
+          }
+          
+          // Store enhanced diagnostic data in connection details
           setConnectionDetails(prev => ({
             ...prev,
             pingLatency: latency,
-            lastActivity: now
+            lastActivity: now,
+            serverTime: data.serverTime,
+            clockDrift: clockDrift,
+            consecutiveSuccessfulPings: (prev.consecutiveSuccessfulPings || 0) + 1,
+            pingStats: {
+              ...(prev.pingStats || {}),
+              min: Math.min(latency, (prev.pingStats?.min || Infinity)),
+              max: Math.max(latency, (prev.pingStats?.max || 0)),
+              recent: [...((prev.pingStats?.recent || []).slice(-9)), latency]
+            }
           }));
           
           // Clear any ping timeout since we got a response
@@ -652,6 +681,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           }
         } else {
           console.log("Received pong response (unknown or server-initiated)");
+          
+          // Still update last activity time for any pong
+          setConnectionDetails(prev => ({
+            ...prev,
+            lastActivity: now,
+            unidentifiedPongs: (prev.unidentifiedPongs || 0) + 1
+          }));
         }
         break;
         
