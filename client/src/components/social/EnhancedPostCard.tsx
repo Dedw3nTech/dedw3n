@@ -19,7 +19,8 @@ import {
   Send,
   ShoppingCart,
   Bookmark,
-  Zap
+  Zap,
+  Flag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
