@@ -399,7 +399,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           
           // If still not authenticated after another few seconds, reconnect
           setTimeout(() => {
-            const stillAuthenticated = connectionStatus === 'authenticated';
+            const stillAuthenticated = connectionStatus === 'connected' && connectionDetails.authenticated === true;
             if (socket && !stillAuthenticated) {
               console.warn("WebSocket health check: Authentication retry failed, resetting connection");
               socket.close();
@@ -1025,7 +1025,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
               type: "authenticate",
-              userId: user.id,
+              userId: user?.id,
               token: token,  // Include the JWT token for authentication
               connectionId: connectionId, // Send connection ID for tracing
               clientInfo: {
@@ -1041,13 +1041,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           
           // Set a timeout to verify authentication success
           setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus === 'connected') {
+            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus === 'connected' && !connectionDetails.authenticated) {
               console.warn("WebSocket authentication may have failed - connection is open but not authenticated");
               // Try to re-authenticate with a fresh token
               const freshToken = getStoredAuthToken();
               socket.send(JSON.stringify({
                 type: "authenticate",
-                userId: user.id,
+                userId: user?.id,
                 token: freshToken,
                 connectionId: connectionId,
                 retryAttempt: true, // Mark as retry for server logging
