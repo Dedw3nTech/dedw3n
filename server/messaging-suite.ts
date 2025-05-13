@@ -437,6 +437,15 @@ function setupWebSockets(server: Server) {
     server: server, 
     path: '/ws',
     clientTracking: true,
+    // Support echo-protocol for better browser compatibility
+    handleProtocols: (protocols, request) => {
+      // Convert Set to Array for compatibility
+      const protocolArray = Array.from(protocols);
+      if (protocolArray.includes('echo-protocol')) {
+        return 'echo-protocol';
+      }
+      return false; // Don't accept other protocols
+    },
     // Add WebSocket protocol options for better stability
     perMessageDeflate: {
       zlibDeflateOptions: {

@@ -611,7 +611,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             socket.send(JSON.stringify({
               type: "pong",
               timestamp: Date.now(),
-              userId: user.id,
+              userId: user?.id,
               pingId: data.pingId || 'server-ping',
               originalTimestamp: data.timestamp
             }));
@@ -1041,7 +1041,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           
           // Set a timeout to verify authentication success
           setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus !== 'authenticated') {
+            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus === 'connected') {
               console.warn("WebSocket authentication may have failed - connection is open but not authenticated");
               // Try to re-authenticate with a fresh token
               const freshToken = getStoredAuthToken();

@@ -456,7 +456,16 @@ function setupWebSockets(server: Server) {
   const wss = new WebSocketServer({ 
     server: server, 
     path: '/ws',
-    clientTracking: true 
+    clientTracking: true,
+    // Support echo-protocol for better browser compatibility
+    handleProtocols: (protocols, request) => {
+      // Convert Set to Array for compatibility
+      const protocolArray = Array.from(protocols);
+      if (protocolArray.includes('echo-protocol')) {
+        return 'echo-protocol';
+      }
+      return false; // Don't accept other protocols
+    }
   });
   
   console.log('WebSocket server initialized at /ws path');
