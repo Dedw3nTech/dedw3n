@@ -392,7 +392,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       // Add cache busting parameters to prevent cached connections
       const cacheBuster = `t=${Date.now()}&cid=${connectionId}`;
-      const wsUrl = `${getWebSocketUrl()}?${cacheBuster}`;
+      const wsUrl = getWebSocketUrl() + '?' + cacheBuster;
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       
       // Create the WebSocket connection
@@ -474,8 +474,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           
           // Set a timeout to verify authentication success
           setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN && !isConnected) {
-              console.warn("WebSocket authentication may have failed - connection is open but not marked as connected");
+            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus !== 'authenticated') {
+              console.warn("WebSocket authentication may have failed - connection is open but not authenticated");
               // Try to re-authenticate with a fresh token
               const freshToken = getStoredAuthToken();
               socket.send(JSON.stringify({
