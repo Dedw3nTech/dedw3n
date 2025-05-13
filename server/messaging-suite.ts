@@ -497,28 +497,62 @@ function setupWebSockets(server: Server) {
     // Add pong timeout to detect dead connections
     let lastPong = Date.now();
     
+    // Track connection metadata on WebSocket object
+    (ws as any).connectionId = connectionId;
+    (ws as any).startTime = startTime;
+    (ws as any).lastActivity = startTime;
+    (ws as any).pingCount = 0;
+    (ws as any).pongCount = 0;
+    (ws as any).authenticated = false;
+    (ws as any).authTime = null;
+    
+    console.log(`WebSocket connection ${connectionId} established with protocol: ${ws.protocol || 'none'}`);
+    
     ws.on('pong', () => {
       // Track last pong for connection health monitoring
       lastPong = Date.now();
-      console.debug('Received pong from client');
+      (ws as any).lastActivity = Date.now();
+      (ws as any).pongCount++;
+      console.debug(`Received pong from client (connection ${connectionId})`);
     });
     
     // Setup ping interval to keep connection alive
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         try {
+          // Enhanced connection monitoring
+          const connectionAge = Date.now() - startTime;
+          const timeSinceLastPong = Date.now() - lastPong;
+          
           // Check if connection is responsive (60 second threshold)
-          if (Date.now() - lastPong > 60000) {
-            console.warn('WebSocket connection unresponsive, terminating');
+          if (timeSinceLastPong > 60000) {
+            console.warn(`WebSocket connection ${connectionId} unresponsive for 60+ seconds, terminating`);
+            console.log(`Connection stats before termination: age=${Math.floor(connectionAge/1000)}s, pings=${(ws as any).pingCount}, pongs=${(ws as any).pongCount}, userId=${userId}, authenticated=${authenticated}`);
+            
+            // Store termination reason in the connection object before closing
+            (ws as any).terminationReason = 'pong_timeout';
+            (ws as any).terminationTime = Date.now();
+            
             ws.terminate(); // Force close unresponsive connection
             return;
           }
           
+          // Log connection status every 5 minutes (or ~20 pings)
+          if ((ws as any).pingCount % 20 === 0) {
+            console.log(`Connection ${connectionId} status: age=${Math.floor(connectionAge/1000)}s, pings=${(ws as any).pingCount}, pongs=${(ws as any).pongCount}, userId=${userId}, authenticated=${authenticated}`);
+          }
+          
           // Send ping to keep connection alive
+          (ws as any).pingCount++;
           ws.ping();
         } catch (error) {
-          console.error('Error pinging WebSocket:', error);
+          console.error(`Error pinging WebSocket connection ${connectionId}:`, error);
         }
+      } else if (ws.readyState === WebSocket.CLOSING) {
+        console.log(`WebSocket connection ${connectionId} is closing, monitoring ping will stop once closed`);
+      } else if (ws.readyState === WebSocket.CLOSED) {
+        console.log(`WebSocket connection ${connectionId} is now closed, clearing ping interval`);
+        clearInterval(pingInterval);
       }
     }, PING_INTERVAL);
     
@@ -588,26 +622,43 @@ function setupWebSockets(server: Server) {
               }
               userConnections.add(ws);
               
+              // Update connection metadata with authentication success
               authenticated = true;
+              (ws as any).authenticated = true;
+              (ws as any).authTime = Date.now();
+              (ws as any).authType = data.token ? 'token' : 'userId';
+              (ws as any).userId = userId;
               
               // Track online status
               broadcastUserStatus(userId, true);
               
-              // Send detailed acknowledgment with connection info
+              // Get connection duration in seconds
+              const connectionDuration = Math.floor((Date.now() - startTime) / 1000);
+              
+              // Send detailed acknowledgment with enhanced connection info
               ws.send(JSON.stringify({
                 type: 'authenticated',
                 userId: userId,
-                connectionId: crypto.randomUUID().slice(0, 8), // Add a unique connection ID for tracking
+                connectionId: connectionId, // Use the full UUID we generated at connection start
                 serverTime: new Date().toISOString(),
                 activeConnections: connections.size, // Send number of active users with connections
                 tokenAuth: !!data.token, // Indicate if token was used for authentication
+                connectionStats: {
+                  startTime: new Date(startTime).toISOString(),
+                  authTime: new Date().toISOString(),
+                  connectionDuration: connectionDuration, // How long it took to authenticate
+                  pings: (ws as any).pingCount,
+                  pongs: (ws as any).pongCount
+                },
                 debugInfo: {
                   timestamp: new Date().toISOString(),
-                  serverVersion: '1.0.1' // Add version to help track deployed code
+                  serverVersion: '1.0.2', // Increment version to match our improvements
+                  protocol: ws.protocol || 'none'
                 }
               }));
               
-              console.log(`User ${userId} authenticated on WebSocket`);
+              console.log(`User ${userId} authenticated on WebSocket connection ${connectionId} after ${connectionDuration}s (using ${(ws as any).authType})`);
+              console.log(`Connection ${connectionId} now has ${userConnections.size} active connections for user ${userId}`);
               
               // Send any pending call requests 
               for (const [callId, call] of activeCalls.entries()) {
