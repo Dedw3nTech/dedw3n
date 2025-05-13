@@ -1013,24 +1013,54 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to construct WebSocket:", error);
       setConnectionStatus('disconnected');
+      
+      // Categorize errors for better user feedback and recovery
+      let errorType = 'construction_error';
+      let errorDetails = error instanceof Error ? error.message : String(error);
+      
+      // Parse the error to provide better diagnostics
+      if (errorDetails.includes('SecurityError')) {
+        errorType = 'security_error';
+      } else if (errorDetails.includes('NetworkError')) {
+        errorType = 'network_error';
+      } else if (errorDetails.includes('blocked') || errorDetails.includes('firewall')) {
+        errorType = 'blocked_error';
+      } else if (errorDetails.includes('protocol')) {
+        errorType = 'protocol_error';
+      }
+      
+      // Update connection details with comprehensive error information
       setConnectionDetails(prev => ({
         ...prev,
         disconnectTime: Date.now(),
-        disconnectReason: 'Failed to construct WebSocket: ' + (error instanceof Error ? error.message : String(error)),
+        disconnectReason: 'Failed to construct WebSocket: ' + errorDetails,
         errorCount: (prev.errorCount || 0) + 1,
         lastError: {
           time: Date.now(),
-          type: 'construction_error',
+          type: errorType,
           url: wsUrl
         }
       }));
       
-      // Schedule a reconnect
+      // Show user-friendly toast notification with actionable advice for repeated errors
+      if (reconnectAttempts > 3) {
+        toast({
+          title: "Connection Issues",
+          description: "Having trouble connecting to messaging service. Please check your network connection.",
+          variant: "destructive",
+        });
+      }
+      
+      // Schedule a reconnect with exponential backoff for persistent issues
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      const backoffDelay = Math.min(
+        RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts),
+        MAX_RECONNECT_INTERVAL
+      );
       reconnectTimer = setTimeout(() => {
         reconnectAttempts++;
         connect();
-      }, RECONNECT_INTERVAL);
+      }, backoffDelay);
       
       return;
     }
@@ -1789,6 +1819,140 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           console.error("Error stopping screen share:", error);
         }
       }
+    }
+  };
+  
+  // Connection health check function to monitor WebSocket state
+  const checkConnectionHealth = () => {
+    // Only proceed if we have a user
+    if (!user) return;
+    
+    console.log("Running WebSocket connection health check...");
+    
+    // Check if socket exists
+    if (!socket) {
+      console.warn("Health check: No socket exists, attempting to reconnect");
+      connect();
+      return;
+    }
+    
+    // Check the socket readyState
+    const readyStateText = {
+      [WebSocket.CONNECTING]: "CONNECTING",
+      [WebSocket.OPEN]: "OPEN",
+      [WebSocket.CLOSING]: "CLOSING",
+      [WebSocket.CLOSED]: "CLOSED"
+    }[socket.readyState];
+    
+    console.log(`Health check: WebSocket state is ${readyStateText} (${socket.readyState})`);
+    
+    switch (socket.readyState) {
+      case WebSocket.OPEN:
+        // Socket is open, send a ping to verify bidirectional communication
+        try {
+          const pingId = `ping-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+          const pingTime = Date.now();
+          
+          // Store ping data on socket for verification when pong received
+          (socket as any)._lastPingId = pingId;
+          (socket as any)._lastPingTime = pingTime;
+          
+          // Set a timeout to detect ping failures
+          const pingTimeout = setTimeout(() => {
+            console.warn("Health check: Ping timed out after 10 seconds, connection may be dead");
+            
+            // Record timeout in connection details
+            setConnectionDetails(prev => ({
+              ...prev,
+              lastError: {
+                time: Date.now(),
+                type: 'ping_timeout',
+                url: window.location.href
+              }
+            }));
+            
+            // If we get multiple consecutive ping timeouts, force reconnect
+            (socket as any)._pingTimeouts = ((socket as any)._pingTimeouts || 0) + 1;
+            
+            if ((socket as any)._pingTimeouts >= 3) {
+              console.error("Health check: 3 consecutive ping timeouts, forcing reconnection");
+              
+              try {
+                socket.close(4000, "Ping timeout");
+              } catch (err) {
+                // Ignore close errors
+              }
+              
+              // Force reconnect after short delay
+              setTimeout(() => {
+                socket = null;
+                connect();
+              }, 1000);
+            }
+          }, 10000);
+          
+          // Store the timeout ID on the socket object
+          (socket as any)._currentPingTimeout = pingTimeout;
+          
+          // Send the ping message
+          socket.send(JSON.stringify({
+            type: "ping",
+            userId: user.id,
+            pingId: pingId,
+            timestamp: pingTime
+          }));
+          
+          console.log(`Health check: Sent ping (ID: ${pingId})`);
+        } catch (error) {
+          console.error("Health check: Error sending ping:", error);
+          
+          // Connection is broken despite being in OPEN state
+          // Force reconnection
+          if (socket) {
+            try {
+              socket.close(4000, "Failed to send ping");
+            } catch (err) {
+              // Ignore close errors
+            }
+            socket = null;
+            connect();
+          }
+        }
+        break;
+        
+      case WebSocket.CONNECTING:
+        // Socket has been stuck in connecting state for too long
+        const connectionStartTime = (socket as any)?._connectionStartTime || 0;
+        const connectionTime = Date.now() - connectionStartTime;
+        
+        if (connectionTime > 10000) { // 10 seconds
+          console.warn("Health check: Socket stuck in CONNECTING state for too long");
+          
+          try {
+            socket.close(1000, "Connection timeout");
+          } catch (err) {
+            // Ignore close errors
+          }
+          
+          // Force reconnect after short delay
+          setTimeout(() => {
+            socket = null;
+            connect();
+          }, 1000);
+        }
+        break;
+        
+      case WebSocket.CLOSED:
+      case WebSocket.CLOSING:
+        // Socket is closed or closing, try to reconnect
+        console.warn(`Health check: Socket is ${readyStateText}, attempting to reconnect`);
+        
+        // Allow a small delay for any pending close to complete
+        setTimeout(() => {
+          socket = null;
+          connect();
+        }, 1000);
+        break;
     }
   };
   
