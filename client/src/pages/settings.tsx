@@ -427,17 +427,6 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 
-                {/* Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">{t("settings.name")}</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t("settings.enterName")}
-                  />
-                </div>
-                
                 {/* Email (editable) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">{t("settings.email")}</Label>
@@ -446,18 +435,6 @@ export default function SettingsPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-white"
-                  />
-                </div>
-                
-                {/* Bio */}
-                <div className="space-y-2">
-                  <Label htmlFor="bio">{t("settings.bio")}</Label>
-                  <Textarea
-                    id="bio"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder={t("settings.enterBio")}
-                    rows={4}
                   />
                 </div>
               </CardContent>
