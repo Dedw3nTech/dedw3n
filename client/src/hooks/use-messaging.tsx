@@ -4,8 +4,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, getStoredAuthToken } from "@/lib/queryClient";
 
-// WebSocket connection
+// WebSocket connection - Using a more specific type with any to bypass TypeScript issues
 let socket: WebSocket | null = null;
+// Type guard to safely check if socket is a WebSocket
+function isWebSocket(socket: any): socket is WebSocket {
+  return socket !== null && typeof socket === 'object' && 'readyState' in socket;
+}
 let reconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
@@ -977,15 +981,68 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       // Save connection start time for tracking
       const connectionStartAttemptTime = Date.now();
       
-      // Try with echo-protocol first
+      // Try with echo-protocol first and implement proper error handling
       try {
+        // Create a new connection with the specified protocol
         socket = new WebSocket(wsUrl, "echo-protocol");
         console.log("WebSocket initialized with echo-protocol");
+        
+        // Add a local error handler for the connection attempt
+        const tempErrorHandler = (event: Event) => {
+          console.error("Error during WebSocket initialization:", event);
+          // Only try the fallback if we're still using this handler (not replaced yet)
+          if (socket && socket.onerror === tempErrorHandler) {
+            try {
+              // Clean up the failed connection
+              socket.onclose = null;
+              socket.onerror = null;
+              socket.onopen = null;
+              socket.onmessage = null;
+              
+              // Try to properly close the socket if possible
+              if (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN) {
+                socket.close();
+              }
+              
+              // Try without a protocol as fallback
+              console.warn("Failed to connect with echo-protocol, trying without protocol specification");
+              socket = new WebSocket(wsUrl);
+              console.log("WebSocket initialized without protocol specification");
+            } catch (fallbackError) {
+              console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
+              socket = null; // Ensure the socket reference is cleared
+              reconnectAttempts++;
+              
+              // Schedule a retry with exponential backoff
+              if (reconnectTimer) clearTimeout(reconnectTimer);
+              reconnectTimer = setTimeout(() => {
+                connect();
+              }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+            }
+          }
+        };
+        
+        // Attach the temporary error handler
+        socket.onerror = tempErrorHandler;
       } catch (protocolError) {
-        // If protocol specification fails, try without protocol
+        // Handle synchronous exceptions during initialization
         console.warn("Failed to connect with echo-protocol, trying without protocol:", protocolError);
-        socket = new WebSocket(wsUrl);
-        console.log("WebSocket initialized without protocol specification");
+        
+        try {
+          socket = new WebSocket(wsUrl);
+          console.log("WebSocket initialized without protocol specification");
+        } catch (fallbackError) {
+          console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
+          socket = null; // Ensure the socket reference is cleared
+          reconnectAttempts++;
+          
+          // Schedule a retry
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(() => {
+            connect();
+          }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+          return; // Exit the connect function early
+        }
       }
       
       // Store connection attempt time for stuck detection
@@ -1220,24 +1277,62 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           case 1006:
             console.warn("WebSocket abnormal closure (server may be restarting)");
             
-            // Progressive retry strategy for abnormal closures
-            // First few attempts should be quick to recover from brief interruptions
-            // Later attempts should back off to avoid flooding the server
+            // Record this in connection details for diagnostics
+            setConnectionDetails(prev => ({
+              ...prev,
+              disconnectTime: Date.now(),
+              disconnectCode: 1006,
+              disconnectReason: 'Abnormal Closure - No close frame received',
+              lastError: {
+                time: Date.now(),
+                type: 'abnormal_closure',
+                url: window.location.href
+              },
+              errorCount: (prev.errorCount || 0) + 1
+            }));
             
+            // Fix: Properly clean up the socket connection
+            if (isWebSocket(socket)) {
+              try {
+                // Clean up event handlers to prevent memory leaks
+                socket.onclose = null;
+                socket.onerror = null;
+                socket.onmessage = null;
+                socket.onopen = null;
+                
+                // If still in open or connecting state, attempt to close it properly
+                if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+                  socket.close(1000, "Clean shutdown before reconnect");
+                }
+              } catch (e) {
+                console.warn("Error while cleaning up socket:", e);
+              }
+              
+              // Release the socket reference entirely
+              socket = null;
+            }
+            
+            // Clear any existing reconnect timers
+            if (reconnectTimer) {
+              clearTimeout(reconnectTimer);
+              reconnectTimer = null;
+            }
+            
+            // Improved progressive retry strategy with more consistent timings
             let abnormalReconnectDelay;
             
             if (reconnectAttempts < 3) {
-              // First few attempts: Try quickly (1-2 second delay)
-              abnormalReconnectDelay = 1000 + (reconnectAttempts * 500);
+              // First few attempts: Try quickly (2-3 second delay) - constant delay for stability
+              abnormalReconnectDelay = 2000;
               console.log(`Quick recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
             } else if (reconnectAttempts < 5) {
-              // Later attempts: Medium delay (5-10 seconds)
-              abnormalReconnectDelay = 5000 + ((reconnectAttempts - 3) * 2500);
+              // Later attempts: Medium fixed delay (5 seconds)
+              abnormalReconnectDelay = 5000;
               console.log(`Medium delay recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
             } else {
-              // Final attempts: Use standard backoff
+              // Final attempts: Use standard backoff with more gentle curve
               abnormalReconnectDelay = Math.min(
-                RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 5),
+                RECONNECT_INTERVAL * Math.pow(1.3, reconnectAttempts - 5),
                 MAX_RECONNECT_INTERVAL
               );
               console.log(`Standard backoff recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
@@ -1246,15 +1341,15 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             reconnectAttempts++;
             
             if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-              if (reconnectTimer) clearTimeout(reconnectTimer);
+              // Apply jitter to prevent reconnection storms (thundering herd problem)
+              const jitteredDelay = abnormalReconnectDelay * (0.9 + (Math.random() * 0.2));
               
               reconnectTimer = setTimeout(() => {
                 if (user) {
-                  // Reset connection completely to avoid any stale connection issues
-                  socket = null;
+                  // Completely fresh connection attempt
                   connect();
                 }
-              }, abnormalReconnectDelay);
+              }, jitteredDelay);
             } else {
               console.error(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached for abnormal closure. Giving up.`);
               toast({
