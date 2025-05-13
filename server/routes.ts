@@ -3899,7 +3899,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filteredPosts = paginatedPosts.filter(post => post.userId !== 1);
       
       console.log(`[INFO] Retrieved ${filteredPosts.length} posts for communities feed`);
-      res.json(filteredPosts);
+      
+      // Map the feed posts to ensure each one has a user property with required fields
+      const postsWithUsers = await Promise.all(filteredPosts.map(async (post) => {
+        // If post already has a user property with all required fields, return it as is
+        if (post.user && post.user.id && post.user.username && post.user.name) {
+          return post;
+        }
+        
+        // Otherwise, fetch the user data
+        try {
+          const userData = await db.select({
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          })
+          .from(users)
+          .where(eq(users.id, post.userId))
+          .limit(1);
+          
+          const user = userData[0] || {
+            id: post.userId,
+            username: 'unknown',
+            name: 'Unknown User',
+            avatar: null
+          };
+          
+          return {
+            ...post,
+            user
+          };
+        } catch (err) {
+          console.error(`Error fetching user data for post ${post.id}:`, err);
+          // Return post with minimal user data as fallback
+          return {
+            ...post,
+            user: {
+              id: post.userId,
+              username: 'unknown',
+              name: 'Unknown User',
+              avatar: null
+            }
+          };
+        }
+      }));
+      
+      res.json(postsWithUsers);
     } catch (error) {
       console.error("Error fetching communities feed:", error);
       res.status(500).json({ message: "Failed to fetch communities feed" });
@@ -3920,7 +3966,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filteredPosts = trendingPosts.filter(post => post.userId !== 1);
       
       console.log(`[INFO] Retrieved ${filteredPosts.length} posts for recommended feed`);
-      res.json(filteredPosts);
+      
+      // Map the feed posts to ensure each one has a user property with required fields
+      const postsWithUsers = await Promise.all(filteredPosts.map(async (post) => {
+        // If post already has a user property with all required fields, return it as is
+        if (post.user && post.user.id && post.user.username && post.user.name) {
+          return post;
+        }
+        
+        // Otherwise, fetch the user data
+        try {
+          const userData = await db.select({
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          })
+          .from(users)
+          .where(eq(users.id, post.userId))
+          .limit(1);
+          
+          const user = userData[0] || {
+            id: post.userId,
+            username: 'unknown',
+            name: 'Unknown User',
+            avatar: null
+          };
+          
+          return {
+            ...post,
+            user
+          };
+        } catch (err) {
+          console.error(`Error fetching user data for post ${post.id}:`, err);
+          // Return post with minimal user data as fallback
+          return {
+            ...post,
+            user: {
+              id: post.userId,
+              username: 'unknown',
+              name: 'Unknown User',
+              avatar: null
+            }
+          };
+        }
+      }));
+      
+      res.json(postsWithUsers);
     } catch (error) {
       console.error("Error fetching recommended feed:", error);
       res.status(500).json({ message: "Failed to fetch recommended feed" });

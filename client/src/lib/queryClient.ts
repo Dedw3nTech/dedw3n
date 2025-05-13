@@ -87,11 +87,16 @@ export async function apiRequest(
   // Extract isFormData from options
   const isFormData = options?.isFormData;
   
-  // Set up request options
+  // Set up request options with enhanced authentication headers
   const requestOptions: RequestInit = {
     method,
     credentials: "include",
-    headers: {},
+    headers: {
+      // Always include these session-related headers for improved auth reliability
+      'X-Use-Session': 'true',
+      'X-Client-Auth': 'true',
+      'X-Request-Time': new Date().toISOString()
+    },
     ...(typeof options === 'object' && options !== null ? options : {})
   };
 
@@ -133,12 +138,21 @@ export async function apiRequest(
     };
   }
 
-  // Add authorization header if token exists
+  // Add authorization header if token exists with enhanced auth reliability
   const authToken = getStoredAuthToken();
   if (authToken) {
     requestOptions.headers = {
       ...requestOptions.headers,
-      'Authorization': `Bearer ${authToken}`
+      'Authorization': `Bearer ${authToken}`,
+      'X-Auth-Token-Present': 'true',
+      'X-Auth-Token-Type': 'jwt'
+    };
+  } else {
+    // Mark that we don't have a token but still want session auth to work
+    requestOptions.headers = {
+      ...requestOptions.headers,
+      'X-Auth-Token-Present': 'false',
+      'X-Auth-Method': 'session'
     };
   }
 
