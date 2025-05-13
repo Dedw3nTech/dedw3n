@@ -105,14 +105,14 @@ export default function ProfileSettingsPage() {
   };
 
   return (
-    <div className="container max-w-3xl pt-6 pb-16">
-      <h1 className="text-3xl font-bold mb-6"></h1>
+    <div className="container max-w-3xl pt-6 pb-16 text-black">
+      <h1 className="text-3xl font-bold mb-6 text-black">User Settings</h1>
       
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="profile" className="flex-1"></TabsTrigger>
-          <TabsTrigger value="account" className="flex-1"></TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-1"></TabsTrigger>
+          <TabsTrigger value="profile" className="flex-1 text-black">Profile</TabsTrigger>
+          <TabsTrigger value="account" className="flex-1 text-black">Account</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-1 text-black">Notifications</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -120,8 +120,9 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle></CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-black">Profile Picture</CardTitle>
+                  <CardDescription className="text-black">
+                    Update your profile photo
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
@@ -138,45 +139,49 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle></CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-black">Personal Information</CardTitle>
+                  <CardDescription className="text-black">
+                    Update your personal details
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name"></Label>
+                    <Label htmlFor="name" className="text-black">Full Name</Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder=""
+                      placeholder="Your full name"
+                      className="text-black"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio"></Label>
+                    <Label htmlFor="bio" className="text-black">About Me</Label>
                     <Textarea
                       id="bio"
                       name="bio"
                       value={formData.bio || ''}
                       onChange={handleInputChange}
-                      placeholder=""
+                      placeholder="Tell us about yourself"
                       rows={4}
+                      className="text-black"
                     />
                   </div>
                   
                   <Button 
                     onClick={handleProfileUpdate}
                     disabled={isUpdating}
-                    className="w-full"
+                    className="w-full text-black"
                   >
                     {isUpdating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
                       </>
                     ) : (
-                      ""
+                      "Update Profile"
                     )}
                   </Button>
                 </CardContent>
@@ -188,12 +193,14 @@ export default function ProfileSettingsPage() {
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle></CardTitle>
-              <CardDescription>
+              <CardTitle className="text-black">Account Settings</CardTitle>
+              <CardDescription className="text-black">
+                Manage your account preferences
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-black">
+                Account settings will be available soon.
               </p>
             </CardContent>
           </Card>
@@ -202,12 +209,14 @@ export default function ProfileSettingsPage() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle></CardTitle>
-              <CardDescription>
+              <CardTitle className="text-black">Notification Preferences</CardTitle>
+              <CardDescription className="text-black">
+                Control how you receive notifications
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-black">
+                Notification settings will be available soon.
               </p>
             </CardContent>
           </Card>
