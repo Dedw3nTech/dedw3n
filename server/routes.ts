@@ -3805,8 +3805,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter out any posts from the admin user (user id 1) if they exist
       const filteredPosts = feedPosts.filter(post => post.userId !== 1);
       
-      console.log(`[INFO] After filtering user 1: ${filteredPosts.length} posts`);
-      res.json(filteredPosts);
+      // Map the feed posts to ensure each one has a user property with required fields
+      const postsWithUsers = await Promise.all(filteredPosts.map(async (post) => {
+        // If post already has a user property with all required fields, return it as is
+        if (post.user && post.user.id && post.user.username && post.user.name) {
+          return post;
+        }
+        
+        // Otherwise, fetch the user data
+        try {
+          const userData = await db.select({
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          })
+          .from(users)
+          .where(eq(users.id, post.userId))
+          .limit(1);
+          
+          const user = userData[0] || {
+            id: post.userId,
+            username: 'unknown',
+            name: 'Unknown User',
+            avatar: null
+          };
+          
+          return {
+            ...post,
+            user
+          };
+        } catch (err) {
+          console.error(`Error fetching user data for post ${post.id}:`, err);
+          // Return post with minimal user data as fallback
+          return {
+            ...post,
+            user: {
+              id: post.userId,
+              username: 'unknown',
+              name: 'Unknown User',
+              avatar: null
+            }
+          };
+        }
+      }));
+      
+      console.log(`[INFO] After filtering user 1: ${postsWithUsers.length} posts`);
+      res.json(postsWithUsers);
     } catch (error) {
       console.error("Error fetching personal feed:", error);
       res.status(500).json({ message: "Failed to fetch personal feed" });
