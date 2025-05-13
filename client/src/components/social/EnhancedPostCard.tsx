@@ -652,7 +652,16 @@ export default function EnhancedPostCard({
           </div>
         </div>
         
-        <div>
+        <div className="flex items-center">
+          {/* Report Button */}
+          <span 
+            className="flex items-center cursor-pointer text-red-500 hover:text-red-600 text-xs mr-2"
+            onClick={handleReport}
+          >
+            <Flag className="w-4 h-4 mr-1" />
+            Report
+          </span>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="px-2">
