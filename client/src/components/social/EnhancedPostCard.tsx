@@ -20,7 +20,9 @@ import {
   ShoppingCart,
   Bookmark,
   Zap,
-  Flag
+  Flag,
+  Mail,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -285,18 +287,8 @@ export default function EnhancedPostCard({
     setShowComments(!showComments);
   };
   
-  const handleShare = () => {
-    if (!user) {
-      toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real app, this would open a sharing dialog
-    // For now, we'll just copy the post link to clipboard
+  // Share options handlers
+  const copyLink = () => {
     const postUrl = `${window.location.origin}/posts/${post.id}`;
     navigator.clipboard.writeText(postUrl)
       .then(() => {
@@ -312,6 +304,52 @@ export default function EnhancedPostCard({
           variant: "destructive",
         });
       });
+  };
+  
+  const shareViaEmail = () => {
+    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    const subject = encodeURIComponent("Check out this post");
+    const body = encodeURIComponent(`I thought you might like this: ${postUrl}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    
+    toast({
+      title: "Email Client Opened",
+      description: "Share this post via email",
+    });
+  };
+  
+  const sendViaMessage = () => {
+    // In a real app, this would navigate to a messaging interface
+    // With the post pre-filled
+    toast({
+      title: "Send via Message",
+      description: "Post will be shared via message",
+    });
+    
+    // Navigate to messages page
+    window.location.href = `/messages?share=${post.id}`;
+  };
+  
+  const shareWithMember = () => {
+    // In a real app, this would open a dialog to select a member
+    toast({
+      title: "Share with Member",
+      description: "Select a member to share with",
+    });
+    
+    // Navigate to members page with share parameter
+    window.location.href = `/members?share=${post.id}`;
+  };
+  
+  const handleShare = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
   };
   
   const handleBoost = () => {
@@ -806,13 +844,43 @@ export default function EnhancedPostCard({
             <span>{t("social.comment")}</span>
           </button>
           
-          <button
-            onClick={handleShare}
-            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
-          >
-            <Share2 className="w-5 h-5 mr-1" />
-            <span>{t("social.share")}</span>
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={handleShare}
+                className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+              >
+                <Share2 className="w-5 h-5 mr-1" />
+                <span>{t("social.share")}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={copyLink}>
+                <span className="flex items-center">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Copy Link
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={shareViaEmail}>
+                <span className="flex items-center">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Share via Email
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={sendViaMessage}>
+                <span className="flex items-center">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Send via Message
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={shareWithMember}>
+                <span className="flex items-center">
+                  <Users className="w-4 h-4 mr-2" />
+                  Share with Member
+                </span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           {showBookmarkButton && (
             <button
