@@ -47,8 +47,6 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import {
@@ -518,9 +516,10 @@ export default function CreatePost({
                       value={postToVisibility}
                       onValueChange={setPostToVisibility}
                     >
-                      <SelectTrigger className="h-7 w-[130px]">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <Button variant="outline" className="h-7 w-[130px] flex justify-between items-center">
+                        <span>{postToVisibility === "public" ? "Public" : "Community"}</span>
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Post to</SelectLabel>
@@ -553,9 +552,15 @@ export default function CreatePost({
                           onValueChange={(value) => setSelectedCommunityId(Number(value))}
                           disabled={!!communityId}
                         >
-                          <SelectTrigger className="h-7 w-[180px]">
-                            <SelectValue placeholder="Select a community" />
-                          </SelectTrigger>
+                          <Button variant="outline" className="h-7 w-[180px] flex justify-between items-center">
+                            <span>
+                              {selectedCommunityId && userCommunities ? 
+                                userCommunities.find((c: any) => c.id === selectedCommunityId)?.name || "Select a community" : 
+                                "Select a community"
+                              }
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>Your communities</SelectLabel>
