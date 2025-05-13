@@ -16,6 +16,11 @@ export default function UserMenu() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
 
+  // If user is not logged in, don't render the dropdown menu at all
+  if (!user) {
+    return null;
+  }
+
   const handleLogout = () => {
     // Show loading state for better UX
     toast({
