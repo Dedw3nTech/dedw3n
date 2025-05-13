@@ -13,6 +13,8 @@ export const moderationMatchTypeEnum = pgEnum('moderation_match_type', ['exact',
 export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'medium', 'high']);
 export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
 export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
+export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system']);
+export const notificationChannelEnum = pgEnum('notification_channel', ['app', 'email', 'push', 'sms']);
 
 // Fraud prevention enums
 export const riskLevelEnum = pgEnum('risk_level', ['low', 'medium', 'high', 'critical']);
