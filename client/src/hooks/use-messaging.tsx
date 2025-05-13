@@ -413,6 +413,49 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     setIsConnected(false);
   };
   
+  // Last time we got a pong response (epoch milliseconds)
+  const lastPongRef = useRef<number>(Date.now());
+  
+  // Check connection status periodically
+  useEffect(() => {
+    const connectionCheckInterval = setInterval(() => {
+      // If we're connected but haven't received a pong in over 1 minute, 
+      // connection might be stale
+      if (isConnected && socket && Date.now() - lastPongRef.current > 60000) {
+        console.warn("WebSocket connection might be stale - no pong received recently");
+        // Try to send a ping to verify connection
+        try {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ 
+              type: "ping",
+              timestamp: new Date().toISOString(),
+              connectionId: "connection_check"
+            }));
+            
+            // Check again in 5 seconds
+            setTimeout(() => {
+              if (Date.now() - lastPongRef.current > 65000) {
+                console.error("Connection confirmed stale - forcing reconnection");
+                // Force reconnection if still no pong
+                disconnect();
+                reconnectAttempts = 0; // Reset attempts for clean reconnect
+                setTimeout(connect, 1000);
+              }
+            }, 5000);
+          }
+        } catch (e) {
+          console.error("Error checking connection:", e);
+          // Force reconnection
+          disconnect();
+          reconnectAttempts = 0;
+          setTimeout(connect, 1000);
+        }
+      }
+    }, 30000);
+    
+    return () => clearInterval(connectionCheckInterval);
+  }, [isConnected]);
+
   // Handle incoming WebSocket messages
   const handleWebSocketMessage = (data: any) => {
     switch (data.type) {
@@ -462,6 +505,20 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Store the interval ID to clear it if needed
         (window as any).wsPingInterval = pingInterval;
         
+        // Update last pong time as authentication is a form of response
+        lastPongRef.current = Date.now();
+        
+        break;
+        
+      case "pong":
+        // Update the last pong timestamp
+        console.log("Received pong from server");
+        lastPongRef.current = Date.now();
+        
+        // Log detailed connection stats for debugging
+        if (data.connectionCount) {
+          console.debug(`Connection stats - Server uptime: ${data.serverUptime}s, Active connections: ${data.connectionCount}`);
+        }
         break;
         
       case "new_message":

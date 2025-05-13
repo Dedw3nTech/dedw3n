@@ -341,7 +341,29 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: true, // Enable refresh when the window regains focus
       staleTime: 0, // Always consider data stale immediately (instead of Infinity or 30s)
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401 Unauthorized
+        if (error?.message?.includes('401:')) return false;
+        
+        // Retry on 502 Bad Gateway (server temporarily unavailable)
+        if (error?.message?.includes('502:')) {
+          console.log(`Retrying 502 error (attempt ${failureCount}): ${error.message}`);
+          // Retry up to 3 times with increasing delay for server availability issues
+          return failureCount < 3;
+        }
+        
+        // Default retry logic - retry once for other errors
+        return failureCount < 1;
+      },
+      retryDelay: (attemptIndex) => {
+        // Exponential backoff with jitter
+        const baseDelay = 1000; // 1 second
+        const jitter = Math.random() * 500; // Random value between 0-500ms
+        return Math.min(
+          30000, // Max 30 seconds
+          baseDelay * Math.pow(2, attemptIndex) + jitter
+        );
+      },
     },
     mutations: {
       retry: false,
