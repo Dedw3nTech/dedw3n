@@ -125,7 +125,13 @@ export default function ProfileSettingsPage() {
         return;
       }
       
-      const response = await apiRequest('PATCH', '/api/users/profile', formData);
+      // Add test user ID header for development
+      const headers = {
+        'X-Test-User-ID': user.id.toString(),
+        'X-Client-User-ID': user.id.toString()
+      };
+      
+      const response = await apiRequest('PATCH', '/api/users/profile', formData, { headers });
       
       if (!response.ok) {
         const errorData = await response.json();

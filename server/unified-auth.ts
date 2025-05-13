@@ -133,6 +133,8 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       '/api/messages/search',
       '/api/auth/me',
       '/api/user',
+      '/api/users/profile',
+      '/api/users/avatar',
       '/api/posts'
     ];
     
