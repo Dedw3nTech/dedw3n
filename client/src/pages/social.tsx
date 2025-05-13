@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
@@ -94,6 +94,7 @@ export default function Social() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("wall");
   const [searchQuery, setSearchQuery] = useState("");
+  const [feedRefreshKey, setFeedRefreshKey] = useState<number>(Date.now()); // For forcing feed refresh
   
   // Logout mutation
   const logoutMutation = useMutation({
@@ -308,7 +309,10 @@ export default function Social() {
                           // Force refresh the feed when a post is created
                           console.log("Post created, refreshing feed");
                           
-                          // Use React Query's invalidation to trigger a refresh
+                          // Update the refresh key to force ContentFeed to remount
+                          setFeedRefreshKey(Date.now());
+                          
+                          // Also use React Query's invalidation to trigger a refresh
                           queryClient.invalidateQueries({ 
                             queryKey: ["/api/feed/personal"],
                             refetchType: "all" 
@@ -320,7 +324,7 @@ export default function Social() {
                     {/* Content Feed */}
                     <div className="bg-white rounded-lg shadow-sm">
                       <div className="p-4">
-                        <ContentFeed key="main-content-feed" />
+                        <ContentFeed key={`main-content-feed-${feedRefreshKey}`} />
                       </div>
                     </div>
                   </div>

@@ -66,9 +66,10 @@ export default function ContentFeed({
   const { data, isLoading, isFetching, refetch } = useQuery<Post[]>({
     queryKey,
     enabled: !userPosts || !!currentUserId,
-    staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 0, // Always consider data stale immediately
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchInterval: 0, // Disable automatic polling
   });
   
   const handleLoadMore = () => {

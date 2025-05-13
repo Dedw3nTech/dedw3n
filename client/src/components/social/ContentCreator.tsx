@@ -202,10 +202,13 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       
       console.log("Post created successfully, calling onSuccess callback");
       
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
+      // Call onSuccess callback if provided - make sure it runs AFTER invalidation
+      setTimeout(() => {
+        if (onSuccess) {
+          console.log("Executing onSuccess callback with delay to ensure cache is invalidated");
+          onSuccess();
+        }
+      }, 100);
     },
     onError: (error: any) => {
       toast({
