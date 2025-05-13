@@ -319,7 +319,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   });
   
   // Helper function to check WebSocket health and reconnect if needed
-  const checkConnectionHealth = useCallback(() => {
+  const checkConnectionHealth = () => {
     // If no user is logged in, don't attempt connection
     if (!user) return;
     
@@ -342,7 +342,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       socket = null;
       connectRef.current();
     }
-  }, [user, isConnected]);
+  };
   
   // Note: Main health check is set up in the user effect below
 
@@ -663,9 +663,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // WebSocket connection function
+  // WebSocket connection function with improved error handling and connection management
   const connect = () => {
-    if (!user || (socket && socket.readyState === WebSocket.OPEN)) return;
+    // Don't attempt to connect if there's no user or we already have an active connection
+    if (!user || (socket && socket.readyState === WebSocket.OPEN)) {
+      console.log("WebSocket connection skipped - no user or connection already open");
+      return;
+    }
     
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
@@ -1464,23 +1468,36 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   
   // Setup regular health checks with the existing checkConnectionHealth function
   useEffect(() => {
-    if (user) {
-      // Start health check timer
-      if (healthCheckTimer) clearInterval(healthCheckTimer);
-      healthCheckTimer = setInterval(checkConnectionHealth, HEALTH_CHECK_INTERVAL);
-      
-      // Initial connection
-      connect();
-    } else {
-      disconnect();
-      // Clear health check timer when user is not available
-      if (healthCheckTimer) {
-        clearInterval(healthCheckTimer);
-        healthCheckTimer = null;
+    const setupHealthCheck = () => {
+      if (user) {
+        // Start health check timer if not already running
+        if (healthCheckTimer) clearInterval(healthCheckTimer);
+        
+        // Set up health check interval that runs every HEALTH_CHECK_INTERVAL ms
+        healthCheckTimer = setInterval(() => {
+          if (checkConnectionHealth) {
+            checkConnectionHealth();
+          }
+        }, HEALTH_CHECK_INTERVAL);
+        
+        // Initial connection
+        connect();
+      } else {
+        // Clean up resources when no user is logged in
+        disconnect();
+        
+        // Clear health check timer when user is not available
+        if (healthCheckTimer) {
+          clearInterval(healthCheckTimer);
+          healthCheckTimer = null;
+        }
       }
-    }
+    };
     
-    // Clean up on unmount
+    // Set up the health check immediately
+    setupHealthCheck();
+    
+    // Clean up on unmount or when user changes
     return () => {
       disconnect();
       if (healthCheckTimer) {
