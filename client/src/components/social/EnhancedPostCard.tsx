@@ -693,10 +693,10 @@ export default function EnhancedPostCard({
         <div className="flex items-center">
           {/* Report Button */}
           <span 
-            className="flex items-center cursor-pointer text-red-500 hover:text-red-600 text-xs mr-2"
+            className="flex items-center cursor-pointer text-red-500 hover:text-red-600 text-xs mr-2 bg-red-50 p-1 rounded-md"
             onClick={handleReport}
           >
-            <Flag className="w-4 h-4 mr-1" />
+            <Flag className="w-4 h-4 mr-1 fill-red-200" />
             Report
           </span>
           
@@ -857,25 +857,25 @@ export default function EnhancedPostCard({
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={copyLink}>
                 <span className="flex items-center">
-                  <Share2 className="w-4 h-4 mr-2" />
+                  <Share2 className="w-4 h-4 mr-2 text-blue-500 stroke-blue-500" />
                   Copy Link
                 </span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={shareViaEmail}>
                 <span className="flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
+                  <Mail className="w-4 h-4 mr-2 text-purple-500 stroke-purple-500" />
                   Share via Email
                 </span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={sendViaMessage}>
                 <span className="flex items-center">
-                  <MessageSquare className="w-4 h-4 mr-2" />
+                  <MessageSquare className="w-4 h-4 mr-2 text-green-500 stroke-green-500" />
                   Send via Message
                 </span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={shareWithMember}>
                 <span className="flex items-center">
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className="w-4 h-4 mr-2 text-orange-500 stroke-orange-500" />
                   Share with Member
                 </span>
               </DropdownMenuItem>
