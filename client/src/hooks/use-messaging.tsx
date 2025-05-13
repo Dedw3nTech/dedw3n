@@ -426,10 +426,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       socket.onopen = () => {
         console.log("WebSocket connected successfully");
         
-        // Store the connection details on the socket object itself
-        (socket as any)._connectionTime = connectionStartTime;
-        (socket as any)._connectionId = connectionId;
-        (socket as any)._reconnectCount = reconnectAttempts;
+        // Make sure socket still exists before setting properties
+        if (socket) {
+          // Store the connection details on the socket object itself
+          (socket as any)._connectionTime = connectionStartTime;
+          (socket as any)._connectionId = connectionId;
+          (socket as any)._reconnectCount = reconnectAttempts;
         
         // Update connection status
         setConnectionDetails({
