@@ -289,6 +289,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register fraud prevention routes
   registerFraudPreventionRoutes(app);
   
+  // Notification API endpoints
+  // Get all notifications for the authenticated user
+  app.get('/api/notifications', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const notifications = await storage.getNotifications(req.user.id);
+      return res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+  
+  // Get unread notification count
+  app.get('/api/notifications/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const count = await storage.getUnreadNotificationCount(req.user.id);
+      return res.json({ count });
+    } catch (error) {
+      console.error('Error fetching unread notification count:', error);
+      return res.status(500).json({ message: 'Failed to fetch unread notification count' });
+    }
+  });
+  
+  // Mark notification as read
+  app.patch('/api/notifications/:id/read', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const notificationId = parseInt(req.params.id);
+      if (isNaN(notificationId)) {
+        return res.status(400).json({ message: 'Invalid notification ID' });
+      }
+      
+      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      
+      if (!updatedNotification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      return res.json(updatedNotification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return res.status(500).json({ message: 'Failed to update notification' });
+    }
+  });
+  
+  // Mark all notifications as read
+  app.post('/api/notifications/mark-all-read', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const success = await storage.markAllNotificationsAsRead(req.user.id);
+      
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to mark notifications as read' });
+      }
+      
+      return res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      return res.status(500).json({ message: 'Failed to update notifications' });
+    }
+  });
+  
+  // Get notification settings
+  app.get('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const settings = await storage.getNotificationSettings(req.user.id);
+      return res.json(settings);
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
+      return res.status(500).json({ message: 'Failed to fetch notification settings' });
+    }
+  });
+  
+  // Update notification setting
+  app.patch('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const { type, channel, enabled } = req.body;
+      
+      if (!type || !channel || typeof enabled !== 'boolean') {
+        return res.status(400).json({ message: 'Invalid request. Required fields: type, channel, enabled' });
+      }
+      
+      const updatedSetting = await storage.updateNotificationSetting(
+        req.user.id,
+        type,
+        channel,
+        enabled
+      );
+      
+      if (!updatedSetting) {
+        return res.status(500).json({ message: 'Failed to update notification setting' });
+      }
+      
+      return res.json(updatedSetting);
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      return res.status(500).json({ message: 'Failed to update notification setting' });
+    }
+  });
+  
   try {
     // Setup Instagram-like API for social media sharing
     await setupInstagramApi(app);

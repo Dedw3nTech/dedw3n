@@ -56,9 +56,13 @@ export interface IStorage {
   createOrUpdateSubscription(subscriptionData: any): Promise<any>;
   
   // Notification operations
-  createNotification(notificationData: any): Promise<any>;
-  getNotifications(userId: number, limit?: number): Promise<any[]>;
+  createNotification(notificationData: InsertNotification): Promise<Notification>;
+  getNotifications(userId: number, limit?: number): Promise<Notification[]>;
   getUnreadNotificationCount(userId: number): Promise<number>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: number): Promise<boolean>;
+  getNotificationSettings(userId: number): Promise<NotificationSettings[]>;
+  updateNotificationSetting(userId: number, type: string, channel: string, enabled: boolean): Promise<NotificationSettings | undefined>;
   
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -413,7 +417,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Notification operations
-  async createNotification(notificationData: any): Promise<any> {
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
     try {
       const [newNotification] = await db.insert(notifications).values(notificationData).returning();
       return newNotification;
@@ -423,7 +427,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getNotifications(userId: number, limit: number = 20): Promise<any[]> {
+  async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
     try {
       const notificationsList = await db
         .select()
@@ -432,7 +436,26 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(notifications.createdAt))
         .limit(limit);
       
-      return notificationsList;
+      // Try to get actor information for each notification
+      const notificationsWithActors = await Promise.all(
+        notificationsList.map(async (notification) => {
+          if (notification.actorId) {
+            const actor = await this.getUser(notification.actorId);
+            return {
+              ...notification,
+              actor: actor ? {
+                id: actor.id,
+                username: actor.username,
+                name: actor.name,
+                avatar: actor.avatar
+              } : null
+            };
+          }
+          return notification;
+        })
+      );
+      
+      return notificationsWithActors;
     } catch (error) {
       console.error('Error getting notifications:', error);
       return [];
@@ -455,6 +478,106 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting unread notification count:', error);
       return 0;
+    }
+  }
+  
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    try {
+      const [updatedNotification] = await db
+        .update(notifications)
+        .set({ isRead: true })
+        .where(eq(notifications.id, id))
+        .returning();
+        
+      return updatedNotification;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return undefined;
+    }
+  }
+  
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    try {
+      await db
+        .update(notifications)
+        .set({ isRead: true })
+        .where(
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false)
+          )
+        );
+        
+      return true;
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      return false;
+    }
+  }
+  
+  // Notification Settings operations
+  async getNotificationSettings(userId: number): Promise<NotificationSettings[]> {
+    try {
+      const settings = await db
+        .select()
+        .from(notificationSettings)
+        .where(eq(notificationSettings.userId, userId));
+        
+      return settings;
+    } catch (error) {
+      console.error('Error getting notification settings:', error);
+      return [];
+    }
+  }
+  
+  async updateNotificationSetting(
+    userId: number, 
+    type: string, 
+    channel: string, 
+    enabled: boolean
+  ): Promise<NotificationSettings | undefined> {
+    try {
+      // Check if setting already exists
+      const [existingSetting] = await db
+        .select()
+        .from(notificationSettings)
+        .where(
+          and(
+            eq(notificationSettings.userId, userId),
+            eq(notificationSettings.type, type as any),
+            eq(notificationSettings.channel, channel as any)
+          )
+        );
+      
+      if (existingSetting) {
+        // Update existing setting
+        const [updated] = await db
+          .update(notificationSettings)
+          .set({ 
+            enabled,
+            updatedAt: new Date()
+          })
+          .where(eq(notificationSettings.id, existingSetting.id))
+          .returning();
+          
+        return updated;
+      } else {
+        // Create new setting
+        const [newSetting] = await db
+          .insert(notificationSettings)
+          .values({
+            userId,
+            type: type as any,
+            channel: channel as any,
+            enabled
+          })
+          .returning();
+          
+        return newSetting;
+      }
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      return undefined;
     }
   }
   
