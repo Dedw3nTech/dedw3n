@@ -7,7 +7,7 @@ import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-
 
 import {
   users, vendors, products, categories, posts, comments,
-  likes, messages, notifications, reviews, carts,
+  likes, messages, notifications, notificationSettings, reviews, carts,
   wallets, transactions, orders, orderItems, communities,
   communityMembers, membershipTiers, memberships, events,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
@@ -22,7 +22,8 @@ import {
   type Cart, type InsertCart, type Wallet, type InsertWallet,
   type Transaction, type InsertTransaction, type Order, type InsertOrder,
   type OrderItem, type InsertOrderItem, type Community, type InsertCommunity,
-  type Connection, type InsertConnection
+  type Connection, type InsertConnection, type Notification, type InsertNotification,
+  type NotificationSettings, type InsertNotificationSettings
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module

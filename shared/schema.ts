@@ -167,12 +167,29 @@ export const callMetadata = pgTable("call_metadata", {
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  type: text("type").notNull(), // like, comment, follow, message
+  type: notificationTypeEnum("type").notNull(),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
-  sourceId: integer("source_id"), // postId, messageId, etc.
-  sourceType: text("source_type"), // post, message, etc.
+  sourceId: integer("source_id"), // ID of the related item (post, comment, etc.)
+  sourceType: text("source_type"), // Type of the related item
+  actorId: integer("actor_id").references(() => users.id), // User who triggered the notification
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Notification settings model
+export const notificationSettings = pgTable("notification_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: notificationTypeEnum("type").notNull(),
+  channel: notificationChannelEnum("channel").notNull(),
+  enabled: boolean("enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    userTypeChannelKey: unique().on(table.userId, table.type, table.channel),
+  }
 });
 
 // Review model
@@ -987,6 +1004,16 @@ export type InsertTrafficAnalytic = z.infer<typeof insertTrafficAnalyticsSchema>
 export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({ id: true, createdAt: true });
 export type SavedPost = typeof savedPosts.$inferSelect;
 export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
+
+// Notification schemas and types
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, updatedAt: true });
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// Notification Settings schemas and types
+export const insertNotificationSettingsSchema = createInsertSchema(notificationSettings).omit({ id: true, createdAt: true, updatedAt: true });
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
+export type InsertNotificationSettings = z.infer<typeof insertNotificationSettingsSchema>;
 
 // =====================================
 // Fraud Prevention Schema
