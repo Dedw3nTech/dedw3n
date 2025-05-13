@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useAuth } from "@/hooks/use-auth";
+import { queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
 
 // Import social components
 import ContentFeed from "@/components/social/ContentFeed";
-import ContentCreator from "@/components/social/ContentCreator";
+import CreatePost from "@/components/social/CreatePost";
 import TrendingSidebar from "@/components/social/TrendingSidebar";
 import SocialMessaging from "@/components/messaging/SocialMessaging";
 import { getInitials } from "@/lib/utils";
@@ -195,7 +196,30 @@ export default function Social() {
               {/* Content Feed - Center */}
               <div className="md:col-span-2">
                 <div className="space-y-6">
-                  {user && <ContentCreator />}
+                  {user && (
+                    <CreatePost 
+                      onSuccess={() => {
+                        // Force refresh the feed when a post is created
+                        console.log("Post created or modified - invalidating all feed endpoints");
+                        
+                        // First, invalidate the queries
+                        queryClient.invalidateQueries({ 
+                          queryKey: ["/api/feed/personal"],
+                          refetchType: "all" 
+                        });
+                        queryClient.invalidateQueries({ 
+                          queryKey: ["/api/feed/communities"],
+                          refetchType: "all" 
+                        });
+                        queryClient.invalidateQueries({ 
+                          queryKey: ["/api/feed/recommended"],
+                          refetchType: "all"
+                        });
+                        
+                        console.log("Post created, refreshing feed");
+                      }} 
+                    />
+                  )}
                   <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
                     <Tabs defaultValue="for-you">
                       <TabsList className="w-full grid grid-cols-3">
@@ -205,12 +229,18 @@ export default function Social() {
                       </TabsList>
                       
                       <TabsContent value="for-you">
-                        <ContentFeed />
+                        <ContentFeed 
+                          key={`for-you-feed-${Date.now()}`}
+                          initialFeedType="personal" 
+                        />
                       </TabsContent>
                       
                       <TabsContent value="following">
                         {user ? (
-                          <ContentFeed />
+                          <ContentFeed 
+                            key={`following-feed-${Date.now()}`}
+                            initialFeedType="personal"
+                          />
                         ) : (
                           <div className="bg-white rounded-lg shadow-sm p-8 text-center my-4">
                             <h3 className="text-lg font-medium text-gray-900">Sign in to see posts from people you follow</h3>
@@ -222,7 +252,10 @@ export default function Social() {
                       </TabsContent>
                       
                       <TabsContent value="popular">
-                        <ContentFeed />
+                        <ContentFeed 
+                          key={`popular-feed-${Date.now()}`}
+                          initialFeedType="recommended"
+                        />
                       </TabsContent>
                     </Tabs>
                   </div>
