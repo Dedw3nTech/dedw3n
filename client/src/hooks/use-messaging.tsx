@@ -262,6 +262,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           // Get token using the proper function instead of direct localStorage access
           const token = getStoredAuthToken();
           
+          // Log token presence for debugging (but not the actual token)
+          console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}`);
+          
           socket.send(JSON.stringify({
             type: "authenticate",
             userId: user.id,
@@ -269,6 +272,21 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           }));
           
           console.log("Sent authentication request to WebSocket server with token");
+          
+          // Set a timeout to verify authentication success
+          setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN && !isConnected) {
+              console.warn("WebSocket authentication may have failed - connection is open but not marked as connected");
+              // Try to re-authenticate with a fresh token
+              const freshToken = getStoredAuthToken();
+              socket.send(JSON.stringify({
+                type: "authenticate",
+                userId: user.id,
+                token: freshToken
+              }));
+              console.log("Sent follow-up authentication request to WebSocket server");
+            }
+          }, 5000); // Check after 5 seconds
         }
       };
       
@@ -280,17 +298,36 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Try to reconnect after delay with backoff
         if (reconnectTimer) clearTimeout(reconnectTimer);
         
-        reconnectAttempts++;
-        const backoffDelay = Math.min(30000, RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 1));
+        // If the close was clean (code 1000), don't increment reconnect attempts
+        // This helps when the server cleanly closes the connection during restart
+        if (event.code !== 1000) {
+          reconnectAttempts++;
+        }
+        
+        // Calculate backoff delay with exponential backoff and jitter
+        // Add random jitter to prevent all clients reconnecting simultaneously
+        const jitter = Math.random() * 1000;
+        const backoffDelay = Math.min(30000, 
+          RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 1) + jitter);
         
         console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${backoffDelay}ms`);
         
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           reconnectTimer = setTimeout(() => {
-            if (user) connect();
+            if (user) {
+              // Reset connection completely to avoid any stale connection issues
+              socket = null;
+              connect();
+            }
           }, backoffDelay);
         } else {
           console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
+          // Notify the user of connection issues
+          toast({
+            title: "Connection Issues",
+            description: "Unable to connect to messaging service. Please try refreshing the page.",
+            variant: "destructive",
+          });
         }
       };
       

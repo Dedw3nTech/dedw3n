@@ -430,7 +430,20 @@ function setupWebSockets(server: Server) {
   const wss = new WebSocketServer({ 
     server: server, 
     path: '/ws',
-    clientTracking: true 
+    clientTracking: true,
+    // Add WebSocket protocol options for better stability
+    perMessageDeflate: {
+      zlibDeflateOptions: {
+        chunkSize: 1024,
+        memLevel: 7,
+        level: 3
+      },
+      zlibInflateOptions: {
+        chunkSize: 10 * 1024
+      },
+      // Below 1024 should be enough, but tuned higher for safety
+      threshold: 1024 
+    }
   });
   
   console.log('WebSocket server initialized at /ws path');
@@ -441,20 +454,45 @@ function setupWebSockets(server: Server) {
     let authenticated = false;
     
     // Setup ping interval to keep connection alive
+    // Lower ping interval for better connection reliability (15 seconds)
+    const PING_INTERVAL = 15000;
+    
+    // Add pong timeout to detect dead connections
+    let lastPong = Date.now();
+    
+    ws.on('pong', () => {
+      // Track last pong for connection health monitoring
+      lastPong = Date.now();
+      console.debug('Received pong from client');
+    });
+    
+    // Setup ping interval to keep connection alive
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         try {
+          // Check if connection is responsive (60 second threshold)
+          if (Date.now() - lastPong > 60000) {
+            console.warn('WebSocket connection unresponsive, terminating');
+            ws.terminate(); // Force close unresponsive connection
+            return;
+          }
+          
+          // Send ping to keep connection alive
           ws.ping();
         } catch (error) {
           console.error('Error pinging WebSocket:', error);
         }
       }
-    }, 30000); // 30 second ping interval
+    }, PING_INTERVAL);
     
     ws.on('message', async (message) => {
       try {
+        // Log raw message for debugging
+        const messageStr = message.toString();
+        console.debug(`WebSocket message received: ${messageStr.substring(0, 100)}${messageStr.length > 100 ? '...' : ''}`);
+        
         // Parse message
-        const data = JSON.parse(message.toString());
+        const data = JSON.parse(messageStr);
         
         // Handle authentication
         if (data.type === 'authenticate') {
@@ -464,23 +502,43 @@ function setupWebSockets(server: Server) {
               // Validate token if provided
               if (data.token) {
                 console.log('Validating token for WebSocket authentication');
-                const tokenPayload = verifyToken(data.token);
-                
-                if (!tokenPayload || tokenPayload.userId !== data.userId) {
-                  console.error('Invalid token or token userId mismatch');
+                try {
+                  const tokenPayload = verifyToken(data.token);
+                  
+                  if (!tokenPayload) {
+                    console.error('Invalid token format or expired token');
+                    ws.send(JSON.stringify({
+                      type: 'error',
+                      message: 'Authentication failed: Invalid or expired token',
+                      timestamp: new Date().toISOString()
+                    }));
+                    return;
+                  }
+                  
+                  if (tokenPayload.userId !== data.userId) {
+                    console.error(`Token userId mismatch: token=${tokenPayload.userId}, request=${data.userId}`);
+                    ws.send(JSON.stringify({
+                      type: 'error',
+                      message: 'Authentication failed: User ID mismatch',
+                      timestamp: new Date().toISOString()
+                    }));
+                    return;
+                  }
+                  
+                  console.log('Token validated successfully for user', data.userId);
+                } catch (tokenError) {
+                  console.error('Token validation error:', tokenError);
                   ws.send(JSON.stringify({
                     type: 'error',
-                    message: 'Authentication failed: Invalid token',
+                    message: 'Authentication failed: Token validation error',
                     timestamp: new Date().toISOString()
                   }));
                   return;
                 }
-                
-                console.log('Token validated successfully for user', data.userId);
               } else {
                 // If no token, check if the session has the same user (for backward compatibility)
                 // This is less secure but maintains compatibility with existing clients
-                console.log('No token provided, using userId authentication only');
+                console.log('No token provided, using userId authentication only - allowing for backward compatibility');
               }
               
               userId = data.userId;
@@ -609,16 +667,21 @@ function setupWebSockets(server: Server) {
       }
     });
     
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
+    ws.on('close', (code, reason) => {
+      console.log(`WebSocket connection closed: code=${code}, reason=${reason || 'No reason provided'}`);
       
       // Clear ping interval
       clearInterval(pingInterval);
       
       // Remove connection from user's connections
       if (userId !== null) {
+        console.log(`Removing WebSocket connection for user ${userId}`);
         removeConnection(userId, ws);
       }
+      
+      // Log current active connections
+      const activeConnections = [...connections.keys()].length;
+      console.log(`Active WebSocket connections: ${activeConnections}`);
     });
     
     ws.on('error', (error) => {
@@ -629,7 +692,14 @@ function setupWebSockets(server: Server) {
       
       // Remove connection from user's connections
       if (userId !== null) {
+        console.log(`Removing WebSocket connection for user ${userId} due to error`);
         removeConnection(userId, ws);
+      }
+      
+      // Don't terminate here - let the close event handle it
+      // But do check if connection is still open, and close it if needed
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close(1011, 'Internal server error');
       }
     });
   });
