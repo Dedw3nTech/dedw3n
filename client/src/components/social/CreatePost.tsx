@@ -806,27 +806,7 @@ export default function CreatePost({
               className="hidden"
             />
 
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex gap-2">
-                {/* Tags button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() => {
-                    if (!currentTag.trim() && tags.length < 5) {
-                      const tag = prompt("Add a tag (without #):");
-                      if (tag && !tags.includes(tag.trim())) {
-                        setTags([...tags, tag.trim()]);
-                      }
-                    }
-                  }}
-                >
-                  <Tag className="h-4 w-4 mr-1" />
-                  Tags ({tags.length}/5)
-                </Button>
-              </div>
-              
+            <div className="flex items-center justify-end mt-3">
               <div className="flex gap-2">
                 <Button
                   variant="outline"
