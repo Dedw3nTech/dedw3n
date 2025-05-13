@@ -15,7 +15,7 @@ import type { Express, Request, Response } from "express";
 import { Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { isAuthenticated } from "./jwt-auth";
+import { authenticate } from "./jwt-auth";
 import { verifyToken } from "./jwt-auth"; // Import for token verification
 
 // Connection management
@@ -460,8 +460,22 @@ function setupWebSockets(server: Server) {
   
   console.log('WebSocket server initialized at /ws path');
   
+  // Add server status endpoint
+  wss.on('headers', (headers, req) => {
+    // Add headers to help with client-side debugging
+    headers.push('X-WebSocket-Server: Dedwen-Messaging');
+    headers.push(`X-WebSocket-Active-Connections: ${connectionStats.activeConnections}`);
+  });
+  
   wss.on('connection', (ws, req) => {
-    console.log('WebSocket connection established');
+    // Track connection in stats
+    connectionStats.totalConnections++;
+    connectionStats.activeConnections++;
+    
+    // Generate unique connection ID
+    const connectionId = `conn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    console.log(`WebSocket connection established (ID: ${connectionId}, Active: ${connectionStats.activeConnections})`);
     let userId: number | null = null;
     let authenticated = false;
     
@@ -634,8 +648,11 @@ function setupWebSockets(server: Server) {
       }
     });
     
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
+    ws.on('close', (code, reason) => {
+      // Update connection statistics
+      connectionStats.activeConnections = Math.max(0, connectionStats.activeConnections - 1);
+      
+      console.log(`WebSocket connection closed (ID: ${connectionId}, Code: ${code}, Reason: ${reason}, Active: ${connectionStats.activeConnections})`);
       
       // Clear ping interval
       clearInterval(pingInterval);
@@ -643,6 +660,12 @@ function setupWebSockets(server: Server) {
       // Remove connection from user's connections
       if (userId !== null) {
         removeConnection(userId, ws);
+        
+        // Broadcast offline status if this was the last connection for this user
+        const userConnections = connections.get(userId);
+        if (!userConnections || userConnections.size === 0) {
+          broadcastUserStatus(userId, false);
+        }
       }
     });
     
