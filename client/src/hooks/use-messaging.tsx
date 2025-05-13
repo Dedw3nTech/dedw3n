@@ -585,10 +585,24 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       case "authenticated":
         console.log("Authenticated with messaging service", data);
         
+        // Update connection status to fully authenticated
+        setConnectionStatus('authenticated');
+        
         // Log connection details for debugging
         if (data.connectionId) {
           console.log(`WebSocket connection established with ID: ${data.connectionId}`);
         }
+        
+        // Update connection details with server info
+        setConnectionDetails(prev => ({
+          ...prev,
+          serverConnectionId: data.connectionId,
+          serverTime: data.serverTime,
+          authenticated: true,
+          tokenAuth: data.tokenAuth,
+          activeConnections: data.activeConnections,
+          lastActivity: Date.now()
+        }));
         
         // Show toast for users with connection issues
         if (reconnectAttempts > 0) {
@@ -599,14 +613,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           reconnectAttempts = 0;
         }
         
-        // Store connection details
-        const connectionDetails = {
+        // Store connection details for persistence
+        const connectionInfo = {
           connectionId: data.connectionId,
           serverTime: data.serverTime,
           authenticated: true,
           tokenAuth: data.tokenAuth
         };
-        localStorage.setItem('ws_connection_details', JSON.stringify(connectionDetails));
+        localStorage.setItem('ws_connection_details', JSON.stringify(connectionInfo));
         
         // Set up regular ping to keep connection alive
         // Start ping immediately and then every 30 seconds
@@ -636,7 +650,16 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       case "pong":
         // Update the last pong timestamp
         console.log("Received pong from server");
-        lastPongRef.current = Date.now();
+        const currentTime = Date.now();
+        lastPongRef.current = currentTime;
+        
+        // Update connection details with last activity
+        setConnectionDetails(prev => ({
+          ...prev,
+          lastActivity: currentTime,
+          pingLatency: data.receivedAt ? currentTime - new Date(data.receivedAt).getTime() : undefined,
+          activeConnections: data.connectionCount || prev.activeConnections
+        }));
         
         // Log detailed connection stats for debugging
         if (data.connectionCount) {
