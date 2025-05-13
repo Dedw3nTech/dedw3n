@@ -934,7 +934,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         wsUrl += `&token=${encodedToken}`;
         console.log("Added authentication token to WebSocket URL");
       } else {
-        console.warn("No authentication token available for WebSocket connection");
+        // We're using session-based authentication as fallback
+        console.log("Using session-based WebSocket authentication");
       }
     } else {
       console.warn("No user ID available for WebSocket connection");
