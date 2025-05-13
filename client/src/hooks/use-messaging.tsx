@@ -1036,6 +1036,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   };
   
+  // Update connectRef with the connect function
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
+  
   // Properly clean up all WebSocket related resources
   const disconnect = () => {
     // Clean up WebSocket connection
