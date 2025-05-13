@@ -127,6 +127,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   
   // States
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'authenticated'>('disconnected');
+  const [connectionDetails, setConnectionDetails] = useState<{
+    id?: string;
+    startTime?: number;
+    reconnects?: number;
+    lastActivity?: number;
+  }>({});
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
   const [activeCall, setActiveCall] = useState<Call | null>(null);
@@ -281,10 +288,15 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
+      setConnectionStatus('disconnected');
       return;
     }
     
     try {
+      // Update connection status to connecting
+      setConnectionStatus('connecting');
+      
+      // Create the WebSocket connection
       socket = new WebSocket(getWebSocketUrl());
       
       socket.onopen = () => {
@@ -297,6 +309,17 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Create connection identifier to help trace this specific connection
         const connectionId = `conn_${Math.floor(Math.random() * 1000000)}`;
         (socket as any)._connectionId = connectionId;
+        
+        // Update connection details for monitoring
+        setConnectionDetails({
+          id: connectionId,
+          startTime: connectionStartTime,
+          reconnects: reconnectAttempts,
+          lastActivity: connectionStartTime
+        });
+        
+        // Update connection status to connected (but not yet authenticated)
+        setConnectionStatus('connected');
         
         // Reset reconnect attempts upon successful connection
         if (reconnectAttempts > 0) {
@@ -349,7 +372,18 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       socket.onclose = (event) => {
         console.log("WebSocket disconnected:", event.code, event.reason);
+        
+        // Update connection status
         setIsConnected(false);
+        setConnectionStatus('disconnected');
+        
+        // Record disconnection in connection details
+        setConnectionDetails(prev => ({
+          ...prev,
+          disconnectTime: Date.now(),
+          disconnectCode: event.code,
+          disconnectReason: event.reason || 'No reason provided'
+        }));
         
         // Clean up ping interval if it exists
         if ((window as any).wsPingInterval) {
