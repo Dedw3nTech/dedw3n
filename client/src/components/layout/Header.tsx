@@ -370,7 +370,7 @@ export default function Header() {
         <div className="container mx-auto px-4 py-2 border-b border-gray-200 bg-blue-500">
           <div className="flex overflow-x-auto">
             <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "wall" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "wall" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("wall");
                 setLocation("/wall");
@@ -384,7 +384,7 @@ export default function Header() {
             </button>
             
             <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "explore" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "explore" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("explore");
                 setLocation("/explore");
@@ -398,7 +398,7 @@ export default function Header() {
             </button>
             
             <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 relative ${activeTab === "messages" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+              className={`py-2 px-4 text-sm font-medium border-b-2 relative ${activeTab === "messages" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("messages");
                 setLocation("/messages");
@@ -417,7 +417,7 @@ export default function Header() {
             </button>
             
             <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "videos" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "videos" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("videos");
                 setLocation("/videos/trending");
@@ -431,7 +431,7 @@ export default function Header() {
             </button>
             
             <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "communities" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "communities" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("communities");
                 setLocation("/communities");
@@ -446,7 +446,7 @@ export default function Header() {
             
             {userData && (
               <button 
-                className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-white hover:text-white"}`}
+                className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "profile" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
                 onClick={() => {
                   setActiveTab("profile");
                   setLocation(`/profile/${userData.username}`);
