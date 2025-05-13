@@ -1010,21 +1010,49 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           // Abnormal closure - most common case when server crashes or restarts
           case 1006:
             console.warn("WebSocket abnormal closure (server may be restarting)");
-            // This is likely a server restart, be patient with reconnects
+            
+            // Progressive retry strategy for abnormal closures
+            // First few attempts should be quick to recover from brief interruptions
+            // Later attempts should back off to avoid flooding the server
+            
+            let abnormalReconnectDelay;
+            
+            if (reconnectAttempts < 3) {
+              // First few attempts: Try quickly (1-2 second delay)
+              abnormalReconnectDelay = 1000 + (reconnectAttempts * 500);
+              console.log(`Quick recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
+            } else if (reconnectAttempts < 5) {
+              // Later attempts: Medium delay (5-10 seconds)
+              abnormalReconnectDelay = 5000 + ((reconnectAttempts - 3) * 2500);
+              console.log(`Medium delay recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
+            } else {
+              // Final attempts: Use standard backoff
+              abnormalReconnectDelay = Math.min(
+                RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 5),
+                MAX_RECONNECT_INTERVAL
+              );
+              console.log(`Standard backoff recovery attempt ${reconnectAttempts + 1} for abnormal closure in ${abnormalReconnectDelay}ms`);
+            }
+            
             reconnectAttempts++;
             
-            // For abnormal closures, attempt reconnection more quickly
-            // to avoid issues with features that require WebSockets
-            const quickReconnectDelay = 1000; // 1 second
-            
             if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+              if (reconnectTimer) clearTimeout(reconnectTimer);
+              
               reconnectTimer = setTimeout(() => {
                 if (user) {
                   // Reset connection completely to avoid any stale connection issues
                   socket = null;
                   connect();
                 }
-              }, quickReconnectDelay);
+              }, abnormalReconnectDelay);
+            } else {
+              console.error(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached for abnormal closure. Giving up.`);
+              toast({
+                title: "Connection Issues",
+                description: "Unable to maintain connection to messaging service. Please refresh the page.",
+                variant: "destructive",
+              });
             }
             
             // Skip the regular reconnection flow for abnormal closures
