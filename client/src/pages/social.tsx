@@ -302,12 +302,25 @@ export default function Social() {
                   {/* Main Content */}
                   <div className="md:col-span-2 space-y-6">
                     {/* Content Creator */}
-                    {user && <ContentCreator />}
+                    {user && (
+                      <ContentCreator 
+                        onSuccess={() => {
+                          // Force refresh the feed when a post is created
+                          console.log("Post created, refreshing feed");
+                          
+                          // Use React Query's invalidation to trigger a refresh
+                          queryClient.invalidateQueries({ 
+                            queryKey: ["/api/feed/personal"],
+                            refetchType: "all" 
+                          });
+                        }} 
+                      />
+                    )}
                     
                     {/* Content Feed */}
                     <div className="bg-white rounded-lg shadow-sm">
                       <div className="p-4">
-                        <ContentFeed />
+                        <ContentFeed key="main-content-feed" />
                       </div>
                     </div>
                   </div>
