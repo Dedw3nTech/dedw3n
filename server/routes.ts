@@ -3861,9 +3861,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/feed/recommended", async (req, res) => {
+  app.get("/api/feed/recommended", unifiedIsAuthenticated, async (req, res) => {
     try {
-      console.log(`[INFO] Fetching recommended feed`);
+      // Log with user ID if authenticated
+      const userId = (req.user as any)?.id;
+      console.log(`[INFO] Fetching recommended feed${userId ? ` for user ${userId}` : ''}`);
       
       // Use the social media suite to get trending posts
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
