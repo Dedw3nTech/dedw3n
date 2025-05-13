@@ -806,7 +806,86 @@ function setupWebSockets(server: Server) {
     });
     
     ws.on('close', (code, reason) => {
-      console.log(`WebSocket connection closed: code=${code}, reason=${reason || 'No reason provided'}`);
+      // Get connection lifetime details
+      const endTime = Date.now();
+      const connectionLifetime = endTime - startTime;
+      const authTime = (ws as any).authTime || null;
+      const authDuration = authTime ? authTime - startTime : null;
+      const authenticatedTime = authTime ? endTime - authTime : null;
+      
+      // Categorize close codes for better diagnostics
+      let closeCategory = 'unknown';
+      let expectedClose = false;
+      
+      // WebSocket standard close codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
+      switch(code) {
+        case 1000:
+          closeCategory = 'normal';
+          expectedClose = true;
+          break;
+        case 1001:
+          closeCategory = 'going_away';
+          expectedClose = true;
+          break;
+        case 1002:
+          closeCategory = 'protocol_error';
+          break;
+        case 1003:
+          closeCategory = 'unsupported_data';
+          break;
+        case 1005:
+          closeCategory = 'no_status';
+          break;
+        case 1006:
+          closeCategory = 'abnormal';
+          break;
+        case 1007:
+          closeCategory = 'invalid_frame_payload_data';
+          break;
+        case 1008:
+          closeCategory = 'policy_violation';
+          break;
+        case 1009:
+          closeCategory = 'message_too_big';
+          break;
+        case 1010:
+          closeCategory = 'missing_extension';
+          break;
+        case 1011:
+          closeCategory = 'internal_error';
+          break;
+        case 1012:
+          closeCategory = 'service_restart';
+          expectedClose = true;
+          break;
+        case 1013:
+          closeCategory = 'try_again_later';
+          expectedClose = true;
+          break;
+        case 1014:
+          closeCategory = 'bad_gateway';
+          break;
+        case 1015:
+          closeCategory = 'tls_handshake';
+          break;
+        case 4000:
+          closeCategory = 'ping_timeout';
+          break;
+        default:
+          if (code >= 4000) {
+            closeCategory = 'application_defined';
+          }
+      }
+      
+      // Log detailed connection closure information
+      console.log(`WebSocket connection ${connectionId} closed: code=${code} (${closeCategory}), reason=${reason || 'No reason provided'}`);
+      console.log(`Connection stats: lifetime=${Math.floor(connectionLifetime/1000)}s, userId=${userId}, authenticated=${(ws as any).authenticated || false}`);
+      
+      if (authTime) {
+        console.log(`Authentication details: authType=${(ws as any).authType}, authDuration=${Math.floor(authDuration/1000)}s, authenticatedTime=${Math.floor(authenticatedTime/1000)}s`);
+      }
+      
+      console.log(`Connection activity: pings=${(ws as any).pingCount || 0}, pongs=${(ws as any).pongCount || 0}`);
       
       // Clear ping interval
       clearInterval(pingInterval);
@@ -818,8 +897,14 @@ function setupWebSockets(server: Server) {
       }
       
       // Log current active connections
-      const activeConnections = [...connections.keys()].length;
-      console.log(`Active WebSocket connections: ${activeConnections}`);
+      const activeUsers = [...connections.keys()].length;
+      let totalConnections = 0;
+      
+      for (const [_, userConns] of connections) {
+        totalConnections += userConns.size;
+      }
+      
+      console.log(`Active WebSocket stats: users=${activeUsers}, connections=${totalConnections}`);
     });
     
     ws.on('error', (error) => {
