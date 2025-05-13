@@ -263,12 +263,12 @@ export default function Header() {
                   )}
                 </div>
                 <div className="p-2 border-t flex justify-between items-center">
-                  <button 
-                    className="text-xs text-primary font-medium hover:underline"
+                  <div 
+                    className="text-xs text-primary font-medium hover:underline cursor-pointer"
                     onClick={() => markAllNotificationsReadMutation.mutate()}
                   >
                     Mark all as read
-                  </button>
+                  </div>
                   <Link 
                     href="/notifications" 
                     className="text-xs text-primary font-medium hover:underline"
@@ -294,11 +294,11 @@ export default function Header() {
         <div className="flex border-b border-gray-200 -mb-px">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary flex items-center justify-center"
+              <div
+                className="flex-1 py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary flex items-center justify-center cursor-pointer"
               >
                 <i className="ri-store-3-line mr-1"></i> Marketplace: {marketTypeLabel} <ChevronDown className="ml-1 h-4 w-4" />
-              </button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuItem 
