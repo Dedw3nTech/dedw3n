@@ -664,7 +664,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   };
   
   // WebSocket connection function
-  const connect = useCallback(() => {
+  const connect = () => {
     if (!user || (socket && socket.readyState === WebSocket.OPEN)) return;
     
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
@@ -1036,10 +1036,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Update connectRef with the connect function
+  // Set connect function reference after it's been defined
+  // This needs to run only once as the function reference doesn't change
   useEffect(() => {
     connectRef.current = connect;
-  }, [connect]);
+  }, []);
   
   // Properly clean up all WebSocket related resources
   const disconnect = () => {
