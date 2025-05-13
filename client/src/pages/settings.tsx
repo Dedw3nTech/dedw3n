@@ -429,7 +429,7 @@ export default function AccountPage() {
                 
                 {/* Email (editable) */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t("settings.email")}</Label>
+                  <Label htmlFor="email">{t("email")}</Label>
                   <Input
                     id="email"
                     value={email}
@@ -446,12 +446,12 @@ export default function AccountPage() {
                   {updateProfileMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving")}
+                      {t("saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {t("settings.saveChanges")}
+                      {t("saveChanges")}
                     </>
                   )}
                 </Button>
@@ -461,13 +461,13 @@ export default function AccountPage() {
             {/* Password Change Card */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.changePassword")}</CardTitle>
-                <CardDescription>{t("settings.changePasswordDesc")}</CardDescription>
+                <CardTitle>{t("changePassword")}</CardTitle>
+                <CardDescription>{t("changePasswordDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Current Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("settings.currentPassword")}</Label>
+                  <Label htmlFor="current-password">{t("currentPassword")}</Label>
                   <Input
                     id="current-password"
                     type="password"
@@ -479,7 +479,7 @@ export default function AccountPage() {
                 
                 {/* New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">{t("settings.newPassword")}</Label>
+                  <Label htmlFor="new-password">{t("newPassword")}</Label>
                   <Input
                     id="new-password"
                     type="password"
@@ -491,7 +491,7 @@ export default function AccountPage() {
                 
                 {/* Confirm New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">{t("settings.confirmPassword")}</Label>
+                  <Label htmlFor="confirm-password">{t("confirmPassword")}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
@@ -509,12 +509,12 @@ export default function AccountPage() {
                   {updatePasswordMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.updating")}
+                      {t("updating")}
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      {t("settings.updatePassword")}
+                      {t("updatePassword")}
                     </>
                   )}
                 </Button>
@@ -526,8 +526,8 @@ export default function AccountPage() {
           <TabsContent value="preferences" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.languageAndRegion")}</CardTitle>
-                <CardDescription>{t("settings.languageAndRegionDesc")}</CardDescription>
+                <CardTitle>{t("languageAndRegion")}</CardTitle>
+                <CardDescription>{t("languageAndRegionDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Language */}
