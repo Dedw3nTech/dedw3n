@@ -92,47 +92,43 @@ export default function ContentFeed({
     <div className="space-y-4">
       {/* Feed Type Selection (not shown for user profile posts) */}
       {!userPosts && (
-        <div className="mb-4 p-3 bg-white border rounded-lg">
-          <div className="flex justify-center gap-4">
-            <Button 
-              variant={feedType === 'personal' ? "default" : "outline"} 
-              className={`w-32 ${feedType === 'personal' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+        <div className="mb-4 text-center pb-2 border-b">
+          <div className="flex justify-center gap-6">
+            <span 
+              className={`cursor-pointer text-lg ${feedType === 'personal' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
               onClick={() => handleFeedTypeChange('personal')}
             >
-              <User className="h-4 w-4 mr-2" />
+              <User className="h-4 w-4 inline mr-1" />
               {t("social.my_feed")}
-            </Button>
-            <Button 
-              variant={feedType === 'communities' ? "default" : "outline"} 
-              className={`w-32 ${feedType === 'communities' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+            </span>
+            <span 
+              className={`cursor-pointer text-lg ${feedType === 'communities' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
               onClick={() => handleFeedTypeChange('communities')}
             >
-              <Users className="h-4 w-4 mr-2" />
+              <Users className="h-4 w-4 inline mr-1" />
               {t("social.communities")}
-            </Button>
+            </span>
           </div>
         </div>
       )}
       
       {/* Sort Options */}
-      <div className="mb-4 p-3 bg-white border rounded-lg">
-        <div className="flex justify-center gap-4">
-          <Button 
-            variant={sortType === 'relevant' ? "default" : "outline"} 
-            className={`w-32 ${sortType === 'relevant' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+      <div className="mb-4 text-center">
+        <div className="flex justify-center gap-6">
+          <span 
+            className={`cursor-pointer ${sortType === 'relevant' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
             onClick={() => handleSortChange('relevant')}
           >
-            <Sparkles className="h-4 w-4 mr-2" />
+            <Sparkles className="h-4 w-4 inline mr-1" />
             {t("social.most_relevant")}
-          </Button>
-          <Button 
-            variant={sortType === 'recent' ? "default" : "outline"} 
-            className={`w-32 ${sortType === 'recent' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+          </span>
+          <span 
+            className={`cursor-pointer ${sortType === 'recent' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
             onClick={() => handleSortChange('recent')}
           >
-            <Clock className="h-4 w-4 mr-2" />
+            <Clock className="h-4 w-4 inline mr-1" />
             {t("social.most_recent")}
-          </Button>
+          </span>
         </div>
       </div>
       
