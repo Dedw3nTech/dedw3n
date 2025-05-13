@@ -1457,19 +1457,42 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     };
   };
   
-  // Connect if user is authenticated
+  // Add a health check function to detect and recover from broken connections
+  const checkConnectionHealth = useCallback(() => {
+    // If we have a user but no socket or it's not open, try to connect
+    if (user && (!socket || socket.readyState !== WebSocket.OPEN)) {
+      console.log("WebSocket health check: Connection needed, initiating...");
+      connect();
+    }
+  }, [user]);
+
+  // Setup regular health checks
   useEffect(() => {
     if (user) {
+      // Start health check timer
+      if (healthCheckTimer) clearInterval(healthCheckTimer);
+      healthCheckTimer = setInterval(checkConnectionHealth, HEALTH_CHECK_INTERVAL);
+      
+      // Initial connection
       connect();
     } else {
       disconnect();
+      // Clear health check timer when user is not available
+      if (healthCheckTimer) {
+        clearInterval(healthCheckTimer);
+        healthCheckTimer = null;
+      }
     }
     
     // Clean up on unmount
     return () => {
       disconnect();
+      if (healthCheckTimer) {
+        clearInterval(healthCheckTimer);
+        healthCheckTimer = null;
+      }
     };
-  }, [user]);
+  }, [user, checkConnectionHealth]);
   
   // Expose methods and state through context
   const value: MessagingContextType = {
