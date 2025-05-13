@@ -289,8 +289,21 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       socket.onopen = () => {
         console.log("WebSocket connected");
+        
+        // Store the connection time for tracking connection duration
+        const connectionStartTime = Date.now();
+        (socket as any)._connectionTime = connectionStartTime;
+        
+        // Create connection identifier to help trace this specific connection
+        const connectionId = `conn_${Math.floor(Math.random() * 1000000)}`;
+        (socket as any)._connectionId = connectionId;
+        
+        // Reset reconnect attempts upon successful connection
+        if (reconnectAttempts > 0) {
+          console.log(`Connection restored after ${reconnectAttempts} attempts`);
+        }
+        reconnectAttempts = 0;
         setIsConnected(true);
-        reconnectAttempts = 0; // Reset reconnect attempts on successful connection
         
         // Authenticate with both userId and token
         if (socket && user) {
@@ -298,12 +311,19 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           const token = getStoredAuthToken();
           
           // Log token presence for debugging (but not the actual token)
-          console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}`);
+          console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}, connectionId: ${connectionId}`);
           
           socket.send(JSON.stringify({
             type: "authenticate",
             userId: user.id,
-            token: token  // Include the JWT token for authentication
+            token: token,  // Include the JWT token for authentication
+            connectionId: connectionId, // Send connection ID for tracing
+            clientInfo: {
+              timestamp: new Date().toISOString(),
+              reconnectAttempts,
+              url: window.location.pathname,
+              userAgent: navigator.userAgent.substring(0, 100) // Truncate user agent to avoid large payloads
+            }
           }));
           
           console.log("Sent authentication request to WebSocket server with token");
@@ -317,7 +337,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
               socket.send(JSON.stringify({
                 type: "authenticate",
                 userId: user.id,
-                token: freshToken
+                token: freshToken,
+                connectionId: connectionId,
+                retryAttempt: true // Mark as retry for server logging
               }));
               console.log("Sent follow-up authentication request to WebSocket server");
             }
@@ -328,15 +350,51 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       socket.onclose = (event) => {
         console.log("WebSocket disconnected:", event.code, event.reason);
         setIsConnected(false);
+        
+        // Clean up ping interval if it exists
+        if ((window as any).wsPingInterval) {
+          clearInterval((window as any).wsPingInterval);
+          (window as any).wsPingInterval = null;
+        }
+        
+        // Clear socket reference
         socket = null;
         
         // Try to reconnect after delay with backoff
         if (reconnectTimer) clearTimeout(reconnectTimer);
         
-        // If the close was clean (code 1000), don't increment reconnect attempts
-        // This helps when the server cleanly closes the connection during restart
-        if (event.code !== 1000) {
-          reconnectAttempts++;
+        // Handle different close codes differently
+        switch (event.code) {
+          // Normal closure - normal server restart or page navigation
+          case 1000:
+            // Don't increment reconnect attempts for clean close
+            // But still reconnect in case of server restart
+            console.log("Clean WebSocket close - will attempt normal reconnect");
+            break;
+            
+          // Going away - typically browser navigation
+          case 1001:
+            console.log("WebSocket going away (likely page navigation)");
+            // Don't auto-reconnect as user is likely changing pages
+            return;
+            
+          // Protocol error
+          case 1002:
+            console.warn("WebSocket protocol error - will try to reconnect");
+            reconnectAttempts++;
+            break;
+            
+          // Abnormal closure - most common case when server crashes or restarts
+          case 1006:
+            console.warn("WebSocket abnormal closure (server may be restarting)");
+            // This is likely a server restart, be patient with reconnects
+            reconnectAttempts++;
+            break;
+            
+          // Default for all other close codes
+          default:
+            console.warn(`WebSocket closed with code ${event.code} - will try to reconnect`);
+            reconnectAttempts++;
         }
         
         // Calculate backoff delay with exponential backoff and jitter
@@ -399,18 +457,49 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   };
   
+  // Properly clean up all WebSocket related resources
   const disconnect = () => {
+    // Clean up WebSocket
     if (socket) {
-      socket.close();
+      try {
+        // First try to send a proper logout message if connection is still open
+        if (socket.readyState === WebSocket.OPEN && user) {
+          socket.send(JSON.stringify({
+            type: "logout",
+            userId: user.id,
+            timestamp: new Date().toISOString()
+          }));
+        }
+      } catch (e) {
+        console.error("Error sending logout message:", e);
+      }
+      
+      // Then close the socket
+      try {
+        socket.close(1000, "Client initiated disconnection");
+      } catch (e) {
+        console.error("Error closing WebSocket:", e);
+      }
+      
+      // Clear socket reference
       socket = null;
     }
     
+    // Clear any reconnection timers
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
     }
     
+    // Clear ping interval
+    if ((window as any).wsPingInterval) {
+      clearInterval((window as any).wsPingInterval);
+      (window as any).wsPingInterval = null;
+    }
+    
+    // Reset connection state
     setIsConnected(false);
+    reconnectAttempts = 0;
   };
   
   // Last time we got a pong response (epoch milliseconds)
@@ -518,6 +607,19 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Log detailed connection stats for debugging
         if (data.connectionCount) {
           console.debug(`Connection stats - Server uptime: ${data.serverUptime}s, Active connections: ${data.connectionCount}`);
+        }
+        break;
+        
+      case "logout_confirmed":
+        console.log("Server confirmed logout:", data.message);
+        // Complete the clean disconnection process
+        if (socket) {
+          try {
+            socket.close(1000, "Logout complete");
+          } catch (e) {
+            console.error("Error closing WebSocket after logout:", e);
+          }
+          socket = null;
         }
         break;
         

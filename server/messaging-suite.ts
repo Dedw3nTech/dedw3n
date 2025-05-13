@@ -652,6 +652,27 @@ function setupWebSockets(server: Server) {
             response = handleSignaling(userId!, data);
             break;
             
+          case 'logout':
+            // Handle explicit client logout
+            console.log(`User ${userId} explicitly logged out from WebSocket`);
+            
+            // Mark user as offline
+            if (userId) {
+              broadcastUserStatus(userId, false);
+              console.log(`Broadcasting offline status for user ${userId}`);
+            }
+            
+            // Send confirmation
+            response = {
+              type: 'logout_confirmed',
+              timestamp: new Date().toISOString(),
+              message: 'Logout successful'
+            };
+            
+            // Don't remove the connection here - the onclose handler will do that
+            // This allows the response to be sent before the connection is closed
+            break;
+            
           case 'ping':
             // Track the ping for connection activity monitoring
             console.debug("Received ping from client", userId ? `(User: ${userId})` : "(Unauthenticated)");
