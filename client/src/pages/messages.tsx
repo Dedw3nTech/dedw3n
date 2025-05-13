@@ -12,6 +12,8 @@ import { useMessaging } from "@/hooks/use-messaging";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
+import { ConnectionDiagnostics } from "@/components/messaging/ConnectionDiagnostics";
+import { ConnectionStatusIndicator } from "@/components/messaging/ConnectionStatusIndicator";
 import { 
   Loader2, Search, Settings, Phone, VideoIcon, Video,
   Info, SendHorizonal, Paperclip, Smile, Plus, X,
@@ -312,7 +314,13 @@ export default function MessagesPage() {
                 <TabsTrigger value="requests">Requests</TabsTrigger>
               </TabsList>
             </Tabs>
+            <ConnectionStatusIndicator />
           </div>
+        </div>
+        
+        {/* Connection Diagnostics Panel */}
+        <div className="mt-4">
+          <ConnectionDiagnostics />
         </div>
       </div>
       
