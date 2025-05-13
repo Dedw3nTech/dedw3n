@@ -14,7 +14,22 @@ import ConnectionsCard from "@/components/social/ConnectionsCard";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { getInitials } from "@/lib/utils";
-import { Post } from "@shared/schema";
+// Import database schema type but extend it with the runtime properties we need
+import { posts } from "@shared/schema";
+import { type InferSelectModel } from "drizzle-orm";
+
+// Base post type from database schema
+type BasePost = InferSelectModel<typeof posts>;
+
+// Extended Post type that includes the user object required by PostCard
+interface Post extends BasePost {
+  user: {
+    id: number;
+    name: string;
+    username: string;
+    avatar?: string | null;
+  };
+}
 import { 
   PenSquare, 
   Loader2, 
