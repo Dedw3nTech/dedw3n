@@ -16,6 +16,12 @@ import {
   isUserLoggedOut 
 } from "../lib/queryClient";
 import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
+import { 
+  saveUserData, 
+  loadUserData, 
+  clearUserData, 
+  updateUserData 
+} from "../lib/userStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -242,6 +248,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Update the user data in the cache
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Store user data in persistent storage for cross-session persistence
+      console.log('Storing authenticated user data to persistent storage:', {
+        id: user.id,
+        username: user.username || '(no username)',
+      });
+      
+      try {
+        // Save the user data to both localStorage and sessionStorage
+        saveUserData(user);
+      } catch (error) {
+        console.error('Error saving user data to storage:', error);
+      }
       
       // Immediately refetch user data to ensure we have the latest
       refetch();
