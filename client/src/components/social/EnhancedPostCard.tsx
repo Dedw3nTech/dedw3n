@@ -729,6 +729,14 @@ export default function EnhancedPostCard({
           </button>
           
           <button
+            onClick={handleBoost}
+            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
+          >
+            <Zap className="w-5 h-5 mr-1" />
+            <span>Boost</span>
+          </button>
+          
+          <button
             onClick={handleComment}
             className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
           >
@@ -742,14 +750,6 @@ export default function EnhancedPostCard({
           >
             <Share2 className="w-5 h-5 mr-1" />
             <span>{t("social.share")}</span>
-          </button>
-          
-          <button
-            onClick={handleBoost}
-            className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
-          >
-            <Zap className="w-5 h-5 mr-1" />
-            <span>Boost</span>
           </button>
           
           {showBookmarkButton && (
