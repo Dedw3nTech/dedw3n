@@ -684,10 +684,7 @@ export default function CreatePost({
                   <Video className="h-4 w-4" />
                   <span className="hidden sm:inline">Video</span>
                 </TabsTrigger>
-                <TabsTrigger value="advertisement" className="flex items-center gap-1">
-                  <Megaphone className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ad</span>
-                </TabsTrigger>
+
               </TabsList>
 
               {/* Standard Post Content */}
@@ -910,51 +907,7 @@ export default function CreatePost({
                 </div>
               </TabsContent>
 
-              {/* Advertisement Content */}
-              <TabsContent value="advertisement" className="space-y-2">
-                <div className="mt-3 space-y-3">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-muted-foreground"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={!!videoFile}
-                    >
-                      <ImageIcon className="h-4 w-4 mr-1" />
-                      Add Photo
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-muted-foreground"
-                      onClick={() => videoInputRef.current?.click()}
-                      disabled={!!imageFile}
-                    >
-                      <Video className="h-4 w-4 mr-1" />
-                      Add Video
-                    </Button>
-                  </div>
-                  <Input
-                    placeholder="External link URL (optional)"
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    className="border bg-accent/30"
-                  />
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="promote-post"
-                      checked={isPromoted}
-                      onChange={(e) => setIsPromoted(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <label htmlFor="promote-post" className="text-sm">
-                      Promote this advertisement
-                    </label>
-                  </div>
-                </div>
-              </TabsContent>
+
             </Tabs>
 
             {/* Shared upload inputs */}
