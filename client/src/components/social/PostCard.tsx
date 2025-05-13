@@ -563,7 +563,7 @@ export default function PostCard({
             <img 
               src={post.imageUrl} 
               alt="Post content" 
-              className="w-full object-cover max-h-96"
+              className="w-full object-contain"
             />
           </div>
         )}
