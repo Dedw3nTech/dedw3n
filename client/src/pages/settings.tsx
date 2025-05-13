@@ -368,14 +368,10 @@ export default function SettingsPage() {
       
       <div className="container max-w-screen-xl py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 max-w-3xl mb-8">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-3xl mb-8">
             <TabsTrigger value="account">
               <User className="h-4 w-4 mr-2" />
               {t("settings.account")}
-            </TabsTrigger>
-            <TabsTrigger value="password">
-              <Lock className="h-4 w-4 mr-2" />
-              {t("settings.password")}
             </TabsTrigger>
             <TabsTrigger value="preferences">
               <Globe className="h-4 w-4 mr-2" />
@@ -393,6 +389,7 @@ export default function SettingsPage() {
           
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
+            {/* Profile Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("settings.profileInformation")}</CardTitle>
@@ -483,10 +480,8 @@ export default function SettingsPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
-          
-          {/* Password Tab */}
-          <TabsContent value="password" className="space-y-6">
+            
+            {/* Password Change Card */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("settings.changePassword")}</CardTitle>
