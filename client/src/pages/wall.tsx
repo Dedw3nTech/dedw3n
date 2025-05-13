@@ -451,9 +451,33 @@ export default function WallPage() {
                 ) : (
                   <div className="space-y-6">
                     {communitiesFeed.map((basePost) => {
-                      // Ensure the post has a proper user object before rendering
+                      // Format date as string and ensure the post has a proper user object
                       const post: Post = {
-                        ...basePost,
+                        id: basePost.id,
+                        userId: basePost.userId,
+                        content: basePost.content,
+                        title: basePost.title,
+                        contentType: basePost.contentType,
+                        imageUrl: basePost.imageUrl,
+                        videoUrl: basePost.videoUrl,
+                        productId: basePost.productId,
+                        // Add default values of 0 for numeric fields
+                        likes: basePost.likes || 0,
+                        comments: basePost.comments || 0,
+                        shares: basePost.shares || 0,
+                        views: basePost.views || 0,
+                        tags: basePost.tags,
+                        isPromoted: basePost.isPromoted,
+                        isPublished: basePost.isPublished,
+                        isFlagged: basePost.isFlagged,
+                        // Convert Date object to string for compatibility with PostCard
+                        createdAt: basePost.createdAt ? 
+                          (typeof basePost.createdAt === 'string' ? 
+                            basePost.createdAt : 
+                            new Date(basePost.createdAt).toISOString()
+                          ) : 
+                          new Date().toISOString(),
+                        // Ensure user object exists
                         user: basePost.user || {
                           id: basePost.userId,
                           name: "User",
@@ -505,9 +529,33 @@ export default function WallPage() {
                 ) : (
                   <div className="space-y-6">
                     {recommendedFeed.map((basePost) => {
-                      // Ensure the post has a proper user object before rendering
+                      // Format date as string and ensure the post has a proper user object
                       const post: Post = {
-                        ...basePost,
+                        id: basePost.id,
+                        userId: basePost.userId,
+                        content: basePost.content,
+                        title: basePost.title,
+                        contentType: basePost.contentType,
+                        imageUrl: basePost.imageUrl,
+                        videoUrl: basePost.videoUrl,
+                        productId: basePost.productId,
+                        // Add default values of 0 for numeric fields
+                        likes: basePost.likes || 0,
+                        comments: basePost.comments || 0,
+                        shares: basePost.shares || 0,
+                        views: basePost.views || 0,
+                        tags: basePost.tags,
+                        isPromoted: basePost.isPromoted,
+                        isPublished: basePost.isPublished,
+                        isFlagged: basePost.isFlagged,
+                        // Convert Date object to string for compatibility with PostCard
+                        createdAt: basePost.createdAt ? 
+                          (typeof basePost.createdAt === 'string' ? 
+                            basePost.createdAt : 
+                            new Date(basePost.createdAt).toISOString()
+                          ) : 
+                          new Date().toISOString(),
+                        // Ensure user object exists
                         user: basePost.user || {
                           id: basePost.userId,
                           name: "User",
