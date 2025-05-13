@@ -330,24 +330,51 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
     
     try {
+      // Clean up any existing connection
+      if (socket) {
+        try {
+          socket.close();
+        } catch (e) {
+          console.warn("Error closing existing socket:", e);
+        }
+        socket = null;
+      }
+      
       // Update connection status to connecting
       setConnectionStatus('connecting');
       
+      // Generate connection ID and timestamp
+      const connectionId = generateConnectionId();
+      const connectionStartTime = Date.now();
+      
+      // Update connection details
+      setConnectionDetails(prev => ({
+        ...prev,
+        id: connectionId,
+        startTime: connectionStartTime,
+        reconnects: (prev.reconnects || 0) + (reconnectAttempts > 0 ? 1 : 0),
+        disconnectTime: undefined,
+        disconnectCode: undefined,
+        disconnectReason: undefined
+      }));
+      
+      // Add cache busting parameters to prevent cached connections
+      const cacheBuster = `t=${Date.now()}&cid=${connectionId}`;
+      const wsUrl = `${getWebSocketUrl()}?${cacheBuster}`;
+      console.log(`Connecting to WebSocket: ${wsUrl}`);
+      
       // Create the WebSocket connection
-      socket = new WebSocket(getWebSocketUrl());
+      socket = new WebSocket(wsUrl);
       
       socket.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("WebSocket connected successfully");
         
-        // Store the connection time for tracking connection duration
-        const connectionStartTime = Date.now();
+        // Store the connection details on the socket object itself
         (socket as any)._connectionTime = connectionStartTime;
-        
-        // Create connection identifier to help trace this specific connection
-        const connectionId = `conn_${Math.floor(Math.random() * 1000000)}`;
         (socket as any)._connectionId = connectionId;
+        (socket as any)._reconnectCount = reconnectAttempts;
         
-        // Update connection details for monitoring
+        // Update connection status
         setConnectionDetails({
           id: connectionId,
           startTime: connectionStartTime,
