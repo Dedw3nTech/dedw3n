@@ -81,7 +81,6 @@ import ExplorePage from "@/pages/explore";
 import SearchPage from "@/pages/search";
 import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
-import SavedPostsPage from "@/pages/saved-posts";
 import PostDetailPage from "@/pages/post-detail";
 
 // Import video pages
