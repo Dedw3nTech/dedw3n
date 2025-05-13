@@ -240,6 +240,41 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   });
   
+  // Helper function to check WebSocket health and reconnect if needed
+  const checkConnectionHealth = useCallback(() => {
+    // If no user is logged in, don't attempt connection
+    if (!user) return;
+    
+    // If socket doesn't exist or is in closing/closed state, reconnect
+    if (!socket || 
+        socket.readyState === WebSocket.CLOSING || 
+        socket.readyState === WebSocket.CLOSED) {
+      console.log("WebSocket health check: Connection needed, initiating...");
+      // Ensure socket is null before reconnecting to avoid duplicates
+      socket = null;
+      connect();
+      return;
+    }
+    
+    // If socket exists but isn't open, and it's been a while, force reconnect
+    if (socket && socket.readyState !== WebSocket.OPEN && !isConnected) {
+      console.log("WebSocket health check: Connection exists but not open, resetting...");
+      // Force close and reconnect
+      socket.close();
+      socket = null;
+      connect();
+    }
+  }, [user, isConnected]);
+  
+  // Set up periodic health check (every 30 seconds)
+  useEffect(() => {
+    const healthCheckInterval = setInterval(checkConnectionHealth, 30000);
+    
+    return () => {
+      clearInterval(healthCheckInterval);
+    };
+  }, [checkConnectionHealth]);
+  
   // WebSocket connection management
   const connect = () => {
     if (!user || socket) return;
@@ -382,13 +417,51 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const handleWebSocketMessage = (data: any) => {
     switch (data.type) {
       case "authenticated":
-        console.log("Authenticated with messaging service");
-        // Send a ping to keep connection alive
-        setTimeout(() => {
+        console.log("Authenticated with messaging service", data);
+        
+        // Log connection details for debugging
+        if (data.connectionId) {
+          console.log(`WebSocket connection established with ID: ${data.connectionId}`);
+        }
+        
+        // Show toast for users with connection issues
+        if (reconnectAttempts > 0) {
+          toast({
+            title: "Connection Restored",
+            description: "Messaging service connection has been re-established",
+          });
+          reconnectAttempts = 0;
+        }
+        
+        // Store connection details
+        const connectionDetails = {
+          connectionId: data.connectionId,
+          serverTime: data.serverTime,
+          authenticated: true,
+          tokenAuth: data.tokenAuth
+        };
+        localStorage.setItem('ws_connection_details', JSON.stringify(connectionDetails));
+        
+        // Set up regular ping to keep connection alive
+        // Start ping immediately and then every 30 seconds
+        const sendPing = () => {
           if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: "ping" }));
+            socket.send(JSON.stringify({ 
+              type: "ping",
+              timestamp: new Date().toISOString(),
+              connectionId: data.connectionId
+            }));
           }
-        }, 30000);
+        };
+        
+        // Send initial ping
+        sendPing();
+        
+        // Set up regular pings
+        const pingInterval = setInterval(sendPing, 30000);
+        // Store the interval ID to clear it if needed
+        (window as any).wsPingInterval = pingInterval;
+        
         break;
         
       case "new_message":

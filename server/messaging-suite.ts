@@ -556,11 +556,18 @@ function setupWebSockets(server: Server) {
               // Track online status
               broadcastUserStatus(userId, true);
               
-              // Send acknowledgment
+              // Send detailed acknowledgment with connection info
               ws.send(JSON.stringify({
                 type: 'authenticated',
                 userId: userId,
-                timestamp: new Date().toISOString()
+                connectionId: crypto.randomUUID().slice(0, 8), // Add a unique connection ID for tracking
+                serverTime: new Date().toISOString(),
+                activeConnections: connections.size, // Send number of active users with connections
+                tokenAuth: !!data.token, // Indicate if token was used for authentication
+                debugInfo: {
+                  timestamp: new Date().toISOString(),
+                  serverVersion: '1.0.1' // Add version to help track deployed code
+                }
               }));
               
               console.log(`User ${userId} authenticated on WebSocket`);
