@@ -18,12 +18,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { Settings as SettingsIcon, User as UserIcon, Bell as BellIcon, Lock as LockIcon, Key as KeyIcon, LogOut as LogOutIcon } from "lucide-react";
 import {
-  Check,
-  Lock,
+  Settings as SettingsIcon,
+  User as UserIcon,
   User,
-  Bell,
+  Bell as BellIcon,
+  Lock as LockIcon,
+  Lock,
+  Key as KeyIcon,
+  LogOut as LogOutIcon,
+  Check,
   Globe,
   Wallet,
   Shield,
@@ -31,9 +35,9 @@ import {
   Languages,
   CreditCard,
   FileText,
-  Settings as SettingsIcon,
   Save,
   Loader2,
+  Bell
 } from "lucide-react";
 
 // The list of available language options
