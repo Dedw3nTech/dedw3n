@@ -70,6 +70,7 @@ export default function ContentFeed({
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchInterval: 0, // Disable automatic polling
+    // Using the default QueryClient's queryFn which adds auth headers
   });
   
   const handleLoadMore = () => {

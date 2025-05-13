@@ -14,6 +14,7 @@ import ConnectionsCard from "@/components/social/ConnectionsCard";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { getInitials } from "@/lib/utils";
+import { Post } from "@shared/schema";
 import { 
   PenSquare, 
   Loader2, 
@@ -54,7 +55,7 @@ export default function WallPage() {
     data: personalFeed,
     isLoading: isLoadingPersonal,
     refetch: refetchPersonal,
-  } = useQuery({
+  } = useQuery<Post[]>({
     queryKey: ["/api/feed/personal"],
     enabled: !!user,
     // Using default query function from queryClient which includes auth headers
@@ -65,7 +66,7 @@ export default function WallPage() {
     data: communitiesFeed,
     isLoading: isLoadingCommunities,
     refetch: refetchCommunities,
-  } = useQuery({
+  } = useQuery<Post[]>({
     queryKey: ["/api/feed/communities"],
     enabled: !!user,
     // Using default query function from queryClient which includes auth headers
@@ -76,7 +77,7 @@ export default function WallPage() {
     data: recommendedFeed,
     isLoading: isLoadingRecommended,
     refetch: refetchRecommended,
-  } = useQuery({
+  } = useQuery<Post[]>({
     queryKey: ["/api/feed/recommended"],
     enabled: !!user,
     // Using default query function from queryClient which includes auth headers
@@ -309,7 +310,7 @@ export default function WallPage() {
                       </div>
                     ))}
                   </div>
-                ) : !personalFeed || personalFeed.length === 0 ? (
+                ) : !personalFeed || (personalFeed as Post[]).length === 0 ? (
                   <div className="text-center py-10">
                     <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <h3 className="text-lg font-medium mb-2">No posts yet</h3>
