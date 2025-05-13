@@ -312,6 +312,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     }
   });
   
+  // Placeholder for the connect function that will be defined later
+  // This allows us to use it in the checkConnectionHealth function
+  const connectRef = useRef<() => void>(() => {
+    console.log("Connect function not yet initialized");
+  });
+  
   // Helper function to check WebSocket health and reconnect if needed
   const checkConnectionHealth = useCallback(() => {
     // If no user is logged in, don't attempt connection
@@ -324,7 +330,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       console.log("WebSocket health check: Connection needed, initiating...");
       // Ensure socket is null before reconnecting to avoid duplicates
       socket = null;
-      connect();
+      connectRef.current();
       return;
     }
     
@@ -334,18 +340,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       // Force close and reconnect
       socket.close();
       socket = null;
-      connect();
+      connectRef.current();
     }
   }, [user, isConnected]);
   
-  // Set up periodic health check (every 30 seconds)
-  useEffect(() => {
-    const healthCheckInterval = setInterval(checkConnectionHealth, 30000);
-    
-    return () => {
-      clearInterval(healthCheckInterval);
-    };
-  }, [checkConnectionHealth]);
+  // Note: Main health check is set up in the user effect below
 
   // Handle WebSocket messages
   const handleWebSocketMessage = (data: any) => {
