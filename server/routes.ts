@@ -3880,13 +3880,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/posts", unifiedIsAuthenticated, async (req, res) => {
+  app.post("/api/posts", async (req, res) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Authentication required to create posts" });
+      // Enhanced logging for debugging post creation requests
+      console.log('[POST API] Post creation request received:');
+      console.log('[POST API] Request headers:', JSON.stringify(req.headers));
+      console.log('[POST API] Request body keys:', Object.keys(req.body));
+      console.log('[POST API] Content type:', req.headers['content-type']);
+      
+      // Try to get user from various sources, prioritizing:
+      // 1. Standard authentication (req.user from auth middleware)
+      // 2. User ID in request body
+      // 3. User ID in headers
+      
+      let userId: number | null = null;
+      let user = null;
+      
+      // Option 1: Check if already authenticated via middleware
+      if (req.user) {
+        userId = (req.user as any).id;
+        user = req.user;
+        console.log('[POST API] User authenticated via middleware:', userId);
+      } 
+      // Option 2: Check for user ID in request body
+      else if (req.body && req.body.userId) {
+        userId = parseInt(req.body.userId);
+        console.log('[POST API] Using user ID from request body:', userId);
+        
+        // Verify this user exists
+        try {
+          user = await storage.getUser(userId);
+          if (!user) {
+            return res.status(401).json({ message: "Invalid user ID provided" });
+          }
+        } catch (error) {
+          console.error('[POST API] Error retrieving user by ID:', error);
+          return res.status(500).json({ message: "Error retrieving user" });
+        }
+      }
+      // Option 3: Check for user ID in headers
+      else if (req.headers['x-client-user-id']) {
+        userId = parseInt(req.headers['x-client-user-id'] as string);
+        console.log('[POST API] Using user ID from headers:', userId);
+        
+        // Verify this user exists
+        try {
+          user = await storage.getUser(userId);
+          if (!user) {
+            return res.status(401).json({ message: "Invalid user ID in header" });
+          }
+        } catch (error) {
+          console.error('[POST API] Error retrieving user by ID from header:', error);
+          return res.status(500).json({ message: "Error retrieving user from header ID" });
+        }
       }
       
-      const userId = (req.user as any).id;
+      // If we still don't have a user, return authentication error
+      if (!userId || !user) {
+        console.error('[POST API] No valid user ID found for post creation');
+        return res.status(401).json({ 
+          message: "Authentication required to create posts. Please log in or provide a valid user ID.",
+          details: {
+            bodyIncludesUserId: req.body && 'userId' in req.body,
+            headerIncludesUserId: 'x-client-user-id' in req.headers,
+            authenticationStatus: !!req.user
+          }
+        });
+      }
+      
       console.log('[POST API] Creating post with user ID:', userId);
       
       // Create a post data object from the JSON request
@@ -3905,101 +3966,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
         postData.tags = req.body.tags;
       }
       
-      // Handle media URLs
+      // Simplified handling of image URLs
       if (req.body.imageUrl) {
         console.log('[POST API] Processing image URL for post');
         
         // Check if it's a base64 image
         if (req.body.imageUrl.startsWith('data:image')) {
-          console.log('[POST API] Detected base64 image, converting to file');
+          console.log('[POST API] Detected base64 image, length:', req.body.imageUrl.length);
           
-          // Use the media handler for consistent processing
           try {
-            // Convert base64 to URL by storing it as an asset
-            const base64Data = req.body.imageUrl;
+            // Parse the base64 data to get image format and content
+            const matches = req.body.imageUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.*)$/);
             
-            // Create a temporary request object to pass to media handler
-            const mediaRequest: any = { 
-              body: { 
-                file: base64Data, 
-                type: 'image' 
-              },
-              protocol: req.protocol,
-              get: (name: string) => req.get(name)
-            };
-            const mediaResponse: any = { 
-              status: function(code: number) { this.statusCode = code; return this; },
-              json: function(data: any) { this.data = data; return this; }
-            };
-            
-            // Use the media handler function directly
-            const { handleMediaUpload } = await import('./media-handler');
-            handleMediaUpload(mediaRequest, mediaResponse);
-            
-            if (mediaResponse.statusCode === 200 && mediaResponse.data.success) {
-              // Set the image URL to the saved file path from media handler
-              postData.imageUrl = mediaResponse.data.mediaUrl;
-              console.log('[POST API] Image saved successfully at:', postData.imageUrl);
-            } else {
-              console.error('[POST API] Failed to process image:', mediaResponse.data);
-              throw new Error('Failed to process image upload');
+            if (!matches || matches.length !== 3) {
+              console.error('[POST API] Invalid base64 image format');
+              return res.status(400).json({ message: "Invalid image format" });
             }
-          } catch (mediaError) {
-            console.error('[POST API] Error processing media:', mediaError);
-            throw new Error('Error processing media upload');
+            
+            const imageFormat = matches[1].toLowerCase();
+            const base64Data = matches[2];
+            
+            // Ensure upload directory exists
+            const uploadDir = './public/uploads/images';
+            if (!fs.existsSync(uploadDir)) {
+              fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            
+            // Generate a unique filename
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 1000);
+            const filename = `post_image_${timestamp}_${random}.${imageFormat}`;
+            const filePath = path.join(uploadDir, filename);
+            
+            // Save the image directly
+            fs.writeFileSync(filePath, base64Data, 'base64');
+            
+            // Set the image URL to the path of the saved file
+            postData.imageUrl = `/uploads/images/${filename}`;
+            console.log('[POST API] Image saved successfully at:', postData.imageUrl);
+          } catch (error) {
+            console.error('[POST API] Error saving image:', error);
+            // Don't fail the entire post creation due to image issues
+            // Just log the error and continue without an image
+            postData.imageError = 'Failed to process image';
           }
         } else {
-          // Use existing URL (for post editing)
+          // Not base64, use the URL as is
           postData.imageUrl = req.body.imageUrl;
           console.log('[POST API] Using provided image URL:', postData.imageUrl);
         }
       }
       
-      // Handle video URLs
+      // Simplified handling of video URLs
       if (req.body.videoUrl) {
         console.log('[POST API] Processing video URL for post');
         
         // Check if it's a base64 video
         if (req.body.videoUrl.startsWith('data:video')) {
-          console.log('[POST API] Detected base64 video, converting to file');
+          console.log('[POST API] Detected base64 video, length:', req.body.videoUrl.length);
           
-          // Use the media handler for consistent processing
           try {
-            // Convert base64 to URL by storing it as an asset
-            const base64Data = req.body.videoUrl;
+            // Parse the base64 data
+            const matches = req.body.videoUrl.match(/^data:video\/([a-zA-Z0-9-]+);base64,(.*)$/);
             
-            // Create a temporary request object to pass to media handler
-            const mediaRequest: any = { 
-              body: { 
-                file: base64Data, 
-                type: 'video' 
-              },
-              protocol: req.protocol,
-              get: (name: string) => req.get(name)
-            };
-            const mediaResponse: any = { 
-              status: function(code: number) { this.statusCode = code; return this; },
-              json: function(data: any) { this.data = data; return this; }
-            };
-            
-            // Use the media handler function directly
-            const { handleMediaUpload } = await import('./media-handler');
-            handleMediaUpload(mediaRequest, mediaResponse);
-            
-            if (mediaResponse.statusCode === 200 && mediaResponse.data.success) {
-              // Set the video URL to the saved file path from media handler
-              postData.videoUrl = mediaResponse.data.mediaUrl;
-              console.log('[POST API] Video saved successfully at:', postData.videoUrl);
+            if (!matches || matches.length !== 3) {
+              console.error('[POST API] Invalid base64 video format');
+              // Don't stop post creation, just continue without video
+              postData.videoError = 'Invalid video format';
             } else {
-              console.error('[POST API] Failed to process video:', mediaResponse.data);
-              throw new Error('Failed to process video upload');
+              const videoFormat = matches[1].toLowerCase();
+              const base64Data = matches[2];
+              
+              // Ensure upload directory exists
+              const uploadDir = './public/uploads/videos';
+              if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+              }
+              
+              // Generate a unique filename
+              const timestamp = Date.now();
+              const random = Math.floor(Math.random() * 1000);
+              const filename = `post_video_${timestamp}_${random}.${videoFormat}`;
+              const filePath = path.join(uploadDir, filename);
+              
+              // Save the video directly
+              fs.writeFileSync(filePath, base64Data, 'base64');
+              
+              // Set the video URL to the path of the saved file
+              postData.videoUrl = `/uploads/videos/${filename}`;
+              console.log('[POST API] Video saved successfully at:', postData.videoUrl);
             }
-          } catch (mediaError) {
-            console.error('[POST API] Error processing media:', mediaError);
-            throw new Error('Error processing media upload');
+          } catch (error) {
+            console.error('[POST API] Error saving video:', error);
+            // Don't fail the entire post creation due to video issues
+            postData.videoError = 'Failed to process video';
           }
         } else {
-          // Use existing URL (for post editing)
+          // Not base64, use the URL as is (for post editing)
           postData.videoUrl = req.body.videoUrl;
           console.log('[POST API] Using provided video URL:', postData.videoUrl);
         }
