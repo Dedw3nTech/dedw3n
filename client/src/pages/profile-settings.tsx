@@ -111,7 +111,6 @@ export default function ProfileSettingsPage() {
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
           <TabsTrigger value="profile" className="flex-1 text-black">Profile</TabsTrigger>
-          <TabsTrigger value="account" className="flex-1 text-black">Account</TabsTrigger>
           <TabsTrigger value="notifications" className="flex-1 text-black">Notifications</TabsTrigger>
         </TabsList>
         
@@ -190,21 +189,7 @@ export default function ProfileSettingsPage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-black">Account Settings</CardTitle>
-              <CardDescription className="text-black">
-                Manage your account preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-black">
-                Account settings will be available soon.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
         
         <TabsContent value="notifications">
           <Card>
