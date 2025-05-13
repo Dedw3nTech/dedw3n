@@ -670,7 +670,15 @@ function setupWebSockets(server: Server) {
     });
     
     ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+      // Track error in stats
+      connectionStats.errors++;
+      connectionStats.lastError = {
+        time: new Date(),
+        message: error.message || 'Unknown WebSocket error',
+        code: error.code
+      };
+      
+      console.error(`WebSocket error on connection ${connectionId}:`, error);
       
       // Clear ping interval
       clearInterval(pingInterval);
@@ -678,6 +686,9 @@ function setupWebSockets(server: Server) {
       // Remove connection from user's connections
       if (userId !== null) {
         removeConnection(userId, ws);
+        
+        // Update active connection count (in case close doesn't fire after error)
+        connectionStats.activeConnections = Math.max(0, connectionStats.activeConnections - 1);
       }
     });
   });
@@ -686,6 +697,9 @@ function setupWebSockets(server: Server) {
 }
 
 // Main API routes registration
+// Import from unified-auth which knows how to handle both authentication methods
+import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth";
+
 export function registerMessagingSuite(app: Express, server: Server) {
   // Set up WebSocket server
   const wss = setupWebSockets(server);
@@ -693,7 +707,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   // Message APIs
   
   // Get messages between users
-  app.get("/api/messages/:userId", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/messages/:userId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const currentUserId = req.user!.id;
       const otherUserId = parseInt(req.params.userId);
@@ -727,7 +741,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Get conversations list
-  app.get("/api/conversations", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/conversations", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const conversations = await storage.getUserConversations(userId);
@@ -739,7 +753,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Send a message
-  app.post("/api/messages", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/messages", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const senderId = req.user!.id;
       const { receiverId, content, attachmentUrl, attachmentType, messageType } = req.body;
@@ -779,7 +793,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Return connection status
-  app.get("/api/users/status", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/users/status", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const onlineUsers: number[] = [];
       
@@ -798,7 +812,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Check status of specific users
-  app.post("/api/users/status", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/users/status", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { userIds } = req.body;
       
