@@ -309,10 +309,32 @@ export default function Social() {
                           // Force refresh the feed when a post is created
                           console.log("Post created, refreshing feed");
                           
-                          // First, invalidate the queries
+                          // First, invalidate the feed queries
                           queryClient.invalidateQueries({ 
                             queryKey: ["/api/feed/personal"],
                             refetchType: "all" 
+                          });
+                          queryClient.invalidateQueries({ 
+                            queryKey: ["/api/feed/communities"],
+                            refetchType: "all" 
+                          });
+                          queryClient.invalidateQueries({ 
+                            queryKey: ["/api/feed/recommended"],
+                            refetchType: "all"
+                          });
+                          
+                          // Also invalidate user stats queries to refresh post count
+                          queryClient.invalidateQueries({ 
+                            queryKey: ['/api/user/stats'],
+                            refetchType: 'all'
+                          });
+                          queryClient.invalidateQueries({ 
+                            queryKey: [`/api/users/${user?.id}/stats`],
+                            refetchType: 'all'
+                          });
+                          queryClient.invalidateQueries({ 
+                            queryKey: ['/api/social/posts/count'],
+                            refetchType: 'all'
                           });
                           
                           // Add a small delay to ensure server has time to process before remounting

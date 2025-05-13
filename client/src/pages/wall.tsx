@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/layout/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -101,9 +102,24 @@ export default function WallPage() {
 
   // Handle post creation success
   const handlePostSuccess = () => {
+    // Refetch all feeds
     refetchPersonal();
     refetchCommunities();
     refetchRecommended();
+    
+    // Invalidate user stats queries to update post count
+    queryClient.invalidateQueries({ 
+      queryKey: ['/api/user/stats'],
+      refetchType: 'all'
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: [`/api/users/${user?.id}/stats`],
+      refetchType: 'all'
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['/api/social/posts/count'],
+      refetchType: 'all'
+    });
   };
 
   if (!user) {
