@@ -952,7 +952,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     // Don't log the full URL with token for security reasons
     
     try {
-      socket = new WebSocket(wsUrl);
+      socket = new WebSocket(wsUrl, "echo-protocol");
     } catch (error) {
       console.error("Failed to construct WebSocket:", error);
       setConnectionStatus('disconnected');
