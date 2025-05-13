@@ -672,18 +672,7 @@ export default function CreatePost({
                   <MessageSquarePlus className="h-4 w-4" />
                   <span className="hidden sm:inline">Standard</span>
                 </TabsTrigger>
-                <TabsTrigger value="article" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">Article</span>
-                </TabsTrigger>
-                <TabsTrigger value="visual" className="flex items-center gap-1">
-                  <ImageIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Visual</span>
-                </TabsTrigger>
-                <TabsTrigger value="video" className="flex items-center gap-1">
-                  <Video className="h-4 w-4" />
-                  <span className="hidden sm:inline">Video</span>
-                </TabsTrigger>
+
 
               </TabsList>
 
@@ -870,42 +859,7 @@ export default function CreatePost({
                 )}
               </TabsContent>
 
-              {/* Article Content */}
-              <TabsContent value="article" className="space-y-2">
-                <p className="text-sm text-muted-foreground mt-3">
-                  Write a detailed article with a compelling title. Great for sharing expertise and insights.
-                </p>
-              </TabsContent>
 
-              {/* Visual Content */}
-              <TabsContent value="visual" className="space-y-2">
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    variant={imageFile ? "secondary" : "default"}
-                    size="sm"
-                    className="w-full"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <ImageIcon className="h-4 w-4 mr-1" />
-                    {imageFile ? "Change Image" : "Upload Image"}
-                  </Button>
-                </div>
-              </TabsContent>
-
-              {/* Video Content */}
-              <TabsContent value="video" className="space-y-2">
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    variant={videoFile ? "secondary" : "default"}
-                    size="sm"
-                    className="w-full"
-                    onClick={() => videoInputRef.current?.click()}
-                  >
-                    <Video className="h-4 w-4 mr-1" />
-                    {videoFile ? "Change Video" : "Upload Video"}
-                  </Button>
-                </div>
-              </TabsContent>
 
 
             </Tabs>
