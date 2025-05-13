@@ -395,7 +395,7 @@ export default function Header() {
                 <Compass className="h-4 w-4" />
                 <span>Explore</span>
               </div>
-            </button>
+            </div>
             
             <div 
               className={`py-2 px-4 text-sm font-medium border-b-2 relative cursor-pointer ${activeTab === "messages" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
@@ -414,10 +414,10 @@ export default function Header() {
                   </Badge>
                 )}
               </div>
-            </button>
+            </div>
             
-            <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "videos" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
+            <div 
+              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "videos" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("videos");
                 setLocation("/videos/trending");
