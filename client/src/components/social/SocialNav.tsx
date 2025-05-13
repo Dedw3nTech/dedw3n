@@ -15,8 +15,8 @@ export default function SocialNav() {
 
   return (
     <div className="flex-1">
-      <button
-        className="w-full py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary relative"
+      <div
+        className="w-full py-4 text-center font-medium text-sm text-gray-600 hover:text-primary relative cursor-pointer"
         onClick={() => setLocation("/social")}
       >
         <i className="ri-group-line mr-1"></i> Social
@@ -25,7 +25,7 @@ export default function SocialNav() {
             {messageData.count}
           </Badge>
         )}
-      </button>
+      </div>
     </div>
   );
 }

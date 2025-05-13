@@ -348,12 +348,12 @@ export default function Header() {
           
           {/* Dating button */}
           <div className="flex-1">
-            <button
-              className="w-full py-4 text-center font-medium text-sm focus:outline-none text-gray-600 hover:text-primary relative"
+            <div
+              className="w-full py-4 text-center font-medium text-sm text-gray-600 hover:text-primary relative cursor-pointer"
               onClick={() => setLocation("/dating")}
             >
               <Heart className="inline-block h-4 w-4 mr-1" /> Dating
-            </button>
+            </div>
           </div>
         </div>
       </div>
