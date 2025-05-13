@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/container";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PostCard } from "@/components/social/PostCard";
+import PostCard from "@/components/social/PostCard";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
