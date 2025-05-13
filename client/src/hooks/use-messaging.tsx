@@ -494,12 +494,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
       };
       
-      socket.onclose = (event) => {
-        console.log(`WebSocket disconnected: Code=${event.code}, Reason=${event.reason || 'No reason provided'}`);
-        
-        // Update connection status
-        setIsConnected(false);
-        setConnectionStatus('disconnected');
+      if (socket) {
+        socket.onclose = (event) => {
+          console.log(`WebSocket disconnected: Code=${event.code}, Reason=${event.reason || 'No reason provided'}`);
+          
+          // Update connection status
+          setIsConnected(false);
+          setConnectionStatus('disconnected');
         
         // Get specific meaning for close codes for better user feedback
         const codeDescription = 
@@ -623,11 +624,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
       };
       
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        
-        // Log detailed connection error information
-        setConnectionDetails(prev => ({
+      if (socket) {
+        socket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          
+          // Log detailed connection error information
+          setConnectionDetails(prev => ({
           ...prev,
           lastActivity: Date.now(),
           errorCount: (prev.errorCount || 0) + 1,
