@@ -952,7 +952,16 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     // Don't log the full URL with token for security reasons
     
     try {
-      socket = new WebSocket(wsUrl, "echo-protocol");
+      // Try with echo-protocol first
+      try {
+        socket = new WebSocket(wsUrl, "echo-protocol");
+        console.log("WebSocket initialized with echo-protocol");
+      } catch (protocolError) {
+        // If protocol specification fails, try without protocol
+        console.warn("Failed to connect with echo-protocol, trying without protocol:", protocolError);
+        socket = new WebSocket(wsUrl);
+        console.log("WebSocket initialized without protocol specification");
+      }
     } catch (error) {
       console.error("Failed to construct WebSocket:", error);
       setConnectionStatus('disconnected');

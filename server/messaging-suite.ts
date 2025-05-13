@@ -439,12 +439,30 @@ function setupWebSockets(server: Server) {
     clientTracking: true,
     // Support echo-protocol for better browser compatibility
     handleProtocols: (protocols, request) => {
-      // Convert Set to Array for compatibility
-      const protocolArray = Array.from(protocols);
-      if (protocolArray.includes('echo-protocol')) {
-        return 'echo-protocol';
+      try {
+        // If no protocols provided, accept connection without protocol
+        if (!protocols || protocols.size === 0) {
+          console.log('WebSocket: No protocols provided, accepting without protocol');
+          return false; // Accept connection but don't use any protocol
+        }
+        
+        // Convert Set to Array for compatibility
+        const protocolArray = Array.from(protocols);
+        console.log('WebSocket: Client requested protocols:', protocolArray);
+        
+        if (protocolArray.includes('echo-protocol')) {
+          console.log('WebSocket: Using echo-protocol');
+          return 'echo-protocol';
+        }
+        
+        // Accept the connection but don't use any protocol
+        console.log('WebSocket: No supported protocols found, accepting without protocol');
+        return false; // Use false instead of true to accept without protocol
+      } catch (error) {
+        // Accept the connection without a protocol if there's an error
+        console.error('WebSocket: Error handling protocols:', error);
+        return false; // Use false instead of true to accept without protocol
       }
-      return false; // Don't accept other protocols
     },
     // Add WebSocket protocol options for better stability
     perMessageDeflate: {
