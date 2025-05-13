@@ -367,9 +367,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerFraudPreventionRoutes(app);
   
   // Unified auth endpoint for getting current user
-  app.get('/api/auth/me', unifiedIsAuthenticated, (req: Request, res: Response) => {
-    console.log('[DEBUG] /api/auth/me - Authenticated with unified auth');
-    res.json(req.user);
+  app.get('/api/auth/me', async (req: Request, res: Response) => {
+    console.log('[DEBUG] /api/auth/me - Authentication attempt');
+    console.log('[DEBUG] /api/auth/me - Session ID:', req.sessionID);
+    console.log('[DEBUG] /api/auth/me - Headers:', JSON.stringify(req.headers));
+    console.log('[DEBUG] /api/auth/me - isAuthenticated():', req.isAuthenticated());
+    console.log('[DEBUG] /api/auth/me - Session data:', req.session);
+    
+    // First check session authentication
+    if (req.isAuthenticated() && req.user) {
+      console.log('[DEBUG] /api/auth/me - User authenticated via session:', req.user ? `ID: ${(req.user as any).id}` : 'None');
+      return res.json(req.user);
+    }
+    
+    // If not authenticated via session, check JWT
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      console.log('[DEBUG] /api/auth/me - Attempting JWT authentication with token:', token.substring(0, 10) + '...');
+      
+      try {
+        const payload = verifyToken(token);
+        if (payload) {
+          console.log('[DEBUG] /api/auth/me - JWT token is valid, payload:', payload);
+          
+          // Look up user from payload
+          const user = await storage.getUser(payload.userId);
+          if (user) {
+            console.log('[DEBUG] /api/auth/me - User found via JWT payload, ID:', user.id);
+            return res.json(user);
+          } else {
+            console.log('[DEBUG] /api/auth/me - User not found with ID from JWT payload:', payload.userId);
+          }
+        } else {
+          console.log('[DEBUG] /api/auth/me - Invalid JWT token');
+        }
+      } catch (error) {
+        console.error('[DEBUG] /api/auth/me - JWT verification error:', error);
+      }
+    }
+    
+    // If we get here, no valid authentication was found
+    console.log('[DEBUG] /api/auth/me - Authentication failed');
+    return res.status(401).json({ 
+      message: 'Unauthorized - No valid authentication',
+      authMethods: ['session', 'bearer'],
+      error: 'invalid_credentials',
+      sessionExists: !!req.session,
+      sessionID: req.sessionID
+    });
   });
   
   // Debug endpoint for session information - no authentication required
