@@ -150,10 +150,27 @@ export default function CreatePost({
         : "/api/posts";
       
       const method = editingPost ? "PUT" : "POST";
-      const response = await apiRequest(method, url, postData);
+      
+      // Get auth token directly from localStorage for direct authentication
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      
+      // Create options with enhanced authentication
+      const options = {
+        headers: {
+          // Include auth token if available for JWT auth
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+          // Include additional headers for debugging
+          'X-Client-Auth': 'true',
+          'X-Request-Time': new Date().toISOString(),
+        }
+      };
+      
+      // Pass options to apiRequest for enhanced authentication
+      const response = await apiRequest(method, url, postData, options);
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Post creation error:", errorData);
         throw new Error(errorData.message || "Failed to save post");
       }
       

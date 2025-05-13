@@ -865,7 +865,23 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             console.warn("WebSocket abnormal closure (server may be restarting)");
             // This is likely a server restart, be patient with reconnects
             reconnectAttempts++;
-            break;
+            
+            // For abnormal closures, attempt reconnection more quickly
+            // to avoid issues with features that require WebSockets
+            const quickReconnectDelay = 1000; // 1 second
+            
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+              reconnectTimer = setTimeout(() => {
+                if (user) {
+                  // Reset connection completely to avoid any stale connection issues
+                  socket = null;
+                  connect();
+                }
+              }, quickReconnectDelay);
+            }
+            
+            // Skip the regular reconnection flow for abnormal closures
+            return;
             
           // Internal server error
           case 1011:
@@ -903,12 +919,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           }, backoffDelay);
         } else {
           console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
-          // Notify the user of connection issues
-          toast({
-            title: "Connection Issues",
-            description: "Unable to connect to messaging service. Please try refreshing the page.",
-            variant: "destructive",
-          });
+          // Notify the user of connection issues only if not a temporary disconnect during navigation
+          if (event.code !== 1001) {
+            toast({
+              title: "Connection Issues",
+              description: "Unable to connect to messaging service. Please try refreshing the page.",
+              variant: "destructive",
+            });
+          }
         }
       };
     }
