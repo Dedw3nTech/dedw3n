@@ -69,30 +69,39 @@ export default function ProfileSettingsPage() {
 
   // Function to invalidate all user-related queries to ensure data consistency
   const invalidateUserRelatedQueries = () => {
-    // User profile queries
-    queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
-    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.username}`] });
-    
-    // Profile picture queries
-    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/profilePicture`] });
-    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.username}/profilePicture`] });
-    
-    // Social queries
-    queryClient.invalidateQueries({ queryKey: ['/api/social'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
-    
-    // Comments
-    queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
-    
-    // User stats
-    queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/stats`] });
-    queryClient.invalidateQueries({ queryKey: ['/api/user/stats'] });
-    
-    // For username changes - invalidate any endpoint that might reference the username
-    if (formData.username !== user.username) {
-      queryClient.invalidateQueries(); // Invalidate all queries if username changes
+    try {
+      // Instead of individual invalidation, use broader patterns to catch all endpoints
+      // This ensures all endpoints that might contain user data are refreshed
+      
+      // Invalidate all user-related endpoints
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      
+      // Specific user endpoints
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}`] });
+      }
+      
+      if (user?.username) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user.username}`] });
+      }
+      
+      // Social content that might display user information
+      queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/comments'] });
+      
+      // For username changes - use a more aggressive approach to ensure consistency
+      if (user?.username && formData.username && formData.username !== user.username) {
+        console.log('Username changed, invalidating all queries for consistency');
+        // Invalidate everything on username change as it affects many endpoints
+        queryClient.invalidateQueries();
+      }
+      
+      console.log('Invalidated all user-related queries for data consistency');
+    } catch (error) {
+      console.error('Error during cache invalidation:', error);
     }
   };
 
@@ -180,7 +189,7 @@ export default function ProfileSettingsPage() {
                   <ProfilePictureUploader
                     userId={user.id}
                     username={user.username}
-                    currentAvatar={user.avatar || ''}
+                    currentAvatar={formData.avatar || user.avatar || ''}
                     onUploadSuccess={handleAvatarUpdate}
                   />
                 </CardContent>
