@@ -150,8 +150,15 @@ const MessagingContext = createContext<MessagingContextType | null>(null);
 // Convert protocol based on location
 function getWebSocketUrl() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  // Add a cache buster to prevent stale connections
-  return `${protocol}//${window.location.host}/ws?t=${Date.now()}`;
+  // Base URL without query parameters
+  return `${protocol}//${window.location.host}/ws`;
+}
+
+// Generate a unique connection ID for debugging and tracking
+function generateConnectionId() {
+  const timestamp = Date.now();
+  const randomPart = Math.random().toString(36).substring(2, 8);
+  return `ws_${timestamp}_${randomPart}`;
 }
 
 // Provider component
@@ -389,7 +396,32 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       console.log(`Connecting to WebSocket: ${wsUrl}`);
       
       // Create the WebSocket connection
-      socket = new WebSocket(wsUrl);
+      try {
+        socket = new WebSocket(wsUrl);
+      } catch (error) {
+        console.error("Failed to construct WebSocket:", error);
+        setConnectionStatus('disconnected');
+        setConnectionDetails(prev => ({
+          ...prev,
+          disconnectTime: Date.now(),
+          disconnectReason: 'Failed to construct WebSocket: ' + (error instanceof Error ? error.message : String(error)),
+          errorCount: (prev.errorCount || 0) + 1,
+          lastError: {
+            time: Date.now(),
+            type: 'construction_error',
+            url: wsUrl
+          }
+        }));
+        
+        // Schedule a reconnect
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          reconnectAttempts++;
+          connect();
+        }, RECONNECT_INTERVAL);
+        
+        return;
+      }
       
       socket.onopen = () => {
         console.log("WebSocket connected successfully");
