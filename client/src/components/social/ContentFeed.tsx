@@ -111,14 +111,7 @@ export default function ContentFeed({
                 <Users className="h-4 w-4 mr-2" />
                 {t("social.communities")}
               </Button>
-              <Button 
-                variant={feedType === 'recommended' ? "default" : "outline"} 
-                className={`w-full ${feedType === 'recommended' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
-                onClick={() => handleFeedTypeChange('recommended')}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {t("social.discover")}
-              </Button>
+
             </div>
           </CardContent>
         </Card>
