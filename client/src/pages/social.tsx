@@ -39,7 +39,7 @@ import {
 
 // Import social components
 import ContentFeed from "@/components/social/ContentFeed";
-import ContentCreator from "@/components/social/ContentCreator";
+import CreatePost from "@/components/social/CreatePost";
 import SocialMessaging from "@/components/messaging/SocialMessaging";
 import { getInitials } from "@/lib/utils";
 
@@ -118,7 +118,7 @@ export default function Social() {
   });
 
   // Fetch trending posts
-  const { data: exploreFeedData, isLoading: isLoadingTrending } = useQuery({
+  const { data: exploreFeedData, isLoading: isLoadingTrending } = useQuery<{popularPosts?: any[]}>({
     queryKey: ["/api/social/explore"],
     enabled: activeTab === "explore",
   });
@@ -126,7 +126,7 @@ export default function Social() {
   const trendingPosts = exploreFeedData?.popularPosts || [];
 
   // Fetch communities
-  const { data: communitiesData, isLoading: isLoadingCommunities } = useQuery({
+  const { data: communitiesData, isLoading: isLoadingCommunities } = useQuery<{publicCommunities?: any[]}>({
     queryKey: ["/api/social/communities"],
     enabled: activeTab === "communities",
   });
@@ -302,21 +302,25 @@ export default function Social() {
                   
                   {/* Main Content */}
                   <div className="md:col-span-2 space-y-6">
-                    {/* Content Creator */}
+                    {/* Create Post */}
                     {user && (
-                      <ContentCreator 
+                      <CreatePost 
                         onSuccess={() => {
                           // Force refresh the feed when a post is created
                           console.log("Post created, refreshing feed");
                           
-                          // Update the refresh key to force ContentFeed to remount
-                          setFeedRefreshKey(Date.now());
-                          
-                          // Also use React Query's invalidation to trigger a refresh
+                          // First, invalidate the queries
                           queryClient.invalidateQueries({ 
                             queryKey: ["/api/feed/personal"],
                             refetchType: "all" 
                           });
+                          
+                          // Add a small delay to ensure server has time to process before remounting
+                          setTimeout(() => {
+                            // Update the refresh key to force ContentFeed to remount
+                            setFeedRefreshKey(Date.now());
+                            console.log("Feed component remounted with new key:", Date.now());
+                          }, 300);
                         }} 
                       />
                     )}
@@ -324,7 +328,11 @@ export default function Social() {
                     {/* Content Feed */}
                     <div className="bg-white rounded-lg shadow-sm">
                       <div className="p-4">
-                        <ContentFeed key={`main-content-feed-${feedRefreshKey}`} />
+                        {/* Added key with timestamp to force remounting when feedRefreshKey changes */}
+                        <ContentFeed 
+                          key={`main-content-feed-${feedRefreshKey}`} 
+                          initialFeedType="personal"
+                        />
                       </div>
                     </div>
                   </div>
