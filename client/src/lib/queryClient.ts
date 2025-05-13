@@ -173,8 +173,28 @@ export async function apiRequest(
         // Clear cache for this endpoint pattern
         clearCache(basePath);
         
-        // Invalidate related queries in React Query cache
-        queryClient.invalidateQueries({ queryKey: [basePath] });
+        // Invalidate related queries in React Query cache with refetchType:'all'
+        queryClient.invalidateQueries({ 
+          queryKey: [basePath],
+          refetchType: 'all'
+        });
+        
+        // Special case for posts - also invalidate all feed endpoints
+        if (url.includes('/api/posts')) {
+          console.log('Post created or modified - invalidating all feed endpoints');
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/feed/personal'],
+            refetchType: 'all'
+          });
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/feed/communities'],
+            refetchType: 'all'
+          });
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/feed/recommended'],
+            refetchType: 'all'
+          });
+        }
       }
     }
     
@@ -319,8 +339,8 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true, // Enable refresh when the window regains focus
+      staleTime: 30000, // Consider data stale after 30 seconds (instead of Infinity)
       retry: false,
     },
     mutations: {
