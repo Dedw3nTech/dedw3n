@@ -540,10 +540,20 @@ export default function PostCard({
       
       <CardContent className="pt-4">
         {post.title && (
-          <h3 className="text-lg font-medium mb-2">{post.title}</h3>
+          <h3 
+            className="text-lg font-medium mb-2 cursor-pointer hover:text-primary transition-colors"
+            onClick={() => !isDetailed && setLocation(`/posts/${post.id}`)}
+          >
+            {post.title}
+          </h3>
         )}
         
-        <p className={`${isDetailed ? "" : "line-clamp-4"} mb-4`}>{post.content}</p>
+        <p 
+          className={`${isDetailed ? "" : "line-clamp-4"} mb-4 ${!isDetailed ? "cursor-pointer hover:text-primary/90 transition-colors" : ""}`}
+          onClick={() => !isDetailed && setLocation(`/posts/${post.id}`)}
+        >
+          {post.content}
+        </p>
         
         {post.imageUrl && !post.videoUrl && (
           <div 

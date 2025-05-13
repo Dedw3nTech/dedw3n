@@ -1,21 +1,16 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { formatDistanceToNow } from "date-fns";
-import { MoreVertical, Trash, Flag, Edit } from "lucide-react";
-import { apiRequest, sanitizeImageUrl } from "@/lib/queryClient";
-import { getInitials } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { getInitials, formatDate } from "@/lib/utils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { ThumbsUp, MessageSquare, Trash2 } from "lucide-react";
+import { useLocation } from "wouter";
 
-interface Comment {
+export interface Comment {
   id: number;
   userId: number;
   postId: number;
@@ -27,6 +22,8 @@ interface Comment {
     username: string;
     avatar?: string | null;
   };
+  isLiked?: boolean;
+  likes?: number;
 }
 
 interface CommentListProps {
@@ -35,109 +32,156 @@ interface CommentListProps {
 }
 
 export default function CommentList({ comments, onCommentUpdate }: CommentListProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { user: currentUser } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // Handle comment deletion
-  const handleDelete = async (commentId: number) => {
-    try {
-      setDeletingId(commentId);
-      await apiRequest("DELETE", `/api/comments/${commentId}`);
-      toast({
-        title: "Comment deleted",
-        description: "Your comment has been deleted successfully",
-      });
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const response = await apiRequest(
+        "DELETE",
+        `/api/comments/${commentId}`,
+        {}
+      );
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete comment");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // After successful deletion, refresh comment list
       if (onCommentUpdate) {
         onCommentUpdate();
       }
-    } catch (error) {
+      
+      toast({
+        title: "Comment deleted",
+        description: "Your comment has been successfully deleted.",
+      });
+    },
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to delete comment. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setDeletingId(null);
+    }
+  });
+
+  // Like comment mutation
+  const likeCommentMutation = useMutation({
+    mutationFn: async ({ commentId, isLiked }: { commentId: number, isLiked: boolean }) => {
+      const response = await apiRequest(
+        isLiked ? "DELETE" : "POST",
+        `/api/comments/${commentId}/like`,
+        {}
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to like/unlike comment");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // After successful like/unlike, refresh comment list
+      if (onCommentUpdate) {
+        onCommentUpdate();
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteComment = (commentId: number) => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      deleteCommentMutation.mutate(commentId);
     }
   };
 
-  // Handle comment reporting
-  const handleReport = (commentId: number) => {
-    toast({
-      title: "Comment reported",
-      description: "Thank you for reporting this comment. We'll review it shortly.",
+  const handleLikeComment = (comment: Comment) => {
+    likeCommentMutation.mutate({ 
+      commentId: comment.id, 
+      isLiked: comment.isLiked || false 
     });
   };
 
-  if (!comments || comments.length === 0) {
+  if (comments.length === 0) {
     return (
       <div className="text-center py-6 text-muted-foreground">
-        No comments yet
+        No comments yet. Be the first to comment!
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-4">
       {comments.map((comment) => (
         <Card key={comment.id} className="p-4">
-          <div className="flex justify-between">
-            <div className="flex items-start">
-              <Avatar className="h-8 w-8 mr-3">
-                {comment.user.avatar ? (
-                  <AvatarImage 
-                    src={sanitizeImageUrl(comment.user.avatar)} 
-                    alt={comment.user.name || "User"}
-                  />
-                ) : null}
-                <AvatarFallback className="text-xs">
-                  {getInitials(comment.user.name || "User")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                  <h4 className="font-medium">{comment.user.name}</h4>
-                  <span className="text-xs text-muted-foreground">
-                    @{comment.user.username}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm">{comment.content}</p>
+          <div className="flex items-start gap-3">
+            <Avatar 
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => setLocation(`/profile/${comment.user.username}`)}
+            >
+              {comment.user.avatar ? (
+                <AvatarImage 
+                  src={comment.user.avatar} 
+                  alt={comment.user.name} 
+                />
+              ) : null}
+              <AvatarFallback>
+                {getInitials(comment.user.name || comment.user.username || 'User')}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span 
+                  className="font-medium cursor-pointer hover:underline"
+                  onClick={() => setLocation(`/profile/${comment.user.username}`)}
+                >
+                  {comment.user.name}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(comment.createdAt)}
+                </span>
+              </div>
+              
+              <p className="mt-1">{comment.content}</p>
+              
+              <div className="flex items-center gap-4 mt-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`p-0 h-auto ${comment.isLiked ? 'text-primary' : ''}`}
+                  onClick={() => handleLikeComment(comment)}
+                >
+                  <ThumbsUp className="h-4 w-4 mr-1" />
+                  <span className="text-xs">{comment.likes || 0}</span>
+                </Button>
+                
+                {currentUser && currentUser.id === comment.userId && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-0 h-auto text-destructive hover:text-destructive/80"
+                    onClick={() => handleDeleteComment(comment.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
-            
-            {/* Comment actions dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {user && user.id === comment.userId ? (
-                  <DropdownMenuItem
-                    onClick={() => handleDelete(comment.id)}
-                    disabled={deletingId === comment.id}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    {deletingId === comment.id ? "Deleting..." : "Delete"}
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onClick={() => handleReport(comment.id)}>
-                    <Flag className="mr-2 h-4 w-4" />
-                    Report
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </Card>
       ))}
