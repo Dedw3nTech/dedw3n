@@ -160,6 +160,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     disconnectReason?: string;
     pingLatency?: number;
     activeConnections?: number;
+    connectionDuration?: number;
+    errorCount?: number;
+    authRetry?: boolean;
+    lastError?: {
+      time: number;
+      type: string;
+      url: string;
+    };
   }>({});
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
@@ -435,18 +443,38 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       };
       
       socket.onclose = (event) => {
-        console.log("WebSocket disconnected:", event.code, event.reason);
+        console.log(`WebSocket disconnected: Code=${event.code}, Reason=${event.reason || 'No reason provided'}`);
         
         // Update connection status
         setIsConnected(false);
         setConnectionStatus('disconnected');
         
-        // Record disconnection in connection details
+        // Get specific meaning for close codes for better user feedback
+        const codeDescription = 
+          event.code === 1000 ? "Normal closure" :
+          event.code === 1001 ? "Going away" :
+          event.code === 1002 ? "Protocol error" :
+          event.code === 1003 ? "Unsupported data" :
+          event.code === 1005 ? "No status received" :
+          event.code === 1006 ? "Abnormal closure" :
+          event.code === 1007 ? "Invalid frame payload data" :
+          event.code === 1008 ? "Policy violation" :
+          event.code === 1009 ? "Message too big" :
+          event.code === 1010 ? "Extension required" :
+          event.code === 1011 ? "Internal server error" :
+          event.code === 1012 ? "Service restart" :
+          event.code === 1013 ? "Try again later" :
+          event.code === 1014 ? "Bad gateway" : "Unknown error";
+        
+        const disconnectTime = Date.now();
+        
+        // Record disconnection in connection details with enhanced information
         setConnectionDetails(prev => ({
           ...prev,
-          disconnectTime: Date.now(),
+          disconnectTime,
           disconnectCode: event.code,
-          disconnectReason: event.reason || 'No reason provided'
+          disconnectReason: event.reason || codeDescription,
+          connectionDuration: prev.startTime ? disconnectTime - prev.startTime : undefined
         }));
         
         // Clean up ping interval if it exists
@@ -498,10 +526,31 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Calculate backoff delay with exponential backoff and jitter
         // Add random jitter to prevent all clients reconnecting simultaneously
         const jitter = Math.random() * 1000;
-        const backoffDelay = Math.min(30000, 
-          RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts - 1) + jitter);
         
-        console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${backoffDelay}ms`);
+        // Select reconnection strategy based on close code
+        let baseDelay = RECONNECT_INTERVAL; // Default reconnect interval
+        
+        if (event.code === 1000) {
+          // For clean closure, use a shorter fixed delay (server might be restarting cleanly)
+          baseDelay = 1500;
+        } else if (event.code === 1006) {
+          // For abnormal closure, use a longer delay with progressive backoff
+          // Server might be down for maintenance or crashed
+          baseDelay = 2000 + (reconnectAttempts * 500);
+        } else if (event.code === 1012 || event.code === 1013) {
+          // Service restart or try again later - use an even longer delay
+          baseDelay = 5000 + (reconnectAttempts * 1000);
+        }
+        
+        // Apply exponential backoff for repeated attempts
+        const exponentialFactor = Math.min(Math.pow(1.5, reconnectAttempts - 1), 10);
+        const adaptiveDelay = baseDelay * exponentialFactor;
+        
+        // Apply reasonable upper bound
+        const backoffDelay = Math.min(adaptiveDelay + jitter, 30000);
+        
+        // Log reconnection strategy
+        console.log(`WebSocket reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${Math.round(backoffDelay)}ms (Code: ${event.code})`);
         
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           reconnectTimer = setTimeout(() => {
@@ -524,7 +573,32 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       socket.onerror = (error) => {
         console.error("WebSocket error:", error);
-        // Don't call close here as it will be handled by onclose event
+        
+        // Log detailed connection error information
+        setConnectionDetails(prev => ({
+          ...prev,
+          lastActivity: Date.now(),
+          errorCount: (prev.errorCount || 0) + 1,
+          lastError: {
+            time: Date.now(),
+            type: 'websocket-error',
+            // We can't access error details due to browser security restrictions,
+            // but we can record when it happened
+            url: window.location.href
+          }
+        }));
+        
+        // Update UI to show connection is having issues
+        if (isConnected) {
+          // Show warning toast only if we were previously connected
+          toast({
+            title: "Connection Issues",
+            description: "Experiencing network issues. Attempting to recover...",
+            variant: "destructive",
+          });
+        }
+        
+        // Don't call close here as the connection will be handled by onclose event
       };
       
       socket.onmessage = (event) => {
