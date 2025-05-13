@@ -444,21 +444,7 @@ export default function Header() {
               </div>
             </button>
             
-            {userData && (
-              <button 
-                className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "profile" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
-                onClick={() => {
-                  setActiveTab("profile");
-                  setLocation(`/profile/${userData.username}`);
-                }}
-                title="View your personal profile - API: /api/users/:username"
-              >
-                <div className="flex items-center gap-1">
-                  <UserIcon className="h-4 w-4" />
-                  <span>Profile</span>
-                </div>
-              </button>
-            )}
+            {/* Profile button removed as requested */}
           </div>
         </div>
       )}
