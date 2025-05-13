@@ -3862,8 +3862,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/posts", isAuthenticated, async (req, res) => {
+  app.post("/api/posts", unifiedIsAuthenticated, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required to create posts" });
+      }
+      
       const userId = (req.user as any).id;
       console.log('[POST API] Creating post with user ID:', userId);
       
