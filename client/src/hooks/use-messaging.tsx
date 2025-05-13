@@ -319,9 +319,21 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   });
   
   // Helper function to check WebSocket health and reconnect if needed
+  // Enhanced with more detailed health checks and logging
   const checkConnectionHealth = () => {
     // If no user is logged in, don't attempt connection
-    if (!user) return;
+    if (!user) {
+      if (socket) {
+        console.log("WebSocket health check: No user logged in, closing connection");
+        socket.close();
+        socket = null;
+      }
+      return;
+    }
+    
+    const now = Date.now();
+    const connectionAge = connectionDetails.startTime ? now - connectionDetails.startTime : null;
+    const lastActivityTime = connectionDetails.lastActivity ? now - connectionDetails.lastActivity : null;
     
     // If socket doesn't exist or is in closing/closed state, reconnect
     if (!socket || 
@@ -334,13 +346,91 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // If socket exists but isn't open, and it's been a while, force reconnect
-    if (socket && socket.readyState !== WebSocket.OPEN && !isConnected) {
+    // Check if socket exists but isn't fully open and authenticated
+    if (socket && socket.readyState !== WebSocket.OPEN) {
+      // If socket is in CONNECTING state for too long, force reconnect
+      if (socket.readyState === WebSocket.CONNECTING && connectionAge && connectionAge > 10000) {
+        console.warn("WebSocket health check: Connection stuck in CONNECTING state for 10+ seconds, resetting...");
+        socket.close();
+        socket = null;
+        connectRef.current();
+        return;
+      }
+      
+      // For other non-OPEN states
       console.log("WebSocket health check: Connection exists but not open, resetting...");
-      // Force close and reconnect
       socket.close();
       socket = null;
       connectRef.current();
+      return;
+    }
+    
+    // Socket is OPEN but check if it's actually working
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // If not authenticated after a reasonable time, force authentication
+      if (!isAuthenticated && connectionAge && connectionAge > 5000) {
+        console.warn("WebSocket health check: Connection open but not authenticated after 5 seconds");
+        
+        try {
+          // Try to authenticate directly
+          const token = getStoredAuthToken();
+          const authMessage = {
+            type: 'authenticate',
+            userId: user.id,
+            token,
+            connectionId: connectionDetails.id || generateConnectionId(),
+            retryAttempt: reconnectAttempts,
+            clientInfo: {
+              userAgent: navigator.userAgent,
+              platform: navigator.platform
+            }
+          };
+          socket.send(JSON.stringify(authMessage));
+          console.log("Sent follow-up authentication request to WebSocket server");
+          
+          // If still not authenticated after another few seconds, reconnect
+          setTimeout(() => {
+            if (socket && !isAuthenticated) {
+              console.warn("WebSocket health check: Authentication retry failed, resetting connection");
+              socket.close();
+              socket = null;
+              reconnectAttempts++;
+              connectRef.current();
+            }
+          }, 3000);
+        } catch (error) {
+          console.error("WebSocket health check: Error sending authentication message", error);
+          socket.close();
+          socket = null;
+          reconnectAttempts++;
+          connectRef.current();
+        }
+        return;
+      }
+      
+      // If authenticated but no activity for a long time, send a ping
+      if (isAuthenticated && lastActivityTime && lastActivityTime > 30000) {
+        console.log("WebSocket health check: No activity for 30+ seconds, sending ping");
+        try {
+          socket.send(JSON.stringify({
+            type: 'ping',
+            timestamp: now,
+            userId: user.id
+          }));
+          
+          // Update last activity time
+          setConnectionDetails(prev => ({
+            ...prev,
+            lastActivity: now
+          }));
+        } catch (error) {
+          console.error("WebSocket health check: Error sending ping message", error);
+          socket.close();
+          socket = null;
+          reconnectAttempts++;
+          connectRef.current();
+        }
+      }
     }
   };
   
