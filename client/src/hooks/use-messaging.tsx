@@ -876,6 +876,28 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       return;
     }
     
+    // Handle connecting state with timeout to prevent stuck connections
+    if (socket && socket.readyState === WebSocket.CONNECTING) {
+      console.log("WebSocket is currently connecting, checking connection health...");
+      
+      // Check if the connection has been stuck in the CONNECTING state for too long
+      const connectionStartTime = (socket as any)?._connectionStartTime || 0;
+      const connectionTime = Date.now() - connectionStartTime;
+      
+      if (connectionTime > 10000) { // 10 seconds
+        console.warn("WebSocket health check: Stuck in CONNECTING state for 10+ seconds, resetting...");
+        try {
+          socket.close(1000, "Connection timeout");
+        } catch (err) {
+          console.error("Error closing stuck WebSocket:", err);
+        }
+        socket = null; // Reset socket to null so we can create a new one
+      } else {
+        // Still in a reasonable connecting time window, let it continue
+        return;
+      }
+    }
+    
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
       setConnectionStatus('disconnected');
@@ -952,6 +974,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     // Don't log the full URL with token for security reasons
     
     try {
+      // Save connection start time for tracking
+      const connectionStartAttemptTime = Date.now();
+      
       // Try with echo-protocol first
       try {
         socket = new WebSocket(wsUrl, "echo-protocol");
@@ -961,6 +986,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.warn("Failed to connect with echo-protocol, trying without protocol:", protocolError);
         socket = new WebSocket(wsUrl);
         console.log("WebSocket initialized without protocol specification");
+      }
+      
+      // Store connection attempt time for stuck detection
+      if (socket) {
+        (socket as any)._connectionStartTime = connectionStartAttemptTime;
+        (socket as any)._connectionId = connectionId;
       }
       
       // Set timeout to detect stuck connections and store it on the socket object
@@ -1206,11 +1237,55 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             // Skip the regular reconnection flow for abnormal closures
             return;
             
+          // Authentication errors - user needs to reauthenticate or token is invalid
+          case 1008:
+            console.error("WebSocket authentication error - user must log in again");
+            
+            // Update connection details with auth failure info
+            setConnectionDetails(prev => ({
+              ...prev,
+              authenticated: false,
+              authRetry: false,
+              disconnectReason: "Authentication failed - " + (event.reason || "Invalid credentials")
+            }));
+            
+            // Check if we should retry with session auth if token auth failed
+            const wasTokenAuth = Boolean(token);
+            
+            if (wasTokenAuth && reconnectAttempts < 2) {
+              // If we were using token auth and it's our first retry,
+              // Try to reconnect using session-based auth instead
+              console.log("Token auth failed, retrying with session-based auth");
+              setConnectionDetails(prev => ({
+                ...prev,
+                tokenAuth: false,
+                authRetry: true
+              }));
+              
+              reconnectTimer = setTimeout(() => {
+                connect();
+              }, 1000);
+              return;
+            }
+            
+            // Otherwise, don't attempt further reconnection - user needs to reauthenticate
+            setConnectionStatus('disconnected');
+            toast({
+              title: "Session expired",
+              description: "Please log in again to reconnect to messaging.",
+              variant: "destructive"
+            });
+            return;
+            
           // Internal server error
           case 1011:
-            console.warn("WebSocket server error - will try to reconnect");
+            console.warn("WebSocket server error - will try to reconnect with increased delay");
             reconnectAttempts++;
-            break;
+            // Use a longer delay for server errors to give server time to recover
+            reconnectTimer = setTimeout(() => {
+              connect();
+            }, RECONNECT_INTERVAL * 2);
+            return;
             
           // Service restart
           case 1012:
