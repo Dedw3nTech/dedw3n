@@ -24,6 +24,17 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -191,7 +202,21 @@ export default function EnhancedPostCard({
       return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      // Invalidate post-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/communities"], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"], refetchType: 'all' });
+      
+      // Invalidate user stats to update post counts
+      queryClient.invalidateQueries({ queryKey: ['/api/user/stats'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/stats`], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/social/posts/count'], refetchType: 'all' });
+      
+      // Log success for debugging
+      console.log("Post created or modified - invalidating all feed endpoints");
+      console.log("Post creation successful - refreshing feeds");
+      
       toast({
         title: t("social.post_deleted"),
         description: t("social.post_delete_success"),
@@ -399,11 +424,17 @@ export default function EnhancedPostCard({
     }
   };
   
+  // State for delete confirmation dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   const handleDelete = () => {
-    // Confirm before deleting
-    if (window.confirm(t("social.confirm_delete"))) {
-      deletePostMutation.mutate();
-    }
+    // Show confirmation dialog instead of window.confirm
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDelete = () => {
+    deletePostMutation.mutate();
+    setShowDeleteDialog(false);
   };
   
   const handleBuy = () => {
@@ -853,6 +884,33 @@ export default function EnhancedPostCard({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("social.confirm_delete_title") || "Delete Post"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("social.confirm_delete") || "Are you sure you want to delete this post? This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePostMutation.isPending}>
+              {t("common.cancel") || "Cancel"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deletePostMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePostMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {t("social.delete") || "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
