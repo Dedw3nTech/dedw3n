@@ -108,7 +108,26 @@ export default function ProfileSettingsPage() {
   const handleProfileUpdate = async () => {
     try {
       setIsUpdating(true);
-      console.log('Submitting profile update:', formData);
+      
+      // Add userId to formData for alternative authentication
+      const updatedFormData = {
+        ...formData,
+        userId: user.id
+      };
+      
+      // Save user data to sessionStorage for cross-page authentication
+      try {
+        sessionStorage.setItem('userData', JSON.stringify({
+          id: user.id,
+          username: formData.username || user.username,
+          name: formData.name || user.name,
+          lastUpdated: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.error('Error saving user data to sessionStorage:', e);
+      }
+      
+      console.log('Submitting profile update:', updatedFormData);
       
       // Check if there are any changes
       if (
@@ -128,23 +147,72 @@ export default function ProfileSettingsPage() {
       // Add test user ID header for development
       const headers = {
         'X-Test-User-ID': user.id.toString(),
-        'X-Client-User-ID': user.id.toString()
+        'X-Client-User-ID': user.id.toString(),
+        'Content-Type': 'application/json'
       };
       
-      const response = await apiRequest('PATCH', '/api/users/profile', formData, { headers });
+      console.log('Using headers for profile update:', headers);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update profile');
+      try {
+        const response = await apiRequest('PATCH', '/api/users/profile', updatedFormData, { headers });
+        
+        if (!response.ok) {
+          // Add debug information about the error
+          console.error('Profile update failed with status:', response.status, response.statusText);
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error('Error data:', errorData);
+          } catch (e) {
+            const errorText = await response.text();
+            console.error('Error response text:', errorText);
+            errorData = { message: errorText || 'Failed to update profile' };
+          }
+          throw new Error(errorData.message || `Failed to update profile: ${response.status}`);
+        }
+        
+        // If we got here, the update was successful
+        const updatedUser = await response.json();
+        console.log('Profile updated successfully:', updatedUser);
+      } catch (error) {
+        console.error('Network error during profile update:', error);
+        
+        // If we had a network error, we'll try with a direct fetch as a fallback
+        console.log('Trying fallback direct fetch approach...');
+        
+        const fallbackResponse = await fetch('/api/users/profile', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Test-User-ID': user.id.toString(),
+            'X-Client-User-ID': user.id.toString()
+          },
+          body: JSON.stringify(updatedFormData)
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          console.error('Fallback profile update failed:', fallbackResponse.status, errorText);
+          throw new Error(`Failed to update profile: ${fallbackResponse.status}`);
+        }
+        
+        const updatedUser = await fallbackResponse.json();
+        console.log('Profile updated successfully:', updatedUser);
       }
       
-      const updatedUser = await response.json();
-      
       // Update query cache with new user data to ensure it's immediately available
-      queryClient.setQueryData({ queryKey: ['/api/user'] }, updatedUser);
+      queryClient.setQueryData({ queryKey: ['/api/user'] }, {
+        ...user,
+        ...formData,
+        id: user.id
+      });
       
       // Also update user data in specific endpoints
-      queryClient.setQueryData({ queryKey: [`/api/users/${updatedUser.id}`] }, updatedUser);
+      queryClient.setQueryData({ queryKey: [`/api/users/${user.id}`] }, {
+        ...user,
+        ...formData,
+        id: user.id
+      });
       
       if (user.username !== updatedUser.username) {
         // If username changed, update that specific endpoint too

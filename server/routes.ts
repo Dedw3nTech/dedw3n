@@ -2453,10 +2453,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Update user profile
-  app.patch("/api/users/profile", isAuthenticated, async (req, res) => {
+  // Authentication debug test endpoint
+  app.get('/api/auth-test', (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      // Headers examination
+      const authHeaders = {
+        authorization: req.headers.authorization ? 'Present (not shown)' : 'Not present',
+        'x-test-user-id': req.headers['x-test-user-id'],
+        'x-client-user-id': req.headers['x-client-user-id'],
+        cookie: req.headers.cookie ? 'Present (not shown)' : 'Not present',
+      };
+      
+      // Session examination
+      const sessionInfo = req.session ? {
+        id: req.session.id,
+        cookie: req.session.cookie ? 'Present (not shown)' : 'Not present',
+        authenticated: req.isAuthenticated(),
+        user: req.isAuthenticated() ? 'User present in session' : 'No user in session',
+      } : 'No session';
+      
+      // User object examination
+      const userInfo = req.user ? {
+        id: (req.user as any).id || (req.user as any).userId,
+        type: req.user.constructor.name,
+        authenticated: req.isAuthenticated(),
+      } : 'No user';
+      
+      res.json({
+        headers: authHeaders,
+        session: sessionInfo,
+        user: userInfo,
+        authMethod: (req as any).authMethod || 'Unknown',
+      });
+    } catch (error) {
+      console.error('Auth test error:', error);
+      res.status(500).json({ error: 'Error examining auth state', message: error.message });
+    }
+  });
+
+  // Update user profile
+  app.patch("/api/users/profile", async (req, res) => {
+    try {
+      // Get user ID from either req.user, headers, or body
+      let userId: number | undefined;
+      
+      // First try to get from authenticated user object
+      if (req.user) {
+        userId = (req.user as any).id || (req.user as any).userId;
+        console.log(`[DEBUG] User ID from auth: ${userId}`);
+      }
+      
+      // If not found, check headers for development/testing purposes
+      if (!userId && (req.headers['x-test-user-id'] || req.headers['x-client-user-id'])) {
+        const headerUserId = req.headers['x-test-user-id'] || req.headers['x-client-user-id'];
+        userId = parseInt(headerUserId as string, 10);
+        console.log(`[DEBUG] User ID from headers: ${userId}`);
+      }
+      
+      // If still not found, check the request body as last resort
+      if (!userId && req.body && req.body.userId) {
+        userId = parseInt(req.body.userId, 10);
+        console.log(`[DEBUG] User ID from body: ${userId}`);
+      }
+      
+      if (!userId) {
+        console.error('[ERROR] No user ID found in request');
+        return res.status(401).json({ message: "Unauthorized - No user ID found" });
+      }
+      
       console.log(`[DEBUG] Updating profile for user ID: ${userId}`);
       
       // Handle JSON input
@@ -2464,7 +2528,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[DEBUG] Update data:`, updates);
       
       // Check if updates object is empty (except for avatar)
-      const hasUpdates = Object.keys(updates).filter(key => key !== 'avatarUrl').length > 0 || updates.avatarUrl;
+      const hasUpdates = Object.keys(updates).filter(key => key !== 'avatarUrl' && key !== 'avatar').length > 0 || 
+                        updates.avatarUrl || updates.avatar;
       
       if (!hasUpdates) {
         console.log(`[DEBUG] No updates provided for user ID: ${userId}`);

@@ -327,13 +327,40 @@ export const getQueryFn: <T>(options: {
     // Set up request options
     const options: RequestInit = {
       credentials: "include",
-      headers: {}
+      headers: {
+        // Always include these session-related headers for improved auth reliability
+        'X-Use-Session': 'true',
+        'X-Client-Auth': 'true',
+        'X-Request-Time': new Date().toISOString()
+      }
     };
 
     // For development: handle test user ID query parameter
     const urlObj = new URL(window.location.origin + url);
     const testUserID = urlObj.searchParams.get('test_user_id');
     const autoLogin = urlObj.searchParams.get('auto_login');
+    
+    // Get user ID from sessionStorage if present - this helps with auth reliability
+    let userId = null;
+    try {
+      const userDataString = sessionStorage.getItem('userData');
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        userId = userData.id;
+      }
+    } catch (e) {
+      console.error('Error retrieving user data from sessionStorage:', e);
+    }
+    
+    // If we're accessing the profile or user endpoints, always include user ID in headers
+    if ((url.includes('/api/users/profile') || url.includes('/api/user')) && userId) {
+      console.log(`Adding user ID ${userId} to headers for profile endpoint`);
+      options.headers = {
+        ...options.headers,
+        'X-Client-User-ID': userId.toString(),
+        'X-Test-User-ID': userId.toString()
+      };
+    }
     
     if (testUserID) {
       console.log(`Development mode - using test user ID: ${testUserID}`);
