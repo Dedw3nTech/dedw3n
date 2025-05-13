@@ -509,74 +509,9 @@ export default function CreatePost({
               <div className="flex-1 space-y-3">
                 <p className="font-medium">{user.name}</p>
                 
-                {/* Post visibility selector */}
-                <span className="mt-2">
-                  <Select
-                    value={postToVisibility}
-                    onValueChange={setPostToVisibility}
-                  >
-                    <span className="h-7 w-[130px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
-                      <span>{postToVisibility === "public" ? "Public" : "Community"}</span>
-                      <ChevronDown className="h-4 w-4 opacity-50" />
-                    </span>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Post to</SelectLabel>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="community">Community</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </span>
+
                 
-                {/* Community selector */}
-                {postToVisibility === "community" && (
-                  <span className="mt-2 block">
-                    {isLoadingCommunities ? (
-                      <Button variant="outline" size="sm" disabled>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading...
-                      </Button>
-                    ) : !userCommunities || userCommunities.length === 0 ? (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setLocation("/communities")}
-                      >
-                        Join a community
-                      </Button>
-                    ) : (
-                      <Select
-                        value={selectedCommunityId?.toString() || ""}
-                        onValueChange={(value) => setSelectedCommunityId(Number(value))}
-                        disabled={!!communityId}
-                      >
-                        <span className="h-7 w-[180px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
-                          <span>
-                            {selectedCommunityId && userCommunities ? 
-                              userCommunities.find((c: any) => c.id === selectedCommunityId)?.name || "Select a community" : 
-                              "Select a community"
-                            }
-                          </span>
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        </span>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Your communities</SelectLabel>
-                            {userCommunities.map((community: any) => (
-                              <SelectItem 
-                                key={community.id} 
-                                value={community.id.toString()}
-                              >
-                                {community.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </span>
-                )}
+
                 
                 {/* Title input removed as requested */}
                 
