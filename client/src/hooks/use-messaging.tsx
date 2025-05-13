@@ -694,9 +694,19 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const token = getStoredAuthToken();
     
-    // Add timestamp and connection ID to prevent caching
+    // Add timestamp, connection ID, user ID, and token to prevent caching and for authentication
     const timestamp = Date.now();
-    const wsUrl = `${protocol}//${window.location.host}/ws?t=${timestamp}&cid=${connectionId}`;
+    let wsUrl = `${protocol}//${window.location.host}/ws?t=${timestamp}&cid=${connectionId}`;
+    
+    // Add authentication parameters if user is available
+    if (user?.id) {
+      wsUrl += `&userId=${user.id}`;
+      
+      // Add token if available (for token-based authentication)
+      if (token) {
+        wsUrl += `&token=${token}`;
+      }
+    }
     
     console.log(`Connecting to WebSocket: ${wsUrl}`);
     
