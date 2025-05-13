@@ -17,6 +17,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticate } from "./jwt-auth";
 import { verifyToken } from "./jwt-auth"; // Import for token verification
+import { unifiedIsAuthenticated } from "./unified-auth"; // Import unified authentication middleware
 
 // Connection management
 const connections = new Map<number, Set<WebSocket>>();
@@ -835,7 +836,7 @@ export function registerMessagingSuite(app: Express, server: Server) {
   });
   
   // Get unread message count
-  app.get("/api/messages/unread/count", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/messages/unread/count", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const count = await storage.getUnreadMessageCount(userId);
