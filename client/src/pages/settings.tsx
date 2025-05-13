@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { Settings as SettingsIcon, User as UserIcon, Bell as BellIcon, Lock as LockIcon, Key as KeyIcon, LogOut as LogOutIcon } from "lucide-react";
 import {
   Check,
   Lock,
@@ -67,9 +68,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("account");
   
   // Form states
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -84,9 +83,7 @@ export default function SettingsPage() {
   // Initialize form with user data
   useEffect(() => {
     if (user) {
-      setName(user.name || "");
       setEmail(user.email || "");
-      setBio(user.bio || "");
       setAvatarPreview(user.avatar || "");
       
       // These would typically come from user preferences in a real app
@@ -284,9 +281,7 @@ export default function SettingsPage() {
     if (!user) return;
     
     const formData = new FormData();
-    formData.append("name", name);
     formData.append("email", email);
-    formData.append("bio", bio);
     
     if (avatarFile) {
       formData.append("avatar", avatarFile);
