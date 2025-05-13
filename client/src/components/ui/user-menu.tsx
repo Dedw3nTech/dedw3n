@@ -84,7 +84,7 @@ export default function UserMenu() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
           <Link href="/profile-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Profile Settings'}
+            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Your Profile'}
           </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
