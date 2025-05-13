@@ -118,7 +118,7 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("settings.profileUpdated"),
+        description: t("profileUpdated"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
@@ -532,10 +532,10 @@ export default function AccountPage() {
               <CardContent className="space-y-6">
                 {/* Language */}
                 <div className="space-y-2">
-                  <Label htmlFor="language">{t("settings.language")}</Label>
+                  <Label htmlFor="language">{t("language")}</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger id="language">
-                      <SelectValue placeholder={t("settings.selectLanguage")} />
+                      <SelectValue placeholder={t("selectLanguage")} />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.map(option => (
@@ -549,10 +549,10 @@ export default function AccountPage() {
                 
                 {/* Currency */}
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t("settings.currency")}</Label>
+                  <Label htmlFor="currency">{t("currency")}</Label>
                   <Select value={currency} onValueChange={setCurrency}>
                     <SelectTrigger id="currency">
-                      <SelectValue placeholder={t("settings.selectCurrency")} />
+                      <SelectValue placeholder={t("selectCurrency")} />
                     </SelectTrigger>
                     <SelectContent>
                       {CURRENCY_OPTIONS.map(option => (
