@@ -525,7 +525,7 @@ function setupWebSockets(server: Server) {
     
     // If no connectionId was provided in URL params, we'll use the one already generated above
     
-    console.log(`WebSocket connection established (ID: ${connectionId}, Active: ${connectionStats.activeConnections})`);
+    console.log(`WebSocket connection established (ID: ${connectionId}, Protocol: ${ws.protocol || 'none'}, Active: ${connectionStats.activeConnections})`);
     let userId: number | null = null;
     let authenticated = false;
     

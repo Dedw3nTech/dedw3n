@@ -464,7 +464,7 @@ function setupWebSockets(server: Server) {
   console.log('WebSocket server initialized at /ws path');
   
   wss.on('connection', (ws, req) => {
-    console.log('WebSocket connection established');
+    console.log('WebSocket connection established - Protocol:', ws.protocol || 'none');
     let userId: number | null = null;
     let authenticated = false;
     
