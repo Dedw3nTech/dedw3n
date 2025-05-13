@@ -379,6 +379,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update the user data in the cache
       queryClient.setQueryData(["/api/user"], user);
       
+      // Store user data in persistent storage for cross-session persistence
+      console.log('Storing newly registered user data to persistent storage:', {
+        id: user.id,
+        username: user.username || '(no username)',
+      });
+      
+      try {
+        // Save the user data to both localStorage and sessionStorage
+        saveUserData(user);
+      } catch (error) {
+        console.error('Error saving user data to storage:', error);
+      }
+      
       // Immediately refetch user data to ensure we have the latest
       refetch();
       
