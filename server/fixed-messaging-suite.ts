@@ -17,7 +17,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticate } from "./jwt-auth";
 import { verifyToken } from "./jwt-auth"; // Import for token verification
-import { unifiedIsAuthenticated } from "./unified-auth"; // Import unified authentication middleware
+import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth"; // Import unified authentication middleware
 
 // Connection management
 const connections = new Map<number, Set<WebSocket>>();
