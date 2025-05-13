@@ -21,6 +21,7 @@ export default function ProfileSettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     bio: '',
     avatar: ''
   });
@@ -30,6 +31,7 @@ export default function ProfileSettingsPage() {
     if (user) {
       setFormData({
         name: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         avatar: user.avatar || ''
       });
@@ -144,6 +146,20 @@ export default function ProfileSettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-black font-bold">Profile Handle Name</Label>
+                    <Input
+                      id="username"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      placeholder="Your unique username"
+                      className="text-black font-medium border-2 border-gray-300"
+                      readOnly
+                    />
+                    <p className="text-xs text-gray-600">This is your unique username used to identify you on the platform.</p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-black">Full Name</Label>
                     <Input
