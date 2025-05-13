@@ -84,6 +84,24 @@ interface MessagingContextType {
   isVideoOff: boolean;
   isScreenSharing: boolean;
   
+  // Connection state
+  connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'authenticated';
+  connectionDetails: {
+    id?: string;
+    startTime?: number;
+    reconnects?: number;
+    lastActivity?: number;
+    serverConnectionId?: string;
+    serverTime?: string;
+    authenticated?: boolean;
+    tokenAuth?: boolean;
+    disconnectTime?: number;
+    disconnectCode?: number;
+    disconnectReason?: string;
+    pingLatency?: number;
+    activeConnections?: number;
+  };
+  
   // Methods
   sendMessage: (userId: number, content: string, attachmentUrl?: string, attachmentType?: string, messageType?: MessageType) => Promise<void>;
   startConversation: (username: string, message: string) => Promise<void>;
@@ -133,6 +151,15 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     startTime?: number;
     reconnects?: number;
     lastActivity?: number;
+    serverConnectionId?: string;
+    serverTime?: string;
+    authenticated?: boolean;
+    tokenAuth?: boolean;
+    disconnectTime?: number;
+    disconnectCode?: number;
+    disconnectReason?: string;
+    pingLatency?: number;
+    activeConnections?: number;
   }>({});
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
   const [incomingCall, setIncomingCall] = useState<Call | null>(null);
@@ -1303,6 +1330,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     isMuted,
     isVideoOff,
     isScreenSharing,
+    
+    // Connection state
+    connectionStatus,
+    connectionDetails,
     
     // Methods
     sendMessage,
