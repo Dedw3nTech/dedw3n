@@ -142,12 +142,33 @@ export async function apiRequest(
     };
   }
 
-  // Handle body and headers based on whether this is FormData or not
+  // Handle body and headers based on content type
   if (data) {
+    // Check if the request is specifically for post creation
+    const isPostCreation = url.includes('/api/posts') && (method === 'POST' || method === 'PUT');
+    
     if (isFormData) {
       // For FormData, let the browser set the Content-Type with boundary
       requestOptions.body = data as FormData;
       // Don't set Content-Type for FormData
+    } else if (isPostCreation) {
+      // For post creation, use x-www-form-urlencoded format instead of multipart form-data
+      // This is to avoid the 500 error with Rails multipart parser
+      requestOptions.headers = { 
+        ...requestOptions.headers,
+        "Content-Type": "application/x-www-form-urlencoded"
+      };
+      
+      // Convert data object to URLSearchParams
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(data as Record<string, any>)) {
+        if (typeof value === 'object' && value !== null) {
+          params.append(key, JSON.stringify(value));
+        } else {
+          params.append(key, String(value));
+        }
+      }
+      requestOptions.body = params;
     } else {
       // For JSON data, set Content-Type and stringify
       requestOptions.headers = { 

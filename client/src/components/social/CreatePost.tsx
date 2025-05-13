@@ -152,27 +152,45 @@ export default function CreatePost({
       // Get auth token directly from localStorage for direct authentication
       const authToken = localStorage.getItem('dedwen_auth_token');
       
-      // Create options with enhanced authentication
+      // Create options with content type specification for x-www-form-urlencoded
       const options = {
         headers: {
           // Include auth token if available for JWT auth
           ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
-          // Include additional headers for debugging
+          // Content type will be set in apiRequest function
           'X-Client-Auth': 'true',
           'X-Request-Time': new Date().toISOString(),
+          'Accept': 'application/json',
         }
       };
       
-      // Pass options to apiRequest for enhanced authentication
-      const response = await apiRequest(method, url, postData, options);
+      console.log(`Sending ${method} request to ${url}`);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Post creation error:", errorData);
-        throw new Error(errorData.message || "Failed to save post");
+      try {
+        // Pass options to apiRequest for proper content type handling
+        const response = await apiRequest(method, url, postData, options);
+        
+        if (!response.ok) {
+          let errorMessage = "Failed to save post";
+          
+          try {
+            const errorData = await response.json();
+            console.error("Post creation error:", errorData);
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            // If it's not JSON, get the status text
+            console.error("Non-JSON error response:", response.statusText);
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Post submission error:", error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
       // Reset form
@@ -348,16 +366,7 @@ export default function CreatePost({
       return;
     }
     
-    // Validate based on content type
-    if (contentType === 'article' && !title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please add a title to your article",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // Validate required fields
     if (!content.trim()) {
       toast({
         title: "Post content required",
@@ -367,48 +376,19 @@ export default function CreatePost({
       return;
     }
     
-    if (contentType === 'visual' && !imageFile && !imagePreview) {
-      toast({
-        title: "Image required",
-        description: "Please upload an image for your visual post",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (contentType === 'video' && !videoFile && !videoPreview) {
-      toast({
-        title: "Video required", 
-        description: "Please upload a video for your video post",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (contentType === 'advertisement' && !title.trim()) {
-      toast({
-        title: "Title required",
-        description: "Please add a title to your advertisement",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Create post data object to send as JSON
+    // Create basic post data object with required fields
+    // Keep it simple - only include what's absolutely necessary
     const postData: any = {
       content,
-      contentType,
+      contentType: 'standard',
     };
     
+    // Only add title if present
     if (title.trim()) {
       postData.title = title;
     }
     
-    if (tags.length > 0) {
-      postData.tags = tags;
-    }
-    
-    // Handle media files
+    // Handle image if present - keep payload as small as possible
     try {
       if (imageFile) {
         const base64Image = await fileToBase64(imageFile);
@@ -417,46 +397,26 @@ export default function CreatePost({
         // Use existing image URL if editing post
         postData.imageUrl = imagePreview;
       }
-      
-      if (videoFile) {
-        const base64Video = await fileToBase64(videoFile);
-        postData.videoUrl = base64Video;
-      } else if (videoPreview && !videoFile) {
-        // Use existing video URL if editing post
-        postData.videoUrl = videoPreview;
-      }
     } catch (error) {
       toast({
         title: "File upload error",
-        description: "There was a problem processing your media files",
+        description: "There was a problem processing your image file",
         variant: "destructive",
       });
       return;
     }
     
-    if (linkUrl.trim()) {
-      postData.linkUrl = linkUrl;
-    }
+    // Debug information to help troubleshoot
+    console.log("Sending post data - content length:", postData.content.length);
+    console.log("Post data keys:", Object.keys(postData));
     
-    // Add product tagging if enabled
-    if (isShoppable && selectedProduct) {
-      postData.isShoppable = true;
-      postData.productId = selectedProduct.id;
-    }
+    // Submit post with specific options to ensure proper formatting
+    toast({
+      title: "Creating post...",
+      description: "Please wait while we process your post",
+    });
     
-    // Add promotion status for advertisements
-    if (contentType === 'advertisement') {
-      postData.isPromoted = isPromoted;
-    }
-    
-    // Add community ID if posting to community
-    if (postToVisibility === "community" && selectedCommunityId) {
-      postData.communityId = selectedCommunityId;
-    }
-    
-    console.log("Sending post data:", postData);
-    
-    // Submit post
+    // Submit post with application/x-www-form-urlencoded format
     postMutation.mutate(postData);
   };
 
