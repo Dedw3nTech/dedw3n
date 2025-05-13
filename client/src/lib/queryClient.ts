@@ -182,6 +182,28 @@ export async function apiRequest(
         // Special case for posts - also invalidate all feed endpoints
         if (url.includes('/api/posts')) {
           console.log('Post created or modified - invalidating all feed endpoints');
+          
+          // Make sure we handle 401 errors gracefully for post creation
+          if (res.status >= 200 && res.status < 300) {
+            console.log('Post creation successful - refreshing feeds');
+          } else if (res.status === 401) {
+            console.warn('Authentication error detected during post creation. Attempting to refresh session...');
+            // Try to refresh the session by fetching the user endpoint
+            try {
+              await fetch('/api/auth/me', { 
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                  'Authorization': `Bearer ${getStoredAuthToken()}`,
+                  'Cache-Control': 'no-cache'
+                }
+              });
+            } catch (e) {
+              console.error('Failed to refresh session:', e);
+            }
+          }
+          
+          // Invalidate feed queries to refresh data
           queryClient.invalidateQueries({ 
             queryKey: ['/api/feed/personal'],
             refetchType: 'all'

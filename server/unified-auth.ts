@@ -221,14 +221,26 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     console.log('[AUTH] Request headers:', JSON.stringify(req.headers));
     console.log('[AUTH] Session info:', req.session ? 'Session exists' : 'No session');
     
-    return res.status(401).json({ message: 'Unauthorized - No valid authentication token' });
+    // Add WWW-Authenticate header to help client understand authentication requirements
+    res.setHeader('WWW-Authenticate', 'Bearer realm="api", charset="UTF-8"');
+    
+    return res.status(401).json({ 
+      message: 'Unauthorized - No valid authentication token',
+      authMethods: ['session', 'bearer'],
+      error: 'invalid_credentials'
+    });
   }
 
   // Verify JWT token
   const payload = verifyToken(token);
   if (!payload) {
     console.log('[AUTH] Authentication failed - invalid token');
-    return res.status(401).json({ message: 'Invalid token' });
+    res.setHeader('WWW-Authenticate', 'Bearer realm="api", error="invalid_token", charset="UTF-8"');
+    return res.status(401).json({ 
+      message: 'Invalid token',
+      error: 'invalid_token',
+      authMethods: ['session', 'bearer']
+    });
   }
 
   try {

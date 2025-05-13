@@ -473,8 +473,48 @@ function setupWebSockets(server: Server) {
     connectionStats.totalConnections++;
     connectionStats.activeConnections++;
     
-    // Generate unique connection ID
-    const connectionId = `conn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Get authentication info from URL params if available
+    const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+    const token = url.searchParams.get('token');
+    const userId = url.searchParams.get('userId');
+    const connectionId = url.searchParams.get('cid') || crypto.randomBytes(4).toString('hex');
+    
+    console.log(`[WS] New connection: ID=${connectionId}, IP=${req.socket.remoteAddress}, UserAgent=${req.headers['user-agent']}`);
+    console.log(`[WS] Auth info - Token: ${token ? token.substring(0, 10) + '...' : 'None'}, UserID: ${userId || 'None'}`);
+    
+    // If userId and token are provided in URL, attempt immediate authentication
+    if (userId && token) {
+      console.log(`[WS] Attempting immediate authentication with provided credentials`);
+      try {
+        const payload = verifyToken(token);
+        if (payload && payload.userId === parseInt(userId)) {
+          // Add user connection tracking
+          const userIdNum = parseInt(userId);
+          if (!connections.has(userIdNum)) {
+            connections.set(userIdNum, new Set());
+          }
+          connections.get(userIdNum)?.add(ws);
+          
+          // Send authenticated message
+          ws.send(JSON.stringify({
+            type: 'authenticated',
+            userId: userIdNum,
+            connectionId: connectionId,
+            serverTime: new Date().toISOString(),
+            activeConnections: connectionStats.activeConnections,
+            tokenAuth: true,
+            debugInfo: {
+              timestamp: new Date().toISOString(),
+              serverVersion: '1.0.1'
+            }
+          }));
+        }
+      } catch (err) {
+        console.error('[WS] Authentication error:', err);
+      }
+    }
+    
+    // If no connectionId was provided in URL params, we'll use the one already generated above
     
     console.log(`WebSocket connection established (ID: ${connectionId}, Active: ${connectionStats.activeConnections})`);
     let userId: number | null = null;
