@@ -115,7 +115,8 @@ const MessagingContext = createContext<MessagingContextType | null>(null);
 // Convert protocol based on location
 function getWebSocketUrl() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/ws`;
+  // Add a cache buster to prevent stale connections
+  return `${protocol}//${window.location.host}/ws?t=${Date.now()}`;
 }
 
 // Provider component
@@ -300,10 +301,18 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       socket.onmessage = (event) => {
         try {
+          // Log the raw message for debugging
+          console.debug("Raw WebSocket message received:", event.data);
+          
           const data = JSON.parse(event.data);
+          
+          // Log parsed data for debugging
+          console.debug("Parsed WebSocket message:", data);
+          
+          // Handle the message
           handleWebSocketMessage(data);
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          console.error("Error parsing WebSocket message:", error, "Raw data:", event.data);
         }
       };
     } catch (error) {
