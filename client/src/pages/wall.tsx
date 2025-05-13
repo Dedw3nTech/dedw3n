@@ -22,7 +22,27 @@ import { type InferSelectModel } from "drizzle-orm";
 type BasePost = InferSelectModel<typeof posts>;
 
 // Extended Post type that includes the user object required by PostCard
-interface Post extends BasePost {
+// This interface matches what the PostCard component expects
+interface Post {
+  id: number;
+  userId: number;
+  content: string;
+  title?: string | null;
+  contentType?: string;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+  productId?: number | null;
+  // Numeric fields with defaults to prevent undefined
+  likes: number;
+  comments: number;
+  shares: number;
+  views: number;
+  tags?: string[];
+  isPromoted?: boolean;
+  promotionEndDate?: string | null;
+  isPublished?: boolean;
+  isFlagged?: boolean;
+  createdAt: string; // Important: This must be a string for PostCard
   user: {
     id: number;
     name: string;
@@ -352,9 +372,43 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {(personalFeed as Post[]).map((post) => (
-                      <PostCard key={post.id} post={post} />
-                    ))}
+                    {Array.isArray(personalFeed) && personalFeed.map((basePost) => {
+                      // Format date as string and ensure the post has a proper user object
+                      const post: Post = {
+                        id: basePost.id,
+                        userId: basePost.userId,
+                        content: basePost.content,
+                        title: basePost.title,
+                        contentType: basePost.contentType,
+                        imageUrl: basePost.imageUrl,
+                        videoUrl: basePost.videoUrl,
+                        productId: basePost.productId,
+                        // Add default values of 0 for numeric fields
+                        likes: basePost.likes || 0,
+                        comments: basePost.comments || 0,
+                        shares: basePost.shares || 0,
+                        views: basePost.views || 0,
+                        tags: basePost.tags,
+                        isPromoted: basePost.isPromoted,
+                        isPublished: basePost.isPublished,
+                        isFlagged: basePost.isFlagged,
+                        // Convert Date object to string for compatibility with PostCard
+                        createdAt: basePost.createdAt ? 
+                          (typeof basePost.createdAt === 'string' ? 
+                            basePost.createdAt : 
+                            new Date(basePost.createdAt).toISOString()
+                          ) : 
+                          new Date().toISOString(),
+                        // Ensure user object exists
+                        user: basePost.user || {
+                          id: basePost.userId,
+                          name: "User",
+                          username: "user",
+                          avatar: null
+                        }
+                      };
+                      return <PostCard key={post.id} post={post} />;
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -378,7 +432,7 @@ export default function WallPage() {
                       </div>
                     ))}
                   </div>
-                ) : !communitiesFeed || (communitiesFeed as Post[]).length === 0 ? (
+                ) : !communitiesFeed || !Array.isArray(communitiesFeed) || communitiesFeed.length === 0 ? (
                   <div className="text-center py-10">
                     <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <h3 className="text-lg font-medium mb-2">No community posts yet</h3>
@@ -396,9 +450,19 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {(communitiesFeed as Post[]).map((post) => (
-                      <PostCard key={post.id} post={post} />
-                    ))}
+                    {communitiesFeed.map((basePost) => {
+                      // Ensure the post has a proper user object before rendering
+                      const post: Post = {
+                        ...basePost,
+                        user: basePost.user || {
+                          id: basePost.userId,
+                          name: "User",
+                          username: "user",
+                          avatar: null
+                        }
+                      };
+                      return <PostCard key={post.id} post={post} />;
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -422,7 +486,7 @@ export default function WallPage() {
                       </div>
                     ))}
                   </div>
-                ) : !recommendedFeed || (recommendedFeed as Post[]).length === 0 ? (
+                ) : !recommendedFeed || !Array.isArray(recommendedFeed) || recommendedFeed.length === 0 ? (
                   <div className="text-center py-10">
                     <Activity className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <h3 className="text-lg font-medium mb-2">We're finding content for you</h3>
@@ -440,9 +504,19 @@ export default function WallPage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {(recommendedFeed as Post[]).map((post) => (
-                      <PostCard key={post.id} post={post} />
-                    ))}
+                    {recommendedFeed.map((basePost) => {
+                      // Ensure the post has a proper user object before rendering
+                      const post: Post = {
+                        ...basePost,
+                        user: basePost.user || {
+                          id: basePost.userId,
+                          name: "User",
+                          username: "user",
+                          avatar: null
+                        }
+                      };
+                      return <PostCard key={post.id} post={post} />;
+                    })}
                   </div>
                 )}
               </TabsContent>
