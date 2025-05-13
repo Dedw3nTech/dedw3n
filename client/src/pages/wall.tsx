@@ -56,14 +56,8 @@ export default function WallPage() {
     refetch: refetchPersonal,
   } = useQuery({
     queryKey: ["/api/feed/personal"],
-    queryFn: async () => {
-      const response = await fetch("/api/feed/personal");
-      if (!response.ok) {
-        throw new Error("Failed to fetch personal feed");
-      }
-      return response.json();
-    },
     enabled: !!user,
+    // Using default query function from queryClient which includes auth headers
   });
 
   // Fetch user's communities feed
@@ -73,14 +67,8 @@ export default function WallPage() {
     refetch: refetchCommunities,
   } = useQuery({
     queryKey: ["/api/feed/communities"],
-    queryFn: async () => {
-      const response = await fetch("/api/feed/communities");
-      if (!response.ok) {
-        throw new Error("Failed to fetch communities feed");
-      }
-      return response.json();
-    },
     enabled: !!user,
+    // Using default query function from queryClient which includes auth headers
   });
 
   // Fetch recommended feed
@@ -90,14 +78,8 @@ export default function WallPage() {
     refetch: refetchRecommended,
   } = useQuery({
     queryKey: ["/api/feed/recommended"],
-    queryFn: async () => {
-      const response = await fetch("/api/feed/recommended");
-      if (!response.ok) {
-        throw new Error("Failed to fetch recommended feed");
-      }
-      return response.json();
-    },
     enabled: !!user,
+    // Using default query function from queryClient which includes auth headers
   });
 
   // Handle post creation success
