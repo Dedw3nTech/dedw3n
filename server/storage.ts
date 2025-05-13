@@ -1214,19 +1214,20 @@ export class DatabaseStorage implements IStorage {
       const [likeCount] = await db
         .select({ count: count() })
         .from(likes)
-        .where(
-          and(
-            eq(likes.entityId, id),
-            eq(likes.entityType, 'post')
-          )
-        );
+        .where(eq(likes.postId, id));
       
-      return {
+      // Create a return object with the necessary fields
+      const postData = {
         ...post,
-        user,
         comments: commentCount.count || 0,
         likes: likeCount.count || 0
       };
+      
+      // Add user data as a separate property (returned as JSON to frontend)
+      // @ts-ignore - user property will be handled by frontend types
+      postData.user = user;
+      
+      return postData;
     } catch (error) {
       console.error('Error getting post:', error);
       return undefined;
