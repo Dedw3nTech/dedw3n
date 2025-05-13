@@ -92,54 +92,49 @@ export default function ContentFeed({
     <div className="space-y-4">
       {/* Feed Type Selection (not shown for user profile posts) */}
       {!userPosts && (
-        <Card className="mb-4">
-          <CardContent className="p-3">
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
-                variant={feedType === 'personal' ? "default" : "outline"} 
-                className={`w-full ${feedType === 'personal' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
-                onClick={() => handleFeedTypeChange('personal')}
-              >
-                <User className="h-4 w-4 mr-2" />
-                {t("social.my_feed")}
-              </Button>
-              <Button 
-                variant={feedType === 'communities' ? "default" : "outline"} 
-                className={`w-full ${feedType === 'communities' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
-                onClick={() => handleFeedTypeChange('communities')}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                {t("social.communities")}
-              </Button>
-
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-4 p-3 bg-white border rounded-lg">
+          <div className="flex justify-center gap-4">
+            <Button 
+              variant={feedType === 'personal' ? "default" : "outline"} 
+              className={`w-32 ${feedType === 'personal' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+              onClick={() => handleFeedTypeChange('personal')}
+            >
+              <User className="h-4 w-4 mr-2" />
+              {t("social.my_feed")}
+            </Button>
+            <Button 
+              variant={feedType === 'communities' ? "default" : "outline"} 
+              className={`w-32 ${feedType === 'communities' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+              onClick={() => handleFeedTypeChange('communities')}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              {t("social.communities")}
+            </Button>
+          </div>
+        </div>
       )}
       
       {/* Sort Options */}
-      <Card className="mb-4">
-        <CardContent className="p-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant={sortType === 'relevant' ? "default" : "outline"} 
-              className={`w-full ${sortType === 'relevant' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
-              onClick={() => handleSortChange('relevant')}
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              {t("social.most_relevant")}
-            </Button>
-            <Button 
-              variant={sortType === 'recent' ? "default" : "outline"} 
-              className={`w-full ${sortType === 'recent' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
-              onClick={() => handleSortChange('recent')}
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              {t("social.most_recent")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mb-4 p-3 bg-white border rounded-lg">
+        <div className="flex justify-center gap-4">
+          <Button 
+            variant={sortType === 'relevant' ? "default" : "outline"} 
+            className={`w-32 ${sortType === 'relevant' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+            onClick={() => handleSortChange('relevant')}
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            {t("social.most_relevant")}
+          </Button>
+          <Button 
+            variant={sortType === 'recent' ? "default" : "outline"} 
+            className={`w-32 ${sortType === 'recent' ? "bg-gray-500 hover:bg-gray-600 text-white" : ""}`} 
+            onClick={() => handleSortChange('recent')}
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            {t("social.most_recent")}
+          </Button>
+        </div>
+      </div>
       
       {/* Loading State */}
       {isLoading && (
