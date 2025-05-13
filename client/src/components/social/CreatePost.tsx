@@ -667,14 +667,7 @@ export default function CreatePost({
               onValueChange={(value) => setContentType(value as ContentType)}
               className="w-full pt-3 border-t"
             >
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="standard" className="flex items-center gap-1">
-                  <MessageSquarePlus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Standard</span>
-                </TabsTrigger>
 
-
-              </TabsList>
 
               {/* Standard Post Content */}
               <TabsContent value="standard" className="space-y-2">
