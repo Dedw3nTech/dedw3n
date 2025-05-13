@@ -432,6 +432,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           (socket as any)._connectionTime = connectionStartTime;
           (socket as any)._connectionId = connectionId;
           (socket as any)._reconnectCount = reconnectAttempts;
+        }
         
         // Update connection status
         setConnectionDetails({

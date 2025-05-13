@@ -558,13 +558,7 @@ export default function CreatePost({
                   )}
                 </div>
                 
-                {/* Title input (optional) */}
-                <Input
-                  placeholder="Post title (optional)"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="border-0 bg-accent/50 focus-visible:ring-0"
-                />
+                {/* Title input removed as requested */}
                 
                 {/* Content textarea */}
                 <Textarea
