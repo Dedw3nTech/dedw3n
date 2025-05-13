@@ -502,8 +502,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           setIsConnected(false);
           setConnectionStatus('disconnected');
         
-        // Get specific meaning for close codes for better user feedback
-        const codeDescription = 
+          // Get specific meaning for close codes for better user feedback
+          const codeDescription = 
           event.code === 1000 ? "Normal closure" :
           event.code === 1001 ? "Going away" :
           event.code === 1002 ? "Protocol error" :
@@ -655,22 +655,24 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         // Don't call close here as the connection will be handled by onclose event
       };
       
-      socket.onmessage = (event) => {
-        try {
-          // Log the raw message for debugging
-          console.debug("Raw WebSocket message received:", event.data);
-          
-          const data = JSON.parse(event.data);
-          
-          // Log parsed data for debugging
-          console.debug("Parsed WebSocket message:", data);
-          
-          // Handle the message
-          handleWebSocketMessage(data);
-        } catch (error) {
-          console.error("Error parsing WebSocket message:", error, "Raw data:", event.data);
-        }
-      };
+      if (socket) {
+        socket.onmessage = (event) => {
+          try {
+            // Log the raw message for debugging
+            console.debug("Raw WebSocket message received:", event.data);
+            
+            const data = JSON.parse(event.data);
+            
+            // Log parsed data for debugging
+            console.debug("Parsed WebSocket message:", data);
+            
+            // Handle the message
+            handleWebSocketMessage(data);
+          } catch (error) {
+            console.error("Error parsing WebSocket message:", error, "Raw data:", event.data);
+          }
+        };
+      }
     } catch (error) {
       console.error("Error connecting to WebSocket:", error);
       setIsConnected(false);
