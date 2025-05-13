@@ -8,9 +8,14 @@ import { apiRequest, getStoredAuthToken } from "@/lib/queryClient";
 let socket: WebSocket | null = null;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 10;
-const RECONNECT_INTERVAL = 3000; // 3 seconds
+const MAX_RECONNECT_ATTEMPTS = 20; // Increased max attempts
+const RECONNECT_INTERVAL = 2000; // 2 seconds initial delay
 const MAX_RECONNECT_INTERVAL = 30000; // 30 seconds maximum reconnect interval
+
+// WebSocket connection health check
+let healthCheckTimer: NodeJS.Timeout | null = null;
+const HEALTH_CHECK_INTERVAL = 10000; // 10 seconds
+const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds timeout for health check
 
 // WebRTC configuration
 const ICE_SERVERS = {
@@ -716,11 +721,26 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       
       // Add token if available (for token-based authentication)
       if (token) {
-        wsUrl += `&token=${token}`;
+        // URL encode the token to prevent special characters from breaking the URL
+        const encodedToken = encodeURIComponent(token);
+        wsUrl += `&token=${encodedToken}`;
+        console.log("Added authentication token to WebSocket URL");
+      } else {
+        console.warn("No authentication token available for WebSocket connection");
       }
+    } else {
+      console.warn("No user ID available for WebSocket connection");
+      // Return early as we can't authenticate without a user ID
+      reconnectAttempts++;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(() => {
+        connect();
+      }, Math.min(RECONNECT_INTERVAL * Math.pow(2, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+      return;
     }
     
-    console.log(`Connecting to WebSocket: ${wsUrl}`);
+    console.log(`Connecting to WebSocket: ${protocol}//${window.location.host}/ws... (connection ID: ${connectionId})`);
+    // Don't log the full URL with token for security reasons
     
     try {
       socket = new WebSocket(wsUrl);

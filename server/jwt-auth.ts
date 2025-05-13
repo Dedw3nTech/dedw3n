@@ -5,9 +5,11 @@ import { InsertAuthToken, User } from '@shared/schema';
 
 // Default token expiration in seconds (24 hours)
 const TOKEN_EXPIRES_IN = 86400;
-// Using a hardcoded secret for development purposes
-// In production, this should be set via environment variables
-const TOKEN_SECRET = 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production';
+// Get the token secret from environment variable with fallback for development
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production';
+
+// Log the token secret source for debugging (without exposing the actual secret)
+console.log(`[AUTH] Using token secret from ${process.env.TOKEN_SECRET ? 'environment variable' : 'fallback value'}`);
 
 // Declare module express-session with a custom user object
 declare module 'express-serve-static-core' {
