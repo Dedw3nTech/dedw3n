@@ -369,8 +369,8 @@ export default function Header() {
         location.startsWith('/profile/')) && (
         <div className="container mx-auto px-4 py-2 border-b border-gray-200 bg-blue-500">
           <div className="flex overflow-x-auto">
-            <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "wall" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
+            <div 
+              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "wall" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("wall");
                 setLocation("/wall");
@@ -381,10 +381,10 @@ export default function Header() {
                 <Home className="h-4 w-4" />
                 <span>Wall</span>
               </div>
-            </button>
+            </div>
             
-            <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "explore" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
+            <div 
+              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "explore" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("explore");
                 setLocation("/explore");
@@ -397,8 +397,8 @@ export default function Header() {
               </div>
             </button>
             
-            <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 relative ${activeTab === "messages" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
+            <div 
+              className={`py-2 px-4 text-sm font-medium border-b-2 relative cursor-pointer ${activeTab === "messages" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("messages");
                 setLocation("/messages");
