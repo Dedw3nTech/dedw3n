@@ -239,30 +239,13 @@ export default function ProfileSettingsPage() {
         description: t('profile.update_success_desc') || 'Your profile has been updated successfully',
       });
       
-      // Store completed user data in sessionStorage for cross-session persistence
-      const updatedUserData = {
-        ...user,
-        ...formData,
-        id: user.id,
-        updatedAt: new Date().toISOString()
-      };
+      // Add timestamp to the already created updatedUserData 
+      updatedUserData.updatedAt = new Date().toISOString();
       
-      try {
-        localStorage.setItem('userData', JSON.stringify(updatedUserData));
-        console.log('User data saved to localStorage for persistence');
-      } catch (e) {
-        console.error('Error saving user data to localStorage:', e);
-      }
+      // We're already using updateUserData earlier, this is redundant now
       
-      try {
-        sessionStorage.setItem('userData', JSON.stringify({
-          ...updatedUserData,
-          lastAuthTime: new Date().toISOString()
-        }));
-        console.log('User data saved to sessionStorage with auth timestamp');
-      } catch (e) {
-        console.error('Error saving user data to sessionStorage:', e);
-      }
+      // User data is already being saved with the updateUserData function above
+      // No need to manually save to sessionStorage anymore
       
     } catch (error) {
       console.error('Error updating profile:', error);
