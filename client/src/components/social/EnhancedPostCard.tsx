@@ -5,7 +5,7 @@ import { Post } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { 
   Heart, 
@@ -85,6 +85,7 @@ export default function EnhancedPostCard({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -509,8 +510,9 @@ export default function EnhancedPostCard({
                 <img 
                   src={post.imageUrl} 
                   alt={post.title || t("social.post_image")} 
-                  className="w-full h-auto rounded-md object-contain"
+                  className="w-full h-auto rounded-md object-contain cursor-pointer"
                   style={{ maxHeight: "calc(100vh - 200px)" }}
+                  onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
                   onLoad={(e) => {
                     // Adjust container height based on image aspect ratio
@@ -583,8 +585,9 @@ export default function EnhancedPostCard({
                 <img 
                   src={post.imageUrl} 
                   alt={post.title || t("social.article_image")} 
-                  className="w-full h-auto rounded-md object-contain"
+                  className="w-full h-auto rounded-md object-contain cursor-pointer"
                   style={{ maxHeight: "calc(100vh - 300px)" }}
+                  onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
                   onLoad={(e) => {
                     // Adjust container height based on image aspect ratio
@@ -624,8 +627,9 @@ export default function EnhancedPostCard({
                 <img 
                   src={post.imageUrl} 
                   alt={post.title || t("social.ad_image")} 
-                  className="w-full h-auto rounded-md object-contain"
+                  className="w-full h-auto rounded-md object-contain cursor-pointer"
                   style={{ maxHeight: "calc(100vh - 300px)" }}
+                  onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
                   onLoad={(e) => {
                     // Adjust container height based on image aspect ratio
