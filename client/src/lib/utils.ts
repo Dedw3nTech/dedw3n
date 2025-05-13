@@ -173,3 +173,32 @@ export function getStarRating(rating: number): string[] {
   
   return stars;
 }
+
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return "Invalid date";
+  }
+  
+  // For recent dates (less than 24 hours), use timeAgo
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  
+  if (diffHours < 24) {
+    return timeAgo(date);
+  }
+  
+  // For older dates, use a readable format
+  const options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  return new Intl.DateTimeFormat('en-GB', options).format(date);
+}
