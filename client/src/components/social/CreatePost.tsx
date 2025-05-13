@@ -516,10 +516,10 @@ export default function CreatePost({
                       value={postToVisibility}
                       onValueChange={setPostToVisibility}
                     >
-                      <div className="h-7 w-[130px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
+                      <span className="h-7 w-[130px] flex justify-between items-center border rounded-md px-3 py-1 text-sm">
                         <span>{postToVisibility === "public" ? "Public" : "Community"}</span>
                         <ChevronDown className="h-4 w-4 opacity-50" />
-                      </div>
+                      </span>
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Post to</SelectLabel>
@@ -703,6 +703,18 @@ export default function CreatePost({
                   >
                     <ImageIcon className="h-4 w-4 mr-1" />
                     Add Photo
+                  </Button>
+                  
+                  {/* Video upload button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={!!imageFile}
+                  >
+                    <Video className="h-4 w-4 mr-1" />
+                    Add Video
                   </Button>
                   
                   {/* Product tagging button */}
