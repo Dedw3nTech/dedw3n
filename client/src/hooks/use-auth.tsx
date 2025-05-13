@@ -470,6 +470,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user data from all possible auth caches
       queryClient.setQueryData(["/api/user"], null);
       
+      // Clear user data from persistent storage (localStorage and sessionStorage)
+      try {
+        console.log('Clearing user data from persistent storage during logout');
+        clearUserData();
+      } catch (error) {
+        console.error('Error clearing user data from storage:', error);
+      }
+      
       // Clear websocket connection if it exists
       try {
         // Access socket only if it exists as a global variable

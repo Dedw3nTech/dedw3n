@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { updateUserData } from '@/lib/userStorage';
 import { Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
@@ -115,16 +116,19 @@ export default function ProfileSettingsPage() {
         userId: user.id
       };
       
-      // Save user data to sessionStorage for cross-page authentication
+      // Save user data to storage for persistent authentication and data consistency
       try {
-        sessionStorage.setItem('userData', JSON.stringify({
+        // Use the userStorage utility to save user data
+        updateUserData({
           id: user.id,
           username: formData.username || user.username,
           name: formData.name || user.name,
-          lastUpdated: new Date().toISOString()
-        }));
+          bio: formData.bio || user.bio,
+          avatar: formData.avatar || user.avatar
+        });
+        console.log('User data saved to persistent storage');
       } catch (e) {
-        console.error('Error saving user data to sessionStorage:', e);
+        console.error('Error saving user data to storage:', e);
       }
       
       console.log('Submitting profile update:', updatedFormData);
@@ -200,27 +204,31 @@ export default function ProfileSettingsPage() {
         console.log('Profile updated successfully:', updatedUser);
       }
       
-      // Update query cache with new user data to ensure it's immediately available
-      queryClient.setQueryData({ queryKey: ['/api/user'] }, {
+      // Create the updated user object
+      const updatedUserData = {
         ...user,
         ...formData,
         id: user.id
-      });
+      };
+      
+      // Update query cache with new user data to ensure it's immediately available
+      queryClient.setQueryData({ queryKey: ['/api/user'] }, updatedUserData);
       
       // Also update user data in specific endpoints
-      queryClient.setQueryData({ queryKey: [`/api/users/${user.id}`] }, {
-        ...user,
-        ...formData,
-        id: user.id
-      });
+      queryClient.setQueryData({ queryKey: [`/api/users/${user.id}`] }, updatedUserData);
       
       // Also update username-specific endpoints if username changed
       if (formData.username && user.username !== formData.username) {
-        queryClient.setQueryData({ queryKey: [`/api/users/${formData.username}`] }, {
-          ...user,
-          ...formData,
-          id: user.id
-        });
+        queryClient.setQueryData({ queryKey: [`/api/users/${formData.username}`] }, updatedUserData);
+      }
+      
+      // Update persistent storage with the new user data
+      try {
+        // Use the full updated user data for consistency
+        updateUserData(updatedUserData);
+        console.log('Updated user data in persistent storage after successful profile update');
+      } catch (error) {
+        console.error('Error updating persistent storage after profile update:', error);
       }
       
       // Invalidate all related queries to ensure data consistency across the app
