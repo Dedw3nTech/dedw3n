@@ -157,9 +157,12 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (postData: InsertPost) => {
-      // Add invalidation of personal feed to ensure new posts appear
-      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+      // We'll handle invalidation in onSuccess to ensure it happens after the post is created
       const response = await apiRequest("POST", "/api/posts", postData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create post");
+      }
       return response.json();
     },
     onSuccess: (data: Post) => {
@@ -173,15 +176,31 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       setMediaPreview(null);
       setMediaData(null);
       
-      // Refresh posts list and feed
-      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+      // Refresh posts list and feed using refetchType: 'all' to force a complete refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/posts"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/personal"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/communities"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/recommended"],
+        refetchType: 'all'
+      });
       
       // Show success toast
       toast({
         title: t("post_created") || "Post Created",
         description: t("post_success_message") || "Your post has been published successfully.",
       });
+      
+      console.log("Post created successfully, calling onSuccess callback");
       
       // Call onSuccess callback if provided
       if (onSuccess) {

@@ -182,17 +182,39 @@ export default function CreatePost({
       });
       
       // Invalidate queries to refresh post lists
-      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/feed/communities"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.username}/posts`] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/personal"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/communities"],
+        refetchType: 'all' 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/feed/recommended"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/posts"],
+        refetchType: 'all'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/users/${user?.username}/posts`],
+        refetchType: 'all'
+      });
       
       if (communityId) {
-        queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/posts`] });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/communities/${communityId}/posts`],
+          refetchType: 'all'
+        });
       }
       
       if (selectedCommunityId) {
-        queryClient.invalidateQueries({ queryKey: [`/api/communities/${selectedCommunityId}/posts`] });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/communities/${selectedCommunityId}/posts`],
+          refetchType: 'all'
+        });
       }
       
       // Call onSuccess callback if provided
