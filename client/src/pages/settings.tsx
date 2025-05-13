@@ -30,7 +30,7 @@ import {
   Languages,
   CreditCard,
   FileText,
-  Cog as CogIcon,
+  Settings as SettingsIcon,
   Save,
   Loader2,
 } from "lucide-react";
@@ -58,7 +58,7 @@ const CURRENCY_OPTIONS = [
   { value: "NGN", label: "Nigerian Naira (₦)" },
 ];
 
-export default function AccountPage() {
+export default function SettingsPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -118,14 +118,14 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("profileUpdated"),
+        description: t("settings.profileUpdated"),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: Error) => {
       toast({
         title: t("misc.error"),
-        description: error.message || t("updateFailed"),
+        description: error.message || t("settings.updateFailed"),
         variant: "destructive",
       });
     },
@@ -150,7 +150,7 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("passwordUpdated"),
+        description: t("settings.passwordUpdated"),
       });
       setCurrentPassword("");
       setNewPassword("");
@@ -159,7 +159,7 @@ export default function AccountPage() {
     onError: (error: Error) => {
       toast({
         title: t("misc.error"),
-        description: error.message || t("updateFailed"),
+        description: error.message || t("settings.updateFailed"),
         variant: "destructive",
       });
     },
@@ -191,13 +191,13 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("preferencesUpdated"),
+        description: t("settings.preferencesUpdated"),
       });
     },
     onError: (error: Error) => {
       toast({
         title: t("misc.error"),
-        description: error.message || t("updateFailed"),
+        description: error.message || t("settings.updateFailed"),
         variant: "destructive",
       });
     },
@@ -217,13 +217,13 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("securityUpdated"),
+        description: t("settings.securityUpdated"),
       });
     },
     onError: () => {
       toast({
         title: t("misc.error"),
-        description: t("updateFailed"),
+        description: t("settings.updateFailed"),
         variant: "destructive",
       });
     },
@@ -245,7 +245,7 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: t("misc.success"),
-        description: t("accountDeleted"),
+        description: t("settings.accountDeleted"),
       });
       // Force logout
       queryClient.setQueryData(["/api/auth/me"], null);
@@ -254,7 +254,7 @@ export default function AccountPage() {
     onError: () => {
       toast({
         title: t("misc.error"),
-        description: t("deleteFailed"),
+        description: t("settings.deleteFailed"),
         variant: "destructive",
       });
     },
@@ -269,7 +269,7 @@ export default function AccountPage() {
     if (!file.type.startsWith("image/")) {
       toast({
         title: t("misc.error"),
-        description: t("invalidImage"),
+        description: t("settings.invalidImage"),
         variant: "destructive",
       });
       return;
@@ -300,7 +300,7 @@ export default function AccountPage() {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
         title: t("misc.error"),
-        description: t("fillAllFields"),
+        description: t("settings.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -309,7 +309,7 @@ export default function AccountPage() {
     if (newPassword !== confirmPassword) {
       toast({
         title: t("misc.error"),
-        description: t("passwordsNotMatch"),
+        description: t("settings.passwordsNotMatch"),
         variant: "destructive",
       });
       return;
@@ -361,9 +361,9 @@ export default function AccountPage() {
   return (
     <div className="bg-background min-h-screen">
       <PageHeader
-        title={t("account.info")}
-        description={t("account.manage")}
-        icon={<CogIcon className="h-6 w-6" />}
+        title={t("settings.accountSettings")}
+        description={t("settings.manageYourAccount")}
+        icon={<SettingsIcon className="h-6 w-6" />}
       />
       
       <div className="container max-w-screen-xl py-6">
@@ -371,19 +371,19 @@ export default function AccountPage() {
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-3xl mb-8">
             <TabsTrigger value="account">
               <User className="h-4 w-4 mr-2" />
-              {t("account")}
+              {t("settings.account")}
             </TabsTrigger>
             <TabsTrigger value="preferences">
               <Globe className="h-4 w-4 mr-2" />
-              {t("preferences")}
+              {t("settings.preferences")}
             </TabsTrigger>
             <TabsTrigger value="notifications">
               <Bell className="h-4 w-4 mr-2" />
-              {t("notifications")}
+              {t("settings.notifications")}
             </TabsTrigger>
             <TabsTrigger value="danger">
               <Shield className="h-4 w-4 mr-2" />
-              {t("security")}
+              {t("settings.security")}
             </TabsTrigger>
           </TabsList>
           
@@ -392,8 +392,8 @@ export default function AccountPage() {
             {/* Profile Information Card */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("profileInformation")}</CardTitle>
-                <CardDescription>{t("updateProfileInfo")}</CardDescription>
+                <CardTitle>{t("settings.profileInformation")}</CardTitle>
+                <CardDescription>{t("settings.updateProfileInfo")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar */}
@@ -411,7 +411,7 @@ export default function AccountPage() {
                       htmlFor="avatar-upload"
                       className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center cursor-pointer"
                     >
-                      <CogIcon className="h-3.5 w-3.5" />
+                      <SettingsIcon className="h-3.5 w-3.5" />
                     </label>
                     <input
                       id="avatar-upload"
@@ -422,14 +422,14 @@ export default function AccountPage() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-medium">{t("profilePicture")}</h3>
-                    <p className="text-sm text-muted-foreground">{t("recommendedSize")}</p>
+                    <h3 className="font-medium">{t("settings.profilePicture")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("settings.recommendedSize")}</p>
                   </div>
                 </div>
                 
                 {/* Email (editable) */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t("email")}</Label>
+                  <Label htmlFor="email">{t("settings.email")}</Label>
                   <Input
                     id="email"
                     value={email}
@@ -446,12 +446,12 @@ export default function AccountPage() {
                   {updateProfileMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("saving")}
+                      {t("settings.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {t("saveChanges")}
+                      {t("settings.saveChanges")}
                     </>
                   )}
                 </Button>
@@ -461,13 +461,13 @@ export default function AccountPage() {
             {/* Password Change Card */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("changePassword")}</CardTitle>
-                <CardDescription>{t("changePasswordDesc")}</CardDescription>
+                <CardTitle>{t("settings.changePassword")}</CardTitle>
+                <CardDescription>{t("settings.changePasswordDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Current Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("currentPassword")}</Label>
+                  <Label htmlFor="current-password">{t("settings.currentPassword")}</Label>
                   <Input
                     id="current-password"
                     type="password"
@@ -479,7 +479,7 @@ export default function AccountPage() {
                 
                 {/* New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">{t("newPassword")}</Label>
+                  <Label htmlFor="new-password">{t("settings.newPassword")}</Label>
                   <Input
                     id="new-password"
                     type="password"
@@ -491,7 +491,7 @@ export default function AccountPage() {
                 
                 {/* Confirm New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">{t("confirmPassword")}</Label>
+                  <Label htmlFor="confirm-password">{t("settings.confirmPassword")}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
@@ -509,12 +509,12 @@ export default function AccountPage() {
                   {updatePasswordMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("updating")}
+                      {t("settings.updating")}
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      {t("updatePassword")}
+                      {t("settings.updatePassword")}
                     </>
                   )}
                 </Button>
@@ -526,16 +526,16 @@ export default function AccountPage() {
           <TabsContent value="preferences" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t("languageAndRegion")}</CardTitle>
-                <CardDescription>{t("languageAndRegionDesc")}</CardDescription>
+                <CardTitle>{t("settings.languageAndRegion")}</CardTitle>
+                <CardDescription>{t("settings.languageAndRegionDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Language */}
                 <div className="space-y-2">
-                  <Label htmlFor="language">{t("language")}</Label>
+                  <Label htmlFor="language">{t("settings.language")}</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger id="language">
-                      <SelectValue placeholder={t("selectLanguage")} />
+                      <SelectValue placeholder={t("settings.selectLanguage")} />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.map(option => (
@@ -549,10 +549,10 @@ export default function AccountPage() {
                 
                 {/* Currency */}
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t("currency")}</Label>
+                  <Label htmlFor="currency">{t("settings.currency")}</Label>
                   <Select value={currency} onValueChange={setCurrency}>
                     <SelectTrigger id="currency">
-                      <SelectValue placeholder={t("selectCurrency")} />
+                      <SelectValue placeholder={t("settings.selectCurrency")} />
                     </SelectTrigger>
                     <SelectContent>
                       {CURRENCY_OPTIONS.map(option => (
@@ -572,12 +572,12 @@ export default function AccountPage() {
                   {updatePreferencesMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("saving")}
+                      {t("settings.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {t("savePreferences")}
+                      {t("settings.savePreferences")}
                     </>
                   )}
                 </Button>
@@ -589,23 +589,23 @@ export default function AccountPage() {
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t("notificationPreferences")}</CardTitle>
-                <CardDescription>{t("notificationPreferencesDesc")}</CardDescription>
+                <CardTitle>{t("settings.notificationPreferences")}</CardTitle>
+                <CardDescription>{t("settings.notificationPreferencesDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   {/* Email Notifications */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>{t("emailNotifications")}</Label>
+                      <Label>{t("settings.emailNotifications")}</Label>
                       <p className="text-sm text-muted-foreground">
-                        {t("emailNotificationsDesc")}
+                        {t("settings.emailNotificationsDesc")}
                       </p>
                     </div>
                     <Switch
                       checked={emailNotifications}
                       onCheckedChange={setEmailNotifications}
-                      aria-label={t("emailNotifications")}
+                      aria-label={t("settings.emailNotifications")}
                     />
                   </div>
                   
@@ -614,15 +614,15 @@ export default function AccountPage() {
                   {/* Marketing Emails */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>{t("marketingEmails")}</Label>
+                      <Label>{t("settings.marketingEmails")}</Label>
                       <p className="text-sm text-muted-foreground">
-                        {t("marketingEmailsDesc")}
+                        {t("settings.marketingEmailsDesc")}
                       </p>
                     </div>
                     <Switch
                       checked={marketingEmails}
                       onCheckedChange={setMarketingEmails}
-                      aria-label={t("marketingEmails")}
+                      aria-label={t("settings.marketingEmails")}
                     />
                   </div>
                 </div>
@@ -635,12 +635,12 @@ export default function AccountPage() {
                   {updatePreferencesMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("saving")}
+                      {t("settings.saving")}
                     </>
                   ) : (
                     <>
                       <Bell className="mr-2 h-4 w-4" />
-                      {t("updateNotifications")}
+                      {t("settings.updateNotifications")}
                     </>
                   )}
                 </Button>
@@ -652,22 +652,22 @@ export default function AccountPage() {
           <TabsContent value="danger" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t("securitySettings")}</CardTitle>
-                <CardDescription>{t("securitySettingsDesc")}</CardDescription>
+                <CardTitle>{t("settings.securitySettings")}</CardTitle>
+                <CardDescription>{t("settings.securitySettingsDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Two-Factor Authentication */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>{t("twoFactorAuth")}</Label>
+                    <Label>{t("settings.twoFactorAuth")}</Label>
                     <p className="text-sm text-muted-foreground">
-                      {t("twoFactorAuthDesc")}
+                      {t("settings.twoFactorAuthDesc")}
                     </p>
                   </div>
                   <Switch
                     checked={twoFactorEnabled}
                     onCheckedChange={setTwoFactorEnabled}
-                    aria-label={t("twoFactorAuth")}
+                    aria-label={t("settings.twoFactorAuth")}
                   />
                 </div>
               </CardContent>
@@ -679,12 +679,12 @@ export default function AccountPage() {
                   {updateSecurityMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("saving")}
+                      {t("settings.saving")}
                     </>
                   ) : (
                     <>
                       <Shield className="mr-2 h-4 w-4" />
-                      {t("updateSecurity")}
+                      {t("settings.updateSecurity")}
                     </>
                   )}
                 </Button>
@@ -694,9 +694,9 @@ export default function AccountPage() {
             {/* Danger Zone */}
             <Card className="border-destructive">
               <CardHeader className="text-destructive">
-                <CardTitle>{t("dangerZone")}</CardTitle>
+                <CardTitle>{t("settings.dangerZone")}</CardTitle>
                 <CardDescription className="text-destructive/80">
-                  {t("dangerZoneDesc")}
+                  {t("settings.dangerZoneDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -704,18 +704,18 @@ export default function AccountPage() {
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      {t("deleteAccount")}
+                      {t("settings.deleteAccount")}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
+                      <AlertDialogTitle>{t("settings.areYouSure")}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t("deleteAccountWarning")}
+                        {t("settings.deleteAccountWarning")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteAccount}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -725,7 +725,7 @@ export default function AccountPage() {
                         ) : (
                           <Trash2 className="mr-2 h-4 w-4" />
                         )}
-                        {t("confirmDelete")}
+                        {t("settings.confirmDelete")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
