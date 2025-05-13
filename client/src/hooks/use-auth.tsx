@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Verify token on component mount and set up periodic checks
+  // Effect for token validation check
   useEffect(() => {
     // Verify token on startup
     verifyTokenValidity();
@@ -66,6 +67,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
   }, []);
+  
+  // Effect for loading stored user data on startup
+  useEffect(() => {
+    // Only attempt to load stored user data if we don't already have a user
+    if (!user && !isLoading) {
+      try {
+        // Try sessionStorage first (faster)
+        let storedUserData = sessionStorage.getItem('userData');
+        
+        // If not in sessionStorage, try localStorage
+        if (!storedUserData) {
+          storedUserData = localStorage.getItem('userData');
+        }
+        
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          
+          // Check if the stored data has a timestamp and isn't too old (24 hours)
+          const lastUpdated = new Date(userData.lastUpdated || 0);
+          const now = new Date();
+          const hoursSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
+          
+          if (hoursSinceUpdate < 24) {
+            console.log('Found stored user data, restoring session:', {
+              id: userData.id,
+              username: userData.username,
+              lastUpdated: userData.lastUpdated
+            });
+            
+            // Update the user data in the cache
+            queryClient.setQueryData(["/api/user"], userData);
+            
+            // Immediately fetch fresh data to ensure we have the latest
+            refetch();
+          } else {
+            console.log('Stored user data is too old, not restoring');
+            // Clear old data
+            sessionStorage.removeItem('userData');
+            localStorage.removeItem('userData');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading stored user data:', error);
+      }
+    }
+  }, [user, isLoading]);
   
   // Function to verify token validity
   const verifyTokenValidity = () => {
