@@ -309,6 +309,26 @@ export default function EnhancedPostCard({
     console.log('Boosting post', post.id);
   };
   
+  const handleReport = () => {
+    if (!user) {
+      toast({
+        title: t("errors.error"),
+        description: t("errors.unauthorized"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show a success message for now
+    toast({
+      title: "Post Reported",
+      description: "Thank you for helping keep our community safe. Our team will review this content.",
+    });
+    
+    // In a real implementation, we would call an API to report the post
+    console.log('Reporting post', post.id);
+  };
+  
   // Save post mutation
   const savePostMutation = useMutation({
     mutationFn: async () => {
@@ -687,6 +707,13 @@ export default function EnhancedPostCard({
           >
             <Zap className="w-4 h-4 mr-1" />
             Boost
+          </span>
+          <span 
+            className="flex items-center cursor-pointer text-red-500 hover:text-red-600"
+            onClick={handleReport}
+          >
+            <Flag className="w-4 h-4 mr-1" />
+            Report
           </span>
         </div>
         <div className="flex space-x-4">
