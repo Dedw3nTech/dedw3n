@@ -87,6 +87,29 @@ export async function apiRequest(
   // Extract isFormData from options
   const isFormData = options?.isFormData;
   
+  // Get userId from session or localStorage if available
+  let userId = null;
+  try {
+    // First try sessionStorage - faster and more reliable for same session
+    const userDataString = sessionStorage.getItem('userData');
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      userId = userData.id;
+      console.log('Using userId from sessionStorage:', userId);
+    } 
+    // Fallback to localStorage if needed
+    else {
+      const localUserDataString = localStorage.getItem('userData');
+      if (localUserDataString) {
+        const localUserData = JSON.parse(localUserDataString);
+        userId = localUserData.id;
+        console.log('Using userId from localStorage:', userId);
+      }
+    }
+  } catch (e) {
+    console.error('Error retrieving user data from storage:', e);
+  }
+  
   // Set up request options with enhanced authentication headers
   const requestOptions: RequestInit = {
     method,
@@ -95,7 +118,12 @@ export async function apiRequest(
       // Always include these session-related headers for improved auth reliability
       'X-Use-Session': 'true',
       'X-Client-Auth': 'true',
-      'X-Request-Time': new Date().toISOString()
+      'X-Request-Time': new Date().toISOString(),
+      'Content-Type': isFormData ? undefined : 'application/json',
+      ...(userId ? { 
+        'X-Client-User-ID': userId.toString(), 
+        'X-Test-User-ID': userId.toString() 
+      } : {})
     },
     ...(typeof options === 'object' && options !== null ? options : {})
   };

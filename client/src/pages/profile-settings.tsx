@@ -214,9 +214,13 @@ export default function ProfileSettingsPage() {
         id: user.id
       });
       
-      if (user.username !== updatedUser.username) {
-        // If username changed, update that specific endpoint too
-        queryClient.setQueryData({ queryKey: [`/api/users/${updatedUser.username}`] }, updatedUser);
+      // Also update username-specific endpoints if username changed
+      if (formData.username && user.username !== formData.username) {
+        queryClient.setQueryData({ queryKey: [`/api/users/${formData.username}`] }, {
+          ...user,
+          ...formData,
+          id: user.id
+        });
       }
       
       // Invalidate all related queries to ensure data consistency across the app
@@ -226,6 +230,31 @@ export default function ProfileSettingsPage() {
         title: t('profile.update_success') || 'Profile updated',
         description: t('profile.update_success_desc') || 'Your profile has been updated successfully',
       });
+      
+      // Store completed user data in sessionStorage for cross-session persistence
+      const updatedUserData = {
+        ...user,
+        ...formData,
+        id: user.id,
+        updatedAt: new Date().toISOString()
+      };
+      
+      try {
+        localStorage.setItem('userData', JSON.stringify(updatedUserData));
+        console.log('User data saved to localStorage for persistence');
+      } catch (e) {
+        console.error('Error saving user data to localStorage:', e);
+      }
+      
+      try {
+        sessionStorage.setItem('userData', JSON.stringify({
+          ...updatedUserData,
+          lastAuthTime: new Date().toISOString()
+        }));
+        console.log('User data saved to sessionStorage with auth timestamp');
+      } catch (e) {
+        console.error('Error saving user data to sessionStorage:', e);
+      }
       
     } catch (error) {
       console.error('Error updating profile:', error);
