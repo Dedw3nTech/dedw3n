@@ -3785,7 +3785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enhanced post routes with direct JSON data for content and file uploads
   // Feed endpoints for social media functionality
-  app.get("/api/feed/personal", isAuthenticated, async (req, res) => {
+  app.get("/api/feed/personal", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       console.log(`[INFO] Fetching personal feed for user ${userId}`);
@@ -3813,7 +3813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/feed/communities", isAuthenticated, async (req, res) => {
+  app.get("/api/feed/communities", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       console.log(`[INFO] Fetching communities feed for user ${userId}`);
@@ -4272,7 +4272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Unlike a post
-  app.delete("/api/posts/:id/like", isAuthenticated, async (req, res) => {
+  app.delete("/api/posts/:id/like", unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
       const userId = (req.user as any).id;
@@ -4347,7 +4347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Unsave a post
-  app.delete("/api/posts/:id/save", isAuthenticated, async (req, res) => {
+  app.delete("/api/posts/:id/save", unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
       const userId = (req.user as any).id;
@@ -4463,7 +4463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add comment to a post
-  app.post("/api/posts/:id/comments", isAuthenticated, async (req, res) => {
+  app.post("/api/posts/:id/comments", unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
       const userId = (req.user as any).id;
@@ -4577,7 +4577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Promotion management endpoints
-  app.post("/api/posts/:id/promote", isAuthenticated, async (req, res) => {
+  app.post("/api/posts/:id/promote", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const postId = parseInt(req.params.id);
@@ -4611,7 +4611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/posts/:id/unpromote", isAuthenticated, async (req, res) => {
+  app.post("/api/posts/:id/unpromote", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const postId = parseInt(req.params.id);
