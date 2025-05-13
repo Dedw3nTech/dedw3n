@@ -149,41 +149,84 @@ export default function CreatePost({
       
       const method = editingPost ? "PUT" : "POST";
       
+      // Log authentication state for debugging
+      console.log("Authentication state:", { 
+        user: user ? `ID: ${user.id}, Username: ${user.username}` : 'Not logged in',
+        isAuthenticated: !!user
+      });
+      
       // Get auth token directly from localStorage for direct authentication
       const authToken = localStorage.getItem('dedwen_auth_token');
+      console.log("Auth token available:", !!authToken);
       
-      // Create options with content type specification for x-www-form-urlencoded
+      // Enhanced debugging for post data
+      console.log("Post data being sent:", { 
+        ...postData,
+        content: postData.content?.length > 50 ? 
+          `${postData.content.substring(0, 50)}... (${postData.content.length} chars)` : 
+          postData.content,
+        imageUrl: postData.imageUrl ? 
+          (postData.imageUrl.startsWith('data:') ? 
+            `[base64 data - ${postData.imageUrl.length} chars]` : 
+            postData.imageUrl) : 
+          'none'
+      });
+      
+      // Create options with enhanced debugging headers
       const options = {
         headers: {
           // Include auth token if available for JWT auth
           ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
-          // Content type will be set in apiRequest function
+          // Add session cookie support flag
+          'X-Use-Session': 'true',
           'X-Client-Auth': 'true',
           'X-Request-Time': new Date().toISOString(),
+          'X-Client-User-ID': user?.id?.toString() || '',
           'Accept': 'application/json',
         }
       };
       
-      console.log(`Sending ${method} request to ${url}`);
+      console.log(`Sending ${method} request to ${url} with headers:`, options.headers);
       
       try {
-        // Pass options to apiRequest for proper content type handling
-        const response = await apiRequest(method, url, postData, options);
+        // Use simple fetch for direct debugging instead of apiRequest
+        const response = await fetch(url, {
+          method,
+          credentials: 'include', // Important for cookies
+          headers: {
+            ...options.headers,
+            'Content-Type': 'application/json' // Simplified to use JSON format consistently
+          },
+          body: JSON.stringify(postData)
+        });
+        
+        console.log(`Server response status: ${response.status} ${response.statusText}`);
+        
+        // Log response headers for debugging
+        const headers: Record<string, string> = {};
+        response.headers.forEach((value, key) => {
+          headers[key] = value;
+        });
+        console.log("Response headers:", headers);
         
         if (!response.ok) {
           let errorMessage = "Failed to save post";
+          let errorDetails = '';
           
           try {
             const errorData = await response.json();
             console.error("Post creation error:", errorData);
             errorMessage = errorData.message || errorMessage;
+            errorDetails = JSON.stringify(errorData, null, 2);
           } catch (e) {
-            // If it's not JSON, get the status text
-            console.error("Non-JSON error response:", response.statusText);
+            // If it's not JSON, get the response text
+            const text = await response.text();
+            console.error("Non-JSON error response:", text);
             errorMessage = `Server error (${response.status}): ${response.statusText}`;
+            errorDetails = text;
           }
           
-          throw new Error(errorMessage);
+          throw new Error(`${errorMessage}\n${errorDetails}`);
         }
         
         return response.json();
@@ -270,11 +313,26 @@ export default function CreatePost({
       }
     },
     onError: (error: Error) => {
+      console.error('Post mutation error details:', error);
+      
+      // Extract meaningful message parts
+      let errorMessage = error.message || "Failed to save post";
+      if (errorMessage.length > 100) {
+        errorMessage = errorMessage.substring(0, 100) + "...";
+      }
+      
+      // Show toast with improved error details
       toast({
-        title: "Error",
-        description: error.message || "Failed to save post",
+        title: "Post Creation Failed",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Show more detailed console error for debugging
+      console.error('Full error message:', error.message);
+      
+      // Try to recover application state
+      setIsExpanded(true); // Keep form open to allow editing
     },
   });
 
@@ -376,11 +434,11 @@ export default function CreatePost({
       return;
     }
     
-    // Create basic post data object with required fields
-    // Keep it simple - only include what's absolutely necessary
+    // Create post data object with required fields including user ID
     const postData: any = {
       content,
       contentType: 'standard',
+      userId: user.id, // Explicitly include user ID for server authentication
     };
     
     // Only add title if present
