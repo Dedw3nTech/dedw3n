@@ -3880,73 +3880,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/posts", async (req, res) => {
+  app.post("/api/posts", unifiedIsAuthenticated, async (req, res) => {
     try {
       // Enhanced logging for debugging post creation requests
       console.log('[POST API] Post creation request received:');
-      console.log('[POST API] Request headers:', JSON.stringify(req.headers));
       console.log('[POST API] Request body keys:', Object.keys(req.body));
       console.log('[POST API] Content type:', req.headers['content-type']);
       
-      // Try to get user from various sources, prioritizing:
-      // 1. Standard authentication (req.user from auth middleware)
-      // 2. User ID in request body
-      // 3. User ID in headers
-      
-      let userId: number | null = null;
-      let user = null;
-      
-      // Option 1: Check if already authenticated via middleware
-      if (req.user) {
-        userId = (req.user as any).id;
-        user = req.user;
-        console.log('[POST API] User authenticated via middleware:', userId);
-      } 
-      // Option 2: Check for user ID in request body
-      else if (req.body && req.body.userId) {
-        userId = parseInt(req.body.userId);
-        console.log('[POST API] Using user ID from request body:', userId);
-        
-        // Verify this user exists
-        try {
-          user = await storage.getUser(userId);
-          if (!user) {
-            return res.status(401).json({ message: "Invalid user ID provided" });
-          }
-        } catch (error) {
-          console.error('[POST API] Error retrieving user by ID:', error);
-          return res.status(500).json({ message: "Error retrieving user" });
-        }
-      }
-      // Option 3: Check for user ID in headers
-      else if (req.headers['x-client-user-id']) {
-        userId = parseInt(req.headers['x-client-user-id'] as string);
-        console.log('[POST API] Using user ID from headers:', userId);
-        
-        // Verify this user exists
-        try {
-          user = await storage.getUser(userId);
-          if (!user) {
-            return res.status(401).json({ message: "Invalid user ID in header" });
-          }
-        } catch (error) {
-          console.error('[POST API] Error retrieving user by ID from header:', error);
-          return res.status(500).json({ message: "Error retrieving user from header ID" });
-        }
+      // Get the authenticated user
+      const userId = (req.user as any).id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required to create posts" });
       }
       
-      // If we still don't have a user, return authentication error
-      if (!userId || !user) {
-        console.error('[POST API] No valid user ID found for post creation');
-        return res.status(401).json({ 
-          message: "Authentication required to create posts. Please log in or provide a valid user ID.",
-          details: {
-            bodyIncludesUserId: req.body && 'userId' in req.body,
-            headerIncludesUserId: 'x-client-user-id' in req.headers,
-            authenticationStatus: !!req.user
-          }
-        });
-      }
+      console.log('[POST API] User authenticated with userId:', userId);
       
       console.log('[POST API] Creating post with user ID:', userId);
       
@@ -4288,7 +4235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Like a post
-  app.post("/api/posts/:id/like", isAuthenticated, async (req, res) => {
+  app.post("/api/posts/:id/like", unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
       const userId = (req.user as any).id;
@@ -4362,7 +4309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Save a post
-  app.post("/api/posts/:id/save", isAuthenticated, async (req, res) => {
+  app.post("/api/posts/:id/save", unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
       const userId = (req.user as any).id;
@@ -4593,25 +4540,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // This endpoint was replaced with the one at line ~2980
   
-  app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/posts/:id", unifiedIsAuthenticated, async (req, res) => {
     try {
+      console.log('[DELETE API] Attempting to delete post');
       const userId = (req.user as any).id;
       const postId = parseInt(req.params.id);
+      
+      if (!userId) {
+        console.log('[DELETE API] No user ID found');
+        return res.status(401).json({ message: "Authentication required to delete posts" });
+      }
+      
+      console.log(`[DELETE API] User ${userId} attempting to delete post ${postId}`);
       
       // Get the post
       const post = await storage.getPost(postId);
       if (!post) {
+        console.log(`[DELETE API] Post ${postId} not found`);
         return res.status(404).json({ message: "Post not found" });
       }
       
       // Check if the post belongs to the user
       if (post.userId !== userId) {
+        console.log(`[DELETE API] Post ${postId} belongs to user ${post.userId}, not ${userId}`);
         return res.status(403).json({ message: "You can only delete your own posts" });
       }
       
+      console.log(`[DELETE API] Deleting post ${postId} by user ${userId}`);
       await storage.deletePost(postId);
+      console.log(`[DELETE API] Post ${postId} deleted successfully`);
       res.status(204).send();
     } catch (error) {
+      console.error('[DELETE API] Error deleting post:', error);
       res.status(500).json({ message: "Failed to delete post" });
     }
   });
