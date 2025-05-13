@@ -428,10 +428,10 @@ export default function Header() {
                 <Video className="h-4 w-4" />
                 <span>Videos</span>
               </div>
-            </button>
+            </div>
             
-            <button 
-              className={`py-2 px-4 text-sm font-medium border-b-2 ${activeTab === "communities" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
+            <div 
+              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "communities" ? "border-yellow-400 text-yellow-400" : "border-transparent text-white hover:text-white"}`}
               onClick={() => {
                 setActiveTab("communities");
                 setLocation("/communities");
@@ -442,7 +442,7 @@ export default function Header() {
                 <Users className="h-4 w-4" />
                 <span>Communities</span>
               </div>
-            </button>
+            </div>
             
             {/* Profile button removed as requested */}
           </div>
