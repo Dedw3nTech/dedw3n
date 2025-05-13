@@ -576,7 +576,7 @@ export default function PostCard({
                 <img 
                   src={post.thumbnailUrl} 
                   alt={post.title || "Video thumbnail"} 
-                  className="w-full aspect-video object-cover"
+                  className="w-full object-contain"
                 />
                 <div 
                   className="absolute inset-0 flex items-center justify-center bg-black/50 cursor-pointer"
@@ -619,7 +619,7 @@ export default function PostCard({
               <video 
                 ref={videoRef}
                 src={post.videoUrl} 
-                className="w-full aspect-video object-cover"
+                className="w-full object-contain"
                 autoPlay={isPlaying}
                 muted={isMuted}
                 playsInline
