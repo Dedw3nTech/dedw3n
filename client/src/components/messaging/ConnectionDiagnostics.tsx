@@ -188,7 +188,12 @@ export function ConnectionDiagnostics() {
             <div className="text-center">
               <div className="text-xs text-muted-foreground">Best</div>
               <div className="text-lg font-medium text-green-500">
-                {connectionDetails.pingStats?.min < Infinity ? `${connectionDetails.pingStats?.min} ms` : '-'}
+                {(connectionDetails.pingStats && 
+                  connectionDetails.pingStats.min !== undefined &&
+                  typeof connectionDetails.pingStats.min === 'number' && 
+                  connectionDetails.pingStats.min < Infinity) 
+                    ? `${connectionDetails.pingStats.min} ms` 
+                    : '-'}
               </div>
             </div>
             
