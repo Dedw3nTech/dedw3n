@@ -479,7 +479,7 @@ function setupWebSockets(server: Server) {
     }
   });
   
-  console.log('WebSocket server initialized at /ws path');
+  console.log('WebSocket server initialized at /ws path with echo-protocol support');
   
   wss.on('connection', (ws, req) => {
     console.log('WebSocket connection established - Protocol:', ws.protocol || 'none');

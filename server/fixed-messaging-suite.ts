@@ -486,7 +486,7 @@ function setupWebSockets(server: Server) {
     }
   });
   
-  console.log('WebSocket server initialized at /ws path');
+  console.log('WebSocket server initialized at /ws path with echo-protocol support');
   
   // Add server status endpoint
   wss.on('headers', (headers, req) => {

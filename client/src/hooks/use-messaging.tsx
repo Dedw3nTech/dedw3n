@@ -962,6 +962,23 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         socket = new WebSocket(wsUrl);
         console.log("WebSocket initialized without protocol specification");
       }
+      
+      // Set timeout to detect stuck connections and store it on the socket object
+      const connectionTimeout = setTimeout(() => {
+        if (socket && socket.readyState === WebSocket.CONNECTING) {
+          console.warn("WebSocket stuck in CONNECTING state for 15+ seconds, resetting...");
+          try {
+            socket.close(1000, "Connection timeout"); 
+          } catch (err) {
+            // Ignore errors when closing
+          }
+          // Begin reconnection process after a short delay
+          setTimeout(() => connect(), 1000);
+        }
+      }, 15000);
+      
+      // Store the timeout ID on the socket object
+      (socket as any)._connectionTimeout = connectionTimeout;
     } catch (error) {
       console.error("Failed to construct WebSocket:", error);
       setConnectionStatus('disconnected');
@@ -990,6 +1007,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     if (socket) {
       socket.onopen = () => {
         console.log("WebSocket connected successfully");
+        
+        // Clear connection timeout to prevent false detections
+        if ((socket as any)._connectionTimeout) {
+          clearTimeout((socket as any)._connectionTimeout);
+          (socket as any)._connectionTimeout = null;
+        }
         
         // Make sure socket still exists before setting properties
         if (socket) {
