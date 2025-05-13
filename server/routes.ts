@@ -1161,35 +1161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
   
-  // Additional endpoint for auth testing
-  app.get("/api/auth/me", unifiedIsAuthenticated, (req, res) => {
-    console.log('[AUTH TEST] /api/auth/me endpoint called');
-    console.log('[AUTH TEST] Authentication state:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
-    console.log('[AUTH TEST] User object:', req.user ? `Present (ID: ${(req.user as any).id})` : 'Not present');
-    console.log('[AUTH TEST] Session ID:', req.sessionID || 'No session ID');
-    
-    res.json({
-      authenticated: !!req.user,
-      user: req.user,
-      method: req.isAuthenticated() ? 'session' : req.user ? 'token' : 'none',
-      sessionID: req.sessionID || null,
-      isAuthenticated: req.isAuthenticated(),
-      authType: req.isAuthenticated() ? 'session' : req.user ? 'token' : 'none',
-      debug: {
-        sessionExists: !!req.session,
-        timestamp: new Date().toISOString(),
-        headers: {
-          authorization: req.headers.authorization ? 'present (not shown)' : 'not present',
-          cookie: req.headers.cookie ? 'present (not shown)' : 'not present'
-        }
-      },
-      session: req.session ? { 
-        id: req.sessionID,
-        cookie: req.session.cookie,
-        // Don't include sensitive data
-      } : null
-    });
-  });
+  // Removed duplicate /api/auth/me endpoint - we're using the comprehensive implementation above
   
   // User profile routes
   app.get("/api/users/id/:userId", async (req, res) => {
