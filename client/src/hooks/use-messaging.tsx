@@ -100,6 +100,14 @@ interface MessagingContextType {
     disconnectReason?: string;
     pingLatency?: number;
     activeConnections?: number;
+    connectionDuration?: number;
+    errorCount?: number;
+    authRetry?: boolean;
+    lastError?: {
+      time: number;
+      type: string;
+      url: string;
+    };
   };
   
   // Methods
@@ -125,6 +133,15 @@ interface MessagingContextType {
   // WebSocket connection
   connect: () => void;
   disconnect: () => void;
+  
+  // Connection diagnostic information
+  getConnectionStats: () => {
+    uptime: number | null;
+    reconnects: number;
+    lastActivity: string | null;
+    errorCount: number;
+    latency: number | null;
+  };
 }
 
 // Create context
@@ -1427,6 +1444,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     await clearConversationMutation.mutateAsync(userId);
   };
   
+  // Define connection stats method for diagnostics
+  const getConnectionStats = () => {
+    // Calculate uptime if we have a start time
+    const uptime = connectionDetails.startTime 
+      ? Date.now() - connectionDetails.startTime 
+      : null;
+      
+    // Format last activity
+    const lastActivity = connectionDetails.lastActivity 
+      ? new Date(connectionDetails.lastActivity).toISOString() 
+      : null;
+      
+    return {
+      uptime,
+      reconnects: connectionDetails.reconnects || 0,
+      lastActivity,
+      errorCount: connectionDetails.errorCount || 0,
+      latency: connectionDetails.pingLatency || null
+    };
+  };
+
   const value = {
     // State
     conversations: conversationsData || [],
@@ -1468,7 +1506,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     
     // WebSocket connection
     connect,
-    disconnect
+    disconnect,
+    
+    // Connection diagnostics
+    getConnectionStats
   };
   
   return (

@@ -22,6 +22,31 @@ import { verifyToken } from "./jwt-auth"; // Import for token verification
 const connections = new Map<number, Set<WebSocket>>();
 const activeCalls = new Map<string, ActiveCall>();
 
+// Connection statistics
+interface ConnectionStats {
+  totalConnections: number;
+  activeConnections: number;
+  authFailures: number;
+  messagesSent: number;
+  messagesReceived: number;
+  errors: number;
+  lastError?: {
+    time: Date;
+    message: string;
+    code?: number;
+  };
+}
+
+// Global connection stats for the server
+const connectionStats: ConnectionStats = {
+  totalConnections: 0,
+  activeConnections: 0,
+  authFailures: 0,
+  messagesSent: 0,
+  messagesReceived: 0,
+  errors: 0
+};
+
 // Types
 interface Connection {
   userId: number;
