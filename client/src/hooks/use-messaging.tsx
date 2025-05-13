@@ -310,12 +310,22 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   }, [checkConnectionHealth]);
   
   // WebSocket connection management
+  // Generate a unique connection ID for tracking
+  const generateConnectionId = () => {
+    return `ws_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+  };
+  
   const connect = () => {
-    if (!user || socket) return;
+    if (!user || (socket && socket.readyState === WebSocket.OPEN)) return;
     
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.log(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`);
       setConnectionStatus('disconnected');
+      setConnectionDetails(prev => ({
+        ...prev,
+        disconnectTime: Date.now(),
+        disconnectReason: 'Maximum reconnection attempts reached'
+      }));
       return;
     }
     
