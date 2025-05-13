@@ -172,13 +172,13 @@ export default function ProfileSettingsPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-black">About Me</Label>
+                    <Label htmlFor="bio" className="text-black">Bio</Label>
                     <Textarea
                       id="bio"
                       name="bio"
                       value={formData.bio || ''}
                       onChange={handleInputChange}
-                      placeholder="Tell us about yourself"
+                      placeholder="Add Bio"
                       rows={4}
                       className="text-black"
                     />
