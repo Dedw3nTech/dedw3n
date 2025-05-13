@@ -30,7 +30,7 @@ import {
   Languages,
   CreditCard,
   FileText,
-  Settings as SettingsIcon,
+  Cog as CogIcon,
   Save,
   Loader2,
 } from "lucide-react";
@@ -58,7 +58,7 @@ const CURRENCY_OPTIONS = [
   { value: "NGN", label: "Nigerian Naira (₦)" },
 ];
 
-export default function SettingsPage() {
+export default function AccountPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -361,9 +361,9 @@ export default function SettingsPage() {
   return (
     <div className="bg-background min-h-screen">
       <PageHeader
-        title={t("settings.accountSettings")}
-        description={t("settings.manageYourAccount")}
-        icon={<SettingsIcon className="h-6 w-6" />}
+        title={t("account.info")}
+        description={t("account.manage")}
+        icon={<CogIcon className="h-6 w-6" />}
       />
       
       <div className="container max-w-screen-xl py-6">
@@ -371,19 +371,19 @@ export default function SettingsPage() {
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-3xl mb-8">
             <TabsTrigger value="account">
               <User className="h-4 w-4 mr-2" />
-              {t("settings.account")}
+              {t("account")}
             </TabsTrigger>
             <TabsTrigger value="preferences">
               <Globe className="h-4 w-4 mr-2" />
-              {t("settings.preferences")}
+              {t("preferences")}
             </TabsTrigger>
             <TabsTrigger value="notifications">
               <Bell className="h-4 w-4 mr-2" />
-              {t("settings.notifications")}
+              {t("notifications")}
             </TabsTrigger>
             <TabsTrigger value="danger">
               <Shield className="h-4 w-4 mr-2" />
-              {t("settings.security")}
+              {t("security")}
             </TabsTrigger>
           </TabsList>
           
@@ -392,8 +392,8 @@ export default function SettingsPage() {
             {/* Profile Information Card */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.profileInformation")}</CardTitle>
-                <CardDescription>{t("settings.updateProfileInfo")}</CardDescription>
+                <CardTitle>{t("profileInformation")}</CardTitle>
+                <CardDescription>{t("updateProfileInfo")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar */}
