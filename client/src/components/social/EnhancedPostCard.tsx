@@ -745,13 +745,6 @@ export default function EnhancedPostCard({
             {(post.comments && post.comments > 0) 
               ? `${post.comments} ${t("social.comments")}` 
               : t("social.no_comments")}
-            <span 
-              className="flex items-center cursor-pointer text-red-500 hover:text-red-600 ml-2"
-              onClick={handleReport}
-              title="Report"
-            >
-              <Flag className="w-4 h-4 ml-1" />
-            </span>
           </span>
           {(post.shares && post.shares > 0) && (
             <span>{post.shares} {t("social.shares")}</span>
