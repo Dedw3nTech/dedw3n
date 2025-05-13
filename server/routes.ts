@@ -4076,40 +4076,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Creating post with data:", postData);
       
-      // Use our centralized API module
+      // Simplified post creation with multi-stage fallback approach
+      let post;
       try {
-        // Import our social API module
+        // First try to use the API module for consistency
         const socialApi = await import('./social-api');
-        
-        // Use the createApiPost function from our API module
-        const post = await socialApi.createApiPost(postData);
-        console.log("Post created successfully via API module:", post);
-        
-        return res.status(201).json(post);
+        post = await socialApi.createApiPost(postData);
+        console.log("[POST API] Post created successfully via API module");
       } catch (apiError) {
-        console.error("API module error when creating post:", apiError);
-        console.log("Falling back to database for post creation...");
+        // If API fails, fall back to direct database storage
+        console.log("[POST API] API module failed, using direct storage:", apiError);
         
-        // If API fails, fall back to database storage
-        // Validate the data before creating the post
-        const validatedData = insertPostSchema.parse(postData);
-        const post = await storage.createPost(validatedData);
-        
-        // Explicitly clear any in-memory posts cache
         try {
-          storage.clearMemoryPostsCache();
-        } catch (error) {
-          console.log("Note: clearMemoryPostsCache not implemented, but this is not critical.");
+          post = await storage.createPost(postData);
+          if (!post) throw new Error("Failed to create post in database");
+          
+          // Try to clear cache if available
+          try {
+            storage.clearMemoryPostsCache();
+          } catch (cacheError) {
+            // Non-critical error, just log it
+            console.log("[POST API] Cache clearing not implemented or failed, but continuing");
+          }
+        } catch (dbError) {
+          console.error("[POST API] Database storage also failed:", dbError);
+          throw new Error("Failed to create post after trying all available methods");
         }
-        
-        return res.status(201).json(post);
       }
+      
+      if (!post) {
+        throw new Error("Post creation resulted in null or undefined post object");
+      }
+      
+      console.log("[POST API] Post created successfully:", post.id);
+      return res.status(201).json(post);
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("[POST API] Error creating post:", error);
+      
+      // Detailed error reporting for debugging
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors });
+        return res.status(400).json({ 
+          message: "Invalid post data format", 
+          errors: error.errors,
+          details: "The post data format is invalid. Please check your request."
+        });
       }
-      res.status(500).json({ message: "Failed to create post" });
+      
+      // Return more helpful information about the error
+      return res.status(500).json({ 
+        message: "Failed to create post",
+        error: error instanceof Error ? error.message : String(error),
+        details: "The server encountered a problem while creating your post. Try again or check your data."
+      });
     }
   });
 
