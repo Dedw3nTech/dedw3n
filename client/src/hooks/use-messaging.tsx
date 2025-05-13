@@ -664,7 +664,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   };
   
   // WebSocket connection function
-  const connect = () => {
+  const connect = useCallback(() => {
     if (!user || (socket && socket.readyState === WebSocket.OPEN)) return;
     
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
