@@ -686,20 +686,25 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           }
           
           // Store enhanced diagnostic data in connection details
-          setConnectionDetails(prev => ({
-            ...prev,
-            pingLatency: latency,
-            lastActivity: now,
-            serverTime: data.serverTime,
-            clockDrift: clockDrift,
-            consecutiveSuccessfulPings: (prev.consecutiveSuccessfulPings || 0) + 1,
-            pingStats: {
-              ...(prev.pingStats || {}),
-              min: Math.min(latency, (prev.pingStats?.min || Infinity)),
-              max: Math.max(latency, (prev.pingStats?.max || 0)),
-              recent: [...((prev.pingStats?.recent || []).slice(-9)), latency]
-            }
-          }));
+          setConnectionDetails(prev => {
+            // Create properly typed default object for pingStats
+            const defaultPingStats = { min: Infinity, max: 0, recent: [] as number[] };
+            const currentPingStats = prev.pingStats || defaultPingStats;
+            
+            return {
+              ...prev,
+              pingLatency: latency,
+              lastActivity: now,
+              serverTime: data.serverTime,
+              clockDrift: clockDrift,
+              consecutiveSuccessfulPings: (prev.consecutiveSuccessfulPings || 0) + 1,
+              pingStats: {
+                min: Math.min(latency, currentPingStats.min),
+                max: Math.max(latency, currentPingStats.max),
+                recent: [...(currentPingStats.recent.slice(-9)), latency]
+              }
+            };
+          });
           
           // Clear any ping timeout since we got a response
           const pingTimeout = (socket as any)?._currentPingTimeout;
@@ -711,11 +716,13 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           console.log("Received pong response (unknown or server-initiated)");
           
           // Still update last activity time for any pong
-          setConnectionDetails(prev => ({
-            ...prev,
-            lastActivity: now,
-            unidentifiedPongs: (prev.unidentifiedPongs || 0) + 1
-          }));
+          setConnectionDetails(prev => {
+            return {
+              ...prev,
+              lastActivity: now,
+              unidentifiedPongs: (prev.unidentifiedPongs || 0) + 1
+            };
+          });
         }
         break;
         
@@ -1358,19 +1365,22 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
             // Fix: Properly clean up the socket connection
             if (socket) {
               try {
-                // Using explicit type checking to avoid TypeScript errors
-                const ws = socket as WebSocket;
+                // Type assertion to work around TypeScript issue
+                const ws = socket as unknown as WebSocket;
                 
-                // Clean up event handlers to prevent memory leaks
-                if ('onclose' in ws) ws.onclose = null;
-                if ('onerror' in ws) ws.onerror = null;
-                if ('onmessage' in ws) ws.onmessage = null;
-                if ('onopen' in ws) ws.onopen = null;
+                // Safely clear event handlers to prevent memory leaks
+                try { ws.onclose = null; } catch (e) {}
+                try { ws.onerror = null; } catch (e) {}
+                try { ws.onmessage = null; } catch (e) {}
+                try { ws.onopen = null; } catch (e) {}
                 
-                // If still in open or connecting state, attempt to close it properly
-                if ('readyState' in ws && 
-                    (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-                  ws.close(1000, "Clean shutdown before reconnect");
+                // Safely close the connection if it's still open
+                try {
+                  if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    ws.close(1000, "Clean shutdown before reconnect");
+                  }
+                } catch (e) {
+                  console.warn("Error closing WebSocket:", e);
                 }
               } catch (e) {
                 console.warn("Error while cleaning up socket:", e);
