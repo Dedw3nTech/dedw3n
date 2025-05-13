@@ -18,9 +18,15 @@ import { storage } from "./storage";
 import { verifyToken } from "./jwt-auth"; // Import for token verification
 import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth";
 
+// Define global types for WebSocket tracking
+declare global {
+  var userStatusUpdates: Map<number, number>; // Map of userId to last status update timestamp
+}
+
 // Connection management
 const connections = new Map<number, Set<WebSocket>>();
 const activeCalls = new Map<string, ActiveCall>();
+const userStatusUpdates = new Map<number, number>(); // Track the last time user status was broadcast
 
 // Types
 interface Connection {
@@ -647,8 +653,30 @@ function setupWebSockets(server: Server) {
             break;
             
           case 'ping':
-            // Client-initiated ping/pong for connection testing
-            response = { type: 'pong', timestamp: new Date().toISOString() };
+            // Track the ping for connection activity monitoring
+            console.debug("Received ping from client", userId ? `(User: ${userId})` : "(Unauthenticated)");
+            
+            // Include more detailed connection data in the pong response
+            response = {
+              type: 'pong',
+              timestamp: new Date().toISOString(),
+              connectionId: data.connectionId || 'unknown',
+              serverUptime: process.uptime(), // Server uptime in seconds
+              pingReceived: true,
+              connectionCount: connections.size || 0
+            };
+            
+            // If this is an authenticated connection, update activity timestamp
+            if (authenticated && userId) {
+              // Refresh user's online status without spamming - only every 5 minutes
+              const lastUpdate = userStatusUpdates.get(userId) || 0;
+              const now = Date.now();
+              if (now - lastUpdate > 5 * 60 * 1000) { // 5 minutes
+                broadcastUserStatus(userId, true);
+                userStatusUpdates.set(userId, now);
+                console.debug(`Refreshed online status for user ${userId} after ping`);
+              }
+            }
             break;
             
           default:
