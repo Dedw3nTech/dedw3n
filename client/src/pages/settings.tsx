@@ -285,6 +285,7 @@ export default function SettingsPage() {
     
     const formData = new FormData();
     formData.append("name", name);
+    formData.append("email", email);
     formData.append("bio", bio);
     
     if (avatarFile) {
@@ -440,17 +441,15 @@ export default function SettingsPage() {
                   />
                 </div>
                 
-                {/* Email (read-only) */}
+                {/* Email (editable) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">{t("settings.email")}</Label>
                   <Input
                     id="email"
                     value={email}
-                    readOnly
-                    disabled
-                    className="bg-muted"
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-white"
                   />
-                  <p className="text-xs text-muted-foreground">{t("settings.emailReadOnly")}</p>
                 </div>
                 
                 {/* Bio */}
