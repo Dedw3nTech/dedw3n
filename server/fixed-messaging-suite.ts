@@ -500,6 +500,43 @@ function setupWebSockets(server: Server) {
     connectionStats.totalConnections++;
     connectionStats.activeConnections++;
     
+    // Initialize connection info for diagnostics and tracking
+    const connectionInfo = {
+      id: connectionId,
+      startTime: Date.now(),
+      authTime: null,
+      userId: null,
+      authenticated: false,
+      authType: null,
+      ip: req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+      pingCount: 0,
+      pongCount: 0
+    };
+    
+    // Store connection info on the WebSocket object for tracking
+    (ws as any)._connectionInfo = connectionInfo;
+    
+    // Log connection establishment with protocol info
+    console.log(`WebSocket connection ${connectionId} established with protocol: ${(ws as any).protocol || 'none'}`);
+    
+    // Set up error handler for better diagnostics
+    ws.on('error', (error) => {
+      connectionStats.errors++;
+      connectionStats.lastError = {
+        time: new Date(),
+        message: error.message,
+        code: (error as any).code
+      };
+      
+      console.error(`WebSocket error on connection ${connectionId}:`, error);
+      
+      // For specific error types, add more detailed logging
+      if ((error as any).code === 'ECONNRESET') {
+        console.log(`Connection ${connectionId} reset by peer - client may have closed tab or navigated away`);
+      }
+    });
+    
     // Get authentication info from URL params if available
     const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
     const token = url.searchParams.get('token');
@@ -720,21 +757,110 @@ function setupWebSockets(server: Server) {
       // Update connection statistics
       connectionStats.activeConnections = Math.max(0, connectionStats.activeConnections - 1);
       
-      console.log(`WebSocket connection closed (ID: ${connectionId}, Code: ${code}, Reason: ${reason}, Active: ${connectionStats.activeConnections})`);
+      // Create a descriptive reason string for diagnostics
+      let reasonStr = reason?.toString() || '';
+      let codeDescription = '';
+      
+      // Add code description for better diagnostics
+      switch (code) {
+        case 1000:
+          codeDescription = 'normal';
+          break;
+        case 1001:
+          codeDescription = 'going_away';
+          break;
+        case 1002:
+          codeDescription = 'protocol_error';
+          break;
+        case 1003:
+          codeDescription = 'unsupported_data';
+          break;
+        case 1005:
+          codeDescription = 'no_status';
+          break;
+        case 1006:
+          codeDescription = 'abnormal_closure';
+          break;
+        case 1007:
+          codeDescription = 'invalid_frame_payload_data';
+          break;
+        case 1008:
+          codeDescription = 'policy_violation';
+          break;
+        case 1009:
+          codeDescription = 'message_too_big';
+          break;
+        case 1010:
+          codeDescription = 'missing_extension';
+          break;
+        case 1011:
+          codeDescription = 'internal_error';
+          break;
+        case 1012:
+          codeDescription = 'service_restart';
+          break;
+        case 1013:
+          codeDescription = 'try_again_later';
+          break;
+        case 1014:
+          codeDescription = 'bad_gateway';
+          break;
+        case 1015:
+          codeDescription = 'tls_handshake';
+          break;
+        default:
+          codeDescription = 'unknown';
+      }
+      
+      // Comprehensive connection closure logging
+      console.log(`WebSocket connection ${connectionId} closed: code=${code} (${codeDescription}), reason=${reasonStr}`);
+      
+      // For abnormal closures, log additional details to help diagnose issues
+      if (code === 1006) {
+        console.log('Abnormal WebSocket closure detected - this typically indicates network issues or browser behavior');
+      }
+      
+      // Log connection lifetime metrics
+      const connectionInfo = (ws as any)._connectionInfo || {};
+      const startTime = connectionInfo.startTime || Date.now();
+      const authTime = connectionInfo.authTime || null;
+      const userId = connectionInfo.userId || null;
+      const authenticated = connectionInfo.authenticated || false;
+      const lifetimeSeconds = Math.round((Date.now() - startTime) / 1000);
+      const authDuration = authTime ? Math.round((authTime - startTime) / 1000) : 'N/A';
+      const authenticatedTime = authTime ? Math.round((Date.now() - authTime) / 1000) : 0;
+      
+      console.log(`Connection stats: lifetime=${lifetimeSeconds}s, userId=${userId}, authenticated=${authenticated}`);
+      if (authenticated) {
+        console.log(`Authentication details: authType=${connectionInfo.authType || 'unknown'}, authDuration=${authDuration}s, authenticatedTime=${authenticatedTime}s`);
+      }
+      console.log(`Connection activity: pings=${connectionInfo.pingCount || 0}, pongs=${connectionInfo.pongCount || 0}`);
       
       // Clear ping interval
       clearInterval(pingInterval);
       
-      // Remove connection from user's connections
-      if (userId !== null) {
-        removeConnection(userId, ws);
+      // Properly clean up connection from the user's connection set if authenticated
+      if (connectionInfo.userId) {
+        removeConnection(connectionInfo.userId, ws);
         
-        // Broadcast offline status if this was the last connection for this user
-        const userConnections = connections.get(userId);
-        if (!userConnections || userConnections.size === 0) {
-          broadcastUserStatus(userId, false);
+        // Log active connections state after cleanup
+        const activeUserConnections = connections.get(connectionInfo.userId)?.size || 0;
+        console.log(`Removing WebSocket connection for user ${connectionInfo.userId}`);
+        if (activeUserConnections === 0) {
+          console.log(`User ${connectionInfo.userId} now has no active connections`);
+          broadcastUserStatus(connectionInfo.userId, false);
+        } else {
+          console.log(`User ${connectionInfo.userId} still has ${activeUserConnections} active connections`);
         }
       }
+      
+      // Log overall WebSocket connection stats
+      const activeUsers = connections.size;
+      const totalConnections = Array.from(connections.values())
+        .reduce((acc, conns) => acc + conns.size, 0);
+      console.log(`Active WebSocket stats: users=${activeUsers}, connections=${totalConnections}`);
+      
+      // Connection cleanup is now handled by the more comprehensive code above
     });
     
     ws.on('error', (error) => {
