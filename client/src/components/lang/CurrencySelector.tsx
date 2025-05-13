@@ -29,7 +29,6 @@ export function CurrencySelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-1 px-2 h-7 rounded-md cursor-pointer hover:bg-accent">
-          <CreditCard className="h-3.5 w-3.5" />
           <span className="text-xs font-medium">{symbol} {currency}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-50" />
         </div>

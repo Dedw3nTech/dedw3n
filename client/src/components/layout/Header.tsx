@@ -9,7 +9,6 @@ import { Badge } from "../ui/badge";
 import { CurrencySelector } from "../lang/CurrencySelector";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
-import { ThemeToggle } from "../ui/theme-toggle";
 import { useMessaging } from "@/hooks/use-messaging";
 import SocialNav from "@/components/social/SocialNav";
 import { Button } from "@/components/ui/button";
@@ -188,7 +187,6 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-3">
             <Logo size="md" />
-            <ThemeToggle />
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
             <div className="hidden md:flex items-center space-x-1 ml-4">
               <CurrencySelector />
