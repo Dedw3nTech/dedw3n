@@ -740,11 +740,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
         
         // Update connection status
-        setConnectionDetails({
+        setConnectionDetails(prevDetails => ({
+          ...prevDetails,
           id: connectionId,
           startTime: connectionStartTime,
-          reconnects: (prev.reconnects || 0) + (reconnectAttempts > 0 ? 1 : 0)
-        });
+          reconnects: (prevDetails.reconnects || 0) + (reconnectAttempts > 0 ? 1 : 0)
+        }));
         setIsConnected(true);
         setConnectionStatus('connected');
         
@@ -759,7 +760,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           // Log token presence for debugging (but not the actual token)
           console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}, connectionId: ${connectionId}`);
           
-          socket.send(JSON.stringify({
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
             type: "authenticate",
             userId: user.id,
             token: token,  // Include the JWT token for authentication
@@ -771,6 +773,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
               userAgent: navigator.userAgent.substring(0, 100) // Truncate user agent to avoid large payloads
             }
           }));
+          }
           
           console.log("Sent authentication request to WebSocket server with token");
           

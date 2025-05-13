@@ -635,29 +635,7 @@ export default function CreatePost({
                   </div>
                 )}
                 
-                {/* Tag input */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add a tag"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag();
-                      }
-                    }}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addTag}
-                    disabled={!currentTag.trim() || tags.length >= 5}
-                  >
-                    Add
-                  </Button>
-                </div>
+
               </div>
             </div>
             
