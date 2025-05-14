@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { queryClient } from "@/lib/queryClient";
 
 // Import the Dedwen logo
-import dedwenLogo from "@assets/WHITE BG DEDWEN LOGO (320 x 132 px).png";
+import dedwenLogo from "../assets/d3-black-logo.png";
 
 export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
