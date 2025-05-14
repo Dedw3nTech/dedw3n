@@ -152,7 +152,7 @@ export default function VendorDashboard() {
     );
   }
   
-  // If user is a vendor but doesn't have a vendor profile yet, show simplified dashboard with "Add Product" button
+  // If user is a vendor but doesn't have a vendor profile yet, show simplified dashboard with multiple options
   if (!isLoadingVendor && !vendor && isUserVendor) {
     return (
       <div className="container max-w-7xl mx-auto py-8 px-4">
@@ -160,16 +160,44 @@ export default function VendorDashboard() {
           <CardHeader>
             <CardTitle className="text-2xl">Vendor Dashboard</CardTitle>
             <CardDescription>
-              Your vendor account is active. You can add products directly.
+              Your vendor account is active. Here are some options to get started.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <p>Your vendor profile is being set up. In the meantime, you can start adding products to your store.</p>
-              <Button onClick={() => setLocation('/add-product')} size="lg">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Add Product
-              </Button>
+              <p>Your vendor profile is being set up. Here are some things you can do now:</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Add Your First Product</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Start selling by adding your first product to your store.
+                    </p>
+                    <Button onClick={() => setLocation('/add-product')}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Product
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">View Dashboard</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      View your dashboard to track sales and performance.
+                    </p>
+                    <Button variant="outline" onClick={() => setActiveTab('dashboard')}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </CardContent>
         </Card>
