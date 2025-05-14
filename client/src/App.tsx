@@ -21,6 +21,43 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+
+// Conditional MarketplaceNav wrapper
+function MarketplaceNavWrapper() {
+  const [location] = useLocation();
+  
+  // Only show marketplace nav on marketplace-related pages
+  const showOnPaths = [
+    '/products',
+    '/product',
+    '/vendors',
+    '/vendor',
+    '/government',
+    '/cart',
+    '/checkout',
+    '/payment-success',
+    '/add-product',
+    '/upload-product',
+    '/vendor-dashboard',
+    '/become-vendor'
+  ];
+  
+  // Check if current path should show the marketplace nav
+  const shouldShowNav = showOnPaths.some(path => 
+    location === path || location.startsWith(`${path}/`)
+  );
+  
+  if (!shouldShowNav) {
+    return null;
+  }
+  
+  return (
+    <div className="sticky top-0 z-30 bg-white shadow-sm">
+      <MarketplaceNav />
+    </div>
+  );
+}
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -208,9 +245,7 @@ function App() {
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <Header />
-                          <div className="sticky top-0 z-30 bg-white shadow-sm">
-                            <MarketplaceNav />
-                          </div>
+                          <MarketplaceNavWrapper />
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
