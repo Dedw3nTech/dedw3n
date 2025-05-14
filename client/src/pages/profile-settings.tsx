@@ -287,6 +287,25 @@ export default function ProfileSettingsPage() {
                   />
                 </CardContent>
               </Card>
+              
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-black">Vendor Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {user.isVendor ? (
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                      <span className="text-green-600 font-medium">Vendor Account Active</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                      <span className="text-red-600 font-medium">Not Active</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
             
             <div className="md:col-span-2">
