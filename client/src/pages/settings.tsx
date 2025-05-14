@@ -465,7 +465,7 @@ export default function SettingsPage() {
                 
                 {/* Confirm New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">{t("settings.confirmPassword")}</Label>
+                  <Label htmlFor="confirm-password">Confrim New Password</Label>
                   <Input
                     id="confirm-password"
                     type="password"
