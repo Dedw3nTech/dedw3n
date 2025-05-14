@@ -396,7 +396,7 @@ export default function SettingsPage() {
                     </Avatar>
                   </div>
                   <div>
-                    <h3 className="font-medium">{t("settings.profilePicture")}</h3>
+                    <h3 className="font-medium">Profile Picture</h3>
                     <p className="text-sm text-muted-foreground">{t("settings.recommendedSize")}</p>
                   </div>
                 </div>
