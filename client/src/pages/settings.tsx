@@ -516,7 +516,7 @@ export default function SettingsPage() {
                 
                 {/* Currency */}
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t("settings.currency")}</Label>
+                  <Label htmlFor="currency">Region</Label>
                   <Select value={currency} onValueChange={setCurrency}>
                     <SelectTrigger id="currency">
                       <SelectValue placeholder={t("settings.selectCurrency")} />
