@@ -290,8 +290,8 @@ export default function ProfileSettingsPage() {
               
               <Card className="mt-6">
                 <CardHeader>
-                  <CardTitle className="text-black flex items-center">
-                    <Store className="mr-2 h-5 w-5" />
+                  <CardTitle className="text-black flex items-center text-sm">
+                    <Store className="mr-2 h-4 w-4" />
                     Vendor Account
                   </CardTitle>
                 </CardHeader>
