@@ -370,7 +370,7 @@ export default function SettingsPage() {
           <TabsList className="grid w-full grid-cols-1 max-w-3xl mb-8">
             <TabsTrigger value="account">
               <User className="h-4 w-4 mr-2" />
-              {t("settings.accountSettings")}
+              Account Settings
             </TabsTrigger>
           </TabsList>
           
