@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -43,7 +43,7 @@ export default function Products() {
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
-  const { marketType, marketTypeLabel } = useMarketType();
+  const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const { currency } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
   const { toast } = useToast();
