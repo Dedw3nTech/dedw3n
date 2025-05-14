@@ -396,8 +396,8 @@ export default function SettingsPage() {
                     </Avatar>
                   </div>
                   <div>
-                    <h3 className="font-medium">{user.username}</h3>
-                    <p className="text-sm text-muted-foreground">@{user.username.toLowerCase()}</p>
+                    <h3 className="font-medium">{user.name || user.username}</h3>
+                    <p className="text-sm text-blue-500 font-medium">@{user.username.toLowerCase()}</p>
                   </div>
                 </div>
                 
