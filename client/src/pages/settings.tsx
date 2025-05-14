@@ -437,7 +437,6 @@ export default function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
-                <CardDescription>{t("settings.changePasswordDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Current Password */}
