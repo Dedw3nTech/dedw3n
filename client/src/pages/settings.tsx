@@ -796,8 +796,8 @@ export default function SettingsPage() {
             {/* Security Section */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.securitySettings")}</CardTitle>
-                <CardDescription>{t("settings.securitySettingsDesc")}</CardDescription>
+                <CardTitle>Sign - In Security Settings</CardTitle>
+
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Two-Factor Authentication */}
@@ -825,7 +825,7 @@ export default function SettingsPage() {
                   ) : (
                     <>
                       <Shield className="mr-2 h-4 w-4" />
-                      {t("settings.updateSecurity")}
+                      Update Security
                     </>
                   )}
                 </Button>
