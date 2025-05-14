@@ -44,11 +44,6 @@ import {
 const LANGUAGE_OPTIONS = [
   { value: "en", label: "English" },
   { value: "fr", label: "Français" },
-  { value: "es", label: "Español" },
-  { value: "de", label: "Deutsch" },
-  { value: "zh", label: "中文" },
-  { value: "ar", label: "العربية" },
-  { value: "sw", label: "Kiswahili" },
   { value: "pt", label: "Português" },
 ];
 
