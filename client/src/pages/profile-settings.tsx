@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Store } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -290,7 +290,10 @@ export default function ProfileSettingsPage() {
               
               <Card className="mt-6">
                 <CardHeader>
-                  <CardTitle className="text-black">Vendor Status</CardTitle>
+                  <CardTitle className="text-black flex items-center">
+                    <Store className="mr-2 h-5 w-5" />
+                    Vendor Account
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {user.isVendor ? (
