@@ -379,7 +379,7 @@ export default function SettingsPage() {
             {/* Profile Information Card */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.profileInformation")}</CardTitle>
+                <CardTitle>Profile Information</CardTitle>
                 <CardDescription>{t("settings.updateProfileInfo")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
