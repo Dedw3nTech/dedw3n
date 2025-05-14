@@ -118,7 +118,7 @@ export default function LogoutSuccess() {
           </h1>
           
           <p className="text-gray-600">
-            Together for a prosperious and green planet
+            Thank you for choosing our platform! We look forward to seeing you again soon.
           </p>
           
           <div className="pt-4">
