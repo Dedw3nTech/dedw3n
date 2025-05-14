@@ -403,7 +403,7 @@ export default function SettingsPage() {
                 
                 {/* Email (editable) */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t("settings.email")}</Label>
+                  <Label htmlFor="email">Your Email</Label>
                   <Input
                     id="email"
                     value={email}
