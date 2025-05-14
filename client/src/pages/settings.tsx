@@ -396,8 +396,8 @@ export default function SettingsPage() {
                     </Avatar>
                   </div>
                   <div>
-                    <h3 className="font-medium">Profile Picture</h3>
-                    <p className="text-sm text-muted-foreground">{t("settings.recommendedSize")}</p>
+                    <h3 className="font-medium">{user.username}</h3>
+                    <p className="text-sm text-muted-foreground">@{user.username.toLowerCase()}</p>
                   </div>
                 </div>
                 
