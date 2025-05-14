@@ -503,7 +503,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Language */}
                 <div className="space-y-2">
-                  <Label htmlFor="language">{t("settings.language")}</Label>
+                  <Label htmlFor="language">Language</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger id="language">
                       <SelectValue placeholder={t("settings.selectLanguage")} />
