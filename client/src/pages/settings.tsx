@@ -750,9 +750,6 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("settings.emailNotificationsDesc")}
-                      </p>
                     </div>
                     <Switch
                       checked={emailNotifications}
@@ -766,10 +763,7 @@ export default function SettingsPage() {
                   {/* Marketing Emails */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>{t("settings.marketingEmails")}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t("settings.marketingEmailsDesc")}
-                      </p>
+                      <Label>Marketing Emails</Label>
                     </div>
                     <Switch
                       checked={marketingEmails}
@@ -809,10 +803,7 @@ export default function SettingsPage() {
                 {/* Two-Factor Authentication */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>{t("settings.twoFactorAuth")}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t("settings.twoFactorAuthDesc")}
-                    </p>
+                    <Label>Two-Factor Authentication</Label>
                   </div>
                   <Switch
                     checked={twoFactorEnabled}
