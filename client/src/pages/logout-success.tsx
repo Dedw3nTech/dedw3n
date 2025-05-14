@@ -102,13 +102,13 @@ export default function LogoutSuccess() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-xl"
+        className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-xl shadow-xl"
       >
         <div className="flex justify-center">
           <img 
             src={dedwenLogo} 
             alt="Dedwen Logo" 
-            className="h-16 mb-6"
+            className="h-48 mb-6" /* Increased from h-16 (4rem/64px) to h-48 (12rem/192px) - 3x bigger */
           />
         </div>
         
