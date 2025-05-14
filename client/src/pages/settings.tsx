@@ -786,7 +786,7 @@ export default function SettingsPage() {
                   ) : (
                     <>
                       <Bell className="mr-2 h-4 w-4" />
-                      {t("settings.updateNotifications")}
+                      Update Notifications
                     </>
                   )}
                 </Button>
