@@ -113,25 +113,6 @@ export default function LogoutSuccess() {
         </div>
         
         <div className="text-center space-y-4">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-green-100">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-10 w-10 text-green-600" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M5 13l4 4L19 7" 
-                />
-              </svg>
-            </div>
-          </div>
-
           <h1 className="text-2xl font-bold text-gray-900">
             You have successfully logged out
           </h1>
