@@ -322,6 +322,14 @@ export default function ProfileSettingsPage() {
                           <span>Product/Service</span>
                         </Button>
                       </div>
+                      <p className="text-xs text-black mt-2">
+                        Don't have a vendor account yet? <span 
+                          className="text-blue-500 hover:text-blue-700 cursor-pointer" 
+                          onClick={() => setLocation('/become-vendor')}
+                        >
+                          Click here
+                        </span> to activate your account
+                      </p>
                     </>
                   ) : (
                     <>
