@@ -742,7 +742,7 @@ export default function SettingsPage() {
             {/* Notifications Section */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("settings.notificationPreferences")}</CardTitle>
+                <CardTitle>Notification Preferences</CardTitle>
                 <CardDescription>{t("settings.notificationPreferencesDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
