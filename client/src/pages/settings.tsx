@@ -508,7 +508,7 @@ export default function SettingsPage() {
   const handlePreferencesUpdate = () => {
     updatePreferencesMutation.mutate({
       language,
-      currency,
+      currency, // Use the same variable but it now represents country
       emailNotifications,
       marketingEmails,
     });
@@ -710,7 +710,7 @@ export default function SettingsPage() {
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRY_OPTIONS.map(option => (
+                      {COUNTRY_OPTIONS.map((option: { value: string; label: string }) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
