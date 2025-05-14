@@ -367,26 +367,14 @@ export default function SettingsPage() {
       
       <div className="container max-w-screen-xl py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-3xl mb-8">
+          <TabsList className="grid w-full grid-cols-1 max-w-3xl mb-8">
             <TabsTrigger value="account">
               <User className="h-4 w-4 mr-2" />
-              {t("settings.account")}
-            </TabsTrigger>
-            <TabsTrigger value="preferences">
-              <Globe className="h-4 w-4 mr-2" />
-              {t("settings.preferences")}
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="h-4 w-4 mr-2" />
-              {t("settings.notifications")}
-            </TabsTrigger>
-            <TabsTrigger value="danger">
-              <Shield className="h-4 w-4 mr-2" />
-              {t("settings.security")}
+              {t("settings.accountSettings")}
             </TabsTrigger>
           </TabsList>
           
-          {/* Account Tab */}
+          {/* Unified Account Tab with all settings */}
           <TabsContent value="account" className="space-y-6">
             {/* Profile Information Card */}
             <Card>
@@ -519,10 +507,8 @@ export default function SettingsPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
-          
-          {/* Preferences Tab */}
-          <TabsContent value="preferences" className="space-y-6">
+
+            {/* Preferences Section */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("settings.languageAndRegion")}</CardTitle>
@@ -582,10 +568,8 @@ export default function SettingsPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
-          
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
+            
+            {/* Notifications Section */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("settings.notificationPreferences")}</CardTitle>
@@ -645,10 +629,8 @@ export default function SettingsPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
-          
-          {/* Security & Danger Zone Tab */}
-          <TabsContent value="danger" className="space-y-6">
+            
+            {/* Security Section */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("settings.securitySettings")}</CardTitle>
