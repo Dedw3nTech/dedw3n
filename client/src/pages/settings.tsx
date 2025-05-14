@@ -499,7 +499,6 @@ export default function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Language and Region</CardTitle>
-                <CardDescription>{t("settings.languageAndRegionDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Language */}
