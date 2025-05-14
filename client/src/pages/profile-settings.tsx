@@ -302,14 +302,24 @@ export default function ProfileSettingsPage() {
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
                         <span className="text-green-600 font-medium">Vendor Account Active</span>
                       </div>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                        onClick={() => setLocation('/vendor-dashboard')}
-                      >
-                        Go To Vendor Dashboard
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          onClick={() => setLocation('/vendor-dashboard')}
+                        >
+                          Go To Vendor Dashboard
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          onClick={() => setLocation('/add-product')}
+                        >
+                          Add Product/Service
+                        </Button>
+                      </div>
                     </>
                   ) : (
                     <div className="flex items-center text-xs">
