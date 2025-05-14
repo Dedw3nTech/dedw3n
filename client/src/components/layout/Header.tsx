@@ -80,7 +80,7 @@ export default function Header() {
 
   // Fetch user data to check if logged in
   const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean; [key: string]: any }>({
-    queryKey: ["/api/auth/me"],
+    queryKey: ["/api/user"],
   });
   
   const isLoggedIn = !!userData;
@@ -194,100 +194,104 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Always visible section */}
-            <UserMenu />
+            {/* Vendor button - only for logged in non-vendors */}
+            {isLoggedIn && userData && userData.isVendor === false && (
+              <Link href="/become-vendor">
+                <Button size="sm" className="hidden md:flex items-center gap-1 bg-red-600 text-white hover:bg-red-700">
+                  <Store className="h-4 w-4" />
+                  <span>Become a Vendor</span>
+                </Button>
+              </Link>
+            )}
             
-            {/* Only visible when logged in */}
+            {/* Cart button - always visible for logged in users */}
             {isLoggedIn && (
-              <div className="flex items-center space-x-4">
-                {/* Become a Vendor button - only shown to logged in users who are not vendors */}
-                {userData && userData.isVendor === false && (
-                  <Link href="/become-vendor">
-                    <Button size="sm" className="hidden md:flex items-center gap-1 bg-red-600 text-white hover:bg-red-700">
-                      <Store className="h-4 w-4" />
-                      <span>Become a Vendor</span>
-                    </Button>
-                  </Link>
+              <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
+                <i className="ri-shopping-cart-2-line text-xl"></i>
+                {cartData?.count && cartData.count > 0 && (
+                  <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                    {cartData.count}
+                  </Badge>
                 )}
-                
-                <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
-                  <i className="ri-shopping-cart-2-line text-xl"></i>
-                  {cartData?.count && cartData.count > 0 && (
-                    <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
-                      {cartData.count}
-                    </Badge>
-                  )}
-                </Link>
+              </Link>
+            )}
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <div className="relative p-2 text-gray-600 hover:text-primary cursor-pointer">
-                      <Bell className="h-5 w-5" />
-                      {unreadNotificationCount > 0 && (
-                        <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
-                          {unreadNotificationCount}
-                        </Badge>
-                      )}
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0" align="end">
-                    <div className="border-b p-3">
-                      <h3 className="font-semibold">Notifications</h3>
-                    </div>
-                    <div className="max-h-[300px] overflow-y-auto">
-                      {!notifications || !Array.isArray(notifications) || notifications.length === 0 ? (
-                        <div className="p-6 text-center text-gray-500">
-                          <p className="text-sm">No notifications yet</p>
-                        </div>
-                      ) : (
-                        notifications.map((notification: any) => (
-                          <div 
-                            key={notification.id} 
-                            className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-gray-50' : ''}`}
-                            onClick={() => markNotificationReadMutation.mutate(notification.id)}
-                          >
-                            <div className="flex items-start">
-                              <div className={`h-8 w-8 rounded-full ${getNotificationIconStyle(notification.type)} flex items-center justify-center mr-3`}>
-                                {getNotificationIcon(notification.type)}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm font-medium">{notification.title}</p>
-                                <p className="text-xs text-gray-500 mt-1">{notification.content}</p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                                </p>
-                              </div>
+            {/* Notification button - always visible for logged in users */}
+            {isLoggedIn && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="relative p-2 text-gray-600 hover:text-primary cursor-pointer">
+                    <Bell className="h-5 w-5" />
+                    {unreadNotificationCount > 0 && (
+                      <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                        {unreadNotificationCount}
+                      </Badge>
+                    )}
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="end">
+                  <div className="border-b p-3">
+                    <h3 className="font-semibold">Notifications</h3>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {!notifications || !Array.isArray(notifications) || notifications.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <p className="text-sm">No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.map((notification: any) => (
+                        <div 
+                          key={notification.id} 
+                          className={`p-3 border-b hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-gray-50' : ''}`}
+                          onClick={() => markNotificationReadMutation.mutate(notification.id)}
+                        >
+                          <div className="flex items-start">
+                            <div className={`h-8 w-8 rounded-full ${getNotificationIconStyle(notification.type)} flex items-center justify-center mr-3`}>
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{notification.title}</p>
+                              <p className="text-xs text-gray-500 mt-1">{notification.content}</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                              </p>
                             </div>
                           </div>
-                        ))
-                      )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="p-2 border-t flex justify-between items-center">
+                    <div 
+                      className="text-xs text-primary font-medium hover:underline cursor-pointer"
+                      onClick={() => markAllNotificationsReadMutation.mutate()}
+                    >
+                      Mark all as read
                     </div>
-                    <div className="p-2 border-t flex justify-between items-center">
-                      <div 
-                        className="text-xs text-primary font-medium hover:underline cursor-pointer"
-                        onClick={() => markAllNotificationsReadMutation.mutate()}
-                      >
-                        Mark all as read
-                      </div>
-                      <Link 
-                        href="/notifications" 
-                        className="text-xs text-primary font-medium hover:underline"
-                        onClick={() => {
-                          // Close the popover when navigating
-                          document.body.click();
-                        }}
-                      >
-                        View all notifications
-                      </Link>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Link href="/wallet" className="relative p-2 text-gray-600 hover:text-primary">
-                  <i className="ri-wallet-3-line text-xl"></i>
-                </Link>
-              </div>
+                    <Link 
+                      href="/notifications" 
+                      className="text-xs text-primary font-medium hover:underline"
+                      onClick={() => {
+                        // Close the popover when navigating
+                        document.body.click();
+                      }}
+                    >
+                      View all notifications
+                    </Link>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
+
+            {/* Wallet button - always visible for logged in users */}
+            {isLoggedIn && (
+              <Link href="/wallet" className="relative p-2 text-gray-600 hover:text-primary">
+                <i className="ri-wallet-3-line text-xl"></i>
+              </Link>
+            )}
+            
+            {/* User menu always at the end */}
+            <UserMenu />
           </div>
         </div>
 

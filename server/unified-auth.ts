@@ -51,7 +51,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
 
   // First check Passport session authentication
-  if (req.isAuthenticated()) {
+  if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
     if (req.user) {
       console.log('[AUTH TEST] Request authenticated via session:', {
         userId: (req.user as any).id,
@@ -60,7 +60,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       });
       return next();
     } else {
-      console.log('[AUTH TEST] isAuthenticated() is true, but no user in request');
+      console.log('[AUTH TEST] Session exists but no user in request');
     }
   } else {
     console.log('[AUTH TEST] Session authentication failed - not authenticated');
