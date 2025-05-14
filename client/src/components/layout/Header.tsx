@@ -296,56 +296,59 @@ export default function Header() {
         </div>
 
         <div className="flex border-b border-gray-200 -mb-px">
-          {/* C2C Marketplace Link */}
+          {/* Marketplaces Dropdown */}
           <div className="flex-1">
-            <div
-              className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${marketType === 'c2c' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
-              onClick={() => {
-                setMarketType("c2c");
-                setLocation("/products");
-              }}
-            >
-              <Users className="inline-block h-4 w-4 mr-1" /> Buy from a friend
-            </div>
-          </div>
-          
-          {/* B2C Marketplace Link */}
-          <div className="flex-1">
-            <div
-              className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${marketType === 'b2c' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
-              onClick={() => {
-                setMarketType("b2c");
-                setLocation("/products");
-              }}
-            >
-              <Store className="inline-block h-4 w-4 mr-1" /> Buy from a store
-            </div>
-          </div>
-          
-          {/* B2B Marketplace Link */}
-          <div className="flex-1">
-            <div
-              className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${marketType === 'b2b' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
-              onClick={() => {
-                setMarketType("b2b");
-                setLocation("/products");
-              }}
-            >
-              <Building className="inline-block h-4 w-4 mr-1" /> Business
-            </div>
-          </div>
-          
-          {/* Governmental Services Link */}
-          <div className="flex-1">
-            <div
-              className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${marketType === 'gov' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
-              onClick={() => {
-                setMarketType("gov");
-                setLocation("/government");
-              }}
-            >
-              <Landmark className="inline-block h-4 w-4 mr-1" /> Governmental
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div
+                  className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${['c2c', 'b2c', 'b2b', 'gov'].includes(marketType) ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
+                >
+                  <i className="ri-store-3-line mr-1"></i> Marketplaces <ChevronDown className="inline-block h-4 w-4 ml-1" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setMarketType("c2c");
+                    setLocation("/products");
+                  }}
+                  className="flex items-center cursor-pointer"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Buy from a friend (C2C)</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setMarketType("b2c");
+                    setLocation("/products");
+                  }}
+                  className="flex items-center cursor-pointer"
+                >
+                  <Store className="mr-2 h-4 w-4" />
+                  <span>Buy from a store (B2C)</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setMarketType("b2b");
+                    setLocation("/products");
+                  }}
+                  className="flex items-center cursor-pointer"
+                >
+                  <Building className="mr-2 h-4 w-4" />
+                  <span>Business (B2B)</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setMarketType("gov");
+                    setLocation("/government");
+                  }}
+                  className="flex items-center cursor-pointer"
+                >
+                  <Landmark className="mr-2 h-4 w-4" />
+                  <span>Governmental Services</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {/* Social button with integrated navigation and messaging */}
