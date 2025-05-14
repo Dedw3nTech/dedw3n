@@ -194,8 +194,12 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {isLoggedIn ? (
-              <>
+            {/* Always visible section */}
+            <UserMenu />
+            
+            {/* Only visible when logged in */}
+            {isLoggedIn && (
+              <div className="flex items-center space-x-4">
                 {/* Become a Vendor button - only shown to logged in users who are not vendors */}
                 {userData && userData.isVendor === false && (
                   <Link href="/become-vendor">
@@ -282,10 +286,8 @@ export default function Header() {
                 <Link href="/wallet" className="relative p-2 text-gray-600 hover:text-primary">
                   <i className="ri-wallet-3-line text-xl"></i>
                 </Link>
-              </>
-            ) : null}
-
-            <UserMenu />
+              </div>
+            )}
           </div>
         </div>
 

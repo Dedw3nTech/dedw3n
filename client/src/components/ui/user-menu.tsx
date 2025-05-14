@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,9 +31,15 @@ export default function UserMenu() {
     };
   }, []);
 
-  // If user is not logged in, don't render the dropdown menu at all
+  // If user is not logged in, show login button
   if (!user) {
-    return null;
+    return (
+      <Link href="/auth" className="flex items-center">
+        <Button variant="outline" size="sm" className="ml-2">
+          {t('auth.login')}
+        </Button>
+      </Link>
+    );
   }
 
   const handleLogout = () => {
