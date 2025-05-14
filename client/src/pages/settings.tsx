@@ -441,7 +441,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 {/* Current Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("settings.currentPassword")}</Label>
+                  <Label htmlFor="current-password">Current Password</Label>
                   <Input
                     id="current-password"
                     type="password"
