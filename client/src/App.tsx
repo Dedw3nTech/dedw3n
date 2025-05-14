@@ -38,6 +38,7 @@ import ApiTestPage from "@/pages/api-test";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
+import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
 
@@ -207,6 +208,9 @@ function App() {
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <Header />
+                          <div className="sticky top-0 z-30 bg-white shadow-sm">
+                            <MarketplaceNav />
+                          </div>
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
