@@ -380,7 +380,7 @@ export default function SettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
-                <CardDescription>{t("settings.updateProfileInfo")}</CardDescription>
+                <CardDescription>Update Profile Information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar */}
