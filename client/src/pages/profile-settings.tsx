@@ -295,12 +295,22 @@ export default function ProfileSettingsPage() {
                     Vendor Account
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   {user.isVendor ? (
-                    <div className="flex items-center text-xs">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
-                      <span className="text-green-600 font-medium">Vendor Account Active</span>
-                    </div>
+                    <>
+                      <div className="flex items-center text-xs">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
+                        <span className="text-green-600 font-medium">Vendor Account Active</span>
+                      </div>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                        onClick={() => setLocation('/vendor-dashboard')}
+                      >
+                        Go To Vendor Dashboard
+                      </Button>
+                    </>
                   ) : (
                     <div className="flex items-center text-xs">
                       <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1"></div>
