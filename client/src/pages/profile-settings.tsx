@@ -324,10 +324,20 @@ export default function ProfileSettingsPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-center text-xs">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1"></div>
-                      <span className="text-red-600 font-medium">Not Active</span>
-                    </div>
+                    <>
+                      <div className="flex items-center text-xs">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1"></div>
+                        <span className="text-red-600 font-medium">Not Active</span>
+                      </div>
+                      <p className="text-xs text-black mt-2">
+                        Don't have a vendor account yet? <span 
+                          className="text-blue-500 hover:text-blue-700 cursor-pointer" 
+                          onClick={() => setLocation('/become-vendor')}
+                        >
+                          Click here
+                        </span> to activate your account
+                      </p>
+                    </>
                   )}
                 </CardContent>
               </Card>
