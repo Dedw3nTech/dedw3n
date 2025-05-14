@@ -361,7 +361,7 @@ export default function SettingsPage() {
     <div className="bg-background min-h-screen">
       <PageHeader
         title="Account Settings"
-        description={t("settings.manageYourAccount")}
+        description="Manage Your Account"
         icon={<SettingsIcon className="h-6 w-6" />}
       />
       
