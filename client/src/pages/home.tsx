@@ -291,8 +291,32 @@ export default function Home() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Empty content as requested */}
+    <div className="container mx-auto px-4 py-10">
+      <div className="bg-blue-600 text-white rounded-xl p-8 shadow-lg">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-6 text-center">Welcome to Dedw3n</h1>
+          <p className="text-xl mb-10 text-center">
+            The all-in-one platform for buying, selling, and connecting with others.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+            <div className="bg-blue-700 p-6 rounded-lg hover:bg-blue-800 transition-colors">
+              <h2 className="text-2xl font-bold mb-3">Multi-Vendor Marketplace</h2>
+              <p className="text-blue-100">Buy from and sell to users across the platform.</p>
+            </div>
+            
+            <div className="bg-blue-700 p-6 rounded-lg hover:bg-blue-800 transition-colors">
+              <h2 className="text-2xl font-bold mb-3">Social</h2>
+              <p className="text-blue-100">Connect with friends, share posts, and build your network.</p>
+            </div>
+            
+            <div className="bg-blue-700 p-6 rounded-lg hover:bg-blue-800 transition-colors">
+              <h2 className="text-2xl font-bold mb-3">Dating</h2>
+              <p className="text-blue-100">Find love or your new friend.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
