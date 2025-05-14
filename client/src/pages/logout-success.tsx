@@ -12,7 +12,7 @@ export default function LogoutSuccess() {
 
   useEffect(() => {
     // Force page title to be exactly as requested
-    document.title = 'Log out success';
+    document.title = 'You have successfully logged out';
     
     // Set all anti-caching headers via meta tags
     const metaTags = [
@@ -133,7 +133,7 @@ export default function LogoutSuccess() {
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            Log out success
+            You have successfully logged out
           </h1>
           
           <p className="text-gray-600">
