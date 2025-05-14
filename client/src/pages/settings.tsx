@@ -749,7 +749,7 @@ export default function SettingsPage() {
                   {/* Email Notifications */}
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>{t("settings.emailNotifications")}</Label>
+                      <Label>Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">
                         {t("settings.emailNotificationsDesc")}
                       </p>
