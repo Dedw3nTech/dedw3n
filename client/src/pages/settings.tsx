@@ -453,7 +453,7 @@ export default function SettingsPage() {
                 
                 {/* New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+                  <Label htmlFor="new-password">New  Password</Label>
                   <Input
                     id="new-password"
                     type="password"
