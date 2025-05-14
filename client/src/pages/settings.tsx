@@ -404,6 +404,7 @@ export default function SettingsPage() {
                 {/* Email (editable) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Your Email</Label>
+                  <p className="text-sm text-muted-foreground">Change Your Email</p>
                   <Input
                     id="email"
                     value={email}
