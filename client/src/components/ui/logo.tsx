@@ -21,16 +21,9 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
   return (
     <Link href="/">
       <div className={`flex items-center cursor-pointer ${className}`}>
-        <img 
-          src={logoImage} 
-          alt="Dedwen Logo" 
-          className={`${sizeClass[size]}`}
-        />
-        {withText && (
-          <span className="ml-2 font-bold text-black">
-            Dedwen
-          </span>
-        )}
+        <span className="font-bold text-black text-lg">
+          Dedwen
+        </span>
       </div>
     </Link>
   );
