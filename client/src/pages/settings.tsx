@@ -394,19 +394,6 @@ export default function SettingsPage() {
                         {getInitials(name || user.username)}
                       </AvatarFallback>
                     </Avatar>
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center cursor-pointer"
-                    >
-                      <SettingsIcon className="h-3.5 w-3.5" />
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
                   </div>
                   <div>
                     <h3 className="font-medium">{t("settings.profilePicture")}</h3>
