@@ -310,7 +310,7 @@ export default function ProfileSettingsPage() {
                           onClick={() => setLocation('/vendor-dashboard')}
                         >
                           <span>Go To</span>
-                          <span>Vendor Dashboard</span>
+                          <span className="text-[10px]">Vendor Dashboard</span>
                         </Button>
                         <Button 
                           variant="default" 
