@@ -306,7 +306,7 @@ export default function ProfileSettingsPage() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs p-1 h-7"
                           onClick={() => setLocation('/vendor-dashboard')}
                         >
                           Go To Vendor Dashboard
@@ -314,7 +314,7 @@ export default function ProfileSettingsPage() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
+                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs p-1 h-7"
                           onClick={() => setLocation('/add-product')}
                         >
                           Add Product/Service
