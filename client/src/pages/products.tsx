@@ -525,59 +525,6 @@ export default function Products() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Marketplace Navigation Header */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
-        <h2 className="text-lg font-semibold mb-3">Marketplace Options</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <Button 
-            variant={marketType === 'c2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'c2c' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
-            onClick={() => {
-              setMarketType("c2c");
-              setLocation("/products");
-            }}
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Buy from a friend (C2C)
-          </Button>
-          
-          <Button 
-            variant={marketType === 'b2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'b2c' ? 'bg-green-500 hover:bg-green-600' : ''}`}
-            onClick={() => {
-              setMarketType("b2c");
-              setLocation("/products");
-            }}
-          >
-            <Store className="mr-2 h-4 w-4" />
-            Buy from a store (B2C)
-          </Button>
-          
-          <Button 
-            variant={marketType === 'b2b' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'b2b' ? 'bg-purple-500 hover:bg-purple-600' : ''}`}
-            onClick={() => {
-              setMarketType("b2b");
-              setLocation("/products");
-            }}
-          >
-            <Building className="mr-2 h-4 w-4" />
-            Business (B2B)
-          </Button>
-          
-          <Button 
-            variant={marketType === 'gov' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'gov' ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
-            onClick={() => {
-              setMarketType("gov");
-              setLocation("/government");
-            }}
-          >
-            <Landmark className="mr-2 h-4 w-4" />
-            Governmental Services
-          </Button>
-        </div>
-      </div>
 
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Products</h1>
