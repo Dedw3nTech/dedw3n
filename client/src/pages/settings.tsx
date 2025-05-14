@@ -835,28 +835,26 @@ export default function SettingsPage() {
             {/* Danger Zone */}
             <Card className="border-destructive">
               <CardHeader className="text-destructive">
-                <CardTitle>{t("settings.dangerZone")}</CardTitle>
-                <CardDescription className="text-destructive/80">
-                  {t("settings.dangerZoneDesc")}
-                </CardDescription>
+                <CardTitle>Delete account</CardTitle>
+
               </CardHeader>
               <CardContent>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      {t("settings.deleteAccount")}
+                      Delete Account
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>{t("settings.areYouSure")}</AlertDialogTitle>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t("settings.deleteAccountWarning")}
+                        This action cannot be undone. Your account and all associated data will be permanently deleted.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t("settings.cancel")}</AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteAccount}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -866,7 +864,7 @@ export default function SettingsPage() {
                         ) : (
                           <Trash2 className="mr-2 h-4 w-4" />
                         )}
-                        {t("settings.confirmDelete")}
+                        Permanently Delete My Account
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
