@@ -191,7 +191,7 @@ export default function VendorDashboard() {
                     <p className="text-sm text-muted-foreground mb-4">
                       View your dashboard to track sales and performance.
                     </p>
-                    <Button variant="outline" onClick={() => setActiveTab('dashboard')}>
+                    <Button variant="outline" onClick={() => setLocation('/vendor-dashboard')}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
                     </Button>
