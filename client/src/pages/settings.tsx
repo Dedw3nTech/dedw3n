@@ -49,6 +49,7 @@ const LANGUAGE_OPTIONS = [
   { value: "zh", label: "中文" },
   { value: "ar", label: "العربية" },
   { value: "sw", label: "Kiswahili" },
+  { value: "pt", label: "Português" },
 ];
 
 // The list of available currency options
@@ -506,7 +507,7 @@ export default function SettingsPage() {
                   <Label htmlFor="language">Language</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger id="language">
-                      <SelectValue placeholder={t("settings.selectLanguage")} />
+                      Portuguese
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.map(option => (
