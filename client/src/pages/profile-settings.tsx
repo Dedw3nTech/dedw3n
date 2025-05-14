@@ -266,7 +266,6 @@ export default function ProfileSettingsPage() {
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
           <TabsTrigger value="profile" className="flex-1 text-black">Profile</TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-1 text-black">Notifications</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -356,24 +355,7 @@ export default function ProfileSettingsPage() {
             </div>
           </div>
         </TabsContent>
-        
 
-        
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-black">Notification Preferences</CardTitle>
-              <CardDescription className="text-black">
-                Control how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-black">
-                Notification settings will be available soon.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
