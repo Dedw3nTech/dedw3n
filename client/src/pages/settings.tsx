@@ -836,7 +836,7 @@ export default function SettingsPage() {
             <Card className="border-destructive">
               <CardHeader className="text-destructive">
                 <CardTitle>Delete account</CardTitle>
-
+                <CardDescription className="text-destructive/80">Once an account is permanently deleted by our services, it cannot be retrieved.</CardDescription>
               </CardHeader>
               <CardContent>
                 <AlertDialog>
