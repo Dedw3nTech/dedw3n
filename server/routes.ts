@@ -1083,6 +1083,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register message routes for direct messaging API
   registerMessageRoutes(app);
   
+  // Post creation endpoint
+  app.post("/api/posts", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const postData = {
+        userId,
+        content: req.body.content || "",
+        title: req.body.title || null,
+        contentType: req.body.contentType || "text",
+        imageUrl: req.body.imageUrl || null,
+        videoUrl: req.body.videoUrl || null,
+        tags: req.body.tags || null,
+        isPublished: true,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0
+      };
+
+      const newPost = await storage.createPost(postData);
+      res.status(201).json(newPost);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  // Feed endpoint
+  app.get("/api/feed/personal", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const posts = await storage.getUserFeed(userId);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error getting feed:", error);
+      res.status(500).json({ message: "Failed to get feed" });
+    }
+  });
+
+  // User stats endpoint
+  app.get("/api/user/stats", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const stats = {
+        posts: await storage.getUserPostCount(userId),
+        followers: await storage.getUserFollowerCount(userId), 
+        following: await storage.getUserFollowingCount(userId)
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting user stats:", error);
+      res.status(500).json({ message: "Failed to get user stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Seed the database with initial data
