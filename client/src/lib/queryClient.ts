@@ -110,6 +110,9 @@ export async function apiRequest(
     console.error('Error retrieving user data from storage:', e);
   }
   
+  // Check if user has logged out
+  const userLoggedOut = isUserLoggedOut();
+  
   // Set up request options with enhanced authentication headers
   const requestOptions: RequestInit = {
     method,
@@ -119,9 +122,12 @@ export async function apiRequest(
       'X-Use-Session': 'true',
       'X-Client-Auth': 'true',
       'X-Request-Time': new Date().toISOString(),
-      'X-Auto-Login': 'true',
+      // Only enable auto-login if user hasn't explicitly logged out
+      'X-Auto-Login': userLoggedOut ? 'false' : 'true',
+      // Add logout header if user has logged out
+      ...(userLoggedOut ? { 'X-Auth-Logged-Out': 'true' } : {}),
       'Content-Type': isFormData ? undefined : 'application/json',
-      ...(userId ? { 
+      ...(userId && !userLoggedOut ? { 
         'X-Client-User-ID': userId.toString(), 
         'X-Test-User-ID': userId.toString() 
       } : {})

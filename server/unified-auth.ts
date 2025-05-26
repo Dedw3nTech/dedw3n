@@ -42,6 +42,12 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
+  // Check if user has explicitly logged out
+  if (req.headers['x-auth-logged-out'] === 'true') {
+    console.log('[AUTH] User has logged out, denying auto-login');
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
   // Third priority: Auto-login for development
   const autoLogin = req.headers['x-auto-login'];
   if (autoLogin === 'true') {

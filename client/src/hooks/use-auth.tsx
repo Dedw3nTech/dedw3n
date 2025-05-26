@@ -438,7 +438,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Pragma': 'no-cache',
           'Expires': '0',
           // Add special header to prevent auto-login
-          'X-Prevent-Autologin': 'true'
+          'X-Auth-Logged-Out': 'true'
         }
       });
       
