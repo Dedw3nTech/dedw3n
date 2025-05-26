@@ -1396,6 +1396,253 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Get individual post by ID with user details
+  async getPostById(postId: number): Promise<any> {
+    try {
+      const [post] = await db
+        .select({
+          id: posts.id,
+          userId: posts.userId,
+          content: posts.content,
+          title: posts.title,
+          contentType: posts.contentType,
+          imageUrl: posts.imageUrl,
+          videoUrl: posts.videoUrl,
+          productId: posts.productId,
+          likes: posts.likes,
+          comments: posts.comments,
+          shares: posts.shares,
+          views: posts.views,
+          tags: posts.tags,
+          isPromoted: posts.isPromoted,
+          promotionEndDate: posts.promotionEndDate,
+          isPublished: posts.isPublished,
+          isFlagged: posts.isFlagged,
+          flagReason: posts.flagReason,
+          reviewStatus: posts.reviewStatus,
+          reviewedAt: posts.reviewedAt,
+          reviewedBy: posts.reviewedBy,
+          moderationNote: posts.moderationNote,
+          createdAt: posts.createdAt,
+          updatedAt: posts.updatedAt,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(posts)
+        .leftJoin(users, eq(posts.userId, users.id))
+        .where(eq(posts.id, postId));
+
+      return post;
+    } catch (error) {
+      console.error('Error getting post by ID:', error);
+      throw error;
+    }
+  }
+
+  // Get comments for a specific post
+  async getPostComments(postId: number): Promise<any[]> {
+    try {
+      const postComments = await db
+        .select({
+          id: comments.id,
+          userId: comments.userId,
+          postId: comments.postId,
+          content: comments.content,
+          createdAt: comments.createdAt,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.postId, postId))
+        .orderBy(desc(comments.createdAt));
+
+      return postComments;
+    } catch (error) {
+      console.error('Error getting post comments:', error);
+      throw error;
+    }
+  }
+
+  // Add a comment to a post
+  async addComment(commentData: { postId: number; userId: number; content: string }): Promise<any> {
+    try {
+      const [comment] = await db
+        .insert(comments)
+        .values({
+          postId: commentData.postId,
+          userId: commentData.userId,
+          content: commentData.content,
+          createdAt: new Date()
+        })
+        .returning();
+
+      // Get comment with user details
+      const [commentWithUser] = await db
+        .select({
+          id: comments.id,
+          userId: comments.userId,
+          postId: comments.postId,
+          content: comments.content,
+          createdAt: comments.createdAt,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(comments)
+        .leftJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.id, comment.id));
+
+      return commentWithUser;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  }
+
+  // Increment post comment count
+  async incrementPostComments(postId: number): Promise<void> {
+    try {
+      await db
+        .update(posts)
+        .set({ 
+          comments: sql`${posts.comments} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId));
+    } catch (error) {
+      console.error('Error incrementing post comments:', error);
+      throw error;
+    }
+  }
+
+  // Toggle post like
+  async togglePostLike(postId: number, userId: number): Promise<{ liked: boolean }> {
+    try {
+      // Check if already liked
+      const [existingLike] = await db
+        .select()
+        .from(likes)
+        .where(and(eq(likes.postId, postId), eq(likes.userId, userId)));
+
+      if (existingLike) {
+        // Unlike
+        await db
+          .delete(likes)
+          .where(and(eq(likes.postId, postId), eq(likes.userId, userId)));
+        
+        await db
+          .update(posts)
+          .set({ 
+            likes: sql`${posts.likes} - 1`,
+            updatedAt: new Date()
+          })
+          .where(eq(posts.id, postId));
+
+        return { liked: false };
+      } else {
+        // Like
+        await db
+          .insert(likes)
+          .values({
+            postId,
+            userId,
+            createdAt: new Date()
+          });
+        
+        await db
+          .update(posts)
+          .set({ 
+            likes: sql`${posts.likes} + 1`,
+            updatedAt: new Date()
+          })
+          .where(eq(posts.id, postId));
+
+        return { liked: true };
+      }
+    } catch (error) {
+      console.error('Error toggling post like:', error);
+      throw error;
+    }
+  }
+
+  // Toggle post save
+  async togglePostSave(postId: number, userId: number): Promise<{ saved: boolean }> {
+    try {
+      // Check if already saved
+      const [existingSave] = await db
+        .select()
+        .from(savedPosts)
+        .where(and(eq(savedPosts.postId, postId), eq(savedPosts.userId, userId)));
+
+      if (existingSave) {
+        // Unsave
+        await db
+          .delete(savedPosts)
+          .where(and(eq(savedPosts.postId, postId), eq(savedPosts.userId, userId)));
+
+        return { saved: false };
+      } else {
+        // Save
+        await db
+          .insert(savedPosts)
+          .values({
+            postId,
+            userId,
+            createdAt: new Date()
+          });
+
+        return { saved: true };
+      }
+    } catch (error) {
+      console.error('Error toggling post save:', error);
+      throw error;
+    }
+  }
+
+  // Increment post shares
+  async incrementPostShares(postId: number): Promise<void> {
+    try {
+      await db
+        .update(posts)
+        .set({ 
+          shares: sql`${posts.shares} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId));
+    } catch (error) {
+      console.error('Error incrementing post shares:', error);
+      throw error;
+    }
+  }
+
+  // Increment post views
+  async incrementPostViews(postId: number): Promise<void> {
+    try {
+      await db
+        .update(posts)
+        .set({ 
+          views: sql`${posts.views} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, postId));
+    } catch (error) {
+      console.error('Error incrementing post views:', error);
+      throw error;
+    }
+  }
+
   async getAllPosts(): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null } })[]> {
     try {
       const postsWithUsers = await db

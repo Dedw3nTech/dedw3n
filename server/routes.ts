@@ -1114,6 +1114,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual post by ID
+  app.get('/api/posts/:id', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      res.status(500).json({ message: 'Failed to fetch post' });
+    }
+  });
+
+  // Get comments for a post
+  app.get('/api/posts/:id/comments', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const comments = await storage.getPostComments(postId);
+      res.json(comments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      res.status(500).json({ message: 'Failed to fetch comments' });
+    }
+  });
+
+  // Add comment to post
+  app.post('/api/posts/:id/comments', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const { content } = req.body;
+      const userId = (req.user as any)?.id;
+      
+      if (!content || content.trim() === '') {
+        return res.status(400).json({ message: 'Comment content is required' });
+      }
+      
+      const comment = await storage.addComment({
+        postId,
+        userId,
+        content: content.trim()
+      });
+      
+      // Update comment count
+      await storage.incrementPostComments(postId);
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).json({ message: 'Failed to add comment' });
+    }
+  });
+
+  // Like/unlike a post
+  app.post('/api/posts/:id/like', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      const result = await storage.togglePostLike(postId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      res.status(500).json({ message: 'Failed to toggle like' });
+    }
+  });
+
+  // Save/unsave a post
+  app.post('/api/posts/:id/save', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      const result = await storage.togglePostSave(postId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      res.status(500).json({ message: 'Failed to toggle save' });
+    }
+  });
+
+  // Share a post
+  app.post('/api/posts/:id/share', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      await storage.incrementPostShares(postId);
+      res.json({ message: 'Post shared successfully' });
+    } catch (error) {
+      console.error('Error sharing post:', error);
+      res.status(500).json({ message: 'Failed to share post' });
+    }
+  });
+
+  // Track post view
+  app.post('/api/posts/:id/view', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      await storage.incrementPostViews(postId);
+      res.json({ message: 'View tracked' });
+    } catch (error) {
+      console.error('Error tracking view:', error);
+      res.status(500).json({ message: 'Failed to track view' });
+    }
+  });
+
   // Feed endpoint
   app.get("/api/feed/personal", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
