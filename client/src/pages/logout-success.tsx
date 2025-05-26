@@ -104,11 +104,7 @@ export default function LogoutSuccess() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-xl shadow-xl"
       >
-        <div className="flex justify-center">
-          <h1 className="text-3xl font-bold text-black mb-6">
-            Dedw3n
-          </h1>
-        </div>
+
         
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-gray-900">
