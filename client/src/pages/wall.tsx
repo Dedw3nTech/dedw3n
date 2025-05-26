@@ -271,10 +271,10 @@ export default function WallPage() {
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start"
-                  onClick={() => setLocation("/members")}
+                  onClick={() => setLocation("/explore")}
                 >
-                  <Users className="h-4 w-4 mr-2" />
-                  Members
+                  <Activity className="h-4 w-4 mr-2" />
+                  Explore
                 </Button>
                 
                 {/* Video section divider */}
