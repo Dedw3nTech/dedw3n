@@ -1284,113 +1284,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clean up any remaining legacy logout code
-  // All logout functionality is now handled in the simple /api/logout endpoint above
+  // User endpoint for authentication checks  
+  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
+    console.log('[DEBUG] /api/user - Authenticated with unified auth');
+    res.json(req.user);
+  });
+
+  // Debug endpoint for testing authentication
+  app.get("/api/auth/me", async (req: Request, res: Response) => {
+    try {
+      console.log('[DEBUG] /api/auth/me called');
       
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
-        console.log('[DEBUG] Found token in Authorization header');
-      } else if (req.query.token) {
-        token = req.query.token as string;
-        console.log('[DEBUG] Found token in query parameters');
-      } else if (req.cookies && req.cookies.token) {
-        token = req.cookies.token;
-        console.log('[DEBUG] Found token in cookies');
-      }
-      
-      if (token) {
-        try {
-          console.log('[DEBUG] Processing token revocation');
-          
-          // Call revoke token function if it exists in storage
-          if (storage.revokeAuthToken) {
-            const authToken = await storage.getAuthToken(token);
-            if (authToken) {
-              await storage.revokeAuthToken(authToken.id, 'User logout');
-              console.log('[DEBUG] JWT token revoked successfully');
-            } else {
-              console.log('[DEBUG] Auth token not found in database');
-            }
-          } else if (typeof revokeToken === 'function') {
-            // Use imported function if available
-            await revokeToken(token, 'User logout');
-            console.log('[DEBUG] JWT token revoked via revokeToken function');
-          } else {
-            console.log('[WARNING] No token revocation mechanism available');
-          }
-          
-          // Clear all possible auth cookies
-          if (req.cookies) {
-            // Clear token cookie with all possible options
-            res.clearCookie('token', { 
-              path: '/', 
-              httpOnly: true,
-              secure: true,
-              sameSite: 'strict'
-            });
-            res.clearCookie('token');
-            
-            // Also clear any other auth-related cookies
-            res.clearCookie('connect.sid', { path: '/' });
-            res.clearCookie('auth', { path: '/' });
-            
-            console.log('[DEBUG] All auth cookies cleared');
-          }
-        } catch (error) {
-          console.error('[ERROR] JWT logout error:', error);
-        }
+      if (req.user) {
+        console.log('[DEBUG] User found in session:', req.user);
+        return res.json(req.user);
       } else {
-        console.log('[DEBUG] No auth token found during logout');
+        console.log('[DEBUG] No user in session');
+        return res.status(401).json({ message: 'Not authenticated' });
       }
-      
-      // Handle session cleanup more gracefully
-      if (req.session) {
-        try {
-          console.log('[DEBUG] Attempting to destroy session');
-          // Use Promise to handle session destroy
-          await new Promise<void>((resolve) => {
-            req.session.destroy((err) => {
-              if (err) {
-                console.error('[ERROR] Session destroy failed:', err);
-              } else {
-                console.log('[DEBUG] Session destroyed successfully');
-              }
-              resolve(); // Always resolve to continue
-            });
-          });
-        } catch (sessionError) {
-          console.error('[ERROR] Error during session destroy:', sessionError);
+    } catch (error) {
+      console.error('[ERROR] Error in /api/auth/me:', error);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Session debug endpoint
+  app.get('/api/debug/session', (req: Request, res: Response) => {
+    res.json({
+      sessionID: req.sessionID,
+      user: req.user,
+      session: req.session
+    });
+  });
+
+  // Development testing endpoints
+  if (process.env.NODE_ENV === 'development') {
+    // Test login endpoint for development
+    app.get('/api/auth/test-login/:userId', async (req: Request, res: Response) => {
+      try {
+        const userId = parseInt(req.params.userId);
+        const user = await storage.getUser(userId);
+        
+        if (user) {
+          req.user = user;
+          console.log(`[DEBUG] Test login successful for user ${userId}`);
+          res.json({ success: true, user });
+        } else {
+          res.status(404).json({ error: 'User not found' });
         }
-      } else {
-        console.log('[DEBUG] No session to destroy');
+      } catch (error) {
+        console.error('[ERROR] Test login failed:', error);
+        res.status(500).json({ error: 'Test login failed' });
       }
-      
-      // Force session regeneration for extra security
-      if (req.session) {
-        try {
-          // Set a flag in the session indicating explicit logout
-          // This will be checked in unified-auth.ts to prevent auto-login
-          req.session.userLoggedOut = true;
-          req.session.save(() => {
-            console.log('[DEBUG] Set userLoggedOut flag in session');
-          });
-          
-          // @ts-ignore - Some types may be missing
-          req.session.regenerate((err: Error) => {
-            if (err) {
-              console.error('[ERROR] Session regeneration failed:', err);
-            } else {
-              console.log('[DEBUG] Session regenerated successfully');
-              
-              // Set the flag again after regeneration for certainty
-              if (req.session) {
-                req.session.userLoggedOut = true;
-                req.session.save();
-              }
-            }
-          });
-        } catch (regError) {
-          console.error('[ERROR] Error during session regeneration:', regError);
+    });
         }
       }
       
