@@ -868,7 +868,6 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
           .innerJoin(users, eq(posts.userId, users.id))
           .where(and(
             inArray(posts.userId, followingIds),
-            userPostIds.length > 0 ? not(inArray(posts.id, userPostIds)) : sql`1=1`,
             eq(posts.isPublished, true)
           ))
           .orderBy(desc(posts.createdAt))
