@@ -1660,7 +1660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user recommendations
-  app.get('/api/users/recommendations', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/users/recommendations', async (req, res) => {
     try {
       console.log('[DEBUG] Getting user recommendations');
       
@@ -1675,10 +1675,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current user's communities
-  app.get('/api/users/communities', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/users/communities', async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
-      console.log(`[DEBUG] Getting communities for current user: ${userId}`);
+      console.log(`[DEBUG] Getting communities for current user`);
       
       // For now, return empty array as communities aren't fully implemented
       const communities: any[] = [];
@@ -1691,7 +1690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user followers
-  app.get('/api/social/followers/:userId', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/social/followers/:userId', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       console.log(`[DEBUG] Getting followers for user: ${userId}`);
@@ -1707,6 +1706,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting user followers:', error);
       res.status(500).json({ message: 'Failed to get user followers' });
+    }
+  });
+
+  // Search users endpoint
+  app.get('/api/users/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      console.log(`[DEBUG] Searching users with query: "${query}"`);
+      
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query, limit);
+      console.log(`[DEBUG] Found ${users.length} users matching "${query}"`);
+      
+      // Remove sensitive data before sending
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        avatar: user.avatar,
+        bio: user.bio,
+        isVendor: user.isVendor,
+        role: user.role
+      }));
+      
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      res.status(500).json({ message: 'Failed to search users' });
     }
   });
 

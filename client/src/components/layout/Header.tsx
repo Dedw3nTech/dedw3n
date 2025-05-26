@@ -30,7 +30,8 @@ import {
   Home, 
   Compass,
   Video,
-  User as UserIcon
+  User as UserIcon,
+  Search
 } from "lucide-react";
 import {
   Popover,
@@ -360,6 +361,19 @@ export default function Header() {
               </div>
             </div>
             
+            <div 
+              className="py-2 px-4 text-sm font-medium cursor-pointer"
+              onClick={() => {
+                setActiveTab("search");
+                setLocation("/search");
+              }}
+              title="Search for users and vendors on the platform - API: /api/users/search"
+            >
+              <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "search" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
+                <Search className="h-4 w-4" />
+                <span>Search User</span>
+              </div>
+            </div>
 
             
             <div 
