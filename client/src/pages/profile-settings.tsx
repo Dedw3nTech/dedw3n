@@ -393,7 +393,7 @@ export default function ProfileSettingsPage() {
                   <Button 
                     onClick={handleProfileUpdate}
                     disabled={isUpdating}
-                    className="w-full text-black"
+                    className="w-full bg-black text-white hover:bg-gray-800"
                   >
                     {isUpdating ? (
                       <>
