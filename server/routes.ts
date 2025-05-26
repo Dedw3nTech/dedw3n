@@ -1282,6 +1282,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile
+  app.patch('/api/users/profile', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { name, bio, location, website, avatarUrl, avatar } = req.body;
+      
+      // Prepare update data
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (bio !== undefined) updateData.bio = bio;
+      if (location !== undefined) updateData.location = location;
+      if (website !== undefined) updateData.website = website;
+      if (avatarUrl !== undefined) updateData.avatar = avatarUrl;
+      if (avatar !== undefined) updateData.avatar = avatar;
+
+      // Update the user in the database
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
+  });
+
   // Feed endpoint
   app.get("/api/feed/personal", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
