@@ -306,7 +306,7 @@ export default function ProfileSettingsPage() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs p-1 h-auto flex flex-col"
+                          className="bg-black hover:bg-gray-800 text-white text-xs p-1 h-auto flex flex-col"
                           onClick={() => setLocation('/vendor-dashboard')}
                         >
                           <span>Go To</span>
@@ -315,7 +315,7 @@ export default function ProfileSettingsPage() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          className="bg-blue-500 hover:bg-blue-600 text-white text-xs p-1 h-auto flex flex-col"
+                          className="bg-black hover:bg-gray-800 text-white text-xs p-1 h-auto flex flex-col"
                           onClick={() => setLocation('/add-product')}
                         >
                           <span>Add</span>
@@ -360,7 +360,7 @@ export default function ProfileSettingsPage() {
                         <Button 
                           variant="default" 
                           size="sm" 
-                          className="bg-purple-500 hover:bg-purple-600 text-white text-xs p-1 h-auto flex flex-col"
+                          className="bg-black hover:bg-gray-800 text-white text-xs p-1 h-auto flex flex-col"
                           onClick={() => setLocation('/dating')}
                         >
                           <span>Go To</span>
