@@ -37,5 +37,15 @@ export function UserDisplayName({ userId, showUsername = false }: UserDisplayNam
     return <Skeleton className="h-4 w-20" />;
   }
 
-  return <span>{getDisplayName()}</span>;
+  return (
+    <span>
+      {user?.name && <span className="font-medium">{user.name}</span>}
+      {user?.username && (
+        <span className="text-gray-500 ml-1">
+          @{user.username}
+        </span>
+      )}
+      {!user?.name && !user?.username && `User ${userId}`}
+    </span>
+  );
 }
