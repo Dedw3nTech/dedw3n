@@ -334,9 +334,8 @@ export default function Header() {
         location === '/communities' ||
         location === '/profile' ||
         location.startsWith('/profile/')) && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-gray-200">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex overflow-x-auto">
+        <div className="container mx-auto px-4 py-6 border-b border-gray-200 bg-black">
+          <div className="flex overflow-x-auto">
             <div 
               className="py-2 px-4 text-sm font-medium cursor-pointer"
               onClick={() => {
@@ -387,7 +386,6 @@ export default function Header() {
 
             
             {/* Profile button removed as requested */}
-            </div>
           </div>
         </div>
       )}
