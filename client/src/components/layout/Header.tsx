@@ -334,7 +334,7 @@ export default function Header() {
         location === '/communities' ||
         location === '/profile' ||
         location.startsWith('/profile/')) && (
-        <div className="container mx-auto px-4 py-6 border-b border-gray-200 bg-black">
+        <div className="container mx-auto px-4 py-6 border-b border-gray-200">
           <div className="flex overflow-x-auto">
             <div 
               className="py-2 px-4 text-sm font-medium cursor-pointer"
@@ -344,7 +344,7 @@ export default function Header() {
               }}
               title="Personal timeline showing posts from you and users you follow - API: /api/feed/personal"
             >
-              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "wall" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "wall" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <Home className="h-4 w-4" />
                 <span>Wall</span>
               </div>
@@ -358,7 +358,7 @@ export default function Header() {
               }}
               title="Discover trending content and suggested users - API: /api/feed/discover and /api/users/recommendations"
             >
-              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "explore" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "explore" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <Compass className="h-4 w-4" />
                 <span>Explore</span>
               </div>
@@ -372,7 +372,7 @@ export default function Header() {
               }}
               title="Direct messages with other users - API: /api/messages and /api/messages/unread/count"
             >
-              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "messages" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "messages" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
                 {messageData?.count && messageData.count > 0 && (
