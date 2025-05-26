@@ -502,7 +502,7 @@ export default function MessagesPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Connect with people to start messaging
               </p>
-              <Button onClick={() => setLocation("/members")}>
+              <Button onClick={() => setLocation("/members")} className="bg-black text-white hover:bg-gray-800">
                 Find People
               </Button>
             </div>
@@ -568,7 +568,7 @@ export default function MessagesPage() {
               <p className="text-muted-foreground mb-4">
                 Select a conversation or start a new one
               </p>
-              <Button onClick={() => setLocation("/members")}>
+              <Button onClick={() => setLocation("/members")} className="bg-black text-white hover:bg-gray-800">
                 Find People to Message
               </Button>
             </div>
