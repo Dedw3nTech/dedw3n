@@ -663,6 +663,7 @@ export default function SettingsPage() {
                 <Button
                   onClick={handlePasswordUpdate}
                   disabled={updatePasswordMutation.isPending}
+                  className="bg-black text-white hover:bg-gray-800"
                 >
                   {updatePasswordMutation.isPending ? (
                     <>
