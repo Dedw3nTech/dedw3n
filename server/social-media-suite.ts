@@ -815,27 +815,50 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getUserFeed(userId: number, options: FeedOptions = {}): Promise<Partial<Post>[]> {
     try {
-      console.log(`Getting simple feed for user ${userId}`);
+      console.log(`Getting personalized feed for user ${userId}`);
       
       const limit = options.limit || 10;
+      const offset = options.offset || 0;
       
-      // Simple approach: Get all published posts and sort by creation date
-      const allPosts = await db.select()
+      // First, get list of users that this user follows
+      const followedUsers = await db.select({
+        followingId: follows.followingId
+      })
+      .from(follows)
+      .where(eq(follows.followerId, userId));
+      
+      const followedUserIds = followedUsers.map(f => f.followingId);
+      console.log(`User ${userId} follows: [${followedUserIds.join(', ')}]`);
+      
+      // If user doesn't follow anyone, return empty feed
+      if (followedUserIds.length === 0) {
+        console.log(`User ${userId} doesn't follow anyone - returning empty feed`);
+        return [];
+      }
+      
+      // Get posts only from followed users
+      const feedPosts = await db.select()
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
-        .where(eq(posts.isPublished, true))
+        .where(
+          and(
+            eq(posts.isPublished, true),
+            inArray(posts.userId, followedUserIds)
+          )
+        )
         .orderBy(desc(posts.createdAt))
-        .limit(limit);
+        .limit(limit)
+        .offset(offset);
       
-      console.log(`Found ${allPosts.length} total posts for feed`);
+      console.log(`Found ${feedPosts.length} posts from followed users for user ${userId}`);
       
       // Return formatted posts with user information
-      const formattedPosts = allPosts.map(post => ({
+      const formattedPosts = feedPosts.map(post => ({
         ...post.posts,
         user: post.users
       }));
       
-      console.log(`Returning ${formattedPosts.length} posts to user ${userId}`);
+      console.log(`Returning ${formattedPosts.length} posts to user ${userId} from followed users`);
       return formattedPosts;
       
     } catch (error) {
