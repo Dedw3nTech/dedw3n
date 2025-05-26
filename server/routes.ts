@@ -1184,26 +1184,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed due to server error" });
     });
   });
-  // Updated logout endpoint that handles both authentication methods
+  // Simple and effective logout endpoint
   app.post("/api/logout", async (req, res) => {
     try {
-      console.log('[DEBUG] Processing logout request');
+      console.log('[LOGOUT] Starting logout process');
       
-      // Explicitly set auth related headers to prevent caching
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      res.setHeader('Surrogate-Control', 'no-store');
-      
-      // Clear test user from debug mode
-      if (req.user && !req.isAuthenticated()) {
-        console.log('[DEBUG] Clearing debug-mode test user');
-        req.user = undefined;
+      // 1. Clear Passport.js session
+      if (req.isAuthenticated()) {
+        req.logout((err) => {
+          if (err) {
+            console.error('[LOGOUT] Session logout error:', err);
+          } else {
+            console.log('[LOGOUT] Session logout successful');
+          }
+        });
       }
       
-      // 1. Handle Passport.js session-based logout first
-      if (req.isAuthenticated()) {
-        console.log('[DEBUG] Logging out authenticated session user');
+      // 2. Destroy session completely
+      if (req.session) {
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('[LOGOUT] Session destroy error:', err);
+          } else {
+            console.log('[LOGOUT] Session destroyed');
+          }
+        });
+      }
+      
+      // 3. Clear all auth cookies
+      res.clearCookie('connect.sid', { path: '/' });
+      res.clearCookie('token', { path: '/' });
+      res.clearCookie('auth', { path: '/' });
+      
+      // 4. Clear user reference
+      req.user = undefined;
+      
+      // 5. Set logout headers
+      res.setHeader('X-Auth-Logged-Out', 'true');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      
+      console.log('[LOGOUT] Logout completed successfully');
+      
+      // Return simple success response
+      res.status(200).json({ 
+        success: true, 
+        message: 'Logged out successfully',
+        redirect: '/auth'
+      });
+      
+    } catch (error) {
+      console.error('[LOGOUT] Logout error:', error);
+      res.status(200).json({ 
+        success: true, 
+        message: 'Logged out',
+        redirect: '/auth'
+      });
+    }
+  });
+
+  // Remove the old complex logout implementation
+  // Keep only the simple one above
+
+  // This is the endpoint called by useAuth() in client code - we need direct implementation, not redirect
+  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
+    console.log('[DEBUG] /api/user - Authenticated with unified auth');
+    res.json(req.user);
+  });
+
+  // Continue with the rest of the old logout code cleanup
+  const oldLogoutStart = '// 1. Handle Passport.js session-based logout first';
         // Convert req.logout with callback to Promise
         await new Promise<void>((resolve) => {
           req.logout((err) => {
