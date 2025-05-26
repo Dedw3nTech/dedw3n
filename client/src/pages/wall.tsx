@@ -177,7 +177,7 @@ export default function WallPage() {
                   </AvatarFallback>
                 </Avatar>
                 <h2 className="text-xl font-bold">{user.name}</h2>
-                <p className="text-muted-foreground mb-3">@{user.username}</p>
+                <p className="text-blue-600 mb-3">@{user.username}</p>
                 
                 {/* Status indicators */}
                 <div className="flex flex-col gap-2 mb-3">
