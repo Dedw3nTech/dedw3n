@@ -174,12 +174,21 @@ export default function ContentFeed({
         </div>
       )}
       
-      {/* Posts List */}
+      {/* Force Posts Display - Debug Mode */}
       {data && data.length > 0 && (
         <div className="space-y-4">
-          {data.map((post) => (
-            <EnhancedPostCard key={post.id} post={post} />
-          ))}
+          <div className="bg-green-100 p-2 rounded mb-4 text-sm">
+            ✅ Found {data.length} posts: {data.map(p => `#${p.id}`).join(', ')}
+          </div>
+          {data.map((post, index) => {
+            console.log(`[ContentFeed] Rendering post ${index + 1}/${data.length}:`, post.id, post.content?.substring(0, 30));
+            return (
+              <div key={post.id} className="border-2 border-blue-200 rounded p-2">
+                <div className="text-xs text-blue-600 mb-2">Post #{post.id} rendering...</div>
+                <EnhancedPostCard post={post} />
+              </div>
+            );
+          })}
           
           {/* Load More Button */}
           {data.length >= itemLimit && (
