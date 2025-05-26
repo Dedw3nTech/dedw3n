@@ -1251,24 +1251,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
-  // Continue with the rest of the old logout code cleanup
-  const oldLogoutStart = '// 1. Handle Passport.js session-based logout first';
-        // Convert req.logout with callback to Promise
+  // Simple logout endpoint that properly clears sessions and prevents auto-login
+  app.post("/api/logout", async (req, res) => {
+    try {
+      console.log('[DEBUG] Logout request received');
+      
+      // Clear session if it exists
+      if (req.session) {
         await new Promise<void>((resolve) => {
-          req.logout((err) => {
+          req.session.destroy((err) => {
             if (err) {
-              console.error('[ERROR] Session logout failed:', err);
+              console.error('[ERROR] Session destroy failed:', err);
             } else {
-              console.log('[DEBUG] Session logout successful');
+              console.log('[DEBUG] Session destroyed successfully');
             }
-            resolve(); // Always resolve to continue
+            resolve();
           });
         });
       }
       
-      // 2. Handle JWT token-based logout
-      const authHeader = req.headers.authorization;
-      let token: string | undefined;
+      // Clear req.user
+      req.user = undefined;
+      
+      // Set headers to prevent auto-login
+      res.setHeader('X-Auth-Logged-Out', 'true');
+      res.setHeader('X-User-Logged-Out', 'true');
+      
+      return res.status(204).end();
+    } catch (error) {
+      console.error('[ERROR] Logout error:', error);
+      return res.status(204).end();
+    }
+  });
+
+  // Clean up any remaining legacy logout code
+  // All logout functionality is now handled in the simple /api/logout endpoint above
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
