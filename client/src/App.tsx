@@ -121,11 +121,6 @@ import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
 
-// Import video pages
-import TrendingVideosPage from "@/pages/videos/trending";
-import ShortsPage from "@/pages/videos/shorts";
-import StoriesPage from "@/pages/videos/stories";
-import LivePage from "@/pages/videos/live";
 import PremiumVideoPage from "@/pages/premium-video";
 
 function Router() {
@@ -185,13 +180,7 @@ function Router() {
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       
-      {/* Protected video routes */}
-      <ProtectedRoute path="/videos/trending" component={TrendingVideosPage} />
-      <ProtectedRoute path="/videos/shorts" component={ShortsPage} />
-      <ProtectedRoute path="/videos/stories" component={StoriesPage} />
-      <ProtectedRoute path="/videos/live" component={LivePage} />
-      <ProtectedRoute path="/videos/upload" component={TrendingVideosPage} />
-      <ProtectedRoute path="/videos/:id" component={TrendingVideosPage} />
+
       
       {/* Premium video routes */}
       <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />
