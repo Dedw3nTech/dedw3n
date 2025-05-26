@@ -31,7 +31,7 @@ import { registerMessagingSuite } from "./messaging-suite";
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
-import { socialMediaSuite } from "./social-media-suite";
+import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
 
 import { 
@@ -4037,76 +4037,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced post routes with direct JSON data for content and file uploads
-  // Feed endpoints for social media functionality
+  // Enhanced feed endpoints using Advanced Social Media Suite
   app.get("/api/feed/personal", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      console.log(`[INFO] Fetching personal feed for user ${userId}`);
+      console.log(`[INFO] Fetching advanced personalized feed for user ${userId}`);
       
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const algorithm = (req.query.algorithm as string) || 'personalized';
+      const sort = req.query.sort as string;
       
-      // Use the social media suite to get user's personalized feed
-      // This will include the user's own posts and posts from followed users
-      const feedPosts = await socialMediaSuite.getUserFeed(userId, {
+      // Map sort parameter to algorithm
+      let feedAlgorithm: 'chronological' | 'engagement' | 'personalized' | 'trending' = 'personalized';
+      if (sort === 'recent') {
+        feedAlgorithm = 'chronological';
+      } else if (algorithm === 'trending') {
+        feedAlgorithm = 'trending';
+      } else if (algorithm === 'engagement') {
+        feedAlgorithm = 'engagement';
+      }
+      
+      // Use the advanced social media suite for enhanced feed
+      const enhancedPosts = await advancedSocialMediaSuite.getPersonalizedFeed(userId, {
         limit,
-        offset
+        offset,
+        algorithm: feedAlgorithm,
+        includePromoted: true
       });
       
-      console.log(`[INFO] Retrieved ${feedPosts.length} posts for personal feed`);
+      console.log(`[INFO] Retrieved ${enhancedPosts.length} enhanced posts for personal feed`);
       
-      // Filter out any posts from the admin user (user id 1) if they exist
-      const filteredPosts = feedPosts.filter(post => post.userId !== 1);
-      
-      // Map the feed posts to ensure each one has a user property with required fields
-      const postsWithUsers = await Promise.all(filteredPosts.map(async (post) => {
-        // If post already has a user property with all required fields, return it as is
-        if (post.user && post.user.id && post.user.username && post.user.name) {
-          return post;
-        }
-        
-        // Otherwise, fetch the user data
-        try {
-          const userData = await db.select({
-            id: users.id,
-            username: users.username,
-            name: users.name,
-            avatar: users.avatar
-          })
-          .from(users)
-          .where(eq(users.id, post.userId))
-          .limit(1);
-          
-          const user = userData[0] || {
-            id: post.userId,
-            username: 'unknown',
-            name: 'Unknown User',
-            avatar: null
-          };
-          
-          return {
-            ...post,
-            user
-          };
-        } catch (err) {
-          console.error(`Error fetching user data for post ${post.id}:`, err);
-          // Return post with minimal user data as fallback
-          return {
-            ...post,
-            user: {
-              id: post.userId,
-              username: 'unknown',
-              name: 'Unknown User',
-              avatar: null
-            }
-          };
+      // Convert enhanced posts to the format expected by the frontend
+      const formattedPosts = enhancedPosts.map(enhancedPost => ({
+        id: enhancedPost.id,
+        userId: enhancedPost.userId,
+        content: enhancedPost.content,
+        title: enhancedPost.title,
+        contentType: enhancedPost.contentType,
+        imageUrl: enhancedPost.imageUrl,
+        videoUrl: enhancedPost.videoUrl,
+        tags: enhancedPost.tags,
+        likes: enhancedPost.metrics.likes,
+        comments: enhancedPost.metrics.comments,
+        shares: enhancedPost.metrics.shares,
+        views: enhancedPost.metrics.views,
+        createdAt: enhancedPost.createdAt,
+        updatedAt: enhancedPost.updatedAt,
+        isPublished: enhancedPost.isPublished,
+        communityId: enhancedPost.communityId,
+        user: {
+          id: enhancedPost.user.id,
+          username: enhancedPost.user.username,
+          name: enhancedPost.user.name,
+          avatar: enhancedPost.user.avatar
         }
       }));
       
-      console.log(`[INFO] After filtering user 1: ${postsWithUsers.length} posts`);
-      res.json(postsWithUsers);
+      console.log(`[INFO] Formatted ${formattedPosts.length} posts with enhanced features`);
+      res.json(formattedPosts);
     } catch (error) {
-      console.error("Error fetching personal feed:", error);
+      console.error("Error fetching advanced personal feed:", error);
       res.status(500).json({ message: "Failed to fetch personal feed" });
     }
   });
