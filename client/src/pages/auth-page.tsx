@@ -144,7 +144,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-black">
       {/* Left side - Forms */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
@@ -155,10 +155,10 @@ export default function AuthPage() {
             </TabsList>
             
             <TabsContent value="login">
-              <Card>
+              <Card className="bg-black border-gray-700">
                 <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>Enter your credentials to access your account</CardDescription>
+                  <CardTitle className="text-white">Login</CardTitle>
+                  <CardDescription className="text-gray-300">Enter your credentials to access your account</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
