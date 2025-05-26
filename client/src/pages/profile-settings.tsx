@@ -376,7 +376,7 @@ export default function ProfileSettingsPage() {
                       </div>
                       <p className="text-xs text-black mt-2">
                         Don't have a dating profile yet? <span 
-                          className="text-purple-500 hover:text-purple-700 cursor-pointer" 
+                          className="text-blue-500 hover:text-blue-700 cursor-pointer" 
                           onClick={() => setLocation('/dating')}
                         >
                           Click here
