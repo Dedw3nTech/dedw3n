@@ -48,11 +48,26 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Search Users</h1>
-        <p className="text-gray-600">Find and connect with other users and vendors on the platform</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-black rounded-full">
+                <Search className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Search Users</h1>
+            <p className="text-xl text-gray-600 leading-relaxed">
+              Find and connect with other users and vendors on the platform
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
 
       {/* Search Input */}
       <div className="relative mb-8">
@@ -157,7 +172,7 @@ export default function SearchPage() {
 
       {/* Quick Tips */}
       {!debouncedQuery && (
-        <div className="mt-12 bg-gray-50 rounded-lg p-6">
+        <div className="mt-12 bg-white rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Search Tips</h3>
           <ul className="space-y-2 text-gray-600">
             <li className="flex items-center space-x-2">
@@ -179,6 +194,7 @@ export default function SearchPage() {
           </ul>
         </div>
       )}
+      </div>
     </div>
   );
 }
