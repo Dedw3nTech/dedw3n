@@ -58,7 +58,7 @@ export default function Footer() {
           </div>
           
           {/* App Download Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-center md:justify-start items-center">
             <div className="mb-4 md:mb-0">
               <p className="text-sm text-gray-600 mb-2 text-center md:text-left">Download our mobile app</p>
               <div className="flex space-x-3 justify-center md:justify-start">
@@ -92,6 +92,7 @@ export default function Footer() {
               </div>
             </div>
           </div>
+          
           <p className="text-xs text-gray-500 text-center md:text-left">
             <span className="text-black font-medium">Dedw3n Ltd.</span> is a British Company registered in England, Wales and Scotland
             under registration number <span className="font-medium">15930281</span>, whose registered office is
