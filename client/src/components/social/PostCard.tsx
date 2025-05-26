@@ -472,12 +472,20 @@ export default function PostCard({
             </Avatar>
             <div>
               <div className="flex items-center">
-                <p 
-                  className="font-medium cursor-pointer hover:underline"
-                  onClick={() => setLocation(`/profile/${post.user.username}`)}
-                >
-                  {post.user.name}
-                </p>
+                <div>
+                  <p 
+                    className="font-medium cursor-pointer hover:underline"
+                    onClick={() => setLocation(`/profile/${post.user.username}`)}
+                  >
+                    {post.user.name}
+                  </p>
+                  <p 
+                    className="text-xs text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => setLocation(`/profile/${post.user.username}`)}
+                  >
+                    @{post.user.username}
+                  </p>
+                </div>
                 {post.community && (
                   <>
                     <span className="mx-1 text-muted-foreground">•</span>
