@@ -1220,6 +1220,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user has liked a post
+  app.get('/api/posts/:id/like/check', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      
+      const liked = await storage.checkPostLike(postId, userId);
+      res.json({ liked });
+    } catch (error) {
+      console.error('Error checking like status:', error);
+      res.status(500).json({ message: 'Failed to check like status' });
+    }
+  });
+
+  // Check if user has saved a post
+  app.get('/api/posts/:id/save/check', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      
+      const saved = await storage.checkPostSave(postId, userId);
+      res.json({ saved });
+    } catch (error) {
+      console.error('Error checking save status:', error);
+      res.status(500).json({ message: 'Failed to check save status' });
+    }
+  });
+
+  // Get user profile
+  app.get('/api/users/:id/profile', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+      res.status(500).json({ message: 'Failed to get user profile' });
+    }
+  });
+
+  // Get user profile picture
+  app.get('/api/users/:id/profilePicture', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json({ avatar: user.avatar });
+    } catch (error) {
+      console.error('Error getting profile picture:', error);
+      res.status(500).json({ message: 'Failed to get profile picture' });
+    }
+  });
+
   // Feed endpoint
   app.get("/api/feed/personal", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
