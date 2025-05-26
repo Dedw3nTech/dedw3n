@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Users, UserCheck, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
