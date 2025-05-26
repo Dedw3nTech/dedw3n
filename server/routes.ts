@@ -33,7 +33,7 @@ import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
 import { socialMediaSuite } from "./social-media-suite";
 import { registerMessageRoutes } from "./message-routes";
-import { setupInstagramApi } from "./instagram-api/setup";
+
 import { 
   posts, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
@@ -411,14 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  try {
-    // Setup Instagram-like API for social media sharing
-    await setupInstagramApi(app);
-    console.log('[ROUTES] Instagram API setup successful');
-  } catch (error) {
-    console.error('[ROUTES] Instagram API setup failed:', error);
-    // Continue with other routes even if Instagram API setup fails
-  }
+
   
   // Page content API endpoints
   app.get('/api/page/:id', (req: Request, res: Response) => {
