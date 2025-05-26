@@ -385,8 +385,8 @@ export default function Header() {
               title="Direct messages with other users - API: /api/messages and /api/messages/unread/count"
             >
               <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "messages" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
-                <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
+                <MessageSquare className="h-4 w-4" />
                 {messageData?.count && messageData.count > 0 && (
                   <Badge className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
                     {messageData.count}
