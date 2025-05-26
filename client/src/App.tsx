@@ -116,6 +116,7 @@ import SearchPage from "@/pages/search";
 import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
+import DatingProfilePage from "@/pages/dating-profile";
 
 import PremiumVideoPage from "@/pages/premium-video";
 
@@ -165,6 +166,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
+      <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />

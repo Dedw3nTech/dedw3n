@@ -96,6 +96,9 @@ export default function UserMenu() {
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
           </Link>
+          <Link href="/dating-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i className="ri-heart-3-line mr-2"></i> Dating Profile
+          </Link>
           <button 
             className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={handleSwitchToDashboard}
