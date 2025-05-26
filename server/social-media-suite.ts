@@ -888,85 +888,14 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
         }));
       }
       
-      // If we don't have enough posts, fetch recent posts from other users to supplement
-      const remainingCount = limit - feedPosts.length;
-      console.log(`Not enough posts from user and followed users. Fetching ${remainingCount} more posts from all users`);
+      // No supplemental posts from unconnected users - only show posts from followed users
+      console.log(`Feed will only show posts from user's own posts and followed users. No supplemental posts from strangers.`);
       
-      // Create arrays of IDs to exclude (posts we already have in the feed)
-      const excludePostIds = feedPosts.length > 0 
-        ? feedPosts.map(post => post.posts.id).join(',')
-        : '';
-        
-      // Create array of user IDs to exclude (user & followed users)
-      const userIdsToExclude = [...followingIds];
-      if (!userIdsToExclude.includes(userId)) {
-        userIdsToExclude.push(userId);
-      }
-      
-      // Default query for additional posts
-      let queryAdditionalPosts;
-      
-      // If we have posts to exclude and users to exclude
-      if (excludePostIds && userIdsToExclude.length > 0) {
-        const excludedUserIds = userIdsToExclude.join(',');
-        
-        queryAdditionalPosts = db.select()
-          .from(posts)
-          .innerJoin(users, eq(posts.userId, users.id))
-          .where(and(
-            sql`${posts.id} NOT IN (${excludePostIds})`,
-            sql`${posts.userId} NOT IN (${excludedUserIds})`,
-            eq(posts.isPublished, true)
-          ))
-          .orderBy(desc(posts.createdAt))
-          .limit(remainingCount);
-      } 
-      // If we only have users to exclude (no posts yet)
-      else if (userIdsToExclude.length > 0) {
-        const excludedUserIds = userIdsToExclude.join(',');
-        
-        queryAdditionalPosts = db.select()
-          .from(posts)
-          .innerJoin(users, eq(posts.userId, users.id))
-          .where(and(
-            sql`${posts.userId} NOT IN (${excludedUserIds})`,
-            eq(posts.isPublished, true)
-          ))
-          .orderBy(desc(posts.createdAt))
-          .limit(remainingCount);
-      }
-      // If we're starting from scratch with no followers and no posts
-      else {
-        queryAdditionalPosts = db.select()
-          .from(posts)
-          .innerJoin(users, eq(posts.userId, users.id))
-          .where(eq(posts.isPublished, true))
-          .orderBy(desc(posts.createdAt))
-          .limit(remainingCount);
-      }
-      
-      // Get additional posts
-      const additionalPosts = await queryAdditionalPosts;
-      console.log(`Found ${additionalPosts.length} additional posts from other users`);
-      
-      // Combine all posts
-      const allPosts = [
-        ...feedPosts.map(post => ({
-          ...post.posts,
-          user: post.users
-        })),
-        ...additionalPosts.map(post => ({
-          ...post.posts,
-          user: post.users
-        }))
-      ];
-      
-      // Sort by created date, most recent first
-      return allPosts.sort((a, b) => {
-        const dateA = a.createdAt?.getTime() || 0;
-        const dateB = b.createdAt?.getTime() || 0;
-        return dateB - dateA;
-      });
+      // Return only the posts we have (user's own posts + followed users' posts)
+      return feedPosts.map(post => ({
+        ...post.posts,
+        user: post.users
+      }));
     } catch (error) {
       console.error(`Error getting feed for user ${userId}:`, error);
       throw error;
