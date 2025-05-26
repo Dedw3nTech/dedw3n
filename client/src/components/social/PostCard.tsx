@@ -858,6 +858,38 @@ export default function PostCard({
             )}
             <span>{post.shares}</span>
           </Button>
+          
+          {/* Buy button for posts with products */}
+          {post.product && (
+            <Button 
+              variant="default" 
+              size="sm"
+              className="flex items-center gap-1 bg-black text-white hover:bg-gray-800"
+              onClick={() => {
+                if (!currentUser) {
+                  toast({
+                    title: "Authentication required",
+                    description: "Please log in to purchase items",
+                    variant: "destructive",
+                  });
+                  setLocation("/auth");
+                  return;
+                }
+                
+                if (post.product?.id) {
+                  addToCartMutation.mutate(post.product.id);
+                }
+              }}
+              disabled={addToCartMutation.isPending}
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShoppingBag className="h-4 w-4" />
+              )}
+              <span>Buy</span>
+            </Button>
+          )}
         </div>
         
         {!isDetailed && (
