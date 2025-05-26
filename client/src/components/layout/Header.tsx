@@ -382,20 +382,7 @@ export default function Header() {
                 )}
               </div>
             </div>
-            
-            <div 
-              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "videos" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
-              onClick={() => {
-                setActiveTab("videos");
-                setLocation("/videos/trending");
-              }}
-              title="Video content including trending, shorts, stories and live streams - API: /api/videos"
-            >
-              <div className="flex items-center gap-1">
-                <Video className="h-4 w-4" />
-                <span>Videos</span>
-              </div>
-            </div>
+
             
             <div 
               className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "communities" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
