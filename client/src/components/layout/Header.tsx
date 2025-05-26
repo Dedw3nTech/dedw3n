@@ -316,7 +316,7 @@ export default function Header() {
           {/* Dating button */}
           <div className="flex-1">
             <div
-              className="w-full py-4 text-center font-medium text-sm text-gray-600 hover:text-primary relative cursor-pointer"
+              className={`w-full py-4 text-center text-sm relative cursor-pointer ${location === '/dating' ? 'text-black font-bold border-b-2 border-black' : 'text-gray-600 font-medium hover:text-primary'}`}
               onClick={() => setLocation("/dating")}
             >
               <Heart className="inline-block h-4 w-4 mr-1" /> Dating
