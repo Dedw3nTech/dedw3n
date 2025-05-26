@@ -100,16 +100,50 @@ app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     
     try {
-      // For now, return a simple success response to test the endpoint
+      // Get user ID from session or headers
+      let userId = req.body.userId;
+      
+      // If no userId in body, try to get from authenticated session
+      if (!userId && req.user) {
+        userId = (req.user as any).id;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User authentication required" });
+      }
+
+      console.log('[DEBUG] Creating post for user:', userId);
       console.log('[DEBUG] Post data received:', req.body);
-      return res.status(201).json({ 
-        success: true, 
-        message: "Post creation endpoint working",
-        data: req.body 
+
+      // Import storage and create the post
+      const { storage } = await import('./storage.js');
+      
+      const postData = {
+        userId: parseInt(userId),
+        content: req.body.content || "",
+        title: req.body.title || null,
+        contentType: req.body.contentType || "text",
+        imageUrl: req.body.imageUrl !== "none" ? req.body.imageUrl : null,
+        videoUrl: req.body.videoUrl || null,
+        tags: req.body.tags || null,
+        isPublished: true,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        views: 0
+      };
+
+      const newPost = await storage.createPost(postData);
+      console.log('[DEBUG] Post created successfully:', newPost.id);
+      
+      return res.status(201).json({
+        success: true,
+        message: "Post created successfully",
+        post: newPost
       });
     } catch (error) {
       console.error('[DEBUG] Post creation error:', error);
-      return res.status(500).json({ message: "Failed to create post" });
+      return res.status(500).json({ message: "Failed to create post", error: error.message });
     }
   });
   
