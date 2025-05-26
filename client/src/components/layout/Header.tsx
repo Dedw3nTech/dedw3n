@@ -299,7 +299,7 @@ export default function Header() {
           {/* Marketplaces Tab */}
           <div className="flex-1">
             <div
-              className={`w-full py-4 text-center font-medium text-sm relative cursor-pointer ${['c2c', 'b2c', 'b2b', 'gov'].includes(marketType) ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-600 hover:text-primary'}`}
+              className={`w-full py-4 text-center text-sm relative cursor-pointer ${['c2c', 'b2c', 'b2b', 'gov'].includes(marketType) ? 'text-black font-bold border-b-2 border-black' : 'text-gray-600 font-medium hover:text-primary'}`}
               onClick={() => {
                 // Default to C2C marketplace
                 setMarketType("c2c");
