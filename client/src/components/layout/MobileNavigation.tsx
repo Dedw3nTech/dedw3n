@@ -67,12 +67,7 @@ export default function MobileNavigation() {
               <span className="text-xs mt-1">{t('nav.messages')}</span>
             </button>
           </Link>
-          <Link href="/wallet">
-            <button className="py-3 px-6 text-gray-500 flex flex-col items-center">
-              <i className="ri-wallet-3-line text-xl"></i>
-              <span className="text-xs mt-1">{t('wallet.my_wallet')}</span>
-            </button>
-          </Link>
+
           <Link href="/profile">
             <button className="py-3 px-6 text-gray-500 flex flex-col items-center">
               <i className="ri-user-line text-xl"></i>
