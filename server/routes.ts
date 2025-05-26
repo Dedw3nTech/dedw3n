@@ -1337,49 +1337,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ error: 'Test login failed' });
       }
     });
-        }
-      }
-      
-      // Set header to signal client to prevent auto-login
-      res.setHeader('X-Auth-Logged-Out', 'true');
-      
-      // Clear req.user - sometimes Passport.js can leave this
-      req.user = undefined;
-      
-      // Return 204 status (No Content) as recommended for logout operations
-      return res.status(204).end();
-    } catch (error) {
-      console.error('[ERROR] Logout error:', error);
-      // Even on error, return success to prevent UI getting stuck
-      return res.status(204).end();
-    }
-  });
-  
-  // This is the endpoint called by useAuth() in client code - we need direct implementation, not redirect
-  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
-    console.log('[DEBUG] /api/user - Authenticated with unified auth');
-    res.json(req.user);
-  });
-  
-  // Removed duplicate /api/auth/me endpoint - we're using the comprehensive implementation above
-  
-  // User profile routes
-  app.get("/api/users/id/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      console.log(`[DEBUG] Fetching profile for user ID: ${userId}`);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
-      const user = await storage.getUser(userId);
-      
-      console.log(`[DEBUG] User found by ID:`, user ? 'Yes' : 'No');
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+  }
+
+  const httpServer = createServer(app);
+
+  return httpServer;
+
       
       // Remove password before sending
       const { password, ...userData } = user;
