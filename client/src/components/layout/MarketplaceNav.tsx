@@ -13,7 +13,7 @@ export function MarketplaceNav() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <Button 
             variant={marketType === 'c2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center bg-black text-white hover:bg-gray-800 ${marketType === 'c2c' ? 'border-gray-600' : 'border-gray-300'}`}
+            className={`flex items-center justify-center ${marketType === 'c2c' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
             onClick={() => {
               setMarketType("c2c");
               setLocation("/products");
@@ -25,7 +25,7 @@ export function MarketplaceNav() {
           
           <Button 
             variant={marketType === 'b2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center bg-black text-white hover:bg-gray-800 ${marketType === 'b2c' ? 'border-gray-600' : 'border-gray-300'}`}
+            className={`flex items-center justify-center ${marketType === 'b2c' ? 'bg-green-500 hover:bg-green-600' : ''}`}
             onClick={() => {
               setMarketType("b2c");
               setLocation("/products");
@@ -37,7 +37,7 @@ export function MarketplaceNav() {
           
           <Button 
             variant={marketType === 'b2b' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center bg-black text-white hover:bg-gray-800 ${marketType === 'b2b' ? 'border-gray-600' : 'border-gray-300'}`}
+            className={`flex items-center justify-center ${marketType === 'b2b' ? 'bg-purple-500 hover:bg-purple-600' : ''}`}
             onClick={() => {
               setMarketType("b2b");
               setLocation("/products");
@@ -49,7 +49,7 @@ export function MarketplaceNav() {
           
           <Button 
             variant={marketType === 'gov' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center bg-black text-white hover:bg-gray-800 ${marketType === 'gov' ? 'border-gray-600' : 'border-gray-300'}`}
+            className={`flex items-center justify-center ${marketType === 'gov' ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
             onClick={() => {
               setMarketType("gov");
               setLocation("/government");
