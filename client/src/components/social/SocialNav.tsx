@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
 
 export default function SocialNav() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth();
   
   // Get unread message count
@@ -13,10 +13,13 @@ export default function SocialNav() {
     enabled: !!user,
   });
 
+  // Check if current page is social-related
+  const isSocialActive = location === '/social' || location === '/wall' || location === '/explore' || location === '/messages' || location.startsWith('/profile');
+
   return (
     <div className="flex-1">
       <div
-        className="w-full py-4 text-center font-medium text-sm text-gray-600 hover:text-primary relative cursor-pointer"
+        className={`w-full py-4 text-center text-sm relative cursor-pointer ${isSocialActive ? 'text-black font-bold border-b-2 border-black' : 'text-gray-600 font-medium hover:text-primary'}`}
         onClick={() => setLocation("/social")}
       >
         <i className="ri-group-line mr-1"></i> Social
