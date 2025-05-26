@@ -73,24 +73,9 @@ export default function ContentFeed({
     // Using the default QueryClient's queryFn which adds auth headers
   });
   
-  // Debug logging to see what's happening with the data
-  console.log('[ContentFeed] Query State:', { 
-    isLoading, 
-    isFetching, 
-    hasData: !!data, 
-    dataLength: data?.length || 0,
-    error: error?.message,
-    endpoint: getFeedEndpoint(),
-    actualData: data,
-    queryKey: queryKey
-  });
+
   
-  // Log whenever data changes
-  useEffect(() => {
-    if (data) {
-      console.log('[ContentFeed] Data received:', data.length, 'posts:', data.map(p => ({ id: p.id, content: p.content?.substring(0, 50) })));
-    }
-  }, [data]);
+
   
   const handleLoadMore = () => {
     setPage(prevPage => prevPage + 1);
@@ -174,21 +159,12 @@ export default function ContentFeed({
         </div>
       )}
       
-      {/* Force Posts Display - Debug Mode */}
+      {/* Posts List */}
       {data && data.length > 0 && (
         <div className="space-y-4">
-          <div className="bg-green-100 p-2 rounded mb-4 text-sm">
-            ✅ Found {data.length} posts: {data.map(p => `#${p.id}`).join(', ')}
-          </div>
-          {data.map((post, index) => {
-            console.log(`[ContentFeed] Rendering post ${index + 1}/${data.length}:`, post.id, post.content?.substring(0, 30));
-            return (
-              <div key={post.id} className="border-2 border-blue-200 rounded p-2">
-                <div className="text-xs text-blue-600 mb-2">Post #{post.id} rendering...</div>
-                <EnhancedPostCard post={post} />
-              </div>
-            );
-          })}
+          {data.map((post) => (
+            <EnhancedPostCard key={post.id} post={post} />
+          ))}
           
           {/* Load More Button */}
           {data.length >= itemLimit && (
