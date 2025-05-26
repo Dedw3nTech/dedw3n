@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@shared/schema";
 import EnhancedPostCard from "@/components/social/EnhancedPostCard";
@@ -80,8 +80,17 @@ export default function ContentFeed({
     hasData: !!data, 
     dataLength: data?.length || 0,
     error: error?.message,
-    endpoint: getFeedEndpoint()
+    endpoint: getFeedEndpoint(),
+    actualData: data,
+    queryKey: queryKey
   });
+  
+  // Log whenever data changes
+  useEffect(() => {
+    if (data) {
+      console.log('[ContentFeed] Data received:', data.length, 'posts:', data.map(p => ({ id: p.id, content: p.content?.substring(0, 50) })));
+    }
+  }, [data]);
   
   const handleLoadMore = () => {
     setPage(prevPage => prevPage + 1);
