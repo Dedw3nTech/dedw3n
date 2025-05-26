@@ -92,6 +92,26 @@ app.use((req, res, next) => {
     // Return a simple JSON response to confirm the API is working correctly
     return res.json({ success: true, message: "API connection test successful", contentType: "json" });
   });
+
+  // Post creation endpoint - must be before catch-all middleware
+  app.post('/api/posts', async (req, res) => {
+    console.log('[DEBUG] Post creation endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      // For now, return a simple success response to test the endpoint
+      console.log('[DEBUG] Post data received:', req.body);
+      return res.status(201).json({ 
+        success: true, 
+        message: "Post creation endpoint working",
+        data: req.body 
+      });
+    } catch (error) {
+      console.error('[DEBUG] Post creation error:', error);
+      return res.status(500).json({ message: "Failed to create post" });
+    }
+  });
   
 
   
