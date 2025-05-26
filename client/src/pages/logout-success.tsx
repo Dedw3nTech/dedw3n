@@ -105,11 +105,9 @@ export default function LogoutSuccess() {
         className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-xl shadow-xl"
       >
         <div className="flex justify-center">
-          <img 
-            src={dedwenLogo} 
-            alt="Dedwen Logo" 
-            className="h-48 mb-6" /* Increased from h-16 (4rem/64px) to h-48 (12rem/192px) - 3x bigger */
-          />
+          <h1 className="text-3xl font-bold text-black mb-6">
+            Dedw3n
+          </h1>
         </div>
         
         <div className="text-center space-y-4">
