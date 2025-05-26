@@ -100,17 +100,17 @@ export default function ContentFeed({
         <div className="mb-4 text-center pb-2 border-b">
           <div className="flex justify-center gap-6">
             <span 
-              className={`cursor-pointer text-lg ${feedType === 'personal' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
+              className={`cursor-pointer text-lg ${feedType === 'personal' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
               onClick={() => handleFeedTypeChange('personal')}
             >
-              <User className="h-4 w-4 inline mr-1" />
+              <User className={`h-4 w-4 inline mr-1 ${feedType === 'personal' ? "text-black font-bold" : ""}`} />
               {t("social.my_feed")}
             </span>
             <span 
-              className={`cursor-pointer text-lg ${feedType === 'communities' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
+              className={`cursor-pointer text-lg ${feedType === 'communities' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
               onClick={() => handleFeedTypeChange('communities')}
             >
-              <Users className="h-4 w-4 inline mr-1" />
+              <Users className={`h-4 w-4 inline mr-1 ${feedType === 'communities' ? "text-black font-bold" : ""}`} />
               {t("social.communities")}
             </span>
           </div>
@@ -121,17 +121,17 @@ export default function ContentFeed({
       <div className="mb-4 text-center">
         <div className="flex justify-center gap-6">
           <span 
-            className={`cursor-pointer ${sortType === 'relevant' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
+            className={`cursor-pointer ${sortType === 'relevant' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
             onClick={() => handleSortChange('relevant')}
           >
-            <Sparkles className="h-4 w-4 inline mr-1" />
+            <Sparkles className={`h-4 w-4 inline mr-1 ${sortType === 'relevant' ? "text-black font-bold" : ""}`} />
             {t("social.most_relevant")}
           </span>
           <span 
-            className={`cursor-pointer ${sortType === 'recent' ? "font-bold text-primary" : "text-gray-600 hover:text-gray-900"}`} 
+            className={`cursor-pointer ${sortType === 'recent' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
             onClick={() => handleSortChange('recent')}
           >
-            <Clock className="h-4 w-4 inline mr-1" />
+            <Clock className={`h-4 w-4 inline mr-1 ${sortType === 'recent' ? "text-black font-bold" : ""}`} />
             {t("social.most_recent")}
           </span>
         </div>
