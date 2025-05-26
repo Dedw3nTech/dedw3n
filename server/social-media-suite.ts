@@ -11,7 +11,7 @@ import {
   Post, User, Comment, Like, Message, Community, Video, Follow
 } from '@shared/schema';
 import { db } from './db';
-import { eq, and, or, desc, sql, not, isNull, gt, lt, gte, lte, asc } from 'drizzle-orm';
+import { eq, and, or, desc, sql, not, isNull, gt, lt, gte, lte, asc, inArray } from 'drizzle-orm';
 
 /**
  * Social Media Suite Interface
@@ -867,7 +867,7 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
           .from(posts)
           .innerJoin(users, eq(posts.userId, users.id))
           .where(and(
-            sql`${posts.userId} IN (${followedUserIds})`,
+            inArray(posts.userId, followedUserIds),
             userPostIds.length > 0 ? sql`${posts.id} NOT IN (${userPostIds.join(',')})` : sql`1=1`,
             eq(posts.isPublished, true)
           ))
