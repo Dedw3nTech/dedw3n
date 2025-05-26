@@ -63,7 +63,7 @@ export default function ContentFeed({
   // Fetch posts using the appropriate feed endpoint
   const queryKey = [getFeedEndpoint()];
   
-  const { data, isLoading, isFetching, refetch } = useQuery<Post[]>({
+  const { data, isLoading, isFetching, refetch, error } = useQuery<Post[]>({
     queryKey,
     enabled: !userPosts || !!currentUserId,
     staleTime: 0, // Always consider data stale immediately
@@ -71,6 +71,16 @@ export default function ContentFeed({
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchInterval: 0, // Disable automatic polling
     // Using the default QueryClient's queryFn which adds auth headers
+  });
+  
+  // Debug logging to see what's happening with the data
+  console.log('[ContentFeed] Query State:', { 
+    isLoading, 
+    isFetching, 
+    hasData: !!data, 
+    dataLength: data?.length || 0,
+    error: error?.message,
+    endpoint: getFeedEndpoint()
   });
   
   const handleLoadMore = () => {
