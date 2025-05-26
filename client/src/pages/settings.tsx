@@ -723,6 +723,7 @@ export default function SettingsPage() {
                 <Button
                   onClick={handlePreferencesUpdate}
                   disabled={updatePreferencesMutation.isPending}
+                  className="bg-black text-white hover:bg-gray-800"
                 >
                   {updatePreferencesMutation.isPending ? (
                     <>
