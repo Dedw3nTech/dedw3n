@@ -1395,6 +1395,33 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Failed to create post');
     }
   }
+
+  async getAllPosts(): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null } })[]> {
+    try {
+      const postsWithUsers = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(eq(posts.isPublished, true))
+        .orderBy(desc(posts.createdAt));
+
+      return postsWithUsers.map(({ post, user }) => ({
+        ...post,
+        user
+      }));
+    } catch (error) {
+      console.error('Error getting all posts:', error);
+      return [];
+    }
+  }
   
   async updatePost(id: number, postData: Partial<Post>): Promise<Post | undefined> {
     try {

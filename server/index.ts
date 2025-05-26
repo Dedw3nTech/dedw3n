@@ -146,6 +146,41 @@ app.use((req, res, next) => {
       return res.status(500).json({ message: "Failed to create post", error: error.message });
     }
   });
+
+  // Feed endpoints - must be before catch-all middleware
+  app.get('/api/feed/personal', async (req, res) => {
+    console.log('[DEBUG] Personal feed endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      // Import storage and get posts (public feed for now)
+      const { storage } = await import('./storage.js');
+      
+      // Get all posts for now (simplified feed)
+      const posts = await storage.getAllPosts();
+      console.log('[DEBUG] Retrieved', posts.length, 'posts for personal feed');
+      
+      return res.status(200).json(posts);
+    } catch (error) {
+      console.error('[DEBUG] Feed error:', error);
+      return res.status(500).json({ message: "Failed to get feed", error: error.message });
+    }
+  });
+
+  app.get('/api/feed/communities', async (req, res) => {
+    console.log('[DEBUG] Communities feed endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).json([]);
+  });
+
+  app.get('/api/feed/recommended', async (req, res) => {
+    console.log('[DEBUG] Recommended feed endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).json([]);
+  });
   
 
   
