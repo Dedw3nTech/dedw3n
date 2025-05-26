@@ -323,7 +323,7 @@ export default function AuthPage() {
       </div>
       
       {/* Right side - Hero Section without Wall */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary-dark">
+      <div className="hidden lg:flex flex-1 bg-black">
         <div className="flex flex-col justify-center items-center p-12 text-white">
           <div className="max-w-md">
             <h1 className="text-4xl font-bold mb-6">Welcome to Dedw3n</h1>
