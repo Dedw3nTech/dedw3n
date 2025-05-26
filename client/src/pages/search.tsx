@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, Users, UserCheck, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import SocialNav from "@/components/social/SocialNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,9 +65,6 @@ export default function SearchPage() {
           </div>
         </div>
       </div>
-
-      {/* Social Navigation */}
-      <SocialNav />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
