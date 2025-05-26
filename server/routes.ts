@@ -1341,13 +1341,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stats = {
         posts: await storage.getUserPostCount(userId),
-        followers: await storage.getUserFollowerCount(userId), 
-        following: await storage.getUserFollowingCount(userId)
+        followers: await storage.getFollowersCount(userId), 
+        following: await storage.getFollowingCount(userId)
       };
       res.json(stats);
     } catch (error) {
       console.error("Error getting user stats:", error);
       res.status(500).json({ message: "Failed to get user stats" });
+    }
+  });
+
+  // Public users endpoint for Members page
+  app.get("/api/users/public", async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllUsersPublic();
+      res.json(users);
+    } catch (error) {
+      console.error("Error getting public users:", error);
+      res.status(500).json({ message: "Failed to get users" });
     }
   });
 

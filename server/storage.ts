@@ -70,6 +70,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
+  getAllUsersPublic(): Promise<User[]>;
   
   // User connection operations
   connectUsers(userId1: number, userId2: number): Promise<boolean>;
@@ -652,6 +653,16 @@ export class DatabaseStorage implements IStorage {
   
   async listUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getAllUsersPublic(): Promise<User[]> {
+    const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+    
+    // Remove sensitive information for public display
+    return allUsers.map(user => {
+      const { password, ...publicUserData } = user;
+      return publicUserData as User;
+    });
   }
   
   async searchUsers(query: string, limit: number = 10): Promise<User[]> {
