@@ -360,19 +360,7 @@ export default function Header() {
               </div>
             </div>
             
-            <div 
-              className="py-2 px-4 text-sm font-medium cursor-pointer"
-              onClick={() => {
-                setActiveTab("explore");
-                setLocation("/explore");
-              }}
-              title="Discover trending content and suggested users - API: /api/feed/discover and /api/users/recommendations"
-            >
-              <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "explore" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
-                <Compass className="h-4 w-4" />
-                <span>Explore</span>
-              </div>
-            </div>
+
             
             <div 
               className="py-2 px-4 text-sm font-medium relative cursor-pointer"
