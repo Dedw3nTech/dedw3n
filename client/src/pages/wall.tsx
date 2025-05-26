@@ -244,14 +244,7 @@ export default function WallPage() {
                   <Bookmark className="h-4 w-4 mr-2" />
                   Saved Posts
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start"
-                  onClick={() => setLocation("/communities")}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Communities
-                </Button>
+
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start"
@@ -294,9 +287,8 @@ export default function WallPage() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="personal">Personal</TabsTrigger>
-                <TabsTrigger value="communities">Communities</TabsTrigger>
                 <TabsTrigger value="recommended">For You</TabsTrigger>
               </TabsList>
               
@@ -387,84 +379,7 @@ export default function WallPage() {
                 )}
               </TabsContent>
               
-              {/* Communities feed */}
-              <TabsContent value="communities" className="space-y-6 mt-6">
-                {isLoadingCommunities ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="space-y-1">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-3 w-16" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-64 w-full rounded-md" />
-                      </div>
-                    ))}
-                  </div>
-                ) : !communitiesFeed || !Array.isArray(communitiesFeed) || communitiesFeed.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <h3 className="text-lg font-medium mb-2">No community posts yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Join communities to see posts from like-minded people.
-                      <br />
-                      Explore communities to get started!
-                    </p>
-                    <Button
-                      onClick={() => setLocation("/communities")}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Explore Communities
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {communitiesFeed.map((basePost) => {
-                      // Format date as string and ensure the post has a proper user object
-                      const post: Post = {
-                        id: basePost.id,
-                        userId: basePost.userId,
-                        content: basePost.content,
-                        title: basePost.title,
-                        contentType: basePost.contentType,
-                        imageUrl: basePost.imageUrl,
-                        videoUrl: basePost.videoUrl,
-                        productId: basePost.productId,
-                        // Add default values of 0 for numeric fields
-                        likes: basePost.likes || 0,
-                        comments: basePost.comments || 0,
-                        shares: basePost.shares || 0,
-                        views: basePost.views || 0,
-                        tags: basePost.tags,
-                        isPromoted: basePost.isPromoted,
-                        isPublished: basePost.isPublished,
-                        isFlagged: basePost.isFlagged,
-                        // Convert Date object to string for compatibility with PostCard
-                        createdAt: basePost.createdAt ? 
-                          (typeof basePost.createdAt === 'string' ? 
-                            basePost.createdAt : 
-                            new Date(basePost.createdAt).toISOString()
-                          ) : 
-                          new Date().toISOString(),
-                        // Ensure user object exists
-                        user: basePost.user || {
-                          id: basePost.userId,
-                          name: "User",
-                          username: "user",
-                          avatar: null
-                        }
-                      };
-                      return <PostCard key={post.id} post={post} />;
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-              
+
               {/* Recommended feed */}
               <TabsContent value="recommended" className="space-y-6 mt-6">
                 {isLoadingRecommended ? (
