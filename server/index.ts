@@ -93,6 +93,25 @@ app.use((req, res, next) => {
     return res.json({ success: true, message: "API connection test successful", contentType: "json" });
   });
 
+  // Trending products endpoint - critical for marketplace functionality
+  app.get('/api/products/trending', async (req, res) => {
+    console.log('[DEBUG] Trending products endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const limit = parseInt(req.query.limit as string) || 4;
+      const { storage } = await import('./storage.js');
+      const trendingProducts = await storage.getTopSellingProducts(limit);
+      
+      console.log(`[DEBUG] Found ${trendingProducts.length} trending products`);
+      return res.json(trendingProducts);
+    } catch (error) {
+      console.error('Error fetching trending products:', error);
+      return res.status(500).json({ message: 'Failed to fetch trending products' });
+    }
+  });
+
   // Post creation endpoint - must be before catch-all middleware
   app.post('/api/posts', async (req, res) => {
     console.log('[DEBUG] Post creation endpoint called');
