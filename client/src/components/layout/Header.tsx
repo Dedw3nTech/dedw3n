@@ -334,7 +334,7 @@ export default function Header() {
         location === '/communities' ||
         location === '/profile' ||
         location.startsWith('/profile/')) && (
-        <div className="container mx-auto px-4 py-4 border-b border-gray-200 bg-black">
+        <div className="container mx-auto px-4 py-6 border-b border-gray-200 bg-black">
           <div className="flex overflow-x-auto">
             <div 
               className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "wall" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
