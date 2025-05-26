@@ -601,6 +601,7 @@ export default function SettingsPage() {
                 <Button
                   onClick={handleProfileUpdate}
                   disabled={updateProfileMutation.isPending}
+                  className="bg-black text-white hover:bg-gray-800"
                 >
                   {updateProfileMutation.isPending ? (
                     <>
