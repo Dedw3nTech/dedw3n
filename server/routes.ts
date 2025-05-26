@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { posts } from "@shared/schema";
+
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
 import { promisify } from "util";
@@ -35,7 +35,7 @@ import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
 
 import { 
-  posts, insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
+  insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
   insertTransactionSchema, insertCommunitySchema, insertCommunityMemberSchema,
   insertMembershipTierSchema, insertMembershipSchema, insertEventSchema,
@@ -1338,8 +1338,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
   }
-
-  const httpServer = createServer(app);
 
   return httpServer;
 }
