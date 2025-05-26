@@ -38,7 +38,7 @@ export default function MobileNavigation() {
             onClick={() => handleViewChange("marketplace")}
           >
             <i className="ri-store-2-line text-xl"></i>
-            <span className="text-xs mt-1">{t('nav.products')}</span>
+            <span className="text-xs mt-1">Marketplaces</span>
           </button>
           <button
             className={`py-3 px-6 flex flex-col items-center ${view === "social" ? "text-primary" : "text-gray-500"}`}
