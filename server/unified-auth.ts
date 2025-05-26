@@ -69,9 +69,9 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
   
   // Fifth priority: Check JWT token authentication
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
+  const jwtAuthHeader = req.headers.authorization;
+  if (jwtAuthHeader && jwtAuthHeader.startsWith('Bearer ')) {
+    const token = jwtAuthHeader.substring(7);
     try {
       const payload = verifyToken(token);
       if (payload) {
@@ -101,15 +101,12 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       console.error('[AUTH] Fallback authentication failed:', error);
     }
   }
-
-  // If session authentication fails, check JWT
-  const authHeader = req.headers.authorization;
   
   // Extract JWT token from authorization header, query parameter, or cookies
   let token: string | undefined;
   
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
+  if (jwtAuthHeader && jwtAuthHeader.startsWith('Bearer ')) {
+    token = jwtAuthHeader.substring(7);
   } else if (req.query.token) {
     token = req.query.token as string;
   } else if (req.cookies && req.cookies.token) {
