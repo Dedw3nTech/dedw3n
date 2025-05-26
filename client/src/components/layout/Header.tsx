@@ -383,20 +383,7 @@ export default function Header() {
               </div>
             </div>
 
-            
-            <div 
-              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "communities" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
-              onClick={() => {
-                setActiveTab("communities");
-                setLocation("/communities");
-              }}
-              title="Interest-based groups for discussion and content sharing - API: /api/communities and /api/users/communities"
-            >
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span>Communities</span>
-              </div>
-            </div>
+
             
             {/* Profile button removed as requested */}
           </div>

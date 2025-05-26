@@ -103,11 +103,7 @@ import TermsPage from "@/pages/terms";
 import CookiesPage from "@/pages/cookies";
 import ContactPage from "@/pages/contact";
 
-// Import community-related components
-import CommunitiesPage from "@/pages/communities";
-import CreateCommunityPage from "@/pages/create-community";
-import CommunityDetailPage from "@/pages/community-detail";
-import CommunityManagePage from "@/pages/community-manage";
+
 
 // Import social networking and user components
 import ProfilePage from "@/pages/profile";
@@ -166,10 +162,6 @@ function Router() {
       <ProtectedRoute path="/wallet" component={WalletPage} />
       <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
       <ProtectedRoute path="/vendor-analytics" component={VendorAnalytics} />
-      <ProtectedRoute path="/communities" component={CommunitiesPage} />
-      <ProtectedRoute path="/communities/create" component={CreateCommunityPage} />
-      <ProtectedRoute path="/communities/:id" component={CommunityDetailPage} />
-      <ProtectedRoute path="/communities/:id/manage" component={CommunityManagePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
