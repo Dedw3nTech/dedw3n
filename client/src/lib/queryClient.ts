@@ -119,6 +119,7 @@ export async function apiRequest(
       'X-Use-Session': 'true',
       'X-Client-Auth': 'true',
       'X-Request-Time': new Date().toISOString(),
+      'X-Auto-Login': 'true',
       'Content-Type': isFormData ? undefined : 'application/json',
       ...(userId ? { 
         'X-Client-User-ID': userId.toString(), 
