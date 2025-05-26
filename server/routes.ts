@@ -766,6 +766,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Session reset endpoint to fix corrupted sessions
+    app.post('/api/session/reset', async (req: Request, res: Response) => {
+      try {
+        // Clear the existing session
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Error destroying session:', err);
+          }
+        });
+        
+        // Clear any passport data
+        req.logout((err) => {
+          if (err) {
+            console.error('Error during logout:', err);
+          }
+        });
+        
+        res.json({ 
+          success: true, 
+          message: "Session reset successfully. Please refresh the page." 
+        });
+      } catch (error) {
+        console.error('Session reset error:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: "Failed to reset session" 
+        });
+      }
+    });
+    
+    // Quick login endpoint to authenticate as your real account
+    app.post('/api/quick-login', async (req: Request, res: Response) => {
+      try {
+        // Get your real user account (ID 6)
+        const user = await storage.getUser(6);
+        
+        if (!user) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "User not found" 
+          });
+        }
+        
+        // Manually set up the session
+        req.login(user, (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.status(500).json({ 
+              success: false, 
+              message: "Failed to establish session" 
+            });
+          }
+          
+          res.json({ 
+            success: true, 
+            message: "Logged in successfully", 
+            user: {
+              id: user.id,
+              username: user.username,
+              name: user.name
+            }
+          });
+        });
+        
+      } catch (error) {
+        console.error('Quick login error:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: "Login failed" 
+        });
+      }
+    });
+
     // API connection test endpoint
     app.post('/api/posts/ping', unifiedIsAuthenticated, (req: Request, res: Response) => {
       console.log('[DEBUG] Direct API ping endpoint called');
