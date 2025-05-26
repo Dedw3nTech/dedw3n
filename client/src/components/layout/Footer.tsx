@@ -63,7 +63,7 @@ export default function Footer() {
           </p>
           <p className="text-xs text-gray-500 text-center md:text-left">
             Our bank is registered with HSBC UK IBAN <span className="font-medium">GB79 HBUK 4003 2782 3984 94</span>
-            (BIC <span className="font-medium">BUKGB4B</span>), our sole official website is <a href="https://www.dedw3n.com" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
+            (BIC <span className="font-medium">BUKGB4B</span>), our sole official website is <a href="https://www.dedw3n.com" className="text-gray-500 hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
           </p>
         </div>
       </div>
