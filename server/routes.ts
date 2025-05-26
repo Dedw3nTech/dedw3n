@@ -1248,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user profile
+  // Get user profile by ID
   app.get('/api/users/:id/profile', unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
@@ -1262,6 +1262,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting user profile:', error);
       res.status(500).json({ message: 'Failed to get user profile' });
+    }
+  });
+
+  // Get user profile by username
+  app.get('/api/users/:username', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`[DEBUG] Getting user profile for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        console.log(`[DEBUG] User not found for username: ${username}`);
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      console.log(`[DEBUG] Found user:`, { id: user.id, username: user.username, name: user.name });
+      res.json(user);
+    } catch (error) {
+      console.error('Error getting user profile by username:', error);
+      res.status(500).json({ message: 'Failed to get user profile' });
+    }
+  });
+
+  // Get user posts by username
+  app.get('/api/users/:username/posts', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`[DEBUG] Getting posts for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const posts = await storage.getUserPosts(user.id);
+      console.log(`[DEBUG] Found ${posts.length} posts for user ${username}`);
+      res.json(posts);
+    } catch (error) {
+      console.error('Error getting user posts:', error);
+      res.status(500).json({ message: 'Failed to get user posts' });
+    }
+  });
+
+  // Get user communities by username
+  app.get('/api/users/:username/communities', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`[DEBUG] Getting communities for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // For now, return empty array as communities aren't fully implemented
+      const communities: any[] = [];
+      console.log(`[DEBUG] Found ${communities.length} communities for user ${username}`);
+      res.json(communities);
+    } catch (error) {
+      console.error('Error getting user communities:', error);
+      res.status(500).json({ message: 'Failed to get user communities' });
+    }
+  });
+
+  // Get user connections by username
+  app.get('/api/users/:username/connections', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`[DEBUG] Getting connections for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // For now, return empty array as connections aren't fully implemented
+      const connections: any[] = [];
+      console.log(`[DEBUG] Found ${connections.length} connections for user ${username}`);
+      res.json(connections);
+    } catch (error) {
+      console.error('Error getting user connections:', error);
+      res.status(500).json({ message: 'Failed to get user connections' });
     }
   });
 
@@ -1573,6 +1656,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[ERROR] Error in /api/auth/me:', error);
       return res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Get user recommendations
+  app.get('/api/users/recommendations', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      console.log('[DEBUG] Getting user recommendations');
+      
+      // For now, return empty array as recommendations aren't fully implemented
+      const recommendations: any[] = [];
+      console.log(`[DEBUG] Found ${recommendations.length} recommendations`);
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error getting user recommendations:', error);
+      res.status(500).json({ message: 'Failed to get user recommendations' });
+    }
+  });
+
+  // Get current user's communities
+  app.get('/api/users/communities', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      console.log(`[DEBUG] Getting communities for current user: ${userId}`);
+      
+      // For now, return empty array as communities aren't fully implemented
+      const communities: any[] = [];
+      console.log(`[DEBUG] Found ${communities.length} communities for current user`);
+      res.json(communities);
+    } catch (error) {
+      console.error('Error getting user communities:', error);
+      res.status(500).json({ message: 'Failed to get user communities' });
+    }
+  });
+
+  // Get user followers
+  app.get('/api/social/followers/:userId', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      console.log(`[DEBUG] Getting followers for user: ${userId}`);
+      
+      const followersCount = await storage.getFollowersCount(userId);
+      const followingCount = await storage.getFollowingCount(userId);
+      
+      console.log(`[DEBUG] Found ${followersCount} followers and ${followingCount} following for user ${userId}`);
+      res.json({ 
+        followers: followersCount, 
+        following: followingCount 
+      });
+    } catch (error) {
+      console.error('Error getting user followers:', error);
+      res.status(500).json({ message: 'Failed to get user followers' });
     }
   });
 
