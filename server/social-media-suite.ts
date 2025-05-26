@@ -815,89 +815,32 @@ export class SocialMediaSuiteImpl implements SocialMediaSuite {
    */
   async getUserFeed(userId: number, options: FeedOptions = {}): Promise<Partial<Post>[]> {
     try {
-      console.log(`Getting feed for user ${userId} with options:`, options);
+      console.log(`Getting simple feed for user ${userId}`);
       
-      // Configure limit and offset
       const limit = options.limit || 10;
-      const offset = options.offset || 0;
       
-      // First get the user's own posts
-      console.log(`Getting user's own posts for user ${userId}`);
-      const userOwnPosts = await db.select()
+      // Simple approach: Get all published posts and sort by creation date
+      const allPosts = await db.select()
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
-        .where(and(
-          eq(posts.userId, userId),
-          eq(posts.isPublished, true)
-        ))
+        .where(eq(posts.isPublished, true))
         .orderBy(desc(posts.createdAt))
         .limit(limit);
-        
-      console.log(`Found ${userOwnPosts.length} of user's own posts`);
       
-      // If the user has enough of their own posts, return those
-      if (userOwnPosts.length >= limit) {
-        return userOwnPosts.map(post => ({
-          ...post.posts,
-          user: post.users
-        }));
-      }
+      console.log(`Found ${allPosts.length} total posts for feed`);
       
-      // Get the list of users the current user is following
-      const following = await db.select({ followingId: follows.followingId })
-        .from(follows)
-        .where(eq(follows.followerId, userId));
-      
-      const followingIds = following.map(f => f.followingId);
-      
-      // Initialize with user's own posts
-      let feedPosts = [...userOwnPosts];
-      const userPostIds = userOwnPosts.map(post => post.posts.id);
-      
-      // Only query followed users if there are any
-      if (followingIds.length > 0) {
-        const followedUserIds = followingIds.join(',');
-        console.log(`User ${userId} is following users: ${followedUserIds}`);
-        
-        // Remaining posts needed
-        const remainingFollowedCount = limit - userOwnPosts.length;
-        
-        // Get posts from followed users, excluding already fetched posts
-        const followedPosts = await db.select()
-          .from(posts)
-          .innerJoin(users, eq(posts.userId, users.id))
-          .where(and(
-            inArray(posts.userId, followingIds),
-            eq(posts.isPublished, true)
-          ))
-          .orderBy(desc(posts.createdAt))
-          .limit(remainingFollowedCount);
-        
-        console.log(`Found ${followedPosts.length} posts from followed users`);
-        
-        // Add to feed posts
-        feedPosts = [...feedPosts, ...followedPosts];
-      }
-      
-      // If we have enough posts from own posts and following, return those
-      if (feedPosts.length >= limit) {
-        return feedPosts.map(post => ({
-          ...post.posts,
-          user: post.users
-        }));
-      }
-      
-      // No supplemental posts from unconnected users - only show posts from followed users
-      console.log(`Feed will only show posts from user's own posts and followed users. No supplemental posts from strangers.`);
-      
-      // Return only the posts we have (user's own posts + followed users' posts)
-      return feedPosts.map(post => ({
+      // Return formatted posts with user information
+      const formattedPosts = allPosts.map(post => ({
         ...post.posts,
         user: post.users
       }));
+      
+      console.log(`Returning ${formattedPosts.length} posts to user ${userId}`);
+      return formattedPosts;
+      
     } catch (error) {
       console.error(`Error getting feed for user ${userId}:`, error);
-      throw error;
+      return [];
     }
   }
 
