@@ -204,6 +204,16 @@ export default function Header() {
               </Link>
             )}
             
+            {/* Dating profile button - only for logged in users */}
+            {isLoggedIn && (
+              <Link href="/dating">
+                <Button size="sm" className="hidden md:flex items-center gap-1 bg-black text-white hover:bg-gray-800">
+                  <Heart className="h-4 w-4" />
+                  <span>Create Dating Profile</span>
+                </Button>
+              </Link>
+            )}
+            
             {/* Cart button - always visible for logged in users */}
             {isLoggedIn && (
               <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary">
