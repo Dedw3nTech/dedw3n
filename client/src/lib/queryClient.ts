@@ -20,8 +20,14 @@ export function setLoggedOutFlag(isLoggedOut: boolean): void {
   try {
     if (isLoggedOut) {
       localStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
+      sessionStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
+      // Also clear any user data to ensure clean logout
+      localStorage.removeItem('userData');
+      sessionStorage.removeItem('userData');
+      console.log('Logout flag set - user officially logged out');
     } else {
       localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
+      sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
     }
   } catch (e) {
     console.error('Error setting logged out flag:', e);
