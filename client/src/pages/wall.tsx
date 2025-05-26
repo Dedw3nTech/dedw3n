@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import ConnectionsCard from "@/components/social/ConnectionsCard";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
+import TrendingProducts from "@/components/TrendingProducts";
 import { getInitials } from "@/lib/utils";
 // Import database schema type but extend it with the runtime properties we need
 import { posts } from "@shared/schema";
@@ -286,64 +287,7 @@ export default function WallPage() {
                   View All
                 </Button>
               </div>
-              <div className="space-y-3">
-                {/* Sample trending items - these would come from your marketplace API */}
-                <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <ShoppingBag className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">Premium Web Design</p>
-                    <p className="text-xs text-muted-foreground">Starting at $299</p>
-                  </div>
-                  <div className="flex items-center text-green-600">
-                    <i className="ri-fire-line text-sm mr-1"></i>
-                    <span className="text-xs">Hot</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">Business Consulting</p>
-                    <p className="text-xs text-muted-foreground">Starting at $150/hr</p>
-                  </div>
-                  <div className="flex items-center text-orange-600">
-                    <i className="ri-trending-up-line text-sm mr-1"></i>
-                    <span className="text-xs">Rising</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-red-600 rounded-lg flex items-center justify-center">
-                    <Activity className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">Digital Marketing</p>
-                    <p className="text-xs text-muted-foreground">Starting at $200</p>
-                  </div>
-                  <div className="flex items-center text-blue-600">
-                    <i className="ri-star-line text-sm mr-1"></i>
-                    <span className="text-xs">Popular</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
-                    <i className="ri-code-line text-white text-lg"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">Mobile App Development</p>
-                    <p className="text-xs text-muted-foreground">Starting at $1,200</p>
-                  </div>
-                  <div className="flex items-center text-purple-600">
-                    <i className="ri-rocket-line text-sm mr-1"></i>
-                    <span className="text-xs">New</span>
-                  </div>
-                </div>
-              </div>
+              <TrendingProducts />
             </Card>
           </div>
           

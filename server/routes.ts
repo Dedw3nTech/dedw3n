@@ -1742,6 +1742,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trending products endpoint
+  app.get('/api/products/trending', async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 4;
+      const trendingProducts = await storage.getTopSellingProducts(limit);
+      
+      res.json(trendingProducts);
+    } catch (error) {
+      console.error('Error fetching trending products:', error);
+      res.status(500).json({ message: 'Failed to fetch trending products' });
+    }
+  });
+
   // Session debug endpoint
   app.get('/api/debug/session', (req: Request, res: Response) => {
     res.json({

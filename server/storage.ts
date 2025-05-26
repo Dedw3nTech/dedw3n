@@ -107,6 +107,7 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
+  getTopSellingProducts(limit: number): Promise<any[]>;
   
   // Cart operations
   countCartItems(userId: number): Promise<number>;
