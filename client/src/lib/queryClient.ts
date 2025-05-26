@@ -360,6 +360,7 @@ export const getQueryFn: <T>(options: {
         // Always include these session-related headers for improved auth reliability
         'X-Use-Session': 'true',
         'X-Client-Auth': 'true',
+        'X-Auto-Login': 'true',
         'X-Request-Time': new Date().toISOString()
       }
     };
