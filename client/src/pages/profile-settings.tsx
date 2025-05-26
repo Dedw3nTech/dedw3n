@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
-import { Loader2, Store } from 'lucide-react';
+import { Loader2, Store, Heart } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -336,6 +336,51 @@ export default function ProfileSettingsPage() {
                         >
                           Click here
                         </span> to activate your account
+                      </p>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="text-black flex items-center text-sm">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Dating Profile
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {user.datingProfile ? (
+                    <>
+                      <div className="flex items-center text-xs">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1"></div>
+                        <span className="text-green-600 font-medium">Dating Profile Active</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-purple-500 hover:bg-purple-600 text-white text-xs p-1 h-auto flex flex-col"
+                          onClick={() => setLocation('/dating')}
+                        >
+                          <span>Go To</span>
+                          <span className="text-[10px]">Dating Section</span>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center text-xs">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1"></div>
+                        <span className="text-red-600 font-medium">Not Active</span>
+                      </div>
+                      <p className="text-xs text-black mt-2">
+                        Don't have a dating profile yet? <span 
+                          className="text-purple-500 hover:text-purple-700 cursor-pointer" 
+                          onClick={() => setLocation('/dating')}
+                        >
+                          Click here
+                        </span> to create your dating profile
                       </p>
                     </>
                   )}
