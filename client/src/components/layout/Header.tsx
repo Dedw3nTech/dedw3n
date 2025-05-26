@@ -337,42 +337,42 @@ export default function Header() {
         <div className="container mx-auto px-4 py-6 border-b border-gray-200 bg-black">
           <div className="flex overflow-x-auto">
             <div 
-              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "wall" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
+              className="py-2 px-4 text-sm font-medium cursor-pointer"
               onClick={() => {
                 setActiveTab("wall");
                 setLocation("/wall");
               }}
               title="Personal timeline showing posts from you and users you follow - API: /api/feed/personal"
             >
-              <div className="flex items-center gap-1">
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "wall" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
                 <Home className="h-4 w-4" />
                 <span>Wall</span>
               </div>
             </div>
             
             <div 
-              className={`py-2 px-4 text-sm font-medium border-b-2 cursor-pointer ${activeTab === "explore" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
+              className="py-2 px-4 text-sm font-medium cursor-pointer"
               onClick={() => {
                 setActiveTab("explore");
                 setLocation("/explore");
               }}
               title="Discover trending content and suggested users - API: /api/feed/discover and /api/users/recommendations"
             >
-              <div className="flex items-center gap-1">
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "explore" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
                 <Compass className="h-4 w-4" />
                 <span>Explore</span>
               </div>
             </div>
             
             <div 
-              className={`py-2 px-4 text-sm font-medium border-b-2 relative cursor-pointer ${activeTab === "messages" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}
+              className="py-2 px-4 text-sm font-medium relative cursor-pointer"
               onClick={() => {
                 setActiveTab("messages");
                 setLocation("/messages");
               }}
               title="Direct messages with other users - API: /api/messages and /api/messages/unread/count"
             >
-              <div className="flex items-center gap-1">
+              <div className={`flex items-center gap-1 border-b-2 ${activeTab === "messages" ? "border-blue-400 text-blue-400" : "border-transparent text-white hover:text-white"}`}>
                 <MessageSquare className="h-4 w-4" />
                 <span>Messages</span>
                 {messageData?.count && messageData.count > 0 && (
