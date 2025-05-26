@@ -49,7 +49,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-[#3B83BD] font-medium">Dedw3n Ltd.</span> All rights reserved.</p>
+            <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> All rights reserved.</p>
             <div className="flex space-x-4">
               <Link href="/privacy" className="text-sm text-gray-600 hover:text-primary">Privacy Policy</Link>
               <Link href="/terms" className="text-sm text-gray-600 hover:text-primary">Terms of Service</Link>
