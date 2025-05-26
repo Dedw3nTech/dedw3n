@@ -97,24 +97,24 @@ export default function LogoutSuccess() {
   }, [setLocation]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-gradient-to-b from-white to-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-black">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-xl shadow-xl"
+        className="w-full max-w-2xl p-8 space-y-6 bg-black rounded-xl shadow-xl"
       >
 
         
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             You have successfully logged out
           </h1>
           
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             Thank you for choosing our platform!
           </p>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             We look forward to seeing you again soon.
           </p>
           
@@ -133,7 +133,7 @@ export default function LogoutSuccess() {
             <Button 
               asChild
               variant="outline" 
-              className="w-full"
+              className="w-full border-gray-300 text-white hover:bg-gray-800"
             >
               <Link href="/">
                 Back to home
@@ -143,10 +143,10 @@ export default function LogoutSuccess() {
         </div>
       </motion.div>
       
-      <div className="mt-8 text-center text-sm text-gray-500">
+      <div className="mt-8 text-center text-sm text-gray-300">
         <p>
           Questions or concerns?{' '}
-          <Link href="/contact" className="text-blue-500 hover:underline">
+          <Link href="/contact" className="text-blue-400 hover:underline">
             contact us
           </Link>
         </p>
