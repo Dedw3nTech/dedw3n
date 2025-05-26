@@ -179,13 +179,24 @@ export default function WallPage() {
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 <p className="text-muted-foreground mb-3">@{user.username}</p>
                 
-                {/* Dating status indicator */}
-                {user.datingProfileActive && (
-                  <div className="flex items-center justify-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium mb-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Open to Date
-                  </div>
-                )}
+                {/* Status indicators */}
+                <div className="flex flex-col gap-2 mb-3">
+                  {/* Dating status indicator */}
+                  {user.datingProfileActive && (
+                    <div className="flex items-center justify-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                      Open to Date
+                    </div>
+                  )}
+                  
+                  {/* Vendor status indicator */}
+                  {user.isVendor && (
+                    <div className="flex items-center justify-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                      Vendor
+                    </div>
+                  )}
+                </div>
                 
                 {user.bio ? (
                   <p className="text-sm mb-4">{user.bio}</p>
