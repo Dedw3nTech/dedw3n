@@ -227,6 +227,18 @@ export default function Header() {
               </Link>
             )}
 
+            {/* Messages button - always visible for logged in users */}
+            {isLoggedIn && (
+              <Link href="/messages" className="relative p-2 text-gray-600 hover:text-primary">
+                <i className="ri-message-3-line text-xl"></i>
+                {messageData?.count && messageData.count > 0 && (
+                  <Badge variant="destructive" className="absolute top-0 right-0 w-4 h-4 p-0 flex items-center justify-center">
+                    {messageData.count}
+                  </Badge>
+                )}
+              </Link>
+            )}
+
             {/* Notification button - always visible for logged in users */}
             {isLoggedIn && (
               <Popover>
@@ -375,25 +387,7 @@ export default function Header() {
               </div>
             </div>
 
-            
-            <div 
-              className="py-2 px-4 text-sm font-medium relative cursor-pointer"
-              onClick={() => {
-                setActiveTab("messages");
-                setLocation("/messages");
-              }}
-              title="Direct messages with other users - API: /api/messages and /api/messages/unread/count"
-            >
-              <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "messages" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
-                <span>Messages</span>
-                <MessageSquare className="h-4 w-4" />
-                {messageData?.count && messageData.count > 0 && (
-                  <Badge className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                    {messageData.count}
-                  </Badge>
-                )}
-              </div>
-            </div>
+
 
 
             
