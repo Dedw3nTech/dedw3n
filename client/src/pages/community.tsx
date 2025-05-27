@@ -250,37 +250,28 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* Fixed Bottom Advertisement - Full Width */}
+      {/* Fixed Bottom Advertisement - Full Width Image */}
       <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
-        <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 shadow-lg rounded-none border-t">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between mb-2 max-w-7xl mx-auto px-4">
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-orange-500" />
-                <span className="font-semibold text-gray-900">Special Offer</span>
-              </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600">
-                ×
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 mb-2">
-                  Limited time: 50% off Premium membership!
-                </p>
-                <div className="text-xs text-gray-600 flex gap-4">
-                  <span>🎉 First month only $4.99</span>
-                  <span>⏰ Offer expires in 24 hours</span>
-                </div>
-              </div>
-              <Button size="sm" className="bg-orange-600 hover:bg-orange-700 px-8">
-                Claim Offer
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="relative w-full bg-black shadow-lg">
+          {/* Close button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-2 right-2 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
+          >
+            ×
+          </Button>
+          
+          {/* Advertisement Image */}
+          <div className="w-full h-32 md:h-40 lg:h-48 overflow-hidden cursor-pointer">
+            <img 
+              src="/assets/Copy of Pre Launch Campaign  SELL.png"
+              alt="Dedw3n - Buy, Sell, Socialize, Love"
+              className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+              onClick={() => window.open('https://www.dedw3n.com', '_blank')}
+            />
+          </div>
+        </div>
       </div>
     </Container>
   );
