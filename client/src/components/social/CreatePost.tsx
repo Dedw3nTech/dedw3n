@@ -627,24 +627,24 @@ export default function CreatePost({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-muted-foreground"
+                    className="text-blue-600 hover:text-blue-700"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={!!videoFile}
                   >
-                    <ImageIcon className="h-4 w-4 mr-1" />
-                    Add Photo
+                    <ImageIcon className="h-4 w-4 mr-1 font-bold" />
+                    <span className="font-semibold">Add Photo</span>
                   </Button>
                   
                   {/* Video upload button */}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-muted-foreground"
+                    className="text-blue-600 hover:text-blue-700"
                     onClick={() => videoInputRef.current?.click()}
                     disabled={!!imageFile}
                   >
-                    <Video className="h-4 w-4 mr-1" />
-                    Add Video
+                    <Video className="h-4 w-4 mr-1 font-bold" />
+                    <span className="font-semibold">Add Video</span>
                   </Button>
                   
                   {/* Product tagging button */}
@@ -653,9 +653,10 @@ export default function CreatePost({
                       <Button 
                         variant={selectedProduct ? "default" : "outline"}
                         size="sm"
+                        className={selectedProduct ? "" : "text-blue-600 hover:text-blue-700"}
                       >
-                        <ShoppingBag className="h-4 w-4 mr-1" />
-                        {selectedProduct ? "Product Tagged" : "Tag Product"}
+                        <ShoppingBag className="h-4 w-4 mr-1 font-bold" />
+                        <span className="font-semibold">{selectedProduct ? "Product Tagged" : "Tag Product"}</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
