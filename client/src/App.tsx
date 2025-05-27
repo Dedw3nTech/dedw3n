@@ -78,6 +78,7 @@ import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
+import { LoginPopup } from "@/components/ui/login-popup";
 
 // Import new page components
 import Products from "@/pages/products";
@@ -138,7 +139,7 @@ function Router() {
       <Route path="/vendor/:id" component={VendorDetailPage} />
       <Route path="/government" component={GovernmentPage} />
       <Route path="/search" component={SearchPage} />
-      <ProtectedRoute path="/dating" component={DatingPage} />
+      <Route path="/dating" component={DatingPage} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       
@@ -178,7 +179,7 @@ function Router() {
       <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
-      <ProtectedRoute path="/community" component={CommunityPage} />
+      <Route path="/community" component={CommunityPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/explore" component={ExplorePage} />
@@ -247,6 +248,7 @@ function App() {
                           <Footer />
                           <MobileNavigation />
                           <OfflineIndicator />
+                          <LoginPopup delay={5000} />
                           {/* Offline simulator hidden as requested */}
                           {/* Chatbot will be implemented later when API key is available */}
                           {/* <ChatbotWindow /> */}
