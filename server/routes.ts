@@ -1348,11 +1348,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user profile picture
-  app.get('/api/users/:id/profilePicture', unifiedIsAuthenticated, async (req, res) => {
+  // Get user by ID
+  app.get('/api/users/id/:id', unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
+      console.log(`[DEBUG] Getting user by ID: ${userId}`);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
       const user = await storage.getUser(userId);
+      
+      if (!user) {
+        console.log(`[DEBUG] User not found for ID: ${userId}`);
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      console.log(`[DEBUG] Found user:`, { id: user.id, username: user.username, name: user.name });
+      res.json(user);
+    } catch (error) {
+      console.error('Error getting user by ID:', error);
+      res.status(500).json({ message: 'Failed to get user' });
+    }
+  });
+
+  // Get user posts by ID
+  app.get('/api/users/id/:id/posts', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log(`[DEBUG] Getting posts for user ID: ${userId}`);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const posts = await storage.getUserPosts(userId);
+      console.log(`[DEBUG] Found ${posts.length} posts for user ID ${userId}`);
+      res.json(posts);
+    } catch (error) {
+      console.error('Error getting user posts:', error);
+      res.status(500).json({ message: 'Failed to get user posts' });
+    }
+  });
+
+  // Get user communities by ID
+  app.get('/api/users/id/:id/communities', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      console.log(`[DEBUG] Getting communities for user ID: ${userId}`);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // For now, return empty array as communities are being simplified
+      console.log(`[DEBUG] Returning empty communities array for user ID ${userId}`);
+      res.json([]);
+    } catch (error) {
+      console.error('Error getting user communities:', error);
+      res.status(500).json({ message: 'Failed to get user communities' });
+    }
+  });
+
+  // Get user profile picture (fix the username handling)
+  app.get('/api/users/:username/profilePicture', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`[DEBUG] Getting profile picture for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
