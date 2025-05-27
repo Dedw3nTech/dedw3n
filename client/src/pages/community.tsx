@@ -8,6 +8,7 @@ import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
+import campaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 
 interface Post {
   id: number;
@@ -268,7 +269,7 @@ export default function CommunityPage() {
             {/* Advertisement Image */}
             <div className="w-full h-16 md:h-20 lg:h-24 overflow-hidden cursor-pointer">
               <img 
-                src="/assets/Copy of Pre Launch Campaign  SELL.png"
+                src={campaignImage}
                 alt="Dedw3n - Buy, Sell, Socialize, Love"
                 className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
                 onClick={() => window.open('https://www.dedw3n.com', '_blank')}
