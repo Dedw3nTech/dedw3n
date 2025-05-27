@@ -96,8 +96,8 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-start h-10"
             >
-              <Link href="/notifications">
-                <Bell className="h-5 w-5 mr-3 text-black" />
+              <Link href="/notifications" className="font-bold text-blue-600">
+                <Bell className="h-5 w-5 mr-3 text-blue-600" />
                 Notifications
               </Link>
             </Button>
@@ -107,8 +107,8 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-start h-10"
             >
-              <Link href="/messages">
-                <MessageSquare className="h-5 w-5 mr-3" />
+              <Link href="/messages" className="font-bold text-blue-600">
+                <MessageSquare className="h-5 w-5 mr-3 text-blue-600" />
                 Messages
               </Link>
             </Button>
@@ -118,8 +118,8 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-start h-10"
             >
-              <Link href="/settings">
-                <Settings className="h-5 w-5 mr-3" />
+              <Link href="/settings" className="font-bold text-blue-600">
+                <Settings className="h-5 w-5 mr-3 text-blue-600" />
                 Settings
               </Link>
             </Button>
