@@ -12,6 +12,7 @@ import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
+import { VideoAdCard } from "@/components/VideoAdCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
@@ -283,6 +284,7 @@ export default function CommunityPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
               <LatestProductsCard />
+              <VideoAdCard />
               <PopularProductsCard />
               <SidebarAdCard />
             </div>
