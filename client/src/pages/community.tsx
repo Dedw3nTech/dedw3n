@@ -250,11 +250,11 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* Fixed Bottom Advertisement */}
-      <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-        <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 shadow-lg">
+      {/* Fixed Bottom Advertisement - Full Width */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
+        <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 shadow-lg rounded-none border-t">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 max-w-7xl mx-auto px-4">
               <div className="flex items-center gap-2">
                 <Star className="h-5 w-5 text-orange-500" />
                 <span className="font-semibold text-gray-900">Special Offer</span>
@@ -264,17 +264,21 @@ export default function CommunityPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-gray-700 mb-3">
-              Limited time: 50% off Premium membership!
-            </p>
-            <div className="text-xs text-gray-600 mb-3">
-              <p>🎉 First month only $4.99</p>
-              <p>⏰ Offer expires in 24 hours</p>
+          <CardContent className="pt-0 max-w-7xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-700 mb-2">
+                  Limited time: 50% off Premium membership!
+                </p>
+                <div className="text-xs text-gray-600 flex gap-4">
+                  <span>🎉 First month only $4.99</span>
+                  <span>⏰ Offer expires in 24 hours</span>
+                </div>
+              </div>
+              <Button size="sm" className="bg-orange-600 hover:bg-orange-700 px-8">
+                Claim Offer
+              </Button>
             </div>
-            <Button size="sm" className="w-full bg-orange-600 hover:bg-orange-700">
-              Claim Offer
-            </Button>
           </CardContent>
         </Card>
       </div>
