@@ -149,7 +149,6 @@ export function ProfileSideCard() {
           className="w-full justify-start h-12 bg-black border-black text-white hover:bg-gray-800 hover:border-gray-800"
         >
           <Link href="/add-product">
-            <PlusCircle className="h-15 w-15 mr-3 text-white" />
             <span className="text-white font-bold">Add Product / Service</span>
           </Link>
         </Button>
