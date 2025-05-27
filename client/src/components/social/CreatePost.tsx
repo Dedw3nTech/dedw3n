@@ -634,29 +634,23 @@ export default function CreatePost({
                 <div className="flex gap-2 mt-3">
                   {/* Image upload button */}
                   <Button
-                    variant="outline"
                     size="sm"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="bg-black text-white hover:bg-gray-800"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={!!videoFile}
                   >
-                    <div className="bg-black rounded p-1 mr-1">
-                      <ImageIcon className="h-3 w-3 text-white font-bold" />
-                    </div>
+                    <ImageIcon className="h-3 w-3 mr-1 font-bold" />
                     <span className="font-semibold">Add Photo</span>
                   </Button>
                   
                   {/* Video upload button */}
                   <Button
-                    variant="outline"
                     size="sm"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="bg-black text-white hover:bg-gray-800"
                     onClick={() => videoInputRef.current?.click()}
                     disabled={!!imageFile}
                   >
-                    <div className="bg-black rounded p-1 mr-1">
-                      <Video className="h-3 w-3 text-white font-bold" />
-                    </div>
+                    <Video className="h-3 w-3 mr-1 font-bold" />
                     <span className="font-semibold">Add Video</span>
                   </Button>
                   
@@ -664,13 +658,10 @@ export default function CreatePost({
                   <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
-                        variant={selectedProduct ? "default" : "outline"}
                         size="sm"
-                        className={selectedProduct ? "" : "text-blue-600 hover:text-blue-700"}
+                        className="bg-black text-white hover:bg-gray-800"
                       >
-                        <div className="bg-black rounded p-1 mr-1">
-                          <ShoppingBag className="h-3 w-3 text-white font-bold" />
-                        </div>
+                        <ShoppingBag className="h-3 w-3 mr-1 font-bold" />
                         <span className="font-semibold">{selectedProduct ? "Product Tagged" : "Tag Product"}</span>
                       </Button>
                     </DialogTrigger>
