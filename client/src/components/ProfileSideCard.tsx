@@ -178,8 +178,8 @@ export function ProfileSideCard() {
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="85" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
-                  <text x="85" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
+                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
+                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
                   {/* Apple Logo */}
                   <g transform="translate(15, 10)">
                     <path d="M12.5 2.5c0.8-1 1.3-2.4 1.2-3.8-1.2 0.1-2.6 0.8-3.5 1.8-0.7 0.9-1.4 2.3-1.2 3.7 1.3 0.1 2.6-0.7 3.5-1.7zm1.2 1.9c-1.9-0.1-3.6 1.1-4.5 1.1-0.9 0-2.3-1-3.8-1-1.9 0-3.7 1.1-4.7 2.8-2 3.5-0.5 8.7 1.4 11.5 0.9 1.4 2 2.9 3.4 2.8 1.4-0.1 1.9-0.9 3.6-0.9s2.1 0.9 3.6 0.9c1.5 0 2.4-1.3 3.3-2.7 1-1.6 1.4-3.1 1.4-3.2-0.1 0-2.7-1-2.7-4.2 0-2.8 2.3-4.1 2.4-4.2-1.3-1.9-3.3-2.1-4-2.1z" fill="white"/>
@@ -190,8 +190,8 @@ export function ProfileSideCard() {
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="85" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
-                  <text x="85" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
+                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
+                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
                   {/* Google Play Logo */}
                   <g transform="translate(15, 8)">
                     <defs>
