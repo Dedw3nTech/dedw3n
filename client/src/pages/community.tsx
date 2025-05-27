@@ -175,78 +175,66 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Feed Column */}
-          <div className="lg:col-span-3">
-            {/* Create Post Section */}
-            {user && (
-              <div className="mb-6" data-create-post>
-                <CreatePost />
-              </div>
-            )}
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                <p className="text-gray-600">Loading community posts...</p>
-              </div>
-            )}
-
-            {/* Posts Feed */}
-            <div className="space-y-6">
-              {allPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                />
-              ))}
+        {/* Main Content - Full Width */}
+        <div className="max-w-2xl mx-auto">
+          {/* Create Post Section */}
+          {user && (
+            <div className="mb-6" data-create-post>
+              <CreatePost />
             </div>
+          )}
 
-            {/* Load More Indicator */}
-            {isFetchingNextPage && (
-              <div className="text-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-gray-600">Loading more posts...</p>
-              </div>
-            )}
+          {/* Loading State */}
+          {isLoading && (
+            <div className="text-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-gray-600">Loading community posts...</p>
+            </div>
+          )}
 
-            {/* End of Feed */}
-            {!hasNextPage && allPosts.length > 0 && (
-              <div className="text-center py-8">
-                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                  <Users className="h-4 w-4" />
-                  <span>You've seen all community posts</span>
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!isLoading && allPosts.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-                <p className="text-gray-600 mb-6">
-                  Be the first to share something with the community!
-                </p>
-                {user && (
-                  <Button onClick={() => document.querySelector('[data-create-post]')?.scrollIntoView({ behavior: 'smooth' })}>
-                    Create First Post
-                  </Button>
-                )}
-              </div>
-            )}
+          {/* Posts Feed */}
+          <div className="space-y-6">
+            {allPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+              />
+            ))}
           </div>
 
-          {/* Advertisement Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-6">
-
-
-
+          {/* Load More Indicator */}
+          {isFetchingNextPage && (
+            <div className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+              <p className="text-sm text-gray-600">Loading more posts...</p>
             </div>
-          </div>
+          )}
+
+          {/* End of Feed */}
+          {!hasNextPage && allPosts.length > 0 && (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                <Users className="h-4 w-4" />
+                <span>You've seen all community posts</span>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && allPosts.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
+              <p className="text-gray-600 mb-6">
+                Be the first to share something with the community!
+              </p>
+              {user && (
+                <Button onClick={() => document.querySelector('[data-create-post]')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Create First Post
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
