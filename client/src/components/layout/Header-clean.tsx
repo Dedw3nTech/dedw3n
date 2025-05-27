@@ -157,20 +157,72 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Smart Search Bar */}
-            <div className="relative">
+            {/* Smart Search Bar with Suggestions */}
+            <div className="relative" ref={searchRef}>
               <form onSubmit={handleSearch} className="flex items-center">
                 <div className="relative">
                   <input
+                    ref={inputRef}
                     type="text"
                     placeholder="Search anything..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSuggestions(e.target.value.length >= 2);
+                      setSelectedIndex(-1);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                      if (searchQuery.length >= 2) {
+                        setShowSuggestions(true);
+                      }
+                    }}
                     className="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
               </form>
+
+              {/* Search Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-50">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={`${suggestion.type}-${suggestion.id}`}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className={`flex items-center px-4 py-2 cursor-pointer hover:bg-gray-50 ${
+                        index === selectedIndex ? 'bg-gray-100' : ''
+                      }`}
+                    >
+                      {suggestion.type === 'user' ? (
+                        <div className="flex items-center space-x-3 w-full">
+                          <User className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {suggestion.title}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">
+                              @{suggestion.subtitle}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-3 w-full">
+                          <Package className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {suggestion.title}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">
+                              {suggestion.subtitle}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <UserMenu />
