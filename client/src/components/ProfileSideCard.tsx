@@ -146,10 +146,10 @@ export function ProfileSideCard() {
         <Button 
           asChild 
           variant="outline" 
-          className="w-full justify-start h-12 bg-red-500 border-red-500 text-white hover:bg-red-600 hover:border-red-600"
+          className="w-full justify-start h-12 bg-black border-black text-red-500 hover:bg-gray-800 hover:border-gray-800"
         >
           <Link href="/add-product">
-            <span className="text-white font-bold">Sell Product/Service</span>
+            <span className="text-red-500 font-bold">Sell Product/Service</span>
           </Link>
         </Button>
       </div>
