@@ -266,7 +266,7 @@ export default function CommunityPage() {
             </Button>
             
             {/* Advertisement Image */}
-            <div className="w-full h-32 md:h-40 lg:h-48 overflow-hidden cursor-pointer">
+            <div className="w-full h-16 md:h-20 lg:h-24 overflow-hidden cursor-pointer">
               <img 
                 src="/assets/Copy of Pre Launch Campaign  SELL.png"
                 alt="Dedw3n - Buy, Sell, Socialize, Love"
