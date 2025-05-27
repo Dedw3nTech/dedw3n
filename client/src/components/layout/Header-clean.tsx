@@ -134,29 +134,28 @@ export default function Header() {
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
           </div>
 
-          {/* Center navigation links */}
-          <div className="flex items-center space-x-8">
-            <button
-              onClick={() => setLocation("/products")}
-              className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
-            >
-              Marketplace
-            </button>
-            <button
-              onClick={() => setLocation("/community")}
-              className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
-            >
-              Community
-            </button>
-            <button
-              onClick={() => setLocation("/dating")}
-              className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
-            >
-              Dating
-            </button>
-          </div>
-
           <div className="flex items-center space-x-4">
+            {/* Navigation links next to search */}
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => setLocation("/products")}
+                className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+              >
+                Marketplace
+              </button>
+              <button
+                onClick={() => setLocation("/community")}
+                className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+              >
+                Community
+              </button>
+              <button
+                onClick={() => setLocation("/dating")}
+                className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+              >
+                Dating
+              </button>
+            </div>
             {/* Smart Search Bar with Suggestions */}
             <div className="relative" ref={searchRef}>
               <form onSubmit={handleSearch} className="flex items-center">
