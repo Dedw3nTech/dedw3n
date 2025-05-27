@@ -22,7 +22,7 @@ export default function SocialNav() {
         className={`w-full py-4 text-center text-sm relative cursor-pointer ${isSocialActive ? 'text-black font-bold border-b-2 border-black' : 'text-gray-600 font-medium hover:text-primary'}`}
         onClick={() => setLocation("/wall")}
       >
-        <i className="ri-group-line mr-1"></i> Social
+        <i className="ri-group-line mr-1"></i> Community
         {messageData && messageData.count > 0 && (
           <Badge className="absolute top-1 right-1/4 w-4 h-4 p-0 flex items-center justify-center">
             {messageData.count}
