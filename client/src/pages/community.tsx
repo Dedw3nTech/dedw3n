@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
+import { ProfileSideCard } from "@/components/ProfileSideCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
@@ -181,9 +182,16 @@ export default function CommunityPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          {/* Profile Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6">
+              <ProfileSideCard />
+            </div>
+          </div>
+
           {/* Main Feed Column */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             {/* Create Post Section */}
             {user && (
               <div className="mb-6" data-create-post>
