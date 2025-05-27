@@ -83,7 +83,7 @@ export default function CommunityGuidelines() {
                   If you have questions about these guidelines or need to report a violation, please contact our support team.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/contact" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors text-center">
+                  <Link href="/contact" className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors text-center">
                     Contact Support
                   </Link>
                   <Link href="/faq" className="bg-white text-primary border border-primary px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors text-center">
