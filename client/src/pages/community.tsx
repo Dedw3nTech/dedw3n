@@ -8,6 +8,7 @@ import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
+import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
@@ -241,12 +242,10 @@ export default function CommunityPage() {
             )}
           </div>
 
-          {/* Advertisement Sidebar */}
+          {/* Products Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-
-
-
+              <LatestProductsCard />
             </div>
           </div>
         </div>
