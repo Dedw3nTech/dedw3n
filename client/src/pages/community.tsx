@@ -200,45 +200,38 @@ export default function CommunityPage() {
               </div>
             )}
 
-            {/* Filter Card */}
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-gray-700">Sort by:</span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={sortBy === 'new' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSortBy('new')}
-                        className="flex items-center gap-2"
-                      >
-                        <Star className="h-4 w-4" />
-                        New
-                      </Button>
-                      <Button
-                        variant={sortBy === 'trending' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSortBy('trending')}
-                        className="flex items-center gap-2"
-                      >
-                        <TrendingUp className="h-4 w-4" />
-                        Trending
-                      </Button>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={handleRefresh}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Filter Tabs */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex gap-8">
+                <button
+                  onClick={() => setSortBy('new')}
+                  className={`text-xl font-bold text-black pb-2 transition-all duration-200 ${
+                    sortBy === 'new' 
+                      ? 'border-b-2 border-black' 
+                      : 'hover:opacity-70'
+                  }`}
+                >
+                  New
+                </button>
+                <button
+                  onClick={() => setSortBy('trending')}
+                  className={`text-xl font-bold text-black pb-2 transition-all duration-200 ${
+                    sortBy === 'trending' 
+                      ? 'border-b-2 border-black' 
+                      : 'hover:opacity-70'
+                  }`}
+                >
+                  Trending
+                </button>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="flex items-center gap-2 text-black hover:opacity-70 transition-opacity"
+              >
+                <RefreshCw className="h-5 w-5" />
+                <span className="font-medium">Refresh</span>
+              </button>
+            </div>
 
             {/* Loading State */}
             {isLoading && (
