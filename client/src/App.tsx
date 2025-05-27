@@ -75,7 +75,7 @@ import ApiTestPage from "@/pages/api-test";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
-import Sidebar from "@/components/layout/Sidebar";
+import SidebarNav from "@/components/layout/SidebarNav";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
@@ -233,7 +233,7 @@ function App() {
                       <ErrorBoundary>
                         <div className="flex min-h-screen">
                           {/* Sidebar for desktop */}
-                          <Sidebar />
+                          <SidebarNav />
                           
                           {/* Main content area */}
                           <div className="flex flex-col flex-1 lg:ml-64">

@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Heart, Home, Search, Store, Users, MessageCircle, User, Menu, X } from "lucide-react";
+import { Heart, Search, Store, Users, MessageCircle, User, Menu, X } from "lucide-react";
 
-interface SidebarProps {
+interface SidebarNavProps {
   onViewChange?: (view: "marketplace" | "social") => void;
-  view?: "marketplace" | "social";
 }
 
-export default function Sidebar({ onViewChange, view }: SidebarProps) {
+export default function SidebarNav({ onViewChange }: SidebarNavProps) {
   const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,7 +28,7 @@ export default function Sidebar({ onViewChange, view }: SidebarProps) {
       icon: Users,
       action: () => {
         onViewChange?.("social");
-        setLocation("/social");
+        setLocation("/wall");
         setIsOpen(false);
       },
       isActive: location === '/social' || location === '/wall'
@@ -77,10 +76,10 @@ export default function Sidebar({ onViewChange, view }: SidebarProps) {
   ];
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       {/* Logo */}
       <div className="p-6 border-b border-gray-200">
-        <div className="text-2xl font-bold text-black">Dedw3n</div>
+        <h1 className="text-2xl font-bold text-black">Dedw3n</h1>
       </div>
 
       {/* Navigation Items */}
@@ -111,7 +110,7 @@ export default function Sidebar({ onViewChange, view }: SidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 bg-white rounded-lg shadow-md p-2"
+        className="lg:hidden fixed top-4 left-4 z-50 bg-white rounded-lg shadow-md p-2 border"
       >
         <Menu className="h-6 w-6" />
       </button>
