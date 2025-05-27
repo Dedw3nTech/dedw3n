@@ -213,7 +213,7 @@ export default function CommunityPage() {
                 >
                   New
                   {sortBy === 'new' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
                 </button>
                 <button
@@ -226,7 +226,7 @@ export default function CommunityPage() {
                 >
                   Trending
                   {sortBy === 'trending' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
                 </button>
               </div>
