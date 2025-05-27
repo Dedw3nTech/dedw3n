@@ -57,14 +57,14 @@ export default function MobileNavigation() {
           <Link href="/messages">
             <button className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1">
               <div className="relative">
-                <i className="ri-message-3-line text-lg"></i>
+                <i className="ri-heart-line text-lg"></i>
                 {messageData && messageData.count > 0 && (
                   <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center">
                     {messageData.count}
                   </Badge>
                 )}
               </div>
-              <span className="text-xs mt-1">{t('nav.messages')}</span>
+              <span className="text-xs mt-1">Dating</span>
             </button>
           </Link>
 
