@@ -170,7 +170,7 @@ function Router() {
       <ProtectedRoute path="/wallet" component={WalletPage} />
       <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
       <ProtectedRoute path="/vendor-analytics" component={VendorAnalytics} />
-      <ProtectedRoute path="/profile" component={WallPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
       <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
