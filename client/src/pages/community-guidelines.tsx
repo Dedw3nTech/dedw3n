@@ -86,7 +86,7 @@ export default function CommunityGuidelines() {
                   <Link href="/contact" className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors text-center">
                     Contact Support
                   </Link>
-                  <Link href="/faq" className="bg-white text-primary border border-primary px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors text-center">
+                  <Link href="/faq" className="bg-white text-black border border-black px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors text-center">
                     View FAQ
                   </Link>
                 </div>
