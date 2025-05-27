@@ -6,9 +6,6 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <h2 className="text-xl font-bold text-black">Dedw3n Ltd.</h2>
-            </div>
 
 
           </div>
