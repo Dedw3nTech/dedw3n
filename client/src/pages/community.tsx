@@ -266,37 +266,7 @@ export default function CommunityPage() {
                 </CardContent>
               </Card>
 
-              {/* Trending Topics Ad */}
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    <span className="font-semibold text-gray-900">Trending Now</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-gray-700 mb-4">
-                    Join the hottest discussions in your community
-                  </p>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">#TechTalk</span>
-                      <span className="text-green-600 font-medium">+120%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">#StartupLife</span>
-                      <span className="text-green-600 font-medium">+85%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">#Innovation</span>
-                      <span className="text-green-600 font-medium">+60%</span>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="w-full mt-4 border-green-300 text-green-700 hover:bg-green-50">
-                    Explore Topics
-                  </Button>
-                </CardContent>
-              </Card>
+
 
               {/* Community Boost Ad */}
               <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200">
