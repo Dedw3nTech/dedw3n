@@ -75,6 +75,7 @@ import ApiTestPage from "@/pages/api-test";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
+import Sidebar from "@/components/layout/Sidebar";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
@@ -230,15 +231,23 @@ function App() {
                   <MessagingProvider>
                     <CurrencyProvider>
                       <ErrorBoundary>
-                        <div className="flex flex-col min-h-screen">
-                          <Header />
-                          <MarketplaceNavWrapper />
-                          <main className="flex-grow">
-                            <ApiErrorBoundary showHomeButton={false}>
-                              <Router />
-                            </ApiErrorBoundary>
-                          </main>
-                          <Footer />
+                        <div className="flex min-h-screen">
+                          {/* Sidebar for desktop */}
+                          <Sidebar />
+                          
+                          {/* Main content area */}
+                          <div className="flex flex-col flex-1 lg:ml-64">
+                            <Header />
+                            <MarketplaceNavWrapper />
+                            <main className="flex-grow">
+                              <ApiErrorBoundary showHomeButton={false}>
+                                <Router />
+                              </ApiErrorBoundary>
+                            </main>
+                            <Footer />
+                          </div>
+                          
+                          {/* Mobile navigation */}
                           <MobileNavigation />
                           <OfflineIndicator />
                           {/* Offline simulator hidden as requested */}
