@@ -24,7 +24,7 @@ export default function Header() {
               Marketplace
             </button>
             <button
-              onClick={() => setLocation("/wall")}
+              onClick={() => setLocation("/community")}
               className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
             >
               Community
