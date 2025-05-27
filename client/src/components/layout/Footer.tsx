@@ -9,9 +9,7 @@ export default function Footer() {
             <div className="flex items-center space-x-2 mb-4">
               <h2 className="text-xl font-bold text-black">Dedw3n Ltd.</h2>
             </div>
-            <p className="text-gray-600 text-sm mb-4">
-              The all-in-one platform to buy, sell, and connect with a community of creators and shoppers.
-            </p>
+
 
           </div>
 
