@@ -1817,6 +1817,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search products endpoint
+  app.get('/api/products/search', async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string || '';
+      console.log(`[DEBUG] Searching products for: "${query}"`);
+      
+      // Search products directly in the database
+      const searchResults = await db
+        .select()
+        .from(products)
+        .where(
+          or(
+            like(products.name, `%${query}%`),
+            like(products.description, `%${query}%`)
+          )
+        )
+        .limit(20);
+      
+      console.log(`[DEBUG] Found ${searchResults.length} products matching "${query}"`);
+      res.json(searchResults);
+    } catch (error) {
+      console.error('Error searching products:', error);
+      res.status(500).json({ message: 'Failed to search products' });
+    }
+  });
+
   // Trending products endpoint
   app.get('/api/products/trending', async (req: Request, res: Response) => {
     try {
