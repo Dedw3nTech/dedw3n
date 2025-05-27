@@ -145,12 +145,12 @@ export function ProfileSideCard() {
       <div className="mt-4">
         <Button 
           asChild 
-          variant="ghost" 
-          className="w-full justify-start h-12 hover:bg-gray-50"
+          variant="outline" 
+          className="w-full justify-start h-12 bg-black border-black text-white hover:bg-gray-800 hover:border-gray-800"
         >
           <Link href="/add-product">
-            <PlusCircle className="h-15 w-15 mr-3 text-gray-500" />
-            <span className="text-gray-700 font-bold">Add Product / Service</span>
+            <PlusCircle className="h-15 w-15 mr-3 text-white" />
+            <span className="text-white font-bold">Add Product / Service</span>
           </Link>
         </Button>
       </div>
