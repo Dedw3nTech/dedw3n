@@ -47,6 +47,7 @@ export default function CommunityPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isAdVisible, setIsAdVisible] = useState(true);
 
   // Use the existing personal feed to show all posts for community feed
   const {
@@ -251,28 +252,31 @@ export default function CommunityPage() {
       </div>
 
       {/* Fixed Bottom Advertisement - Full Width Image */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
-        <div className="relative w-full bg-black shadow-lg">
-          {/* Close button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="absolute top-2 right-2 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
-          >
-            ×
-          </Button>
-          
-          {/* Advertisement Image */}
-          <div className="w-full h-32 md:h-40 lg:h-48 overflow-hidden cursor-pointer">
-            <img 
-              src="/assets/Copy of Pre Launch Campaign  SELL.png"
-              alt="Dedw3n - Buy, Sell, Socialize, Love"
-              className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
-              onClick={() => window.open('https://www.dedw3n.com', '_blank')}
-            />
+      {isAdVisible && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
+          <div className="relative w-full bg-black shadow-lg">
+            {/* Close button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-2 right-2 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
+              onClick={() => setIsAdVisible(false)}
+            >
+              ×
+            </Button>
+            
+            {/* Advertisement Image */}
+            <div className="w-full h-32 md:h-40 lg:h-48 overflow-hidden cursor-pointer">
+              <img 
+                src="/assets/Copy of Pre Launch Campaign  SELL.png"
+                alt="Dedw3n - Buy, Sell, Socialize, Love"
+                className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+                onClick={() => window.open('https://www.dedw3n.com', '_blank')}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </Container>
   );
 }
