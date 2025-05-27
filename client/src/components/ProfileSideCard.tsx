@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -145,12 +145,12 @@ export function ProfileSideCard() {
       <div className="mt-4">
         <Button 
           asChild 
-          variant="outline" 
-          className="w-full justify-start h-12 border-dashed border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+          variant="ghost" 
+          className="w-full justify-start h-12 hover:bg-gray-50"
         >
           <Link href="/add-product">
-            <Plus className="h-5 w-5 mr-3 text-gray-500" />
-            <span className="text-gray-700 font-medium">Add Product / Service</span>
+            <PlusCircle className="h-15 w-15 mr-3 text-gray-500" />
+            <span className="text-gray-700 font-bold">Add Product / Service</span>
           </Link>
         </Button>
       </div>
