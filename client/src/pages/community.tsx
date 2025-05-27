@@ -173,17 +173,7 @@ export default function CommunityPage() {
             </Button>
           </div>
 
-          {/* API Endpoints Info */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-medium text-gray-900 mb-2">Community Feed API</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><code className="bg-gray-200 px-2 py-1 rounded">GET /api/feed/community</code> - All posts from all users</p>
-              <p><code className="bg-gray-200 px-2 py-1 rounded">GET /api/posts/:id</code> - Individual post details</p>
-              <p><code className="bg-gray-200 px-2 py-1 rounded">POST /api/posts</code> - Create new post</p>
-              <p><code className="bg-gray-200 px-2 py-1 rounded">POST /api/posts/:id/like</code> - Like/unlike post</p>
-              <p><code className="bg-gray-200 px-2 py-1 rounded">POST /api/posts/:id/share</code> - Share post</p>
-            </div>
-          </div>
+
         </div>
 
         {/* Create Post Section */}

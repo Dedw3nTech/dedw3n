@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -41,10 +41,10 @@ export default function MobileNavigation() {
             <span className="text-xs mt-1">Marketplaces</span>
           </button>
           <button
-            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "social" ? "text-primary" : "text-gray-500"}`}
+            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "social" || location === "/community" ? "text-blue-500" : "text-gray-500"}`}
             onClick={() => handleViewChange("social")}
           >
-            <i className="ri-group-line text-lg"></i>
+            <i className={`ri-group-line text-lg ${view === "social" || location === "/community" ? "text-blue-500" : ""}`}></i>
             <span className="text-xs mt-1">Community</span>
           </button>
           <button
