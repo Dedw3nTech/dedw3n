@@ -78,14 +78,14 @@ export function LoginPopup({ delay = 5000 }: LoginPopupProps) {
 
                 <div className="space-y-3 pt-4">
                   <Button asChild className="w-full bg-black hover:bg-gray-900 text-white">
-                    <Link href="/auth?mode=signin">
+                    <Link href="/auth?mode=signin" onClick={handleDismiss}>
                       <LogIn className="h-4 w-4 mr-2" />
                       Sign In
                     </Link>
                   </Button>
                   
                   <Button asChild variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
-                    <Link href="/auth?mode=signup">
+                    <Link href="/auth?mode=signup" onClick={handleDismiss}>
                       <UserPlus className="h-4 w-4 mr-2" />
                       Create Account
                     </Link>
