@@ -225,9 +225,6 @@ export function ProfileSideCard() {
           {/* Company Info */}
           <div className="pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 bg-black rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">D</span>
-              </div>
               <span className="text-xs font-semibold text-gray-900">Dedw3n</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
