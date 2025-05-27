@@ -1,12 +1,75 @@
 import { useLocation } from "wouter";
-import { useState } from "react";
-import { Search } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, User, Package } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import UserMenu from "../ui/user-menu";
 import Logo from "../ui/logo";
+
+interface SearchSuggestion {
+  id: number;
+  title: string;
+  subtitle: string;
+  type: 'user' | 'product';
+  avatar?: string;
+  image?: string;
+}
 
 export default function Header() {
   const [location, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch search suggestions when user types
+  const { data: suggestions = [] } = useQuery<SearchSuggestion[]>({
+    queryKey: ['/api/search/suggestions', searchQuery],
+    enabled: searchQuery.length >= 2 && showSuggestions,
+    staleTime: 300, // Cache for 300ms to reduce API calls
+  });
+
+  // Handle clicks outside search to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => (prev + 1) % suggestions.length);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev <= 0 ? suggestions.length - 1 : prev - 1);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          handleSuggestionClick(suggestions[selectedIndex]);
+        } else {
+          handleSearch(e);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        inputRef.current?.blur();
+        break;
+    }
+  };
 
   const detectSearchType = (query: string): string => {
     const lowerQuery = query.toLowerCase();
@@ -37,6 +100,17 @@ export default function Header() {
     return "products";
   };
 
+  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    
+    if (suggestion.type === 'user') {
+      setLocation(`/profile/${suggestion.id}`);
+    } else if (suggestion.type === 'product') {
+      setLocation(`/product/${suggestion.id}`);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -46,6 +120,7 @@ export default function Header() {
         type: detectedType
       });
       setLocation(`/search?${searchParams.toString()}`);
+      setShowSuggestions(false);
     }
   };
 

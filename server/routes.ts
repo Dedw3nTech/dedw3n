@@ -9,7 +9,8 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, or, like, sql } from "drizzle-orm";
+import { users, products } from "@shared/schema";
 
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -1823,6 +1824,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = req.query.q as string || '';
       console.log(`[DEBUG] Searching products for: "${query}"`);
       
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      
       // Search products directly in the database
       const searchResults = await db
         .select()
@@ -1840,6 +1845,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error searching products:', error);
       res.status(500).json({ message: 'Failed to search products' });
+    }
+  });
+
+  // Search suggestions endpoint for autocomplete
+  app.get('/api/search/suggestions', async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string || '';
+      console.log(`[DEBUG] Getting search suggestions for: "${query}"`);
+      
+      if (!query || query.trim().length < 2) {
+        return res.json([]);
+      }
+      
+      // Get top 3 users and top 3 products matching the query
+      const userSuggestions = await db
+        .select({
+          id: users.id,
+          title: users.name,
+          subtitle: users.username,
+          type: sql`'user'`,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(
+          or(
+            like(users.name, `%${query}%`),
+            like(users.username, `%${query}%`)
+          )
+        )
+        .limit(3);
+
+      const productSuggestions = await db
+        .select({
+          id: products.id,
+          title: products.name,
+          subtitle: products.description,
+          type: sql`'product'`,
+          image: products.imageUrl
+        })
+        .from(products)
+        .where(
+          or(
+            like(products.name, `%${query}%`),
+            like(products.description, `%${query}%`)
+          )
+        )
+        .limit(3);
+
+      const suggestions = [...userSuggestions, ...productSuggestions];
+      console.log(`[DEBUG] Found ${suggestions.length} suggestions for "${query}"`);
+      
+      res.json(suggestions);
+    } catch (error) {
+      console.error('Error getting search suggestions:', error);
+      res.status(500).json({ message: 'Failed to get search suggestions' });
     }
   });
 
