@@ -1925,6 +1925,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Messaging API endpoints
+  app.get('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const conversations = await storage.getConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error('Error getting conversations:', error);
+      res.status(500).json({ message: 'Failed to get conversations' });
+    }
+  });
+
+  app.get('/api/messages/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      res.status(500).json({ message: 'Failed to get unread count' });
+    }
+  });
+
+  app.get('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = req.user!.id;
+      const otherUserId = parseInt(req.params.userId);
+      
+      if (isNaN(otherUserId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const messages = await storage.getMessagesBetweenUsers(currentUserId, otherUserId);
+      const otherUser = await storage.getUser(otherUserId);
+      
+      res.json({
+        messages,
+        otherUser,
+        activeCall: null
+      });
+    } catch (error) {
+      console.error('Error getting messages:', error);
+      res.status(500).json({ message: 'Failed to get messages' });
+    }
+  });
+
+  app.post('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const senderId = req.user!.id;
+      const receiverId = parseInt(req.params.userId);
+      const { content, attachmentUrl, attachmentType, messageType = 'text' } = req.body;
+
+      if (isNaN(receiverId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const message = await storage.createMessage({
+        senderId,
+        receiverId,
+        content,
+        attachmentUrl,
+        attachmentType,
+        messageType,
+        isRead: false
+      });
+
+      res.json(message);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+
+  app.post('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const senderId = req.user!.id;
+      const { recipientUsername, firstMessage } = req.body;
+
+      // Find recipient by username
+      const recipient = await storage.getUserByUsername(recipientUsername);
+      if (!recipient) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Create the first message
+      const message = await storage.createMessage({
+        senderId,
+        receiverId: recipient.id,
+        content: firstMessage,
+        messageType: 'text',
+        isRead: false
+      });
+
+      res.json({
+        conversation: {
+          recipientId: recipient.id,
+          recipientUsername: recipient.username,
+          recipientName: recipient.name
+        },
+        message
+      });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      res.status(500).json({ message: 'Failed to start conversation' });
+    }
+  });
+
+  app.post('/api/messages/mark-read/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = req.user!.id;
+      const otherUserId = parseInt(req.params.userId);
+
+      if (isNaN(otherUserId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      await storage.markMessagesAsRead(currentUserId, otherUserId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      res.status(500).json({ message: 'Failed to mark messages as read' });
+    }
+  });
+
+  app.delete('/api/messages/:messageId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      const userId = req.user!.id;
+
+      if (isNaN(messageId)) {
+        return res.status(400).json({ message: 'Invalid message ID' });
+      }
+
+      await storage.deleteMessage(messageId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      res.status(500).json({ message: 'Failed to delete message' });
+    }
+  });
+
+  app.delete('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = req.user!.id;
+      const otherUserId = parseInt(req.params.userId);
+
+      if (isNaN(otherUserId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      await storage.clearConversation(currentUserId, otherUserId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error clearing conversation:', error);
+      res.status(500).json({ message: 'Failed to clear conversation' });
+    }
+  });
+
   // Development testing endpoints
   if (process.env.NODE_ENV === 'development') {
     // Test login endpoint for development

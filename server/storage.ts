@@ -36,14 +36,16 @@ export interface IStorage {
   getUserMessages(userId: number): Promise<Message[]>;
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
   getUserConversations(userId: number): Promise<any[]>;
+  getConversations(userId: number): Promise<any[]>;
   getUnreadMessageCount(userId: number): Promise<number>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<Message | undefined>;
+  markMessagesAsRead(currentUserId: number, otherUserId: number): Promise<void>;
   updateMessageContent(id: number, newContent: string): Promise<Message | undefined>;
   searchUserMessages(userId: number, query: string): Promise<any[]>;
   clearConversation(userId1: number, userId2: number): Promise<boolean>;
   getUserMessagingStats(userId: number): Promise<any>;
-  deleteMessage(id: number): Promise<boolean>;
+  deleteMessage(id: number, userId?: number): Promise<boolean>;
   
   // Call operations
   createCallSession(callData: any): Promise<any>;
@@ -3423,6 +3425,120 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error locking/unlocking user account:', error);
     }
+  }
+
+  // Additional messaging methods
+  async getConversations(userId: number): Promise<any[]> {
+    return this.getUserConversations(userId);
+  }
+
+  async markMessagesAsRead(currentUserId: number, otherUserId: number): Promise<void> {
+    try {
+      await db
+        .update(messages)
+        .set({ isRead: true })
+        .where(
+          and(
+            eq(messages.receiverId, currentUserId),
+            eq(messages.senderId, otherUserId),
+            eq(messages.isRead, false)
+          )
+        );
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      throw error;
+    }
+  }
+
+  async deleteMessage(id: number, userId?: number): Promise<boolean> {
+    try {
+      if (userId) {
+        // Only allow deletion if the user is the sender
+        const [message] = await db
+          .select()
+          .from(messages)
+          .where(and(eq(messages.id, id), eq(messages.senderId, userId)));
+        
+        if (!message) {
+          return false;
+        }
+      }
+
+      await db.delete(messages).where(eq(messages.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      return false;
+    }
+  }
+
+  // Missing methods from interface
+  async checkPostLike(postId: number, userId: number): Promise<boolean> {
+    return this.hasUserLikedPost(userId, postId);
+  }
+
+  async checkPostSave(postId: number, userId: number): Promise<boolean> {
+    try {
+      const [existingSave] = await db
+        .select()
+        .from(savedPosts)
+        .where(and(eq(savedPosts.postId, postId), eq(savedPosts.userId, userId)));
+      
+      return !!existingSave;
+    } catch (error) {
+      console.error('Error checking if user saved post:', error);
+      return false;
+    }
+  }
+
+  async getUserFeed(userId: number, limit: number = 10, offset: number = 0): Promise<Post[]> {
+    try {
+      const userFeed = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar,
+            isVendor: users.isVendor
+          }
+        })
+        .from(posts)
+        .leftJoin(users, eq(posts.userId, users.id))
+        .leftJoin(follows, and(eq(follows.followingId, posts.userId), eq(follows.followerId, userId)))
+        .where(
+          or(
+            eq(posts.userId, userId), // User's own posts
+            eq(follows.followerId, userId) // Posts from followed users
+          )
+        )
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return userFeed.map(({ post, user }) => ({
+        ...post,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar,
+          isVendor: user.isVendor
+        }
+      })) as Post[];
+    } catch (error) {
+      console.error('Error getting user feed:', error);
+      return [];
+    }
+  }
+
+  async getUserFollowerCount(userId: number): Promise<number> {
+    return this.getFollowersCount(userId);
+  }
+
+  async getUserFollowingCount(userId: number): Promise<number> {
+    return this.getFollowingCount(userId);
   }
 }
 

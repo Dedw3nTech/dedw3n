@@ -86,10 +86,7 @@ export default function SocialMessaging({ embedded = false }: SocialMessagingPro
   const { user } = useAuth();
   const { 
     sendMessage, 
-    markAsRead, 
-    onlineUsers, 
-    typingUsers, 
-    sendTypingStatus,
+    markAsRead,
     isConnected
   } = useMessaging();
   
