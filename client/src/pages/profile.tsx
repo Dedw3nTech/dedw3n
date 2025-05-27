@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useRoute, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -393,18 +393,6 @@ export default function ProfilePage() {
     refetchPosts();
   };
 
-  // This useEffect will update Header's location state for proper tab highlighting
-  useEffect(() => {
-    // This will be read by the Header component to determine which tab to highlight
-    const urlParts = window.location.pathname.split('/');
-    if (urlParts[1] === 'profile') {
-      // Force the location to be recognized as the profile page in the Header component
-      // This will be picked up by the useEffect in the Header that's monitoring the location
-      const event = new CustomEvent('locationchange', { detail: { path: '/profile' }});
-      window.dispatchEvent(event);
-    }
-  }, []);
-
   // Render if profile not found or error
   if (profileError) {
     return (
@@ -506,69 +494,51 @@ export default function ProfilePage() {
         <div className="container max-w-screen-xl px-4">
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center space-x-1 overflow-x-auto">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Home className="h-4 w-4" />
-                  <span className="hidden sm:inline">Home</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/")}>
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
               
-              <Link href="/marketplace">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Store className="h-4 w-4" />
-                  <span className="hidden sm:inline">Marketplace</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/marketplace")}>
+                <Store className="h-4 w-4" />
+                <span className="hidden sm:inline">Marketplace</span>
+              </Button>
               
-              <Link href="/community">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span className="hidden sm:inline">Community</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/community")}>
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Community</span>
+              </Button>
               
-              <Link href="/messages">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Dating</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/messages")}>
+                <Heart className="h-4 w-4" />
+                <span className="hidden sm:inline">Dating</span>
+              </Button>
               
-              <Link href="/wall">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Wall</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/wall")}>
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Wall</span>
+              </Button>
               
-              <Link href="/explore">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Compass className="h-4 w-4" />
-                  <span className="hidden sm:inline">Explore</span>
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={() => setLocation("/explore")}>
+                <Compass className="h-4 w-4" />
+                <span className="hidden sm:inline">Explore</span>
+              </Button>
             </div>
             
             {/* Right side actions */}
             <div className="flex items-center space-x-2">
-              <Link href="/notifications">
-                <Button variant="ghost" size="sm">
-                  <Bell className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/notifications")}>
+                <Bell className="h-4 w-4" />
+              </Button>
               
-              <Link href="/messages">
-                <Button variant="ghost" size="sm">
-                  <MessageSquare className="h-4 w-4" />
-                </Button>
-              </Link>
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/messages")}>
+                <MessageSquare className="h-4 w-4" />
+              </Button>
               
-              <Link href="/profile-settings">
-                <Button variant="outline" size="sm">
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" onClick={() => setLocation("/profile-settings")}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
             </div>
           </div>
         </div>

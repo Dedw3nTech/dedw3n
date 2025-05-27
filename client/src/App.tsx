@@ -108,7 +108,7 @@ import CommunityPage from "@/pages/community";
 
 
 // Import social networking and user components
-import ProfilePage from "@/pages/profile";
+import ProfilePage from "@/pages/profile-simple";
 import SettingsPage from "@/pages/settings";
 import ProfileSettingsPage from "@/pages/profile-settings";
 import WallPage from "@/pages/wall";
