@@ -201,24 +201,24 @@ export default function CommunityPage() {
             )}
 
             {/* Filter Tabs */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex gap-8">
+            <div className="mb-8 flex items-center justify-center relative">
+              <div className="flex gap-12">
                 <button
                   onClick={() => setSortBy('new')}
-                  className={`text-xl font-bold text-black pb-2 transition-all duration-200 ${
+                  className={`text-2xl font-bold text-black pb-3 transition-all duration-300 ${
                     sortBy === 'new' 
-                      ? 'border-b-2 border-black' 
-                      : 'hover:opacity-70'
+                      ? 'border-b-3 border-black' 
+                      : 'hover:opacity-70 hover:scale-105'
                   }`}
                 >
                   New
                 </button>
                 <button
                   onClick={() => setSortBy('trending')}
-                  className={`text-xl font-bold text-black pb-2 transition-all duration-200 ${
+                  className={`text-2xl font-bold text-black pb-3 transition-all duration-300 ${
                     sortBy === 'trending' 
-                      ? 'border-b-2 border-black' 
-                      : 'hover:opacity-70'
+                      ? 'border-b-3 border-black' 
+                      : 'hover:opacity-70 hover:scale-105'
                   }`}
                 >
                   Trending
@@ -226,7 +226,7 @@ export default function CommunityPage() {
               </div>
               <button
                 onClick={handleRefresh}
-                className="flex items-center gap-2 text-black hover:opacity-70 transition-opacity"
+                className="absolute right-0 flex items-center gap-2 text-black hover:opacity-70 transition-all duration-200 hover:scale-105"
               >
                 <RefreshCw className="h-5 w-5" />
                 <span className="font-medium">Refresh</span>
