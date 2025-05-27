@@ -178,21 +178,45 @@ export function ProfileSideCard() {
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="60" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
-                  <text x="60" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
-                  <path d="M15 20c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm2 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z" fill="white"/>
+                  <text x="85" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
+                  <text x="85" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
+                  {/* Apple Logo */}
+                  <g transform="translate(15, 10)">
+                    <path d="M12.5 2.5c0.8-1 1.3-2.4 1.2-3.8-1.2 0.1-2.6 0.8-3.5 1.8-0.7 0.9-1.4 2.3-1.2 3.7 1.3 0.1 2.6-0.7 3.5-1.7zm1.2 1.9c-1.9-0.1-3.6 1.1-4.5 1.1-0.9 0-2.3-1-3.8-1-1.9 0-3.7 1.1-4.7 2.8-2 3.5-0.5 8.7 1.4 11.5 0.9 1.4 2 2.9 3.4 2.8 1.4-0.1 1.9-0.9 3.6-0.9s2.1 0.9 3.6 0.9c1.5 0 2.4-1.3 3.3-2.7 1-1.6 1.4-3.1 1.4-3.2-0.1 0-2.7-1-2.7-4.2 0-2.8 2.3-4.1 2.4-4.2-1.3-1.9-3.3-2.1-4-2.1z" fill="white"/>
+                  </g>
                 </svg>
               </a>
               <a href="https://play.google.com" target="_blank" rel="noopener noreferrer"
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="60" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
-                  <text x="60" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
-                  <polygon points="15,12 15,28 19,20" fill="#ff6f00"/>
-                  <polygon points="19,20 23,16 19,12" fill="#ff9800"/>
-                  <polygon points="19,20 23,24 19,28" fill="#4caf50"/>
-                  <polygon points="15,28 19,20 23,24" fill="#2196f3"/>
+                  <text x="85" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
+                  <text x="85" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
+                  {/* Google Play Logo */}
+                  <g transform="translate(15, 8)">
+                    <defs>
+                      <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor:"#4285F4"}}/>
+                        <stop offset="100%" style={{stopColor:"#286EF1"}}/>
+                      </linearGradient>
+                      <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor:"#34A853"}}/>
+                        <stop offset="100%" style={{stopColor:"#137333"}}/>
+                      </linearGradient>
+                      <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor:"#FBBC04"}}/>
+                        <stop offset="100%" style={{stopColor:"#F29900"}}/>
+                      </linearGradient>
+                      <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor:"#EA4335"}}/>
+                        <stop offset="100%" style={{stopColor:"#D33B2C"}}/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M2 2 L10 10 L2 18 Z" fill="url(#blueGradient)"/>
+                    <path d="M10 10 L18 2 L14 2 L10 6 Z" fill="url(#yellowGradient)"/>
+                    <path d="M10 10 L18 18 L14 18 L10 14 Z" fill="url(#greenGradient)"/>
+                    <path d="M2 18 L10 10 L6 10 L2 14 Z" fill="url(#redGradient)"/>
+                  </g>
                 </svg>
               </a>
             </div>
