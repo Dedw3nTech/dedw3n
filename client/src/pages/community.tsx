@@ -171,14 +171,7 @@ export default function CommunityPage() {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="sm"
-              className="ml-4"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+
           </div>
         </div>
 
@@ -230,13 +223,7 @@ export default function CommunityPage() {
                   )}
                 </button>
               </div>
-              <button
-                onClick={handleRefresh}
-                className="absolute right-0 flex items-center gap-2 text-black hover:opacity-70 transition-all duration-200 hover:scale-105"
-              >
-                <RefreshCw className="h-5 w-5" />
-                <span className="font-medium">Refresh</span>
-              </button>
+
             </div>
 
             {/* Loading State */}
