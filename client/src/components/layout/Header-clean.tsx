@@ -8,8 +8,14 @@ export default function Header() {
   return (
     <header className="bg-background shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        {/* Top navigation links */}
-        <div className="flex justify-center items-center py-2 border-b border-gray-200">
+        {/* Single header row with everything aligned */}
+        <div className="flex justify-between items-center py-4">
+          <div className="flex items-center space-x-3">
+            <Logo size="md" />
+            <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
+          </div>
+
+          {/* Center navigation links */}
           <div className="flex items-center space-x-8">
             <button
               onClick={() => setLocation("/products")}
@@ -29,14 +35,6 @@ export default function Header() {
             >
               Dating
             </button>
-          </div>
-        </div>
-
-        {/* Main header with logo and user menu */}
-        <div className="flex justify-between items-center py-4">
-          <div className="flex items-center space-x-3">
-            <Logo size="md" />
-            <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
           </div>
 
           <div className="flex items-center space-x-4">
