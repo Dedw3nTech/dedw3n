@@ -12,6 +12,7 @@ import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
+import { AdPostCard } from "@/components/AdPostCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
@@ -236,11 +237,16 @@ export default function CommunityPage() {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-              {allPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                />
+              {allPosts.map((post, index) => (
+                <div key={post.id}>
+                  <PostCard post={post} />
+                  {/* Insert advertisement every 4 posts */}
+                  {(index + 1) % 4 === 0 && (
+                    <div className="mt-6">
+                      <AdPostCard />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
