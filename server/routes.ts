@@ -1349,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user by ID
-  app.get('/api/users/id/:id', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/users/id/:id', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       console.log(`[DEBUG] Getting user by ID: ${userId}`);
@@ -1374,7 +1374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user posts by ID
-  app.get('/api/users/id/:id/posts', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/users/id/:id/posts', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       console.log(`[DEBUG] Getting posts for user ID: ${userId}`);
@@ -1398,7 +1398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user communities by ID
-  app.get('/api/users/id/:id/communities', unifiedIsAuthenticated, async (req, res) => {
+  app.get('/api/users/id/:id/communities', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
       console.log(`[DEBUG] Getting communities for user ID: ${userId}`);
