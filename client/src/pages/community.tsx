@@ -177,6 +177,11 @@ export default function CommunityPage() {
           </div>
         </div>
 
+        {/* Post Creation Section - Always Visible */}
+        <div className="mb-6">
+          <CreatePost />
+        </div>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Feed Column */}
