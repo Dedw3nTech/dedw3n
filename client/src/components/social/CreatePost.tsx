@@ -56,6 +56,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 
 interface CreatePostProps {
   communityId?: number;
@@ -533,14 +534,22 @@ export default function CreatePost({
                 
                 {/* Title input removed as requested */}
                 
-                {/* Content textarea */}
-                <Textarea
-                  placeholder="What's on your mind?"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={4}
-                  className="border-0 bg-accent/50 focus-visible:ring-0"
-                />
+                {/* Content textarea with emoji picker */}
+                <div className="relative">
+                  <Textarea
+                    placeholder="What's on your mind?"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={4}
+                    className="border-0 bg-accent/50 focus-visible:ring-0 pr-10"
+                  />
+                  <div className="absolute bottom-2 right-2">
+                    <EmojiPickerComponent
+                      onEmojiSelect={(emoji) => setContent(prev => prev + emoji)}
+                      className="text-muted-foreground hover:text-foreground"
+                    />
+                  </div>
+                </div>
                 
                 {/* Image preview */}
                 {imagePreview && (
