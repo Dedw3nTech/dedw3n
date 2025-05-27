@@ -631,7 +631,9 @@ export default function CreatePost({
                     onClick={() => fileInputRef.current?.click()}
                     disabled={!!videoFile}
                   >
-                    <ImageIcon className="h-4 w-4 mr-1 font-bold" />
+                    <div className="bg-black rounded p-1 mr-1">
+                      <ImageIcon className="h-3 w-3 text-white font-bold" />
+                    </div>
                     <span className="font-semibold">Add Photo</span>
                   </Button>
                   
@@ -643,7 +645,9 @@ export default function CreatePost({
                     onClick={() => videoInputRef.current?.click()}
                     disabled={!!imageFile}
                   >
-                    <Video className="h-4 w-4 mr-1 font-bold" />
+                    <div className="bg-black rounded p-1 mr-1">
+                      <Video className="h-3 w-3 text-white font-bold" />
+                    </div>
                     <span className="font-semibold">Add Video</span>
                   </Button>
                   
@@ -655,7 +659,9 @@ export default function CreatePost({
                         size="sm"
                         className={selectedProduct ? "" : "text-blue-600 hover:text-blue-700"}
                       >
-                        <ShoppingBag className="h-4 w-4 mr-1 font-bold" />
+                        <div className="bg-black rounded p-1 mr-1">
+                          <ShoppingBag className="h-3 w-3 text-white font-bold" />
+                        </div>
                         <span className="font-semibold">{selectedProduct ? "Product Tagged" : "Tag Product"}</span>
                       </Button>
                     </DialogTrigger>
