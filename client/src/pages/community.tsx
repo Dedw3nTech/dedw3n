@@ -47,7 +47,7 @@ export default function CommunityPage() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Infinite query for community feed with pagination
+  // Use the existing personal feed to show all posts for community feed
   const {
     data,
     error,
@@ -58,14 +58,31 @@ export default function CommunityPage() {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['/api/feed/community', refreshKey],
+    queryKey: ['/api/feed/personal', refreshKey],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(`/api/feed/community?offset=${pageParam}&limit=${POSTS_PER_PAGE}`);
+      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}`);
       if (!response.ok) {
         throw new Error('Failed to fetch community feed');
       }
-      const data: CommunityFeedResponse = await response.json();
-      return data;
+      const posts = await response.json();
+      
+      // Transform the data to match expected CommunityFeedResponse format
+      return {
+        posts: posts.map((post: any) => ({
+          ...post,
+          _count: {
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            shares: post.shares || 0
+          },
+          isLiked: false,
+          isShared: false
+        })),
+        hasMore: posts.length === POSTS_PER_PAGE,
+        totalCount: posts.length,
+        currentOffset: pageParam,
+        nextOffset: posts.length === POSTS_PER_PAGE ? pageParam + POSTS_PER_PAGE : null
+      };
     },
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.hasMore) return undefined;
