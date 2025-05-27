@@ -233,7 +233,7 @@ export function ProfileSideCard() {
             <p className="text-xs text-gray-500 leading-relaxed mt-2">
               Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com.
             </p>
-            <p className="text-xs text-gray-400 mt-1">© 2024 All rights reserved</p>
+            <p className="text-xs text-gray-400 mt-1">© 2025 Dedw3n Ltd. All rights reserved.</p>
           </div>
         </div>
       </div>
