@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, Loader2, RefreshCw } from "lucide-react";
+import { Users, Loader2, RefreshCw, Star, Zap, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { Container } from "@/components/ui/container";
@@ -148,7 +149,7 @@ export default function CommunityPage() {
 
   return (
     <Container className="py-6">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -172,76 +173,156 @@ export default function CommunityPage() {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
-
-
         </div>
 
-        {/* Create Post Section */}
-        {user && (
-          <div className="mb-6" data-create-post>
-            <CreatePost />
-          </div>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-gray-600">Loading community posts...</p>
-          </div>
-        )}
-
-        {/* Posts Feed */}
-        <div className="space-y-6">
-          {allPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onLike={() => {
-                // Refresh posts after like action
-                refetch();
-              }}
-              onShare={() => {
-                // Refresh posts after share action
-                refetch();
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Load More Indicator */}
-        {isFetchingNextPage && (
-          <div className="text-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-            <p className="text-sm text-gray-600">Loading more posts...</p>
-          </div>
-        )}
-
-        {/* End of Feed */}
-        {!hasNextPage && allPosts.length > 0 && (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-              <Users className="h-4 w-4" />
-              <span>You've seen all community posts</span>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && allPosts.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-            <p className="text-gray-600 mb-6">
-              Be the first to share something with the community!
-            </p>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Feed Column */}
+          <div className="lg:col-span-3">
+            {/* Create Post Section */}
             {user && (
-              <Button onClick={() => document.querySelector('[data-create-post]')?.scrollIntoView({ behavior: 'smooth' })}>
-                Create First Post
-              </Button>
+              <div className="mb-6" data-create-post>
+                <CreatePost />
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="text-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                <p className="text-gray-600">Loading community posts...</p>
+              </div>
+            )}
+
+            {/* Posts Feed */}
+            <div className="space-y-6">
+              {allPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                />
+              ))}
+            </div>
+
+            {/* Load More Indicator */}
+            {isFetchingNextPage && (
+              <div className="text-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                <p className="text-sm text-gray-600">Loading more posts...</p>
+              </div>
+            )}
+
+            {/* End of Feed */}
+            {!hasNextPage && allPosts.length > 0 && (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
+                  <Users className="h-4 w-4" />
+                  <span>You've seen all community posts</span>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && allPosts.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
+                <p className="text-gray-600 mb-6">
+                  Be the first to share something with the community!
+                </p>
+                {user && (
+                  <Button onClick={() => document.querySelector('[data-create-post]')?.scrollIntoView({ behavior: 'smooth' })}>
+                    Create First Post
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-        )}
+
+          {/* Advertisement Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              {/* Premium Features Ad */}
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="h-5 w-5 text-yellow-500" />
+                    <span className="font-semibold text-gray-900">Go Premium</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-700 mb-4">
+                    Unlock exclusive features and boost your community experience
+                  </p>
+                  <ul className="text-xs text-gray-600 space-y-1 mb-4">
+                    <li>• Ad-free browsing</li>
+                    <li>• Priority support</li>
+                    <li>• Advanced analytics</li>
+                    <li>• Custom themes</li>
+                  </ul>
+                  <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                    Upgrade Now
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Trending Topics Ad */}
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-100 border-green-200">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <span className="font-semibold text-gray-900">Trending Now</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-700 mb-4">
+                    Join the hottest discussions in your community
+                  </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">#TechTalk</span>
+                      <span className="text-green-600 font-medium">+120%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">#StartupLife</span>
+                      <span className="text-green-600 font-medium">+85%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">#Innovation</span>
+                      <span className="text-green-600 font-medium">+60%</span>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full mt-4 border-green-300 text-green-700 hover:bg-green-50">
+                    Explore Topics
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Community Boost Ad */}
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-5 w-5 text-purple-600" />
+                    <span className="font-semibold text-gray-900">Boost Your Posts</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-700 mb-4">
+                    Get more visibility and engagement for your content
+                  </p>
+                  <div className="text-xs text-gray-600 mb-4">
+                    <p>✨ 10x more reach</p>
+                    <p>📈 Better engagement</p>
+                    <p>🎯 Targeted audience</p>
+                  </div>
+                  <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
+                    Boost Post
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </Container>
   );
