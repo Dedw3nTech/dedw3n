@@ -42,10 +42,9 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Check if user has explicitly logged out - multiple header variations
+  // Only block if user has explicitly logged out via logout action
   if (req.headers['x-auth-logged-out'] === 'true' || 
-      req.headers['x-user-logged-out'] === 'true' ||
-      req.headers['x-auto-login'] === 'false') {
+      req.headers['x-user-logged-out'] === 'true') {
     console.log('[AUTH] X-User-Logged-Out header detected, rejecting authentication');
     return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
   }
