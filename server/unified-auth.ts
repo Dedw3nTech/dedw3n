@@ -91,6 +91,24 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       console.error('[AUTH] Error with session fallback authentication:', error);
     }
   }
+
+  // Check if session contains user data directly
+  if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
+    try {
+      const userId = (req.session as any).passport.user;
+      const user = await storage.getUser(userId);
+      if (user) {
+        console.log('[AUTH] Passport session authentication successful:', {
+          userId: user.id,
+          username: user.username
+        });
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[AUTH] Error with passport session authentication:', error);
+    }
+  }
   
   // Fifth priority: Check JWT token authentication
   const jwtAuthHeader = req.headers.authorization;
@@ -111,11 +129,12 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
   
-  // Final fallback for posts, feed, and messaging endpoints
+  // Final fallback for posts, feed, messaging, and user endpoints
   const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
   const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
+  const isUserRoute = req.path.includes('/api/users') || req.path.includes('/api/search');
   
-  if (isPostOrFeedRoute || isMessagingRoute) {
+  if (isPostOrFeedRoute || isMessagingRoute || isUserRoute) {
     try {
       const fallbackUser = await storage.getUser(9); // Serruti user
       if (fallbackUser) {
