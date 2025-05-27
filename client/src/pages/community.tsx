@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
 import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
+import { SidebarAdCard } from "@/components/SidebarAdCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
@@ -248,6 +249,7 @@ export default function CommunityPage() {
             <div className="sticky top-6 space-y-6">
               <LatestProductsCard />
               <PopularProductsCard />
+              <SidebarAdCard />
             </div>
           </div>
         </div>
