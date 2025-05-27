@@ -173,20 +173,27 @@ export function ProfileSideCard() {
           {/* App Downloads */}
           <div>
             <h4 className="text-xs font-semibold text-gray-900 mb-2">Download App</h4>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer"
-                 className="flex items-center gap-2 p-1 rounded hover:bg-gray-50 transition-colors">
-                <div className="w-5 h-5 bg-black rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🍎</span>
-                </div>
-                <span className="text-xs text-gray-700">App Store</span>
+                 className="block hover:opacity-80 transition-opacity">
+                <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
+                  <rect width="120" height="35" rx="6" fill="#000000"/>
+                  <text x="60" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
+                  <text x="60" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
+                  <path d="M15 20c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm2 0c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z" fill="white"/>
+                </svg>
               </a>
               <a href="https://play.google.com" target="_blank" rel="noopener noreferrer"
-                 className="flex items-center gap-2 p-1 rounded hover:bg-gray-50 transition-colors">
-                <div className="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">▶</span>
-                </div>
-                <span className="text-xs text-gray-700">Google Play</span>
+                 className="block hover:opacity-80 transition-opacity">
+                <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
+                  <rect width="120" height="35" rx="6" fill="#000000"/>
+                  <text x="60" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
+                  <text x="60" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
+                  <polygon points="15,12 15,28 19,20" fill="#ff6f00"/>
+                  <polygon points="19,20 23,16 19,12" fill="#ff9800"/>
+                  <polygon points="19,20 23,24 19,28" fill="#4caf50"/>
+                  <polygon points="15,28 19,20 23,24" fill="#2196f3"/>
+                </svg>
               </a>
             </div>
           </div>
