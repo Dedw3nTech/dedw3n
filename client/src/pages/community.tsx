@@ -203,28 +203,39 @@ export default function CommunityPage() {
             {/* Filter Card */}
             <Card className="mb-6">
               <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-700">Sort by:</span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={sortBy === 'new' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSortBy('new')}
-                      className="flex items-center gap-2"
-                    >
-                      <Star className="h-4 w-4" />
-                      New
-                    </Button>
-                    <Button
-                      variant={sortBy === 'trending' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSortBy('trending')}
-                      className="flex items-center gap-2"
-                    >
-                      <TrendingUp className="h-4 w-4" />
-                      Trending
-                    </Button>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={sortBy === 'new' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSortBy('new')}
+                        className="flex items-center gap-2"
+                      >
+                        <Star className="h-4 w-4" />
+                        New
+                      </Button>
+                      <Button
+                        variant={sortBy === 'trending' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSortBy('trending')}
+                        className="flex items-center gap-2"
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        Trending
+                      </Button>
+                    </div>
                   </div>
+                  <Button
+                    onClick={handleRefresh}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Refresh
+                  </Button>
                 </div>
               </CardContent>
             </Card>
