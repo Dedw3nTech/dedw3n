@@ -69,7 +69,12 @@ export default function CommunityPage() {
   } = useInfiniteQuery({
     queryKey: ['/api/feed/personal', refreshKey, sortBy],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sort=${sortBy}`);
+      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sort=${sortBy}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch community feed');
       }
@@ -98,32 +103,47 @@ export default function CommunityPage() {
       return allPages.length * POSTS_PER_PAGE;
     },
     initialPageParam: 0,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount unless data is stale
   });
 
-  // Infinite scroll handler
+  // Infinite scroll handler with throttling
   const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop
-      >= document.documentElement.offsetHeight - 1000
-    ) {
-      if (hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
+    if (!hasNextPage || isFetchingNextPage) return;
+    
+    const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+    const threshold = document.documentElement.offsetHeight - 800;
+    
+    if (scrollPosition >= threshold) {
+      fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Set up scroll listener
+  // Set up scroll listener with throttling
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    let timeoutId: NodeJS.Timeout;
+    const throttledHandler = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 150);
+    };
+    
+    window.addEventListener('scroll', throttledHandler, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', throttledHandler);
+      clearTimeout(timeoutId);
+    };
   }, [handleScroll]);
 
-  // Flatten all posts from all pages
+  // Flatten all posts from all pages and deduplicate by ID
   const allPosts = data?.pages?.flatMap(page => page.posts) || [];
+  const uniquePosts = allPosts.filter((post, index, self) => 
+    index === self.findIndex(p => p.id === post.id)
+  );
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
-    refetch();
     toast({
       title: "Community feed refreshed",
       description: "Latest posts have been loaded",
@@ -132,7 +152,6 @@ export default function CommunityPage() {
 
   const handlePostCreated = () => {
     setRefreshKey(prev => prev + 1);
-    refetch();
   };
 
   if (isError) {
@@ -237,8 +256,8 @@ export default function CommunityPage() {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-              {allPosts.map((post, index) => (
-                <div key={post.id}>
+              {uniquePosts.map((post, index) => (
+                <div key={`${post.id}-${index}`}>
                   <PostCard post={post} />
                   {/* Insert advertisement every 4 posts */}
                   {(index + 1) % 4 === 0 && (
@@ -259,7 +278,7 @@ export default function CommunityPage() {
             )}
 
             {/* End of Feed */}
-            {!hasNextPage && allPosts.length > 0 && (
+            {!hasNextPage && uniquePosts.length > 0 && (
               <div className="text-center py-8">
                 <div className="inline-flex items-center gap-2 text-sm text-gray-500">
                   <Users className="h-4 w-4" />
@@ -269,7 +288,7 @@ export default function CommunityPage() {
             )}
 
             {/* Empty State */}
-            {!isLoading && allPosts.length === 0 && (
+            {!isLoading && uniquePosts.length === 0 && (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
