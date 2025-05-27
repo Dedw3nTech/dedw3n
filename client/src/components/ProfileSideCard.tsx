@@ -12,6 +12,7 @@ interface User {
   name: string;
   email?: string;
   avatar?: string;
+  datingEnabled?: boolean;
 }
 
 export function ProfileSideCard() {
@@ -76,6 +77,12 @@ export function ProfileSideCard() {
             @{user.username}
           </p>
           
+          {user.datingEnabled && (
+            <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200">
+              <Heart className="h-3 w-3 mr-1" />
+              Open to Date
+            </Badge>
+          )}
 
         </div>
       </CardHeader>
