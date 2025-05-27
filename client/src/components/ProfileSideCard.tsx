@@ -225,7 +225,7 @@ export function ProfileSideCard() {
           {/* Company Info */}
           <div className="pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold text-gray-900">Dedw3n</span>
+              <span className="text-xs font-semibold text-gray-900">Dedw3n Ltd.</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               Buy, Sell, Socialize, Love. Connect with your community and discover amazing products.
