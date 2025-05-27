@@ -156,9 +156,10 @@ export default function SocialMessaging({ embedded = false }: SocialMessagingPro
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageText(e.target.value);
     
-    if (activeChat) {
-      sendTypingStatus(activeChat, e.target.value.length > 0);
-    }
+    // Typing status functionality can be added later
+    // if (activeChat) {
+    //   sendTypingStatus(activeChat, e.target.value.length > 0);
+    // }
   };
 
   const handleAttachment = (type: string) => {
@@ -244,9 +245,8 @@ export default function SocialMessaging({ embedded = false }: SocialMessagingPro
                               <User className="h-6 w-6 text-gray-600" />
                             )}
                           </div>
-                          {onlineUsers.includes(convo.userId) && (
-                            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-                          )}
+                          {/* Online status indicator - can be implemented later */}
+                          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-gray-400 border-2 border-white"></span>
                         </div>
                         <div className="flex-1 overflow-hidden">
                           <div className="flex justify-between">
