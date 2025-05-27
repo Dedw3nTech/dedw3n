@@ -45,7 +45,7 @@ export default function MobileNavigation() {
             onClick={() => handleViewChange("social")}
           >
             <i className="ri-group-line text-lg"></i>
-            <span className="text-xs mt-1">{t('nav.social')}</span>
+            <span className="text-xs mt-1">Community</span>
           </button>
           <button
             className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1"
