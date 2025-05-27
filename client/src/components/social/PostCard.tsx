@@ -38,6 +38,7 @@ import {
   Maximize,
   Film,
   ShoppingBag,
+  ShoppingCart,
   Tag,
   DollarSign,
   Users,
@@ -819,6 +820,19 @@ export default function PostCard({
       
       <CardFooter className="flex justify-between border-t pt-4 pb-4">
         <div className="flex gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
+            onClick={() => {
+              // Add buy functionality here
+              toast({ title: "Buy feature coming soon!" });
+            }}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span>Buy</span>
+          </Button>
+          
           <Button 
             variant="ghost" 
             size="sm"
