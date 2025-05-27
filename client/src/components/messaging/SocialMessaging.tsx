@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import ProductSearch from './ProductSearch';
 import ProductMessage from './ProductMessage';
+import { EmojiPickerComponent } from '@/components/ui/emoji-picker';
 import defaultAvatar from '@assets/WHITE BG DEDWEN LOGO (320 x 132 px) (128 x 56 px).png';
 
 interface SocialMessagingProps {

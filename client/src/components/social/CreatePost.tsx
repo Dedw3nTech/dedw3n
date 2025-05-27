@@ -545,7 +545,7 @@ export default function CreatePost({
                   />
                   <div className="absolute bottom-2 right-2">
                     <EmojiPickerComponent
-                      onEmojiSelect={(emoji) => setContent(prev => prev + emoji)}
+                      onEmojiSelect={(emoji: string) => setContent((prev: string) => prev + emoji)}
                       className="text-muted-foreground hover:text-foreground"
                     />
                   </div>

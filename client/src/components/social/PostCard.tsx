@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -905,8 +906,14 @@ export default function PostCard({
                 placeholder="Write a comment..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="pr-10 min-h-[80px]"
+                className="pr-20 min-h-[80px]"
               />
+              <div className="absolute right-12 bottom-2">
+                <EmojiPickerComponent
+                  onEmojiSelect={(emoji: string) => setCommentText((prev: string) => prev + emoji)}
+                  className="text-muted-foreground hover:text-foreground"
+                />
+              </div>
               <Button
                 size="icon"
                 variant="ghost"
