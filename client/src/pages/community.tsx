@@ -185,7 +185,7 @@ export default function CommunityPage() {
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6">
+            <div className="fixed top-20 w-full max-w-xs">
               <ProfileSideCard />
             </div>
           </div>
