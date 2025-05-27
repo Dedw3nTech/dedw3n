@@ -275,6 +275,15 @@ export default function CommunityPage() {
                 onClick={() => window.open('https://www.dedw3n.com', '_blank')}
               />
             </div>
+            
+            {/* Blue Bar with Advertisement Text */}
+            <div className="w-full bg-blue-600 py-1 px-4">
+              <div className="max-w-7xl mx-auto flex items-center justify-center">
+                <span className="text-white text-xs">
+                  Advertisement . <a href="/remove-ads" className="underline hover:text-blue-200">Remove ads</a>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}

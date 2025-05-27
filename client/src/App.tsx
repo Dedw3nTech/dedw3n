@@ -104,6 +104,7 @@ import CookiesPage from "@/pages/cookies";
 import ContactPage from "@/pages/contact";
 import CommunityGuidelines from "@/pages/community-guidelines";
 import CommunityPage from "@/pages/community";
+import RemoveAdsPage from "@/pages/remove-ads";
 
 
 
@@ -149,6 +150,7 @@ function Router() {
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/community-guidelines" component={CommunityGuidelines} />
+      <Route path="/remove-ads" component={RemoveAdsPage} />
       <Route path="/api-test" component={ApiTestPage} />
       
       {/* Protected routes - require authentication */}
