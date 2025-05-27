@@ -74,7 +74,7 @@ export function ProfileSideCard() {
               {user.name || user.username}
             </h3>
             
-            <p className="text-sm text-gray-500 mb-3">
+            <p className="text-sm text-blue-500 mb-3">
               @{user.username}
             </p>
             
