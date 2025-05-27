@@ -205,23 +205,29 @@ export default function CommunityPage() {
               <div className="flex gap-12">
                 <button
                   onClick={() => setSortBy('new')}
-                  className={`text-2xl text-black pb-3 transition-all duration-300 ${
+                  className={`text-2xl text-black pb-3 transition-all duration-300 relative ${
                     sortBy === 'new' 
-                      ? 'font-bold border-b-4 border-black' 
+                      ? 'font-bold' 
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
                   New
+                  {sortBy === 'new' && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black"></div>
+                  )}
                 </button>
                 <button
                   onClick={() => setSortBy('trending')}
-                  className={`text-2xl text-black pb-3 transition-all duration-300 ${
+                  className={`text-2xl text-black pb-3 transition-all duration-300 relative ${
                     sortBy === 'trending' 
-                      ? 'font-bold border-b-4 border-black' 
+                      ? 'font-bold' 
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
                   Trending
+                  {sortBy === 'trending' && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-black"></div>
+                  )}
                 </button>
               </div>
               <button
