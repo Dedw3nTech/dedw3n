@@ -8,7 +8,7 @@ import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
-import campaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
+import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 
 interface Post {
   id: number;
