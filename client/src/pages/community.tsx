@@ -167,7 +167,7 @@ export default function CommunityPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Community</h1>
                 <p className="text-sm text-gray-600">
-                  See what everyone in our community is sharing
+                  Welcome to the Ded3wn Community feed
                 </p>
               </div>
             </div>
