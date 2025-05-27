@@ -34,10 +34,10 @@ export default function MobileNavigation() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around">
           <button
-            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "marketplace" ? "text-primary" : "text-gray-500"}`}
+            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "marketplace" || location.startsWith("/marketplace") ? "text-blue-500" : "text-gray-500"}`}
             onClick={() => handleViewChange("marketplace")}
           >
-            <i className="ri-store-2-line text-lg"></i>
+            <i className={`ri-store-2-line text-lg ${view === "marketplace" || location.startsWith("/marketplace") ? "text-blue-500" : ""}`}></i>
             <span className="text-xs mt-1">Marketplaces</span>
           </button>
           <button
