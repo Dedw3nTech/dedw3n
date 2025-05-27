@@ -228,7 +228,10 @@ export function ProfileSideCard() {
               <span className="text-xs font-semibold text-gray-900">Dedw3n Ltd.</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Buy, Sell, Socialize, Love. Connect with your community and discover amazing products.
+              Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF.
+            </p>
+            <p className="text-xs text-gray-500 leading-relaxed mt-2">
+              Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com.
             </p>
             <p className="text-xs text-gray-400 mt-1">© 2024 All rights reserved</p>
           </div>
