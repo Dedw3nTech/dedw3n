@@ -47,13 +47,7 @@ export default function MobileNavigation() {
             <i className={`ri-group-line text-lg ${view === "social" || location === "/community" ? "text-blue-500" : ""}`}></i>
             <span className="text-xs mt-1">Community</span>
           </button>
-          <button
-            className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1"
-            onClick={() => setSearchOpen(true)}
-          >
-            <i className="ri-search-line text-lg"></i>
-            <span className="text-xs mt-1">Explore</span>
-          </button>
+
           <Link href="/messages">
             <button className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1">
               <div className="relative">
