@@ -242,52 +242,9 @@ export default function CommunityPage() {
           {/* Advertisement Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-              {/* Premium Features Ad */}
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    <span className="font-semibold text-gray-900">Go Premium</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-gray-700 mb-4">
-                    Unlock exclusive features and boost your community experience
-                  </p>
-                  <ul className="text-xs text-gray-600 space-y-1 mb-4">
-                    <li>• Ad-free browsing</li>
-                    <li>• Priority support</li>
-                    <li>• Advanced analytics</li>
-                    <li>• Custom themes</li>
-                  </ul>
-                  <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                    Upgrade Now
-                  </Button>
-                </CardContent>
-              </Card>
 
-              {/* Community Boost Ad */}
-              <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-5 w-5 text-purple-600" />
-                    <span className="font-semibold text-gray-900">Boost Your Posts</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-gray-700 mb-4">
-                    Get more visibility and engagement for your content
-                  </p>
-                  <div className="text-xs text-gray-600 mb-4">
-                    <p>✨ 10x more reach</p>
-                    <p>📈 Better engagement</p>
-                    <p>🎯 Targeted audience</p>
-                  </div>
-                  <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
-                    Boost Post
-                  </Button>
-                </CardContent>
-              </Card>
+
+
             </div>
           </div>
         </div>
