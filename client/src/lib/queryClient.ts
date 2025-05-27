@@ -128,8 +128,8 @@ export async function apiRequest(
       'X-Use-Session': 'true',
       'X-Client-Auth': 'true',
       'X-Request-Time': new Date().toISOString(),
-      // Only enable auto-login if user hasn't explicitly logged out
-      'X-Auto-Login': userLoggedOut ? 'false' : 'true',
+      // Disable auto-login to show proper login screen
+      'X-Auto-Login': 'false',
       // Add logout header if user has logged out
       ...(userLoggedOut ? { 'X-Auth-Logged-Out': 'true' } : {}),
       'Content-Type': isFormData ? undefined : 'application/json',
@@ -372,7 +372,7 @@ export const getQueryFn: <T>(options: {
         // Always include these session-related headers for improved auth reliability
         'X-Use-Session': 'true',
         'X-Client-Auth': 'true',
-        'X-Auto-Login': 'true',
+        'X-Auto-Login': 'false',
         'X-Request-Time': new Date().toISOString()
       }
     };
