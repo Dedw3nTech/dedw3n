@@ -53,6 +53,7 @@ export default function CommunityPage() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAdVisible, setIsAdVisible] = useState(true);
+  const [sortBy, setSortBy] = useState<'new' | 'trending'>('new');
 
   // Use the existing personal feed to show all posts for community feed
   const {
@@ -65,9 +66,9 @@ export default function CommunityPage() {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['/api/feed/personal', refreshKey],
+    queryKey: ['/api/feed/personal', refreshKey, sortBy],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}`);
+      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sort=${sortBy}`);
       if (!response.ok) {
         throw new Error('Failed to fetch community feed');
       }
@@ -198,6 +199,35 @@ export default function CommunityPage() {
                 <CreatePost />
               </div>
             )}
+
+            {/* Filter Card */}
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={sortBy === 'new' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSortBy('new')}
+                      className="flex items-center gap-2"
+                    >
+                      <Star className="h-4 w-4" />
+                      New
+                    </Button>
+                    <Button
+                      variant={sortBy === 'trending' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSortBy('trending')}
+                      className="flex items-center gap-2"
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                      Trending
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Loading State */}
             {isLoading && (
