@@ -76,16 +76,7 @@ export function ProfileSideCard() {
             @{user.username}
           </p>
           
-          <div className="flex gap-2 mb-4">
-            <Badge variant="secondary" className="text-xs">
-              <Star className="h-3 w-3 mr-1" />
-              Member
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              <Heart className="h-3 w-3 mr-1" />
-              Active
-            </Badge>
-          </div>
+
         </div>
       </CardHeader>
       
@@ -100,9 +91,6 @@ export function ProfileSideCard() {
             <Link href="/messages">
               <MessageSquare className="h-4 w-4 mr-3" />
               Messages
-              <Badge variant="secondary" className="ml-auto text-xs">
-                3
-              </Badge>
             </Link>
           </Button>
           
@@ -114,9 +102,6 @@ export function ProfileSideCard() {
             <Link href="/notifications">
               <Bell className="h-4 w-4 mr-3" />
               Notifications
-              <Badge variant="destructive" className="ml-auto text-xs">
-                5
-              </Badge>
             </Link>
           </Button>
           
@@ -131,20 +116,7 @@ export function ProfileSideCard() {
             </Link>
           </Button>
         </div>
-        
-        {/* Stats Section */}
-        <div className="pt-3 border-t">
-          <div className="grid grid-cols-2 gap-3 text-center">
-            <div>
-              <div className="font-semibold text-lg text-gray-900">24</div>
-              <div className="text-xs text-gray-500">Posts</div>
-            </div>
-            <div>
-              <div className="font-semibold text-lg text-gray-900">156</div>
-              <div className="text-xs text-gray-500">Followers</div>
-            </div>
-          </div>
-        </div>
+
         
         {/* View Profile Button */}
         <div className="pt-2">

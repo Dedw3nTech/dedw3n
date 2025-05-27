@@ -41,7 +41,7 @@ export function LatestProductsCard() {
               </div>
             ))}
           </div>
-        ) : !products || products.length === 0 ? (
+        ) : !products || !Array.isArray(products) || products.length === 0 ? (
           <div className="text-center py-8">
             <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">No products available</p>
