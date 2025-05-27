@@ -852,6 +852,7 @@ export default function CreatePost({
                 <Button
                   onClick={handleSubmit}
                   disabled={postMutation.isPending || !content.trim()}
+                  className="bg-black text-white hover:bg-gray-800 disabled:bg-gray-400"
                 >
                   {postMutation.isPending ? (
                     <>
