@@ -103,6 +103,7 @@ import TermsPage from "@/pages/terms";
 import CookiesPage from "@/pages/cookies";
 import ContactPage from "@/pages/contact";
 import CommunityGuidelines from "@/pages/community-guidelines";
+import CommunityPage from "@/pages/community";
 
 
 
@@ -175,6 +176,7 @@ function Router() {
       <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
+      <ProtectedRoute path="/community" component={CommunityPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/explore" component={ExplorePage} />

@@ -376,6 +376,20 @@ export default function Header() {
             <div 
               className="py-2 px-4 text-sm font-medium cursor-pointer"
               onClick={() => {
+                setActiveTab("community");
+                setLocation("/community");
+              }}
+              title="Community feed showing all posts from all users on the platform - API: /api/feed/community"
+            >
+              <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "community" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
+                <i className="ri-group-line text-base"></i>
+                <span>Community</span>
+              </div>
+            </div>
+            
+            <div 
+              className="py-2 px-4 text-sm font-medium cursor-pointer"
+              onClick={() => {
                 setActiveTab("search");
                 setLocation("/search");
               }}

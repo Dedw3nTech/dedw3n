@@ -200,6 +200,43 @@ app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json([]);
   });
+
+  // Community feed endpoint - shows ALL posts from ALL users with pagination
+  app.get('/api/feed/community', async (req, res) => {
+    console.log('[DEBUG] Community feed endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const { storage } = await import('./storage.js');
+      
+      // Get pagination parameters
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      console.log(`[DEBUG] Community feed request: limit=${limit}, offset=${offset}`);
+      
+      // Get all posts from all users with pagination
+      const posts = await storage.getAllPostsPaginated(limit, offset);
+      
+      // Check if there are more posts available
+      const totalPosts = await storage.getTotalPostsCount();
+      const hasMore = offset + posts.length < totalPosts;
+      
+      console.log(`[DEBUG] Retrieved ${posts.length} posts for community feed (${offset}-${offset + posts.length} of ${totalPosts})`);
+      
+      return res.status(200).json({
+        posts,
+        hasMore,
+        totalCount: totalPosts,
+        currentOffset: offset,
+        nextOffset: hasMore ? offset + limit : null
+      });
+    } catch (error) {
+      console.error('[DEBUG] Community feed error:', error);
+      return res.status(500).json({ message: "Failed to get community feed", error: error.message });
+    }
+  });
   
 
   
