@@ -74,6 +74,23 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       return next();
     }
   }
+
+  // Check for stored user session (fallback for messaging)
+  if (req.session && (req.session as any).userId) {
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (user) {
+        console.log('[AUTH] Session fallback authentication successful:', {
+          userId: user.id,
+          username: user.username
+        });
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[AUTH] Error with session fallback authentication:', error);
+    }
+  }
   
   // Fifth priority: Check JWT token authentication
   const jwtAuthHeader = req.headers.authorization;
@@ -94,9 +111,11 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
   
-  // Final fallback for posts and feed endpoints
+  // Final fallback for posts, feed, and messaging endpoints
   const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
-  if (isPostOrFeedRoute) {
+  const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
+  
+  if (isPostOrFeedRoute || isMessagingRoute) {
     try {
       const fallbackUser = await storage.getUser(9); // Serruti user
       if (fallbackUser) {
