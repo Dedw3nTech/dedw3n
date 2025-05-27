@@ -72,7 +72,7 @@ import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
 
-import Header from "@/components/layout/Header";
+import Header from "@/components/layout/Header-clean";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
