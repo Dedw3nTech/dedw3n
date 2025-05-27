@@ -2,16 +2,16 @@ import { Link } from "wouter";
 
 export default function CommunityGuidelines() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gray-900 rounded-lg shadow-sm p-8">
+          <div className="bg-white rounded-lg shadow-sm p-8">
             <div className="mb-8">
               <Link href="/" className="text-primary hover:underline text-sm mb-4 inline-block">
                 ← Back to Home
               </Link>
-              <h1 className="text-3xl font-bold text-white mb-4">Community Guidelines</h1>
-              <p className="text-gray-300">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">Community Guidelines</h1>
+              <p className="text-gray-600">
                 Welcome to Dedw3n! These guidelines help ensure our community remains a safe, inclusive, and positive space for everyone.
               </p>
             </div>
