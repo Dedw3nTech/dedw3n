@@ -34,30 +34,30 @@ export default function MobileNavigation() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex justify-around">
           <button
-            className={`py-3 px-6 flex flex-col items-center ${view === "marketplace" ? "text-primary" : "text-gray-500"}`}
+            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "marketplace" ? "text-primary" : "text-gray-500"}`}
             onClick={() => handleViewChange("marketplace")}
           >
-            <i className="ri-store-2-line text-xl"></i>
+            <i className="ri-store-2-line text-lg"></i>
             <span className="text-xs mt-1">Marketplaces</span>
           </button>
           <button
-            className={`py-3 px-6 flex flex-col items-center ${view === "social" ? "text-primary" : "text-gray-500"}`}
+            className={`py-2 px-2 flex flex-col items-center flex-1 ${view === "social" ? "text-primary" : "text-gray-500"}`}
             onClick={() => handleViewChange("social")}
           >
-            <i className="ri-group-line text-xl"></i>
+            <i className="ri-group-line text-lg"></i>
             <span className="text-xs mt-1">{t('nav.social')}</span>
           </button>
           <button
-            className="py-3 px-6 text-gray-500 flex flex-col items-center"
+            className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1"
             onClick={() => setSearchOpen(true)}
           >
-            <i className="ri-search-line text-xl"></i>
+            <i className="ri-search-line text-lg"></i>
             <span className="text-xs mt-1">{t('products.search')}</span>
           </button>
           <Link href="/messages">
-            <button className="py-3 px-6 text-gray-500 flex flex-col items-center">
+            <button className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1">
               <div className="relative">
-                <i className="ri-message-3-line text-xl"></i>
+                <i className="ri-message-3-line text-lg"></i>
                 {messageData && messageData.count > 0 && (
                   <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center">
                     {messageData.count}
@@ -69,8 +69,8 @@ export default function MobileNavigation() {
           </Link>
 
           <Link href="/profile">
-            <button className="py-3 px-6 text-gray-500 flex flex-col items-center">
-              <i className="ri-user-line text-xl"></i>
+            <button className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1">
+              <i className="ri-user-line text-lg"></i>
               <span className="text-xs mt-1">{t('account.profile')}</span>
             </button>
           </Link>
