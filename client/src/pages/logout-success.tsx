@@ -97,24 +97,24 @@ export default function LogoutSuccess() {
   }, [setLocation]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-black">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12 bg-white">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl p-8 space-y-6 bg-black rounded-xl shadow-xl"
+        className="w-full max-w-2xl p-8 space-y-6 bg-white rounded-xl shadow-xl border border-gray-200"
       >
 
         
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-black">
             You have successfully logged out
           </h1>
           
-          <p className="text-gray-300">
+          <p className="text-gray-600">
             Thank you for choosing our platform!
           </p>
-          <p className="text-gray-300">
+          <p className="text-gray-600">
             We look forward to seeing you again soon.
           </p>
           
@@ -142,10 +142,10 @@ export default function LogoutSuccess() {
         </div>
       </motion.div>
       
-      <div className="mt-8 text-center text-sm text-gray-300">
+      <div className="mt-8 text-center text-sm text-gray-600">
         <p>
           Questions or concerns?{' '}
-          <Link href="/contact" className="text-blue-400 hover:underline">
+          <Link href="/contact" className="text-blue-600 hover:underline">
             contact us
           </Link>
         </p>
