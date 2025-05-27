@@ -52,7 +52,7 @@ export default function MobileNavigation() {
             onClick={() => setSearchOpen(true)}
           >
             <i className="ri-search-line text-lg"></i>
-            <span className="text-xs mt-1">{t('products.search')}</span>
+            <span className="text-xs mt-1">Explore</span>
           </button>
           <Link href="/messages">
             <button className="py-2 px-2 text-gray-500 flex flex-col items-center flex-1">
