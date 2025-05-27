@@ -72,21 +72,22 @@ export default function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
-        className="flex items-center space-x-1"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Avatar>
-          {user?.avatar ? (
-            <AvatarImage
-              src={sanitizeImageUrl(user.avatar, '/assets/default-avatar.png')}
-              alt={user.name || user.username}
-            />
-          ) : null}
-          <AvatarFallback>{getInitials(user?.name || user?.username || '')}</AvatarFallback>
-        </Avatar>
-        <i className="ri-arrow-down-s-line text-gray-500"></i>
-      </button>
+      <div className="flex items-center space-x-1">
+        <Link href="/profile">
+          <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+            {user?.avatar ? (
+              <AvatarImage
+                src={sanitizeImageUrl(user.avatar, '/assets/default-avatar.png')}
+                alt={user.name || user.username}
+              />
+            ) : null}
+            <AvatarFallback>{getInitials(user?.name || user?.username || '')}</AvatarFallback>
+          </Avatar>
+        </Link>
+        <button onClick={() => setIsOpen(!isOpen)}>
+          <i className="ri-arrow-down-s-line text-gray-500 hover:text-gray-700 transition-colors"></i>
+        </button>
+      </div>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
