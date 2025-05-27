@@ -153,6 +153,61 @@ export function ProfileSideCard() {
           </Link>
         </Button>
       </div>
+
+      {/* Footer Information Card */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 mt-4">
+        <div className="space-y-3">
+          {/* Quick Links */}
+          <div>
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">Quick Links</h4>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <Link href="/about" className="text-gray-600 hover:text-blue-500">About</Link>
+              <Link href="/help" className="text-gray-600 hover:text-blue-500">Help</Link>
+              <Link href="/privacy" className="text-gray-600 hover:text-blue-500">Privacy</Link>
+              <Link href="/terms" className="text-gray-600 hover:text-blue-500">Terms</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-blue-500">Contact</Link>
+              <Link href="/careers" className="text-gray-600 hover:text-blue-500">Careers</Link>
+            </div>
+          </div>
+
+          {/* Social Links */}
+          <div>
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">Follow Us</h4>
+            <div className="flex gap-2">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" 
+                 className="w-6 h-6 bg-blue-400 rounded text-white flex items-center justify-center text-xs hover:bg-blue-500">
+                T
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+                 className="w-6 h-6 bg-blue-600 rounded text-white flex items-center justify-center text-xs hover:bg-blue-700">
+                F
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+                 className="w-6 h-6 bg-pink-500 rounded text-white flex items-center justify-center text-xs hover:bg-pink-600">
+                I
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+                 className="w-6 h-6 bg-blue-700 rounded text-white flex items-center justify-center text-xs hover:bg-blue-800">
+                L
+              </a>
+            </div>
+          </div>
+
+          {/* Company Info */}
+          <div className="pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-4 h-4 bg-black rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">D</span>
+              </div>
+              <span className="text-xs font-semibold text-gray-900">Dedw3n</span>
+            </div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Buy, Sell, Socialize, Love. Connect with your community and discover amazing products.
+            </p>
+            <p className="text-xs text-gray-400 mt-1">© 2024 All rights reserved</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
