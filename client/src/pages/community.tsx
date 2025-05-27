@@ -16,6 +16,9 @@ interface Post {
   imageUrl?: string;
   createdAt: string;
   updatedAt: string;
+  likes: number;
+  comments: number;
+  shares: number;
   user: {
     id: number;
     username: string;
@@ -168,8 +171,8 @@ export default function CommunityPage() {
 
         {/* Create Post Section */}
         {user && (
-          <div className="mb-6">
-            <CreatePost onPostCreated={handlePostCreated} />
+          <div className="mb-6" data-create-post>
+            <CreatePost />
           </div>
         )}
 

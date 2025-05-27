@@ -127,6 +127,8 @@ export interface IStorage {
   getTrendingPosts(limit?: number): Promise<Post[]>;
   getPopularTags(limit?: number): Promise<{ tag: string, count: number }[]>;
   getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
+  getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]>;
+  getTotalPostsCount(): Promise<number>;
   
   // Like operations
   likePost(postId: number, userId: number): Promise<boolean>;
@@ -1668,6 +1670,56 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting all posts:', error);
       return [];
+    }
+  }
+
+  async getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]> {
+    try {
+      const postsWithUsers = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(posts)
+        .innerJoin(users, eq(posts.userId, users.id))
+        .where(eq(posts.isPublished, true))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      return postsWithUsers.map(({ post, user }) => ({
+        ...post,
+        user,
+        _count: {
+          likes: post.likes || 0,
+          comments: post.comments || 0,
+          shares: post.shares || 0
+        },
+        isLiked: false,
+        isShared: false
+      }));
+    } catch (error) {
+      console.error('Error getting paginated posts:', error);
+      return [];
+    }
+  }
+
+  async getTotalPostsCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(posts)
+        .where(eq(posts.isPublished, true));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting total posts count:', error);
+      return 0;
     }
   }
   
