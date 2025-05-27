@@ -121,7 +121,7 @@ export default function LogoutSuccess() {
           <div className="pt-4">
             <Button 
               asChild
-              className="w-full bg-primary hover:bg-primary/90 text-white"
+              className="w-full bg-black hover:bg-gray-900 text-white"
             >
               <Link href="/auth">
                 Sign in again
@@ -132,8 +132,7 @@ export default function LogoutSuccess() {
           <div className="pt-2">
             <Button 
               asChild
-              variant="outline" 
-              className="w-full border-gray-300 text-white hover:bg-gray-800"
+              className="w-full bg-black hover:bg-gray-900 text-white border-black"
             >
               <Link href="/">
                 Back to home
