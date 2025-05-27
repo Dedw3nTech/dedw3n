@@ -170,25 +170,23 @@ export function ProfileSideCard() {
             </div>
           </div>
 
-          {/* Social Links */}
+          {/* App Downloads */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 mb-2">Follow Us</h4>
-            <div className="flex gap-2">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" 
-                 className="w-6 h-6 bg-blue-400 rounded text-white flex items-center justify-center text-xs hover:bg-blue-500">
-                T
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">Download App</h4>
+            <div className="space-y-1">
+              <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer"
+                 className="flex items-center gap-2 p-1 rounded hover:bg-gray-50 transition-colors">
+                <div className="w-5 h-5 bg-black rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🍎</span>
+                </div>
+                <span className="text-xs text-gray-700">App Store</span>
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
-                 className="w-6 h-6 bg-blue-600 rounded text-white flex items-center justify-center text-xs hover:bg-blue-700">
-                F
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
-                 className="w-6 h-6 bg-pink-500 rounded text-white flex items-center justify-center text-xs hover:bg-pink-600">
-                I
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
-                 className="w-6 h-6 bg-blue-700 rounded text-white flex items-center justify-center text-xs hover:bg-blue-800">
-                L
+              <a href="https://play.google.com" target="_blank" rel="noopener noreferrer"
+                 className="flex items-center gap-2 p-1 rounded hover:bg-gray-50 transition-colors">
+                <div className="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">▶</span>
+                </div>
+                <span className="text-xs text-gray-700">Google Play</span>
               </a>
             </div>
           </div>
