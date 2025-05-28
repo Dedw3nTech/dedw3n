@@ -15,7 +15,7 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import promoImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
-import bottomPromoImage from "@assets/Black Friday Email Header  (1).png";
+import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
