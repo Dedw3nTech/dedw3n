@@ -686,10 +686,10 @@ export default function Products() {
         <div className="mb-4">
           <Input
             type="text"
-            placeholder="Search products..."
+            placeholder={`Search within ${marketType.toUpperCase()}`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
+            className="w-full text-[12px]"
           />
         </div>
       </div>
@@ -815,7 +815,7 @@ export default function Products() {
       {marketType === 'b2b' && (
         <div>
           <h3 className="text-lg font-medium mb-2">Business Options</h3>
-          <div className="space-y-2">
+          <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="bulk-discount"
