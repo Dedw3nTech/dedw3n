@@ -14,7 +14,7 @@ import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 // Import promotional images
-import defaultPromoImage from "@assets/Dedw3n Business.png";
+import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 
