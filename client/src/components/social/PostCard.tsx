@@ -847,7 +847,6 @@ export default function PostCard({
               toast({ title: "Make an offer feature coming soon!" });
             }}
           >
-            <Star className="h-4 w-4" />
             <span>Make an Offer</span>
           </Button>
           
