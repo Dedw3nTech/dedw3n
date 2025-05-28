@@ -347,7 +347,7 @@ function MarketplaceBottomPromoSection() {
       <img 
         src={currentBottomPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
-        className="w-full h-[350px] object-cover"
+        className={`w-full object-cover ${marketType === 'c2c' ? 'h-[367px]' : 'h-[350px]'}`}
       />
     </div>
   );
