@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -110,6 +110,54 @@ export function ProfileSideCard() {
                 <Settings className="h-5 w-5 mr-3" />
                 Settings
               </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-10"
+            >
+              <Link href="/cart">
+                <ShoppingCart className="h-5 w-5 mr-3" />
+                Add to Cart
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-10"
+            >
+              <Link href="/vendor-dashboard">
+                <Store className="h-5 w-5 mr-3" />
+                Vendor Dashboard
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-10"
+            >
+              <Link href="/dating-dashboard">
+                <Heart className="h-5 w-5 mr-3" />
+                Dating Dashboard
+              </Link>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                // Handle logout
+                fetch('/api/logout', { method: 'POST' })
+                  .then(() => {
+                    window.location.href = '/';
+                  });
+              }}
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              Log Out
             </Button>
           </div>
 
