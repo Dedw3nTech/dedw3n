@@ -288,18 +288,14 @@ export default function Products() {
           <div className="mb-2">
             {product.discountPrice ? (
               <div className="flex items-center">
-                <div className={`font-bold ${
-                  marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
-                }`}>
+                <div className="font-bold text-blue-600">
                   {formatPriceWithCurrency(product.discountPrice, currency)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                 </div>
                 <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceWithCurrency(product.price, currency)}</div>
               </div>
             ) : (
-              <div className={`font-bold ${
-                  marketType === 'c2c' ? 'text-blue-600' : marketType === 'b2c' ? 'text-green-600' : 'text-purple-600'
-                }`}>
+              <div className="font-bold text-blue-600">
                 {formatPriceWithCurrency(product.price, currency)}
                 {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
               </div>
