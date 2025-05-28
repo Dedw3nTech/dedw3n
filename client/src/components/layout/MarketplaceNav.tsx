@@ -148,44 +148,15 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
 
-      {/* Featured Content Strip */}
-      <div className="w-full bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 hover:shadow-sm transition-shadow">
-              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Flash Sale</p>
-                <p className="text-xs text-gray-500">Up to 50% off</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 hover:shadow-sm transition-shadow">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">New Arrivals</p>
-                <p className="text-xs text-gray-500">Fresh products daily</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:shadow-sm transition-shadow">
-              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Featured</p>
-                <p className="text-xs text-gray-500">Editor's choice</p>
-              </div>
+      {/* Fixed Picture Banner */}
+      <div className="w-full bg-gray-100 py-4">
+        <div className="container mx-auto px-4">
+          <div className="h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
+            <div className="text-white text-center">
+              <svg className="mx-auto h-12 w-12 mb-2 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+              </svg>
+              <p className="text-lg font-medium">Picture Banner</p>
             </div>
           </div>
         </div>
