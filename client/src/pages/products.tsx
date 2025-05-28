@@ -814,7 +814,7 @@ export default function Products() {
 
       {marketType === 'b2b' && (
         <div>
-          <h3 className="text-lg font-medium mb-2">Business Options</h3>
+          <h3 className="font-medium mb-2 text-[14px]">Business Options</h3>
           <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
