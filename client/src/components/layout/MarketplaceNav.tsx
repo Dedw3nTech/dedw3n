@@ -148,25 +148,22 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
       
-      {/* Promotional Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="md:w-1/2 mb-6 md:mb-0">
-              <h2 className="text-3xl font-bold mb-4">Special Offer!</h2>
-              <p className="text-lg mb-4">Get up to 50% off on selected items. Limited time offer!</p>
-              <Button 
-                className="bg-white text-blue-600 hover:bg-gray-100 font-medium px-6 py-2"
-                onClick={() => setLocation("/products")}
-              >
-                Shop Now
-              </Button>
-            </div>
-            <div className="md:w-1/2 flex justify-center">
-              <div className="w-64 h-40 bg-white/20 rounded-lg flex items-center justify-center">
-                <span className="text-white/80 text-sm">Promotional Image</span>
-              </div>
-            </div>
+      {/* Full Width Promotional Banner */}
+      <div className="relative w-full h-64 md:h-80 bg-gradient-to-r from-blue-600 to-purple-600 bg-cover bg-center bg-no-repeat overflow-hidden">
+        {/* Background overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/30"></div>
+        
+        {/* Content overlay */}
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="text-center text-white px-6">
+            <h2 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">Special Offer!</h2>
+            <p className="text-lg md:text-xl mb-6 drop-shadow-md">Get up to 50% off on selected items. Limited time offer!</p>
+            <Button 
+              className="bg-white text-blue-600 hover:bg-gray-100 font-medium px-8 py-3 text-lg rounded-full shadow-lg"
+              onClick={() => setLocation("/products")}
+            >
+              Shop Now
+            </Button>
           </div>
         </div>
       </div>
