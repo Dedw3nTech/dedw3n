@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLoginPrompt } from "@/hooks/use-login-prompt";
+import { LoginPromptModal } from "@/components/LoginPromptModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
 import { useLocation } from "wouter";
