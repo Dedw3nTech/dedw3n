@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 // Import promotional images
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import businessMeetingImage from "@assets/Dedw3n Business.png";
+import c2cMarketplaceImage from "@assets/Copy of Dedw3n Marketplace II.png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 
