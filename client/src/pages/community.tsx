@@ -199,10 +199,10 @@ export default function CommunityPage() {
 
             {/* Filter Tabs */}
             <div className="mb-8 flex items-center justify-center relative">
-              <div className="flex gap-12">
+              <div className="flex gap-12 text-[12px]">
                 <button
                   onClick={() => setSortBy('new')}
-                  className={`text-2xl text-black pb-3 transition-all duration-300 relative ${
+                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
                     sortBy === 'new' 
                       ? 'font-bold' 
                       : 'font-normal hover:text-blue-500'
@@ -215,7 +215,7 @@ export default function CommunityPage() {
                 </button>
                 <button
                   onClick={() => setSortBy('trending')}
-                  className={`text-2xl text-black pb-3 transition-all duration-300 relative ${
+                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
                     sortBy === 'trending' 
                       ? 'font-bold' 
                       : 'font-normal hover:text-blue-500'
@@ -298,7 +298,6 @@ export default function CommunityPage() {
           </div>
         </div>
       </div>
-
       {/* Fixed Bottom Advertisement - Full Width Image */}
       {isAdVisible && (
         <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
