@@ -841,7 +841,7 @@ export default function PostCard({
           <Button 
             variant="ghost" 
             size="sm"
-            className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+            className="flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-orange-500 hover:border-orange-600"
             onClick={() => {
               // Add make offer functionality here
               toast({ title: "Make an offer feature coming soon!" });
