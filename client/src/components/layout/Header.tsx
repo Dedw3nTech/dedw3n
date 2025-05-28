@@ -190,58 +190,6 @@ export default function Header() {
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
           </div>
 
-          {/* Market Type Selector - only show on marketplace pages */}
-          {(location === "/products" || 
-            location === "/product" || 
-            location.startsWith("/product/") ||
-            location === "/vendors" ||
-            location.startsWith("/vendor/") ||
-            location === "/cart" ||
-            location === "/checkout" ||
-            location === "/liked") && (
-            <div className="hidden md:flex items-center space-x-1">
-              <button
-                onClick={() => {
-                  setMarketType("c2c");
-                  setLocation("/products");
-                }}
-                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                  marketType === 'c2c' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                C2C
-              </button>
-              <button
-                onClick={() => {
-                  setMarketType("b2c");
-                  setLocation("/products");
-                }}
-                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                  marketType === 'b2c' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                B2C
-              </button>
-              <button
-                onClick={() => {
-                  setMarketType("b2b");
-                  setLocation("/products");
-                }}
-                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                  marketType === 'b2b' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                B2B
-              </button>
-            </div>
-          )}
-
           <div className="flex items-center space-x-4">
             <UserMenu />
           </div>
