@@ -425,7 +425,7 @@ export default function Products() {
               checked={showSale}
               onCheckedChange={(checked) => setShowSale(checked === true)}
             />
-            <Label htmlFor="show-sale" className="text-sm">On Sale</Label>
+            <Label htmlFor="show-sale" className="text-[12px] font-normal">On Sale</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -433,7 +433,7 @@ export default function Products() {
               checked={showNew}
               onCheckedChange={(checked) => setShowNew(checked === true)}
             />
-            <Label htmlFor="show-new" className="text-sm">New Arrivals</Label>
+            <Label htmlFor="show-new" className="text-[12px] font-normal">New Arrivals</Label>
           </div>
         </div>
       </div>
