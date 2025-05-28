@@ -148,6 +148,29 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
 
+      {/* Full-width Promotional Header */}
+      <div className="w-full bg-gradient-to-r from-slate-100 to-gray-100 border-b border-gray-200">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-6xl">
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div className="h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
+                  <div className="text-gray-500">
+                    <svg className="mx-auto h-16 w-16 mb-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-lg font-medium">Promotional Space</p>
+                    <p className="text-sm">Perfect place for your promotional images</p>
+                  </div>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Featured Promotion</h2>
+                <p className="text-gray-600">Add your promotional content here to showcase special offers and announcements</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
