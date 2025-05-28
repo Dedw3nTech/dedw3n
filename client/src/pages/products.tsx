@@ -682,6 +682,19 @@ export default function Products() {
       )}
       
       <div>
+        <h3 className="font-medium mb-2 text-[14px]">Search for Product</h3>
+        <div className="mb-4">
+          <Input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      <div>
         <h3 className="font-medium mb-2 text-[14px]">Categories</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
