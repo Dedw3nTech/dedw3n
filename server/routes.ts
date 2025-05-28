@@ -2116,6 +2116,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Products API endpoints
+  app.get('/api/products', async (req: Request, res: Response) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Failed to fetch products' });
+    }
+  });
+
+  app.get('/api/products/popular', async (req: Request, res: Response) => {
+    try {
+      const popularProducts = await storage.getPopularProducts();
+      res.json(popularProducts);
+    } catch (error) {
+      console.error('Error fetching popular products:', error);
+      res.status(500).json({ message: 'Failed to fetch popular products' });
+    }
+  });
+
+  // Subscription status endpoint
+  app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json({
+        hasSubscription: user.datingSubscription !== 'none',
+        subscriptionLevel: user.datingSubscription || 'none',
+        datingEnabled: user.datingEnabled || false
+      });
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+      res.status(500).json({ message: 'Failed to fetch subscription status' });
+    }
+  });
+
+  // Post deletion endpoint
+  app.delete('/api/posts/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: 'Invalid post ID' });
+      }
+
+      const success = await storage.deletePost(postId, req.user!.id);
+      if (success) {
+        res.json({ success: true, message: 'Post deleted successfully' });
+      } else {
+        res.status(404).json({ message: 'Post not found or unauthorized' });
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      res.status(500).json({ message: 'Failed to delete post' });
+    }
+  });
+
   // Development testing endpoints
   if (process.env.NODE_ENV === 'development') {
     // Test login endpoint for development
