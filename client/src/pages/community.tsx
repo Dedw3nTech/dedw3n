@@ -367,7 +367,6 @@ export default function CommunityPage() {
                 loading="lazy"
               />
             </div>
-            
             {/* Blue Bar with Advertisement Text - iPhone Optimized */}
             <div className="w-full bg-blue-600 py-3 px-4 min-h-[44px] flex items-center justify-center">
               <div className="w-full max-w-none flex items-center justify-center">
