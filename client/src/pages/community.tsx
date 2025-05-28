@@ -227,7 +227,52 @@ export default function CommunityPage() {
                   )}
                 </button>
               </div>
+            </div>
 
+            {/* Feed Sorting Options */}
+            <div className="mb-6 flex items-center justify-center">
+              <div className="flex gap-8 text-xs text-gray-600">
+                <button
+                  onClick={() => setSortBy('popular')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'popular' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >
+                  popular
+                </button>
+                <button
+                  onClick={() => setSortBy('following')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'following' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >
+                  following
+                </button>
+                <button
+                  onClick={() => setSortBy('watchlist')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'watchlist' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >
+                  watchlist
+                </button>
+                <button
+                  onClick={() => setSortBy('suggested')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'suggested' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >
+                  suggested
+                </button>
+              </div>
             </div>
 
             {/* Loading State */}
