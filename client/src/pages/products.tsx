@@ -371,6 +371,23 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6">
+      {marketType === 'b2c' && (
+        <div>
+          <h3 className="text-lg font-medium mb-2">Search for Products</h3>
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div>
         <h3 className="text-lg font-medium mb-2">Categories</h3>
         <div className="space-y-2">
