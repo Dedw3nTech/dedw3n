@@ -46,6 +46,7 @@ import {
   DollarSign,
   Users,
   Truck,
+  Star,
 } from "lucide-react";
 
 // Type for the post object
