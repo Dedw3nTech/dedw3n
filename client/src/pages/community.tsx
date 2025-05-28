@@ -357,8 +357,8 @@ export default function CommunityPage() {
               ×
             </Button>
             
-            {/* Advertisement Image */}
-            <div className="w-full h-20 overflow-hidden cursor-pointer">
+            {/* Advertisement Image - Responsive Height */}
+            <div className="w-full h-16 sm:h-20 md:h-24 lg:h-28 overflow-hidden cursor-pointer">
               <img 
                 src={campaignImage}
                 alt="Dedw3n - Buy, Sell, Socialize, Love"
@@ -367,11 +367,11 @@ export default function CommunityPage() {
               />
             </div>
             
-            {/* Blue Bar with Advertisement Text */}
-            <div className="w-full bg-blue-600 py-1 px-4">
+            {/* Blue Bar with Advertisement Text - Responsive Padding */}
+            <div className="w-full bg-blue-600 py-1.5 sm:py-2 px-2 sm:px-4">
               <div className="max-w-7xl mx-auto flex items-center justify-center">
-                <span className="text-white text-xs">
-                  Advertisement . <a href="/remove-ads" className="underline hover:text-blue-200">Remove ads</a>
+                <span className="text-white text-xs sm:text-sm font-medium">
+                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-200 transition-colors">Remove ads</a>
                 </span>
               </div>
             </div>
