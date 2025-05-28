@@ -277,6 +277,28 @@ export default function Products() {
               <ShoppingCart className="h-12 w-12" />
             </div>
           )}
+
+          {/* Hover overlay with Add to Shopping Bag button */}
+          {marketType !== 'c2c' && (
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addToCartMutation.mutate(product.id);
+                }}
+                disabled={addToCartMutation.isPending}
+                className="bg-white text-black hover:bg-gray-100 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
+                size="sm"
+              >
+                {addToCartMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                )}
+                Add to Shopping Bag
+              </Button>
+            </div>
+          )}
           
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isNew && (
