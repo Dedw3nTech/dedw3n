@@ -327,7 +327,7 @@ export default function Products() {
         className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
       >
         <div 
-          className="aspect-square bg-gray-100 relative overflow-hidden group"
+          className="aspect-[1/3] bg-gray-100 relative overflow-hidden group"
           onClick={() => setLocation(`/product/${product.id}`)}
         >
           {product.imageUrl ? (
