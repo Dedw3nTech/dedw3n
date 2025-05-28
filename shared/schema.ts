@@ -94,6 +94,17 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Liked products model
+export const likedProducts = pgTable("liked_products", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  // Ensure a user can only like a product once
+  uniqueUserProduct: unique().on(table.userId, table.productId),
+}));
+
 // Category model
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
@@ -1134,3 +1145,8 @@ export type InsertSuspiciousDevice = z.infer<typeof insertSuspiciousDeviceSchema
 
 export type TrustedDevice = typeof trustedDevices.$inferSelect;
 export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
+
+// Liked products schemas
+export const insertLikedProductSchema = createInsertSchema(likedProducts).omit({ id: true, createdAt: true });
+export type LikedProduct = typeof likedProducts.$inferSelect;
+export type InsertLikedProduct = z.infer<typeof insertLikedProductSchema>;

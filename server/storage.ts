@@ -15,6 +15,7 @@ import {
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
+  likedProducts,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -23,7 +24,8 @@ import {
   type Transaction, type InsertTransaction, type Order, type InsertOrder,
   type OrderItem, type InsertOrderItem, type Community, type InsertCommunity,
   type Connection, type InsertConnection, type Notification, type InsertNotification,
-  type NotificationSettings, type InsertNotificationSettings
+  type NotificationSettings, type InsertNotificationSettings,
+  type LikedProduct, type InsertLikedProduct
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
