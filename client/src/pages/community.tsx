@@ -180,16 +180,11 @@ export default function CommunityPage() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-black text-white rounded-lg">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Community</h1>
-                <p className="text-sm text-gray-600">
-                  Welcome to the Ded3wn Community feed
-                </p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Community</h1>
+              <p className="text-sm text-gray-600">
+                Welcome to the Ded3wn Community feed
+              </p>
             </div>
 
           </div>
