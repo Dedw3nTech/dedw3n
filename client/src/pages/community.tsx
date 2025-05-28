@@ -357,21 +357,22 @@ export default function CommunityPage() {
               ×
             </Button>
             
-            {/* Advertisement Image - Responsive Height */}
-            <div className="w-full h-16 sm:h-20 md:h-24 lg:h-28 overflow-hidden cursor-pointer">
+            {/* Advertisement Image - iPhone Optimized */}
+            <div className="w-full h-20 xs:h-20 sm:h-24 md:h-28 lg:h-32 overflow-hidden cursor-pointer">
               <img 
                 src={campaignImage}
                 alt="Dedw3n - Buy, Sell, Socialize, Love"
                 className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
                 onClick={() => window.open('https://www.dedw3n.com', '_blank')}
+                loading="lazy"
               />
             </div>
             
-            {/* Blue Bar with Advertisement Text - Responsive Padding */}
-            <div className="w-full bg-blue-600 py-1.5 sm:py-2 px-2 sm:px-4">
-              <div className="max-w-7xl mx-auto flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-medium">
-                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-200 transition-colors">Remove ads</a>
+            {/* Blue Bar with Advertisement Text - iPhone Enhanced */}
+            <div className="w-full bg-blue-600 py-2 px-3 min-h-[36px] flex items-center">
+              <div className="max-w-7xl mx-auto w-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium text-center leading-tight">
+                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-200 transition-colors font-medium">Remove ads</a>
                 </span>
               </div>
             </div>
