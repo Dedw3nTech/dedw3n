@@ -70,7 +70,19 @@ export default function Products() {
   });
 
   const likeMutation = useMutation({
-    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/like`, { method: 'POST' }),
+    mutationFn: (productId: number) => 
+      fetch(`/api/products/${productId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to like product');
+        }
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       toast({
@@ -88,7 +100,19 @@ export default function Products() {
   });
 
   const unlikeMutation = useMutation({
-    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/like`, { method: 'DELETE' }),
+    mutationFn: (productId: number) => 
+      fetch(`/api/products/${productId}/like`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to unlike product');
+        }
+        return res.json();
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       toast({
