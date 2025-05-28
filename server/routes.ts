@@ -1852,6 +1852,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Individual product endpoint
+  app.get('/api/products/:id', async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      console.error("Error getting product:", error);
+      res.status(500).json({ message: "Failed to get product" });
+    }
+  });
+
+  // Product reviews endpoint
+  app.get('/api/products/:id/reviews', async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
+      // Return empty reviews array for now
+      res.json([]);
+    } catch (error) {
+      console.error("Error getting product reviews:", error);
+      res.status(500).json({ message: "Failed to get product reviews" });
+    }
+  });
+
   // Search products endpoint
   app.get('/api/products/search', async (req: Request, res: Response) => {
     try {
@@ -1934,6 +1973,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting search suggestions:', error);
       res.status(500).json({ message: 'Failed to get search suggestions' });
+    }
+  });
+
+  // Vendor endpoints
+  app.get('/api/vendors', async (req: Request, res: Response) => {
+    try {
+      // Return vendors from storage
+      const vendors = await storage.getVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error getting vendors:", error);
+      res.status(500).json({ message: "Failed to get vendors" });
+    }
+  });
+
+  // Create vendor endpoint
+  app.post('/api/vendors', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const vendorData = {
+        userId,
+        ...req.body
+      };
+
+      const vendor = await storage.createVendor(vendorData);
+      res.status(201).json(vendor);
+    } catch (error) {
+      console.error("Error creating vendor:", error);
+      res.status(500).json({ message: "Failed to create vendor account" });
+    }
+  });
+
+  // Individual vendor endpoint
+  app.get('/api/vendors/:id', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: "Invalid vendor ID" });
+      }
+      
+      const vendor = await storage.getVendor(vendorId);
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      console.error("Error getting vendor:", error);
+      res.status(500).json({ message: "Failed to get vendor" });
     }
   });
 

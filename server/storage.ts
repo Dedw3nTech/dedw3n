@@ -743,6 +743,32 @@ export class DatabaseStorage implements IStorage {
     const [newVendor] = await db.insert(vendors).values(vendor).returning();
     return newVendor;
   }
+
+  async getVendor(id: number): Promise<Vendor | undefined> {
+    try {
+      const [vendor] = await db
+        .select({
+          vendor: vendors,
+          user: users
+        })
+        .from(vendors)
+        .innerJoin(users, eq(vendors.userId, users.id))
+        .where(eq(vendors.id, id));
+      
+      if (!vendor) {
+        return undefined;
+      }
+      
+      const { password, ...safeUserData } = vendor.user;
+      return {
+        ...vendor.vendor,
+        user: safeUserData
+      } as Vendor;
+    } catch (error) {
+      console.error('Error fetching vendor:', error);
+      return undefined;
+    }
+  }
   
   // Cart operations
   async countCartItems(userId: number): Promise<number> {
