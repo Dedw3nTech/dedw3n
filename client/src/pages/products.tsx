@@ -57,6 +57,7 @@ export default function Products() {
   const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
   const [productsPerPage, setProductsPerPage] = useState<number>(30);
+  const [columnsPerRow, setColumnsPerRow] = useState<number>(4);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -861,7 +862,7 @@ export default function Products() {
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {/* Products per page selector */}
               <div className="flex items-center gap-1 text-sm text-gray-600">
                 <span>Show</span>
@@ -884,6 +885,40 @@ export default function Products() {
                   className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 120 ? 'text-black font-medium' : ''}`}
                 >
                   120
+                </button>
+              </div>
+
+              {/* Grid layout selector */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setColumnsPerRow(3)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
+                  title="3 columns"
+                >
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                </button>
+                <button
+                  onClick={() => setColumnsPerRow(4)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
+                  title="4 columns"
+                >
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                </button>
+                <button
+                  onClick={() => setColumnsPerRow(5)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 5 ? 'opacity-100' : 'opacity-50'}`}
+                  title="5 columns"
+                >
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
                 </button>
               </div>
 
@@ -922,7 +957,12 @@ export default function Products() {
           </div>
 
           {/* Product grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className={`grid gap-6 ${
+            columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+            columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+            columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
+            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          }`}>
             {renderProductGrid()}
           </div>
         </div>
