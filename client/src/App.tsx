@@ -22,6 +22,7 @@ import c2cMarketplaceImage from "@assets/Copy of Dedw3n Marketplace II.png";
 import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
+import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
@@ -34,8 +35,8 @@ const marketPromoImages = {
     bottom: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
   },
   c2c: {
-    top: defaultPromoImage, // Placeholder - upload your C2C-specific top image here
-    bottom: bottomPromoImage, // Placeholder - upload your C2C-specific bottom image here
+    top: sellCampaignImage, // Currently: Copy of Pre Launch Campaign  SELL.png
+    bottom: c2cFooterImage, // Currently: Copy of Dedw3n Marketplace III.png (urban street scene)
   },
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
