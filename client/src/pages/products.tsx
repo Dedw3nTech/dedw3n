@@ -548,43 +548,6 @@ export default function Products() {
           </SheetContent>
         </Sheet>
       </div>
-      
-      {/* Market type banner */}
-      <div className={`p-4 mb-6 rounded-lg ${
-        marketType === 'c2c' 
-          ? 'bg-blue-50 border border-blue-200' 
-          : marketType === 'b2c' 
-            ? 'bg-green-50 border border-green-200' 
-            : 'bg-purple-50 border border-purple-200'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold mb-1">
-              {marketType === 'c2c' 
-                ? '👥 Friend-to-Friend Marketplace' 
-                : marketType === 'b2c' 
-                  ? '🏪 Store Marketplace' 
-                  : '🏢 Business Marketplace'}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {marketType === 'c2c' 
-                ? 'Browse products from other users in your community. Perfect for finding unique and second-hand items.' 
-                : marketType === 'b2c' 
-                  ? 'Shop products from verified stores and businesses. Expect quality products and reliable shipping.' 
-                  : 'Wholesale products for businesses. Bulk quantities, competitive pricing, and B2B services.'}
-            </p>
-          </div>
-          <div className={`text-sm font-medium px-3 py-1 rounded-full ${
-            marketType === 'c2c' 
-              ? 'bg-blue-100 text-blue-800' 
-              : marketType === 'b2c' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-purple-100 text-purple-800'
-          }`}>
-            {marketTypeLabel}
-          </div>
-        </div>
-      </div>
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar filters - desktop */}
