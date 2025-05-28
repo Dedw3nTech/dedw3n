@@ -1490,6 +1490,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (sort === 'region') {
         const posts = await storage.getPostsByRegion(userId, limit, offset);
         res.json(posts);
+      } else if (sort === 'country') {
+        const posts = await storage.getPostsByCountry(userId, limit, offset);
+        res.json(posts);
       } else {
         const posts = await storage.getUserFeed(userId, sort, limit, offset);
         res.json(posts);
