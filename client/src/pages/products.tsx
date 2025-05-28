@@ -552,7 +552,7 @@ export default function Products() {
               disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
               <Heart 
-                className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
               />
             </Button>
             <DropdownMenu>
