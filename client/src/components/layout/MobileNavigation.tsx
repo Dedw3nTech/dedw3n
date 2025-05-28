@@ -50,7 +50,7 @@ export default function MobileNavigation() {
               <span className="text-xs font-medium">Marketplaces</span>
             </button>
 
-            <Link href="/messages">
+            <Link href="/dating">
               <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
                 <div className="relative mb-1">
                   <i className="ri-heart-line text-lg"></i>
