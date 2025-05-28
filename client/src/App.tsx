@@ -297,7 +297,7 @@ function MarketplacePromoSection() {
       <img 
         src={promoImage} 
         alt="Dedwen Black Friday Header - Premium Marketplace" 
-        className="w-full h-[75px] object-cover"
+        className="w-full h-[50px] object-cover"
       />
     </div>
   );
