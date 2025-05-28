@@ -2198,46 +2198,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Simple WebSocket server setup - fixed to resolve connection issues
+  // Stable WebSocket server implementation
   const { WebSocketServer } = require('ws');
+  const connectedClients = new Set();
+  
   const wss = new WebSocketServer({ 
     server: httpServer, 
     path: '/ws',
-    clientTracking: true,
-    perMessageDeflate: false, // Disable compression to reduce complexity
-    handleProtocols: () => false // Don't handle any specific protocols
+    clientTracking: false, // Disable automatic client tracking
+    perMessageDeflate: false,
+    skipUTF8Validation: true,
+    maxPayload: 16 * 1024 * 1024 // 16MB max payload
   });
   
   console.log('WebSocket server initialized at /ws');
   
   wss.on('connection', (ws: any, req: any) => {
-    console.log('WebSocket connection established successfully');
+    console.log('WebSocket connection established');
     
-    // Send immediate authentication success to fix client connection issues
-    setTimeout(() => {
-      if (ws.readyState === 1) { // WebSocket.OPEN
-        ws.send(JSON.stringify({
-          type: 'authenticated',
-          connectionId: `ws_${Date.now()}`,
-          serverTime: Date.now(),
-          message: 'WebSocket connected and authenticated'
-        }));
-      }
-    }, 100);
+    // Add to our connection tracking
+    connectedClients.add(ws);
+    
+    // Send immediate connection confirmation
+    const connectionId = `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      ws.send(JSON.stringify({
+        type: 'connection_established',
+        connectionId,
+        serverTime: Date.now(),
+        status: 'connected'
+      }));
+    } catch (error) {
+      console.log('Error sending initial message:', error.message);
+    }
 
-    // Set up ping/pong for connection health
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === 1) { // WebSocket.OPEN
-        ws.ping();
-      } else {
-        clearInterval(pingInterval);
-      }
-    }, 30000); // Ping every 30 seconds
-
-    ws.on('pong', () => {
-      // Connection is alive
-    });
-
+    // Handle incoming messages
     ws.on('message', (message: any) => {
       try {
         const data = JSON.parse(message.toString());
@@ -2245,31 +2241,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (data.type === 'ping') {
           ws.send(JSON.stringify({
             type: 'pong',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            connectionId
           }));
         } else if (data.type === 'authenticate') {
-          // Handle authentication requests
           ws.send(JSON.stringify({
             type: 'authenticated',
-            connectionId: data.connectionId || `ws_${Date.now()}`,
+            connectionId: data.connectionId || connectionId,
             serverTime: Date.now(),
-            message: 'Authentication successful'
+            status: 'authenticated'
           }));
         }
       } catch (error) {
-        // Ignore parse errors
+        // Silently handle parse errors
       }
     });
 
+    // Handle connection close
     ws.on('close', (code: number, reason: string) => {
-      console.log(`WebSocket connection closed: code=${code}, reason=${reason}`);
-      clearInterval(pingInterval);
+      console.log(`WebSocket closed: ${code} - ${reason}`);
+      connectedClients.delete(ws);
     });
 
+    // Handle errors gracefully
     ws.on('error', (error: any) => {
-      console.log(`WebSocket error: ${error.message}`);
-      clearInterval(pingInterval);
+      console.log(`WebSocket error handled: ${error.code || error.message}`);
+      connectedClients.delete(ws);
     });
+
+    // Set connection timeout to prevent hanging connections
+    const connectionTimeout = setTimeout(() => {
+      if (ws.readyState === 1) {
+        ws.terminate();
+      }
+    }, 300000); // 5 minutes
+
+    ws.on('close', () => clearTimeout(connectionTimeout));
+    ws.on('error', () => clearTimeout(connectionTimeout));
+  });
+
+  // Handle server errors
+  wss.on('error', (error: any) => {
+    console.log('WebSocket server error:', error.message);
   });
 
   return httpServer;
