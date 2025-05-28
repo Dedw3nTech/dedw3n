@@ -23,7 +23,7 @@ export default function MobileNavigation() {
 
   const handleViewChange = (newView: "marketplace" | "social") => {
     setView(newView);
-    setLocation(newView === "marketplace" ? "/products" : "/community");
+    setLocation(newView === "marketplace" ? "/products" : "/");
   };
 
   return (
@@ -35,19 +35,19 @@ export default function MobileNavigation() {
         <div className="flex justify-center">
           <div className="flex w-full max-w-lg justify-between px-6">
             <button
-              className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location.startsWith("/marketplace") ? "text-blue-500" : "text-gray-500"}`}
-              onClick={() => handleViewChange("marketplace")}
+              className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location === "/community" ? "text-blue-500" : "text-gray-500"}`}
+              onClick={() => handleViewChange("social")}
             >
-              <i className={`ri-store-2-line text-lg mb-1 ${location === "/" || location.startsWith("/marketplace") ? "text-blue-500" : ""}`}></i>
-              <span className="text-xs font-medium">Marketplaces</span>
+              <i className={`ri-group-line text-lg mb-1 ${location === "/" || location === "/community" ? "text-blue-500" : ""}`}></i>
+              <span className="text-xs font-medium">Community</span>
             </button>
             
             <button
-              className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-blue-500" : "text-gray-500"}`}
-              onClick={() => handleViewChange("social")}
+              className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location.startsWith("/marketplace") ? "text-blue-500" : "text-gray-500"}`}
+              onClick={() => handleViewChange("marketplace")}
             >
-              <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-blue-500" : ""}`}></i>
-              <span className="text-xs font-medium">Community</span>
+              <i className={`ri-store-2-line text-lg mb-1 ${location.startsWith("/marketplace") ? "text-blue-500" : ""}`}></i>
+              <span className="text-xs font-medium">Marketplaces</span>
             </button>
 
             <Link href="/messages">

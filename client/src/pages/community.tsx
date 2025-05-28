@@ -249,9 +249,7 @@ export default function CommunityPage() {
                       ? 'text-black font-medium' 
                       : 'hover:text-gray-800'
                   }`}
-                >
-                  following
-                </button>
+                >Following</button>
                 <button
                   onClick={() => setSortBy('watchlist')}
                   className={`transition-colors duration-200 ${
@@ -259,9 +257,7 @@ export default function CommunityPage() {
                       ? 'text-black font-medium' 
                       : 'hover:text-gray-800'
                   }`}
-                >
-                  watchlist
-                </button>
+                >Watchlist</button>
                 <button
                   onClick={() => setSortBy('suggested')}
                   className={`transition-colors duration-200 ${
@@ -269,9 +265,7 @@ export default function CommunityPage() {
                       ? 'text-black font-medium' 
                       : 'hover:text-gray-800'
                   }`}
-                >
-                  suggested
-                </button>
+                >Suggested</button>
               </div>
             </div>
 
