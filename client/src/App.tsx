@@ -44,7 +44,8 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/add-product',
     '/upload-product',
     '/vendor-dashboard',
-    '/become-vendor'
+    '/become-vendor',
+    '/liked'
   ];
   
   // Check if current path should show the marketplace nav
@@ -99,6 +100,7 @@ import GovernmentPage from "@/pages/government";
 import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
+import LikedPage from "@/pages/liked";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";

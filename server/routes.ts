@@ -2333,6 +2333,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Liked products endpoints
+  app.post('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      // Check if already liked
+      const isLiked = await storage.checkProductLiked(userId, productId);
+      if (isLiked) {
+        return res.status(400).json({ message: 'Product already liked' });
+      }
+      
+      const likedProduct = await storage.likeProduct(userId, productId);
+      res.json({ success: true, liked: true });
+    } catch (error) {
+      console.error('Error liking product:', error);
+      res.status(500).json({ message: 'Failed to like product' });
+    }
+  });
+
+  app.delete('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      const success = await storage.unlikeProduct(userId, productId);
+      res.json({ success, liked: false });
+    } catch (error) {
+      console.error('Error unliking product:', error);
+      res.status(500).json({ message: 'Failed to unlike product' });
+    }
+  });
+
+  app.get('/api/products/:id/liked', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      const isLiked = await storage.checkProductLiked(userId, productId);
+      res.json({ liked: isLiked });
+    } catch (error) {
+      console.error('Error checking if product is liked:', error);
+      res.status(500).json({ message: 'Failed to check like status' });
+    }
+  });
+
+  app.get('/api/liked-products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const likedProducts = await storage.getUserLikedProducts(userId);
+      res.json(likedProducts);
+    } catch (error) {
+      console.error('Error getting liked products:', error);
+      res.status(500).json({ message: 'Failed to get liked products' });
+    }
+  });
+
   // Skip WebSocket for now to focus on core functionality
   console.log('WebSocket disabled - focusing on core API functionality');
 

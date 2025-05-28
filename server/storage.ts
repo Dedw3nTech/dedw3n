@@ -151,6 +151,12 @@ export interface IStorage {
   checkSavedPost(postId: number, userId: number): Promise<boolean>;
   getSavedPosts(userId: number, options: { limit: number, offset: number }): Promise<Post[]>;
   
+  // Liked products operations
+  likeProduct(userId: number, productId: number): Promise<LikedProduct>;
+  unlikeProduct(userId: number, productId: number): Promise<boolean>;
+  checkProductLiked(userId: number, productId: number): Promise<boolean>;
+  getUserLikedProducts(userId: number): Promise<Product[]>;
+  
   // Comment operations
   createComment(comment: InsertComment): Promise<Comment>;
   getPostComments(postId: number, limit?: number, offset?: number): Promise<Comment[]>;
@@ -3541,6 +3547,73 @@ export class DatabaseStorage implements IStorage {
 
   async getUserFollowerCount(userId: number): Promise<number> {
     return this.getFollowersCount(userId);
+  }
+
+  // Liked products operations
+  async likeProduct(userId: number, productId: number): Promise<LikedProduct> {
+    try {
+      const [likedProduct] = await db
+        .insert(likedProducts)
+        .values({ userId, productId })
+        .returning();
+      return likedProduct;
+    } catch (error) {
+      console.error('Error liking product:', error);
+      throw error;
+    }
+  }
+
+  async unlikeProduct(userId: number, productId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(likedProducts)
+        .where(and(eq(likedProducts.userId, userId), eq(likedProducts.productId, productId)));
+      return true;
+    } catch (error) {
+      console.error('Error unliking product:', error);
+      return false;
+    }
+  }
+
+  async checkProductLiked(userId: number, productId: number): Promise<boolean> {
+    try {
+      const [liked] = await db
+        .select()
+        .from(likedProducts)
+        .where(and(eq(likedProducts.userId, userId), eq(likedProducts.productId, productId)))
+        .limit(1);
+      return !!liked;
+    } catch (error) {
+      console.error('Error checking if product is liked:', error);
+      return false;
+    }
+  }
+
+  async getUserLikedProducts(userId: number): Promise<Product[]> {
+    try {
+      const likedProductsData = await db
+        .select({
+          product: products,
+          vendor: vendors,
+        })
+        .from(likedProducts)
+        .innerJoin(products, eq(likedProducts.productId, products.id))
+        .innerJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(eq(likedProducts.userId, userId))
+        .orderBy(desc(likedProducts.createdAt));
+
+      return likedProductsData.map(({ product, vendor }) => ({
+        ...product,
+        vendor: {
+          id: vendor.id,
+          storeName: vendor.storeName,
+          rating: vendor.rating
+        }
+      })) as Product[];
+    } catch (error) {
+      console.error('Error getting user liked products:', error);
+      return [];
+    }
   }
 
   async getUserFollowingCount(userId: number): Promise<number> {
