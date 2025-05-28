@@ -354,7 +354,6 @@ export default function Products() {
               variant={marketType === 'c2c' ? 'outline' : 'default'} 
               size="sm" 
               onClick={() => setLocation(`/product/${product.id}`)}
-              className={marketType === 'b2c' ? 'bg-green-600 hover:bg-green-700' : marketType === 'b2b' ? 'bg-purple-600 hover:bg-purple-700' : ''}
             >
               {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Shop' : 'Bulk Buy'}
             </Button>
