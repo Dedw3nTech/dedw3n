@@ -1959,6 +1959,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messaging API endpoints
+  // Products API endpoints
+  app.get('/api/products', async (req: Request, res: Response) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Failed to fetch products' });
+    }
+  });
+
+  app.get('/api/products/popular', async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 4;
+      const popularProducts = await storage.getTopSellingProducts(limit);
+      res.json(popularProducts);
+    } catch (error) {
+      console.error('Error fetching popular products:', error);
+      res.status(500).json({ message: 'Failed to fetch popular products' });
+    }
+  });
+
+  // Categories API endpoint
+  app.get('/api/categories', async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      res.status(500).json({ message: 'Failed to fetch categories' });
+    }
+  });
+
+  // Subscription status endpoint
+  app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const subscription = await storage.getUserSubscription(req.user.id);
+      
+      res.json({
+        status: subscription?.status || 'none',
+        type: subscription?.subscriptionType || 'none',
+        validUntil: subscription?.validUntil || null,
+        features: subscription?.features || []
+      });
+    } catch (error) {
+      console.error('Error getting subscription status:', error);
+      res.status(500).json({ message: 'Failed to get subscription status' });
+    }
+  });
+
   app.get('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
@@ -2198,91 +2252,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Stable WebSocket server implementation
-  const { WebSocketServer } = require('ws');
-  const connectedClients = new Set();
+  // Minimal WebSocket server for stable connections
+  const { WebSocketServer, WebSocket } = require('ws');
   
   const wss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws',
-    clientTracking: false, // Disable automatic client tracking
-    perMessageDeflate: false,
-    skipUTF8Validation: true,
-    maxPayload: 16 * 1024 * 1024 // 16MB max payload
+    path: '/ws'
   });
   
-  console.log('WebSocket server initialized at /ws');
+  console.log('WebSocket server started on /ws');
   
-  wss.on('connection', (ws: any, req: any) => {
-    console.log('WebSocket connection established');
+  wss.on('connection', (ws: any) => {
+    console.log('New WebSocket connection');
     
-    // Add to our connection tracking
-    connectedClients.add(ws);
-    
-    // Send immediate connection confirmation
-    const connectionId = `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    try {
+    // Send immediate welcome message
+    if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
-        type: 'connection_established',
-        connectionId,
-        serverTime: Date.now(),
-        status: 'connected'
+        type: 'welcome',
+        status: 'connected',
+        timestamp: Date.now()
       }));
-    } catch (error) {
-      console.log('Error sending initial message:', error.message);
     }
 
-    // Handle incoming messages
-    ws.on('message', (message: any) => {
+    ws.on('message', (data: any) => {
       try {
-        const data = JSON.parse(message.toString());
+        const message = JSON.parse(data.toString());
         
-        if (data.type === 'ping') {
+        if (message.type === 'ping') {
           ws.send(JSON.stringify({
             type: 'pong',
-            timestamp: Date.now(),
-            connectionId
-          }));
-        } else if (data.type === 'authenticate') {
-          ws.send(JSON.stringify({
-            type: 'authenticated',
-            connectionId: data.connectionId || connectionId,
-            serverTime: Date.now(),
-            status: 'authenticated'
+            timestamp: Date.now()
           }));
         }
-      } catch (error) {
-        // Silently handle parse errors
+      } catch (e) {
+        // Ignore invalid messages
       }
     });
 
-    // Handle connection close
-    ws.on('close', (code: number, reason: string) => {
-      console.log(`WebSocket closed: ${code} - ${reason}`);
-      connectedClients.delete(ws);
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
     });
 
-    // Handle errors gracefully
     ws.on('error', (error: any) => {
-      console.log(`WebSocket error handled: ${error.code || error.message}`);
-      connectedClients.delete(ws);
+      console.log('WebSocket error:', error.message);
     });
-
-    // Set connection timeout to prevent hanging connections
-    const connectionTimeout = setTimeout(() => {
-      if (ws.readyState === 1) {
-        ws.terminate();
-      }
-    }, 300000); // 5 minutes
-
-    ws.on('close', () => clearTimeout(connectionTimeout));
-    ws.on('error', () => clearTimeout(connectionTimeout));
-  });
-
-  // Handle server errors
-  wss.on('error', (error: any) => {
-    console.log('WebSocket server error:', error.message);
   });
 
   return httpServer;
