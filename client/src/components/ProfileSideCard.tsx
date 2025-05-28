@@ -112,16 +112,6 @@ export function ProfileSideCard() {
               </Link>
             </Button>
             
-            <Button 
-              asChild 
-              variant="ghost" 
-              className="w-full justify-start h-10"
-            >
-              <Link href="/cart">
-                <ShoppingCart className="h-5 w-5 mr-3" />
-                Add to Cart
-              </Link>
-            </Button>
             
             <Button 
               asChild 
