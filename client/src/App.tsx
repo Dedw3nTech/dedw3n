@@ -19,13 +19,14 @@ import { useEffect, useState } from "react";
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import businessMeetingImage from "@assets/Dedw3n Business.png";
 import c2cMarketplaceImage from "@assets/Copy of Dedw3n Marketplace II.png";
+import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
   b2c: {
-    top: defaultPromoImage, // Currently: Dedw3n Business II.png (businesswoman at airport)
+    top: luxuryB2CImage, // Currently: Dedw3n Marketplace (1).png (luxury couple with leopard)
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   b2b: {
