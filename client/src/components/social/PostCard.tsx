@@ -705,7 +705,20 @@ export default function PostCard({
             </div>
           </div>
           
-          {currentUser && currentUser.id === post.userId && (
+          <div className="flex items-center gap-2">
+            {/* Mobile Share Button */}
+            <div className="block md:hidden">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => requireAuth("share", () => setIsShareModalOpen(true))}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {currentUser && currentUser.id === post.userId && (
             <div className="relative group">
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="h-5 w-5" />
