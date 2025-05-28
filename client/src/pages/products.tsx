@@ -399,7 +399,7 @@ export default function Products() {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button 
-              variant={marketType === 'c2c' ? 'outline' : 'default'} 
+              variant="ghost"
               size="sm" 
               onClick={(e) => {
                 e.stopPropagation();
@@ -410,13 +410,13 @@ export default function Products() {
                 }
               }}
               disabled={addToCartMutation.isPending}
+              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal"
             >
               {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                marketType !== 'c2c' && <ShoppingCart className="h-4 w-4 mr-2" />
+                marketType === 'c2c' ? 'View' : 'Buy'
               )}
-              {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Add to Cart' : 'Add to Cart'}
             </Button>
           </div>
         </CardFooter>
