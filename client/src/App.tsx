@@ -317,12 +317,20 @@ function MarketplacePromoSection() {
   // Get the appropriate promotional image for this market type
   const currentPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.top || marketPromoImages.b2c.top;
   
+  // Debug log
+  console.log('MarketplaceTopPromoSection - Market Type:', marketType);
+  console.log('MarketplaceTopPromoSection - Current Image:', currentPromoImage);
+  console.log('MarketplaceTopPromoSection - All Images:', marketPromoImages);
+  
   return (
     <div className="w-full">
       <img 
-        src={currentPromoImage} 
+        src={`${currentPromoImage}?v=${Date.now()}`}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
         className="w-full h-[400px] object-cover"
+        key={`promo-${marketType}-${Date.now()}`}
+        onError={(e) => console.error('Image failed to load:', e.currentTarget.src)}
+        onLoad={() => console.log('Image loaded successfully:', currentPromoImage)}
       />
     </div>
   );
@@ -346,10 +354,11 @@ function MarketplaceBottomPromoSection() {
   return (
     <div className="w-full">
       <img 
-        src={currentBottomPromoImage} 
+        src={`${currentBottomPromoImage}?v=${Date.now()}`}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
         className="w-full object-cover"
         style={{ height: '350px' }}
+        key={`promo-bottom-${marketType}-${Date.now()}`}
       />
     </div>
   );
