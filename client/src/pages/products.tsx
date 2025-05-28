@@ -812,41 +812,8 @@ export default function Products() {
                 {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
               </div>
               
-              {/* Sort by dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    Sort by
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" side="bottom" sideOffset={4} avoidCollisions={false}>
-                  <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setSortBy('trending')}>
-                    Trending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
-                    Price: Low to High
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
-                    Price: High to Low
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                    Newest Product
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('region')}>
-                    Your Region
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('country')}>
-                    Your Country
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {selectedCategories.map(category => (
+              <div className="flex flex-wrap gap-2">
+                {selectedCategories.map(category => (
                 <Badge variant="outline" key={category} className="flex items-center gap-1">
                   {category}
                   <button
@@ -882,12 +849,45 @@ export default function Products() {
                 </Badge>
               )}
               
-              {(selectedCategories.length > 0 || showSale || showNew) && (
-                <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
-                  Clear All
-                </Button>
-              )}
+                {(selectedCategories.length > 0 || showSale || showNew) && (
+                  <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
+                    Clear All
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {/* Sort by dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
+                  Sort by
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
+                <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSortBy('trending')}>
+                  Trending
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
+                  Price: Low to High
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
+                  Price: High to Low
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                  Newest Product
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('region')}>
+                  Your Region
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('country')}>
+                  Your Country
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Product grid */}
