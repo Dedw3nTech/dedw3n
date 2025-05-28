@@ -1482,8 +1482,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const posts = await storage.getUserFeed(userId);
-      res.json(posts);
+      const sort = req.query.sort as string;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      // Handle region-based filtering
+      if (sort === 'region') {
+        const posts = await storage.getPostsByRegion(userId, limit, offset);
+        res.json(posts);
+      } else {
+        const posts = await storage.getUserFeed(userId, sort, limit, offset);
+        res.json(posts);
+      }
     } catch (error) {
       console.error("Error getting feed:", error);
       res.status(500).json({ message: "Failed to get feed" });

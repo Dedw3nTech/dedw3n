@@ -54,7 +54,7 @@ export default function CommunityPage() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAdVisible, setIsAdVisible] = useState(true);
-  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'watchlist' | 'suggested'>('new');
+  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region'>('new');
 
   // Use the existing personal feed to show all posts for community feed
   const {
@@ -250,6 +250,14 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >Following</button>
+                <button
+                  onClick={() => setSortBy('region')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'region' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >My Region</button>
 
 
               </div>
