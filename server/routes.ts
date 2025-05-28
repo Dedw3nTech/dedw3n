@@ -2333,7 +2333,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Liked products endpoints
+  // Favorites/Liked products endpoints
+  app.post('/api/favorites/:productId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const userId = req.user!.id;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      // Check if already liked
+      const isLiked = await storage.checkProductLiked(userId, productId);
+      if (isLiked) {
+        return res.status(400).json({ message: 'Product already in favorites' });
+      }
+      
+      const likedProduct = await storage.likeProduct(userId, productId);
+      res.json({ success: true, liked: true, message: 'Product added to favorites' });
+    } catch (error) {
+      console.error('Error adding product to favorites:', error);
+      res.status(500).json({ message: 'Failed to add product to favorites' });
+    }
+  });
+
+  app.delete('/api/favorites/:productId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId);
+      const userId = req.user!.id;
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      const success = await storage.unlikeProduct(userId, productId);
+      res.json({ success, liked: false, message: 'Product removed from favorites' });
+    } catch (error) {
+      console.error('Error removing product from favorites:', error);
+      res.status(500).json({ message: 'Failed to remove product from favorites' });
+    }
+  });
+
+  // Keep the old endpoints for backward compatibility
   app.post('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.id);

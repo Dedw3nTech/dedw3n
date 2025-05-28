@@ -6,6 +6,7 @@ import { Heart, ShoppingBag } from "lucide-react";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import { Header } from "@/components/layout/Header";
 import { useMarketType } from "@/hooks/use-market-type";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Product {
   id: number;
