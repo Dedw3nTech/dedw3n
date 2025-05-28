@@ -137,7 +137,7 @@ export function ProfileSideCard() {
             
             <Button 
               variant="ghost" 
-              className="w-full justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="w-full justify-start h-10 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               onClick={() => {
                 // Handle logout
                 fetch('/api/logout', { method: 'POST' })
