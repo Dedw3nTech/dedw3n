@@ -148,22 +148,31 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
       
-      {/* Promotional Banner */}
-      <div className="relative w-full h-64 md:h-80 bg-gradient-to-r from-blue-600 to-purple-600 bg-cover bg-center bg-no-repeat overflow-hidden">
-        {/* Background overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/30"></div>
-        
-        {/* Content overlay */}
-        <div className="relative z-10 flex items-center justify-center h-full">
-          <div className="text-center text-white px-6">
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">Special Offer!</h2>
-            <p className="text-lg md:text-xl mb-6 drop-shadow-md">Get up to 50% off on selected items. Limited time offer!</p>
-            <Button 
-              className="bg-white text-blue-600 hover:bg-gray-100 font-medium px-8 py-3 text-lg rounded-full shadow-lg"
-              onClick={() => setLocation("/products")}
-            >
-              Shop Now
-            </Button>
+      {/* Promotional Card Holder */}
+      <div className="w-full px-4 py-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Background overlay for better text readability */}
+            <div className="relative bg-black/20">
+              {/* Content */}
+              <div className="flex flex-col md:flex-row items-center justify-between p-8 md:p-12">
+                <div className="md:w-2/3 text-center md:text-left text-white mb-6 md:mb-0">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg">Special Offer!</h2>
+                  <p className="text-lg md:text-xl mb-6 drop-shadow-md opacity-90">Get up to 50% off on selected items. Limited time offer!</p>
+                  <Button 
+                    className="bg-white text-blue-600 hover:bg-gray-100 font-medium px-8 py-3 text-lg rounded-full shadow-lg transition-all duration-300 hover:scale-105"
+                    onClick={() => setLocation("/products")}
+                  >
+                    Shop Now
+                  </Button>
+                </div>
+                <div className="md:w-1/3 flex justify-center">
+                  <div className="w-48 h-32 md:w-64 md:h-40 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+                    <span className="text-white/80 text-sm font-medium">Promotional Image</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
