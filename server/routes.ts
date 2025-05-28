@@ -2252,6 +2252,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  // Cart API routes
+  app.get('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const cartItems = await storage.listCartItems(userId);
+      res.json(cartItems);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+      res.status(500).json({ message: 'Failed to fetch cart items' });
+    }
+  });
+
+  app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const cartData = insertCartSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      const cartItem = await storage.addToCart(cartData);
+      res.json(cartItem);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      res.status(500).json({ message: 'Failed to add item to cart' });
+    }
+  });
+
+  app.get('/api/cart/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.countCartItems(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error counting cart items:', error);
+      res.status(500).json({ message: 'Failed to count cart items' });
+    }
+  });
+
+  app.put('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const cartItemId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      if (isNaN(cartItemId)) {
+        return res.status(400).json({ message: 'Invalid cart item ID' });
+      }
+      
+      const updatedItem = await storage.updateCartItem(cartItemId, updates);
+      if (!updatedItem) {
+        return res.status(404).json({ message: 'Cart item not found' });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      res.status(500).json({ message: 'Failed to update cart item' });
+    }
+  });
+
+  app.delete('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const cartItemId = parseInt(req.params.id);
+      
+      if (isNaN(cartItemId)) {
+        return res.status(400).json({ message: 'Invalid cart item ID' });
+      }
+      
+      const success = await storage.removeCartItem(cartItemId);
+      if (!success) {
+        return res.status(404).json({ message: 'Cart item not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error removing cart item:', error);
+      res.status(500).json({ message: 'Failed to remove cart item' });
+    }
+  });
+
   // Skip WebSocket for now to focus on core functionality
   console.log('WebSocket disabled - focusing on core API functionality');
 

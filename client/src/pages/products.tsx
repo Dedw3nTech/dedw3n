@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, Link as WouterLink } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
@@ -47,6 +47,38 @@ export default function Products() {
   const { currency } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Add to cart mutation
+  const addToCartMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      return await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          quantity: 1
+        })
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cart/count'] });
+      toast({
+        title: "Added to Cart",
+        description: "Product has been added to your shopping bag!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add product to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Force rerender when currency changes
   useEffect(() => {
@@ -347,9 +379,22 @@ export default function Products() {
             <Button 
               variant={marketType === 'c2c' ? 'outline' : 'default'} 
               size="sm" 
-              onClick={() => setLocation(`/product/${product.id}`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (marketType === 'c2c') {
+                  setLocation(`/product/${product.id}`);
+                } else {
+                  addToCartMutation.mutate(product.id);
+                }
+              }}
+              disabled={addToCartMutation.isPending}
             >
-              {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Shop' : 'Bulk Buy'}
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                marketType !== 'c2c' && <ShoppingCart className="h-4 w-4 mr-2" />
+              )}
+              {marketType === 'c2c' ? 'View' : marketType === 'b2c' ? 'Add to Cart' : 'Add to Cart'}
             </Button>
           </div>
         </CardFooter>
