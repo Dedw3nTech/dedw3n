@@ -539,7 +539,7 @@ export default function Products() {
                 }
               }}
               disabled={addToCartMutation.isPending}
-              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal ml-2"
+              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto ml-2 font-bold"
             >
               {addToCartMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
