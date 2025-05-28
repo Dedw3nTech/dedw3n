@@ -18,20 +18,19 @@ export function MarketplaceNav() {
               setLocation("/products");
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-5 w-5 text-blue-600" />
-              <span className={`text-lg font-medium transition-colors duration-300 ${
+            <div className="mb-2">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
                 marketType === 'c2c' 
-                  ? 'text-blue-600' 
-                  : 'text-gray-700 group-hover:text-blue-600'
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
               }`}>
                 Buy from a friend (C2C)
               </span>
             </div>
             <div className={`h-0.5 transition-all duration-300 ${
               marketType === 'c2c' 
-                ? 'bg-blue-600 w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-blue-600'
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
             }`} />
           </div>
           
@@ -42,20 +41,19 @@ export function MarketplaceNav() {
               setLocation("/products");
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Store className="h-5 w-5 text-green-600" />
-              <span className={`text-lg font-medium transition-colors duration-300 ${
+            <div className="mb-2">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
                 marketType === 'b2c' 
-                  ? 'text-green-600' 
-                  : 'text-gray-700 group-hover:text-green-600'
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
               }`}>
                 Buy from a store (B2C)
               </span>
             </div>
             <div className={`h-0.5 transition-all duration-300 ${
               marketType === 'b2c' 
-                ? 'bg-green-600 w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-green-600'
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
             }`} />
           </div>
           
@@ -66,20 +64,19 @@ export function MarketplaceNav() {
               setLocation("/products");
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Building className="h-5 w-5 text-purple-600" />
-              <span className={`text-lg font-medium transition-colors duration-300 ${
+            <div className="mb-2">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
                 marketType === 'b2b' 
-                  ? 'text-purple-600' 
-                  : 'text-gray-700 group-hover:text-purple-600'
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
               }`}>
                 Business (B2B)
               </span>
             </div>
             <div className={`h-0.5 transition-all duration-300 ${
               marketType === 'b2b' 
-                ? 'bg-purple-600 w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-purple-600'
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
             }`} />
           </div>
           
@@ -90,20 +87,19 @@ export function MarketplaceNav() {
               setLocation("/government");
             }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <Landmark className="h-5 w-5 text-amber-600" />
-              <span className={`text-lg font-medium transition-colors duration-300 ${
+            <div className="mb-2">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
                 marketType === 'gov' 
-                  ? 'text-amber-600' 
-                  : 'text-gray-700 group-hover:text-amber-600'
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
               }`}>
                 Governmental Services
               </span>
             </div>
             <div className={`h-0.5 transition-all duration-300 ${
               marketType === 'gov' 
-                ? 'bg-amber-600 w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-amber-600'
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
             }`} />
           </div>
         </div>
