@@ -47,7 +47,7 @@ export default function MobileNavigation() {
               onClick={() => handleViewChange("marketplace")}
             >
               <i className={`ri-store-2-line text-lg mb-1 ${location.startsWith("/marketplace") ? "text-blue-500" : ""}`}></i>
-              <span className="text-xs font-medium">Marketplaces</span>
+              <span className="text-xs font-medium">Marketplace</span>
             </button>
 
             <Link href="/dating">
@@ -82,7 +82,6 @@ export default function MobileNavigation() {
           </div>
         </div>
       </div>
-
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
