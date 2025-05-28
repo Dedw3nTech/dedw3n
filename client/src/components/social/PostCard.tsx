@@ -877,16 +877,7 @@ export default function PostCard({
             <span>{post.shares}</span>
           </Button>
         </div>
-        
-        {!isDetailed && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setLocation(`/posts/${post.id}`)}
-          >
-            View Details
-          </Button>
-        )}
+
       </CardFooter>
       
       {/* Comment input section */}

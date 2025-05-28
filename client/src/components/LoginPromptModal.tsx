@@ -129,9 +129,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             {getActionIcon()}
           </div>
-          <DialogTitle className="text-2xl font-bold text-gray-900">
-            Join Our Community
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-gray-900">Join Dedw3n</DialogTitle>
           <DialogDescription className="text-gray-600">
             Sign in to unlock all features including posting, messaging, and personalized content.
           </DialogDescription>
