@@ -366,16 +366,7 @@ export default function CommunityPage() {
               ×
             </Button>
             
-            {/* Advertisement Image - iPhone Optimized */}
-            <div className="w-full h-20 xs:h-20 sm:h-24 md:h-28 lg:h-32 overflow-hidden cursor-pointer">
-              <img 
-                src={campaignImage}
-                alt="Dedw3n - Buy, Sell, Socialize, Love"
-                className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
-                onClick={() => window.open('https://www.dedw3n.com', '_blank')}
-                loading="lazy"
-              />
-            </div>
+
             {/* Blue Bar with Advertisement Text - iPhone Optimized */}
             <div className="w-full bg-blue-600 py-3 px-4 min-h-[44px] flex items-center justify-center">
               <div className="w-full max-w-none flex items-center justify-center">
