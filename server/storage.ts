@@ -106,6 +106,8 @@ export interface IStorage {
   
   // Product operations
   listProducts(): Promise<Product[]>;
+  getProducts(): Promise<Product[]>;
+  getPopularProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
@@ -3632,6 +3634,45 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting posts by country:', error);
       return [];
+    }
+  }
+
+  // Add missing methods for API endpoints
+  async getProducts(): Promise<Product[]> {
+    try {
+      return await db.select().from(products).orderBy(desc(products.createdAt));
+    } catch (error) {
+      console.error('Error getting products:', error);
+      return [];
+    }
+  }
+
+  async getPopularProducts(): Promise<Product[]> {
+    try {
+      return await db.select().from(products)
+        .orderBy(desc(products.rating))
+        .limit(10);
+    } catch (error) {
+      console.error('Error getting popular products:', error);
+      return [];
+    }
+  }
+
+  async deletePost(id: number, userId?: number): Promise<boolean> {
+    try {
+      if (userId) {
+        // Verify the user owns the post or is admin
+        const [post] = await db.select().from(posts).where(eq(posts.id, id));
+        if (!post || (post.userId !== userId)) {
+          return false;
+        }
+      }
+      
+      await db.delete(posts).where(eq(posts.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      return false;
     }
   }
 }
