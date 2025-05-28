@@ -13,6 +13,20 @@ interface MarketplaceNavProps {
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
   const [, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
+  const [showBanner, setShowBanner] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setShowBanner(false);
+      } else {
+        setShowBanner(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
@@ -149,7 +163,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
       </div>
 
       {/* Fixed Picture Banner */}
-      <div className="w-full bg-gray-100 py-4">
+      <div className={`w-full bg-gray-100 py-4 transition-all duration-300 ease-in-out ${showBanner ? 'opacity-100 max-h-48' : 'opacity-0 max-h-0 py-0 overflow-hidden'}`}>
         <div className="container mx-auto px-4">
           <div className="h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
             <div className="text-white text-center">
