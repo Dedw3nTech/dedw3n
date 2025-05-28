@@ -89,19 +89,11 @@ export function LatestProductsCard() {
                     )}
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-1 mt-1">
-                    {product.category && (
-                      <Badge variant="secondary" className="text-xs">
-                        {product.category}
-                      </Badge>
-                    )}
-                    
-                    {product.vendor && (
-                      <p className="text-xs text-gray-500 break-words">
-                        by {product.vendor.name}
-                      </p>
-                    )}
-                  </div>
+                  {product.vendor && (
+                    <p className="text-xs text-gray-500 break-words mt-1">
+                      by {product.vendor.name}
+                    </p>
+                  )}
                 </div>
                 
                 <Button
