@@ -1028,7 +1028,7 @@ export default function PostCard({
           <Button 
             variant="ghost" 
             size="sm"
-            className={`flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white ${
+            className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
               !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
@@ -1045,7 +1045,7 @@ export default function PostCard({
           <Button 
             variant="ghost" 
             size="sm"
-            className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-orange-500 hover:border-orange-600 ${
+            className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
               !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             onClick={handleMakeOffer}
