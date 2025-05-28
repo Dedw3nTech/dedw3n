@@ -148,8 +148,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
       
-      {/* Full Width Promotional Banner */}
-      <div className="relative w-full h-64 md:h-80 bg-gradient-to-r from-blue-600 to-purple-600 bg-cover bg-center bg-no-repeat overflow-hidden">
+      {/* Fixed Promotional Banner */}
+      <div className="fixed top-0 left-0 right-0 w-full h-64 md:h-80 bg-gradient-to-r from-blue-600 to-purple-600 bg-cover bg-center bg-no-repeat overflow-hidden z-50">
         {/* Background overlay for better text readability */}
         <div className="absolute inset-0 bg-black/30"></div>
         
