@@ -63,6 +63,62 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [repostText, setRepostText] = useState('');
 
+  // Liked products functionality
+  const { data: likedProducts = [] } = useQuery({
+    queryKey: ['/api/products/liked'],
+    queryFn: () => apiRequest('/api/products/liked'),
+  });
+
+  const likeMutation = useMutation({
+    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/like`, { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products/liked'] });
+      toast({
+        title: "Product Liked",
+        description: "Product added to your liked items!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to like product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/unlike`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products/liked'] });
+      toast({
+        title: "Product Unliked",
+        description: "Product removed from your liked items.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error", 
+        description: "Failed to unlike product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Check if a product is liked
+  const isProductLiked = (productId: number) => {
+    return likedProducts.some((likedProduct: any) => likedProduct.id === productId);
+  };
+
+  // Handle like/unlike toggle
+  const handleLikeToggle = (productId: number) => {
+    if (isProductLiked(productId)) {
+      unlikeMutation.mutate(productId);
+    } else {
+      likeMutation.mutate(productId);
+    }
+  };
+
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (productId: number) => {
@@ -468,12 +524,12 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
-              onClick={() => {
-                // TODO: Implement like/unlike functionality
-                console.log('Like clicked for product:', product.id);
-              }}
+              onClick={() => handleLikeToggle(product.id)}
+              disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
-              <Heart className="h-4 w-4" />
+              <Heart 
+                className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+              />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
