@@ -108,6 +108,7 @@ export default function PostCard({
 }: PostCardProps) {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const { isOpen, action, showLoginPrompt, closePrompt, requireAuth } = useLoginPrompt();
   const [, setLocation] = useLocation();
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -840,7 +841,7 @@ export default function PostCard({
             variant="ghost" 
             size="sm"
             className={`flex items-center gap-1 ${post.isLiked ? "text-blue-500" : ""}`}
-            onClick={handleLike}
+            onClick={() => requireAuth("like", handleLike)}
             disabled={likeMutation.isPending}
           >
             {likeMutation.isPending ? (
@@ -855,7 +856,7 @@ export default function PostCard({
             variant="ghost" 
             size="sm"
             className="flex items-center gap-1"
-            onClick={handleComment}
+            onClick={() => requireAuth("comment", handleComment)}
           >
             <MessageSquare className="h-4 w-4" />
             <span>{post.comments}</span>
@@ -865,7 +866,7 @@ export default function PostCard({
             variant="ghost" 
             size="sm"
             className="flex items-center gap-1"
-            onClick={handleShare}
+            onClick={() => requireAuth("share", handleShare)}
             disabled={shareMutation.isPending}
           >
             {shareMutation.isPending ? (
@@ -992,6 +993,13 @@ export default function PostCard({
           )}
         </div>
       )}
+      
+      {/* Login Prompt Modal */}
+      <LoginPromptModal 
+        isOpen={isOpen} 
+        onClose={closePrompt} 
+        action={action} 
+      />
     </Card>
   );
 }

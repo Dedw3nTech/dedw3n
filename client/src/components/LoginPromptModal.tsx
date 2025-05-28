@@ -205,8 +205,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+          <Button type="submit" className="w-full" disabled={loginMutation.isPending || registerMutation.isPending}>
+            {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
         </form>
 
