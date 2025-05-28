@@ -173,6 +173,7 @@ function Router() {
       <ProtectedRoute path="/cart" component={Cart} />
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
+      <ProtectedRoute path="/liked" component={LikedPage} />
       <ProtectedRoute path="/add-product" component={AddProduct} />
       <ProtectedRoute path="/upload-product" component={UploadProduct} />
       <ProtectedRoute path="/members" component={MembersPage} />
