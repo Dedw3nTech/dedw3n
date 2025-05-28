@@ -241,6 +241,39 @@ function App() {
                         <div className="flex flex-col min-h-screen">
                           <Header />
                           <MarketplaceNavWrapper />
+                          
+                          {/* Full-width Upload Picture Section */}
+                          <div className="w-full bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b border-gray-200">
+                            <div className="container mx-auto px-4 py-12">
+                              <div className="max-w-4xl mx-auto">
+                                <div className="border-2 border-dashed border-blue-300 rounded-xl p-12 text-center hover:border-blue-400 transition-all duration-300 cursor-pointer bg-white/60 backdrop-blur-sm">
+                                  <div className="mb-6">
+                                    <svg className="mx-auto h-16 w-16 text-blue-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </div>
+                                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Share Your Moment</h3>
+                                  <p className="text-lg text-gray-600 mb-6">Upload a picture to make your page beautiful and share with the community</p>
+                                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2">
+                                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                      </svg>
+                                      Choose Photo
+                                    </button>
+                                    <span className="text-gray-500">or drag and drop here</span>
+                                  </div>
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    id="main-image-upload"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
