@@ -284,8 +284,8 @@ function App() {
 function MarketplacePromoSection() {
   const [location] = useLocation();
   
-  // Only show on marketplace-related pages
-  const isMarketplacePage = location === "/" || location === "/products" || location === "/categories" || location.startsWith("/products/");
+  // Only show on marketplace-related pages (excluding home page)
+  const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
   
   if (!isMarketplacePage) return null;
   
@@ -303,8 +303,8 @@ function MarketplacePromoSection() {
 function MarketplaceBottomPromoSection() {
   const [location] = useLocation();
   
-  // Only show on marketplace-related pages
-  const isMarketplacePage = location === "/" || location === "/products" || location === "/categories" || location.startsWith("/products/");
+  // Only show on marketplace-related pages (excluding home page)
+  const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
   
   if (!isMarketplacePage) return null;
   
