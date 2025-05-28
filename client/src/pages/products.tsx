@@ -467,19 +467,19 @@ export default function Products() {
               <Checkbox
                 id="verified-only"
               />
-              <Label htmlFor="verified-only" className="text-sm">Verified stores only</Label>
+              <Label htmlFor="verified-only" className="text-[12px] font-normal">Verified stores only</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="free-shipping"
               />
-              <Label htmlFor="free-shipping" className="text-sm">Free shipping</Label>
+              <Label htmlFor="free-shipping" className="text-[12px] font-normal">Free shipping</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="next-day-delivery"
               />
-              <Label htmlFor="next-day-delivery" className="text-sm">Next day delivery</Label>
+              <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">Next day delivery</Label>
             </div>
           </div>
         </div>
