@@ -194,7 +194,12 @@ export async function offlineAwareFetch(
   
   // If we're online, just perform the fetch
   if (isOnline) {
-    return fetch(url, options);
+    try {
+      return fetch(url, options);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
+    }
   }
   
   // We're offline, handle according to request type
