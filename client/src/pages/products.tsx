@@ -280,8 +280,8 @@ export default function Products() {
         </div>
         
         <CardContent className="pt-4 flex-grow">
-          <div className="font-medium mb-1 line-clamp-1 hover:text-primary cursor-pointer" onClick={() => setLocation(`/product/${product.id}`)}>
-            {product.name}
+          <div className="font-medium mb-1 text-sm leading-tight hover:text-primary cursor-pointer min-h-[2.5rem] flex items-center" onClick={() => setLocation(`/product/${product.id}`)}>
+            <span className="line-clamp-2">{product.name}</span>
           </div>
           <div className="text-sm text-gray-500 mb-2">{product.category}</div>
           <div className="line-clamp-2 text-sm text-gray-600 mb-2">
