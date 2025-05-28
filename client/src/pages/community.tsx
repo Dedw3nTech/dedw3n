@@ -258,22 +258,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >Watchlist</button>
-                <button
-                  onClick={() => setSortBy('suggested')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'suggested' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >Suggested</button>
-                <button
-                  onClick={() => setSortBy('region')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'region' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >My Region</button>
+
               </div>
             </div>
 
