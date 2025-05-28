@@ -820,19 +820,19 @@ export default function Products() {
               <Checkbox
                 id="bulk-discount"
               />
-              <Label htmlFor="bulk-discount" className="text-sm">Volume discounts</Label>
+              <Label htmlFor="bulk-discount" className="text-[12px] font-normal">Volume discounts</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="wholesale-only"
               />
-              <Label htmlFor="wholesale-only" className="text-sm">Wholesale only</Label>
+              <Label htmlFor="wholesale-only" className="text-[12px] font-normal">Wholesale only</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="tax-exempt"
               />
-              <Label htmlFor="tax-exempt" className="text-sm">Tax exempt eligible</Label>
+              <Label htmlFor="tax-exempt" className="text-[12px] font-normal">Tax exempt eligible</Label>
             </div>
           </div>
         </div>
