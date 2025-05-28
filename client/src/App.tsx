@@ -249,7 +249,7 @@ function App() {
                             <img 
                               src={promoImage} 
                               alt="Dedwen Black Friday Header - Premium Marketplace" 
-                              className="w-full h-64 object-cover"
+                              className="w-full h-96 object-cover"
                             />
                           </div>
                           
