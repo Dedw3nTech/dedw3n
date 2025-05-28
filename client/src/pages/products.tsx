@@ -547,7 +547,7 @@ export default function Products() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 bg-black hover:bg-gray-800"
+              className="h-8 w-8"
               onClick={() => handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
