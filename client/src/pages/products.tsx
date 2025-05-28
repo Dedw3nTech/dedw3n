@@ -283,26 +283,9 @@ export default function Products() {
           <div className="font-medium mb-1 text-sm leading-tight hover:text-primary cursor-pointer min-h-[2.5rem] flex items-center" onClick={() => setLocation(`/product/${product.id}`)}>
             <span className="line-clamp-2">{product.name}</span>
           </div>
-          <div className="text-sm text-gray-500 mb-2">{product.category}</div>
-          <div className="line-clamp-2 text-sm text-gray-600 mb-2">
-            {product.description}
-          </div>
           
-          {/* Additional info based on market type */}
-          {marketType === 'b2b' && (
-            <div className="text-xs mt-1 text-gray-500">
-              <span className="font-medium">Volume discount available</span>
-            </div>
-          )}
-          {marketType === 'c2c' && (
-            <div className="text-xs mt-1 text-gray-500">
-              <span>Listed by User{product.vendorId}</span>
-            </div>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex justify-between items-center">
-          <div>
+          {/* Price moved below title */}
+          <div className="mb-2">
             {product.discountPrice ? (
               <div className="flex items-center">
                 <div className={`font-bold ${
@@ -322,6 +305,26 @@ export default function Products() {
               </div>
             )}
           </div>
+          
+          <div className="text-sm text-gray-500 mb-2">{product.category}</div>
+          <div className="line-clamp-2 text-sm text-gray-600 mb-2">
+            {product.description}
+          </div>
+          
+          {/* Additional info based on market type */}
+          {marketType === 'b2b' && (
+            <div className="text-xs mt-1 text-gray-500">
+              <span className="font-medium">Volume discount available</span>
+            </div>
+          )}
+          {marketType === 'c2c' && (
+            <div className="text-xs mt-1 text-gray-500">
+              <span>Listed by User{product.vendorId}</span>
+            </div>
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex justify-end items-center">
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
