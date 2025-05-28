@@ -1,3 +1,4 @@
+import React from 'react';
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +8,8 @@ import { ThemeProvider } from "next-themes";
 import { ViewProvider } from "@/hooks/use-view";
 import { AuthProvider } from "@/hooks/use-auth";
 import { MessagingProvider } from "@/hooks/use-messaging";
-import { MarketTypeProvider } from "@/hooks/use-market-type";
+import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
+import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
@@ -42,7 +44,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 
 // Conditional MarketplaceNav wrapper
@@ -304,30 +306,12 @@ function App() {
 // Marketplace promotional sections that only show on marketplace pages
 function MarketplacePromoSection() {
   const [location] = useLocation();
+  const { marketType } = useMarketType();
   
   // Only show on marketplace-related pages (excluding home page)
   const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
   
   if (!isMarketplacePage) return null;
-  
-  // Use React state to track market type changes
-  const [marketType, setMarketType] = React.useState(() => localStorage.getItem('marketType') || 'b2c');
-  
-  // Listen for storage changes to update when market type switches
-  React.useEffect(() => {
-    const handleStorageChange = () => {
-      setMarketType(localStorage.getItem('marketType') || 'b2c');
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    // Also check for changes manually since localStorage doesn't trigger storage event for same tab
-    const interval = setInterval(handleStorageChange, 100);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
   
   // Get the appropriate promotional image for this market type
   const currentPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.top || marketPromoImages.b2c.top;
@@ -345,27 +329,22 @@ function MarketplacePromoSection() {
 
 function MarketplaceBottomPromoSection() {
   const [location] = useLocation();
+  const { marketType } = useMarketType();
   
   // Only show on marketplace-related pages (excluding home page)
   const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
   
   if (!isMarketplacePage) return null;
   
-  // Get market type from URL parameters or localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
-  
   // Get the appropriate bottom promotional image for this market type
   const currentBottomPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.bottom || marketPromoImages.b2c.bottom;
   
   return (
-    <div className="w-full">
+    <div className="w-full" key={`marketplace-bottom-${marketType}`}>
       <img 
-        src={`${currentBottomPromoImage}?v=${Date.now()}`}
+        src={currentBottomPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
-        className="w-full object-cover"
-        style={{ height: '350px' }}
-        key={`promo-bottom-${marketType}-${Date.now()}`}
+        className="w-full h-[350px] object-cover"
       />
     </div>
   );
