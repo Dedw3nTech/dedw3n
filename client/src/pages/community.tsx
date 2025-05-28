@@ -250,14 +250,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >Following</button>
-                <button
-                  onClick={() => setSortBy('watchlist')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'watchlist' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >Watchlist</button>
+
 
               </div>
             </div>
