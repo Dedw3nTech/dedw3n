@@ -185,12 +185,12 @@ export default function Header() {
     <header className="bg-background shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center space-x-3">
-            <Logo size="md" />
-            <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
+          <div className="flex items-center space-x-2 min-w-0 flex-1">
+            <Logo size="sm" className="flex-shrink-0" />
+            <span className="text-xs font-bold text-red-600 whitespace-nowrap">BETA</span>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <UserMenu />
           </div>
         </div>
