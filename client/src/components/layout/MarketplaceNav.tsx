@@ -8,56 +8,104 @@ export function MarketplaceNav() {
   const { marketType, setMarketType } = useMarketType();
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200 py-3">
+    <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <Button 
-            variant={marketType === 'c2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'c2c' ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
+        <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
+          <div 
+            className="cursor-pointer group transition-all duration-300"
             onClick={() => {
               setMarketType("c2c");
               setLocation("/products");
             }}
           >
-            <Users className="mr-2 h-4 w-4" />
-            Buy from a friend (C2C)
-          </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              <span className={`text-lg font-medium transition-colors duration-300 ${
+                marketType === 'c2c' 
+                  ? 'text-blue-600' 
+                  : 'text-gray-700 group-hover:text-blue-600'
+              }`}>
+                Buy from a friend (C2C)
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'c2c' 
+                ? 'bg-blue-600 w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-blue-600'
+            }`} />
+          </div>
           
-          <Button 
-            variant={marketType === 'b2c' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'b2c' ? 'bg-green-500 hover:bg-green-600' : ''}`}
+          <div 
+            className="cursor-pointer group transition-all duration-300"
             onClick={() => {
               setMarketType("b2c");
               setLocation("/products");
             }}
           >
-            <Store className="mr-2 h-4 w-4" />
-            Buy from a store (B2C)
-          </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <Store className="h-5 w-5 text-green-600" />
+              <span className={`text-lg font-medium transition-colors duration-300 ${
+                marketType === 'b2c' 
+                  ? 'text-green-600' 
+                  : 'text-gray-700 group-hover:text-green-600'
+              }`}>
+                Buy from a store (B2C)
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'b2c' 
+                ? 'bg-green-600 w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-green-600'
+            }`} />
+          </div>
           
-          <Button 
-            variant={marketType === 'b2b' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'b2b' ? 'bg-purple-500 hover:bg-purple-600' : ''}`}
+          <div 
+            className="cursor-pointer group transition-all duration-300"
             onClick={() => {
               setMarketType("b2b");
               setLocation("/products");
             }}
           >
-            <Building className="mr-2 h-4 w-4" />
-            Business (B2B)
-          </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <Building className="h-5 w-5 text-purple-600" />
+              <span className={`text-lg font-medium transition-colors duration-300 ${
+                marketType === 'b2b' 
+                  ? 'text-purple-600' 
+                  : 'text-gray-700 group-hover:text-purple-600'
+              }`}>
+                Business (B2B)
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'b2b' 
+                ? 'bg-purple-600 w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-purple-600'
+            }`} />
+          </div>
           
-          <Button 
-            variant={marketType === 'gov' ? 'default' : 'outline'} 
-            className={`flex items-center justify-center ${marketType === 'gov' ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+          <div 
+            className="cursor-pointer group transition-all duration-300"
             onClick={() => {
               setMarketType("gov");
               setLocation("/government");
             }}
           >
-            <Landmark className="mr-2 h-4 w-4" />
-            Governmental Services
-          </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <Landmark className="h-5 w-5 text-amber-600" />
+              <span className={`text-lg font-medium transition-colors duration-300 ${
+                marketType === 'gov' 
+                  ? 'text-amber-600' 
+                  : 'text-gray-700 group-hover:text-amber-600'
+              }`}>
+                Governmental Services
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'gov' 
+                ? 'bg-amber-600 w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-amber-600'
+            }`} />
+          </div>
         </div>
       </div>
     </div>

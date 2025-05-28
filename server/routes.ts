@@ -1984,7 +1984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Categories API endpoint
   app.get('/api/categories', async (req: Request, res: Response) => {
     try {
-      const categories = await storage.getCategories();
+      const categories = await storage.listCategories();
       res.json(categories);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -2252,51 +2252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Minimal WebSocket server for stable connections
-  const { WebSocketServer, WebSocket } = require('ws');
-  
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws'
-  });
-  
-  console.log('WebSocket server started on /ws');
-  
-  wss.on('connection', (ws: any) => {
-    console.log('New WebSocket connection');
-    
-    // Send immediate welcome message
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: 'welcome',
-        status: 'connected',
-        timestamp: Date.now()
-      }));
-    }
-
-    ws.on('message', (data: any) => {
-      try {
-        const message = JSON.parse(data.toString());
-        
-        if (message.type === 'ping') {
-          ws.send(JSON.stringify({
-            type: 'pong',
-            timestamp: Date.now()
-          }));
-        }
-      } catch (e) {
-        // Ignore invalid messages
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
-    });
-
-    ws.on('error', (error: any) => {
-      console.log('WebSocket error:', error.message);
-    });
-  });
+  // Skip WebSocket for now to focus on core functionality
+  console.log('WebSocket disabled - focusing on core API functionality');
 
   return httpServer;
 }
