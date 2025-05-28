@@ -56,6 +56,10 @@ export default function CommunityPage() {
   const [isAdVisible, setIsAdVisible] = useState(true);
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country'>('new');
 
+  // Track if we've reached the end of feed to prevent unnecessary calls
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [lastFetchedCount, setLastFetchedCount] = useState(0);
+
   // Use the existing personal feed to show all posts for community feed
   const {
     data,
@@ -80,6 +84,22 @@ export default function CommunityPage() {
       }
       const posts = await response.json();
       
+      // Check if we've reached the end of posts
+      const isEndOfFeed = posts.length < POSTS_PER_PAGE;
+      if (isEndOfFeed && posts.length > 0) {
+        setHasReachedEnd(true);
+      }
+      
+      // Track consecutive empty fetches
+      if (posts.length === 0) {
+        setLastFetchedCount(prev => prev + 1);
+        if (lastFetchedCount >= 2) {
+          setHasReachedEnd(true);
+        }
+      } else {
+        setLastFetchedCount(0);
+      }
+      
       // Transform the data to match expected CommunityFeedResponse format
       return {
         posts: posts.map((post: any) => ({
@@ -92,14 +112,15 @@ export default function CommunityPage() {
           isLiked: false,
           isShared: false
         })),
-        hasMore: posts.length === POSTS_PER_PAGE,
+        hasMore: !isEndOfFeed && posts.length === POSTS_PER_PAGE,
         totalCount: posts.length,
         currentOffset: pageParam,
-        nextOffset: posts.length === POSTS_PER_PAGE ? pageParam + POSTS_PER_PAGE : null
+        nextOffset: !isEndOfFeed && posts.length === POSTS_PER_PAGE ? pageParam + POSTS_PER_PAGE : null,
+        isEndOfFeed
       };
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage.hasMore) return undefined;
+      if (!lastPage.hasMore || lastPage.isEndOfFeed || hasReachedEnd) return undefined;
       return allPages.length * POSTS_PER_PAGE;
     },
     initialPageParam: 0,
@@ -110,9 +131,9 @@ export default function CommunityPage() {
     refetchInterval: false, // Disable automatic refetching
   });
 
-  // Infinite scroll handler with improved throttling
+  // Infinite scroll handler with improved throttling and end detection
   const handleScroll = useCallback(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
+    if (!hasNextPage || isFetchingNextPage || hasReachedEnd) return;
     
     const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
     const threshold = document.documentElement.offsetHeight - 1000;
@@ -120,7 +141,7 @@ export default function CommunityPage() {
     if (scrollPosition >= threshold) {
       fetchNextPage();
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, hasReachedEnd]);
 
   // Set up scroll listener with debouncing
   useEffect(() => {
@@ -152,6 +173,8 @@ export default function CommunityPage() {
   );
 
   const handleRefresh = () => {
+    setHasReachedEnd(false);
+    setLastFetchedCount(0);
     queryClient.invalidateQueries({ queryKey: ['/api/feed/personal'] });
     toast({
       title: "Community feed refreshed",
@@ -160,8 +183,16 @@ export default function CommunityPage() {
   };
 
   const handlePostCreated = () => {
+    setHasReachedEnd(false);
+    setLastFetchedCount(0);
     queryClient.invalidateQueries({ queryKey: ['/api/feed/personal'] });
   };
+
+  // Reset end state when sorting changes
+  useEffect(() => {
+    setHasReachedEnd(false);
+    setLastFetchedCount(0);
+  }, [sortBy]);
 
   if (isError) {
     return (
@@ -316,11 +347,29 @@ export default function CommunityPage() {
             )}
 
             {/* End of Feed */}
-            {!hasNextPage && uniquePosts.length > 0 && (
+            {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
               <div className="text-center py-8">
-                <div className="inline-flex items-center gap-2 text-sm text-gray-500">
-                  <Users className="h-4 w-4" />
-                  <span>You've seen all community posts</span>
+                <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="bg-blue-100 rounded-full p-2">
+                      <Users className="h-5 w-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    You've reached the end!
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    You've seen all available posts in the community feed. Check back later for new content or try refreshing to see if there are any updates.
+                  </p>
+                  <Button 
+                    onClick={handleRefresh}
+                    variant="outline"
+                    size="sm"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Refresh Feed
+                  </Button>
                 </div>
               </div>
             )}
