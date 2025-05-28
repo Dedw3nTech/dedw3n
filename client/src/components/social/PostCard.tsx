@@ -258,6 +258,47 @@ export default function PostCard({
     },
   });
 
+  // Add to cart mutation
+  const addToCartMutation = useMutation({
+    mutationFn: async () => {
+      if (!post.product?.id) {
+        throw new Error("No product information available");
+      }
+      
+      const response = await apiRequest(
+        "POST",
+        `/api/cart/add`,
+        { 
+          productId: post.product.id,
+          quantity: 1
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add product to cart");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Added to cart",
+        description: "Product added to your cart successfully",
+      });
+      
+      // Invalidate cart data
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add product to cart",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete post mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -294,40 +335,6 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to delete post",
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Add to cart mutation
-  const addToCartMutation = useMutation({
-    mutationFn: async (productId: number) => {
-      const response = await apiRequest(
-        "POST",
-        "/api/cart",
-        { productId, quantity: 1 }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add product to cart");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Added to cart",
-        description: "Product added to your cart successfully",
-      });
-      
-      // Invalidate cart data
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add product to cart",
         variant: "destructive",
       });
     },
@@ -899,14 +906,18 @@ export default function PostCard({
           <Button 
             variant="ghost" 
             size="sm"
-            className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
-            onClick={() => {
-              // Add buy functionality here
-              toast({ title: "Buy feature coming soon!" });
-            }}
+            className={`flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white ${
+              !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
+            disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
           >
-            <ShoppingCart className="h-4 w-4" />
-            <span>Buy</span>
+            {addToCartMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShoppingCart className="h-4 w-4" />
+            )}
+            <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
           </Button>
 
           <Button 
