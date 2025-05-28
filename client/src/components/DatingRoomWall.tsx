@@ -83,12 +83,29 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
       return;
     }
     
-    setSelectedRoom(roomId);
-    if (roomId === "normal") {
-      setShowConfirmDialog(false);
-    } else {
+    // Check if user has access to this room based on their subscription
+    const userSubscription = user.datingSubscription || 'normal';
+    const hasAccess = checkRoomAccess(roomId, userSubscription);
+    
+    if (!hasAccess) {
+      // Show upgrade dialog for rooms they don't have access to
+      setSelectedRoom(roomId);
       setShowConfirmDialog(true);
+      return;
     }
+    
+    // User has access, allow entry
+    setSelectedRoom(roomId);
+  };
+
+  const checkRoomAccess = (roomId: string, userSubscription: string): boolean => {
+    const subscriptionLevels = {
+      'normal': ['normal'],
+      'vip': ['normal', 'vip'],
+      'vvip': ['normal', 'vip', 'vvip']
+    };
+    
+    return subscriptionLevels[userSubscription as keyof typeof subscriptionLevels]?.includes(roomId) || false;
   };
 
   const handleConfirmSelection = () => {
@@ -110,13 +127,20 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {rooms.map((room) => (
-          <Card 
-            key={room.id}
-            className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105 ${room.borderColor} border-2 cursor-pointer`}
-            onClick={() => handleRoomSelect(room.id)}
-          >
-            {room.id !== "normal" && (
+        {rooms.map((room) => {
+          const userSubscription = user?.datingSubscription || 'normal';
+          const hasAccess = checkRoomAccess(room.id, userSubscription);
+          const isLocked = !hasAccess;
+          
+          return (
+            <Card 
+              key={room.id}
+              className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105 ${room.borderColor} border-2 cursor-pointer ${
+                isLocked ? 'opacity-60 grayscale' : ''
+              }`}
+              onClick={() => handleRoomSelect(room.id)}
+            >
+              {room.id !== "normal" && (
               <div className="absolute top-4 right-4">
                 <Badge className={room.badgeColor}>{room.badge}</Badge>
               </div>
@@ -158,7 +182,8 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
               </Button>
             </CardContent>
           </Card>
-        ))}
+          )
+        })}
       </div>
 
       <div className="text-center mt-8">

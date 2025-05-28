@@ -22,6 +22,9 @@ export const riskLevelEnum = pgEnum('risk_level', ['low', 'medium', 'high', 'cri
 // Define user roles enum
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', 'vendor', 'business']);
 
+// Define dating subscription levels enum
+export const datingSubscriptionEnum = pgEnum('dating_subscription', ['normal', 'vip', 'vvip']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -42,6 +45,7 @@ export const users = pgTable("users", {
   verificationToken: text("verification_token"),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   twoFactorSecret: text("two_factor_secret"),
+  datingSubscription: datingSubscriptionEnum("dating_subscription").default('normal'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
