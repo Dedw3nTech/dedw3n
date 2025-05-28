@@ -23,7 +23,7 @@ export default function MobileNavigation() {
 
   const handleViewChange = (newView: "marketplace" | "social") => {
     setView(newView);
-    setLocation(newView === "marketplace" ? "/" : "/community");
+    setLocation(newView === "marketplace" ? "/products" : "/community");
   };
 
   return (
