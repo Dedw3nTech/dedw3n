@@ -719,37 +719,38 @@ export default function PostCard({
             </div>
 
             {currentUser && currentUser.id === post.userId && (
-            <div className="relative group">
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
-              <div className="absolute right-0 mt-2 w-36 bg-background shadow-md rounded-md p-1 hidden group-hover:block z-10 border">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start text-sm"
-                  onClick={() => setLocation(`/posts/${post.id}/edit`)}
-                >
-                  <i className="ri-edit-line mr-2"></i>
-                  Edit Post
+              <div className="relative group">
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-5 w-5" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start text-sm text-destructive hover:text-destructive"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <i className="ri-delete-bin-line mr-2"></i>
-                  )}
-                  Delete Post
-                </Button>
+                <div className="absolute right-0 mt-2 w-36 bg-background shadow-md rounded-md p-1 hidden group-hover:block z-10 border">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start text-sm"
+                    onClick={() => setLocation(`/posts/${post.id}/edit`)}
+                  >
+                    <i className="ri-edit-line mr-2"></i>
+                    Edit Post
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start text-sm text-destructive hover:text-destructive"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <i className="ri-delete-bin-line mr-2"></i>
+                    )}
+                    Delete Post
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
