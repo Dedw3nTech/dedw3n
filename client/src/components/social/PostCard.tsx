@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   MessageSquare,
   ThumbsUp,
@@ -113,6 +122,9 @@ export default function PostCard({
   const [, setLocation] = useLocation();
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [offerAmount, setOfferAmount] = useState("");
+  const [offerMessage, setOfferMessage] = useState("");
   
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -316,6 +328,43 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to add product to cart",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Offer message mutation
+  const offerMutation = useMutation({
+    mutationFn: async ({ amount, message }: { amount: string; message: string }) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/messages/send`,
+        { 
+          recipientId: post.userId,
+          content: `💰 Offer: $${amount}\n\n${message}`
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send offer");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setOfferAmount("");
+      setOfferMessage("");
+      setIsOfferModalOpen(false);
+      toast({
+        title: "Offer Sent!",
+        description: "Your offer has been sent as a message to the post author",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send offer",
         variant: "destructive",
       });
     },
