@@ -17,7 +17,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -55,6 +55,7 @@ export default function Products() {
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const { currency } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [sortBy, setSortBy] = useState<string>('trending');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -247,36 +248,59 @@ export default function Products() {
     },
   });
 
-  // Filter products based on criteria
-  const filteredProducts = products.filter((product: any) => {
-    // Filter by search term
-    if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    
-    // Filter by price range
-    if (product.price < priceRange[0] || product.price > priceRange[1]) {
-      return false;
-    }
-    
-    // Filter by selected categories
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
-      return false;
-    }
-    
-    // Filter by sale status
-    if (showSale && !product.isOnSale) {
-      return false;
-    }
-    
-    // Filter by new status
-    if (showNew && !product.isNew) {
-      return false;
-    }
-    
-    return true;
-  });
+  // Filter and sort products based on criteria
+  const filteredAndSortedProducts = products
+    .filter((product: any) => {
+      // Filter by search term
+      if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+          !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by price range
+      if (product.price < priceRange[0] || product.price > priceRange[1]) {
+        return false;
+      }
+      
+      // Filter by selected categories
+      if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
+        return false;
+      }
+      
+      // Filter by sale status
+      if (showSale && !product.isOnSale) {
+        return false;
+      }
+      
+      // Filter by new status
+      if (showNew && !product.isNew) {
+        return false;
+      }
+      
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'trending':
+          // Sort by popularity/sales - assuming higher vendorId or newer products are trending
+          return (b.vendorId || 0) - (a.vendorId || 0);
+        case 'price-low-high':
+          return a.price - b.price;
+        case 'price-high-low':
+          return b.price - a.price;
+        case 'newest':
+          // Sort by ID (newer products have higher IDs)
+          return b.id - a.id;
+        case 'region':
+          // Sort by region - for now just alphabetical by category
+          return (a.category || '').localeCompare(b.category || '');
+        case 'country':
+          // Sort by country - for now just alphabetical by vendor
+          return (a.vendorId || 0) - (b.vendorId || 0);
+        default:
+          return 0;
+      }
+    });
 
   // Determine highest product price for slider max
   const maxPrice = Math.max(...products.map((p: any) => p.price), 1000);
@@ -390,7 +414,7 @@ export default function Products() {
       );
     }
 
-    if (filteredProducts.length === 0) {
+    if (filteredAndSortedProducts.length === 0) {
       return (
         <div className="col-span-full py-12 text-center">
           <div className="text-gray-500 mb-4">No products found matching your criteria</div>
@@ -401,7 +425,7 @@ export default function Products() {
       );
     }
 
-    return filteredProducts.map((product: any) => (
+    return filteredAndSortedProducts.map((product: any) => (
       <Card 
         key={product.id} 
         className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
@@ -783,8 +807,42 @@ export default function Products() {
         <div className="flex-1">
           {/* Product count and active filters */}
           <div className="flex flex-wrap justify-between items-center mb-6">
-            <div className="text-sm text-gray-500">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-500">
+                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
+              </div>
+              
+              {/* Sort by dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    Sort by
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSortBy('trending')}>
+                    Trending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
+                    Price: Low to High
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
+                    Price: High to Low
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                    Newest Product
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('region')}>
+                    Your Region
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('country')}>
+                    Your Country
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="flex flex-wrap gap-2">
