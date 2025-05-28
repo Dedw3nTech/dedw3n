@@ -368,11 +368,11 @@ export default function CommunityPage() {
               />
             </div>
             
-            {/* Blue Bar with Advertisement Text - iPhone Enhanced */}
-            <div className="w-full bg-blue-600 py-2 px-3 min-h-[36px] flex items-center">
-              <div className="max-w-7xl mx-auto w-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium text-center leading-tight">
-                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-200 transition-colors font-medium">Remove ads</a>
+            {/* Blue Bar with Advertisement Text - iPhone Optimized */}
+            <div className="w-full bg-blue-600 py-3 px-4 min-h-[44px] flex items-center justify-center">
+              <div className="w-full max-w-none flex items-center justify-center">
+                <span className="text-white text-sm font-semibold text-center whitespace-nowrap">
+                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-100 transition-colors font-semibold ml-1">Remove ads</a>
                 </span>
               </div>
             </div>
