@@ -65,14 +65,14 @@ export default function Products() {
 
   // Liked products functionality
   const { data: likedProducts = [] } = useQuery({
-    queryKey: ['/api/products/liked'],
-    queryFn: () => apiRequest('/api/products/liked'),
+    queryKey: ['/api/liked-products'],
+    queryFn: () => apiRequest('/api/liked-products'),
   });
 
   const likeMutation = useMutation({
     mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/like`, { method: 'POST' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products/liked'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       toast({
         title: "Product Liked",
         description: "Product added to your liked items!",
@@ -88,9 +88,9 @@ export default function Products() {
   });
 
   const unlikeMutation = useMutation({
-    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/unlike`, { method: 'DELETE' }),
+    mutationFn: (productId: number) => apiRequest(`/api/products/${productId}/like`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products/liked'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       toast({
         title: "Product Unliked",
         description: "Product removed from your liked items.",

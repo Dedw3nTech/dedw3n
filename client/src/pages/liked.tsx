@@ -31,6 +31,7 @@ export default function LikedPage() {
 
   const { data: likedProducts = [], isLoading } = useQuery<Product[]>({
     queryKey: ['/api/liked-products'],
+    queryFn: () => fetch('/api/liked-products').then(res => res.json()),
   });
 
   const getButtonText = () => {
