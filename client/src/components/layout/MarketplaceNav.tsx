@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, ShoppingBag, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import promoImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -163,16 +164,13 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
       </div>
 
       {/* Fixed Picture Banner */}
-      <div className={`w-full bg-gray-100 py-4 transition-all duration-300 ease-in-out ${showBanner ? 'opacity-100 max-h-48' : 'opacity-0 max-h-0 py-0 overflow-hidden'}`}>
-        <div className="container mx-auto px-4">
-          <div className="h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-            <div className="text-white text-center">
-              <svg className="mx-auto h-12 w-12 mb-2 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
-              <p className="text-lg font-medium">Picture Banner</p>
-            </div>
-          </div>
+      <div className={`w-full transition-all duration-300 ease-in-out ${showBanner ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+        <div className="w-full">
+          <img 
+            src={promoImage} 
+            alt="Dedwen Promotional Banner - BUY | SELL | SOCIALIZE | LOVE" 
+            className="w-full h-64 object-cover"
+          />
         </div>
       </div>
 
