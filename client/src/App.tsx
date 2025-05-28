@@ -13,7 +13,7 @@ import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import promoImage from "@assets/Dedw3n Marketplace.png";
+import promoImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Black Friday Email Header  (1).png";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
