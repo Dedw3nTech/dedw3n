@@ -23,7 +23,7 @@ import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
-import c2cHeaderImage from "@assets/Dedw3n Business II (1).png";
+import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
@@ -36,7 +36,7 @@ const marketPromoImages = {
     bottom: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
   },
   c2c: {
-    top: c2cHeaderImage, // Currently: Dedw3n Business II (1).png (luxury car with businessman)
+    top: c2cHeaderImage, // Currently: Dedw3n Business II (2).png (professional businesswoman with glasses)
     bottom: c2cFooterImage, // Currently: Copy of Dedw3n Marketplace III.png (urban street scene)
   },
 };
