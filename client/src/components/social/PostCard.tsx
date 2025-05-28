@@ -1093,7 +1093,7 @@ export default function PostCard({
             </div>
             <div className="grid grid-cols-4 items-start gap-4">
               <label htmlFor="offer-message" className="text-right font-medium pt-2">
-                Add message for seller
+                Message Seller
               </label>
               <Textarea
                 id="offer-message"
