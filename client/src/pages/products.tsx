@@ -34,6 +34,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Products() {
@@ -48,6 +57,11 @@ export default function Products() {
   const [forceUpdate, setForceUpdate] = useState(0);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Repost dialog state
+  const [repostDialogOpen, setRepostDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [repostText, setRepostText] = useState('');
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
@@ -75,6 +89,40 @@ export default function Products() {
       toast({
         title: "Error",
         description: "Failed to add product to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Repost to feed mutation
+  const repostMutation = useMutation({
+    mutationFn: async ({ productId, text }: { productId: number; text?: string }) => {
+      return await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: text || `Check out this product: ${selectedProduct?.name}`,
+          productId,
+          type: 'product_share'
+        })
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
+      toast({
+        title: "Posted to Feed!",
+        description: "Product has been shared to your community feed.",
+      });
+      setRepostDialogOpen(false);
+      setRepostText('');
+      setSelectedProduct(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post to feed. Please try again.",
         variant: "destructive",
       });
     }
@@ -210,9 +258,29 @@ export default function Products() {
   };
   
   const shareOnFeed = (product: any) => {
-    // Navigate to social feed with prefilled share content
-    const productUrl = `/product/${product.id}`;
-    setLocation(`/social?share=${product.id}&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&content=${encodeURIComponent(`Check out this product: ${product.name}`)}`);
+    setSelectedProduct(product);
+    setRepostDialogOpen(true);
+  };
+
+  const handleRepost = (withText: boolean) => {
+    if (selectedProduct) {
+      if (withText) {
+        // Keep dialog open for text input
+        return;
+      } else {
+        // Repost without text
+        repostMutation.mutate({ productId: selectedProduct.id });
+      }
+    }
+  };
+
+  const handleRepostWithText = () => {
+    if (selectedProduct) {
+      repostMutation.mutate({ 
+        productId: selectedProduct.id, 
+        text: repostText.trim() 
+      });
+    }
   };
   
   const shareViaMessage = (product: any) => {
@@ -677,6 +745,69 @@ export default function Products() {
           </div>
         </div>
       </div>
+
+      {/* Repost Dialog */}
+      <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Repost to Community Feed</DialogTitle>
+            <DialogDescription>
+              Would you like to add a message with this product share?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedProduct && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{selectedProduct.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {formatPriceWithCurrency(selectedProduct.price, currency)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Add your message (optional)</label>
+              <Textarea
+                placeholder="What do you think about this product?"
+                value={repostText}
+                onChange={(e) => setRepostText(e.target.value)}
+                className="mt-2"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleRepost(false)}
+              disabled={repostMutation.isPending}
+            >
+              Post Without Text
+            </Button>
+            <Button
+              onClick={handleRepostWithText}
+              disabled={repostMutation.isPending}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              {repostMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                'Post to Feed'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
