@@ -768,19 +768,19 @@ export default function Products() {
       {/* Market-specific filters */}
       {marketType === 'c2c' && (
         <div>
-          <h3 className="text-lg font-medium mb-2">Friend Options</h3>
-          <div className="space-y-2">
+          <h3 className="font-medium mb-2 text-[14px]">Friend Options</h3>
+          <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="friends-only"
               />
-              <Label htmlFor="friends-only" className="text-sm">Friends only</Label>
+              <Label htmlFor="friends-only" className="text-[12px] font-normal">Friends only</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="local-only"
               />
-              <Label htmlFor="local-only" className="text-sm">Local pickup only</Label>
+              <Label htmlFor="local-only" className="text-[12px] font-normal">Local pickup only</Label>
             </div>
           </div>
         </div>
