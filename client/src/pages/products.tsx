@@ -356,12 +356,12 @@ export default function Products() {
                 }}
                 disabled={addToCartMutation.isPending}
                 className="bg-black text-white hover:bg-gray-800 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
-                size="lg"
+                size="sm"
               >
                 {addToCartMutation.isPending ? (
-                  <Loader2 className="h-6 w-6 animate-spin mr-3" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
-                  <ShoppingCart className="h-6 w-6 mr-3" />
+                  <ShoppingCart className="h-4 w-4 mr-2" />
                 )}
                 Add to Shopping Bag
               </Button>
