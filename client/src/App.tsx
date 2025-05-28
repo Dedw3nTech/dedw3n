@@ -151,6 +151,7 @@ import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
 import DatingProfilePage from "@/pages/dating-profile";
+import LandingPage from "@/pages/landing";
 
 import PremiumVideoPage from "@/pages/premium-video";
 
@@ -160,7 +161,7 @@ function Router() {
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>
-      <Route path="/" component={CommunityPage} />
+      <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/products" component={Products} />
