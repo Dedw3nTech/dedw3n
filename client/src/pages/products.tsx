@@ -370,7 +370,7 @@ export default function Products() {
 
   // Content for the filter sidebar
   const FilterContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[14px]">
       {marketType === 'b2c' && (
         <div>
           <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
@@ -389,7 +389,7 @@ export default function Products() {
       )}
       
       <div>
-        <h3 className="text-lg font-medium mb-2">Categories</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Categories</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
             <div className="flex justify-center py-2">
@@ -407,7 +407,7 @@ export default function Products() {
                   htmlFor={`category-${category.id}`}
                   className="flex justify-between w-full text-sm"
                 >
-                  <span>{category.name}</span>
+                  <span className="text-[12px] font-normal">{category.name}</span>
                   <span className="text-gray-500">({categoryCount[category.name] || 0})</span>
                 </Label>
               </div>
@@ -417,8 +417,8 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-2">Product Status</h3>
-        <div className="space-y-2">
+        <h3 className="font-medium mb-2 text-[14px]">Product Status</h3>
+        <div className="space-y-2 font-normal text-[12px]">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="show-sale"
@@ -461,8 +461,8 @@ export default function Products() {
 
       {marketType === 'b2c' && (
         <div>
-          <h3 className="text-lg font-medium mb-2">Store Options</h3>
-          <div className="space-y-2">
+          <h3 className="font-medium mb-2 text-[14px]">Store Options</h3>
+          <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="verified-only"
