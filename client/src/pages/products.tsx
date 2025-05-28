@@ -862,28 +862,30 @@ export default function Products() {
             </div>
             
             <div className="flex items-center gap-4">
-              {/* Products per page dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                    {productsPerPage} per page
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
-                  <DropdownMenuLabel>Products per page</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setProductsPerPage(30)}>
-                    30 products
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setProductsPerPage(60)}>
-                    60 products
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setProductsPerPage(120)}>
-                    120 products
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Products per page selector */}
+              <div className="flex items-center gap-1 text-sm text-gray-600">
+                <span>Show</span>
+                <button
+                  onClick={() => setProductsPerPage(30)}
+                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 30 ? 'text-black font-medium' : ''}`}
+                >
+                  30
+                </button>
+                <span>|</span>
+                <button
+                  onClick={() => setProductsPerPage(60)}
+                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 60 ? 'text-black font-medium' : ''}`}
+                >
+                  60
+                </button>
+                <span>|</span>
+                <button
+                  onClick={() => setProductsPerPage(120)}
+                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 120 ? 'text-black font-medium' : ''}`}
+                >
+                  120
+                </button>
+              </div>
 
               {/* Sort by dropdown */}
               <DropdownMenu>
