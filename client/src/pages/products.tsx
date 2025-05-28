@@ -287,7 +287,7 @@ export default function Products() {
                   addToCartMutation.mutate(product.id);
                 }}
                 disabled={addToCartMutation.isPending}
-                className="bg-white text-black hover:bg-gray-100 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
+                className="bg-black text-white hover:bg-gray-800 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
                 size="sm"
               >
                 {addToCartMutation.isPending ? (
