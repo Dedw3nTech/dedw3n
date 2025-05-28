@@ -257,6 +257,20 @@ function App() {
                               <Router />
                             </ApiErrorBoundary>
                           </main>
+                          
+                          {/* New Section Below Main */}
+                          <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+                            <div className="container mx-auto px-4">
+                              <div className="text-center text-white">
+                                <h2 className="text-4xl font-bold mb-8">Join the Dedwen Community</h2>
+                                <p className="text-xl mb-8">Connect with millions of buyers and sellers worldwide</p>
+                                <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                                  Get Started Today
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          
                           <Footer />
                           <MobileNavigation />
                           <OfflineIndicator />
