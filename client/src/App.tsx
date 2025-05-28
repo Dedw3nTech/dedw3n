@@ -292,6 +292,13 @@ function MarketplacePromoSection() {
   
   if (!isMarketplacePage) return null;
   
+  // Get market type from URL parameters or localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
+  
+  // Only show promotional images for B2C market type
+  if (marketType !== 'b2c') return null;
+  
   return (
     <div className="w-full">
       <img 
@@ -310,6 +317,13 @@ function MarketplaceBottomPromoSection() {
   const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
   
   if (!isMarketplacePage) return null;
+  
+  // Get market type from URL parameters or localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
+  
+  // Only show promotional images for B2C market type
+  if (marketType !== 'b2c') return null;
   
   return (
     <div className="w-full">
