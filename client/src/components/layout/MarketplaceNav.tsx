@@ -164,7 +164,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
       </div>
 
       {/* Fixed Picture Banner */}
-      <div className={`w-full transition-all duration-300 ease-in-out ${showBanner ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+      <div className={`w-full transition-all duration-500 ease-out ${showBanner ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'}`}>
         <div className="w-full">
           <img 
             src={promoImage} 
