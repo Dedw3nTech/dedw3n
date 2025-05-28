@@ -116,8 +116,33 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
     return subscriptionLevels[userSubscription as keyof typeof subscriptionLevels]?.includes(roomId) || false;
   };
 
-  const handleConfirmSelection = () => {
+  const handleConfirmSelection = async () => {
+    if (!user) return;
+
+    try {
+      // If user hasn't activated dating, activate it first
+      if (!user.datingEnabled) {
+        const response = await fetch('/api/user/activate-dating', {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          // Refresh user data by refetching
+          window.location.reload();
+        } else {
+          console.error('Failed to activate dating');
+        }
+      } else {
+        // Handle subscription upgrade logic here
+        console.log(`Upgrading to ${selectedRoom} subscription`);
+      }
+    } catch (error) {
+      console.error('Error handling confirmation:', error);
+    }
+
     setShowConfirmDialog(false);
+    setSelectedRoom(null);
   };
 
   // If user has selected a room, show the content

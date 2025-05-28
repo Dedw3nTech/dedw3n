@@ -1717,6 +1717,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  // Dating activation route
+  app.post("/api/user/activate-dating", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user's dating enabled status
+      await db.update(users)
+        .set({ datingEnabled: true })
+        .where(eq(users.id, req.user.id));
+
+      res.json({ message: "Dating feature activated successfully", datingEnabled: true });
+    } catch (error) {
+      console.error("Error activating dating:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Debug endpoint for testing authentication
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     try {
