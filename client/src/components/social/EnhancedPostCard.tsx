@@ -551,9 +551,16 @@ export default function EnhancedPostCard({
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     onLoad={(e) => {
-                      // No height restrictions needed
-                      const frame = e.target as HTMLIFrameElement;
-                      // Keep any necessary video processing logic
+                      // Add safety check for frame access
+                      try {
+                        const frame = e.target as HTMLIFrameElement;
+                        if (frame && frame.contentWindow) {
+                          // Keep any necessary video processing logic
+                        }
+                      } catch (error) {
+                        // Silently handle frame access errors
+                        console.debug('Frame access error handled safely');
+                      }
                     }}
                   ></iframe>
                 </div>
