@@ -84,7 +84,32 @@ export interface ApiRequestOptions extends RequestInit {
   isFormData?: boolean;
 }
 
+// Overloaded function for both single URL parameter (GET) and full parameters
+export async function apiRequest(url: string): Promise<any>;
 export async function apiRequest(
+  method: string,
+  url: string,
+  data?: unknown | undefined,
+  options?: ApiRequestOptions,
+): Promise<Response>;
+export async function apiRequest(
+  urlOrMethod: string,
+  url?: string,
+  data?: unknown | undefined,
+  options?: ApiRequestOptions,
+): Promise<any> {
+  // Handle single parameter case (GET request)
+  if (url === undefined) {
+    const getUrl = urlOrMethod;
+    const response = await apiRequestFull('GET', getUrl, undefined, options);
+    return response.json();
+  }
+  
+  // Handle full parameter case
+  return apiRequestFull(urlOrMethod, url, data, options);
+}
+
+async function apiRequestFull(
   method: string,
   url: string,
   data?: unknown | undefined,
@@ -132,12 +157,12 @@ export async function apiRequest(
       'X-Auto-Login': 'false',
       // Add logout header if user has logged out
       ...(userLoggedOut ? { 'X-Auth-Logged-Out': 'true' } : {}),
-      'Content-Type': isFormData ? undefined : 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(userId && !userLoggedOut ? { 
         'X-Client-User-ID': userId.toString(), 
         'X-Test-User-ID': userId.toString() 
       } : {})
-    },
+    } as HeadersInit,
     ...(typeof options === 'object' && options !== null ? options : {})
   };
 
