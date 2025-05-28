@@ -352,32 +352,7 @@ export default function CommunityPage() {
           </div>
         </div>
       </div>
-      {/* Fixed Bottom Advertisement - Full Width Image */}
-      {isAdVisible && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
-          <div className="relative w-full bg-black shadow-lg">
-            {/* Close button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute top-2 right-2 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
-              onClick={() => setIsAdVisible(false)}
-            >
-              ×
-            </Button>
-            
 
-            {/* Blue Bar with Advertisement Text - iPhone Optimized */}
-            <div className="w-full bg-blue-600 py-3 px-4 min-h-[44px] flex items-center justify-center">
-              <div className="w-full max-w-none flex items-center justify-center">
-                <span className="text-white text-sm font-semibold text-center whitespace-nowrap">
-                  Advertisement • <a href="/remove-ads" className="underline hover:text-blue-100 transition-colors font-semibold ml-1">Remove ads</a>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </Container>
   );
 }
