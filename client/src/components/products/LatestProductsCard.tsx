@@ -59,8 +59,8 @@ export function LatestProductsCard() {
         ) : (
           <>
             {products.slice(0, 4).map((product: Product) => (
-              <div key={product.id} className="flex gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+              <div key={product.id} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
                   {product.image ? (
                     <img 
                       src={product.image} 
@@ -72,13 +72,13 @@ export function LatestProductsCard() {
                   )}
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">
+                <div className="flex-1 min-w-0 text-center sm:text-left">
+                  <h4 className="font-medium text-xs sm:text-sm md:text-base leading-tight break-words">
                     {product.name}
                   </h4>
                   
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="font-bold text-green-600 text-sm">
+                  <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 mt-1 flex-wrap">
+                    <span className="font-bold text-green-600 text-xs sm:text-sm whitespace-nowrap">
                       ${product.price}
                     </span>
                     {product.rating && (
@@ -89,27 +89,29 @@ export function LatestProductsCard() {
                     )}
                   </div>
                   
-                  {product.category && (
-                    <Badge variant="secondary" className="text-xs mt-1">
-                      {product.category}
-                    </Badge>
-                  )}
-                  
-                  {product.vendor && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      by {product.vendor.name}
-                    </p>
-                  )}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-1 mt-1">
+                    {product.category && (
+                      <Badge variant="secondary" className="text-xs">
+                        {product.category}
+                      </Badge>
+                    )}
+                    
+                    {product.vendor && (
+                      <p className="text-xs text-gray-500 break-words">
+                        by {product.vendor.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 flex-shrink-0 mx-auto sm:mx-0"
                   asChild
                 >
                   <Link href={`/product/${product.id}`}>
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Link>
                 </Button>
               </div>
