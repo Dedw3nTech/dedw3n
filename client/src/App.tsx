@@ -241,6 +241,17 @@ function App() {
                         <div className="flex flex-col min-h-screen">
                           <Header />
                           <MarketplaceNavWrapper />
+                          
+                          {/* New Section Above Main */}
+                          <div className="bg-gray-50 py-8">
+                            <div className="container mx-auto px-4">
+                              <div className="text-center">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Featured Content</h2>
+                                <p className="text-gray-600">This is your new section above the main content area.</p>
+                              </div>
+                            </div>
+                          </div>
+                          
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
