@@ -3,8 +3,6 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, ShoppingBag, Wallet } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import promoImage from "@assets/Black Friday Email Header .png";
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -14,20 +12,6 @@ interface MarketplaceNavProps {
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
   const [, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
-  const [showBanner, setShowBanner] = useState(true);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setShowBanner(false);
-      } else {
-        setShowBanner(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
@@ -163,16 +147,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
 
-      {/* Fixed Picture Banner */}
-      <div className={`w-full transition-all duration-500 ease-out ${showBanner ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'}`}>
-        <div className="w-full">
-          <img 
-            src={promoImage} 
-            alt="Dedwen Black Friday Header - Premium Marketplace" 
-            className="w-full h-64 object-cover"
-          />
-        </div>
-      </div>
+
 
     </div>
   );
