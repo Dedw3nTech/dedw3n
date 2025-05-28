@@ -1,9 +1,15 @@
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
-import { Button } from '@/components/ui/button';
-import { Users, Store, Building, Landmark } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-export function MarketplaceNav() {
+interface MarketplaceNavProps {
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+}
+
+export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
   const [, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
 
@@ -102,6 +108,19 @@ export function MarketplaceNav() {
                 : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
             }`} />
           </div>
+          
+          {/* Search bar positioned next to Governmental Services */}
+          {setSearchTerm && (
+            <div className="relative flex-1 max-w-md ml-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

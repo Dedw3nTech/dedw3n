@@ -25,7 +25,7 @@ import { useLocation } from "wouter";
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 
 // Conditional MarketplaceNav wrapper
-function MarketplaceNavWrapper() {
+function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: string; setSearchTerm?: (term: string) => void } = {}) {
   const [location] = useLocation();
   
   // Only show marketplace nav on marketplace-related pages
@@ -55,7 +55,7 @@ function MarketplaceNavWrapper() {
   
   return (
     <div className="sticky top-0 z-30 bg-white shadow-sm">
-      <MarketplaceNav />
+      <MarketplaceNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
     </div>
   );
 }

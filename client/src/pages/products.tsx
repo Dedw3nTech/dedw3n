@@ -559,17 +559,6 @@ export default function Products() {
 
         {/* Main content */}
         <div className="flex-1">
-          {/* Search bar */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
           {/* Product count and active filters */}
           <div className="flex flex-wrap justify-between items-center mb-6">
             <div className="text-sm text-gray-500">
