@@ -43,7 +43,7 @@ export function ProfileSideCard() {
   if (!user) {
     return (
       <Card className="w-full">
-        <CardContent className="p-4 text-center">
+        <CardContent className="p-4 text-center invisible">
           <div className="text-gray-500 mb-4">
             <Users className="h-12 w-12 mx-auto mb-2" />
             <p className="text-sm">Please sign in to view your profile</p>
