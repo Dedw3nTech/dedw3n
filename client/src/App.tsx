@@ -13,6 +13,7 @@ import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
+import promoImage from "@assets/Black Friday Email Header .png";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -243,13 +244,12 @@ function App() {
                           <MarketplaceNavWrapper />
                           
                           {/* New Section Above Main */}
-                          <div className="bg-gray-50 py-16">
-                            <div className="container mx-auto px-4">
-                              <div className="text-center">
-                                <h2 className="text-4xl font-bold text-gray-800 mb-8">Featured Content</h2>
-                                <p className="text-xl text-gray-600">This is your new section above the main content area.</p>
-                              </div>
-                            </div>
+                          <div className="w-full">
+                            <img 
+                              src={promoImage} 
+                              alt="Dedwen Black Friday Header - Premium Marketplace" 
+                              className="w-full h-64 object-cover"
+                            />
                           </div>
                           
                           <main className="flex-grow">
