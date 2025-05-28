@@ -224,13 +224,7 @@ export default function Products() {
     return filteredProducts.map((product: any) => (
       <Card 
         key={product.id} 
-        className={`overflow-hidden flex flex-col ${
-          marketType === 'c2c' 
-            ? 'border-blue-200 hover:border-blue-300' 
-            : marketType === 'b2c' 
-              ? 'border-green-200 hover:border-green-300' 
-              : 'border-purple-200 hover:border-purple-300'
-        } transition-colors`}
+        className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
       >
         <div 
           className="aspect-square bg-gray-100 relative overflow-hidden group"
