@@ -3709,8 +3709,9 @@ export class DatabaseStorage implements IStorage {
 
   async getPopularProducts(): Promise<Product[]> {
     try {
+      // Return products ordered by creation date since rating column may not exist
       return await db.select().from(products)
-        .orderBy(desc(products.rating))
+        .orderBy(desc(products.createdAt))
         .limit(10);
     } catch (error) {
       console.error('Error getting popular products:', error);
