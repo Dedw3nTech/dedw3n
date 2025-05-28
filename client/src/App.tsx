@@ -13,7 +13,8 @@ import { CurrencyProvider } from "@/hooks/use-currency";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import promoImage from "@assets/Dedw3n Business.png";
+import businessPromoImage from "@assets/Dedw3n Business.png";
+import originalPromoImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
@@ -299,11 +300,17 @@ function MarketplacePromoSection() {
   // Only show promotional images for B2C market type
   if (marketType !== 'b2c') return null;
   
+  // Choose the appropriate promotional image based on context
+  const promoImageSrc = marketType === 'b2c' ? businessPromoImage : originalPromoImage;
+  const altText = marketType === 'b2c' 
+    ? "Dedwen Business Marketplace - Doing Business Made Easy" 
+    : "Dedwen Marketplace - Premium Shopping Experience";
+
   return (
     <div className="w-full">
       <img 
-        src={promoImage} 
-        alt="Dedwen Black Friday Header - Premium Marketplace" 
+        src={promoImageSrc} 
+        alt={altText} 
         className="w-full h-[400px] object-cover"
       />
     </div>
