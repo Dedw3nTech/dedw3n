@@ -73,7 +73,7 @@ export function LatestProductsCard() {
                 </div>
                 
                 <div className="flex-1 min-w-0 text-center sm:text-left">
-                  <h4 className="font-medium text-xs sm:text-sm md:text-base leading-tight break-words">
+                  <h4 className="font-medium text-xs sm:text-sm md:text-base leading-tight break-words line-clamp-2 h-8 sm:h-10 overflow-hidden">
                     {product.name}
                   </h4>
                   
