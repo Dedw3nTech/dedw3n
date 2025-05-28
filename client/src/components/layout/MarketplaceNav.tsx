@@ -87,32 +87,9 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               }`} />
             </div>
             
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => {
-                setMarketType("gov");
-                setLocation("/government");
-              }}
-            >
-              <div className="mb-2">
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  marketType === 'gov' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  Governmental Services
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'gov' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            {/* Search bar positioned next to Governmental Services */}
+            {/* Search bar */}
             {setSearchTerm && (
-              <div className="relative flex-1 max-w-md ml-4">
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search products..."
