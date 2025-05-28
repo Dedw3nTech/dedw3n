@@ -836,6 +836,19 @@ export default function PostCard({
             <ShoppingCart className="h-4 w-4" />
             <span>Buy</span>
           </Button>
+
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+            onClick={() => {
+              // Add make offer functionality here
+              toast({ title: "Make an offer feature coming soon!" });
+            }}
+          >
+            <Star className="h-4 w-4" />
+            <span>Make an Offer</span>
+          </Button>
           
           <Button 
             variant="ghost" 
