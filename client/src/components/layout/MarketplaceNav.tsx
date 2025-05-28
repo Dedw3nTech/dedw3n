@@ -148,6 +148,63 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         </div>
       </div>
 
+      {/* Image Card Holder Section */}
+      <div className="container mx-auto px-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Featured Category Card */}
+          <div className="group cursor-pointer overflow-hidden rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 p-6 hover:shadow-lg transition-all duration-300">
+            <div className="h-32 mb-4 bg-blue-200 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Featured Products</h3>
+            <p className="text-sm text-gray-600">Discover trending items in your area</p>
+          </div>
+
+          {/* Local Deals Card */}
+          <div className="group cursor-pointer overflow-hidden rounded-lg bg-gradient-to-br from-green-50 to-green-100 p-6 hover:shadow-lg transition-all duration-300">
+            <div className="h-32 mb-4 bg-green-200 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Local Deals</h3>
+            <p className="text-sm text-gray-600">Best offers from nearby vendors</p>
+          </div>
+
+          {/* Community Favorites Card */}
+          <div className="group cursor-pointer overflow-hidden rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 p-6 hover:shadow-lg transition-all duration-300">
+            <div className="h-32 mb-4 bg-purple-200 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zM4 18v-4.5c0-1.1.9-2 2-2s2 .9 2 2V18h4v-5c0-1.1.9-2 2-2s2 .9 2 2v5h4v-7.5c0-1.1-.9-2-2-2s-2 .9-2 2V13h-4V8.5c0-1.1-.9-2-2-2s-2 .9-2 2V13H4v5z"/>
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Community Picks</h3>
+            <p className="text-sm text-gray-600">Top-rated by our members</p>
+          </div>
+
+          {/* New Arrivals Card */}
+          <div className="group cursor-pointer overflow-hidden rounded-lg bg-gradient-to-br from-orange-50 to-orange-100 p-6 hover:shadow-lg transition-all duration-300">
+            <div className="h-32 mb-4 bg-orange-200 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">New Arrivals</h3>
+            <p className="text-sm text-gray-600">Fresh inventory just added</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
