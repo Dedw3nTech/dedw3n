@@ -316,7 +316,8 @@ function MarketplaceBottomPromoSection() {
       <img 
         src={bottomPromoImage} 
         alt="Dedwen Black Friday - Professional Fashion Collection" 
-        className="w-full h-64 object-cover"
+        className="w-full object-cover"
+        style={{ height: '350px' }}
       />
     </div>
   );
