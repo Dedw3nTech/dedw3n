@@ -372,25 +372,6 @@ export default function Products() {
   const FilterContent = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-2">Price Range</h3>
-        <div className="px-2">
-          <Slider
-            defaultValue={[0, maxPrice]}
-            value={priceRange}
-            min={0}
-            max={maxPrice}
-            step={1}
-            onValueChange={(value) => setPriceRange(value as [number, number])}
-            className="my-6"
-          />
-          <div className="flex justify-between text-sm">
-            <div>{formatPriceWithCurrency(priceRange[0], currency)}</div>
-            <div>{formatPriceWithCurrency(priceRange[1], currency)}</div>
-          </div>
-        </div>
-      </div>
-
-      <div>
         <h3 className="text-lg font-medium mb-2">Categories</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
