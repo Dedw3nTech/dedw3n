@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, ShoppingBag, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import promoImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
+import promoImage from "@assets/Black Friday Email Header .png";
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -168,7 +168,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         <div className="w-full">
           <img 
             src={promoImage} 
-            alt="Dedwen Promotional Banner - BUY | SELL | SOCIALIZE | LOVE" 
+            alt="Dedwen Black Friday Header - Premium Marketplace" 
             className="w-full h-64 object-cover"
           />
         </div>
