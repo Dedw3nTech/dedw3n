@@ -1097,7 +1097,7 @@ export default function PostCard({
               </label>
               <Textarea
                 id="offer-message"
-                placeholder="Tell them why you're interested..."
+                placeholder="Add a message to seller"
                 value={offerMessage}
                 onChange={(e) => setOfferMessage(e.target.value)}
                 className="col-span-3 min-h-[80px]"
