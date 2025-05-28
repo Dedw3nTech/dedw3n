@@ -1960,16 +1960,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messaging API endpoints
-  // Products API endpoints
-  app.get('/api/products', async (req: Request, res: Response) => {
-    try {
-      const products = await storage.getProducts();
-      res.json(products);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      res.status(500).json({ message: 'Failed to fetch products' });
-    }
-  });
 
   app.get('/api/products/popular', async (req: Request, res: Response) => {
     try {

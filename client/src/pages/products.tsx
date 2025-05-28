@@ -226,15 +226,36 @@ export default function Products() {
     };
   }, []);
 
-  // Fetch products
+  // Fetch products with filters
   const {
     data: products = [],
     isLoading: productsLoading,
     error: productsError,
   } = useQuery({
-    queryKey: ['/api/products'],
+    queryKey: ['/api/products', {
+      search: searchTerm,
+      categories: selectedCategories,
+      regions: selectedRegions,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      onSale: showSale,
+      isNew: showNew,
+      sortBy: sortBy
+    }],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/products');
+      const params = new URLSearchParams();
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (selectedCategories.length > 0) params.append('categories', selectedCategories.join(','));
+      if (selectedRegions.length > 0) params.append('regions', selectedRegions.join(','));
+      if (priceRange[0] > 0) params.append('minPrice', priceRange[0].toString());
+      if (priceRange[1] < 1000) params.append('maxPrice', priceRange[1].toString());
+      if (showSale) params.append('onSale', 'true');
+      if (showNew) params.append('isNew', 'true');
+      if (sortBy) params.append('sortBy', sortBy);
+      
+      const url = `/api/products${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await apiRequest('GET', url);
       return response.json();
     },
   });
