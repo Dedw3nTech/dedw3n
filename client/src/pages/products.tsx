@@ -387,7 +387,14 @@ export default function Products() {
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-end items-center">
+        <CardFooter className="flex justify-between items-center">
+          <Button
+            size="sm"
+            onClick={() => shareOnFeed(product)}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            Post
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
