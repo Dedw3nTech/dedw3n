@@ -29,7 +29,7 @@ const marketPromoImages = {
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   b2b: {
-    top: businessMeetingImage, // Currently: Dedw3n Business.png (professional business meeting)
+    top: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   c2c: {
