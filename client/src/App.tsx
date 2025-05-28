@@ -244,14 +244,8 @@ function App() {
                           <Header />
                           <MarketplaceNavWrapper />
                           
-                          {/* New Section Above Main */}
-                          <div className="w-full">
-                            <img 
-                              src={promoImage} 
-                              alt="Dedwen Black Friday Header - Premium Marketplace" 
-                              className="w-full h-96 object-cover"
-                            />
-                          </div>
+                          {/* New Section Above Main - Only show on marketplace pages */}
+                          <MarketplacePromoSection />
                           
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
@@ -259,14 +253,8 @@ function App() {
                             </ApiErrorBoundary>
                           </main>
                           
-                          {/* New Section Below Main */}
-                          <div className="w-full">
-                            <img 
-                              src={sellCampaignImage} 
-                              alt="Dedwen Pre-Launch Campaign - Buy, Sell, Socialize, Love" 
-                              className="w-full h-64 object-cover"
-                            />
-                          </div>
+                          {/* New Section Below Main - Only show on marketplace pages */}
+                          <MarketplaceBottomPromoSection />
                           
                           <Footer />
                           <MobileNavigation />
@@ -288,6 +276,45 @@ function App() {
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+// Marketplace promotional sections that only show on marketplace pages
+function MarketplacePromoSection() {
+  const [location] = useLocation();
+  
+  // Only show on marketplace-related pages
+  const isMarketplacePage = location === "/" || location === "/products" || location === "/categories" || location.startsWith("/products/");
+  
+  if (!isMarketplacePage) return null;
+  
+  return (
+    <div className="w-full">
+      <img 
+        src={promoImage} 
+        alt="Dedwen Black Friday Header - Premium Marketplace" 
+        className="w-full h-96 object-cover"
+      />
+    </div>
+  );
+}
+
+function MarketplaceBottomPromoSection() {
+  const [location] = useLocation();
+  
+  // Only show on marketplace-related pages
+  const isMarketplacePage = location === "/" || location === "/products" || location === "/categories" || location.startsWith("/products/");
+  
+  if (!isMarketplacePage) return null;
+  
+  return (
+    <div className="w-full">
+      <img 
+        src={sellCampaignImage} 
+        alt="Dedwen Pre-Launch Campaign - Buy, Sell, Socialize, Love" 
+        className="w-full h-64 object-cover"
+      />
+    </div>
   );
 }
 
