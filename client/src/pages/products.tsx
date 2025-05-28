@@ -820,7 +820,7 @@ export default function Products() {
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent align="start" side="bottom">
                   <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setSortBy('trending')}>
