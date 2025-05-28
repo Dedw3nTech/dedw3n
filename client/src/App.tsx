@@ -216,6 +216,8 @@ function Router() {
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       
+      {/* Product detail routes */}
+      <Route path="/product/:id" component={ProductDetail} />
 
       
       {/* Premium video routes */}
