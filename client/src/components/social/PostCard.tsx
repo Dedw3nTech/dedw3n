@@ -624,7 +624,6 @@ export default function PostCard({
           )}
         </div>
       </CardHeader>
-      
       <CardContent className="pt-4">
         {post.title && (
           <h3 
@@ -895,7 +894,6 @@ export default function PostCard({
           </div>
         )}
       </CardContent>
-      
       <CardFooter className="flex justify-between border-t pt-4 pb-4">
         <div className="flex gap-4">
           <Button 
@@ -914,8 +912,11 @@ export default function PostCard({
           <Button 
             variant="ghost" 
             size="sm"
-            className="flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-orange-500 hover:border-orange-600"
+            className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-orange-500 hover:border-orange-600 ${
+              !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
             onClick={handleMakeOffer}
+            disabled={!post.product && !post.isShoppable}
           >
             <span>Make an Offer</span>
           </Button>
@@ -962,7 +963,6 @@ export default function PostCard({
         </div>
 
       </CardFooter>
-      
       {/* Comment input section */}
       {isCommenting && (
         <div className="p-4 pt-0 border-t">
@@ -1008,7 +1008,6 @@ export default function PostCard({
           </div>
         </div>
       )}
-      
       {/* Comments section */}
       {(showComments || isDetailed) && (
         <div className="p-4 pt-0 border-t">
@@ -1067,7 +1066,6 @@ export default function PostCard({
           )}
         </div>
       )}
-      
       {/* Make Offer Modal */}
       <Dialog open={isOfferModalOpen} onOpenChange={setIsOfferModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -1079,9 +1077,7 @@ export default function PostCard({
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="offer-amount" className="text-right font-medium">
-                Amount ($)
-              </label>
+              <label htmlFor="offer-amount" className="text-right font-medium">Amount (£)</label>
               <Input
                 id="offer-amount"
                 type="number"
@@ -1128,7 +1124,6 @@ export default function PostCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Login Prompt Modal */}
       <LoginPromptModal 
         isOpen={isOpen} 
