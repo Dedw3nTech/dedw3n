@@ -463,12 +463,24 @@ export default function Products() {
           >
             Repost
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => {
+                // TODO: Implement like/unlike functionality
+                console.log('Like clicked for product:', product.id);
+              }}
+            >
+              <Heart className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Share Product</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -493,7 +505,8 @@ export default function Products() {
                 Share with Member
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </CardFooter>
       </Card>
     ));
