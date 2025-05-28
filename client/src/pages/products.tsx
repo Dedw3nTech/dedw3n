@@ -588,19 +588,19 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
               onClick={() => handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
               <Heart 
                 className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
               />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-            >
-              <Plus className="h-4 w-4" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
