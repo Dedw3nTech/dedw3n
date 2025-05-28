@@ -49,6 +49,7 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
@@ -315,12 +316,22 @@ export default function Products() {
         : [...prev, category]
     );
   };
+
+  // Handle region checkbox toggle
+  const toggleRegion = (region: string) => {
+    setSelectedRegions(prev => 
+      prev.includes(region)
+        ? prev.filter(r => r !== region)
+        : [...prev, region]
+    );
+  };
   
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm('');
     setPriceRange([0, maxPrice]);
     setSelectedCategories([]);
+    setSelectedRegions([]);
     setShowSale(false);
     setShowNew(false);
   };
@@ -670,6 +681,27 @@ export default function Products() {
       </div>
 
       <div>
+        <h3 className="font-medium mb-2 text-[14px]">Region</h3>
+        <div className="space-y-2">
+          {['Africa', 'Asia', 'Europe', 'Middle East', 'North America', 'South America', 'Oceania'].map((region) => (
+            <div key={region} className="flex items-center space-x-2">
+              <Checkbox
+                id={`region-${region}`}
+                checked={selectedRegions.includes(region)}
+                onCheckedChange={() => toggleRegion(region)}
+              />
+              <Label
+                htmlFor={`region-${region}`}
+                className="text-[12px] font-normal"
+              >
+                {region}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
         <h3 className="font-medium mb-2 text-[14px]">Product Status</h3>
         <div className="space-y-2 font-normal text-[12px]">
           <div className="flex items-center space-x-2">
@@ -830,6 +862,18 @@ export default function Products() {
                 </Badge>
               ))}
               
+              {selectedRegions.map(region => (
+                <Badge variant="outline" key={region} className="flex items-center gap-1">
+                  {region}
+                  <button
+                    onClick={() => toggleRegion(region)}
+                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+              
               {showSale && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   On Sale
@@ -854,7 +898,7 @@ export default function Products() {
                 </Badge>
               )}
               
-                {(selectedCategories.length > 0 || showSale || showNew) && (
+                {(selectedCategories.length > 0 || selectedRegions.length > 0 || showSale || showNew) && (
                   <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
                     Clear All
                   </Button>
