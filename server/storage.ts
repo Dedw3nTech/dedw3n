@@ -132,6 +132,7 @@ export interface IStorage {
   getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]>;
   getTotalPostsCount(): Promise<number>;
   getPostsByRegion(userId: number, limit: number, offset: number): Promise<Post[]>;
+  getPostsByCountry(userId: number, limit: number, offset: number): Promise<Post[]>;
   
   // Like operations
   likePost(postId: number, userId: number): Promise<boolean>;
@@ -3584,6 +3585,52 @@ export class DatabaseStorage implements IStorage {
       })) as Post[];
     } catch (error) {
       console.error('Error getting posts by region:', error);
+      return [];
+    }
+  }
+
+  async getPostsByCountry(userId: number, limit: number, offset: number): Promise<Post[]> {
+    try {
+      // First get the current user's country
+      const [currentUser] = await db.select({ country: users.country }).from(users).where(eq(users.id, userId));
+      
+      if (!currentUser || !currentUser.country) {
+        // If user has no country set, return empty array
+        return [];
+      }
+
+      // Get posts from users in the same country
+      const countryPosts = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar,
+            isVendor: users.isVendor
+          }
+        })
+        .from(posts)
+        .leftJoin(users, eq(posts.userId, users.id))
+        .where(eq(users.country, currentUser.country))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      // Transform the results to match the Post interface
+      return countryPosts.map(row => ({
+        ...row.post,
+        user: row.user || {
+          id: 0,
+          username: 'Unknown',
+          name: 'Unknown User',
+          avatar: null,
+          isVendor: false
+        }
+      })) as Post[];
+    } catch (error) {
+      console.error('Error getting posts by country:', error);
       return [];
     }
   }
