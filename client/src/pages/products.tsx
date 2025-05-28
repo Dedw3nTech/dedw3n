@@ -56,6 +56,7 @@ export default function Products() {
   const { currency } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
+  const [productsPerPage, setProductsPerPage] = useState<number>(30);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -425,7 +426,10 @@ export default function Products() {
       );
     }
 
-    return filteredAndSortedProducts.map((product: any) => (
+    // Limit products based on productsPerPage setting
+    const displayedProducts = filteredAndSortedProducts.slice(0, productsPerPage);
+    
+    return displayedProducts.map((product: any) => (
       <Card 
         key={product.id} 
         className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
@@ -857,37 +861,62 @@ export default function Products() {
               </div>
             </div>
             
-            {/* Sort by dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                  Sort by
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
-                <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSortBy('trending')}>
-                  Trending
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
-                  Price: Low to High
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
-                  Price: High to Low
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                  Newest Product
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('region')}>
-                  Your Region
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('country')}>
-                  Your Country
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-4">
+              {/* Products per page dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
+                    {productsPerPage} per page
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
+                  <DropdownMenuLabel>Products per page</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setProductsPerPage(30)}>
+                    30 products
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setProductsPerPage(60)}>
+                    60 products
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setProductsPerPage(120)}>
+                    120 products
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Sort by dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
+                    Sort by
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
+                  <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSortBy('trending')}>
+                    Trending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
+                    Price: Low to High
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
+                    Price: High to Low
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                    Newest Product
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('region')}>
+                    Your Region
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('country')}>
+                    Your Country
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Product grid */}
