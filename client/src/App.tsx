@@ -18,31 +18,20 @@ import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 
-// Page-specific promotional images (placeholders for future uploads)
-// You can replace these with actual images later
-const pagePromoImages = {
-  home: defaultPromoImage,
-  products: defaultPromoImage,
-  categories: defaultPromoImage,
-  profile: defaultPromoImage,
-  social: defaultPromoImage,
-  messages: defaultPromoImage,
-  liked: defaultPromoImage,
-  subscription: defaultPromoImage,
-  // Add more pages as needed
-};
-
-// Bottom promotional images for different pages
-const pageBottomPromoImages = {
-  home: bottomPromoImage,
-  products: bottomPromoImage,
-  categories: bottomPromoImage,
-  profile: bottomPromoImage,
-  social: bottomPromoImage,
-  messages: bottomPromoImage,
-  liked: bottomPromoImage,
-  subscription: bottomPromoImage,
-  // Add more pages as needed
+// Market-specific promotional images - each market type has its own separate images
+const marketPromoImages = {
+  b2c: {
+    top: defaultPromoImage, // Currently: Dedw3n Business II.png (businesswoman at airport)
+    bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
+  },
+  b2b: {
+    top: defaultPromoImage, // Placeholder - upload your B2B-specific top image here
+    bottom: bottomPromoImage, // Placeholder - upload your B2B-specific bottom image here
+  },
+  c2c: {
+    top: defaultPromoImage, // Placeholder - upload your C2C-specific top image here
+    bottom: bottomPromoImage, // Placeholder - upload your C2C-specific bottom image here
+  },
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -324,31 +313,14 @@ function MarketplacePromoSection() {
   const urlParams = new URLSearchParams(window.location.search);
   const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
   
-  // Only show promotional images for B2C market type
-  if (marketType !== 'b2c') return null;
-  
-  // Determine which image to use based on current page
-  const getPageKey = (path: string): keyof typeof pagePromoImages => {
-    if (path === "/") return "home";
-    if (path === "/products") return "products";
-    if (path === "/categories") return "categories";
-    if (path === "/profile") return "profile";
-    if (path === "/social") return "social";
-    if (path === "/messages") return "messages";
-    if (path === "/liked") return "liked";
-    if (path === "/subscription") return "subscription";
-    if (path.startsWith("/products/")) return "products";
-    return "products"; // Default fallback
-  };
-  
-  const pageKey = getPageKey(location);
-  const currentPromoImage = pagePromoImages[pageKey];
+  // Get the appropriate promotional image for this market type
+  const currentPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.top || marketPromoImages.b2c.top;
   
   return (
     <div className="w-full">
       <img 
         src={currentPromoImage} 
-        alt={`Dedwen ${pageKey.charAt(0).toUpperCase() + pageKey.slice(1)} - Premium Marketplace`}
+        alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
         className="w-full h-[400px] object-cover"
       />
     </div>
@@ -367,31 +339,14 @@ function MarketplaceBottomPromoSection() {
   const urlParams = new URLSearchParams(window.location.search);
   const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
   
-  // Only show promotional images for B2C market type
-  if (marketType !== 'b2c') return null;
-  
-  // Determine which bottom image to use based on current page
-  const getPageKey = (path: string): keyof typeof pageBottomPromoImages => {
-    if (path === "/") return "home";
-    if (path === "/products") return "products";
-    if (path === "/categories") return "categories";
-    if (path === "/profile") return "profile";
-    if (path === "/social") return "social";
-    if (path === "/messages") return "messages";
-    if (path === "/liked") return "liked";
-    if (path === "/subscription") return "subscription";
-    if (path.startsWith("/products/")) return "products";
-    return "products"; // Default fallback
-  };
-  
-  const pageKey = getPageKey(location);
-  const currentBottomPromoImage = pageBottomPromoImages[pageKey];
+  // Get the appropriate bottom promotional image for this market type
+  const currentBottomPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.bottom || marketPromoImages.b2c.bottom;
   
   return (
     <div className="w-full">
       <img 
         src={currentBottomPromoImage} 
-        alt={`Dedwen ${pageKey.charAt(0).toUpperCase() + pageKey.slice(1)} - Professional Collection`}
+        alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
         className="w-full object-cover"
         style={{ height: '350px' }}
       />
