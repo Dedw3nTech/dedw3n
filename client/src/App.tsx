@@ -29,8 +29,8 @@ const marketPromoImages = {
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   b2b: {
-    top: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
-    bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
+    top: businessMeetingImage, // Currently: Dedw3n Business.png (professional business meeting)
+    bottom: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
   },
   c2c: {
     top: defaultPromoImage, // Placeholder - upload your C2C-specific top image here
