@@ -373,7 +373,7 @@ export default function Products() {
     <div className="space-y-6">
       {marketType === 'b2c' && (
         <div>
-          <h3 className="text-lg font-medium mb-2">Search for Products</h3>
+          <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
           <div className="space-y-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -381,7 +381,7 @@ export default function Products() {
                 placeholder="Search Within B2C"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-[12px]"
               />
             </div>
           </div>
