@@ -15,6 +15,7 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 // Import promotional images
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
+import businessMeetingImage from "@assets/Dedw3n Business.png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 
@@ -25,8 +26,8 @@ const marketPromoImages = {
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   b2b: {
-    top: defaultPromoImage, // Placeholder - upload your B2B-specific top image here
-    bottom: bottomPromoImage, // Placeholder - upload your B2B-specific bottom image here
+    top: businessMeetingImage, // Currently: Dedw3n Business.png (professional business meeting)
+    bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   c2c: {
     top: defaultPromoImage, // Placeholder - upload your C2C-specific top image here
