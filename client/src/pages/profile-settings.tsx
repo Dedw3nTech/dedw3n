@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProfilePictureUploader from '@/components/user/ProfilePictureUploader';
+import RegionSelector from '@/components/RegionSelector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
-import { Loader2, Store, Heart } from 'lucide-react';
+import { Loader2, Store, Heart, Globe } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -433,6 +434,24 @@ export default function ProfileSettingsPage() {
                       rows={4}
                       className="text-black"
                     />
+                  </div>
+
+                  {/* Region Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-black flex items-center">
+                      <Globe className="mr-2 h-4 w-4" />
+                      My Region
+                    </Label>
+                    <RegionSelector 
+                      currentRegion={user?.region}
+                      onRegionChange={() => {
+                        // Refresh user data after region update
+                        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+                      }}
+                    />
+                    <p className="text-xs text-gray-600">
+                      Select your region to see posts from users in your area when using "My Region" filter.
+                    </p>
                   </div>
                   
                   <Button 

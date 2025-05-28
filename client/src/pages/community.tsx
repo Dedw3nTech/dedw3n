@@ -249,7 +249,9 @@ export default function CommunityPage() {
                       ? 'text-black font-medium' 
                       : 'hover:text-gray-800'
                   }`}
-                >Following</button>
+                >
+                  Following
+                </button>
                 <button
                   onClick={() => setSortBy('region')}
                   className={`transition-colors duration-200 ${
@@ -257,7 +259,9 @@ export default function CommunityPage() {
                       ? 'text-black font-medium' 
                       : 'hover:text-gray-800'
                   }`}
-                >My Region</button>
+                >
+                  My Region
+                </button>
 
 
               </div>
