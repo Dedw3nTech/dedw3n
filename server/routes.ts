@@ -1100,6 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: req.body.imageUrl || null,
         videoUrl: req.body.videoUrl || null,
         tags: req.body.tags || null,
+        productId: req.body.productId || null, // Support for product reposts
         isPublished: true,
         likes: 0,
         comments: 0,
