@@ -199,7 +199,7 @@ export default function CommunityPage() {
 
             {/* Filter Tabs */}
             <div className="mb-8 flex items-center justify-center relative">
-              <div className="flex gap-8 text-[12px] flex-wrap justify-center">
+              <div className="flex gap-12 text-[12px]">
                 <button
                   onClick={() => setSortBy('new')}
                   className={`text-xl text-black pb-3 transition-all duration-300 relative ${
@@ -210,7 +210,7 @@ export default function CommunityPage() {
                 >
                   New
                   {sortBy === 'new' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
                 </button>
                 <button
@@ -223,59 +223,7 @@ export default function CommunityPage() {
                 >
                   Trending
                   {sortBy === 'trending' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
-                  )}
-                </button>
-                <button
-                  onClick={() => setSortBy('popular')}
-                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
-                    sortBy === 'popular' 
-                      ? 'font-bold' 
-                      : 'font-normal hover:text-blue-500'
-                  }`}
-                >
-                  Popular
-                  {sortBy === 'popular' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
-                  )}
-                </button>
-                <button
-                  onClick={() => setSortBy('following')}
-                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
-                    sortBy === 'following' 
-                      ? 'font-bold' 
-                      : 'font-normal hover:text-blue-500'
-                  }`}
-                >
-                  Following
-                  {sortBy === 'following' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
-                  )}
-                </button>
-                <button
-                  onClick={() => setSortBy('watchlist')}
-                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
-                    sortBy === 'watchlist' 
-                      ? 'font-bold' 
-                      : 'font-normal hover:text-blue-500'
-                  }`}
-                >
-                  Watchlist
-                  {sortBy === 'watchlist' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
-                  )}
-                </button>
-                <button
-                  onClick={() => setSortBy('suggested')}
-                  className={`text-xl text-black pb-3 transition-all duration-300 relative ${
-                    sortBy === 'suggested' 
-                      ? 'font-bold' 
-                      : 'font-normal hover:text-blue-500'
-                  }`}
-                >
-                  Suggested
-                  {sortBy === 'suggested' && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-black"></div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
                 </button>
               </div>
@@ -365,7 +313,7 @@ export default function CommunityPage() {
             </Button>
             
             {/* Advertisement Image */}
-            <div className="w-full h-16 md:h-20 lg:h-24 overflow-hidden cursor-pointer">
+            <div className="w-full h-20 overflow-hidden cursor-pointer">
               <img 
                 src={campaignImage}
                 alt="Dedw3n - Buy, Sell, Socialize, Love"
