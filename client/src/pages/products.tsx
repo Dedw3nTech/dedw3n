@@ -324,7 +324,7 @@ export default function Products() {
     return filteredProducts.map((product: any) => (
       <Card 
         key={product.id} 
-        className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
+        className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300 h-[600px]"
       >
         <div 
           className="aspect-square bg-gray-100 relative overflow-hidden group"
