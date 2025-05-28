@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Users, Loader2, RefreshCw, Star, Zap, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ const POSTS_PER_PAGE = 10;
 export default function CommunityPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
   const [isAdVisible, setIsAdVisible] = useState(true);
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country'>('new');
 
@@ -67,7 +67,7 @@ export default function CommunityPage() {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['/api/feed/personal', refreshKey, sortBy],
+    queryKey: ['/api/feed/personal', sortBy],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sort=${sortBy}`, {
         credentials: 'include',
@@ -103,35 +103,44 @@ export default function CommunityPage() {
       return allPages.length * POSTS_PER_PAGE;
     },
     initialPageParam: 0,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: false, // Don't refetch on mount unless data is stale
+    refetchInterval: false, // Disable automatic refetching
   });
 
-  // Infinite scroll handler with throttling
+  // Infinite scroll handler with improved throttling
   const handleScroll = useCallback(() => {
     if (!hasNextPage || isFetchingNextPage) return;
     
     const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
-    const threshold = document.documentElement.offsetHeight - 800;
+    const threshold = document.documentElement.offsetHeight - 1000;
     
     if (scrollPosition >= threshold) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Set up scroll listener with throttling
+  // Set up scroll listener with debouncing
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    const throttledHandler = () => {
+    let isScrolling = false;
+    
+    const debouncedHandler = () => {
+      if (isScrolling) return;
+      isScrolling = true;
+      
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 150);
+      timeoutId = setTimeout(() => {
+        handleScroll();
+        isScrolling = false;
+      }, 200);
     };
     
-    window.addEventListener('scroll', throttledHandler, { passive: true });
+    window.addEventListener('scroll', debouncedHandler, { passive: true });
     return () => {
-      window.removeEventListener('scroll', throttledHandler);
+      window.removeEventListener('scroll', debouncedHandler);
       clearTimeout(timeoutId);
     };
   }, [handleScroll]);
@@ -143,7 +152,7 @@ export default function CommunityPage() {
   );
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
+    queryClient.invalidateQueries({ queryKey: ['/api/feed/personal'] });
     toast({
       title: "Community feed refreshed",
       description: "Latest posts have been loaded",
@@ -151,7 +160,7 @@ export default function CommunityPage() {
   };
 
   const handlePostCreated = () => {
-    setRefreshKey(prev => prev + 1);
+    queryClient.invalidateQueries({ queryKey: ['/api/feed/personal'] });
   };
 
   if (isError) {
@@ -193,7 +202,7 @@ export default function CommunityPage() {
             {/* Create Post Section */}
             {user && (
               <div className="mb-6" data-create-post>
-                <CreatePost />
+                <CreatePost onSuccess={handlePostCreated} />
               </div>
             )}
 
