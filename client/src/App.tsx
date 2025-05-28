@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 
 // Conditional MarketplaceNav wrapper
 function MarketplaceNavWrapper() {
@@ -249,6 +250,7 @@ function App() {
                           <MobileNavigation />
                           <OfflineIndicator />
                           <LoginPopup delay={5000} />
+                          <GlobalLoginHandler />
                           {/* Offline simulator hidden as requested */}
                           {/* Chatbot will be implemented later when API key is available */}
                           {/* <ChatbotWindow /> */}
