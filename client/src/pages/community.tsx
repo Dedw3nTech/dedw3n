@@ -54,7 +54,7 @@ export default function CommunityPage() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAdVisible, setIsAdVisible] = useState(true);
-  const [sortBy, setSortBy] = useState<'new' | 'trending'>('new');
+  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'watchlist' | 'suggested'>('new');
 
   // Use the existing personal feed to show all posts for community feed
   const {
@@ -240,7 +240,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  popular
+                  Popular
                 </button>
                 <button
                   onClick={() => setSortBy('following')}
