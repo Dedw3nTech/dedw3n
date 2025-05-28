@@ -241,28 +241,6 @@ function App() {
                         <div className="flex flex-col min-h-screen">
                           <Header />
                           <MarketplaceNavWrapper />
-                          
-                          {/* Full-width banner card */}
-                          <div className="w-full bg-gradient-to-r from-blue-600 to-purple-600 py-8">
-                            <div className="container mx-auto px-4">
-                              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                                <div className="relative h-48 md:h-64 lg:h-80 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                                  <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-center text-white">
-                                      <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4">
-                                        Welcome to Dedw3n
-                                      </h1>
-                                      <p className="text-lg md:text-xl lg:text-2xl opacity-90">
-                                        Your Complete Social Marketplace Experience
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
