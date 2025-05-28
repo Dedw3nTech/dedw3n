@@ -126,14 +126,14 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             {getActionIcon()}
           </div>
-          <DialogTitle className="text-xl font-bold">
-            Join Dedw3n to {getActionMessage()}
+          <DialogTitle className="text-2xl font-bold text-gray-900">
+            Join Our Community
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600">
-            Connect, share, and discover amazing content with our community
+          <DialogDescription className="text-gray-600">
+            Sign in to unlock all features including posting, messaging, and personalized content.
           </DialogDescription>
         </DialogHeader>
 
@@ -205,7 +205,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loginMutation.isPending || registerMutation.isPending}>
+          <Button type="submit" className="w-full bg-black hover:bg-gray-900 text-white" disabled={loginMutation.isPending || registerMutation.isPending}>
             {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
         </form>
