@@ -83,6 +83,14 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
       return;
     }
     
+    // Check if user has activated dating in their profile
+    if (!user.datingEnabled) {
+      // Show dialog to activate dating feature
+      setSelectedRoom(roomId);
+      setShowConfirmDialog(true);
+      return;
+    }
+    
     // Check if user has access to this room based on their subscription
     const userSubscription = user.datingSubscription || 'normal';
     const hasAccess = checkRoomAccess(roomId, userSubscription);
@@ -130,7 +138,8 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
         {rooms.map((room) => {
           const userSubscription = user?.datingSubscription || 'normal';
           const hasAccess = checkRoomAccess(room.id, userSubscription);
-          const isLocked = !hasAccess;
+          const isDatingDisabled = user && !user.datingEnabled;
+          const isLocked = !hasAccess || isDatingDisabled;
           
           return (
             <Card 
@@ -196,11 +205,23 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Upgrade to {selectedRoom === "vip" ? "VIP" : "VVIP"} Room</DialogTitle>
-            <DialogDescription>
-              You're about to upgrade to the {selectedRoom === "vip" ? "VIP" : "VVIP"} dating experience. 
-              This will unlock premium features and enhance your dating journey.
-            </DialogDescription>
+            {user && !user.datingEnabled ? (
+              <>
+                <DialogTitle>Activate Dating Feature</DialogTitle>
+                <DialogDescription>
+                  To access dating rooms, you need to activate the dating feature in your profile first. 
+                  This will enable you to connect with others and find meaningful relationships.
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <DialogTitle>Upgrade to {selectedRoom === "vip" ? "VIP" : "VVIP"} Room</DialogTitle>
+                <DialogDescription>
+                  You're about to upgrade to the {selectedRoom === "vip" ? "VIP" : "VVIP"} dating experience. 
+                  This will unlock premium features and enhance your dating journey.
+                </DialogDescription>
+              </>
+            )}
           </DialogHeader>
           
           <div className="flex justify-end space-x-3 mt-6">
@@ -208,10 +229,16 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
               Cancel
             </Button>
             <Button 
-              className={selectedRoom === "vip" ? "bg-purple-500 hover:bg-purple-600" : "bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"}
+              className={
+                user && !user.datingEnabled 
+                  ? "bg-blue-500 hover:bg-blue-600"
+                  : selectedRoom === "vip" 
+                  ? "bg-purple-500 hover:bg-purple-600" 
+                  : "bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
+              }
               onClick={handleConfirmSelection}
             >
-              Confirm Upgrade
+              {user && !user.datingEnabled ? "Activate Dating" : "Confirm Upgrade"}
             </Button>
           </div>
         </DialogContent>

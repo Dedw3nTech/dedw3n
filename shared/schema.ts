@@ -46,6 +46,7 @@ export const users = pgTable("users", {
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   twoFactorSecret: text("two_factor_secret"),
   datingSubscription: datingSubscriptionEnum("dating_subscription").default('normal'),
+  datingEnabled: boolean("dating_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
