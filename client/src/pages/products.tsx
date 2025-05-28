@@ -575,11 +575,11 @@ export default function Products() {
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-between items-center">
+        <CardFooter className="flex justify-end items-center relative">
           <Button
             size="sm"
             onClick={() => shareOnFeed(product)}
-            className="bg-black text-white hover:bg-gray-800"
+            className="bg-black text-white hover:bg-gray-800 absolute left-0"
           >
             Repost
           </Button>
