@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { DatingRoomWall } from "@/components/DatingRoomWall";
 
 
 // Dating preferences types
@@ -275,8 +276,9 @@ export default function DatingPage() {
         icon={<Heart className="h-6 w-6" />}
       />
       
-      <div className="mt-8">
-        <Tabs defaultValue="browse">
+      <DatingRoomWall>
+        <div className="mt-8">
+          <Tabs defaultValue="browse">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="browse">
                 <Users className="h-4 w-4 mr-2" />
@@ -617,7 +619,8 @@ export default function DatingPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      </DatingRoomWall>
     </div>
   );
 }
