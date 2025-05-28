@@ -423,6 +423,30 @@ export default function PostCard({
     commentMutation.mutate(commentText);
   };
 
+  const handleMakeOffer = () => {
+    if (!currentUser) {
+      showLoginPrompt("make an offer");
+      return;
+    }
+    setIsOfferModalOpen(true);
+  };
+
+  const handleSendOffer = () => {
+    if (!offerAmount.trim() || !offerMessage.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both an offer amount and message",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    offerMutation.mutate({ 
+      amount: offerAmount, 
+      message: offerMessage 
+    });
+  };
+
   // Video player functions
   const toggleVideoPlay = () => {
     if (videoRef.current) {
@@ -891,10 +915,7 @@ export default function PostCard({
             variant="ghost" 
             size="sm"
             className="flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-orange-500 hover:border-orange-600"
-            onClick={() => {
-              // Add make offer functionality here
-              toast({ title: "Make an offer feature coming soon!" });
-            }}
+            onClick={handleMakeOffer}
           >
             <span>Make an Offer</span>
           </Button>
@@ -1047,6 +1068,67 @@ export default function PostCard({
         </div>
       )}
       
+      {/* Make Offer Modal */}
+      <Dialog open={isOfferModalOpen} onOpenChange={setIsOfferModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Make an Offer</DialogTitle>
+            <DialogDescription>
+              Send an offer to {post.user.name} for this item
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="offer-amount" className="text-right font-medium">
+                Amount ($)
+              </label>
+              <Input
+                id="offer-amount"
+                type="number"
+                placeholder="0.00"
+                value={offerAmount}
+                onChange={(e) => setOfferAmount(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <label htmlFor="offer-message" className="text-right font-medium pt-2">
+                Message
+              </label>
+              <Textarea
+                id="offer-message"
+                placeholder="Tell them why you're interested..."
+                value={offerMessage}
+                onChange={(e) => setOfferMessage(e.target.value)}
+                className="col-span-3 min-h-[80px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsOfferModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendOffer}
+              disabled={offerMutation.isPending}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {offerMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Offer"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Prompt Modal */}
       <LoginPromptModal 
         isOpen={isOpen} 
