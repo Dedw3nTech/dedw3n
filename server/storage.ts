@@ -131,6 +131,7 @@ export interface IStorage {
   getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
   getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]>;
   getTotalPostsCount(): Promise<number>;
+  getPostsByRegion(userId: number, limit: number, offset: number): Promise<Post[]>;
   
   // Like operations
   likePost(postId: number, userId: number): Promise<boolean>;
@@ -3539,6 +3540,52 @@ export class DatabaseStorage implements IStorage {
 
   async getUserFollowingCount(userId: number): Promise<number> {
     return this.getFollowingCount(userId);
+  }
+
+  async getPostsByRegion(userId: number, limit: number, offset: number): Promise<Post[]> {
+    try {
+      // First get the current user's region
+      const [currentUser] = await db.select({ region: users.region }).from(users).where(eq(users.id, userId));
+      
+      if (!currentUser || !currentUser.region) {
+        // If user has no region set, return empty array
+        return [];
+      }
+
+      // Get posts from users in the same region
+      const regionPosts = await db
+        .select({
+          post: posts,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar,
+            isVendor: users.isVendor
+          }
+        })
+        .from(posts)
+        .leftJoin(users, eq(posts.userId, users.id))
+        .where(eq(users.region, currentUser.region))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      // Transform the results to match the Post interface
+      return regionPosts.map(row => ({
+        ...row.post,
+        user: row.user || {
+          id: 0,
+          username: 'Unknown',
+          name: 'Unknown User',
+          avatar: null,
+          isVendor: false
+        }
+      })) as Post[];
+    } catch (error) {
+      console.error('Error getting posts by region:', error);
+      return [];
+    }
   }
 }
 

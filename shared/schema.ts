@@ -25,6 +25,20 @@ export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', '
 // Define dating subscription levels enum
 export const datingSubscriptionEnum = pgEnum('dating_subscription', ['normal', 'vip', 'vvip']);
 
+// Define regions enum
+export const regionEnum = pgEnum('region', [
+  'Africa', 
+  'South Asia', 
+  'East Asia', 
+  'Oceania', 
+  'North America', 
+  'Central America', 
+  'South America', 
+  'Middle East', 
+  'Europe', 
+  'Central Asia'
+]);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -47,7 +61,7 @@ export const users = pgTable("users", {
   twoFactorSecret: text("two_factor_secret"),
   datingSubscription: datingSubscriptionEnum("dating_subscription").default('normal'),
   datingEnabled: boolean("dating_enabled").default(false),
-  region: text("region"),
+  region: regionEnum("region"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
