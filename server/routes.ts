@@ -2164,8 +2164,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Products API endpoints
   app.get('/api/products', async (req: Request, res: Response) => {
     try {
-      const products = await storage.getProducts();
-      res.json(products);
+      const {
+        search,
+        categories,
+        regions,
+        minPrice,
+        maxPrice,
+        onSale,
+        isNew,
+        sortBy
+      } = req.query;
+
+      console.log('[DEBUG] Products API called with filters:', req.query);
+
+      let query = db.select().from(products);
+      const conditions = [];
+
+      // Search filter
+      if (search && typeof search === 'string') {
+        conditions.push(
+          or(
+            like(products.name, `%${search}%`),
+            like(products.description, `%${search}%`)
+          )
+        );
+      }
+
+      // Category filter
+      if (categories && typeof categories === 'string') {
+        const categoryList = categories.split(',').map(c => c.trim());
+        if (categoryList.length > 0) {
+          conditions.push(
+            or(...categoryList.map(category => eq(products.category, category)))
+          );
+        }
+      }
+
+      // Price range filter
+      if (minPrice && typeof minPrice === 'string') {
+        const min = parseFloat(minPrice);
+        if (!isNaN(min)) {
+          conditions.push(sql`${products.price} >= ${min}`);
+        }
+      }
+
+      if (maxPrice && typeof maxPrice === 'string') {
+        const max = parseFloat(maxPrice);
+        if (!isNaN(max)) {
+          conditions.push(sql`${products.price} <= ${max}`);
+        }
+      }
+
+      // Apply conditions if any
+      if (conditions.length > 0) {
+        query = query.where(sql`${conditions.reduce((acc, condition) => acc ? sql`${acc} AND ${condition}` : condition, null)}`);
+      }
+
+      // Apply sorting
+      if (sortBy && typeof sortBy === 'string') {
+        switch (sortBy) {
+          case 'price-low-high':
+            query = query.orderBy(products.price);
+            break;
+          case 'price-high-low':
+            query = query.orderBy(sql`${products.price} DESC`);
+            break;
+          case 'newest':
+            query = query.orderBy(sql`${products.id} DESC`);
+            break;
+          case 'trending':
+          default:
+            // Default ordering by id desc for trending
+            query = query.orderBy(sql`${products.id} DESC`);
+            break;
+        }
+      } else {
+        query = query.orderBy(sql`${products.id} DESC`);
+      }
+
+      const filteredProducts = await query;
+      
+      console.log(`[DEBUG] Found ${filteredProducts.length} products after filtering`);
+      res.json(filteredProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Failed to fetch products' });
