@@ -393,7 +393,7 @@ export default function Products() {
             onClick={() => shareOnFeed(product)}
             className="bg-black text-white hover:bg-gray-800"
           >
-            Post
+            Repost
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
