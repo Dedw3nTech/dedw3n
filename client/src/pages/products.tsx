@@ -333,21 +333,43 @@ export default function Products() {
           </div>
           
           {/* Price moved below title */}
-          <div>
-            {product.discountPrice ? (
-              <div className="flex items-center">
+          <div className="flex items-center justify-between">
+            <div>
+              {product.discountPrice ? (
+                <div className="flex items-center">
+                  <div className="font-bold text-blue-600">
+                    {formatPriceWithCurrency(product.discountPrice, currency)}
+                    {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
+                  </div>
+                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceWithCurrency(product.price, currency)}</div>
+                </div>
+              ) : (
                 <div className="font-bold text-blue-600">
-                  {formatPriceWithCurrency(product.discountPrice, currency)}
+                  {formatPriceWithCurrency(product.price, currency)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                 </div>
-                <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceWithCurrency(product.price, currency)}</div>
-              </div>
-            ) : (
-              <div className="font-bold text-blue-600">
-                {formatPriceWithCurrency(product.price, currency)}
-                {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
-              </div>
-            )}
+              )}
+            </div>
+            <Button 
+              variant="ghost"
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (marketType === 'c2c') {
+                  setLocation(`/product/${product.id}`);
+                } else {
+                  addToCartMutation.mutate(product.id);
+                }
+              }}
+              disabled={addToCartMutation.isPending}
+              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal ml-2"
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                marketType === 'c2c' ? 'View' : 'Buy'
+              )}
+            </Button>
           </div>
           
           <div className="text-sm text-gray-500">{product.category}</div>
@@ -366,59 +388,37 @@ export default function Products() {
         </CardContent>
         
         <CardFooter className="flex justify-end items-center">
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Share Product</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => shareByEmail(product)}>
-                  <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                  Share via Email
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
-                  <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-                  Copy Link
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareOnFeed(product)}>
-                  <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                  Share on Feed
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => shareViaMessage(product)}>
-                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                  Send via Message
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
-                  <Users className="h-4 w-4 mr-2 text-blue-600" />
-                  Share with Member
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button 
-              variant="ghost"
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (marketType === 'c2c') {
-                  setLocation(`/product/${product.id}`);
-                } else {
-                  addToCartMutation.mutate(product.id);
-                }
-              }}
-              disabled={addToCartMutation.isPending}
-              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal"
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                marketType === 'c2c' ? 'View' : 'Buy'
-              )}
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Share Product</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => shareByEmail(product)}>
+                <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                Share via Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
+                <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
+                Copy Link
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => shareOnFeed(product)}>
+                <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                Share on Feed
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => shareViaMessage(product)}>
+                <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                Send via Message
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
+                <Users className="h-4 w-4 mr-2 text-blue-600" />
+                Share with Member
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardFooter>
       </Card>
     ));
