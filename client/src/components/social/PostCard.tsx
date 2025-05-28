@@ -56,7 +56,23 @@ import {
   Users,
   Truck,
   Star,
+  Mail,
+  MessageCircle,
+  Repeat2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Type for the post object
 interface Post {
@@ -125,6 +141,9 @@ export default function PostCard({
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
   const [offerMessage, setOfferMessage] = useState("");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
   
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -375,6 +394,95 @@ export default function PostCard({
         variant: "destructive",
       });
     },
+  });
+
+  // Repost mutation
+  const repostMutation = useMutation({
+    mutationFn: async ({ message }: { message: string }) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/posts`,
+        { 
+          content: message,
+          sharedPostId: post.id
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to repost");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reposted",
+        description: "Post shared to your timeline",
+      });
+      setIsShareModalOpen(false);
+      setShareMessage("");
+      
+      // Invalidate query cache to refresh posts
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to repost",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/messages/send`,
+        { 
+          recipientId: parseInt(userId),
+          content: `📤 Shared post: "${post.content}"\n\n${message}\n\nOriginal post: ${window.location.origin}/post/${post.id}`
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send message");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message sent",
+        description: "Post shared via message",
+      });
+      setIsShareModalOpen(false);
+      setShareMessage("");
+      setSelectedUser("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch users for message sharing
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const response = await fetch("/api/users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      return response.json();
+    },
+    enabled: isShareModalOpen,
   });
 
   const handleLike = () => {
@@ -957,20 +1065,50 @@ export default function PostCard({
             <span>{post.comments}</span>
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => requireAuth("share", handleShare)}
-            disabled={shareMutation.isPending}
-          >
-            {shareMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Share2 className="h-4 w-4" />
-            )}
-            <span>{post.shares}</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                <Share2 className="h-4 w-4" />
+                <span>{post.shares}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => requireAuth("share", () => setIsShareModalOpen(true))}
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Message
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const subject = `Check out this post from ${post.user.name}`;
+                  const body = `${post.content}\n\nView original post: ${window.location.origin}/post/${post.id}`;
+                  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                }}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                E-mail
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => requireAuth("repost", () => {
+                  setShareMessage(`Shared from @${post.user.username}`);
+                  repostMutation.mutate({ message: `Shared from @${post.user.username}` });
+                })}
+                disabled={repostMutation.isPending}
+              >
+                {repostMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Repeat2 className="mr-2 h-4 w-4" />
+                )}
+                Repost
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
       </CardFooter>
@@ -1130,6 +1268,73 @@ export default function PostCard({
                 </>
               ) : (
                 "Send Offer"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Modal */}
+      <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Share Post</DialogTitle>
+            <DialogDescription>
+              Send this post to a user via message
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="select-user" className="text-right font-medium">Send to</label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user: any) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name} (@{user.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <label htmlFor="share-message" className="text-right font-medium pt-2">
+                Message
+              </label>
+              <Textarea
+                id="share-message"
+                placeholder="Add a message..."
+                value={shareMessage}
+                onChange={(e) => setShareMessage(e.target.value)}
+                className="col-span-3 min-h-[80px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsShareModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedUser && shareMessage) {
+                  sendMessageMutation.mutate({ userId: selectedUser, message: shareMessage });
+                }
+              }}
+              disabled={sendMessageMutation.isPending || !selectedUser || !shareMessage}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {sendMessageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
               )}
             </Button>
           </DialogFooter>
