@@ -310,20 +310,34 @@ function MarketplacePromoSection() {
   
   if (!isMarketplacePage) return null;
   
-  // Get market type from URL parameters or localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  const marketType = urlParams.get('market') || localStorage.getItem('marketType') || 'b2c';
+  // Use React state to track market type changes
+  const [marketType, setMarketType] = React.useState(() => localStorage.getItem('marketType') || 'b2c');
+  
+  // Listen for storage changes to update when market type switches
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      setMarketType(localStorage.getItem('marketType') || 'b2c');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Also check for changes manually since localStorage doesn't trigger storage event for same tab
+    const interval = setInterval(handleStorageChange, 100);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
   
   // Get the appropriate promotional image for this market type
   const currentPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.top || marketPromoImages.b2c.top;
   
   return (
-    <div className="w-full">
+    <div className="w-full" key={`marketplace-top-${marketType}`}>
       <img 
-        src={`${currentPromoImage}?v=${Date.now()}`}
+        src={currentPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
         className="w-full h-[400px] object-cover"
-        key={`promo-${marketType}-${Date.now()}`}
       />
     </div>
   );
