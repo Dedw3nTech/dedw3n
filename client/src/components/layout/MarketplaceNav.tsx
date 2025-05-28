@@ -128,8 +128,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           {/* Right corner buttons */}
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
-              className="flex items-center gap-2 px-4 py-2 border-gray-200 hover:bg-gray-50"
+              variant="ghost"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/cart")}
             >
               <ShoppingBag className="h-4 w-4" />
@@ -137,8 +137,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             </Button>
             
             <Button
-              variant="outline"
-              className="flex items-center gap-2 px-4 py-2 border-gray-200 hover:bg-gray-50"
+              variant="ghost"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/wallet")}
             >
               <Wallet className="h-4 w-4" />
