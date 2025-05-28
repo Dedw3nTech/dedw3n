@@ -15,6 +15,7 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import promoImage from "@assets/Black Friday Email Header .png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
+import bottomPromoImage from "@assets/Black Friday Email Header  (1).png";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -310,8 +311,8 @@ function MarketplaceBottomPromoSection() {
   return (
     <div className="w-full">
       <img 
-        src={sellCampaignImage} 
-        alt="Dedwen Pre-Launch Campaign - Buy, Sell, Socialize, Love" 
+        src={bottomPromoImage} 
+        alt="Dedwen Black Friday - Professional Fashion Collection" 
         className="w-full h-64 object-cover"
       />
     </div>
