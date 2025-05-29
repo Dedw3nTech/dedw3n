@@ -27,12 +27,13 @@ import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
 import b2cHeaderImage from "@assets/Copy of Dedw3n Business B2C Header.png";
+import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
   b2c: {
     top: b2cHeaderImage, // Currently: Copy of Dedw3n Business B2C Header.png (professional business people)
-    bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
+    bottom: b2cFooterImage, // Currently: Dedw3n Business B2C Footer.png (artistic portrait with mobile app interface)
   },
   b2b: {
     top: b2bHeaderImage, // Currently: Dedw3n Business B2B.png (professional businessman on phone)
