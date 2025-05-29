@@ -49,8 +49,9 @@ export function PopularProductsCard() {
             <p className="text-gray-500 text-sm">No popular products yet</p>
             <Button 
               asChild 
-              variant="outline" 
-              className="mt-3"
+              variant="ghost" 
+              className="mt-3 border-0"
+              style={{ fontSize: '12px' }}
             >
               <Link href="/products">
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -133,8 +134,9 @@ export function PopularProductsCard() {
             <div className="pt-2">
               <Button 
                 asChild 
-                variant="outline" 
-                className="w-full"
+                variant="ghost" 
+                className="w-full border-0"
+                style={{ fontSize: '12px' }}
               >
                 <Link href="/products?sort=popular">
                   <TrendingUp className="h-4 w-4 mr-2" />
