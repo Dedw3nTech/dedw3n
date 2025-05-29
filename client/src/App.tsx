@@ -57,6 +57,8 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
   
   // Only show marketplace nav on marketplace-related pages
   const showOnPaths = [
+    '/',
+    '/marketplace',
     '/products',
     '/product',
     '/vendors',
@@ -125,7 +127,6 @@ import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
 import LikedPage from "@/pages/liked";
-import B2CLandingPage from "@/pages/b2c-landing";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";
@@ -315,8 +316,8 @@ function MarketplacePromoSection() {
   const [location] = useLocation();
   const { marketType } = useMarketType();
   
-  // Only show on marketplace-related pages (excluding home page)
-  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
+  // Only show on marketplace-related pages (including home page)
+  const isMarketplacePage = location === "/" || location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
   
   if (!isMarketplacePage) return null;
   
