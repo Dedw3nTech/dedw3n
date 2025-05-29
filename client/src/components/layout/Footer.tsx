@@ -59,13 +59,10 @@ export default function Footer() {
 
           
           <p className="text-xs text-gray-500 text-center md:text-left">
-            <span className="text-black font-medium">Dedw3n Ltd.</span> is a British Company registered in England, Wales and Scotland
-            under registration number <span className="font-medium">15930281</span>, whose registered office is
-            situated <span className="font-medium">50 Essex Street, London, England, WC2R3JF</span>.
+            <span className="text-black font-medium">Dedw3n Ltd.</span> is a British Company registered in England, Wales and Scotland under registration number <span className="font-medium">15930281</span>, whose registered office is situated <span className="font-medium">50 Essex Street, London, England, WC2R3JF</span>.
           </p>
           <p className="text-xs text-gray-500 text-center md:text-left">
-            Our bank is registered with HSBC UK IBAN <span className="font-medium">GB79 HBUK 4003 2782 3984 94</span>
-            (BIC <span className="font-medium">BUKGB4B</span>), our sole official website is <a href="https://www.dedw3n.com" className="text-gray-500 hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
+            Our bank is registered with HSBC UK IBAN <span className="font-medium">GB79 HBUK 4003 2782 3984 94</span> (BIC <span className="font-medium">BUKGB4B</span>), our sole official website is <a href="https://www.dedw3n.com" className="text-gray-500 hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
           </p>
         </div>
       </div>
