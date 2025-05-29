@@ -364,7 +364,7 @@ export default function CommunityPage() {
                   <h3 className="text-[14px] font-semibold text-gray-900 mb-2">
                     You've reached the end!
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-[12px] text-gray-600 mb-4">
                     You've seen all available posts in the community feed. Check back later for new content or try refreshing to see if there are any updates.
                   </p>
                   <Button 
