@@ -22,7 +22,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => {
                 setMarketType("c2c");
-                setLocation("/products");
+                setLocation("/marketplace");
               }}
             >
               <div className="mb-2">
@@ -45,7 +45,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => {
                 setMarketType("b2c");
-                setLocation("/products");
+                setLocation("/marketplace");
               }}
             >
               <div className="mb-2">
@@ -68,7 +68,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => {
                 setMarketType("b2b");
-                setLocation("/products");
+                setLocation("/marketplace");
               }}
             >
               <div className="mb-2">
