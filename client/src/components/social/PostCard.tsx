@@ -719,19 +719,6 @@ export default function PostCard({
                       @{post.user.username}
                     </p>
                   </div>
-                  
-                  {/* Add Friend Button - only show for other users */}
-                  {currentUser && currentUser.id !== post.userId && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1"
-                      onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
-                    >
-                      <Plus className="h-3 w-3" />
-                      <span style={{ fontSize: '16px' }}>Add Friend</span>
-                    </Button>
-                  )}
                 </div>
                 {post.community && (
                   <>
@@ -751,10 +738,25 @@ export default function PostCard({
                   </>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <CalendarDays className="h-3 w-3 inline mr-1" />
-                {formatDate(post.createdAt)}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground flex items-center">
+                  <CalendarDays className="h-3 w-3 inline mr-1" />
+                  {formatDate(post.createdAt)}
+                </p>
+                
+                {/* Add Friend Button - only show for other users */}
+                {currentUser && currentUser.id !== post.userId && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1"
+                    onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span style={{ fontSize: '16px' }}>Add Friend</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           
