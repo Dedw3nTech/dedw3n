@@ -207,6 +207,22 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
       )}
 
       <div className="space-y-2">
+        <Label htmlFor="country">Select Your Country</Label>
+        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose your country" />
+          </SelectTrigger>
+          <SelectContent className="max-h-60 overflow-y-auto">
+            {COUNTRIES.map((country) => (
+              <SelectItem key={country} value={country}>
+                {country}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="city">Your City</Label>
         <Input
           id="city"
@@ -226,22 +242,6 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
           {updateCityMutation.isPending ? 'Updating...' : 'Save City'}
         </Button>
       )}
-
-      <div className="space-y-2">
-        <Label htmlFor="country">Select Your Country</Label>
-        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose your country" />
-          </SelectTrigger>
-          <SelectContent className="max-h-60 overflow-y-auto">
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
       
       {selectedCountry !== currentCountry && (
         <Button 
