@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
 import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
+import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
@@ -402,6 +403,7 @@ export default function CommunityPage() {
           {/* Products Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
+              <TrendingCategoriesCard />
               <LatestProductsCard />
               <PopularProductsCard />
               <SidebarAdCard />
