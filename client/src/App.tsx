@@ -26,11 +26,12 @@ import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
 import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
+import b2cHeaderImage from "@assets/Copy of Dedw3n Business B2C Header.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
   b2c: {
-    top: luxuryB2CImage, // Currently: Dedw3n Marketplace (1).png (luxury couple with leopard)
+    top: b2cHeaderImage, // Currently: Copy of Dedw3n Business B2C Header.png (professional business people)
     bottom: bottomPromoImage, // Currently: Copy of Dedw3n Marketplace.png
   },
   b2b: {
