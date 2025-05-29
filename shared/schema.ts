@@ -235,6 +235,21 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Friend requests model
+export const friendRequests = pgTable("friend_requests", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  message: text("message"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, accepted, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueFriendRequest: unique().on(table.senderId, table.recipientId),
+  };
+});
+
 // User connections model
 export const connections = pgTable("connections", {
   id: serial("id").primaryKey(),
@@ -633,6 +648,9 @@ export const insertCreatorEarningSchema = createInsertSchema(creatorEarnings)
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true, updatedAt: true });
   
+export const insertFriendRequestSchema = createInsertSchema(friendRequests)
+  .omit({ id: true, status: true, createdAt: true, updatedAt: true });
+
 export const insertConnectionSchema = createInsertSchema(connections)
   .omit({ id: true, status: true, createdAt: true, updatedAt: true });
   
@@ -712,6 +730,9 @@ export type InsertCreatorEarning = z.infer<typeof insertCreatorEarningSchema>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type FriendRequest = typeof friendRequests.$inferSelect;
+export type InsertFriendRequest = z.infer<typeof insertFriendRequestSchema>;
 
 export type Connection = typeof connections.$inferSelect;
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;

@@ -2614,6 +2614,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Friend request routes
+  app.post("/api/friends/request", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { recipientId, message } = req.body;
+      const senderId = req.user!.id;
+
+      // Check if friend request already exists
+      const existingRequest = await storage.getFriendRequest(senderId, recipientId);
+      if (existingRequest) {
+        return res.status(400).json({ message: "Friend request already sent" });
+      }
+
+      // Create friend request
+      const friendRequest = await storage.createFriendRequest({
+        senderId,
+        recipientId,
+        message: message || "Hi! I'd like to be friends."
+      });
+
+      res.json({ message: "Friend request sent successfully", friendRequest });
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      res.status(500).json({ message: "Failed to send friend request" });
+    }
+  });
+
+  app.get("/api/friends/requests", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const requests = await storage.getFriendRequests(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching friend requests:", error);
+      res.status(500).json({ message: "Failed to fetch friend requests" });
+    }
+  });
+
+  app.post("/api/friends/accept/:requestId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const userId = req.user!.id;
+
+      await storage.acceptFriendRequest(requestId, userId);
+      res.json({ message: "Friend request accepted" });
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      res.status(500).json({ message: "Failed to accept friend request" });
+    }
+  });
+
+  app.post("/api/friends/reject/:requestId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const userId = req.user!.id;
+
+      await storage.rejectFriendRequest(requestId, userId);
+      res.json({ message: "Friend request rejected" });
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+      res.status(500).json({ message: "Failed to reject friend request" });
+    }
+  });
+
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
   setupWebSocket(httpServer);
