@@ -361,7 +361,7 @@ export default function CommunityPage() {
             {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
               <div className="text-center py-8">
                 <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-[14px]">
                     You've reached the end!
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
@@ -407,7 +407,6 @@ export default function CommunityPage() {
           </div>
         </div>
       </div>
-
     </Container>
   );
 }
