@@ -36,7 +36,7 @@ export function SidebarAdCard() {
           
           {/* Promotional Badge */}
           <div className="absolute top-3 left-3">
-            <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
+            <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
               LIMITED TIME
             </div>
           </div>
