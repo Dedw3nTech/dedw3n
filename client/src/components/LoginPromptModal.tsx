@@ -128,7 +128,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold text-gray-900">Join Dedw3n</DialogTitle>
           <DialogDescription className="text-gray-600">
-            Sign in to unlock all features including posting, messaging, and personalized content.
+            Sign in to unlock all features !
           </DialogDescription>
         </DialogHeader>
 
