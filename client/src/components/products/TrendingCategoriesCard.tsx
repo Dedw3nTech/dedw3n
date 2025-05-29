@@ -65,8 +65,12 @@ export function TrendingCategoriesCard() {
                 
                 <div className="flex-1 min-w-0 text-center sm:text-left w-full">
                   <div className="space-y-1">
-                    <h4 className="font-medium break-words leading-tight text-center sm:text-left" style={{ fontSize: '9px' }}>
-                      {category.name}
+                    <h4 className="font-medium leading-tight text-center sm:text-left" style={{ fontSize: '10px', lineHeight: '1.2' }}>
+                      {category.name.split(' ').map((word, wordIndex) => (
+                        <div key={wordIndex} className="block">
+                          {word}
+                        </div>
+                      ))}
                     </h4>
                     {category.growth > 0 && (
                       <div className="flex items-center gap-1 text-green-600 justify-center sm:justify-start">
