@@ -8,7 +8,7 @@ export default function B2CLandingPage() {
 
   const handleShopNow = () => {
     setMarketType('b2c');
-    setLocation('/products');
+    setLocation('/marketplace');
   };
 
   return (

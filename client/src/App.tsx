@@ -339,7 +339,7 @@ function MarketplaceBottomPromoSection() {
   const { marketType } = useMarketType();
   
   // Only show on marketplace-related pages (excluding home page)
-  const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
+  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
   
   if (!isMarketplacePage) return null;
   
