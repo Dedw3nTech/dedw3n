@@ -109,7 +109,7 @@ import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
-import { LoginPopup } from "@/components/ui/login-popup";
+
 
 // Import new page components
 import Products from "@/pages/products";
@@ -291,7 +291,7 @@ function App() {
                           <Footer />
                           <MobileNavigation />
                           <OfflineIndicator />
-                          <LoginPopup delay={5000} />
+
                           <GlobalLoginHandler />
                           {/* Offline simulator hidden as requested */}
                           {/* Chatbot will be implemented later when API key is available */}
