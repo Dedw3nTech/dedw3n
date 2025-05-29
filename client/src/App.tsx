@@ -166,6 +166,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/marketplace" component={Products} />
+      <Route path="/products" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
