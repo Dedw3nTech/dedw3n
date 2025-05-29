@@ -78,7 +78,7 @@ export function LatestProductsCard() {
                   </h4>
                   
                   <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 mt-1 flex-wrap">
-                    <span className="font-bold text-green-600 text-xs sm:text-sm whitespace-nowrap">
+                    <span className="font-normal text-blue-600 whitespace-nowrap" style={{ fontSize: '12px' }}>
                       ${product.price}
                     </span>
                     {product.rating && (
