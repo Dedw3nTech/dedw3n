@@ -42,9 +42,19 @@ export function TrendingProductsToolbar() {
     );
   }
 
-  // Only show the toolbar if there are products to display
+  // Show placeholder when no products are available
   if (products.length === 0) {
-    return null;
+    return (
+      <div className="bg-white text-black p-2 mb-4 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <span className="text-sm font-semibold text-black">Trending Products</span>
+        </div>
+        <div className="text-xs text-gray-500">
+          No trending products available
+        </div>
+      </div>
+    );
   }
 
   // Duplicate products for seamless scrolling
