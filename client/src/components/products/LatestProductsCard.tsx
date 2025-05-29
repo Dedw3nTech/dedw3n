@@ -26,7 +26,7 @@ export function LatestProductsCard() {
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="font-semibold tracking-tight flex items-center gap-2 text-[15px]">
           <ShoppingBag className="h-5 w-5 text-blue-600" />
           Latest Products
         </CardTitle>
