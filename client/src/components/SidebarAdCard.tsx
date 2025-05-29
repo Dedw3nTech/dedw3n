@@ -43,7 +43,7 @@ export function SidebarAdCard() {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 bg-gray-100 border border-gray-300">
           <h3 className="font-bold text-lg text-gray-900 mb-2">
             🎉 Special Launch Offer
           </h3>
