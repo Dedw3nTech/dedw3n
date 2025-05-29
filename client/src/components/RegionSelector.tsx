@@ -65,7 +65,7 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
 
   const updateRegionMutation = useMutation({
     mutationFn: async (region: string) => {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
 
   const updateCountryMutation = useMutation({
     mutationFn: async (country: string) => {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
 
   const updateCityMutation = useMutation({
     mutationFn: async (city: string) => {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

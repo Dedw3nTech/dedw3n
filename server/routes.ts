@@ -1268,6 +1268,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update current user's profile
+  app.patch('/api/users/profile', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const updateData = req.body;
+      console.log(`[DEBUG] Updating profile for user ${userId} with data:`, updateData);
+
+      // Update the user profile
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Remove sensitive data before sending response
+      const { password, passwordResetToken, passwordResetExpires, verificationToken, ...userWithoutPassword } = updatedUser;
+      
+      console.log(`[DEBUG] Profile updated successfully for user ${userId}`);
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      res.status(500).json({ message: 'Failed to update user profile' });
+    }
+  });
+
   // Get user profile by username
   app.get('/api/users/:username', unifiedIsAuthenticated, async (req, res) => {
     try {
