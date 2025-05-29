@@ -162,10 +162,12 @@ export default function Social() {
 
   return (
     <div className="bg-background">
-      <div className="container mx-auto px-4 py-6">
-        {/* Trending Products Toolbar - Always visible at top */}
+      {/* Trending Products Toolbar - Full width at top */}
+      <div className="w-full px-4 py-2 bg-background">
         <TrendingProductsToolbar />
-        
+      </div>
+      
+      <div className="container mx-auto px-4 py-6">
         {/* User Profile Card removed as requested */}
         
         {/* Social Navigation moved to header */}

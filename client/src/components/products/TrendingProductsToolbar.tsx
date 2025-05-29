@@ -45,7 +45,7 @@ export function TrendingProductsToolbar() {
   // Show placeholder when no products are available
   if (products.length === 0) {
     return (
-      <div className="bg-white text-black p-2 mb-4 rounded-lg border border-gray-200">
+      <div className="w-full bg-white text-black p-3 mb-4 rounded-lg border border-gray-200">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
           <span className="text-sm font-semibold text-black">Trending Products</span>
@@ -61,7 +61,7 @@ export function TrendingProductsToolbar() {
   const scrollingProducts = [...products, ...products];
 
   return (
-    <div className="bg-white text-black p-2 mb-4 rounded-lg overflow-hidden relative border border-gray-200">
+    <div className="w-full bg-white text-black p-3 mb-4 rounded-lg overflow-hidden relative border border-gray-200">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <span className="text-sm font-semibold text-black">Trending Products</span>
