@@ -12,7 +12,7 @@ export function SidebarAdCard() {
   }
 
   return (
-    <Card className="w-full border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+    <Card className="w-full border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
       <CardContent className="p-0 relative">
         {/* Close button */}
         <button
