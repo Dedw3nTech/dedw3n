@@ -54,7 +54,7 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service']);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
@@ -371,7 +371,7 @@ export default function Products() {
     setPriceRange([0, maxPrice]);
     setSelectedCategories([]);
     setSelectedRegions([]);
-    setSelectedProductTypes(['product', 'service']);
+    setSelectedProductTypes([]);
     setShowSale(false);
     setShowNew(false);
   };
