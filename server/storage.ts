@@ -15,7 +15,7 @@ import {
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
-  likedProducts,
+  likedProducts, friendRequests,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -157,6 +157,13 @@ export interface IStorage {
   unlikeProduct(userId: number, productId: number): Promise<boolean>;
   checkProductLiked(userId: number, productId: number): Promise<boolean>;
   getUserLikedProducts(userId: number): Promise<Product[]>;
+  
+  // Friend request operations
+  createFriendRequest(request: { senderId: number, recipientId: number, message: string }): Promise<any>;
+  getFriendRequest(senderId: number, recipientId: number): Promise<any>;
+  getFriendRequests(userId: number): Promise<any[]>;
+  acceptFriendRequest(requestId: number, userId: number): Promise<void>;
+  rejectFriendRequest(requestId: number, userId: number): Promise<void>;
   
   // Comment operations
   createComment(comment: InsertComment): Promise<Comment>;
@@ -3761,6 +3768,130 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting post:', error);
       return false;
+    }
+  }
+
+  // Friend request operations
+  async createFriendRequest(request: { senderId: number, recipientId: number, message: string }): Promise<any> {
+    try {
+      const [friendRequest] = await db
+        .insert(friendRequests)
+        .values({
+          senderId: request.senderId,
+          recipientId: request.recipientId,
+          message: request.message,
+          status: 'pending'
+        })
+        .returning();
+      return friendRequest;
+    } catch (error) {
+      console.error('Error creating friend request:', error);
+      throw error;
+    }
+  }
+
+  async getFriendRequest(senderId: number, recipientId: number): Promise<any> {
+    try {
+      const [friendRequest] = await db
+        .select()
+        .from(friendRequests)
+        .where(and(
+          eq(friendRequests.senderId, senderId),
+          eq(friendRequests.recipientId, recipientId),
+          eq(friendRequests.status, 'pending')
+        ))
+        .limit(1);
+      return friendRequest;
+    } catch (error) {
+      console.error('Error getting friend request:', error);
+      return undefined;
+    }
+  }
+
+  async getFriendRequests(userId: number): Promise<any[]> {
+    try {
+      const requests = await db
+        .select({
+          id: friendRequests.id,
+          senderId: friendRequests.senderId,
+          recipientId: friendRequests.recipientId,
+          message: friendRequests.message,
+          status: friendRequests.status,
+          createdAt: friendRequests.createdAt,
+          sender: {
+            id: users.id,
+            name: users.name,
+            username: users.username,
+            avatar: users.avatar
+          }
+        })
+        .from(friendRequests)
+        .innerJoin(users, eq(friendRequests.senderId, users.id))
+        .where(and(
+          eq(friendRequests.recipientId, userId),
+          eq(friendRequests.status, 'pending')
+        ))
+        .orderBy(desc(friendRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error('Error getting friend requests:', error);
+      return [];
+    }
+  }
+
+  async acceptFriendRequest(requestId: number, userId: number): Promise<void> {
+    try {
+      // First get the friend request
+      const [request] = await db
+        .select()
+        .from(friendRequests)
+        .where(and(
+          eq(friendRequests.id, requestId),
+          eq(friendRequests.recipientId, userId),
+          eq(friendRequests.status, 'pending')
+        ));
+
+      if (!request) {
+        throw new Error('Friend request not found');
+      }
+
+      // Update the friend request status
+      await db
+        .update(friendRequests)
+        .set({ status: 'accepted' })
+        .where(eq(friendRequests.id, requestId));
+
+      // Create mutual connections
+      await db.insert(connections).values({
+        userId1: request.senderId,
+        userId2: request.recipientId,
+        status: 'active'
+      });
+
+      await db.insert(connections).values({
+        userId1: request.recipientId,
+        userId2: request.senderId,
+        status: 'active'
+      });
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      throw error;
+    }
+  }
+
+  async rejectFriendRequest(requestId: number, userId: number): Promise<void> {
+    try {
+      await db
+        .update(friendRequests)
+        .set({ status: 'rejected' })
+        .where(and(
+          eq(friendRequests.id, requestId),
+          eq(friendRequests.recipientId, userId),
+          eq(friendRequests.status, 'pending')
+        ));
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      throw error;
     }
   }
 }
