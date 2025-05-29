@@ -106,7 +106,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
-import CleanHome from "@/pages/clean-home";
+
 
 import Header from "@/components/layout/Header-clean";
 import Footer from "@/components/layout/Footer";
@@ -167,7 +167,7 @@ function Router() {
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>
-      <Route path="/" component={CleanHome} />
+      <Route path="/" component={Products} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/marketplace" component={Products} />
@@ -279,7 +279,23 @@ function App() {
                     <CurrencyProvider>
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
-                          <ConditionalLayout />
+                          <Header />
+                          <MarketplaceNavWrapper />
+                          
+                          {/* New Section Above Main - Only show on marketplace pages */}
+                          <MarketplacePromoSection />
+                          
+                          <main className="flex-grow">
+                            <ApiErrorBoundary showHomeButton={false}>
+                              <Router />
+                            </ApiErrorBoundary>
+                          </main>
+                          
+                          {/* New Section Below Main - Only show on marketplace pages */}
+                          <MarketplaceBottomPromoSection />
+                          
+                          <Footer />
+                          <MobileNavigation />
                           <OfflineIndicator />
 
                           <GlobalLoginHandler />
