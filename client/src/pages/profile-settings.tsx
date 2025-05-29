@@ -36,7 +36,10 @@ export default function ProfileSettingsPage() {
         name: user.name || '',
         username: user.username || '',
         bio: user.bio || '',
-        avatar: user.avatar || ''
+        avatar: user.avatar || '',
+        region: user.region || '',
+        country: user.country || '',
+        city: user.city || ''
       });
     }
   }, [user]);
@@ -109,10 +112,10 @@ export default function ProfileSettingsPage() {
   };
 
   const handleProfileUpdate = async () => {
-    // Validate required fields
-    const isRegionMissing = !user?.region;
-    const isCountryMissing = !user?.country;
-    const isCityMissing = !user?.city?.trim();
+    // Validate required fields using formData
+    const isRegionMissing = !formData.region;
+    const isCountryMissing = !formData.country;
+    const isCityMissing = !formData.city?.trim();
 
     if (isRegionMissing || isCountryMissing || isCityMissing) {
       setShowValidationErrors(true);

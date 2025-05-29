@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const REGIONS = [
   'Africa',
@@ -50,9 +47,19 @@ interface RegionSelectorProps {
   onCountryChange?: (country: string) => void;
   onCityChange?: (city: string) => void;
   showErrors?: boolean;
+  disabled?: boolean;
 }
 
-export default function RegionSelector({ currentRegion, currentCountry, currentCity, onRegionChange, onCountryChange, onCityChange, showErrors = false }: RegionSelectorProps) {
+export default function RegionSelector({ 
+  currentRegion, 
+  currentCountry, 
+  currentCity, 
+  onRegionChange, 
+  onCountryChange, 
+  onCityChange, 
+  showErrors = false, 
+  disabled = false 
+}: RegionSelectorProps) {
   const [selectedRegion, setSelectedRegion] = useState(currentRegion || '');
   const [selectedCountry, setSelectedCountry] = useState(currentCountry || '');
   const [selectedCity, setSelectedCity] = useState(currentCity || '');
@@ -67,157 +74,22 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
   const isRegionMissing = showErrors && !selectedRegion;
   const isCountryMissing = showErrors && !selectedCountry;
   const isCityMissing = showErrors && !selectedCity.trim();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const updateRegionMutation = useMutation({
-    mutationFn: async (region: string) => {
-      const response = await fetch('/api/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ region }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update region');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Region Updated',
-        description: 'Your region has been successfully updated.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      onRegionChange?.(selectedRegion);
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update region. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const updateCountryMutation = useMutation({
-    mutationFn: async (country: string) => {
-      const response = await fetch('/api/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ country }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update country');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Country Updated',
-        description: 'Your country has been successfully updated.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      onCountryChange?.(selectedCountry);
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update country. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const updateCityMutation = useMutation({
-    mutationFn: async (city: string) => {
-      const response = await fetch('/api/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ city }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update city');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'City Updated',
-        description: 'Your city has been successfully updated.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      onCityChange?.(selectedCity);
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update city. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const handleSaveRegion = () => {
-    if (selectedRegion) {
-      updateRegionMutation.mutate(selectedRegion);
-    }
+  const handleRegionChange = (value: string) => {
+    setSelectedRegion(value);
+    onRegionChange?.(value);
   };
 
-  const handleSaveCountry = () => {
-    if (selectedCountry) {
-      updateCountryMutation.mutate(selectedCountry);
-    }
+  const handleCountryChange = (value: string) => {
+    setSelectedCountry(value);
+    onCountryChange?.(value);
   };
 
-  const handleSaveCity = () => {
-    if (selectedCity.trim()) {
-      updateCityMutation.mutate(selectedCity.trim());
-    }
+  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSelectedCity(value);
+    onCityChange?.(value);
   };
-
-  const handleSaveAllLocation = async () => {
-    try {
-      // Save all location fields in sequence
-      if (selectedRegion && selectedRegion !== currentRegion) {
-        await updateRegionMutation.mutateAsync(selectedRegion);
-      }
-      if (selectedCountry && selectedCountry !== currentCountry) {
-        await updateCountryMutation.mutateAsync(selectedCountry);
-      }
-      if (selectedCity.trim() && selectedCity.trim() !== (currentCity || '')) {
-        await updateCityMutation.mutateAsync(selectedCity.trim());
-      }
-    } catch (error) {
-      console.error('Failed to save location data:', error);
-    }
-  };
-
-  // Check if any location field has changed
-  const hasLocationChanges = 
-    (selectedRegion !== currentRegion) ||
-    (selectedCountry !== currentCountry) ||
-    (selectedCity.trim() !== (currentCity || ''));
-
-  // Check if any mutation is pending
-  const isAnyMutationPending = 
-    updateRegionMutation.isPending ||
-    updateCountryMutation.isPending ||
-    updateCityMutation.isPending;
 
   return (
     <div className="space-y-4">
@@ -225,7 +97,7 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
         <Label htmlFor="region" className={isRegionMissing ? 'text-red-600' : ''}>
           Select Your Region {showErrors && <span className="text-red-600">*</span>}
         </Label>
-        <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+        <Select value={selectedRegion} onValueChange={handleRegionChange} disabled={disabled}>
           <SelectTrigger className={isRegionMissing ? 'border-red-500 focus:border-red-500' : ''}>
             <SelectValue placeholder="Choose your region" />
           </SelectTrigger>
@@ -246,7 +118,7 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
         <Label htmlFor="country" className={isCountryMissing ? 'text-red-600' : ''}>
           Select Your Country {showErrors && <span className="text-red-600">*</span>}
         </Label>
-        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+        <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled}>
           <SelectTrigger className={isCountryMissing ? 'border-red-500 focus:border-red-500' : ''}>
             <SelectValue placeholder="Choose your country" />
           </SelectTrigger>
@@ -272,23 +144,14 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
           type="text"
           placeholder="Enter your city name"
           value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
+          onChange={handleCityChange}
+          disabled={disabled}
           className={isCityMissing ? 'border-red-500 focus:border-red-500' : ''}
         />
         {isCityMissing && (
           <p className="text-red-600 text-sm">Please enter your city name</p>
         )}
       </div>
-      
-      {hasLocationChanges && (
-        <Button 
-          onClick={handleSaveAllLocation} 
-          disabled={isAnyMutationPending || (!selectedRegion || !selectedCountry || !selectedCity.trim())}
-          className="w-full"
-        >
-          {isAnyMutationPending ? 'Saving...' : 'Save'}
-        </Button>
-      )}
     </div>
   );
 }
