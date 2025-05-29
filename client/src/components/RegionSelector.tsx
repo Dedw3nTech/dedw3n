@@ -207,6 +207,27 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
       )}
 
       <div className="space-y-2">
+        <Label htmlFor="city">Your City</Label>
+        <Input
+          id="city"
+          type="text"
+          placeholder="Enter your city name"
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+        />
+      </div>
+      
+      {selectedCity.trim() !== (currentCity || '') && (
+        <Button 
+          onClick={handleSaveCity} 
+          disabled={updateCityMutation.isPending || !selectedCity.trim()}
+          className="w-full"
+        >
+          {updateCityMutation.isPending ? 'Updating...' : 'Save City'}
+        </Button>
+      )}
+
+      <div className="space-y-2">
         <Label htmlFor="country">Select Your Country</Label>
         <Select value={selectedCountry} onValueChange={setSelectedCountry}>
           <SelectTrigger>
@@ -229,27 +250,6 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
           className="w-full"
         >
           {updateCountryMutation.isPending ? 'Updating...' : 'Save Country'}
-        </Button>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="city">Your City</Label>
-        <Input
-          id="city"
-          type="text"
-          placeholder="Enter your city name"
-          value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
-        />
-      </div>
-      
-      {selectedCity.trim() !== (currentCity || '') && (
-        <Button 
-          onClick={handleSaveCity} 
-          disabled={updateCityMutation.isPending || !selectedCity.trim()}
-          className="w-full"
-        >
-          {updateCityMutation.isPending ? 'Updating...' : 'Save City'}
         </Button>
       )}
     </div>
