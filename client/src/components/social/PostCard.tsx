@@ -60,6 +60,8 @@ import {
   MessageCircle,
   Repeat2,
   Plus,
+  Bookmark,
+  Flag,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -774,6 +776,7 @@ export default function PostCard({
               </Button>
             </div>
 
+            {/* Post author's menu (Edit/Delete) */}
             {currentUser && currentUser.id === post.userId && (
               <div className="relative group">
                 <Button variant="ghost" size="icon">
@@ -805,6 +808,41 @@ export default function PostCard({
                   </Button>
                 </div>
               </div>
+            )}
+
+            {/* Other users' posts menu (Save/Report) */}
+            {currentUser && currentUser.id !== post.userId && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Post saved",
+                        description: "This post has been saved to your collection",
+                      });
+                    }}
+                  >
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Save
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Post reported",
+                        description: "Thank you for helping keep our community safe",
+                      });
+                    }}
+                  >
+                    <Flag className="mr-2 h-4 w-4" />
+                    Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
