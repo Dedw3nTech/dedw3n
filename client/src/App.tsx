@@ -106,7 +106,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
-import BusinessMarketplace from "@/pages/business-marketplace";
+
 
 
 import Header from "@/components/layout/Header-clean";
@@ -192,7 +192,6 @@ function Router() {
       <Route path="/community-guidelines" component={CommunityGuidelines} />
       <Route path="/remove-ads" component={RemoveAdsPage} />
       <Route path="/api-test" component={ApiTestPage} />
-      <Route path="/business-marketplace" component={BusinessMarketplace} />
       
       {/* Protected routes - require authentication */}
       <Route path="/social">
