@@ -26,13 +26,13 @@ import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
 import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B Header.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
-import b2cHeaderImage from "@assets/Dedw3n Business C2c header.png";
+import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
 import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
   b2c: {
-    top: b2cHeaderImage, // Currently: Dedw3n Business C2c header.png (diverse marketplace community with Dedw3n branding)
+    top: b2cHeaderImage, // Currently: Dedw3n Business B2C Header (1).png (professional business people with enhanced styling)
     bottom: b2cFooterImage, // Currently: Dedw3n Business B2C Footer.png (artistic portrait with mobile app interface)
   },
   b2b: {
