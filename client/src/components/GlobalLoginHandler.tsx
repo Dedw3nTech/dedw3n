@@ -7,6 +7,13 @@ export function GlobalLoginHandler() {
   const { user } = useAuth();
   const { isOpen, action, showLoginPrompt, closePrompt } = useLoginPrompt();
 
+  // Close login modal when user becomes authenticated
+  useEffect(() => {
+    if (user && isOpen) {
+      closePrompt();
+    }
+  }, [user, isOpen, closePrompt]);
+
   useEffect(() => {
     // Only add global click handler if user is not authenticated
     if (!user) {
