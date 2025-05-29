@@ -59,6 +59,7 @@ import {
   Mail,
   MessageCircle,
   Repeat2,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -144,6 +145,8 @@ export default function PostCard({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
+  const [isFriendRequestModalOpen, setIsFriendRequestModalOpen] = useState(false);
+  const [friendRequestMessage, setFriendRequestMessage] = useState("");
   
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -435,6 +438,42 @@ export default function PostCard({
     },
   });
 
+  // Friend request mutation
+  const friendRequestMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: number; message: string }) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/friends/request`,
+        { 
+          recipientId: userId,
+          message: message
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send friend request");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setFriendRequestMessage("");
+      setIsFriendRequestModalOpen(false);
+      toast({
+        title: "Friend Request Sent!",
+        description: "Your friend request has been sent successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send friend request",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
@@ -706,6 +745,19 @@ export default function PostCard({
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Add Friend Button - only show for other users */}
+            {currentUser && currentUser.id !== post.userId && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center gap-1"
+                onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Friend</span>
+              </Button>
+            )}
+
             {/* Mobile Share Button */}
             <div className="block md:hidden">
               <Button 
@@ -1354,6 +1406,63 @@ export default function PostCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Friend Request Modal */}
+      <Dialog open={isFriendRequestModalOpen} onOpenChange={setIsFriendRequestModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Friend</DialogTitle>
+            <DialogDescription>
+              Send a friend request to {post.user.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-start gap-4">
+              <label htmlFor="friend-request-message" className="text-right font-medium pt-2">
+                Message (Optional)
+              </label>
+              <Textarea
+                id="friend-request-message"
+                placeholder="Add a personal message..."
+                value={friendRequestMessage}
+                onChange={(e) => setFriendRequestMessage(e.target.value)}
+                className="col-span-3 min-h-[80px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsFriendRequestModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                friendRequestMutation.mutate({ 
+                  userId: post.userId, 
+                  message: friendRequestMessage || "Hi! I'd like to be friends." 
+                });
+              }}
+              disabled={friendRequestMutation.isPending}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {friendRequestMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Send Friend Request
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Login Prompt Modal */}
       <LoginPromptModal 
         isOpen={isOpen} 
