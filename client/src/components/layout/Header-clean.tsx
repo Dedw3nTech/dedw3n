@@ -138,7 +138,7 @@ export default function Header() {
             {/* Navigation links next to search */}
             <div className="flex items-center space-x-6">
               <button
-                onClick={() => setLocation("/products")}
+                onClick={() => setLocation("/marketplace")}
                 className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
               >
                 Marketplace
