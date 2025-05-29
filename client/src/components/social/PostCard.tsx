@@ -704,19 +704,34 @@ export default function PostCard({
             </Avatar>
             <div>
               <div className="flex items-center">
-                <div>
-                  <p 
-                    className="font-medium cursor-pointer hover:underline"
-                    onClick={() => setLocation(`/profile/${post.user.username}`)}
-                  >
-                    {post.user.name}
-                  </p>
-                  <p 
-                    className="text-xs text-blue-600 cursor-pointer hover:underline"
-                    onClick={() => setLocation(`/profile/${post.user.username}`)}
-                  >
-                    @{post.user.username}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <p 
+                      className="font-medium cursor-pointer hover:underline"
+                      onClick={() => setLocation(`/profile/${post.user.username}`)}
+                    >
+                      {post.user.name}
+                    </p>
+                    <p 
+                      className="text-xs text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => setLocation(`/profile/${post.user.username}`)}
+                    >
+                      @{post.user.username}
+                    </p>
+                  </div>
+                  
+                  {/* Add Friend Button - only show for other users */}
+                  {currentUser && currentUser.id !== post.userId && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1"
+                      onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span className="text-xs">Add Friend</span>
+                    </Button>
+                  )}
                 </div>
                 {post.community && (
                   <>
@@ -736,25 +751,10 @@ export default function PostCard({
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground flex items-center">
-                  <CalendarDays className="h-3 w-3 inline mr-1" />
-                  {formatDate(post.createdAt)}
-                </p>
-                
-                {/* Add Friend Button - only show for other users */}
-                {currentUser && currentUser.id !== post.userId && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1"
-                    onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span className="text-xs">Add Friend</span>
-                  </Button>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground flex items-center">
+                <CalendarDays className="h-3 w-3 inline mr-1" />
+                {formatDate(post.createdAt)}
+              </p>
             </div>
           </div>
           
