@@ -1,9 +1,6 @@
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
-
-// Import promotional images
-import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
-import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace.png';
+import { Button } from '@/components/ui/button';
 
 export default function B2CLandingPage() {
   const [, setLocation] = useLocation();
@@ -16,27 +13,21 @@ export default function B2CLandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative">
-        <div className="w-full">
-          <img 
-            src={luxuryB2CImage}
-            alt="Dedwen B2C Marketplace"
-            className="w-full h-[500px] object-cover cursor-pointer"
+      {/* Simple Hero Section */}
+      <section className="relative bg-gradient-to-r from-blue-600 to-purple-700 py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-5xl font-bold text-white mb-6">
+            Welcome to Dedwen B2C Marketplace
+          </h1>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Discover premium products and connect with businesses worldwide
+          </p>
+          <Button 
             onClick={handleShopNow}
-          />
-        </div>
-      </section>
-
-      {/* Bottom Section */}
-      <section className="relative">
-        <div className="w-full">
-          <img 
-            src={bottomPromoImage}
-            alt="Dedwen B2C Marketplace"
-            className="w-full h-[350px] object-cover cursor-pointer"
-            onClick={handleShopNow}
-          />
+            className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg font-semibold"
+          >
+            Start Shopping
+          </Button>
         </div>
       </section>
     </div>

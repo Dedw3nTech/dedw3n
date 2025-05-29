@@ -854,17 +854,6 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header Advertisement */}
-      <section className="relative">
-        <div className="w-full">
-          <img 
-            src={luxuryB2CImage}
-            alt="Dedwen B2C Marketplace"
-            className="w-full h-[400px] object-cover cursor-pointer"
-            onClick={() => setLocation('/products')}
-          />
-        </div>
-      </section>
 
       <div className="container mx-auto px-4 py-8">
 
@@ -1135,18 +1124,6 @@ export default function Products() {
       </Dialog>
       
       </div>
-
-      {/* Footer Advertisement */}
-      <section className="relative">
-        <div className="w-full">
-          <img 
-            src={bottomPromoImage}
-            alt="Dedwen B2C Marketplace"
-            className="w-full h-[350px] object-cover cursor-pointer"
-            onClick={() => setLocation('/products')}
-          />
-        </div>
-      </section>
     </div>
   );
 }
