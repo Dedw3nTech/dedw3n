@@ -51,10 +51,10 @@ export function TrendingProductsToolbar() {
   const scrollingProducts = [...products, ...products];
 
   return (
-    <div className="bg-black text-white p-2 mb-4 rounded-lg overflow-hidden relative">
+    <div className="bg-white text-black p-2 mb-4 rounded-lg overflow-hidden relative border border-gray-200">
       <div className="flex items-center gap-2 mb-1">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span className="text-xs font-semibold text-green-400">LIVE MARKET</span>
+        <span className="text-sm font-semibold text-black">Trending Products</span>
       </div>
       
       <div className="relative overflow-hidden">
@@ -64,17 +64,17 @@ export function TrendingProductsToolbar() {
               key={`${product.id}-${index}`}
               className="flex items-center gap-2 mr-8 flex-shrink-0"
             >
-              <span className="text-sm font-medium text-white truncate max-w-32">
+              <span className="text-sm font-medium text-black truncate max-w-32">
                 {product.name}
               </span>
               
               <div className="flex items-center gap-1">
-                <span className="text-sm font-bold text-white">
+                <span className="text-sm font-bold text-black">
                   ${product.price.toFixed(2)}
                 </span>
                 
                 <div className={`flex items-center gap-1 ${
-                  product.priceChange >= 0 ? 'text-green-400' : 'text-red-400'
+                  product.priceChange >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
                   {product.priceChange >= 0 ? (
                     <TrendingUp className="h-3 w-3" />
