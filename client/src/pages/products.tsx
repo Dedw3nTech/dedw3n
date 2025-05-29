@@ -296,6 +296,11 @@ export default function Products() {
         return false;
       }
       
+      // Filter by product type
+      if (selectedProductTypes.length > 0 && !selectedProductTypes.includes(product.productType || 'product')) {
+        return false;
+      }
+      
       // Filter by sale status
       if (showSale && !product.isOnSale) {
         return false;
@@ -366,6 +371,7 @@ export default function Products() {
     setPriceRange([0, maxPrice]);
     setSelectedCategories([]);
     setSelectedRegions([]);
+    setSelectedProductTypes(['product', 'service']);
     setShowSale(false);
     setShowNew(false);
   };
@@ -939,6 +945,18 @@ export default function Products() {
                 </Badge>
               ))}
               
+              {selectedProductTypes.length < 2 && selectedProductTypes.map(productType => (
+                <Badge key={productType} variant="outline" className="flex items-center gap-1">
+                  {productType === 'product' ? 'Products' : 'Services'}
+                  <button
+                    onClick={() => toggleProductType(productType)}
+                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+              
               {showSale && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   On Sale
@@ -963,7 +981,7 @@ export default function Products() {
                 </Badge>
               )}
               
-                {(selectedCategories.length > 0 || selectedRegions.length > 0 || showSale || showNew) && (
+                {(selectedCategories.length > 0 || selectedRegions.length > 0 || selectedProductTypes.length < 2 || showSale || showNew) && (
                   <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
                     Clear All
                   </Button>
