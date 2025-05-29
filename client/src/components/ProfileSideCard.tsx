@@ -85,7 +85,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/notifications">
-                <Bell className="h-6 w-6 mr-3 text-black" />
+                <Bell className="h-5 w-5 mr-3 text-gray-700" />
                 Notifications
               </Link>
             </Button>
@@ -96,7 +96,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/messages">
-                <MessageSquare className="h-5 w-5 mr-3" />
+                <MessageSquare className="h-5 w-5 mr-3 text-gray-700" />
                 Messages
               </Link>
             </Button>
@@ -107,7 +107,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/settings">
-                <Settings className="h-5 w-5 mr-3" />
+                <Settings className="h-5 w-5 mr-3 text-gray-700" />
                 Settings
               </Link>
             </Button>
@@ -119,7 +119,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/vendor-dashboard">
-                <Store className="h-5 w-5 mr-3" />
+                <Store className="h-5 w-5 mr-3 text-gray-700" />
                 Vendor Dashboard
               </Link>
             </Button>
@@ -130,7 +130,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/dating-dashboard">
-                <Heart className="h-5 w-5 mr-3" />
+                <Heart className="h-5 w-5 mr-3 text-gray-700" />
                 Dating Dashboard
               </Link>
             </Button>
@@ -146,7 +146,7 @@ export function ProfileSideCard() {
                   });
               }}
             >
-              <LogOut className="h-5 w-5 mr-3" />
+              <LogOut className="h-5 w-5 mr-3 text-blue-600" />
               Log Out
             </Button>
           </div>
