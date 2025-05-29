@@ -126,9 +126,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            {getActionIcon()}
-          </div>
           <DialogTitle className="text-2xl font-bold text-gray-900">Join Dedw3n</DialogTitle>
           <DialogDescription className="text-gray-600">
             Sign in to unlock all features including posting, messaging, and personalized content.
@@ -240,6 +237,10 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             >
               Privacy Policy
             </Button>
+          </p>
+          
+          <p className="text-gray-500 mt-3" style={{ fontSize: '10px', fontWeight: 'normal', width: '100%' }}>
+            By agreeing to sign up for Dedw3n Ltd., you are accepting several important agreements. This includes the platform's Terms of Service, which outlines the rules and regulations for using the platform. You also accept the platform's Privacy Policy, which explains how your personal information will be collected, used, and protected. Finally, you agree to follow the Community Guidelines, which define acceptable behavior and content within the platform's community.
           </p>
         </div>
       </DialogContent>
