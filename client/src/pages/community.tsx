@@ -360,7 +360,7 @@ export default function CommunityPage() {
             {/* End of Feed */}
             {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
               <div className="text-center py-8">
-                <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
+                <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     You've reached the end!
                   </h3>
