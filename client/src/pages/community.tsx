@@ -71,9 +71,9 @@ export default function CommunityPage() {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['/api/feed/personal', sortBy],
+    queryKey: ['/api/feed/community', sortBy],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetch(`/api/feed/personal?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sort=${sortBy}`, {
+      const response = await fetch(`/api/feed/community?offset=${pageParam}&limit=${POSTS_PER_PAGE}&sortBy=${sortBy}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,8 @@ export default function CommunityPage() {
       if (!response.ok) {
         throw new Error('Failed to fetch community feed');
       }
-      const posts = await response.json();
+      const result = await response.json();
+      const posts = result.posts || result;
       
       // Check if we've reached the end of posts
       const isEndOfFeed = posts.length < POSTS_PER_PAGE;
