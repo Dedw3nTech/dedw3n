@@ -57,26 +57,26 @@ export function TrendingCategoriesCard() {
         ) : (
           <>
             {categories.slice(0, 5).map((category: TrendingCategory, index: number) => (
-              <div key={category.id} className="flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={category.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                 {/* Trending Rank */}
-                <div className="w-6 h-6 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
                   {index + 1}
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-sm truncate">
+                <div className="flex-1 min-w-0 text-center sm:text-left w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <h4 className="font-medium break-words leading-tight" style={{ fontSize: '13px' }}>
                       {category.name}
                     </h4>
                     {category.growth > 0 && (
-                      <div className="flex items-center gap-1 text-green-600">
+                      <div className="flex items-center gap-1 text-green-600 justify-center sm:justify-start">
                         <TrendingUp className="h-3 w-3" />
                         <span className="text-xs">+{category.growth}%</span>
                       </div>
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-1 text-xs text-gray-500 flex-wrap">
                     <span>{category.posts} posts</span>
                     <span>{category.tags} tags</span>
                     <span>{category.shares} shares</span>
@@ -86,11 +86,11 @@ export function TrendingCategoriesCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 w-7 p-0 flex-shrink-0"
+                  className="h-8 w-8 p-0 flex-shrink-0 mx-auto sm:mx-0"
                   asChild
                 >
                   <Link href={`/products?category=${encodeURIComponent(category.name)}`}>
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-4 w-4" />
                   </Link>
                 </Button>
               </div>
