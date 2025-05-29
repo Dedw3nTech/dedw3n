@@ -23,7 +23,7 @@ import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import c2cFooterImage from "@assets/Dedw3n Business C2C Footer.png";
-import c2cHeaderImage from "@assets/Dedw3n Business C2c header.png";
+import c2cHeaderImage from "@assets/Dedw3n Business C2c header (1).png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B Header.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
 import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
