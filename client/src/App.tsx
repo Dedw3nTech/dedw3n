@@ -25,6 +25,7 @@ import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
 import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B.png";
+import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
 
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
@@ -34,7 +35,7 @@ const marketPromoImages = {
   },
   b2b: {
     top: b2bHeaderImage, // Currently: Dedw3n Business B2B.png (professional businessman on phone)
-    bottom: c2cMarketplaceImage, // Currently: Copy of Dedw3n Marketplace II.png (sophisticated businessman)
+    bottom: b2bFooterImage, // Currently: Dedw3n Business B2B Footer.png (professional businessman in suit)
   },
   c2c: {
     top: c2cHeaderImage, // Currently: Dedw3n Business II (2).png (professional businesswoman with glasses)
