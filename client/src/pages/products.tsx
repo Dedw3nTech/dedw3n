@@ -6,9 +6,8 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatPriceWithCurrency } from '@/lib/currencyConverter';
-// Promotional images will be imported here
-const luxuryB2CImage = '/assets/Copy of Dedw3n Marketplace.png';
-const bottomPromoImage = '/assets/Copy of Dedw3n Marketplace III.png';
+import luxuryB2CImage from '@assets/Copy of Dedw3n Marketplace.png';
+import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
 import {
   Card,
   CardContent,
