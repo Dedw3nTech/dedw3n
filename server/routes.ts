@@ -1525,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const posts = await storage.getPostsByCountry(userId, limit, offset);
         res.json(posts);
       } else {
-        const posts = await storage.getUserFeed(userId, sort, limit, offset);
+        const posts = await storage.getUserFeed(userId, limit, offset);
         res.json(posts);
       }
     } catch (error) {

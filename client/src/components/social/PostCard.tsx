@@ -723,13 +723,11 @@ export default function PostCard({
                     >
                       @{post.user.username}
                     </p>
-                    {post.user.region && (
+                    {(post.user.city || post.user.country || post.user.region) && (
                       <p className="text-xs text-gray-600 font-normal">
-                        {post.user.city && post.user.country 
-                          ? `${post.user.city}, ${post.user.country}, ${post.user.region}`
-                          : post.user.country 
-                            ? `${post.user.country}, ${post.user.region}`
-                            : post.user.region
+                        {[post.user.city, post.user.country, post.user.region]
+                          .filter(Boolean)
+                          .join(', ')
                         }
                       </p>
                     )}
