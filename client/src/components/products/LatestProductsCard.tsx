@@ -112,8 +112,9 @@ export function LatestProductsCard() {
             <div className="pt-2">
               <Button 
                 asChild 
-                variant="outline" 
-                className="w-full"
+                variant="ghost" 
+                className="w-full border-0"
+                style={{ fontSize: '14px' }}
               >
                 <Link href="/products">
                   <ExternalLink className="h-4 w-4 mr-2" />
