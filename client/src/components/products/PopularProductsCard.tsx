@@ -28,8 +28,8 @@ export function PopularProductsCard() {
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Flame className="h-5 w-5 text-orange-500" />
+        <CardTitle className="font-semibold tracking-tight flex items-center gap-2 text-[14px]">
+          <Flame className="h-5 w-5 text-blue-600" />
           Popular Products
         </CardTitle>
       </CardHeader>
