@@ -761,7 +761,7 @@ export default function PostCard({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1"
+                    className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1 ml-auto"
                     onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
                   >
                     <Plus className="h-3 w-3" />
