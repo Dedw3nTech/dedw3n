@@ -854,12 +854,8 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-white">
+
       <div className="container mx-auto px-4 py-8">
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
-          <p className="text-gray-600 mt-2">Discover and shop from our curated selection of products</p>
-        </div>
 
       <div className="flex justify-end items-center mb-4">
         {/* Mobile filter button */}
