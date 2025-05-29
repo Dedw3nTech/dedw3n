@@ -136,17 +136,18 @@ export default function RegionSelector({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="city" className={isCityMissing ? 'text-red-600' : ''}>
+        <Label htmlFor="city" className={isCityMissing ? 'text-red-600' : 'text-black'}>
           Your City {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Input
           id="city"
+          name="city"
           type="text"
-          placeholder="Enter your city name"
+          placeholder="Your city name"
           value={selectedCity}
           onChange={handleCityChange}
           disabled={disabled}
-          className={isCityMissing ? 'border-red-500 focus:border-red-500' : ''}
+          className={isCityMissing ? 'border-red-500 focus:border-red-500 text-black' : 'text-black'}
         />
         {isCityMissing && (
           <p className="text-red-600 text-sm">Please enter your city name</p>
