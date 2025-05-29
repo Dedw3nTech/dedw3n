@@ -21,6 +21,7 @@ export default function ProfileSettingsPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -108,6 +109,21 @@ export default function ProfileSettingsPage() {
   };
 
   const handleProfileUpdate = async () => {
+    // Validate required fields
+    const isRegionMissing = !user?.region;
+    const isCountryMissing = !user?.country;
+    const isCityMissing = !user?.city?.trim();
+
+    if (isRegionMissing || isCountryMissing || isCityMissing) {
+      setShowValidationErrors(true);
+      toast({
+        title: "Missing Required Information",
+        description: "Please fill in all required location fields (Region, Country, and City).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsUpdating(true);
       
@@ -444,6 +460,9 @@ export default function ProfileSettingsPage() {
                     </Label>
                     <RegionSelector 
                       currentRegion={user?.region}
+                      currentCountry={user?.country}
+                      currentCity={user?.city}
+                      showErrors={showValidationErrors}
                       onRegionChange={() => {
                         // Refresh user data after region update
                         queryClient.invalidateQueries({ queryKey: ['/api/user'] });
