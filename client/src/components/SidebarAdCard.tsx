@@ -49,7 +49,7 @@ export function SidebarAdCard() {
           </h3>
           
           <p className="text-sm text-gray-700 mb-3">
-            Get <span className="font-bold text-orange-600">50% OFF</span> on all premium products. 
+            Get <span className="font-bold text-blue-600">50% OFF</span> on all premium products. 
             Don't miss this exclusive deal!
           </p>
           
