@@ -161,9 +161,7 @@ function Router() {
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>
-      <Route path="/">
-        <Products marketType="b2c" />
-      </Route>
+      <Route path="/" component={Products} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/products" component={Products} />

@@ -6,6 +6,9 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatPriceWithCurrency } from '@/lib/currencyConverter';
+// Promotional images will be imported here
+const luxuryB2CImage = '/assets/Copy of Dedw3n Marketplace.png';
+const bottomPromoImage = '/assets/Copy of Dedw3n Marketplace III.png';
 import {
   Card,
   CardContent,
@@ -44,6 +47,8 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+
+
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -849,7 +854,20 @@ export default function Products() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-white">
+      {/* Header Advertisement */}
+      <section className="relative">
+        <div className="w-full">
+          <img 
+            src={luxuryB2CImage}
+            alt="Dedwen B2C Marketplace"
+            className="w-full h-[400px] object-cover cursor-pointer"
+            onClick={() => setLocation('/products')}
+          />
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-8">
 
       <div className="flex justify-end items-center mb-4">
         {/* Mobile filter button */}
@@ -1116,6 +1134,20 @@ export default function Products() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      </div>
+
+      {/* Footer Advertisement */}
+      <section className="relative">
+        <div className="w-full">
+          <img 
+            src={bottomPromoImage}
+            alt="Dedwen B2C Marketplace"
+            className="w-full h-[350px] object-cover cursor-pointer"
+            onClick={() => setLocation('/products')}
+          />
+        </div>
+      </section>
     </div>
   );
 }
