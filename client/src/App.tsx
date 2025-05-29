@@ -164,7 +164,7 @@ function Router() {
       <Route path="/" component={Products} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/logout-success" component={LogoutSuccess} />
-      <Route path="/products" component={Products} />
+      <Route path="/marketplace" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
       <Route path="/vendors" component={VendorsPage} />
       <Route path="/vendor/:id" component={VendorDetailPage} />
@@ -316,7 +316,7 @@ function MarketplacePromoSection() {
   const { marketType } = useMarketType();
   
   // Only show on marketplace-related pages (excluding home page)
-  const isMarketplacePage = location === "/products" || location === "/categories" || location.startsWith("/products/");
+  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
   
   if (!isMarketplacePage) return null;
   
