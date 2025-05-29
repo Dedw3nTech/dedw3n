@@ -708,7 +708,7 @@ export default function Products() {
               checked={selectedProductTypes.includes('product')}
               onCheckedChange={() => toggleProductType('product')}
             />
-            <Label htmlFor="show-products" className="text-[12px] font-normal">Products</Label>
+            <Label htmlFor="show-products" className="text-[12px] font-normal">Product</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -716,7 +716,7 @@ export default function Products() {
               checked={selectedProductTypes.includes('service')}
               onCheckedChange={() => toggleProductType('service')}
             />
-            <Label htmlFor="show-services" className="text-[12px] font-normal">Services</Label>
+            <Label htmlFor="show-services" className="text-[12px] font-normal">Service</Label>
           </div>
         </div>
       </div>

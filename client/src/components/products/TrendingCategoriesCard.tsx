@@ -58,11 +58,6 @@ export function TrendingCategoriesCard() {
           <>
             {categories.slice(0, 5).map((category: TrendingCategory, index: number) => (
               <div key={category.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                {/* Trending Rank */}
-                <div className="w-7 h-7 bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
-                  {index + 1}
-                </div>
-                
                 <div className="flex-1 min-w-0 text-center sm:text-left w-full">
                   <div className="space-y-1">
                     <h4 className="font-medium leading-tight text-center sm:text-left" style={{ fontSize: '10px', lineHeight: '1.2' }}>
