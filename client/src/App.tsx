@@ -24,7 +24,7 @@ import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
 import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
 import c2cHeaderImage from "@assets/Dedw3n Business II (2).png";
-import b2bHeaderImage from "@assets/Dedw3n Business B2B.png";
+import b2bHeaderImage from "@assets/Dedw3n Business B2B Header.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
 import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
 import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
@@ -36,7 +36,7 @@ const marketPromoImages = {
     bottom: b2cFooterImage, // Currently: Dedw3n Business B2C Footer.png (artistic portrait with mobile app interface)
   },
   b2b: {
-    top: b2bHeaderImage, // Currently: Dedw3n Business B2B.png (professional businessman on phone)
+    top: b2bHeaderImage, // Currently: Dedw3n Business B2B Header.png (professional businessman on phone with enhanced styling)
     bottom: b2bFooterImage, // Currently: Dedw3n Business B2B Footer.png (professional businessman in suit)
   },
   c2c: {
