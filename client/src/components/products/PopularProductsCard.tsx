@@ -45,7 +45,7 @@ export function PopularProductsCard() {
         ) : !products || !Array.isArray(products) || products.length === 0 ? (
           <div className="text-center py-8">
             <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-[12px]">No popular products yet</p>
+            <p className="text-gray-500" style={{ fontSize: '12px' }}>No popular products yet</p>
             <Button 
               asChild 
               variant="ghost" 
