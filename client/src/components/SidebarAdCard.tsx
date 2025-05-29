@@ -60,7 +60,7 @@ export function SidebarAdCard() {
             
             <Button 
               size="sm" 
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               <ExternalLink className="h-3 w-3 mr-1" />
               Shop Now
