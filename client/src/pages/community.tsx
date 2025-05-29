@@ -357,33 +357,7 @@ export default function CommunityPage() {
               </div>
             )}
 
-            {/* End of Feed */}
-            {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
-              <div className="text-center py-8">
-                <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="bg-blue-100 rounded-full p-2">
-                      <Users className="h-5 w-5 text-blue-600" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    You've reached the end!
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    You've seen all available posts in the community feed. Check back later for new content or try refreshing to see if there are any updates.
-                  </p>
-                  <Button 
-                    onClick={handleRefresh}
-                    variant="outline"
-                    size="sm"
-                    className="inline-flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh Feed
-                  </Button>
-                </div>
-              </div>
-            )}
+
 
             {/* Empty State */}
             {!isLoading && uniquePosts.length === 0 && (
