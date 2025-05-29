@@ -114,7 +114,7 @@ export function LatestProductsCard() {
                 asChild 
                 variant="ghost" 
                 className="w-full border-0"
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '12px' }}
               >
                 <Link href="/products">
                   <ExternalLink className="h-4 w-4 mr-2" />
