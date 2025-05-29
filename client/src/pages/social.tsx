@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -162,6 +163,9 @@ export default function Social() {
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-6">
+        {/* Trending Products Toolbar - Always visible at top */}
+        <TrendingProductsToolbar />
+        
         {/* User Profile Card removed as requested */}
         
         {/* Social Navigation moved to header */}
