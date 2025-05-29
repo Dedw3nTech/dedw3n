@@ -361,7 +361,7 @@ export default function CommunityPage() {
             {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
               <div className="text-center py-8">
                 <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center justify-center gap-2 mb-2">
                     <h3 className="text-[14px] font-semibold text-gray-900">
                       You've reached the end!
                     </h3>
