@@ -729,7 +729,7 @@ export default function PostCard({
                       onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
                     >
                       <Plus className="h-3 w-3" />
-                      <span className="text-xs">Add Friend</span>
+                      <span style={{ fontSize: '18px' }}>Add Friend</span>
                     </Button>
                   )}
                 </div>
