@@ -685,6 +685,10 @@ export default function Products() {
       </div>
 
       <div>
+        <h3 className="font-medium mb-2 text-[14px]">Product or Service</h3>
+      </div>
+
+      <div>
         <h3 className="font-medium mb-2 text-[14px]">Categories</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
