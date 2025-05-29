@@ -146,8 +146,8 @@ export default function PostCard({
   const [shareMessage, setShareMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [isFriendRequestModalOpen, setIsFriendRequestModalOpen] = useState(false);
-  const [friendRequestMessage, setFriendRequestMessage] = useState("");
-  
+  const [friendRequestMessage, setFriendRequestMessage] = useState("Hi! I'd like to be friends.");
+
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -338,6 +338,8 @@ export default function PostCard({
       return response.json();
     },
     onSuccess: () => {
+      setIsFriendRequestModalOpen(false);
+      setFriendRequestMessage("Hi! I'd like to be friends.");
       toast({
         title: "Friend request sent",
         description: "Your friend request has been sent successfully",
@@ -351,6 +353,8 @@ export default function PostCard({
       });
     },
   });
+
+
 
   // Delete post mutation
   const deleteMutation = useMutation({
@@ -1434,10 +1438,7 @@ export default function PostCard({
             </Button>
             <Button 
               onClick={() => {
-                friendRequestMutation.mutate({ 
-                  userId: post.userId, 
-                  message: friendRequestMessage || "Hi! I'd like to be friends." 
-                });
+                friendRequestMutation.mutate(friendRequestMessage || "Hi! I'd like to be friends.");
               }}
               disabled={friendRequestMutation.isPending}
               className="bg-blue-500 hover:bg-blue-600 text-white"
