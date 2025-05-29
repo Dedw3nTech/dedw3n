@@ -26,7 +26,10 @@ export default function ProfileSettingsPage() {
     name: '',
     username: '',
     bio: '',
-    avatar: ''
+    avatar: '',
+    region: '',
+    country: '',
+    city: ''
   });
 
   // Update form data when user data is available
@@ -462,13 +465,18 @@ export default function ProfileSettingsPage() {
                       My Region
                     </Label>
                     <RegionSelector 
-                      currentRegion={user?.region}
-                      currentCountry={user?.country}
-                      currentCity={user?.city}
+                      currentRegion={formData.region}
+                      currentCountry={formData.country}
+                      currentCity={formData.city}
                       showErrors={showValidationErrors}
-                      onRegionChange={() => {
-                        // Refresh user data after region update
-                        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+                      onRegionChange={(region) => {
+                        setFormData(prev => ({ ...prev, region }));
+                      }}
+                      onCountryChange={(country) => {
+                        setFormData(prev => ({ ...prev, country }));
+                      }}
+                      onCityChange={(city) => {
+                        setFormData(prev => ({ ...prev, city }));
                       }}
                     />
                     <p className="text-xs text-gray-600">
