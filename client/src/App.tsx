@@ -22,7 +22,7 @@ import c2cMarketplaceImage from "@assets/Copy of Dedw3n Marketplace II.png";
 import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
 import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
 import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
-import c2cFooterImage from "@assets/Copy of Dedw3n Marketplace III.png";
+import c2cFooterImage from "@assets/Dedw3n Business C2C Footer.png";
 import c2cHeaderImage from "@assets/Dedw3n Business C2c header.png";
 import b2bHeaderImage from "@assets/Dedw3n Business B2B Header.png";
 import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
@@ -41,7 +41,7 @@ const marketPromoImages = {
   },
   c2c: {
     top: c2cHeaderImage, // Currently: Dedw3n Business C2c header.png (diverse marketplace community with Dedw3n branding)
-    bottom: c2cFooterImage, // Currently: Copy of Dedw3n Marketplace III.png (urban street scene)
+    bottom: c2cFooterImage, // Currently: Dedw3n Business C2C Footer.png (professional C2C marketplace scene with Dedw3n branding)
   },
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
