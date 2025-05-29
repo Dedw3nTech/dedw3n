@@ -1698,25 +1698,79 @@ export class DatabaseStorage implements IStorage {
     try {
       const postsWithUsers = await db
         .select({
-          post: posts,
-          user: {
-            id: users.id,
-            username: users.username,
-            name: users.name,
-            avatar: users.avatar,
-            city: users.city,
-            country: users.country,
-            region: users.region
-          }
+          // Post fields
+          id: posts.id,
+          userId: posts.userId,
+          content: posts.content,
+          title: posts.title,
+          contentType: posts.contentType,
+          imageUrl: posts.imageUrl,
+          videoUrl: posts.videoUrl,
+          productId: posts.productId,
+          likes: posts.likes,
+          comments: posts.comments,
+          shares: posts.shares,
+          views: posts.views,
+          tags: posts.tags,
+          isPromoted: posts.isPromoted,
+          promotionEndDate: posts.promotionEndDate,
+          isPublished: posts.isPublished,
+          isFlagged: posts.isFlagged,
+          flagReason: posts.flagReason,
+          reviewStatus: posts.reviewStatus,
+          reviewedAt: posts.reviewedAt,
+          reviewedBy: posts.reviewedBy,
+          moderationNote: posts.moderationNote,
+          createdAt: posts.createdAt,
+          updatedAt: posts.updatedAt,
+          // User fields
+          user_id: users.id,
+          user_username: users.username,
+          user_name: users.name,
+          user_avatar: users.avatar,
+          user_city: users.city,
+          user_country: users.country,
+          user_region: users.region
         })
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
         .where(eq(posts.isPublished, true))
         .orderBy(desc(posts.createdAt));
 
-      return postsWithUsers.map(({ post, user }) => ({
-        ...post,
-        user
+      return postsWithUsers.map((row) => ({
+        id: row.id,
+        userId: row.userId,
+        content: row.content,
+        title: row.title,
+        contentType: row.contentType,
+        imageUrl: row.imageUrl,
+        videoUrl: row.videoUrl,
+        productId: row.productId,
+        likes: row.likes,
+        comments: row.comments,
+        shares: row.shares,
+        views: row.views,
+        tags: row.tags,
+        isPromoted: row.isPromoted,
+        promotionEndDate: row.promotionEndDate,
+        isPublished: row.isPublished,
+        isFlagged: row.isFlagged,
+        flagReason: row.flagReason,
+        reviewStatus: row.reviewStatus,
+        reviewedAt: row.reviewedAt,
+        reviewedBy: row.reviewedBy,
+        moderationNote: row.moderationNote,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        user: {
+          id: row.user_id,
+          username: row.user_username,
+          name: row.user_name,
+          avatar: row.user_avatar,
+          city: row.user_city,
+          country: row.user_country,
+          region: row.user_region
+        }
       }));
     } catch (error) {
       console.error('Error getting all posts:', error);

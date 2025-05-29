@@ -63,6 +63,7 @@ export const users = pgTable("users", {
   datingEnabled: boolean("dating_enabled").default(false),
   region: regionEnum("region"),
   country: text("country"),
+  city: text("city"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
