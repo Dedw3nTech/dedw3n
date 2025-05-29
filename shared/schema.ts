@@ -39,6 +39,9 @@ export const regionEnum = pgEnum('region', [
   'Central Asia'
 ]);
 
+// Define product type enum
+export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -92,6 +95,7 @@ export const products = pgTable("products", {
   inventory: integer("inventory").default(1),
   isNew: boolean("is_new").default(false),
   isOnSale: boolean("is_on_sale").default(false),
+  productType: productTypeEnum("product_type").default('product').notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

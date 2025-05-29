@@ -54,6 +54,7 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service']);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
@@ -348,6 +349,14 @@ export default function Products() {
       prev.includes(region)
         ? prev.filter(r => r !== region)
         : [...prev, region]
+    );
+  };
+
+  const toggleProductType = (productType: string) => {
+    setSelectedProductTypes(prev => 
+      prev.includes(productType)
+        ? prev.filter(pt => pt !== productType)
+        : [...prev, productType]
     );
   };
   
@@ -686,6 +695,24 @@ export default function Products() {
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Product or Service</h3>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-products"
+              checked={selectedProductTypes.includes('product')}
+              onCheckedChange={() => toggleProductType('product')}
+            />
+            <Label htmlFor="show-products" className="text-[12px] font-normal">Products</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-services"
+              checked={selectedProductTypes.includes('service')}
+              onCheckedChange={() => toggleProductType('service')}
+            />
+            <Label htmlFor="show-services" className="text-[12px] font-normal">Services</Label>
+          </div>
+        </div>
       </div>
 
       <div>
