@@ -668,33 +668,19 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {marketType === 'b2c' && (
-        <div>
-          <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
-          <div className="space-y-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search Within B2C"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 text-[12px]"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Search for Product</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
         <div className="mb-4">
-          <Input
-            type="text"
-            placeholder={`Search within ${marketType.toUpperCase()}`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-[12px]"
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder={`Search within ${marketType.toUpperCase()}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 text-[12px]"
+            />
+          </div>
         </div>
       </div>
 
