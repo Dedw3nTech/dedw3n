@@ -752,7 +752,7 @@ export default function Products() {
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Region</h3>
         <div className="space-y-2">
-          {['Africa', 'Asia', 'Europe', 'Middle East', 'North America', 'South America', 'Oceania'].map((region) => (
+          {['Africa', 'South Asia', 'East Asia', 'Oceania', 'North America', 'Central America', 'South America', 'Middle East', 'Europe', 'Central Asia'].map((region) => (
             <div key={region} className="flex items-center space-x-2">
               <Checkbox
                 id={`region-${region}`}
