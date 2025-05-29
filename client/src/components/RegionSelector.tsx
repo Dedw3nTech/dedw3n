@@ -94,7 +94,7 @@ export default function RegionSelector({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="region" className={isRegionMissing ? 'text-red-600' : ''}>
+        <Label htmlFor="region" className={`text-xs ${isRegionMissing ? 'text-red-600' : ''}`}>
           Select Your Region {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Select value={selectedRegion} onValueChange={handleRegionChange} disabled={disabled}>
@@ -115,7 +115,7 @@ export default function RegionSelector({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="country" className={isCountryMissing ? 'text-red-600' : ''}>
+        <Label htmlFor="country" className={`text-xs ${isCountryMissing ? 'text-red-600' : ''}`}>
           Select Your Country {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled}>
@@ -136,7 +136,7 @@ export default function RegionSelector({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="city" className={isCityMissing ? 'text-red-600' : 'text-black'}>
+        <Label htmlFor="city" className={`text-xs ${isCityMissing ? 'text-red-600' : 'text-black'}`}>
           Your City {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Input
