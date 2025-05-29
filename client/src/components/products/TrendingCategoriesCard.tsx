@@ -64,8 +64,8 @@ export function TrendingCategoriesCard() {
                 </div>
                 
                 <div className="flex-1 min-w-0 text-center sm:text-left w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <h4 className="font-medium break-words leading-tight" style={{ fontSize: '13px' }}>
+                  <div className="space-y-1">
+                    <h4 className="font-medium break-words leading-tight text-center sm:text-left" style={{ fontSize: '13px' }}>
                       {category.name}
                     </h4>
                     {category.growth > 0 && (
