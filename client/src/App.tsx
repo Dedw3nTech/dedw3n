@@ -330,7 +330,7 @@ function MarketplacePromoSection() {
       <img 
         src={currentPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
-        className="w-full h-[400px] object-cover"
+        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
       />
     </div>
   );
@@ -353,7 +353,7 @@ function MarketplaceBottomPromoSection() {
       <img 
         src={currentBottomPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
-        className={`w-full object-cover ${marketType === 'c2c' ? 'h-[367px]' : 'h-[350px]'}`}
+        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
       />
     </div>
   );
