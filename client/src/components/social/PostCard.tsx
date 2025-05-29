@@ -469,42 +469,6 @@ export default function PostCard({
     },
   });
 
-  // Friend request mutation
-  const friendRequestMutation = useMutation({
-    mutationFn: async ({ userId, message }: { userId: number; message: string }) => {
-      const response = await apiRequest(
-        "POST",
-        `/api/friends/request`,
-        { 
-          recipientId: userId,
-          message: message
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send friend request");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      setFriendRequestMessage("");
-      setIsFriendRequestModalOpen(false);
-      toast({
-        title: "Friend Request Sent!",
-        description: "Your friend request has been sent successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send friend request",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
