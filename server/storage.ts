@@ -3532,7 +3532,10 @@ export class DatabaseStorage implements IStorage {
             username: users.username,
             name: users.name,
             avatar: users.avatar,
-            isVendor: users.isVendor
+            isVendor: users.isVendor,
+            city: users.city,
+            country: users.country,
+            region: users.region
           }
         })
         .from(posts)
@@ -3555,7 +3558,10 @@ export class DatabaseStorage implements IStorage {
           username: user.username,
           name: user.name,
           avatar: user.avatar,
-          isVendor: user.isVendor
+          isVendor: user.isVendor,
+          city: user.city,
+          country: user.country,
+          region: user.region
         }
       })) as Post[];
     } catch (error) {

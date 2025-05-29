@@ -89,6 +89,9 @@ interface Post {
     name: string;
     username: string;
     avatar?: string | null;
+    city?: string | null;
+    country?: string | null;
+    region?: string | null;
   };
   imageUrl?: string | null;
   videoUrl?: string | null;
