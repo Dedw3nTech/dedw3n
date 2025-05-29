@@ -54,7 +54,7 @@ export default function CommunityPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAdVisible, setIsAdVisible] = useState(true);
-  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country'>('new');
+  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country' | 'city'>('new');
 
   // Track if we've reached the end of feed to prevent unnecessary calls
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
@@ -311,6 +311,16 @@ export default function CommunityPage() {
                   }`}
                 >
                   My Country
+                </button>
+                <button
+                  onClick={() => setSortBy('city')}
+                  className={`transition-colors duration-200 ${
+                    sortBy === 'city' 
+                      ? 'text-black font-medium' 
+                      : 'hover:text-gray-800'
+                  }`}
+                >
+                  My City
                 </button>
               </div>
             </div>

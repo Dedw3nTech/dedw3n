@@ -228,11 +228,29 @@ app.use((req, res, next) => {
       // Get pagination parameters
       const limit = parseInt(req.query.limit as string) || 10;
       const offset = parseInt(req.query.offset as string) || 0;
+      const sortBy = req.query.sortBy as string || 'popular';
       
-      console.log(`[DEBUG] Community feed request: limit=${limit}, offset=${offset}`);
+      console.log(`[DEBUG] Community feed request: limit=${limit}, offset=${offset}, sortBy=${sortBy}`);
       
-      // Get all posts from all users with pagination
-      const posts = await storage.getAllPostsPaginated(limit, offset);
+      // Get user ID for location-based filtering
+      let userId = null;
+      if (req.session?.passport?.user) {
+        userId = req.session.passport.user;
+      }
+      
+      // Get posts based on sort type
+      let posts;
+      if (sortBy === 'city' || sortBy === 'country' || sortBy === 'region') {
+        if (userId) {
+          posts = await storage.getPostsByLocation(userId, sortBy, limit, offset);
+        } else {
+          // Fallback to all posts if user not authenticated
+          posts = await storage.getAllPostsPaginated(limit, offset);
+        }
+      } else {
+        // Default to all posts for other sort types
+        posts = await storage.getAllPostsPaginated(limit, offset);
+      }
       
       // Check if there are more posts available
       const totalPosts = await storage.getTotalPostsCount();
