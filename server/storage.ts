@@ -1778,7 +1778,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]> {
+  async getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null; city: string | null; country: string | null; region: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]> {
     try {
       const postsWithUsers = await db
         .select({
@@ -1787,7 +1787,10 @@ export class DatabaseStorage implements IStorage {
             id: users.id,
             username: users.username,
             name: users.name,
-            avatar: users.avatar
+            avatar: users.avatar,
+            city: users.city,
+            country: users.country,
+            region: users.region
           }
         })
         .from(posts)
