@@ -49,12 +49,17 @@ interface RegionSelectorProps {
   onRegionChange?: (region: string) => void;
   onCountryChange?: (country: string) => void;
   onCityChange?: (city: string) => void;
+  showErrors?: boolean;
 }
 
-export default function RegionSelector({ currentRegion, currentCountry, currentCity, onRegionChange, onCountryChange, onCityChange }: RegionSelectorProps) {
+export default function RegionSelector({ currentRegion, currentCountry, currentCity, onRegionChange, onCountryChange, onCityChange, showErrors = false }: RegionSelectorProps) {
   const [selectedRegion, setSelectedRegion] = useState(currentRegion || '');
   const [selectedCountry, setSelectedCountry] = useState(currentCountry || '');
   const [selectedCity, setSelectedCity] = useState(currentCity || '');
+  
+  const isRegionMissing = showErrors && !selectedRegion;
+  const isCountryMissing = showErrors && !selectedCountry;
+  const isCityMissing = showErrors && !selectedCity.trim();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -181,9 +186,11 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="region">Select Your Region</Label>
+        <Label htmlFor="region" className={isRegionMissing ? 'text-red-600' : ''}>
+          Select Your Region {showErrors && <span className="text-red-600">*</span>}
+        </Label>
         <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-          <SelectTrigger>
+          <SelectTrigger className={isRegionMissing ? 'border-red-500 focus:border-red-500' : ''}>
             <SelectValue placeholder="Choose your region" />
           </SelectTrigger>
           <SelectContent>
@@ -194,6 +201,9 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
             ))}
           </SelectContent>
         </Select>
+        {isRegionMissing && (
+          <p className="text-red-600 text-sm">Please select a region</p>
+        )}
       </div>
       
       {selectedRegion !== currentRegion && (
@@ -207,9 +217,11 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="country">Select Your Country</Label>
+        <Label htmlFor="country" className={isCountryMissing ? 'text-red-600' : ''}>
+          Select Your Country {showErrors && <span className="text-red-600">*</span>}
+        </Label>
         <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-          <SelectTrigger>
+          <SelectTrigger className={isCountryMissing ? 'border-red-500 focus:border-red-500' : ''}>
             <SelectValue placeholder="Choose your country" />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto">
@@ -220,17 +232,26 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
             ))}
           </SelectContent>
         </Select>
+        {isCountryMissing && (
+          <p className="text-red-600 text-sm">Please select a country</p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="city">Your City</Label>
+        <Label htmlFor="city" className={isCityMissing ? 'text-red-600' : ''}>
+          Your City {showErrors && <span className="text-red-600">*</span>}
+        </Label>
         <Input
           id="city"
           type="text"
           placeholder="Enter your city name"
           value={selectedCity}
           onChange={(e) => setSelectedCity(e.target.value)}
+          className={isCityMissing ? 'border-red-500 focus:border-red-500' : ''}
         />
+        {isCityMissing && (
+          <p className="text-red-600 text-sm">Please enter your city name</p>
+        )}
       </div>
       
       {selectedCity.trim() !== (currentCity || '') && (
