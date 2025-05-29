@@ -4,8 +4,8 @@ import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1)
 
 export function AdPostCard() {
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
-      <CardContent className="p-4">
+    <Card className="bg-white border-2 border-blue-200">
+      <CardContent className="p-4 bg-white">
         {/* Advertisement Label */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
