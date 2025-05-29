@@ -20,28 +20,10 @@ export function TrendingProductsToolbar() {
         if (response.ok) {
           const data = await response.json();
           setProducts(data);
-        } else {
-          // Create sample data structure for demonstration
-          setProducts([
-            { id: 1, name: "Wireless Headphones", price: 199.99, priceChange: 15.50, changePercent: 8.4 },
-            { id: 2, name: "Smart Watch Pro", price: 349.99, priceChange: -25.00, changePercent: -6.7 },
-            { id: 3, name: "Gaming Laptop", price: 1299.99, priceChange: 89.99, changePercent: 7.4 },
-            { id: 4, name: "Bluetooth Speaker", price: 79.99, priceChange: -5.00, changePercent: -5.9 },
-            { id: 5, name: "4K Webcam", price: 159.99, priceChange: 12.00, changePercent: 8.1 },
-            { id: 6, name: "Ergonomic Mouse", price: 49.99, priceChange: 3.50, changePercent: 7.5 },
-            { id: 7, name: "USB-C Hub", price: 89.99, priceChange: -7.50, changePercent: -7.7 },
-            { id: 8, name: "Wireless Charger", price: 39.99, priceChange: 2.99, changePercent: 8.1 },
-          ]);
         }
       } catch (error) {
         console.error('Error fetching trending products:', error);
-        // Use fallback data on error
-        setProducts([
-          { id: 1, name: "Wireless Headphones", price: 199.99, priceChange: 15.50, changePercent: 8.4 },
-          { id: 2, name: "Smart Watch Pro", price: 349.99, priceChange: -25.00, changePercent: -6.7 },
-          { id: 3, name: "Gaming Laptop", price: 1299.99, priceChange: 89.99, changePercent: 7.4 },
-          { id: 4, name: "Bluetooth Speaker", price: 79.99, priceChange: -5.00, changePercent: -5.9 },
-        ]);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -58,6 +40,11 @@ export function TrendingProductsToolbar() {
         </div>
       </div>
     );
+  }
+
+  // Only show the toolbar if there are products to display
+  if (products.length === 0) {
+    return null;
   }
 
   // Duplicate products for seamless scrolling
@@ -104,8 +91,6 @@ export function TrendingProductsToolbar() {
           ))}
         </div>
       </div>
-      
-
     </div>
   );
 }
