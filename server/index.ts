@@ -173,11 +173,26 @@ app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     
     try {
-      // Import storage and get posts (public feed for now)
+      // Import storage and get posts with user location data
       const { storage } = await import('./storage.js');
       
-      // Get all posts for now (simplified feed)
-      const posts = await storage.getAllPosts();
+      // Get user ID from session (fallback to getting all posts if no user)
+      let userId = null;
+      if (req.session?.passport?.user) {
+        userId = req.session.passport.user;
+      }
+      
+      let posts;
+      if (userId) {
+        // Get personalized feed with location data
+        const limit = parseInt(req.query.limit as string) || 10;
+        const offset = parseInt(req.query.offset as string) || 0;
+        posts = await storage.getUserFeed(userId, limit, offset);
+      } else {
+        // Fallback to all posts if no user session
+        posts = await storage.getAllPosts();
+      }
+      
       console.log('[DEBUG] Retrieved', posts.length, 'posts for personal feed');
       
       return res.status(200).json(posts);

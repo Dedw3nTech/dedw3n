@@ -3524,6 +3524,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserFeed(userId: number, limit: number = 10, offset: number = 0): Promise<Post[]> {
     try {
+      console.log(`[DEBUG] getUserFeed called for user ${userId}`);
       const userFeed = await db
         .select({
           post: posts,
@@ -3551,7 +3552,9 @@ export class DatabaseStorage implements IStorage {
         .limit(limit)
         .offset(offset);
 
-      return userFeed.map(({ post, user }) => ({
+      console.log(`[DEBUG] Found ${userFeed.length} posts, first user data:`, userFeed[0]?.user);
+      
+      const result = userFeed.map(({ post, user }) => ({
         ...post,
         user: {
           id: user.id,
@@ -3564,6 +3567,9 @@ export class DatabaseStorage implements IStorage {
           region: user.region
         }
       })) as Post[];
+      
+      console.log(`[DEBUG] Returning post with user:`, result[0]?.user);
+      return result;
     } catch (error) {
       console.error('Error getting user feed:', error);
       return [];
