@@ -1694,7 +1694,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllPosts(): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null } })[]> {
+  async getAllPosts(): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null; city: string | null; country: string | null; region: string | null } })[]> {
     try {
       const postsWithUsers = await db
         .select({
@@ -1703,7 +1703,10 @@ export class DatabaseStorage implements IStorage {
             id: users.id,
             username: users.username,
             name: users.name,
-            avatar: users.avatar
+            avatar: users.avatar,
+            city: users.city,
+            country: users.country,
+            region: users.region
           }
         })
         .from(posts)
