@@ -99,11 +99,11 @@ export function LatestProductsCard() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0 flex-shrink-0 mx-auto sm:mx-0"
+                  className="h-8 px-2 flex-shrink-0 mx-auto sm:mx-0"
                   asChild
                 >
                   <Link href={`/product/${product.id}`}>
-                    <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs font-bold">View</span>
                   </Link>
                 </Button>
               </div>
