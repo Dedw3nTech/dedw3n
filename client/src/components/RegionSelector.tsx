@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -56,6 +56,13 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
   const [selectedRegion, setSelectedRegion] = useState(currentRegion || '');
   const [selectedCountry, setSelectedCountry] = useState(currentCountry || '');
   const [selectedCity, setSelectedCity] = useState(currentCity || '');
+
+  // Sync local state with props when they change
+  useEffect(() => {
+    setSelectedRegion(currentRegion || '');
+    setSelectedCountry(currentCountry || '');
+    setSelectedCity(currentCity || '');
+  }, [currentRegion, currentCountry, currentCity]);
   
   const isRegionMissing = showErrors && !selectedRegion;
   const isCountryMissing = showErrors && !selectedCountry;
