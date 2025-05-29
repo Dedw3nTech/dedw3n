@@ -12,8 +12,8 @@ export function SidebarAdCard() {
   }
 
   return (
-    <Card className="w-full border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-      <CardContent className="p-0 relative">
+    <Card className="w-full border-2 border-blue-200 bg-white">
+      <CardContent className="p-0 relative bg-white">
         {/* Close button */}
         <button
           onClick={() => setIsVisible(false)}
