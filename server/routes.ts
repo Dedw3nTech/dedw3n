@@ -34,6 +34,7 @@ import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
+import { setupWebSocket } from "./websocket-handler";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -2100,8 +2101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
-      const conversations = await storage.getConversations(userId);
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const userId = req.user.id;
+      const conversations = await storage.getUserConversations(userId);
       res.json(conversations);
     } catch (error) {
       console.error('Error getting conversations:', error);
@@ -2111,7 +2115,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/messages/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const userId = req.user.id;
       const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
@@ -2607,8 +2614,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Skip WebSocket for now to focus on core functionality
-  console.log('WebSocket disabled - focusing on core API functionality');
+  // Set up WebSocket server for messaging
+  console.log('Setting up WebSocket server for messaging...');
+  setupWebSocket(httpServer);
 
   return httpServer;
 }
