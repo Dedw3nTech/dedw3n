@@ -1,20 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
-import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { AdPostCard } from "@/components/AdPostCard";
 import { useAuth } from "@/hooks/use-auth";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { LoginPromptModal } from "@/components/LoginPromptModal";
-import { Heart, ShoppingBag, Filter, Grid, List, Search, Star, Users, TrendingUp } from "lucide-react";
-import type { Product } from "@shared/schema";
+import { Heart, ShoppingBag, Filter, Grid, List, Search } from "lucide-react";
 
 export default function BusinessMarketplace() {
   const { user } = useAuth();
