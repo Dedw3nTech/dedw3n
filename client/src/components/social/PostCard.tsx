@@ -827,7 +827,7 @@ export default function PostCard({
                       });
                     }}
                   >
-                    <Bookmark className="mr-2 h-4 w-4" />
+                    <Bookmark className="mr-2 h-4 w-4 fill-current" />
                     Save
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -838,7 +838,7 @@ export default function PostCard({
                       });
                     }}
                   >
-                    <Flag className="mr-2 h-4 w-4" />
+                    <Flag className="mr-2 h-4 w-4 fill-current" />
                     Report
                   </DropdownMenuItem>
                 </DropdownMenuContent>
