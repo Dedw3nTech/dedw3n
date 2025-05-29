@@ -183,6 +183,35 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
     }
   };
 
+  const handleSaveAllLocation = async () => {
+    try {
+      // Save all location fields in sequence
+      if (selectedRegion && selectedRegion !== currentRegion) {
+        await updateRegionMutation.mutateAsync(selectedRegion);
+      }
+      if (selectedCountry && selectedCountry !== currentCountry) {
+        await updateCountryMutation.mutateAsync(selectedCountry);
+      }
+      if (selectedCity.trim() && selectedCity.trim() !== (currentCity || '')) {
+        await updateCityMutation.mutateAsync(selectedCity.trim());
+      }
+    } catch (error) {
+      console.error('Failed to save location data:', error);
+    }
+  };
+
+  // Check if any location field has changed
+  const hasLocationChanges = 
+    (selectedRegion !== currentRegion) ||
+    (selectedCountry !== currentCountry) ||
+    (selectedCity.trim() !== (currentCity || ''));
+
+  // Check if any mutation is pending
+  const isAnyMutationPending = 
+    updateRegionMutation.isPending ||
+    updateCountryMutation.isPending ||
+    updateCityMutation.isPending;
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -206,16 +235,6 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
         )}
       </div>
       
-      {selectedRegion !== currentRegion && (
-        <Button 
-          onClick={handleSaveRegion} 
-          disabled={updateRegionMutation.isPending || !selectedRegion}
-          className="w-full"
-        >
-          {updateRegionMutation.isPending ? 'Updating...' : 'Save Region'}
-        </Button>
-      )}
-
       <div className="space-y-2">
         <Label htmlFor="country" className={isCountryMissing ? 'text-red-600' : ''}>
           Select Your Country {showErrors && <span className="text-red-600">*</span>}
@@ -254,23 +273,13 @@ export default function RegionSelector({ currentRegion, currentCountry, currentC
         )}
       </div>
       
-      {selectedCity.trim() !== (currentCity || '') && (
+      {hasLocationChanges && (
         <Button 
-          onClick={handleSaveCity} 
-          disabled={updateCityMutation.isPending || !selectedCity.trim()}
+          onClick={handleSaveAllLocation} 
+          disabled={isAnyMutationPending || (!selectedRegion || !selectedCountry || !selectedCity.trim())}
           className="w-full"
         >
-          {updateCityMutation.isPending ? 'Updating...' : 'Save City'}
-        </Button>
-      )}
-      
-      {selectedCountry !== currentCountry && (
-        <Button 
-          onClick={handleSaveCountry} 
-          disabled={updateCountryMutation.isPending || !selectedCountry}
-          className="w-full"
-        >
-          {updateCountryMutation.isPending ? 'Updating...' : 'Save Country'}
+          {isAnyMutationPending ? 'Saving...' : 'Save'}
         </Button>
       )}
     </div>
