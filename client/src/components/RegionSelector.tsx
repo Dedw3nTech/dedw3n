@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -44,13 +45,16 @@ const COUNTRIES = [
 interface RegionSelectorProps {
   currentRegion?: string | null;
   currentCountry?: string | null;
+  currentCity?: string | null;
   onRegionChange?: (region: string) => void;
   onCountryChange?: (country: string) => void;
+  onCityChange?: (city: string) => void;
 }
 
-export default function RegionSelector({ currentRegion, currentCountry, onRegionChange, onCountryChange }: RegionSelectorProps) {
+export default function RegionSelector({ currentRegion, currentCountry, currentCity, onRegionChange, onCountryChange, onCityChange }: RegionSelectorProps) {
   const [selectedRegion, setSelectedRegion] = useState(currentRegion || '');
   const [selectedCountry, setSelectedCountry] = useState(currentCountry || '');
+  const [selectedCity, setSelectedCity] = useState(currentCity || '');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -122,6 +126,40 @@ export default function RegionSelector({ currentRegion, currentCountry, onRegion
     },
   });
 
+  const updateCityMutation = useMutation({
+    mutationFn: async (city: string) => {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ city }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update city');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'City Updated',
+        description: 'Your city has been successfully updated.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      onCityChange?.(selectedCity);
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update city. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleSaveRegion = () => {
     if (selectedRegion) {
       updateRegionMutation.mutate(selectedRegion);
@@ -131,6 +169,12 @@ export default function RegionSelector({ currentRegion, currentCountry, onRegion
   const handleSaveCountry = () => {
     if (selectedCountry) {
       updateCountryMutation.mutate(selectedCountry);
+    }
+  };
+
+  const handleSaveCity = () => {
+    if (selectedCity.trim()) {
+      updateCityMutation.mutate(selectedCity.trim());
     }
   };
 
@@ -185,6 +229,27 @@ export default function RegionSelector({ currentRegion, currentCountry, onRegion
           className="w-full"
         >
           {updateCountryMutation.isPending ? 'Updating...' : 'Save Country'}
+        </Button>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="city">Your City</Label>
+        <Input
+          id="city"
+          type="text"
+          placeholder="Enter your city name"
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+        />
+      </div>
+      
+      {selectedCity.trim() !== (currentCity || '') && (
+        <Button 
+          onClick={handleSaveCity} 
+          disabled={updateCityMutation.isPending || !selectedCity.trim()}
+          className="w-full"
+        >
+          {updateCityMutation.isPending ? 'Updating...' : 'Save City'}
         </Button>
       )}
     </div>
