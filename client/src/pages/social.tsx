@@ -162,9 +162,11 @@ export default function Social() {
 
   return (
     <div className="bg-background">
-      {/* Trending Products Toolbar - Full width at top */}
-      <div className="w-full px-4 py-2 bg-background">
-        <TrendingProductsToolbar />
+      {/* Trending Products Toolbar - Full browser width at top */}
+      <div className="w-screen bg-background border-b border-gray-200">
+        <div className="px-4 py-2">
+          <TrendingProductsToolbar />
+        </div>
       </div>
       
       <div className="container mx-auto px-4 py-6">
