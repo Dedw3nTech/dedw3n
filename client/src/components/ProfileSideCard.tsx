@@ -131,7 +131,7 @@ export function ProfileSideCard() {
             >
               <Link href="/vendor-dashboard">
                 <Store className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Vendor Dashboard
+                Vendor Panel
               </Link>
             </Button>
             
@@ -142,7 +142,7 @@ export function ProfileSideCard() {
             >
               <Link href="/dating-dashboard">
                 <Heart className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Dating Dashboard
+                Dating Panel
               </Link>
             </Button>
             
