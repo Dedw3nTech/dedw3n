@@ -76,16 +76,9 @@ export default function LikedPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-base font-bold text-gray-900 mb-2">Your Liked Products</h1>
-          <p className="text-gray-600">
-            {likedProducts.length === 0 
-              ? "You haven't liked any products yet. Start exploring to find products you love!"
-              : `You have ${likedProducts.length} liked product${likedProducts.length === 1 ? '' : 's'}`
-            }
-          </p>
+          <h1 className="text-base font-bold text-gray-900 mb-2">Liked Products</h1>
         </div>
 
         {likedProducts.length === 0 ? (
