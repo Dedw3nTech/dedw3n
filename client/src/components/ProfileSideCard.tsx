@@ -107,7 +107,12 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/chatrooms">
-                <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
+                <svg className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  {/* First talking cloud */}
+                  <path d="M7 9c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5v-2.5h1c2.8 0 5-2.2 5-5s-2.2-5-5-5H7z" fill="currentColor" opacity="0.7"/>
+                  {/* Second talking cloud */}
+                  <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
+                </svg>
                 Chatrooms
               </Link>
             </Button>
