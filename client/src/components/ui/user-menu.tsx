@@ -5,18 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
-import { LoginPromptModal } from "@/components/LoginPromptModal";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
   const { user, logoutMutation } = useAuth();
+  const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
 
   // Close menu when clicking outside
@@ -36,21 +36,14 @@ export default function UserMenu() {
   // If user is not logged in, show login button
   if (!user) {
     return (
-      <>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="ml-2"
-          onClick={() => setShowLoginModal(true)}
-        >
-          {t('auth.login')}
-        </Button>
-        <LoginPromptModal 
-          isOpen={showLoginModal} 
-          onClose={() => setShowLoginModal(false)} 
-          action="login" 
-        />
-      </>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="ml-2"
+        onClick={() => showLoginPrompt('login')}
+      >
+        {t('auth.login')}
+      </Button>
     );
   }
 
