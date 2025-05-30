@@ -85,7 +85,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/notifications">
-                <Bell className="h-5 w-5 mr-3 text-gray-700" />
+                <Bell className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Notifications
               </Link>
             </Button>
@@ -96,7 +96,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/messages">
-                <MessageSquare className="h-5 w-5 mr-3 text-gray-700" />
+                <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Messages
               </Link>
             </Button>
@@ -107,7 +107,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/chatrooms">
-                <MessageSquare className="h-5 w-5 mr-3 text-gray-700" />
+                <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Chatrooms
               </Link>
             </Button>
@@ -118,7 +118,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/settings">
-                <Settings className="h-5 w-5 mr-3 text-gray-700" />
+                <Settings className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Settings
               </Link>
             </Button>
@@ -130,7 +130,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/vendor-dashboard">
-                <Store className="h-5 w-5 mr-3 text-gray-700" />
+                <Store className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Vendor Dashboard
               </Link>
             </Button>
@@ -141,7 +141,7 @@ export function ProfileSideCard() {
               className="w-full justify-start h-10"
             >
               <Link href="/dating-dashboard">
-                <Heart className="h-5 w-5 mr-3 text-gray-700" />
+                <Heart className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
                 Dating Dashboard
               </Link>
             </Button>
@@ -157,7 +157,7 @@ export function ProfileSideCard() {
                   });
               }}
             >
-              <LogOut className="h-5 w-5 mr-3 text-blue-600" />
+              <LogOut className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" />
               Log Out
             </Button>
           </div>
@@ -198,7 +198,7 @@ export function ProfileSideCard() {
             className="w-full justify-start h-9 text-[12px]"
           >
             <Link href="/chatrooms?room=global">
-              <Globe className="h-4 w-4 mr-3 text-blue-600" />
+              <Globe className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Enter Global Chat Room
             </Link>
           </Button>
@@ -209,7 +209,7 @@ export function ProfileSideCard() {
             className="w-full justify-start h-9 text-[12px]"
           >
             <Link href="/chatrooms?room=regional">
-              <MapPin className="h-4 w-4 mr-3 text-blue-600" />
+              <MapPin className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Enter Regional Chat Room
             </Link>
           </Button>
@@ -220,7 +220,7 @@ export function ProfileSideCard() {
             className="w-full justify-start h-9 text-[12px]"
           >
             <Link href="/chatrooms?room=country">
-              <Flag className="h-4 w-4 mr-3 text-blue-600" />
+              <Flag className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Enter Local Chat Room
             </Link>
           </Button>
