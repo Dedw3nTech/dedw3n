@@ -113,18 +113,18 @@ export default function UserMenu() {
           </button>
           <div className="border-t border-gray-100"></div>
           <button
-            className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            className="w-full text-left block px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
             onClick={handleLogout}
             disabled={logoutMutation.isPending}
           >
             {logoutMutation.isPending ? (
               <>
-                <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin" /> 
+                <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin text-blue-600" /> 
                 {t('auth.logging_out') || 'Logging out...'}
               </>
             ) : (
               <>
-                <i className="ri-logout-box-line mr-2"></i> {t('auth.logout')}
+                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {t('auth.logout')}
               </>
             )}
           </button>
