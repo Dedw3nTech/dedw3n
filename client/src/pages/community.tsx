@@ -406,8 +406,8 @@ export default function CommunityPage() {
           {/* Products Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-              <VideoAdCampaignCard />
               <TrendingCategoriesCard />
+              <VideoAdCampaignCard />
               <LatestProductsCard />
               <PopularProductsCard />
               <SidebarAdCard />
