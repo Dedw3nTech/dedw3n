@@ -178,6 +178,22 @@ export function ProfileSideCard() {
         </CardContent>
       </Card>
       
+      {/* Add Product/Service Button */}
+      <div className="mt-4">
+        <Button 
+          asChild 
+          variant="outline" 
+          className="w-full justify-start h-12 bg-black border-black text-white hover:bg-gray-800 hover:border-gray-800"
+        >
+          <Link href="/add-product" className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+            </svg>
+            <span className="text-white font-bold">Sell Product/Service</span>
+          </Link>
+        </Button>
+      </div>
+      
       {/* Chatroom Quick Access Card */}
       <Card className="mt-4">
         <CardHeader className="pb-3">
@@ -226,22 +242,6 @@ export function ProfileSideCard() {
           </Button>
         </CardContent>
       </Card>
-      
-      {/* Add Product/Service Button */}
-      <div className="mt-4">
-        <Button 
-          asChild 
-          variant="outline" 
-          className="w-full justify-start h-12 bg-black border-black text-white hover:bg-gray-800 hover:border-gray-800"
-        >
-          <Link href="/add-product" className="flex items-center gap-2">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-            </svg>
-            <span className="text-white font-bold">Sell Product/Service</span>
-          </Link>
-        </Button>
-      </div>
 
       {/* Footer Information Card */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mt-4">
