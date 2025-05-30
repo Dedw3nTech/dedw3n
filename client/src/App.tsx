@@ -280,6 +280,7 @@ function App() {
                     <CurrencyProvider>
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
+                          <Header />
                           <MarketplaceNavWrapper />
                           
                           {/* New Section Above Main - Only show on marketplace pages */}
