@@ -43,8 +43,8 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md p-0 bg-transparent border-none shadow-none">
-        <div className="relative bg-black rounded-lg overflow-hidden">
+      <DialogContent className="max-w-[280px] p-0 bg-transparent border-none shadow-none">
+        <div className="relative rounded-lg overflow-hidden">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -54,11 +54,11 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
             <X className="h-4 w-4" />
           </button>
 
-          {/* YouTube embed iframe */}
-          <div className="aspect-[9/16] w-full max-w-[300px]">
+          {/* YouTube embed iframe - compact size for mobile/shorts format */}
+          <div className="aspect-[9/16] w-[260px]">
             <iframe
               src={getEmbedUrl(videoUrl)}
-              className="w-full h-full"
+              className="w-full h-full rounded-lg"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               frameBorder="0"
@@ -70,8 +70,8 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
           </div>
 
           {/* Optional overlay content */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-none">
-            <p className="text-white text-sm font-medium">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none rounded-b-lg">
+            <p className="text-white text-xs font-medium">
               Discover amazing deals on Dedw3n!
             </p>
           </div>
