@@ -21,12 +21,30 @@ export default function Cart() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!user) {
-      setLocation('/auth');
-    }
-  }, [user, setLocation]);
+  // Show authentication message if not logged in
+  if (!user) {
+    return (
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>Shopping Cart</CardTitle>
+            <CardDescription>
+              Please log in to view your shopping cart
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              You need to be signed in to manage your cart and make purchases.
+            </p>
+            <Button onClick={() => setLocation('/')}>
+              Go to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   // Fetch cart items
   const { 
