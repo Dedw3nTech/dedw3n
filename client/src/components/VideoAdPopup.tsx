@@ -42,8 +42,10 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
   if (!videoUrl) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-[280px] p-0 bg-transparent border-none shadow-none">
+    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
+      <DialogContent className="max-w-[280px] p-0 bg-transparent border-none shadow-none fixed top-4 right-4 translate-x-0 translate-y-0"
+        onInteractOutside={(e) => e.preventDefault()}>
+      <div className="fixed inset-0 pointer-events-none" />
         <div className="relative rounded-lg overflow-hidden">
           {/* Close button */}
           <button
