@@ -155,8 +155,8 @@ export default function VendorDashboard() {
               There was an error verifying your vendor status. Please try logging in again or contact support if the issue persists.
             </p>
             <div className="space-y-2">
-              <Button onClick={() => setLocation('/')}>
-                Return to Home
+              <Button onClick={() => setLocation('/vendor-register')} className="bg-black text-white hover:bg-gray-800">
+                Register as Vendor
               </Button>
             </div>
           </CardContent>

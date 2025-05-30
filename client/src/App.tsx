@@ -133,6 +133,7 @@ import GovernmentPage from "@/pages/government";
 import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
+import VendorRegisterPage from "@/pages/vendor-register";
 import LikedPage from "@/pages/liked";
 
 // Import footer pages
@@ -182,6 +183,7 @@ function Router() {
       <Route path="/dating" component={DatingPage} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
+      <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />
       
       {/* Footer pages - publicly accessible */}
       <Route path="/faq" component={FAQPage} />
