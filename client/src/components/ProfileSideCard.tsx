@@ -106,6 +106,17 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-start h-10"
             >
+              <Link href="/chatrooms">
+                <MessageSquare className="h-5 w-5 mr-3 text-gray-700" />
+                Chatrooms
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-10"
+            >
               <Link href="/settings">
                 <Settings className="h-5 w-5 mr-3 text-gray-700" />
                 Settings
