@@ -30,6 +30,15 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
     setIsOpen(false);
   };
 
+  // Convert YouTube URL to embed URL
+  const getEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/shorts/')) {
+      const videoId = url.split('/shorts/')[1]?.split('?')[0];
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&mute=1&controls=0&modestbranding=1&rel=0&playlist=${videoId}`;
+    }
+    return url;
+  };
+
   if (!videoUrl) return null;
 
   return (
@@ -45,26 +54,23 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
             <X className="h-4 w-4" />
           </button>
 
-          {/* Video */}
-          <video
-            className="w-full h-auto max-h-[400px] object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            controls={false}
-            onError={(e) => {
-              console.error('Video failed to load:', e);
-              setIsOpen(false);
-            }}
-          >
-            <source src={videoUrl} type="video/mp4" />
-            <source src={videoUrl} type="video/webm" />
-            Your browser does not support the video tag.
-          </video>
+          {/* YouTube embed iframe */}
+          <div className="aspect-[9/16] w-full max-w-[300px]">
+            <iframe
+              src={getEmbedUrl(videoUrl)}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              frameBorder="0"
+              onError={() => {
+                console.error('Video failed to load');
+                setIsOpen(false);
+              }}
+            />
+          </div>
 
           {/* Optional overlay content */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-none">
             <p className="text-white text-sm font-medium">
               Discover amazing deals on Dedw3n!
             </p>

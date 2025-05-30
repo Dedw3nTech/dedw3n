@@ -878,6 +878,11 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Video Advertisement Popup */}
+      <VideoAdPopup 
+        videoUrl="https://youtube.com/shorts/JnafG_D-c2g?feature=share"
+        delayMs={3000}
+      />
 
       <div className="container mx-auto px-4 py-8">
 
