@@ -40,7 +40,7 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
-      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed bottom-20 right-4 translate-x-0 translate-y-0 w-[200px]"
+      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200px]"
         onInteractOutside={(e) => e.preventDefault()}>
         <div className="relative w-[200px] aspect-[9/16]">
           {/* YouTube embed iframe - YouTube Shorts dimensions */}
