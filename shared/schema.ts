@@ -587,7 +587,7 @@ export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
 
 export const insertVendorSchema = createInsertSchema(vendors)
-  .omit({ id: true, rating: true, ratingCount: true });
+  .omit({ id: true, rating: true, ratingCount: true, isApproved: true, createdAt: true, updatedAt: true });
   
 export const vendorUpdateSchema = z.object({
   storeName: z.string().min(3).max(100).optional(),
@@ -1190,3 +1190,5 @@ export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
 export const insertLikedProductSchema = createInsertSchema(likedProducts).omit({ id: true, createdAt: true });
 export type LikedProduct = typeof likedProducts.$inferSelect;
 export type InsertLikedProduct = z.infer<typeof insertLikedProductSchema>;
+
+
