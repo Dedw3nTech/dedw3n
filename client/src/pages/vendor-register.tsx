@@ -57,10 +57,20 @@ export default function VendorRegisterPage() {
 
   const registerVendorMutation = useMutation({
     mutationFn: async (data: VendorRegistrationForm) => {
-      return apiRequest("/api/vendors/register", {
+      const response = await fetch("/api/vendors/register", {
         method: "POST",
-        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       toast({

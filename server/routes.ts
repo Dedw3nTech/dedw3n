@@ -2039,6 +2039,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vendor registration endpoint
+  app.post('/api/vendors/register', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Validate the request body using the vendor schema
+      const validatedData = insertVendorSchema.parse(req.body);
+
+      const vendorData = {
+        userId,
+        ...validatedData
+      };
+
+      const vendor = await storage.createVendor(vendorData);
+      
+      // Also update the user to mark them as a vendor
+      await storage.updateUser(userId, { isVendor: true });
+      
+      res.status(201).json({
+        message: "Vendor registration successful",
+        vendor
+      });
+    } catch (error: any) {
+      console.error("Error registering vendor:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Invalid vendor registration data",
+          errors: error.errors
+        });
+      }
+      res.status(500).json({ message: "Failed to register as vendor" });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {
