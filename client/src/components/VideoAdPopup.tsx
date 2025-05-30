@@ -12,14 +12,11 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
   const [hasShown, setHasShown] = useState(false);
 
   useEffect(() => {
-    // Check if user has already seen the ad in this session
-    const adShown = sessionStorage.getItem('videoAdShown');
-    
-    if (!adShown && !hasShown) {
+    // Always show the video for testing - remove session check temporarily
+    if (!hasShown) {
       // Load instantly (no delay)
       setIsOpen(true);
       setHasShown(true);
-      sessionStorage.setItem('videoAdShown', 'true');
     }
   }, [hasShown]);
 
