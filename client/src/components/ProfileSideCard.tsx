@@ -195,7 +195,7 @@ export function ProfileSideCard() {
           <Button 
             asChild 
             variant="ghost" 
-            className="w-full justify-start h-9 text-[14px]"
+            className="w-full justify-start h-10 text-[14px]"
           >
             <Link href="/chatrooms?room=global">
               <Globe className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
@@ -206,7 +206,7 @@ export function ProfileSideCard() {
           <Button 
             asChild 
             variant="ghost" 
-            className="w-full justify-start h-9 text-[14px]"
+            className="w-full justify-start h-10 text-[14px]"
           >
             <Link href="/chatrooms?room=regional">
               <MapPin className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
@@ -217,7 +217,7 @@ export function ProfileSideCard() {
           <Button 
             asChild 
             variant="ghost" 
-            className="w-full justify-start h-9 text-[14px]"
+            className="w-full justify-start h-10 text-[14px]"
           >
             <Link href="/chatrooms?room=country">
               <Flag className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
