@@ -8,9 +8,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { LoginPromptModal } from "@/components/LoginPromptModal";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -34,11 +36,21 @@ export default function UserMenu() {
   // If user is not logged in, show login button
   if (!user) {
     return (
-      <Link href="/auth" className="flex items-center">
-        <Button variant="outline" size="sm" className="ml-2">
+      <>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="ml-2"
+          onClick={() => setShowLoginModal(true)}
+        >
           {t('auth.login')}
         </Button>
-      </Link>
+        <LoginPromptModal 
+          isOpen={showLoginModal} 
+          onClose={() => setShowLoginModal(false)} 
+          action="login" 
+        />
+      </>
     );
   }
 
