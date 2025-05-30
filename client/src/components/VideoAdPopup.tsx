@@ -40,33 +40,30 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
-      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed bottom-20 right-4 translate-x-0 translate-y-0 w-auto"
+      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed bottom-20 right-4 translate-x-0 translate-y-0 w-[200px]"
         onInteractOutside={(e) => e.preventDefault()}>
-      <div className="fixed inset-0 pointer-events-none" />
-        <div className="relative rounded-lg overflow-hidden">
-          {/* Close button */}
+        <div className="relative w-[200px] aspect-[9/16]">
+          {/* YouTube embed iframe - YouTube Shorts dimensions */}
+          <iframe
+            src={getEmbedUrl(videoUrl)}
+            className="w-full h-full rounded-lg shadow-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            frameBorder="0"
+            onError={() => {
+              console.error('Video failed to load');
+              setIsOpen(false);
+            }}
+          />
+          
+          {/* Close button positioned over the video */}
           <button
             onClick={handleClose}
-            className="absolute top-2 right-2 z-50 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors shadow-lg"
+            className="absolute top-2 right-2 z-50 bg-black/70 hover:bg-black/90 text-white rounded-full p-1.5 transition-colors shadow-lg"
             aria-label="Close advertisement"
           >
             <X className="h-3 w-3" />
           </button>
-
-          {/* YouTube embed iframe - YouTube Shorts dimensions */}
-          <div className="aspect-[9/16] w-[200px]">
-            <iframe
-              src={getEmbedUrl(videoUrl)}
-              className="w-full h-full rounded-lg shadow-lg"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              frameBorder="0"
-              onError={() => {
-                console.error('Video failed to load');
-                setIsOpen(false);
-              }}
-            />
-          </div>
 
           {/* Optional overlay content */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none rounded-b-lg">
