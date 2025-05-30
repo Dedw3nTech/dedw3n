@@ -68,7 +68,7 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
           {/* Optional overlay content */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none rounded-b-lg">
             <p className="text-white text-xs font-medium">
-              Discover amazing deals on Dedw3n!
+              Welcome to Dedw3n
             </p>
           </div>
         </div>
