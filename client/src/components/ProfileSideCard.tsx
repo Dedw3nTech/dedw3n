@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Globe, MapPin, Flag } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -175,6 +175,50 @@ export function ProfileSideCard() {
               </Link>
             </Button>
           </div>
+        </CardContent>
+      </Card>
+      
+      {/* Chatroom Quick Access Card */}
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Quick Chat Access
+          </h3>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-9 text-sm"
+          >
+            <Link href="/chatrooms?room=global">
+              <Globe className="h-4 w-4 mr-3 text-blue-600" />
+              Global
+            </Link>
+          </Button>
+          
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-9 text-sm"
+          >
+            <Link href="/chatrooms?room=regional">
+              <MapPin className="h-4 w-4 mr-3 text-green-600" />
+              My Region
+            </Link>
+          </Button>
+          
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-9 text-sm"
+          >
+            <Link href="/chatrooms?room=country">
+              <Flag className="h-4 w-4 mr-3 text-red-600" />
+              My Country
+            </Link>
+          </Button>
         </CardContent>
       </Card>
       
