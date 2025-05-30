@@ -97,7 +97,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Social from "@/pages/social";
-import AuthPage from "@/pages/auth-page";
+
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
@@ -169,7 +169,7 @@ function Router() {
         <TestAuthPage />
       </Route>
       <Route path="/" component={Products} />
-      <Route path="/auth" component={AuthPage} />
+
       <Route path="/logout-success" component={LogoutSuccess} />
       <Route path="/marketplace" component={Products} />
       <Route path="/products" component={Products} />
