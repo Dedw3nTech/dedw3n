@@ -3,8 +3,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingBag } from "lucide-react";
-import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
-import { Header } from "@/components/layout/Header";
+
 import { useMarketType } from "@/hooks/use-market-type";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -57,8 +56,6 @@ export default function LikedPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
-        <MarketplaceNav />
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
@@ -79,8 +76,6 @@ export default function LikedPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <MarketplaceNav />
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
