@@ -199,7 +199,7 @@ export function ProfileSideCard() {
           >
             <Link href="/chatrooms?room=global">
               <Globe className="h-4 w-4 mr-3 text-blue-600" />
-              Global
+              Enter Global Chat Room
             </Link>
           </Button>
           
@@ -209,8 +209,8 @@ export function ProfileSideCard() {
             className="w-full justify-start h-9 text-[12px]"
           >
             <Link href="/chatrooms?room=regional">
-              <MapPin className="h-4 w-4 mr-3 text-green-600" />
-              My Region
+              <MapPin className="h-4 w-4 mr-3 text-blue-600" />
+              Enter Regional Chat Room
             </Link>
           </Button>
           
@@ -220,8 +220,8 @@ export function ProfileSideCard() {
             className="w-full justify-start h-9 text-[12px]"
           >
             <Link href="/chatrooms?room=country">
-              <Flag className="h-4 w-4 mr-3 text-red-600" />
-              My Country
+              <Flag className="h-4 w-4 mr-3 text-blue-600" />
+              Enter Local Chat Room
             </Link>
           </Button>
         </CardContent>
