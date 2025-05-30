@@ -110,6 +110,7 @@ import ApiTestPage from "@/pages/api-test";
 
 
 
+import Header from "@/components/layout/Header-clean";
 import Footer from "@/components/layout/Footer";
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
@@ -280,6 +281,7 @@ function App() {
                     <CurrencyProvider>
                       <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
+                          <Header />
                           <MarketplaceNavWrapper />
                           
                           {/* New Section Above Main - Only show on marketplace pages */}
