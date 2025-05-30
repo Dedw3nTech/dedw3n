@@ -37,8 +37,16 @@ export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [vendorId, setVendorId] = useState<number | null>(null);
   
-  // Fetch vendor profile
-  const { data: vendor, isLoading: isLoadingVendor } = useQuery({
+  // Authentication wall - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      setLocation('/');
+      return;
+    }
+  }, [user, setLocation]);
+  
+  // Fetch vendor profile only if user is authenticated
+  const { data: vendor, isLoading: isLoadingVendor, error: vendorError } = useQuery({
     queryKey: ["/api/vendors/me"],
     queryFn: async () => {
       const response = await fetch("/api/vendors/me");
@@ -47,11 +55,17 @@ export default function VendorDashboard() {
           // Not a vendor yet
           return null;
         }
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          setLocation('/');
+          return null;
+        }
         throw new Error("Failed to fetch vendor profile");
       }
       return response.json();
     },
     enabled: !!user,
+    retry: false,
   });
 
   // Fetch summary data
@@ -74,23 +88,82 @@ export default function VendorDashboard() {
     }
   }, [vendor]);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!user) {
-      setLocation('/auth');
-    }
-  }, [user, setLocation]);
+  // Show loading screen while checking authentication
+  if (!user) {
+    return (
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>Vendor Dashboard</CardTitle>
+            <CardDescription>
+              Please log in to access your vendor dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              You need to be authenticated to access vendor features and manage your store.
+            </p>
+            <Button onClick={() => setLocation('/')}>
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Handle becoming a vendor
   const handleBecomeVendor = () => {
     setLocation('/become-vendor');
   };
 
-  // Loading state
-  if (!user) {
+  // Show loading while vendor data is being fetched
+  if (isLoadingVendor) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>Loading Vendor Dashboard</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground">
+              Verifying your vendor access...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle vendor authentication errors
+  if (vendorError) {
+    return (
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              Unable to verify vendor access
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              There was an error verifying your vendor status. Please try logging in again or contact support if the issue persists.
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => setLocation('/')}>
+                Return to Home
+              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
