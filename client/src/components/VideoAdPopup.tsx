@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface VideoAdPopupProps {
   videoUrl: string;
@@ -37,8 +38,11 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
-      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
+      <DialogContent className="p-0 bg-transparent border-none shadow-none fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 [&>button]:hidden"
         onInteractOutside={(e) => e.preventDefault()}>
+        <VisuallyHidden>
+          <DialogTitle>Video Advertisement</DialogTitle>
+        </VisuallyHidden>
         <div className="relative w-[min(200px,25vw)] aspect-[9/16] max-w-[200px] min-w-[150px]">
           {/* YouTube embed iframe - YouTube Shorts dimensions */}
           <iframe
