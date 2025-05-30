@@ -7,7 +7,7 @@ interface VideoAdPopupProps {
   delayMs?: number; // Delay before showing the popup
 }
 
-export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
+export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasShown, setHasShown] = useState(false);
 
@@ -16,15 +16,12 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
     const adShown = sessionStorage.getItem('videoAdShown');
     
     if (!adShown && !hasShown) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        setHasShown(true);
-        sessionStorage.setItem('videoAdShown', 'true');
-      }, delayMs);
-
-      return () => clearTimeout(timer);
+      // Load instantly (no delay)
+      setIsOpen(true);
+      setHasShown(true);
+      sessionStorage.setItem('videoAdShown', 'true');
     }
-  }, [delayMs, hasShown]);
+  }, [hasShown]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -43,7 +40,7 @@ export function VideoAdPopup({ videoUrl, delayMs = 3000 }: VideoAdPopupProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
-      <DialogContent className="max-w-[280px] p-0 bg-transparent border-none shadow-none fixed top-4 right-4 translate-x-0 translate-y-0"
+      <DialogContent className="max-w-[280px] p-0 bg-transparent border-none shadow-none fixed bottom-20 right-4 translate-x-0 translate-y-0"
         onInteractOutside={(e) => e.preventDefault()}>
       <div className="fixed inset-0 pointer-events-none" />
         <div className="relative rounded-lg overflow-hidden">
