@@ -158,9 +158,6 @@ export default function VendorDashboard() {
               <Button onClick={() => setLocation('/')}>
                 Return to Home
               </Button>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
             </div>
           </CardContent>
         </Card>
