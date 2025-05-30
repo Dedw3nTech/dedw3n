@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatPriceWithCurrency } from '@/lib/currencyConverter';
+import { VideoAdPopup } from '@/components/VideoAdPopup';
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
 import {
