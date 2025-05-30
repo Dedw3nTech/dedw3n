@@ -1191,4 +1191,71 @@ export const insertLikedProductSchema = createInsertSchema(likedProducts).omit({
 export type LikedProduct = typeof likedProducts.$inferSelect;
 export type InsertLikedProduct = z.infer<typeof insertLikedProductSchema>;
 
+// Chatroom type enum
+export const chatroomTypeEnum = pgEnum('chatroom_type', ['global', 'regional', 'country']);
+
+// Chatrooms table
+export const chatrooms = pgTable("chatrooms", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: chatroomTypeEnum("type").notNull(),
+  region: text("region"), // For regional chatrooms
+  country: text("country"), // For country chatrooms
+  isActive: boolean("is_active").default(true),
+  maxUsers: integer("max_users").default(1000),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Chatroom messages table
+export const chatroomMessages = pgTable("chatroom_messages", {
+  id: serial("id").primaryKey(),
+  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  messageType: text("message_type").default("text"), // text, image, file, etc.
+  isDeleted: boolean("is_deleted").default(false),
+  editedAt: timestamp("edited_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    chatroomIdx: index('idx_chatroom_messages_chatroom').on(table.chatroomId),
+    userIdx: index('idx_chatroom_messages_user').on(table.userId),
+    createdAtIdx: index('idx_chatroom_messages_created').on(table.createdAt),
+  };
+});
+
+// Chatroom members table (for tracking who's in which chatroom)
+export const chatroomMembers = pgTable("chatroom_members", {
+  id: serial("id").primaryKey(),
+  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastSeenAt: timestamp("last_seen_at").defaultNow(),
+  isModerator: boolean("is_moderator").default(false),
+  isOnline: boolean("is_online").default(false),
+}, (table) => {
+  return {
+    uniqueMember: unique().on(table.chatroomId, table.userId),
+    chatroomIdx: index('idx_chatroom_members_chatroom').on(table.chatroomId),
+    userIdx: index('idx_chatroom_members_user').on(table.userId),
+  };
+});
+
+// Chatroom schemas
+export const insertChatroomSchema = createInsertSchema(chatrooms).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertChatroomMessageSchema = createInsertSchema(chatroomMessages).omit({ id: true, createdAt: true });
+export const insertChatroomMemberSchema = createInsertSchema(chatroomMembers).omit({ id: true, joinedAt: true });
+
+// Chatroom types
+export type Chatroom = typeof chatrooms.$inferSelect;
+export type InsertChatroom = z.infer<typeof insertChatroomSchema>;
+
+export type ChatroomMessage = typeof chatroomMessages.$inferSelect;
+export type InsertChatroomMessage = z.infer<typeof insertChatroomMessageSchema>;
+
+export type ChatroomMember = typeof chatroomMembers.$inferSelect;
+export type InsertChatroomMember = z.infer<typeof insertChatroomMemberSchema>;
+
 

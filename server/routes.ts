@@ -44,7 +44,8 @@ import {
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
   insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
-  insertVideoProductOverlaySchema, insertCommunityContentSchema
+  insertVideoProductOverlaySchema, insertCommunityContentSchema,
+  chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -2799,6 +2800,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       res.status(500).json({ message: "Failed to reject friend request" });
+    }
+  });
+
+  // Chatroom API endpoints
+  
+  // Get all chatrooms
+  app.get('/api/chatrooms', async (req: Request, res: Response) => {
+    try {
+      const allChatrooms = await db.select().from(chatrooms).where(eq(chatrooms.isActive, true));
+      res.json(allChatrooms);
+    } catch (error) {
+      console.error('Error fetching chatrooms:', error);
+      res.status(500).json({ message: 'Failed to fetch chatrooms' });
+    }
+  });
+
+  // Get chatroom messages
+  app.get('/api/chatrooms/:id/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      const messages = await db
+        .select({
+          id: chatroomMessages.id,
+          content: chatroomMessages.content,
+          messageType: chatroomMessages.messageType,
+          createdAt: chatroomMessages.createdAt,
+          userId: chatroomMessages.userId,
+          username: users.username,
+          avatar: users.avatar
+        })
+        .from(chatroomMessages)
+        .leftJoin(users, eq(chatroomMessages.userId, users.id))
+        .where(eq(chatroomMessages.chatroomId, chatroomId))
+        .orderBy(sql`${chatroomMessages.createdAt} DESC`)
+        .limit(limit)
+        .offset(offset);
+
+      res.json(messages.reverse()); // Reverse to show chronological order
+    } catch (error) {
+      console.error('Error fetching chatroom messages:', error);
+      res.status(500).json({ message: 'Failed to fetch messages' });
+    }
+  });
+
+  // Send message to chatroom
+  app.post('/api/chatrooms/:id/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const messageData = insertChatroomMessageSchema.parse({
+        chatroomId,
+        userId,
+        content: req.body.content,
+        messageType: req.body.messageType || 'text'
+      });
+
+      const [newMessage] = await db.insert(chatroomMessages).values(messageData).returning();
+
+      // Get the complete message with user info
+      const messageWithUser = await db
+        .select({
+          id: chatroomMessages.id,
+          content: chatroomMessages.content,
+          messageType: chatroomMessages.messageType,
+          createdAt: chatroomMessages.createdAt,
+          userId: chatroomMessages.userId,
+          username: users.username,
+          avatar: users.avatar
+        })
+        .from(chatroomMessages)
+        .leftJoin(users, eq(chatroomMessages.userId, users.id))
+        .where(eq(chatroomMessages.id, newMessage.id))
+        .limit(1);
+
+      res.status(201).json(messageWithUser[0]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+
+  // Join chatroom
+  app.post('/api/chatrooms/:id/join', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Check if already a member
+      const existingMember = await db
+        .select()
+        .from(chatroomMembers)
+        .where(eq(chatroomMembers.chatroomId, chatroomId))
+        .where(eq(chatroomMembers.userId, userId))
+        .limit(1);
+
+      if (existingMember.length > 0) {
+        return res.json({ message: 'Already a member of this chatroom' });
+      }
+
+      await db.insert(chatroomMembers).values({
+        chatroomId,
+        userId,
+        isOnline: true
+      });
+
+      res.json({ message: 'Successfully joined chatroom' });
+    } catch (error) {
+      console.error('Error joining chatroom:', error);
+      res.status(500).json({ message: 'Failed to join chatroom' });
     }
   });
 
