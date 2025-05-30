@@ -85,7 +85,7 @@ export default function LikedPage() {
           <div className="text-center py-16">
             <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No liked products yet</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-[14px]">
               Browse our marketplace and click the heart icon on products you love
             </p>
             <Button onClick={() => setLocation('/products')} className="bg-black text-white hover:bg-gray-800">
