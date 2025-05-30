@@ -182,8 +182,13 @@ export function ProfileSideCard() {
       <Card className="mt-4">
         <CardHeader className="pb-3">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Quick Chat Access
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              {/* First talking cloud */}
+              <path d="M7 9c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5v-2.5h1c2.8 0 5-2.2 5-5s-2.2-5-5-5H7z" fill="currentColor" opacity="0.7"/>
+              {/* Second talking cloud */}
+              <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
+            </svg>
+            Chat Rooms
           </h3>
         </CardHeader>
         <CardContent className="space-y-2">
