@@ -2513,20 +2513,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Cart API routes
-  app.get('/api/cart', async (req: Request, res: Response) => {
+  app.get('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use fallback authentication for cart routes
-      let user = req.user;
-      
-      if (!user) {
-        // Try fallback authentication by getting the default user (Serruti)
-        user = await storage.getUserByUsername('Serruti');
-        if (!user) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
-      }
-      
-      const cartItems = await storage.listCartItems(user.id);
+      const userId = req.user!.id;
+      const cartItems = await storage.listCartItems(userId);
       res.json(cartItems);
     } catch (error) {
       console.error('Error fetching cart items:', error);
@@ -2534,22 +2524,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cart', async (req: Request, res: Response) => {
+  app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use fallback authentication for cart routes
-      let user = req.user;
-      
-      if (!user) {
-        // Try fallback authentication by getting the default user (Serruti)
-        user = await storage.getUserByUsername('Serruti');
-        if (!user) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
-      }
-      
+      const userId = req.user!.id;
       const cartData = insertCartSchema.parse({
         ...req.body,
-        userId: user.id
+        userId
       });
       
       const cartItem = await storage.addToCart(cartData);
@@ -2560,20 +2540,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/cart/count', async (req: Request, res: Response) => {
+  app.get('/api/cart/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use fallback authentication for cart routes
-      let user = req.user;
-      
-      if (!user) {
-        // Try fallback authentication by getting the default user (Serruti)
-        user = await storage.getUserByUsername('Serruti');
-        if (!user) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
-      }
-      
-      const count = await storage.countCartItems(user.id);
+      const userId = req.user!.id;
+      const count = await storage.countCartItems(userId);
       res.json({ count });
     } catch (error) {
       console.error('Error counting cart items:', error);
@@ -2581,24 +2551,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/cart/:id', async (req: Request, res: Response) => {
+  app.put('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const cartItemId = parseInt(req.params.id);
       const updates = req.body;
       
       if (isNaN(cartItemId)) {
         return res.status(400).json({ message: 'Invalid cart item ID' });
-      }
-      
-      // Use fallback authentication for cart routes
-      let user = req.user;
-      
-      if (!user) {
-        // Try fallback authentication by getting the default user (Serruti)
-        user = await storage.getUserByUsername('Serruti');
-        if (!user) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
       }
       
       const updatedItem = await storage.updateCartItem(cartItemId, updates);
@@ -2613,23 +2572,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/cart/:id', async (req: Request, res: Response) => {
+  app.delete('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const cartItemId = parseInt(req.params.id);
       
       if (isNaN(cartItemId)) {
         return res.status(400).json({ message: 'Invalid cart item ID' });
-      }
-      
-      // Use fallback authentication for cart routes
-      let user = req.user;
-      
-      if (!user) {
-        // Try fallback authentication by getting the default user (Serruti)
-        user = await storage.getUserByUsername('Serruti');
-        if (!user) {
-          return res.status(401).json({ message: 'Authentication required' });
-        }
       }
       
       const success = await storage.removeCartItem(cartItemId);

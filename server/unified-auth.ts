@@ -202,12 +202,10 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       '/api/users/profile',
       '/api/users/avatar',
       '/api/posts',
-      '/api/liked-products',
-      '/api/cart',
-      '/api/cart/count'
+      '/api/liked-products'
     ];
     
-    if ((specialRoutes.includes(req.path) || req.path.startsWith('/api/messages/') || req.path.startsWith('/api/posts/') || req.path.startsWith('/api/cart/') || req.path.includes('/like')) && req.session) {
+    if ((specialRoutes.includes(req.path) || req.path.startsWith('/api/messages/') || req.path.startsWith('/api/posts/') || req.path.includes('/like')) && req.session) {
       console.log(`[AUTH] Special route detected: ${req.path} - checking for user in session`);
       
       // Try to extract user ID from session directly
