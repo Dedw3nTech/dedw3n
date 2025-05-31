@@ -389,7 +389,7 @@ export default function DatingPage() {
                         <Label className="text-sm font-medium">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
                         <Slider
                           value={ageRange}
-                          onValueChange={setAgeRange}
+                          onValueChange={(value) => setAgeRange(value as [number, number])}
                           max={65}
                           min={18}
                           step={1}
@@ -449,7 +449,7 @@ export default function DatingPage() {
                           <Checkbox
                             id="online-only"
                             checked={showOnlineOnly}
-                            onCheckedChange={setShowOnlineOnly}
+                            onCheckedChange={(checked) => setShowOnlineOnly(checked === true)}
                           />
                           <Label htmlFor="online-only" className="text-sm">Online now</Label>
                         </div>
@@ -458,7 +458,7 @@ export default function DatingPage() {
                           <Checkbox
                             id="active-only"
                             checked={showActiveOnly}
-                            onCheckedChange={setShowActiveOnly}
+                            onCheckedChange={(checked) => setShowActiveOnly(checked === true)}
                           />
                           <Label htmlFor="active-only" className="text-sm">Active profiles only</Label>
                         </div>
@@ -550,99 +550,155 @@ export default function DatingPage() {
           
           {/* Browse Profiles Tab */}
           <TabsContent value="browse" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sampleProfiles.map((profile) => (
-                <Card key={profile.id} className="overflow-hidden">
-                  {/* Photo Gallery */}
+            <div className={`grid gap-6 ${
+              columnsPerRow === 2 ? 'grid-cols-1 md:grid-cols-2' :
+              columnsPerRow === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            }`}>
+              {filteredProfiles.map((profile) => (
+                <Card key={profile.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
+                  {/* Main Profile Image */}
                   <div className="relative">
-                    {/* Main profile photo */}
-                    <div className="relative w-full h-48 overflow-hidden">
+                    <div className="aspect-square overflow-hidden">
                       <img 
-                        src={profile.photos[0] || "https://placehold.co/400x400/gray/white?text=Profile+Photo"} 
+                        src={profile.photos[0] || "https://placehold.co/400x400/f3f4f6/9ca3af?text=Profile"} 
                         alt={`${profile.name}'s profile`}
-                        className="w-full h-full object-cover transition-all hover:scale-105"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     </div>
                     
-                    {/* Photo thumbnails */}
-                    <div className="absolute bottom-2 right-2 flex space-x-1">
-                      {profile.photos.slice(1, 4).map((photo, index) => (
-                        <div key={index} className="w-8 h-8 rounded-md overflow-hidden border border-white">
-                          <img 
-                            src={photo || "https://placehold.co/100x100/gray/white?text=Photo"} 
-                            alt={`${profile.name}'s photo ${index + 2}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ))}
-                      {profile.photos.length > 4 && (
-                        <div className="w-8 h-8 rounded-md bg-black/60 flex items-center justify-center text-white text-xs border border-white">
-                          +{profile.photos.length - 4}
-                        </div>
-                      )}
+                    {/* Status Badge */}
+                    <div className="absolute top-3 left-3">
+                      <Badge variant={profile.isActive ? "default" : "secondary"} className="text-xs">
+                        {profile.isActive ? "Online" : "Away"}
+                      </Badge>
+                    </div>
+                    
+                    {/* Photo Count */}
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="secondary" className="text-xs bg-black/60 text-white">
+                        {profile.photos.length} photos
+                      </Badge>
+                    </div>
+                    
+                    {/* Quick Action Buttons */}
+                    <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
+                        <Share2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={profile.avatar || ""} alt={profile.name} />
-                        <AvatarFallback>{profile.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-lg">{profile.name}</CardTitle>
-                        <CardDescription>@{profile.username}</CardDescription>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Profile Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg text-gray-900 truncate">{profile.name}</h3>
+                          <p className="text-sm text-gray-500">@{profile.username}</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStartConversation(profile.username)}>
+                              <MessageCircle className="mr-2 h-4 w-4" />
+                              Message
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Heart className="mr-2 h-4 w-4" />
+                              Like Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Share2 className="mr-2 h-4 w-4" />
+                              Share Profile
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {profile.relationshipPreference === "dating" && "Looking to Date"}
-                        {profile.relationshipPreference === "meeting" && "Open to Meeting"}
-                        {profile.relationshipPreference === "marriage" && "Seeking Marriage"}
-                        {profile.relationshipPreference === "casual" && "Casual Relationship"}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 line-clamp-3 mb-4">{profile.bio}</p>
-                    
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium mb-2">Interests</h4>
+                      
+                      {/* Relationship Preference */}
+                      <div>
+                        <Badge variant="outline" className="text-xs">
+                          {profile.relationshipPreference === "dating" && "Looking to Date"}
+                          {profile.relationshipPreference === "meeting" && "Open to Meeting"}
+                          {profile.relationshipPreference === "marriage" && "Seeking Marriage"}
+                          {profile.relationshipPreference === "casual" && "Casual Relationship"}
+                        </Badge>
+                      </div>
+                      
+                      {/* Bio */}
+                      <p className="text-sm text-gray-600 line-clamp-2">{profile.bio}</p>
+                      
+                      {/* Interests */}
                       <div className="flex flex-wrap gap-1">
-                        {profile.interests.map((interest, i) => (
-                          <span key={i} className="inline-block px-2 py-1 rounded-md text-xs bg-gray-100">
+                        {profile.interests.slice(0, 3).map((interest, i) => (
+                          <span key={i} className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                             {interest}
                           </span>
                         ))}
+                        {profile.interests.length > 3 && (
+                          <span className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                            +{profile.interests.length - 3}
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    
-                    {profile.wishlist.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Wishlist</h4>
-                        {profile.wishlist.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between border rounded-md p-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center">
-                                <Gift className="h-5 w-5 text-gray-500" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium">{item.name}</p>
-                                <p className="text-xs text-gray-500">${item.price.toFixed(2)}</p>
-                              </div>
-                            </div>
+                      
+                      {/* Wishlist Preview */}
+                      {profile.wishlist.length > 0 && (
+                        <div className="border-t pt-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">
+                              {profile.wishlist.length} wishlist item{profile.wishlist.length !== 1 ? 's' : ''}
+                            </span>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => handleSendGift(profile.id, item.id)}
+                              onClick={() => handleSendGift(profile.id, profile.wishlist[0].id)}
+                              className="h-7 text-xs"
                             >
+                              <Gift className="mr-1 h-3 w-3" />
                               Send Gift
                             </Button>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
+                  
+                  {/* Action Footer */}
+                  <CardFooter className="p-4 pt-0">
+                    <div className="flex gap-2 w-full">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleStartConversation(profile.username)}
+                      >
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Message
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          toast({
+                            title: "Profile Liked",
+                            description: `You liked ${profile.name}'s profile!`,
+                          });
+                        }}
+                      >
+                        <Heart className="mr-2 h-4 w-4" />
+                        Like
+                      </Button>
+                    </div>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
