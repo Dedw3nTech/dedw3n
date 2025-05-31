@@ -303,15 +303,6 @@ export default function MessagesPage() {
       {/* Social Header Navigation */}
       <div className="mb-6 border-b pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Tabs defaultValue="all" className="w-full sm:w-auto">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="unread">Unread</TabsTrigger>
-                <TabsTrigger value="requests">Requests</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
         </div>
         
         {/* Message Category Navigation */}
@@ -464,6 +455,16 @@ export default function MessagesPage() {
           <div className="p-4 border-b">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Messages</h2>
+            </div>
+            
+            <div className="mb-4">
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="unread">Unread</TabsTrigger>
+                  <TabsTrigger value="requests">Requests</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
             
             {isSearching ? (
