@@ -482,7 +482,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="flex gap-2 mb-6">
             <Button
               variant="outline"
               size="sm"
@@ -492,7 +492,7 @@ export default function ProductDetail() {
                   description: "Added to your favorites!",
                 });
               }}
-              className="flex items-center justify-center"
+              className="flex-1"
             >
               <Heart className="mr-2 h-4 w-4" />
               Like
@@ -517,7 +517,7 @@ export default function ProductDetail() {
                   setLocation('/auth');
                 }
               }}
-              className="flex items-center justify-center"
+              className="flex-1"
             >
               <Users className="mr-2 h-4 w-4" />
               Add to Dating
@@ -541,13 +541,11 @@ export default function ProductDetail() {
                   setLocation('/auth');
                 }
               }}
-              className="flex items-center justify-center"
+              className="flex-1"
             >
               <MessageCircle className="mr-2 h-4 w-4" />
               Send Offer
             </Button>
-            
-
           </div>
         </div>
       </div>
