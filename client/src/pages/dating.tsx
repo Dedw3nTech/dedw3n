@@ -57,6 +57,7 @@ type DatingProfile = {
   interests: string[];
   wishlist: WishlistItem[];
   isMatch?: boolean; // Added to track match status
+  lastActive?: Date; // When the user was last active
 };
 
 type WishlistItem = {
@@ -96,6 +97,7 @@ const sampleProfiles: DatingProfile[] = [
     bio: "Love hiking and outdoor activities. Looking for someone who shares my passion for adventure!",
     relationshipPreference: "dating",
     isActive: true,
+    lastActive: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago (online)
     interests: ["Hiking", "Photography", "Travel"],
     wishlist: [
       {
@@ -211,6 +213,14 @@ export default function DatingPage() {
   const relationshipTypes = ["Dating", "Meeting", "Marriage", "Casual"];
   const interestOptions = ["Hiking", "Photography", "Travel", "Technology", "Coffee", "Movies", "Art", "Reading", "Cooking", "Music", "Sports", "Gaming"];
   const locationOptions = ["London", "Manchester", "Birmingham", "Edinburgh", "Cardiff", "Belfast", "Bristol", "Liverpool"];
+  
+  // Function to check if user is online (within last 5 minutes)
+  const isUserOnline = (lastActive?: Date) => {
+    if (!lastActive) return false;
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    return new Date(lastActive) > fiveMinutesAgo;
+  };
   
   // Handle photo upload
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -627,8 +637,11 @@ export default function DatingPage() {
                     
                     {/* Status Badge */}
                     <div className="absolute top-3 left-3">
-                      <Badge variant={profile.isActive ? "default" : "secondary"} className="text-xs">
-                        {profile.isActive ? "Online" : "Away"}
+                      <Badge 
+                        variant={isUserOnline(profile.lastActive) ? "default" : "secondary"} 
+                        className={`text-xs ${isUserOnline(profile.lastActive) ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-500 text-white"}`}
+                      >
+                        {isUserOnline(profile.lastActive) ? "Online" : "Away"}
                       </Badge>
                     </div>
                     
