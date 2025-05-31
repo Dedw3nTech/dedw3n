@@ -656,14 +656,14 @@ export default function Products() {
               {product.discountPrice ? (
                 <div className="flex items-center">
                   <div className="font-bold text-blue-600">
-                    {formatPriceWithCurrency(product.discountPrice, currency)}
+                    {formatPrice(product.discountPrice)}
                     {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                   </div>
-                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceWithCurrency(product.price, currency)}</div>
+                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
                 </div>
               ) : (
                 <div className="font-bold text-blue-600">
-                  {formatPriceWithCurrency(product.price, currency)}
+                  {formatPrice(product.price)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                 </div>
               )}
@@ -1233,7 +1233,7 @@ export default function Products() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedProduct.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {formatPriceWithCurrency(selectedProduct.price, currency)}
+                    {formatPrice(selectedProduct.price)}
                   </p>
                 </div>
               </div>
@@ -1296,7 +1296,7 @@ export default function Products() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedOfferProduct.name}</h4>
                   <p className="text-sm text-gray-600">
-                    Listed: {formatPriceWithCurrency(selectedOfferProduct.price, currency)}
+                    Listed: {formatPrice(selectedOfferProduct.price)}
                   </p>
                 </div>
               </div>
