@@ -755,8 +755,10 @@ export default function DatingPage() {
                         </Badge>
                       </div>
                       
-                      {/* Bio */}
-                      <p className="text-sm text-gray-600 line-clamp-2">{profile.bio}</p>
+                      {/* Bio - Always 3 lines for consistent card height */}
+                      <div className="h-12">
+                        <p className="text-sm text-gray-600 line-clamp-3">{profile.bio}</p>
+                      </div>
                       
                       {/* Interests */}
                       <div className="flex flex-wrap gap-1">
