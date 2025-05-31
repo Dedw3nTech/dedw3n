@@ -547,30 +547,7 @@ export default function ProductDetail() {
               Send Offer
             </Button>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (user) {
-                  setLocation(`/social?repost=${productId}`);
-                  toast({
-                    title: "Product Reposted",
-                    description: "Product shared to your social feed!",
-                  });
-                } else {
-                  toast({
-                    title: "Login Required",
-                    description: "Please log in to repost",
-                    variant: "destructive"
-                  });
-                  setLocation('/auth');
-                }
-              }}
-              className="flex items-center justify-center"
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Repost
-            </Button>
+
           </div>
         </div>
       </div>
