@@ -1111,7 +1111,7 @@ export default function DatingPage() {
       
       {/* Gift Selection Popup */}
       <Dialog open={giftPopupOpen} onOpenChange={setGiftPopupOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Send a Gift to {selectedProfile?.name}</DialogTitle>
             <DialogDescription>
