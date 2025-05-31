@@ -15,7 +15,7 @@ import {
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
-  likedProducts, friendRequests,
+  likedProducts, friendRequests, giftPropositions,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -25,7 +25,8 @@ import {
   type OrderItem, type InsertOrderItem, type Community, type InsertCommunity,
   type Connection, type InsertConnection, type Notification, type InsertNotification,
   type NotificationSettings, type InsertNotificationSettings,
-  type LikedProduct, type InsertLikedProduct
+  type LikedProduct, type InsertLikedProduct,
+  type GiftProposition, type InsertGiftProposition
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
@@ -228,6 +229,13 @@ export interface IStorage {
   incrementLoginAttempts(userId: number): Promise<void>;
   resetLoginAttempts(userId: number): Promise<void>;
   lockUserAccount(userId: number, lock: boolean): Promise<void>;
+
+  // Gift operations
+  createGiftProposition(giftData: InsertGiftProposition): Promise<GiftProposition>;
+  getGiftProposition(id: number): Promise<GiftProposition | undefined>;
+  getUserSentGifts(userId: number): Promise<GiftProposition[]>;
+  getUserReceivedGifts(userId: number): Promise<GiftProposition[]>;
+  updateGiftStatus(id: number, status: string, paymentIntentId?: string): Promise<GiftProposition | undefined>;
 }
 
 // Database storage implementation
@@ -4199,6 +4207,132 @@ export class DatabaseStorage implements IStorage {
   // Alias for getUserConversationsByCategory to match the expected method name
   async getUserConversationsByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]> {
     return this.getConversationsByCategory(userId, category);
+  }
+
+  // Gift operations
+  async createGiftProposition(giftData: InsertGiftProposition): Promise<GiftProposition> {
+    try {
+      const [newGift] = await db
+        .insert(giftPropositions)
+        .values(giftData)
+        .returning();
+      return newGift;
+    } catch (error) {
+      console.error('Error creating gift proposition:', error);
+      throw new Error('Failed to create gift proposition');
+    }
+  }
+
+  async getGiftProposition(id: number): Promise<GiftProposition | undefined> {
+    try {
+      const [gift] = await db
+        .select()
+        .from(giftPropositions)
+        .where(eq(giftPropositions.id, id));
+      return gift;
+    } catch (error) {
+      console.error('Error getting gift proposition:', error);
+      return undefined;
+    }
+  }
+
+  async getUserSentGifts(userId: number): Promise<GiftProposition[]> {
+    try {
+      const gifts = await db
+        .select({
+          gift: giftPropositions,
+          recipient: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            image: products.image,
+            price: products.price
+          }
+        })
+        .from(giftPropositions)
+        .leftJoin(users, eq(giftPropositions.recipientId, users.id))
+        .leftJoin(products, eq(giftPropositions.productId, products.id))
+        .where(eq(giftPropositions.senderId, userId))
+        .orderBy(desc(giftPropositions.createdAt));
+
+      return gifts.map(item => ({
+        ...item.gift,
+        recipient: item.recipient,
+        product: item.product
+      })) as GiftProposition[];
+    } catch (error) {
+      console.error('Error getting user sent gifts:', error);
+      return [];
+    }
+  }
+
+  async getUserReceivedGifts(userId: number): Promise<GiftProposition[]> {
+    try {
+      const gifts = await db
+        .select({
+          gift: giftPropositions,
+          sender: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            image: products.image,
+            price: products.price
+          }
+        })
+        .from(giftPropositions)
+        .leftJoin(users, eq(giftPropositions.senderId, users.id))
+        .leftJoin(products, eq(giftPropositions.productId, products.id))
+        .where(eq(giftPropositions.recipientId, userId))
+        .orderBy(desc(giftPropositions.createdAt));
+
+      return gifts.map(item => ({
+        ...item.gift,
+        sender: item.sender,
+        product: item.product
+      })) as GiftProposition[];
+    } catch (error) {
+      console.error('Error getting user received gifts:', error);
+      return [];
+    }
+  }
+
+  async updateGiftStatus(id: number, status: string, paymentIntentId?: string): Promise<GiftProposition | undefined> {
+    try {
+      const updateData: any = {
+        status,
+        respondedAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      if (paymentIntentId) {
+        updateData.paymentIntentId = paymentIntentId;
+      }
+
+      if (status === 'paid') {
+        updateData.paidAt = new Date();
+      }
+
+      const [updatedGift] = await db
+        .update(giftPropositions)
+        .set(updateData)
+        .where(eq(giftPropositions.id, id))
+        .returning();
+
+      return updatedGift;
+    } catch (error) {
+      console.error('Error updating gift status:', error);
+      return undefined;
+    }
   }
 }
 
