@@ -461,7 +461,7 @@ export default function ProfilePage() {
 
                 {/* Gift Products List */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Send a Gift</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Connect to {profile.name}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { id: 1, name: "Wireless Headphones", price: 89.99, image: "https://placehold.co/100x100/blue/white?text=Headphones" },
