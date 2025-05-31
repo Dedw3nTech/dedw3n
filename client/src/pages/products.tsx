@@ -73,6 +73,12 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [repostText, setRepostText] = useState('');
 
+  // Send Offer dialog state
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
+  const [selectedOfferProduct, setSelectedOfferProduct] = useState<any>(null);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerMessage, setOfferMessage] = useState('');
+
   // Liked products functionality
   const { data: likedProducts = [] } = useQuery({
     queryKey: ['/api/liked-products'],
@@ -213,6 +219,45 @@ export default function Products() {
       toast({
         title: "Error",
         description: "Failed to post to feed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Send offer mutation
+  const sendOfferMutation = useMutation({
+    mutationFn: ({ productId, amount, message }: { productId: number; amount: string; message: string }) => 
+      fetch('/api/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId: selectedOfferProduct?.vendorId,
+          content: `🎯 OFFER: ${formatPriceWithCurrency(parseFloat(amount), currency)} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
+          category: 'marketplace'
+        })
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to send offer');
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Offer Sent!",
+        description: "Your offer has been sent to the product owner.",
+      });
+      setOfferDialogOpen(false);
+      setOfferAmount('');
+      setOfferMessage('');
+      setSelectedOfferProduct(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send offer. Please try again.",
         variant: "destructive",
       });
     }
@@ -579,26 +624,40 @@ export default function Products() {
                 </div>
               )}
             </div>
-            <Button 
-              variant="ghost"
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (marketType === 'c2c') {
-                  setLocation(`/product/${product.id}`);
-                } else {
-                  addToCartMutation.mutate(product.id);
-                }
-              }}
-              disabled={addToCartMutation.isPending}
-              className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto ml-2 font-bold"
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                marketType === 'c2c' ? 'View' : 'Buy'
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost"
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (marketType === 'c2c') {
+                    setLocation(`/product/${product.id}`);
+                  } else {
+                    addToCartMutation.mutate(product.id);
+                  }
+                }}
+                disabled={addToCartMutation.isPending}
+                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-bold"
+              >
+                {addToCartMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  marketType === 'c2c' ? 'View' : 'Buy'
+                )}
+              </Button>
+              <Button 
+                variant="ghost"
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedOfferProduct(product);
+                  setOfferDialogOpen(true);
+                }}
+                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-bold"
+              >
+                Send Offer
+              </Button>
+            </div>
           </div>
           
           <div className="text-sm text-gray-500">{product.category}</div>
@@ -1158,6 +1217,91 @@ export default function Products() {
                 </>
               ) : (
                 'Post to Feed'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Offer Dialog */}
+      <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Offer</DialogTitle>
+            <DialogDescription>
+              Send a price offer to the product owner
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOfferProduct && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{selectedOfferProduct.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    Listed: {formatPriceWithCurrency(selectedOfferProduct.price, currency)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="offer-amount" className="text-sm font-medium">Your Offer Amount</Label>
+              <Input
+                id="offer-amount"
+                type="number"
+                placeholder="Enter your offer amount"
+                value={offerAmount}
+                onChange={(e) => setOfferAmount(e.target.value)}
+                className="mt-2"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <Label htmlFor="offer-message" className="text-sm font-medium">Message (optional)</Label>
+              <Textarea
+                id="offer-message"
+                placeholder="Add a message with your offer..."
+                value={offerMessage}
+                onChange={(e) => setOfferMessage(e.target.value)}
+                className="mt-2"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setOfferDialogOpen(false)}
+              disabled={sendOfferMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedOfferProduct && offerAmount) {
+                  sendOfferMutation.mutate({
+                    productId: selectedOfferProduct.id,
+                    amount: offerAmount,
+                    message: offerMessage
+                  });
+                }
+              }}
+              disabled={sendOfferMutation.isPending || !offerAmount}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              {sendOfferMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Offer'
               )}
             </Button>
           </DialogFooter>
