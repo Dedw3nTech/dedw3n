@@ -789,14 +789,6 @@ export default function DatingPage() {
                             <span className="text-xs text-gray-500">
                               {profile.wishlist.length} wishlist item{profile.wishlist.length !== 1 ? 's' : ''}
                             </span>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleSendGift(profile)}
-                              className="h-7 text-xs bg-black text-white hover:bg-gray-800"
-                            >
-                              <Gift className="mr-1 h-3 w-3" />
-                              Send Gift
-                            </Button>
                           </div>
                           
                           {/* Wishlist Product Images */}
