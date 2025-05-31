@@ -2,7 +2,7 @@ import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, ShoppingBag, Store, Heart } from 'lucide-react';
+import { Search, ShoppingBag, Store, Heart, PoundSterling } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -128,6 +128,14 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             >
               <Store className="h-4 w-4" />
               <span className="text-sm font-medium">Vendor Dashboard</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+            >
+              <PoundSterling className="h-4 w-4" />
+              <span className="text-sm font-medium">Currency</span>
             </Button>
           </div>
         </div>
