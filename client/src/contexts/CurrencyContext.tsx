@@ -54,7 +54,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (context === undefined) {
-    throw new Error('useCurrency must be used within a CurrencyProvider');
+    // Provide fallback values instead of throwing error
+    return {
+      selectedCurrency: currencies[0], // Default to GBP
+      setSelectedCurrency: () => {},
+      convertPrice: (priceInUSD: number) => priceInUSD / currencies[0].rate,
+      formatPrice: (priceInUSD: number) => `${currencies[0].symbol}${(priceInUSD / currencies[0].rate).toFixed(2)}`
+    };
   }
   return context;
 }
