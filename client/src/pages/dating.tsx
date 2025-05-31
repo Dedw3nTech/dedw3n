@@ -1154,7 +1154,7 @@ export default function DatingPage() {
                 </div>
                 
                 <Button size="sm" className="bg-black text-white hover:bg-gray-800">
-                  Select
+                  Send Gift
                 </Button>
               </div>
             ))}
