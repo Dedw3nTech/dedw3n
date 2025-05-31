@@ -522,27 +522,33 @@ export default function DatingPage() {
               
               {/* View controls */}
               <div className="flex items-center gap-2">
-                <Button
-                  variant={columnsPerRow === 2 ? "default" : "outline"}
-                  size="sm"
+                <button
                   onClick={() => setColumnsPerRow(2)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 2 ? 'opacity-100' : 'opacity-50'}`}
+                  title="2 columns"
                 >
-                  2 Columns
-                </Button>
-                <Button
-                  variant={columnsPerRow === 3 ? "default" : "outline"}
-                  size="sm"
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                </button>
+                <button
                   onClick={() => setColumnsPerRow(3)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
+                  title="3 columns"
                 >
-                  3 Columns
-                </Button>
-                <Button
-                  variant={columnsPerRow === 4 ? "default" : "outline"}
-                  size="sm"
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                </button>
+                <button
                   onClick={() => setColumnsPerRow(4)}
+                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
+                  title="4 columns"
                 >
-                  4 Columns
-                </Button>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                  <div className="w-1 h-4 bg-black"></div>
+                </button>
               </div>
             </div>
           </div>
