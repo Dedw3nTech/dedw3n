@@ -421,26 +421,24 @@ export default function ProductDetail() {
           <div className="mb-6">
             <div className="flex flex-col space-y-2">
               <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {product.discountPrice && product.discountPrice < product.price ? (
-                      <>
-                        <span className="text-2xl font-bold text-primary">
-                          {formatPrice(product.discountPrice)}
-                        </span>
-                        <span className="text-lg text-gray-500 line-through">
-                          {formatPrice(product.price)}
-                        </span>
-                        <Badge className="bg-red-500">
-                          Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-                        </Badge>
-                      </>
-                    ) : (
-                      <span className="text-2xl font-bold text-gray-900">
+                <div className="flex items-center gap-2">
+                  {product.discountPrice && product.discountPrice < product.price ? (
+                    <>
+                      <span className="text-2xl font-bold text-primary">
+                        {formatPrice(product.discountPrice)}
+                      </span>
+                      <span className="text-lg text-gray-500 line-through">
                         {formatPrice(product.price)}
                       </span>
-                    )}
-                  </div>
+                      <Badge className="bg-red-500">
+                        Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                      </Badge>
+                    </>
+                  ) : (
+                    <span className="text-2xl font-bold text-gray-900">
+                      {formatPrice(product.price)}
+                    </span>
+                  )}
                   
                   {/* Send Offer Button */}
                   <Button
@@ -461,7 +459,7 @@ export default function ProductDetail() {
                         setLocation('/auth');
                       }
                     }}
-                    className="p-2 hover:bg-gray-100"
+                    className="p-2 hover:bg-gray-100 ml-1"
                   >
                     <span className="text-black font-bold">Send Offer</span>
                   </Button>
