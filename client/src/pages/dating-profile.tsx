@@ -46,6 +46,21 @@ const INTEREST_OPTIONS = [
   "Fashion", "Food", "Animals", "Adventure", "Beach", "Hiking", "Yoga"
 ];
 
+// Generate height options from 4'0" (125cm) to 8'11" (272cm)
+const HEIGHT_OPTIONS = (() => {
+  const heights = [];
+  for (let feet = 4; feet <= 8; feet++) {
+    const maxInches = feet === 8 ? 11 : 11;
+    for (let inches = 0; inches <= maxInches; inches++) {
+      const totalInches = feet * 12 + inches;
+      const cm = Math.round(totalInches * 2.54);
+      const display = `${feet}'${inches}" (${cm}cm)`;
+      heights.push({ value: display, label: display });
+    }
+  }
+  return heights;
+})();
+
 export default function DatingProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -55,6 +70,7 @@ export default function DatingProfilePage() {
   // Form state
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState<number>(18);
+  const [height, setHeight] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -208,7 +224,7 @@ export default function DatingProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Display Name *</Label>
                   <Input
@@ -228,6 +244,21 @@ export default function DatingProfilePage() {
                     value={age}
                     onChange={(e) => setAge(parseInt(e.target.value) || 18)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">Height</Label>
+                  <Select value={height} onValueChange={setHeight}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your height" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HEIGHT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
