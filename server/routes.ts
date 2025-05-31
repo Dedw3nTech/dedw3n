@@ -2123,6 +2123,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Messaging API endpoints
 
+  // Category-specific messaging endpoints
+  app.get('/api/messages/category/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const category = req.params.category as 'marketplace' | 'community' | 'dating';
+      const userId = (req as any).user.id;
+      
+      if (!['marketplace', 'community', 'dating'].includes(category)) {
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+      
+      const messages = await storage.getMessagesByCategory(userId, category);
+      res.json(messages);
+    } catch (error) {
+      console.error(`Error getting ${req.params.category} messages:`, error);
+      res.status(500).json({ message: 'Failed to get messages' });
+    }
+  });
+
+  app.get('/api/messages/conversations/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const category = req.params.category as 'marketplace' | 'community' | 'dating';
+      const userId = (req as any).user.id;
+      
+      if (!['marketplace', 'community', 'dating'].includes(category)) {
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+      
+      const conversations = await storage.getConversationsByCategory(userId, category);
+      res.json(conversations);
+    } catch (error) {
+      console.error(`Error getting ${req.params.category} conversations:`, error);
+      res.status(500).json({ message: 'Failed to get conversations' });
+    }
+  });
+
+  app.get('/api/messages/unread/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const category = req.params.category as 'marketplace' | 'community' | 'dating';
+      const userId = (req as any).user.id;
+      
+      if (!['marketplace', 'community', 'dating'].includes(category)) {
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+      
+      const count = await storage.getUnreadCountByCategory(userId, category);
+      res.json({ count });
+    } catch (error) {
+      console.error(`Error getting ${req.params.category} unread count:`, error);
+      res.status(500).json({ message: 'Failed to get unread count' });
+    }
+  });
+
+  // Enhanced message creation with category support
+  app.post('/api/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { receiverId, content, attachmentUrl, attachmentType, messageType, category = 'marketplace' } = req.body;
+      const senderId = (req as any).user.id;
+
+      if (!receiverId || !content) {
+        return res.status(400).json({ message: 'Receiver ID and content are required' });
+      }
+
+      if (!['marketplace', 'community', 'dating'].includes(category)) {
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+
+      const messageData = {
+        senderId,
+        receiverId,
+        content,
+        attachmentUrl,
+        attachmentType,
+        messageType: messageType || 'text',
+        category,
+        isRead: false
+      };
+
+      const message = await storage.createMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      console.error('Error creating message:', error);
+      res.status(500).json({ message: 'Failed to create message' });
+    }
+  });
+
   app.get('/api/products/popular', async (req: Request, res: Response) => {
     try {
       const limit = parseInt(req.query.limit as string) || 4;
