@@ -851,16 +851,11 @@ export default function DatingPage() {
                       </Button>
                       <Button 
                         size="sm" 
-                        className="flex-1"
-                        onClick={() => {
-                          toast({
-                            title: "Profile Liked",
-                            description: `You liked ${profile.name}'s profile!`,
-                          });
-                        }}
+                        className="flex-1 bg-black text-white hover:bg-gray-800"
+                        onClick={() => handleSendGift(profile)}
                       >
-                        <Heart className="mr-2 h-4 w-4" />
-                        Like
+                        <Gift className="mr-2 h-4 w-4" />
+                        Send Gift
                       </Button>
                     </div>
                   </CardFooter>
