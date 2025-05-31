@@ -493,34 +493,14 @@ export default function DatingPage() {
         <div className="bg-white border-b border-gray-200 py-4">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* Results count and sort */}
+              {/* Results count */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
                   Showing {filteredProfiles.length} profiles
                 </span>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Sort by: {sortBy === 'newest' ? 'Newest' : sortBy === 'active' ? 'Most Active' : 'Recommended'}
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                      Newest
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('active')}>
-                      Most Active
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('recommended')}>
-                      Recommended
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
               
-              {/* Profiles per page and view controls */}
+              {/* Profiles per page, view controls, and sort */}
               <div className="flex items-center gap-6">
                 {/* Profiles per page selector */}
                 <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -551,32 +531,46 @@ export default function DatingPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setColumnsPerRow(2)}
-                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 2 ? 'opacity-100' : 'opacity-50'}`}
-                    title="2 columns"
+                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 2 ? 'text-black font-medium' : 'text-gray-600'}`}
                   >
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
+                    2 Columns
                   </button>
+                  <span className="text-gray-300">|</span>
                   <button
                     onClick={() => setColumnsPerRow(3)}
-                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
-                    title="3 columns"
+                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 3 ? 'text-black font-medium' : 'text-gray-600'}`}
                   >
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
+                    3 Columns
                   </button>
+                  <span className="text-gray-300">|</span>
                   <button
                     onClick={() => setColumnsPerRow(4)}
-                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
-                    title="4 columns"
+                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 4 ? 'text-black font-medium' : 'text-gray-600'}`}
                   >
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
-                    <div className="w-1 h-4 bg-black"></div>
+                    4 Columns
                   </button>
                 </div>
+
+                {/* Sort dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Sort by: {sortBy === 'newest' ? 'Newest' : sortBy === 'active' ? 'Most Active' : 'Recommended'}
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                      Newest
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('active')}>
+                      Most Active
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('recommended')}>
+                      Recommended
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
