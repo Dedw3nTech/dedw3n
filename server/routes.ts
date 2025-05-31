@@ -3021,28 +3021,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dating profile endpoint - using same auth pattern as /api/user
+  // Dating profile endpoint - using fallback auth
   app.get('/api/dating-profile', async (req: Request, res: Response) => {
     try {
       console.log('[DEBUG] /api/dating-profile called');
-
-      // Try session authentication first
-      if (req.user) {
-        console.log('[DEBUG] Dating profile - User found in session:', req.user.id);
+      
+      let authenticatedUser = null;
+      
+      // First try unifiedIsAuthenticated manually
+      try {
+        if (req.user) {
+          authenticatedUser = req.user;
+          console.log('[DEBUG] Dating profile - Session user found:', authenticatedUser.id);
+        } else {
+          // Try manual session check
+          const sessionUserId = req.session?.passport?.user;
+          if (sessionUserId) {
+            const user = await storage.getUser(sessionUserId);
+            if (user) {
+              authenticatedUser = user;
+              console.log('[DEBUG] Dating profile - Session fallback user found:', user.id);
+            }
+          }
+        }
         
-        // Get user's dating profile from the database
-        const user = await storage.getUser(req.user.id);
-        if (!user) {
-          return res.status(404).json({ message: 'User not found' });
+        // If no session auth, try Authorization header
+        if (!authenticatedUser) {
+          const authHeader = req.headers.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            try {
+              const payload = verifyToken(token);
+              if (payload) {
+                const user = await storage.getUser(payload.userId);
+                if (user) {
+                  authenticatedUser = user;
+                  console.log('[DEBUG] Dating profile - JWT user found:', user.id);
+                }
+              }
+            } catch (jwtError) {
+              console.log('[DEBUG] Dating profile - JWT verification failed');
+            }
+          }
+        }
+        
+        if (!authenticatedUser) {
+          console.log('[DEBUG] Dating profile - No authentication found');
+          return res.status(401).json({ 
+            message: 'Unauthorized - No valid authentication' 
+          });
         }
 
-        // Create a comprehensive dating profile response
+        // Create comprehensive dating profile response
         const datingProfile = {
-          id: user.id,
-          userId: user.id,
-          displayName: user.name || user.username,
+          id: authenticatedUser.id,
+          userId: authenticatedUser.id,
+          displayName: authenticatedUser.name || authenticatedUser.username,
           age: 28,
-          bio: user.bio || "Adventure seeker and coffee enthusiast. Love exploring new places, trying different cuisines, and having deep conversations about life.",
+          bio: authenticatedUser.bio || "Adventure seeker and coffee enthusiast. Love exploring new places, trying different cuisines, and having deep conversations about life.",
           location: "New York, NY",
           interests: ["Travel", "Photography", "Cooking", "Reading", "Hiking", "Coffee", "Art", "Music"],
           lookingFor: "Someone who shares my passion for adventure and meaningful conversations",
@@ -3057,58 +3093,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: new Date().toISOString()
         };
 
+        console.log('[DEBUG] Dating profile - Returning profile for user:', authenticatedUser.id);
         return res.json(datingProfile);
-      }
-
-      // Try JWT authentication as fallback
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.substring(7);
-        console.log('[DEBUG] Dating profile - Attempting JWT authentication');
         
-        try {
-          const payload = verifyToken(token);
-          if (payload) {
-            console.log('[DEBUG] Dating profile - JWT token is valid');
-            
-            const user = await storage.getUser(payload.userId);
-            if (user) {
-              console.log('[DEBUG] Dating profile - User found via JWT payload:', user.id);
-              
-              // Create dating profile response
-              const datingProfile = {
-                id: user.id,
-                userId: user.id,
-                displayName: user.name || user.username,
-                age: 28,
-                bio: user.bio || "Adventure seeker and coffee enthusiast. Love exploring new places, trying different cuisines, and having deep conversations about life.",
-                location: "New York, NY",
-                interests: ["Travel", "Photography", "Cooking", "Reading", "Hiking", "Coffee", "Art", "Music"],
-                lookingFor: "Someone who shares my passion for adventure and meaningful conversations",
-                relationshipType: "Serious Relationship",
-                profileImages: [
-                  "https://images.unsplash.com/photo-1494790108755-2616b612b0e7?w=400&h=400&fit=crop&crop=face",
-                  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=400&fit=crop&crop=face"
-                ],
-                isActive: true,
-                isPremium: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              };
-
-              return res.json(datingProfile);
-            }
-          }
-        } catch (error) {
-          console.error('[DEBUG] Dating profile - JWT verification error:', error);
-        }
+      } catch (authError) {
+        console.error('[DEBUG] Dating profile - Authentication error:', authError);
+        return res.status(401).json({ 
+          message: 'Authentication error' 
+        });
       }
       
-      console.log('[DEBUG] Dating profile - Authentication failed');
-      return res.status(401).json({ 
-        message: 'Unauthorized - No valid authentication',
-        authMethods: ['session', 'bearer']
-      });
     } catch (error) {
       console.error('Error fetching dating profile:', error);
       res.status(500).json({ message: 'Failed to fetch dating profile' });
