@@ -528,7 +528,7 @@ export default function ProfilePage() {
             <DialogDescription>
               {selectedGift && (
                 <>
-                  Sending <strong>{selectedGift.name}</strong> will initiate a match request to <strong>{profile.name}</strong>.
+                  Offering <strong>{selectedGift.name}</strong> will initiate a match request to <strong>{profile.name}</strong>.
                 </>
               )}
             </DialogDescription>
