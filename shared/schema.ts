@@ -1262,4 +1262,45 @@ export type InsertChatroomMessage = z.infer<typeof insertChatroomMessageSchema>;
 export type ChatroomMember = typeof chatroomMembers.$inferSelect;
 export type InsertChatroomMember = z.infer<typeof insertChatroomMemberSchema>;
 
+// Gift status enum
+export const giftStatusEnum = pgEnum('gift_status', ['pending', 'accepted', 'rejected', 'paid']);
+
+// Gift propositions table
+export const giftPropositions = pgTable("gift_propositions", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  message: text("message"), // Optional message from sender
+  status: giftStatusEnum("status").notNull().default("pending"),
+  amount: doublePrecision("amount").notNull(), // Gift amount
+  currency: text("currency").notNull().default("GBP"),
+  paymentIntentId: text("payment_intent_id"), // Stripe payment intent ID
+  respondedAt: timestamp("responded_at"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    senderIdx: index('idx_gift_propositions_sender').on(table.senderId),
+    recipientIdx: index('idx_gift_propositions_recipient').on(table.recipientId),
+    productIdx: index('idx_gift_propositions_product').on(table.productId),
+    statusIdx: index('idx_gift_propositions_status').on(table.status),
+  };
+});
+
+// Gift proposition schema
+export const insertGiftPropositionSchema = createInsertSchema(giftPropositions).omit({ 
+  id: true, 
+  paymentIntentId: true,
+  respondedAt: true, 
+  paidAt: true,
+  createdAt: true, 
+  updatedAt: true 
+});
+
+// Gift proposition types
+export type GiftProposition = typeof giftPropositions.$inferSelect;
+export type InsertGiftProposition = z.infer<typeof insertGiftPropositionSchema>;
+
 

@@ -22,7 +22,8 @@ import {
   MessageCircle,
   MessageSquare,
   Users,
-  Heart
+  Heart,
+  Gift
 } from 'lucide-react';
 import { 
   supportedCurrencies, 
@@ -656,6 +657,30 @@ export default function ProductDetail() {
               <span className="text-black text-lg font-bold">+</span>
             </Button>
             
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (user) {
+                  // Send gift to dating room member
+                  toast({
+                    title: "Send as Gift",
+                    description: "Choose someone from dating room to send this gift to!",
+                  });
+                  setLocation(`/dating?gift=${productId}`);
+                } else {
+                  toast({
+                    title: "Login Required",
+                    description: "Please log in to send gifts",
+                    variant: "destructive"
+                  });
+                  setLocation('/auth');
+                }
+              }}
+              className="p-2 hover:bg-gray-100"
+            >
+              <Gift className="h-5 w-5 text-pink-600" />
+            </Button>
 
           </div>
         </div>
