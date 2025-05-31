@@ -531,23 +531,30 @@ export default function DatingPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setColumnsPerRow(2)}
-                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 2 ? 'text-black font-medium' : 'text-gray-600'}`}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 2 ? 'opacity-100' : 'opacity-50'}`}
+                    title="2 columns"
                   >
-                    2 Columns
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
                   </button>
-                  <span className="text-gray-300">|</span>
                   <button
                     onClick={() => setColumnsPerRow(3)}
-                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 3 ? 'text-black font-medium' : 'text-gray-600'}`}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
+                    title="3 columns"
                   >
-                    3 Columns
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
                   </button>
-                  <span className="text-gray-300">|</span>
                   <button
                     onClick={() => setColumnsPerRow(4)}
-                    className={`px-2 py-1 hover:text-black transition-colors ${columnsPerRow === 4 ? 'text-black font-medium' : 'text-gray-600'}`}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
+                    title="4 columns"
                   >
-                    4 Columns
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
                   </button>
                 </div>
 
