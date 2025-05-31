@@ -37,6 +37,7 @@ export default function MessagesPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [callType, setCallType] = useState<"audio" | "video">("video");
+  const [selectedCategory, setSelectedCategory] = useState<"marketplace" | "community" | "dating">("marketplace");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -81,14 +82,14 @@ export default function MessagesPage() {
     return null;
   }
 
-  // Fetch user's conversations
+  // Fetch user's conversations filtered by category
   const {
     data: apiConversations,
     isLoading: isLoadingConversations,
   } = useQuery({
-    queryKey: ["/api/messages/conversations"],
+    queryKey: ["/api/messages/conversations", selectedCategory],
     queryFn: async () => {
-      const response = await fetch("/api/messages/conversations");
+      const response = await fetch(`/api/messages/conversations?category=${selectedCategory}`);
       if (!response.ok) {
         throw new Error("Failed to fetch conversations");
       }
@@ -148,7 +149,7 @@ export default function MessagesPage() {
       const response = await apiRequest(
         "POST",
         `/api/messages/conversations/${conversationId}`,
-        { content: message }
+        { content: message, category: selectedCategory }
       );
       
       if (!response.ok) {
@@ -316,6 +317,26 @@ export default function MessagesPage() {
             </Tabs>
             <ConnectionStatusIndicator />
           </div>
+        </div>
+        
+        {/* Message Category Navigation */}
+        <div className="mt-4">
+          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as "marketplace" | "community" | "dating")} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="marketplace" className="flex items-center gap-2">
+                <i className="ri-store-2-line text-base"></i>
+                <span>Marketplace</span>
+              </TabsTrigger>
+              <TabsTrigger value="community" className="flex items-center gap-2">
+                <i className="ri-group-line text-base"></i>
+                <span>Community</span>
+              </TabsTrigger>
+              <TabsTrigger value="dating" className="flex items-center gap-2">
+                <i className="ri-heart-line text-base"></i>
+                <span>Dating</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
         {/* Connection Diagnostics Panel */}

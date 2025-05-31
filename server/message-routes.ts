@@ -26,7 +26,14 @@ export function registerMessageRoutes(app: Express) {
   app.get("/api/messages/conversations", unifiedIsAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const conversations = await storage.getUserConversations(userId);
+      const category = req.query.category as 'marketplace' | 'community' | 'dating' | undefined;
+      
+      let conversations;
+      if (category) {
+        conversations = await storage.getUserConversationsByCategory(userId, category);
+      } else {
+        conversations = await storage.getUserConversations(userId);
+      }
       
       // Enhance participants with current user info
       const currentUser = await storage.getUser(userId);
