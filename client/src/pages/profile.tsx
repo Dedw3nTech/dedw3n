@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowLeft, 
   MessageCircle, 
@@ -319,6 +320,8 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Dating Profile Info */}
+            <DatingProfileInfo userId={profile.id} />
 
           </div>
         </div>
