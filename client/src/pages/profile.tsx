@@ -319,33 +319,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Wishlist */}
-            {profile.wishlist.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    Dating Profile Info
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {profile.wishlist.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">{item.name}</p>
-                        <p className="text-lg font-bold text-green-600">${item.price}</p>
-                      </div>
-                      <Button 
-                        size="sm"
-                        onClick={() => handleSendGift(item.id)}
-                      >
-                        <Gift className="mr-1 h-3 w-3" />
-                        Send
-                      </Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+
           </div>
         </div>
       </div>
