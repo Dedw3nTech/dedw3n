@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMessaging } from '@/hooks/use-messaging';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -40,6 +41,12 @@ export function ConnectionDiagnostics() {
     connect, 
     disconnect 
   } = useMessaging();
+  const { user } = useAuth();
+
+  // Only show for admin users
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
   
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   
