@@ -161,22 +161,23 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                       </div>
                     )}
                     {selectedCurrency.code === 'USD' && (
-                      <div className="w-full h-full bg-red-600 relative">
-                        {/* Red and white stripes */}
-                        <div className="absolute top-0 left-0 w-full h-full">
-                          <div className="h-full flex flex-col">
-                            <div className="h-1/6 bg-red-600"></div>
-                            <div className="h-1/6 bg-white"></div>
-                            <div className="h-1/6 bg-red-600"></div>
-                            <div className="h-1/6 bg-white"></div>
-                            <div className="h-1/6 bg-red-600"></div>
-                            <div className="h-1/6 bg-white"></div>
+                      <div className="w-full h-full bg-red-600 relative overflow-hidden">
+                        {/* Red and white stripes - 13 total */}
+                        <div className="absolute inset-0">
+                          <div className="w-full h-full flex flex-col">
+                            <div className="flex-1 bg-red-600"></div>
+                            <div className="flex-1 bg-white"></div>
+                            <div className="flex-1 bg-red-600"></div>
+                            <div className="flex-1 bg-white"></div>
+                            <div className="flex-1 bg-red-600"></div>
+                            <div className="flex-1 bg-white"></div>
+                            <div className="flex-1 bg-red-600"></div>
                           </div>
                         </div>
-                        {/* Blue canton with stars */}
-                        <div className="absolute top-0 left-0 w-2/5 h-3/5 bg-blue-800 flex items-center justify-center">
-                          <div className="text-white text-xs leading-none">
-                            ★★★<br/>★★★
+                        {/* Blue canton with optimized stars */}
+                        <div className="absolute top-0 left-0 w-[40%] h-[54%] bg-blue-800 flex items-center justify-center">
+                          <div className="text-white text-[8px] leading-none font-bold opacity-90">
+                            ★★★★<br/>★★★★<br/>★★★★
                           </div>
                         </div>
                       </div>
@@ -232,22 +233,23 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                         </div>
                       )}
                       {currency.code === 'USD' && (
-                        <div className="w-full h-full bg-red-600 relative">
-                          {/* Red and white stripes */}
-                          <div className="absolute top-0 left-0 w-full h-full">
-                            <div className="h-full flex flex-col">
-                              <div className="h-1/6 bg-red-600"></div>
-                              <div className="h-1/6 bg-white"></div>
-                              <div className="h-1/6 bg-red-600"></div>
-                              <div className="h-1/6 bg-white"></div>
-                              <div className="h-1/6 bg-red-600"></div>
-                              <div className="h-1/6 bg-white"></div>
+                        <div className="w-full h-full bg-red-600 relative overflow-hidden">
+                          {/* Red and white stripes - 13 total */}
+                          <div className="absolute inset-0">
+                            <div className="w-full h-full flex flex-col">
+                              <div className="flex-1 bg-red-600"></div>
+                              <div className="flex-1 bg-white"></div>
+                              <div className="flex-1 bg-red-600"></div>
+                              <div className="flex-1 bg-white"></div>
+                              <div className="flex-1 bg-red-600"></div>
+                              <div className="flex-1 bg-white"></div>
+                              <div className="flex-1 bg-red-600"></div>
                             </div>
                           </div>
-                          {/* Blue canton with stars */}
-                          <div className="absolute top-0 left-0 w-2/5 h-3/5 bg-blue-800 flex items-center justify-center">
-                            <div className="text-white text-xs leading-none">
-                              ★★★<br/>★★★
+                          {/* Blue canton with optimized stars */}
+                          <div className="absolute top-0 left-0 w-[40%] h-[54%] bg-blue-800 flex items-center justify-center">
+                            <div className="text-white text-[8px] leading-none font-bold opacity-90">
+                              ★★★★<br/>★★★★<br/>★★★★
                             </div>
                           </div>
                         </div>
