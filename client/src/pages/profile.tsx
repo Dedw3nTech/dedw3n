@@ -398,15 +398,14 @@ export default function ProfilePage() {
             {/* Bio & Interests */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3">
                   About {profile.name}
-                  <Button 
-                    size="sm" 
-                    className="bg-blue-500 hover:bg-blue-600 text-white h-6 px-3 text-xs"
-                    style={{ fontSize: '14px' }}
-                  >
-                    Edit
-                  </Button>
+                  <Badge variant="outline">
+                    {profile.relationshipPreference === "dating" ? "Looking to Date" :
+                     profile.relationshipPreference === "meeting" ? "Open to Meeting" :
+                     profile.relationshipPreference === "marriage" ? "Seeking Marriage" :
+                     profile.relationshipPreference === "casual" ? "Casual Relationship" : "Looking to Date"}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
