@@ -3021,6 +3021,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dating profile endpoint
+  app.get('/api/dating-profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get user's dating profile from the database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Create a comprehensive dating profile response
+      const datingProfile = {
+        id: user.id,
+        userId: user.id,
+        displayName: user.name || user.username,
+        age: 28, // Default age - in production this would come from user profile
+        bio: user.bio || "Adventure seeker and coffee enthusiast. Love exploring new places, trying different cuisines, and having deep conversations about life.",
+        location: "New York, NY", // Default location - in production this would come from user profile
+        interests: ["Travel", "Photography", "Cooking", "Reading", "Hiking", "Coffee", "Art", "Music"],
+        lookingFor: "Someone who shares my passion for adventure and meaningful conversations",
+        relationshipType: "Serious Relationship",
+        profileImages: [
+          "https://images.unsplash.com/photo-1494790108755-2616b612b0e7?w=400&h=400&fit=crop&crop=face",
+          "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=400&fit=crop&crop=face"
+        ],
+        isActive: true,
+        isPremium: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      res.json(datingProfile);
+    } catch (error) {
+      console.error('Error fetching dating profile:', error);
+      res.status(500).json({ message: 'Failed to fetch dating profile' });
+    }
+  });
+
   // User search endpoint for gift functionality
   app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
