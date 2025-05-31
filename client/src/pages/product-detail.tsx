@@ -21,7 +21,8 @@ import {
   Link as LinkIcon,
   MessageCircle,
   MessageSquare,
-  Users
+  Users,
+  Heart
 } from 'lucide-react';
 import { 
   supportedCurrencies, 
