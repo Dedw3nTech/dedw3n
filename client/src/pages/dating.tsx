@@ -178,6 +178,10 @@ export default function DatingPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
+  const handleViewProfile = (username: string) => {
+    setLocation(`/profile/${username}`);
+  };
+  
   // Dating profile filters and search (matching marketplace structure)
   const [searchTerm, setSearchTerm] = useState('');
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 65]);
@@ -557,7 +561,10 @@ export default function DatingPage() {
                 <Card key={profile.id} className="group hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
                   {/* Main Profile Image */}
                   <div className="relative">
-                    <div className="aspect-square overflow-hidden">
+                    <div 
+                      className="aspect-square overflow-hidden cursor-pointer"
+                      onClick={() => handleViewProfile(profile.username)}
+                    >
                       <img 
                         src={profile.photos[0] || "https://placehold.co/400x400/f3f4f6/9ca3af?text=Profile"} 
                         alt={`${profile.name}'s profile`}
@@ -594,9 +601,12 @@ export default function DatingPage() {
                     <div className="space-y-3">
                       {/* Profile Header */}
                       <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg text-gray-900 truncate">{profile.name}</h3>
-                          <p className="text-sm text-gray-500">@{profile.username}</p>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => handleViewProfile(profile.username)}
+                        >
+                          <h3 className="font-semibold text-lg text-gray-900 truncate hover:text-blue-600 transition-colors">{profile.name}</h3>
+                          <p className="text-sm text-gray-500 hover:text-blue-500 transition-colors">@{profile.username}</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

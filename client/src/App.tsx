@@ -163,6 +163,7 @@ import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
 import DatingProfilePage from "@/pages/dating-profile";
+import UserProfilePage from "@/pages/profile";
 
 import PremiumVideoPage from "@/pages/premium-video";
 
@@ -183,6 +184,7 @@ function Router() {
       <Route path="/government" component={GovernmentPage} />
       <Route path="/search" component={SearchPage} />
       <Route path="/dating" component={DatingPage} />
+      <Route path="/profile/:username" component={UserProfilePage} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />
