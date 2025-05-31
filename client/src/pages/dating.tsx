@@ -643,7 +643,7 @@ export default function DatingPage() {
                         variant={isUserOnline(profile.lastActive) ? "default" : "secondary"} 
                         className={`text-xs ${isUserOnline(profile.lastActive) ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-500 text-white"}`}
                       >
-                        {isUserOnline(profile.lastActive) ? "Online" : "Away"}
+                        {isUserOnline(profile.lastActive) ? "Online" : "Offline"}
                       </Badge>
                     </div>
                     
