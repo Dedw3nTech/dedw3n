@@ -189,6 +189,7 @@ export default function DatingPage() {
   const [sortBy, setSortBy] = useState<string>('newest');
   const [profilesPerPage, setProfilesPerPage] = useState<number>(12);
   const [columnsPerRow, setColumnsPerRow] = useState<number>(3);
+  const [currentTab, setCurrentTab] = useState('browse');
   
   // Profile management
   const [relationshipPreference, setRelationshipPreference] = useState<RelationshipPreference>("dating");
@@ -362,6 +363,24 @@ export default function DatingPage() {
                   />
                 </div>
                 
+                {/* Dating Room Tabs */}
+                <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-auto">
+                  <TabsList className="grid grid-cols-3 h-10">
+                    <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3">
+                      <Users className="h-4 w-4 flex-shrink-0" />
+                      Browse
+                    </TabsTrigger>
+                    <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3">
+                      <User className="h-4 w-4 flex-shrink-0" />
+                      Profile
+                    </TabsTrigger>
+                    <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3">
+                      <Heart className="h-4 w-4 flex-shrink-0" />
+                      Matches
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
                 {/* Filter Button */}
                 <Sheet>
                   <SheetTrigger asChild>
@@ -527,24 +546,8 @@ export default function DatingPage() {
 
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
-          <Tabs defaultValue="browse">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="browse">
-                <Users className="h-4 w-4 mr-2" />
-                Browse Profiles
-              </TabsTrigger>
-              <TabsTrigger value="myprofile">
-                <User className="h-4 w-4 mr-2" />
-                My Profile
-              </TabsTrigger>
-              <TabsTrigger value="matches">
-                <Heart className="h-4 w-4 mr-2" />
-                My Matches
-              </TabsTrigger>
-            </TabsList>
-          
           {/* Browse Profiles Tab */}
-          <TabsContent value="browse" className="mt-6">
+          {currentTab === "browse" && (
             <div className={`grid gap-6 ${
               columnsPerRow === 2 ? 'grid-cols-1 md:grid-cols-2' :
               columnsPerRow === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
@@ -697,10 +700,10 @@ export default function DatingPage() {
                 </Card>
               ))}
             </div>
-          </TabsContent>
+          )}
           
           {/* My Profile Tab */}
-          <TabsContent value="myprofile" className="mt-6">
+          {currentTab === "myprofile" && (
             <Card>
               <CardHeader>
                 <CardTitle>My Dating Profile</CardTitle>
@@ -870,10 +873,10 @@ export default function DatingPage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
+          )}
           
           {/* Matches Tab */}
-          <TabsContent value="matches" className="mt-6">
+          {currentTab === "matches" && (
             <Card>
               <CardHeader>
                 <CardTitle>Your Matches</CardTitle>
@@ -922,8 +925,7 @@ export default function DatingPage() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
         </div>
       </DatingRoomWall>
     </div>
