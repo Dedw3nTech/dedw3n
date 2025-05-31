@@ -44,23 +44,24 @@ export function VideoAdPopup({ videoUrl, delayMs = 0 }: VideoAdPopupProps) {
           <DialogTitle>Video Advertisement</DialogTitle>
         </VisuallyHidden>
         <div className="relative w-[min(200px,25vw)] aspect-[9/16] max-w-[200px] min-w-[150px]">
-          {/* YouTube embed iframe - YouTube Shorts dimensions */}
-          <iframe
-            src={getEmbedUrl(videoUrl)}
-            className="w-full h-full rounded-lg shadow-2xl border-2 border-white/20"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            frameBorder="0"
+          {/* Video placeholder */}
+          <div 
+            className="w-full h-full rounded-lg shadow-2xl border-2 border-white/20 bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center"
             style={{ 
               minWidth: '150px',
               maxWidth: '200px',
               aspectRatio: '9/16'
             }}
-            onError={() => {
-              console.error('Video failed to load');
-              setIsOpen(false);
-            }}
-          />
+          >
+            <div className="text-center text-white p-4">
+              <div className="w-12 h-12 mx-auto mb-2 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+              <p className="text-xs font-medium">Video Content</p>
+            </div>
+          </div>
           
           {/* Close button positioned over the video */}
           <button
