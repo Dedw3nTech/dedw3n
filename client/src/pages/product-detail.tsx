@@ -484,7 +484,7 @@ export default function ProductDetail() {
           {/* Action Buttons */}
           <div className="flex gap-2 mb-6">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => {
                 toast({
@@ -492,10 +492,9 @@ export default function ProductDetail() {
                   description: "Added to your favorites!",
                 });
               }}
-              className="flex-1"
+              className="p-2 hover:bg-gray-100"
             >
-              <Heart className="mr-2 h-4 w-4" />
-              Like
+              <Heart className="h-5 w-5 text-black" />
             </Button>
             
             <Button
