@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -478,10 +478,13 @@ export default function ProfilePage() {
                           />
                         </div>
                         <p className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 mb-2">
                           <Gift className="h-3 w-3 text-green-600" />
                           <p className="text-sm font-bold text-green-600">${product.price}</p>
                         </div>
+                        <Link href={`/product/${product.id}`} className="text-xs text-blue-600 hover:text-blue-800 underline">
+                          Product info
+                        </Link>
                         
                         {/* Send Gift Button - Right Corner */}
                         <Button
