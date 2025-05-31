@@ -999,6 +999,11 @@ export default function Products() {
         delayMs={3000}
       />
 
+      {/* Full-width banner */}
+      <div className="w-full h-[400px] bg-cover bg-center bg-no-repeat" 
+           style={{backgroundImage: "url('/attached_assets/Dedw3n Business B2C Footer.png')"}}>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
 
       <div className="flex justify-end items-center mb-4">
