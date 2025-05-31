@@ -372,7 +372,6 @@ export default function ProductDetail() {
         <span className="mx-2">/</span>
         <span className="text-gray-700">{product.name}</span>
       </div>
-
       {/* Product overview */}
       <div className="flex flex-col md:flex-row gap-8 mb-12">
         {/* Product image */}
@@ -461,7 +460,7 @@ export default function ProductDetail() {
                     }}
                     className="p-2 hover:bg-gray-100 ml-1"
                   >
-                    <span className="text-black font-bold">Send Offer</span>
+                    <span className="text-black font-normal">Send Offer</span>
                   </Button>
                 </div>
               </div>
@@ -661,7 +660,6 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-
       {/* Tabs for description and reviews */}
       <Tabs defaultValue="description" className="mb-12">
         <TabsList className="mb-6 border-b w-full justify-start rounded-none">
@@ -915,7 +913,6 @@ export default function ProductDetail() {
           </div>
         </TabsContent>
       </Tabs>
-
       {/* Similar products section - can be implemented in the future */}
     </div>
   );
