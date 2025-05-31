@@ -548,6 +548,7 @@ export default function ProfilePage() {
               Cancel
             </Button>
             <Button 
+              className="bg-black hover:bg-gray-800 text-white"
               onClick={() => {
                 if (selectedGift) {
                   toast({
