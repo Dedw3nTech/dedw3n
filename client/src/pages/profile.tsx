@@ -400,7 +400,7 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
                   About {profile.name}
-                  <Badge variant="outline">
+                  <Badge className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600" style={{ fontSize: '14px' }}>
                     {profile.relationshipPreference === "dating" ? "Looking to Date" :
                      profile.relationshipPreference === "meeting" ? "Open to Meeting" :
                      profile.relationshipPreference === "marriage" ? "Seeking Marriage" :
