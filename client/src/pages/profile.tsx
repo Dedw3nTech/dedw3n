@@ -249,6 +249,47 @@ export default function ProfilePage() {
 
                 <Separator className="my-6" />
 
+                {/* Gift Products List */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Send a Gift</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: 1, name: "Wireless Headphones", price: 89.99, image: "https://placehold.co/100x100/blue/white?text=Headphones" },
+                      { id: 2, name: "Smart Watch", price: 199.99, image: "https://placehold.co/100x100/green/white?text=Watch" },
+                      { id: 3, name: "Coffee Mug", price: 24.99, image: "https://placehold.co/100x100/brown/white?text=Mug" },
+                      { id: 4, name: "Notebook Set", price: 15.99, image: "https://placehold.co/100x100/orange/white?text=Notes" }
+                    ].map((product) => (
+                      <div key={product.id} className="relative bg-gray-50 rounded-lg p-3 border hover:border-gray-300 transition-colors">
+                        <div className="aspect-square mb-2 overflow-hidden rounded">
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <p className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">{product.name}</p>
+                        <p className="text-sm font-bold text-green-600">${product.price}</p>
+                        
+                        {/* Send Gift Button - Right Corner */}
+                        <Button
+                          size="sm"
+                          className="absolute top-2 right-2 h-8 w-8 p-0 bg-black hover:bg-gray-800"
+                          onClick={() => {
+                            toast({
+                              title: "Gift Sent!",
+                              description: `You sent ${product.name} to ${profile.name}`
+                            });
+                          }}
+                        >
+                          <Gift className="h-4 w-4 text-white" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator className="my-6" />
+
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   <Button 
