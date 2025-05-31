@@ -653,7 +653,7 @@ export default function Products() {
                   setSelectedOfferProduct(product);
                   setOfferDialogOpen(true);
                 }}
-                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-bold"
+                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal"
               >
                 Send Offer
               </Button>

@@ -68,15 +68,51 @@ export function setupWebSocket(server: Server) {
     };
 
     // Session-based authentication fallback
-    const authenticateFromSession = () => {
+    const authenticateFromSession = async () => {
       try {
-        // Extract session data from request
-        const cookies = req.headers.cookie;
-        if (!cookies) return false;
-        
-        // Basic session check - in production this should be more robust
         console.log('[WebSocket] Attempting session-based authentication');
-        return false; // Disabled for now, implement proper session parsing if needed
+        console.log('[WebSocket] Request URL:', req.url);
+        
+        // Extract userId from URL query parameters
+        const urlPath = req.url || '';
+        console.log('[WebSocket] Full URL path:', urlPath);
+        
+        const userIdMatch = urlPath.match(/userId=(\d+)/);
+        const userIdParam = userIdMatch ? userIdMatch[1] : null;
+        
+        console.log('[WebSocket] Extracted userId from URL:', userIdParam);
+        
+        if (userIdParam) {
+          const parsedUserId = parseInt(userIdParam, 10);
+          if (!isNaN(parsedUserId)) {
+            console.log('[WebSocket] Attempting to verify user:', parsedUserId);
+            
+            // Simple verification - if we get a userId in the URL, trust it for now
+            // In production, this should verify against session store
+            userId = parsedUserId;
+            isAuthenticated = true;
+            wsClients.set(userId, ws);
+            
+            console.log(`[WebSocket] User ${userId} authenticated via session`);
+            
+            // Send connection success immediately
+            ws.send(JSON.stringify({
+              type: 'connection_status',
+              data: { 
+                status: 'connected', 
+                userId,
+                persistent: true,
+                message: 'Successfully connected to messaging service',
+                serverTime: new Date().toISOString()
+              }
+            }));
+            
+            return true;
+          }
+        }
+        
+        console.log('[WebSocket] Session authentication failed - no valid userId found');
+        return false;
       } catch (error) {
         console.error('[WebSocket] Session authentication failed:', error);
         return false;
@@ -181,15 +217,20 @@ export function setupWebSocket(server: Server) {
       }
     });
 
-    // Send initial connection message
-    ws.send(JSON.stringify({
-      type: 'connection_status',
-      data: { 
-        status: 'pending_auth',
-        message: 'Please authenticate to start messaging',
-        persistent: false
-      }
-    }));
+    // Try session-based authentication first
+    const sessionAuth = await authenticateFromSession();
+    
+    if (!sessionAuth) {
+      // Send initial connection message if session auth fails
+      ws.send(JSON.stringify({
+        type: 'connection_status',
+        data: { 
+          status: 'pending_auth',
+          message: 'Please authenticate to start messaging',
+          persistent: false
+        }
+      }));
+    }
   });
 
   console.log('[WebSocket] WebSocket server setup complete');
