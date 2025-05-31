@@ -139,7 +139,10 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   variant="ghost"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 >
-                  <span className="text-sm font-medium">Currency</span>
+                  <span className="text-sm">
+                    <span className="font-bold">{selectedCurrency.symbol} {selectedCurrency.code}</span>
+                    <span className="font-normal ml-1">Currency</span>
+                  </span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
