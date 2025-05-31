@@ -637,14 +637,14 @@ export default function DatingPage() {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors">
                       Sort by: {
-                        sortBy === 'global' ? 'Global' :
+                        sortBy === 'global' ? 'All' :
                         sortBy === 'region' ? 'My Region' :
                         sortBy === 'country' ? 'My Country' :
                         sortBy === 'city' ? 'My City' :
                         sortBy === 'tribe' ? 'Tribe' :
                         sortBy === 'language' ? 'Language' :
                         sortBy === 'income' ? 'Income' :
-                        'Global'
+                        'All'
                       }
                       <ChevronDown className="h-4 w-4" />
                     </button>
