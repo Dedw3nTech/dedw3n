@@ -562,19 +562,40 @@ export default function DatingPage() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors">
-                      Sort by: {sortBy === 'newest' ? 'Newest' : sortBy === 'active' ? 'Most Active' : 'Recommended'}
+                      Sort by: {
+                        sortBy === 'global' ? 'Global' :
+                        sortBy === 'region' ? 'My Region' :
+                        sortBy === 'country' ? 'My Country' :
+                        sortBy === 'city' ? 'My City' :
+                        sortBy === 'tribe' ? 'Tribe' :
+                        sortBy === 'language' ? 'Language' :
+                        sortBy === 'income' ? 'Income' :
+                        'Global'
+                      }
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                      Newest
+                    <DropdownMenuItem onClick={() => setSortBy('global')}>
+                      Global
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('active')}>
-                      Most Active
+                    <DropdownMenuItem onClick={() => setSortBy('region')}>
+                      My Region
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('recommended')}>
-                      Recommended
+                    <DropdownMenuItem onClick={() => setSortBy('country')}>
+                      My Country
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('city')}>
+                      My City
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('tribe')}>
+                      Tribe
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('language')}>
+                      Language
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('income')}>
+                      Income
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
