@@ -479,6 +479,98 @@ export default function ProductDetail() {
               )}
             </p>
           </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                toast({
+                  title: "Product Liked",
+                  description: "Added to your favorites!",
+                });
+              }}
+              className="flex items-center justify-center"
+            >
+              <Heart className="mr-2 h-4 w-4" />
+              Like
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (user) {
+                  setLocation('/dating');
+                  toast({
+                    title: "Added to Dating Profile",
+                    description: "Product added to your dating wishlist!",
+                  });
+                } else {
+                  toast({
+                    title: "Login Required",
+                    description: "Please log in to add to dating profile",
+                    variant: "destructive"
+                  });
+                  setLocation('/auth');
+                }
+              }}
+              className="flex items-center justify-center"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Add to Dating
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (user) {
+                  toast({
+                    title: "Offer Sent",
+                    description: "Your offer has been sent to the product owner!",
+                  });
+                } else {
+                  toast({
+                    title: "Login Required",
+                    description: "Please log in to send an offer",
+                    variant: "destructive"
+                  });
+                  setLocation('/auth');
+                }
+              }}
+              className="flex items-center justify-center"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Send Offer
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (user) {
+                  setLocation(`/social?repost=${productId}`);
+                  toast({
+                    title: "Product Reposted",
+                    description: "Product shared to your social feed!",
+                  });
+                } else {
+                  toast({
+                    title: "Login Required",
+                    description: "Please log in to repost",
+                    variant: "destructive"
+                  });
+                  setLocation('/auth');
+                }
+              }}
+              className="flex items-center justify-center"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Repost
+            </Button>
+          </div>
         </div>
       </div>
 
