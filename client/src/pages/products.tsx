@@ -655,7 +655,7 @@ export default function Products() {
             <div>
               {product.discountPrice ? (
                 <div className="flex items-center">
-                  <div className="font-bold text-blue-600">
+                  <div className="font-bold text-blue-600 text-sm">
                     {formatPrice(product.discountPrice)}
                     {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                   </div>
