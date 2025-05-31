@@ -398,7 +398,16 @@ export default function ProfilePage() {
             {/* Bio & Interests */}
             <Card>
               <CardHeader>
-                <CardTitle>About {profile.name}</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  About {profile.name}
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-500 hover:bg-blue-600 text-white h-6 px-3 text-xs"
+                    style={{ fontSize: '14px' }}
+                  >
+                    Edit
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
