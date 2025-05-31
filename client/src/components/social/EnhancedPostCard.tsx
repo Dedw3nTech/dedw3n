@@ -538,31 +538,17 @@ export default function EnhancedPostCard({
             {post.videoUrl && (
               <div className="w-full rounded-md overflow-hidden bg-gray-100">
                 <div 
-                  className="relative video-container" 
-                  style={{ 
-                    paddingBottom: "56.25%", // 16:9 aspect ratio by default
-                    height: 0 
-                  }}
+                  className="relative aspect-video bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center"
                 >
-                  <iframe
-                    src={post.videoUrl}
-                    className="absolute top-0 left-0 w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    onLoad={(e) => {
-                      // Add safety check for frame access
-                      try {
-                        const frame = e.target as HTMLIFrameElement;
-                        if (frame && frame.contentWindow) {
-                          // Keep any necessary video processing logic
-                        }
-                      } catch (error) {
-                        // Silently handle frame access errors
-                        console.debug('Frame access error handled safely');
-                      }
-                    }}
-                  ></iframe>
+                  <div className="text-center text-white">
+                    <div className="w-16 h-16 mx-auto mb-3 bg-white/30 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium">Video Content</p>
+                    <p className="text-xs opacity-75">Click to play</p>
+                  </div>
                 </div>
               </div>
             )}
