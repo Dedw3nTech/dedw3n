@@ -561,10 +561,10 @@ export default function DatingPage() {
                 {/* Sort dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors">
                       Sort by: {sortBy === 'newest' ? 'Newest' : sortBy === 'active' ? 'Most Active' : 'Recommended'}
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={() => setSortBy('newest')}>
