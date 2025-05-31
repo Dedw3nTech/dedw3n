@@ -398,23 +398,30 @@ export default function ProductDetail() {
           <div className="mb-6">
             <div className="flex flex-col space-y-2">
               <div>
-                {product.discountPrice && product.discountPrice < product.price ? (
-                  <>
-                    <span className="text-2xl font-bold text-primary mr-2">
-                      {formatPrice(product.discountPrice)}
-                    </span>
-                    <span className="text-lg text-gray-500 line-through">
+                <div className="flex items-center gap-3 mb-2">
+                  {product.discountPrice && product.discountPrice < product.price ? (
+                    <>
+                      <span className="text-2xl font-bold text-primary">
+                        {formatPrice(product.discountPrice)}
+                      </span>
+                      <span className="text-lg text-gray-500 line-through">
+                        {formatPrice(product.price)}
+                      </span>
+                      <Badge className="bg-red-500">
+                        Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                      </Badge>
+                    </>
+                  ) : (
+                    <span className="text-2xl font-bold text-gray-900">
                       {formatPrice(product.price)}
                     </span>
-                    <Badge className="ml-2 bg-red-500">
-                      Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-                    </Badge>
-                  </>
-                ) : (
-                  <span className="text-2xl font-bold text-gray-900">
-                    {formatPrice(product.price)}
-                  </span>
-                )}
+                  )}
+                  {product.location && (
+                    <span className="text-lg font-bold text-gray-700">
+                      • {product.location}
+                    </span>
+                  )}
+                </div>
               </div>
               
               {/* Currency converter */}
