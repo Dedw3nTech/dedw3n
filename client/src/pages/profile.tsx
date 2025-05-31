@@ -295,14 +295,6 @@ export default function ProfilePage() {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <Button 
-                    onClick={handleStartConversation}
-                    className="w-full"
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                  
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant="outline"
