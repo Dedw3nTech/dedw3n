@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMessaging } from '@/hooks/use-messaging';
+import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff, AlertCircle, Check, Clock, RefreshCw } from 'lucide-react';
@@ -28,6 +29,12 @@ function formatUptime(ms: number): string {
 
 export function ConnectionStatusIndicator() {
   const { connectionStatus, connectionDetails, connect } = useMessaging();
+  const { user } = useAuth();
+
+  // Only show for admin users
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
   const [timeAgo, setTimeAgo] = useState<string>('');
   
   // Calculate time since last activity
