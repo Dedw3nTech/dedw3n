@@ -525,7 +525,7 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle></DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base">
               {selectedGift && (
                 <>
                   Offering <strong>{selectedGift.name}</strong> will initiate a match request to <strong>{profile.name}</strong>.
