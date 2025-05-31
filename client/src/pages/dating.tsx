@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import PageHeader from "@/components/layout/PageHeader";
-import { Heart, Gift, MessageCircle, User, Users, X } from "lucide-react";
+import { Heart, Gift, MessageCircle, User, Users, X, Search, SlidersHorizontal, MapPin, Calendar, ChevronDown, Share2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,9 +11,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { DatingRoomWall } from "@/components/DatingRoomWall";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 // Dating preferences types
@@ -152,6 +177,20 @@ export default function DatingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  
+  // Dating profile filters and search (matching marketplace structure)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [ageRange, setAgeRange] = useState<[number, number]>([18, 65]);
+  const [selectedRelationshipTypes, setSelectedRelationshipTypes] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [profilesPerPage, setProfilesPerPage] = useState<number>(12);
+  const [columnsPerRow, setColumnsPerRow] = useState<number>(3);
+  
+  // Profile management
   const [relationshipPreference, setRelationshipPreference] = useState<RelationshipPreference>("dating");
   const [isProfileActive, setIsProfileActive] = useState(false);
   const [bio, setBio] = useState("");
@@ -159,9 +198,14 @@ export default function DatingPage() {
   const [wishlistItem, setWishlistItem] = useState("");
   const [wishlistItemPrice, setWishlistItemPrice] = useState("");
   const [myWishlist, setMyWishlist] = useState<WishlistItem[]>([]);
-  const [matches, setMatches] = useState<Match[]>([sampleMatch]); // Sample match data
+  const [matches, setMatches] = useState<Match[]>([sampleMatch]);
   const [myPhotos, setMyPhotos] = useState<string[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  
+  // Available filter options
+  const relationshipTypes = ["Dating", "Meeting", "Marriage", "Casual"];
+  const interestOptions = ["Hiking", "Photography", "Travel", "Technology", "Coffee", "Movies", "Art", "Reading", "Cooking", "Music", "Sports", "Gaming"];
+  const locationOptions = ["London", "Manchester", "Birmingham", "Edinburgh", "Cardiff", "Belfast", "Bristol", "Liverpool"];
   
   // Handle photo upload
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,18 +312,228 @@ export default function DatingPage() {
     });
   };
 
+  // Filter profiles based on search and filters
+  const filteredProfiles = sampleProfiles.filter(profile => {
+    // Search term filter
+    if (searchTerm && !profile.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !profile.bio.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !profile.interests.some(interest => interest.toLowerCase().includes(searchTerm.toLowerCase()))) {
+      return false;
+    }
+    
+    // Relationship type filter
+    if (selectedRelationshipTypes.length > 0 && 
+        !selectedRelationshipTypes.some(type => 
+          type.toLowerCase() === profile.relationshipPreference.toLowerCase())) {
+      return false;
+    }
+    
+    // Interest filter
+    if (selectedInterests.length > 0 && 
+        !selectedInterests.some(interest => 
+          profile.interests.includes(interest))) {
+      return false;
+    }
+    
+    // Active profiles only
+    if (showActiveOnly && !profile.isActive) {
+      return false;
+    }
+    
+    return true;
+  });
+
   return (
-    <div className="container mx-auto py-6">
-      <PageHeader 
-        title="Dating & Relationships" 
-        description="Connect with others, exchange gifts, and find your match"
-        icon={<Heart className="h-6 w-6" />}
-      />
-      
+    <div className="min-h-screen bg-gray-50">
       <DatingRoomWall>
-        <div className="mt-8">
+        {/* Header Section with Search */}
+        <div className="bg-white border-b border-gray-200 py-6">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Dating & Relationships</h1>
+                <p className="text-gray-600 mt-1">Connect with others, exchange gifts, and find your match</p>
+              </div>
+              
+              {/* Search Bar */}
+              <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <div className="relative flex-1 md:w-96">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search profiles by name, interests, or bio..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                {/* Filter Button */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Filters
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Filter Profiles</SheetTitle>
+                      <SheetDescription>
+                        Narrow down your search to find the perfect match
+                      </SheetDescription>
+                    </SheetHeader>
+                    
+                    <div className="mt-6 space-y-6">
+                      {/* Age Range Filter */}
+                      <div>
+                        <Label className="text-sm font-medium">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
+                        <Slider
+                          value={ageRange}
+                          onValueChange={setAgeRange}
+                          max={65}
+                          min={18}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+                      
+                      {/* Relationship Type Filter */}
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Looking For</Label>
+                        <div className="space-y-2">
+                          {relationshipTypes.map((type) => (
+                            <div key={type} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={type}
+                                checked={selectedRelationshipTypes.includes(type)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedRelationshipTypes([...selectedRelationshipTypes, type]);
+                                  } else {
+                                    setSelectedRelationshipTypes(selectedRelationshipTypes.filter(t => t !== type));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={type} className="text-sm">{type}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Interests Filter */}
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Interests</Label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {interestOptions.map((interest) => (
+                            <div key={interest} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={interest}
+                                checked={selectedInterests.includes(interest)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedInterests([...selectedInterests, interest]);
+                                  } else {
+                                    setSelectedInterests(selectedInterests.filter(i => i !== interest));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={interest} className="text-sm">{interest}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Online/Active Filters */}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="online-only"
+                            checked={showOnlineOnly}
+                            onCheckedChange={setShowOnlineOnly}
+                          />
+                          <Label htmlFor="online-only" className="text-sm">Online now</Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="active-only"
+                            checked={showActiveOnly}
+                            onCheckedChange={setShowActiveOnly}
+                          />
+                          <Label htmlFor="active-only" className="text-sm">Active profiles only</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls Bar (matching marketplace style) */}
+        <div className="bg-white border-b border-gray-200 py-4">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              {/* Results count and sort */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Showing {filteredProfiles.length} profiles
+                </span>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Sort by: {sortBy === 'newest' ? 'Newest' : sortBy === 'active' ? 'Most Active' : 'Recommended'}
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                      Newest
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('active')}>
+                      Most Active
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('recommended')}>
+                      Recommended
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              {/* View controls */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={columnsPerRow === 2 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setColumnsPerRow(2)}
+                >
+                  2 Columns
+                </Button>
+                <Button
+                  variant={columnsPerRow === 3 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setColumnsPerRow(3)}
+                >
+                  3 Columns
+                </Button>
+                <Button
+                  variant={columnsPerRow === 4 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setColumnsPerRow(4)}
+                >
+                  4 Columns
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
           <Tabs defaultValue="browse">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="browse">
                 <Users className="h-4 w-4 mr-2" />
                 Browse Profiles
