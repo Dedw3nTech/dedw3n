@@ -662,7 +662,7 @@ export default function Products() {
                   <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
                 </div>
               ) : (
-                <div className="font-bold text-blue-600">
+                <div className="font-bold text-blue-600 text-[14px]">
                   {formatPrice(product.price)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
                 </div>
