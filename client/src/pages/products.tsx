@@ -8,7 +8,6 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { VideoAdPopup } from '@/components/VideoAdPopup';
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
-import bannerImage from '@assets/Dedw3n Business B2C Footer.png';
 import {
   Card,
   CardContent,
@@ -999,11 +998,6 @@ export default function Products() {
         videoUrl="https://youtube.com/shorts/JnafG_D-c2g?feature=share"
         delayMs={3000}
       />
-
-      {/* Full-width banner */}
-      <div className="w-full h-[400px] bg-cover bg-center bg-no-repeat" 
-           style={{backgroundImage: `url(${bannerImage})`}}>
-      </div>
 
       <div className="container mx-auto px-4 py-8">
 
