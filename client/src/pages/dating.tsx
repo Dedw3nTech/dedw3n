@@ -850,15 +850,6 @@ export default function DatingPage() {
                         View Profile
                       </Button>
                       <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => handleStartConversation(profile.username)}
-                      >
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Message
-                      </Button>
-                      <Button 
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
