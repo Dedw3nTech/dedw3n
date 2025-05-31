@@ -482,7 +482,7 @@ export default function ProfilePage() {
                           <Gift className="h-3 w-3 text-green-600" />
                           <p className="text-sm font-bold text-green-600">${product.price}</p>
                         </div>
-                        <Link href={`/product/${product.id}`} className="text-xs text-blue-600 hover:text-blue-800 underline">
+                        <Link href={`/product/${product.id}`} className="text-xs text-blue-600 hover:text-blue-800">
                           Product info
                         </Link>
                         
