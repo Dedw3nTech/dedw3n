@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -235,6 +236,8 @@ export default function ProfilePage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<any>(null);
   
   // Find profile by username
   const profile = mockProfiles.find(p => p.username === username) || mockProfiles[0];
@@ -491,10 +494,8 @@ export default function ProfilePage() {
                           size="sm"
                           className="absolute top-2 right-2 h-8 w-8 p-0 bg-black hover:bg-gray-800"
                           onClick={() => {
-                            toast({
-                              title: "Gift Sent!",
-                              description: `You sent ${product.name} to ${profile.name}`
-                            });
+                            setSelectedGift(product);
+                            setGiftDialogOpen(true);
                           }}
                         >
                           <Gift className="h-4 w-4 text-white" />
@@ -518,6 +519,51 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Gift Confirmation Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Send Gift</DialogTitle>
+            <DialogDescription>
+              {selectedGift && (
+                <>
+                  Sending <strong>{selectedGift.name}</strong> will initiate a match request to <strong>{profile.name}</strong>.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <h4 className="font-medium text-yellow-800 mb-2">Disclaimer:</h4>
+              <p className="text-sm text-yellow-700 leading-relaxed">
+                By accepting your gift, the recipient is under no obligation; it is merely a token of appreciation within African culture. The recipient retains the right to reject, refund, or keep the gift without any expectation of counter-performance. Please note that Dedw3n Ltd. does not provide refunds for gifts.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGiftDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedGift) {
+                  toast({
+                    title: "Gift Sent!",
+                    description: `You sent ${selectedGift.name} to ${profile.name}`
+                  });
+                  setGiftDialogOpen(false);
+                  setSelectedGift(null);
+                }
+              }}
+            >
+              Send Gift
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
