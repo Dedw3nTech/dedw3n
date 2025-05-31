@@ -350,11 +350,6 @@ export default function DatingPage() {
         <div className="bg-white border-b border-gray-200 py-6">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Dating & Relationships</h1>
-                <p className="text-gray-600 mt-1">Connect with others, exchange gifts, and find your match</p>
-              </div>
-              
               {/* Search Bar */}
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                 <div className="relative flex-1 md:w-96">
