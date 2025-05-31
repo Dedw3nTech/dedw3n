@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
+import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
@@ -18,6 +20,18 @@ export default function UserMenu() {
   const { user, logoutMutation } = useAuth();
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
+
+  // Fetch unread message count
+  const { data: unreadMessages } = useQuery<{ count: number }>({
+    queryKey: ['/api/messages/unread/count'],
+    enabled: user !== null,
+  });
+
+  // Fetch unread notifications count
+  const { data: unreadNotifications } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/unread/count'],
+    enabled: user !== null,
+  });
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -101,6 +115,26 @@ export default function UserMenu() {
           </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
+          </Link>
+          <Link href="/messages" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <div className="flex items-center">
+              <i className="ri-message-3-line mr-2 text-blue-600"></i> Messages
+            </div>
+            {unreadMessages?.count > 0 && (
+              <Badge className="bg-blue-600 text-white text-xs ml-2">
+                {unreadMessages.count}
+              </Badge>
+            )}
+          </Link>
+          <Link href="/notifications" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <div className="flex items-center">
+              <i className="ri-notification-3-line mr-2 text-blue-600"></i> Notifications
+            </div>
+            {unreadNotifications?.count > 0 && (
+              <Badge className="bg-blue-600 text-white text-xs ml-2">
+                {unreadNotifications.count}
+              </Badge>
+            )}
           </Link>
           <Link href="/dating-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <i className="ri-heart-3-line mr-2"></i> Dating Profile
