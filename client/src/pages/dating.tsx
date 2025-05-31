@@ -576,26 +576,23 @@ export default function DatingPage() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => setSortBy('global')}>
-                      Global
+                    <DropdownMenuItem onClick={() => setSortBy('small-to-tall')}>
+                      Small to Tall
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('region')}>
-                      My Region
+                    <DropdownMenuItem onClick={() => setSortBy('tall-to-small')}>
+                      Tall to Small
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('country')}>
-                      My Country
+                    <DropdownMenuItem onClick={() => setSortBy('high-income-to-low')}>
+                      High Income to Low Income
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('city')}>
-                      My City
+                    <DropdownMenuItem onClick={() => setSortBy('low-income-to-high')}>
+                      Low Income to High Income
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('tribe')}>
-                      Tribe
+                    <DropdownMenuItem onClick={() => setSortBy('low-kids-to-high')}>
+                      Low Number of Kids to High Number of Kids
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('language')}>
-                      Language
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('income')}>
-                      Income
+                    <DropdownMenuItem onClick={() => setSortBy('high-kids-to-low')}>
+                      High Number of Kids to Low Number of Kids
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
