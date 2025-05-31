@@ -739,7 +739,7 @@ export default function Products() {
                 setGiftDialogOpen(true);
               }}
             >
-              <Gift className="h-4 w-4 text-pink-500" />
+              <Gift className="h-4 w-4 text-blue-500" />
             </Button>
             <Button 
               variant="ghost" 
