@@ -254,6 +254,11 @@ export default function DatingPage() {
   const [wishlistItem, setWishlistItem] = useState("");
   const [wishlistItemPrice, setWishlistItemPrice] = useState("");
   const [myWishlist, setMyWishlist] = useState<WishlistItem[]>([]);
+  
+  // Gift selection popup state
+  const [giftPopupOpen, setGiftPopupOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<DatingProfile | null>(null);
+  const [selectedGift, setSelectedGift] = useState<WishlistItem | null>(null);
   const [matches, setMatches] = useState<Match[]>([sampleMatch]);
   const [myPhotos, setMyPhotos] = useState<string[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
@@ -323,14 +328,22 @@ export default function DatingPage() {
   };
   
   // Handling gift purchases
-  const handleSendGift = (profileId: number, giftId: number) => {
-    // In a real app, this would add the gift to cart first
+  const handleSendGift = (profile: DatingProfile) => {
+    setSelectedProfile(profile);
+    setGiftPopupOpen(true);
+  };
+
+  const handleGiftSelection = (gift: WishlistItem) => {
+    setSelectedGift(gift);
+    // Add gift to cart and redirect to checkout
     toast({
       title: "Gift Added to Cart",
-      description: "Redirecting to checkout...",
+      description: `${gift.name} for ${selectedProfile?.name} - Redirecting to checkout...`,
     });
     
-    // Redirect to checkout page
+    setGiftPopupOpen(false);
+    setSelectedProfile(null);
+    setSelectedGift(null);
     setLocation("/checkout");
   };
 
@@ -778,9 +791,8 @@ export default function DatingPage() {
                             </span>
                             <Button 
                               size="sm" 
-                              variant="outline"
-                              onClick={() => handleSendGift(profile.id, profile.wishlist[0].id)}
-                              className="h-7 text-xs"
+                              onClick={() => handleSendGift(profile)}
+                              className="h-7 text-xs bg-black text-white hover:bg-gray-800"
                             >
                               <Gift className="mr-1 h-3 w-3" />
                               Send Gift
@@ -1092,6 +1104,68 @@ export default function DatingPage() {
           )}
         </div>
       </DatingRoomWall>
+      
+      {/* Gift Selection Popup */}
+      <Dialog open={giftPopupOpen} onOpenChange={setGiftPopupOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send a Gift to {selectedProfile?.name}</DialogTitle>
+            <DialogDescription>
+              Choose a gift from {selectedProfile?.name}'s wishlist
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {selectedProfile?.wishlist.map((gift) => (
+              <div
+                key={gift.id}
+                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => handleGiftSelection(gift)}
+              >
+                <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center overflow-hidden">
+                  {gift.imageUrl ? (
+                    <img 
+                      src={gift.imageUrl} 
+                      alt={gift.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Gift className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">{gift.name}</h4>
+                  <p className="text-sm font-semibold text-green-600">${gift.price.toFixed(2)}</p>
+                  {gift.link && (
+                    <p className="text-xs text-gray-500 truncate">From: {gift.link}</p>
+                  )}
+                </div>
+                
+                <Button size="sm" className="bg-black text-white hover:bg-gray-800">
+                  Select
+                </Button>
+              </div>
+            ))}
+          </div>
+          
+          {selectedProfile?.wishlist.length === 0 && (
+            <div className="text-center py-8">
+              <Gift className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No gifts in wishlist</p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setGiftPopupOpen(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
