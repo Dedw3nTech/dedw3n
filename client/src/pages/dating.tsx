@@ -520,35 +520,63 @@ export default function DatingPage() {
                 </DropdownMenu>
               </div>
               
-              {/* View controls */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setColumnsPerRow(2)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 2 ? 'opacity-100' : 'opacity-50'}`}
-                  title="2 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
-                <button
-                  onClick={() => setColumnsPerRow(3)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
-                  title="3 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
-                <button
-                  onClick={() => setColumnsPerRow(4)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
-                  title="4 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
+              {/* Profiles per page and view controls */}
+              <div className="flex items-center gap-6">
+                {/* Profiles per page selector */}
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <span>Show</span>
+                  <button
+                    onClick={() => setProfilesPerPage(30)}
+                    className={`px-2 py-1 hover:text-black transition-colors ${profilesPerPage === 30 ? 'text-black font-medium' : ''}`}
+                  >
+                    30
+                  </button>
+                  <span>|</span>
+                  <button
+                    onClick={() => setProfilesPerPage(60)}
+                    className={`px-2 py-1 hover:text-black transition-colors ${profilesPerPage === 60 ? 'text-black font-medium' : ''}`}
+                  >
+                    60
+                  </button>
+                  <span>|</span>
+                  <button
+                    onClick={() => setProfilesPerPage(120)}
+                    className={`px-2 py-1 hover:text-black transition-colors ${profilesPerPage === 120 ? 'text-black font-medium' : ''}`}
+                  >
+                    120
+                  </button>
+                </div>
+
+                {/* Grid layout controls */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setColumnsPerRow(2)}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 2 ? 'opacity-100' : 'opacity-50'}`}
+                    title="2 columns"
+                  >
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                  </button>
+                  <button
+                    onClick={() => setColumnsPerRow(3)}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
+                    title="3 columns"
+                  >
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                  </button>
+                  <button
+                    onClick={() => setColumnsPerRow(4)}
+                    className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
+                    title="4 columns"
+                  >
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                    <div className="w-1 h-4 bg-black"></div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
