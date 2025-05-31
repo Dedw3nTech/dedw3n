@@ -295,24 +295,10 @@ export default function ProfilePage() {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        toast({
-                          title: "Profile Liked",
-                          description: `You liked ${profile.name}'s profile!`
-                        });
-                      }}
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      Like
-                    </Button>
-                    <Button variant="outline">
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share
-                    </Button>
-                  </div>
+                  <Button variant="outline" className="w-full">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
                 </div>
 
                 <div className="text-xs text-gray-500 text-center mt-4">
