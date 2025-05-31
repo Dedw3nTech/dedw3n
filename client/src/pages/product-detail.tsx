@@ -522,7 +522,7 @@ export default function ProductDetail() {
             </Button>
             
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => {
                 if (user) {
@@ -539,10 +539,9 @@ export default function ProductDetail() {
                   setLocation('/auth');
                 }
               }}
-              className="flex-1"
+              className="p-2 hover:bg-gray-100"
             >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Send Offer
+              <span className="text-black font-bold">Send Offer</span>
             </Button>
           </div>
         </div>
