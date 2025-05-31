@@ -126,6 +126,20 @@ export default function ProductDetail() {
     enabled: !!product?.vendorId,
   });
 
+  // Fetch product uploader's profile to get location
+  const {
+    data: uploaderProfile,
+    isLoading: uploaderLoading,
+  } = useQuery({
+    queryKey: ['/api/user', product?.userId],
+    queryFn: async () => {
+      if (!product?.userId) return null;
+      const response = await apiRequest('GET', `/api/user/${product.userId}/profile`);
+      return response.json();
+    },
+    enabled: !!product?.userId,
+  });
+
   // Fetch product reviews
   const {
     data: reviews = [],
@@ -390,6 +404,15 @@ export default function ProductDetail() {
                 <Link href={`/vendor/${vendor.id}`} className="text-primary hover:underline">
                   {vendor.storeName}
                 </Link>
+              </p>
+            </div>
+          )}
+
+          {/* Uploader location */}
+          {!uploaderLoading && uploaderProfile?.location && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                📍 {uploaderProfile.location}
               </p>
             </div>
           )}
