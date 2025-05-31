@@ -153,10 +153,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   >
                     <div className="w-6 h-4 rounded border border-gray-200 overflow-hidden">
                       {currency.code === 'GBP' && (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-800 via-white to-red-600 relative">
-                          <div className="absolute inset-0 bg-blue-800"></div>
-                          <div className="absolute top-0 left-0 w-full h-1/3 bg-white"></div>
-                          <div className="absolute bottom-0 left-0 w-full h-1/3 bg-red-600"></div>
+                        <div className="w-full h-full bg-blue-800 relative">
+                          {/* White diagonal cross (St. Andrew's Cross) */}
+                          <div className="absolute inset-0 bg-white"></div>
+                          <div className="absolute top-0 left-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(0 0, 40% 0, 0 40%)'}}></div>
+                          <div className="absolute top-0 right-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(60% 0, 100% 0, 100% 40%)'}}></div>
+                          <div className="absolute bottom-0 left-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(0 60%, 0 100%, 40% 100%)'}}></div>
+                          <div className="absolute bottom-0 right-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(60% 100%, 100% 100%, 100% 60%)'}}></div>
+                          {/* Red cross (St. George's Cross) */}
+                          <div className="absolute top-0 left-1/2 w-0.5 h-full bg-red-600 transform -translate-x-1/2"></div>
+                          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-600 transform -translate-y-1/2"></div>
                         </div>
                       )}
                       {currency.code === 'USD' && (
