@@ -304,7 +304,6 @@ export default function MessagesPage() {
       <div className="mb-6 border-b pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Messages</h1>
             <p className="text-muted-foreground">Connect and chat with friends and community members</p>
           </div>
           <div className="flex items-center gap-2">
@@ -315,7 +314,6 @@ export default function MessagesPage() {
                 <TabsTrigger value="requests">Requests</TabsTrigger>
               </TabsList>
             </Tabs>
-            <ConnectionStatusIndicator />
           </div>
         </div>
         
@@ -337,11 +335,6 @@ export default function MessagesPage() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
-        
-        {/* Connection Diagnostics Panel */}
-        <div className="mt-4">
-          <ConnectionDiagnostics />
         </div>
       </div>
       

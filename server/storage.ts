@@ -4195,6 +4195,11 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
   }
+
+  // Alias for getUserConversationsByCategory to match the expected method name
+  async getUserConversationsByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]> {
+    return this.getConversationsByCategory(userId, category);
+  }
 }
 
 export const storage = new DatabaseStorage();
