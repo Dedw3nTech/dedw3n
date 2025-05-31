@@ -524,7 +524,7 @@ export default function ProfilePage() {
       <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Send Gift</DialogTitle>
+            <DialogTitle></DialogTitle>
             <DialogDescription>
               {selectedGift && (
                 <>
@@ -537,7 +537,7 @@ export default function ProfilePage() {
           <div className="py-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <h4 className="font-medium text-yellow-800 mb-2">Disclaimer:</h4>
-              <p className="text-sm text-yellow-700 leading-relaxed">
+              <p className="text-xs text-yellow-700 leading-relaxed">
                 By accepting your gift, the recipient is under no obligation; it is merely a token of appreciation within African culture. The recipient retains the right to reject, refund, or keep the gift without any expectation of counter-performance. Please note that Dedw3n Ltd. does not provide refunds for gifts.
               </p>
             </div>
