@@ -59,7 +59,7 @@ export default function Products() {
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
-  const { currency } = useCurrency();
+  const { formatPrice } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
   const [productsPerPage, setProductsPerPage] = useState<number>(30);
