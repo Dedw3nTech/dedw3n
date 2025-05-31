@@ -151,7 +151,37 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     onClick={() => setSelectedCurrency(currency)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <span className="text-lg">{currency.flag}</span>
+                    <div className="w-6 h-4 rounded border border-gray-200 overflow-hidden">
+                      {currency.code === 'GBP' && (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-800 via-white to-red-600 relative">
+                          <div className="absolute inset-0 bg-blue-800"></div>
+                          <div className="absolute top-0 left-0 w-full h-1/3 bg-white"></div>
+                          <div className="absolute bottom-0 left-0 w-full h-1/3 bg-red-600"></div>
+                        </div>
+                      )}
+                      {currency.code === 'USD' && (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-red-500 relative">
+                          <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">🌍</div>
+                        </div>
+                      )}
+                      {currency.code === 'EUR' && (
+                        <div className="w-full h-full bg-gradient-to-r from-blue-500 via-white to-blue-500 relative">
+                          <div className="absolute inset-0 flex items-center justify-center text-yellow-400 text-xs">★</div>
+                        </div>
+                      )}
+                      {currency.code === 'INR' && (
+                        <div className="w-full h-full bg-gradient-to-b from-orange-500 via-white to-green-600"></div>
+                      )}
+                      {currency.code === 'NGN' && (
+                        <div className="w-full h-full bg-gradient-to-b from-green-600 via-white to-green-600"></div>
+                      )}
+                      {currency.code === 'ZAR' && (
+                        <div className="w-full h-full bg-gradient-to-br from-green-600 via-yellow-400 to-red-600"></div>
+                      )}
+                      {currency.code === 'KES' && (
+                        <div className="w-full h-full bg-gradient-to-b from-black via-red-600 to-green-600"></div>
+                      )}
+                    </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{currency.symbol} {currency.code}</span>
                       <span className="text-xs text-gray-500">{currency.name}</span>
