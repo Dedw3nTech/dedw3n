@@ -8,6 +8,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { VideoAdPopup } from '@/components/VideoAdPopup';
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
+import bannerImage from '@assets/Dedw3n Business B2C Footer.png';
 import {
   Card,
   CardContent,
@@ -1001,7 +1002,7 @@ export default function Products() {
 
       {/* Full-width banner */}
       <div className="w-full h-[400px] bg-cover bg-center bg-no-repeat" 
-           style={{backgroundImage: "url('/attached_assets/Dedw3n Business B2C Footer.png')"}}>
+           style={{backgroundImage: `url(${bannerImage})`}}>
       </div>
 
       <div className="container mx-auto px-4 py-8">
