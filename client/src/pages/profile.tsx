@@ -19,8 +19,187 @@ import {
   Star,
   Camera,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2,
+  Users,
+  Clock
 } from "lucide-react";
+
+// Dating Profile Info Component
+interface DatingProfileInfoProps {
+  userId: number;
+}
+
+interface DatingProfile {
+  id?: number;
+  userId: number;
+  displayName: string;
+  age: number;
+  bio: string;
+  location: string;
+  interests: string[];
+  lookingFor: string;
+  relationshipType: string;
+  profileImages: string[];
+  isActive: boolean;
+  isPremium: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+function DatingProfileInfo({ userId }: DatingProfileInfoProps) {
+  const { data: datingProfile, isLoading, error } = useQuery({
+    queryKey: ["/api/dating-profile"],
+    enabled: !!userId,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-red-500" />
+            Dating Profile Info
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-red-500" />
+            Dating Profile Info
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-4">No dating profile found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!datingProfile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-red-500" />
+            Dating Profile Info
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500 text-center py-4">No dating profile available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const profile = datingProfile as DatingProfile;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Heart className="h-5 w-5 text-red-500" />
+          Dating Profile Info
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Display Name & Age */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-lg">{profile.displayName}</h3>
+            <p className="text-gray-600">{profile.age} years old</p>
+          </div>
+          <Badge variant={profile.isActive ? "default" : "secondary"}>
+            {profile.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+
+        {/* Location */}
+        {profile.location && (
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <span className="text-sm">{profile.location}</span>
+          </div>
+        )}
+
+        {/* Bio */}
+        {profile.bio && (
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-1">About</h4>
+            <p className="text-sm text-gray-600">{profile.bio}</p>
+          </div>
+        )}
+
+        {/* Relationship Type */}
+        {profile.relationshipType && (
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-gray-400" />
+            <span className="text-sm">Looking for: {profile.relationshipType}</span>
+          </div>
+        )}
+
+        {/* Looking For */}
+        {profile.lookingFor && (
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-1">Preferences</h4>
+            <p className="text-sm text-gray-600">{profile.lookingFor}</p>
+          </div>
+        )}
+
+        {/* Interests */}
+        {profile.interests && profile.interests.length > 0 && (
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Dating Interests</h4>
+            <div className="flex flex-wrap gap-1">
+              {profile.interests.map((interest, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Profile Images Count */}
+        {profile.profileImages && profile.profileImages.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Camera className="h-4 w-4 text-gray-400" />
+            <span className="text-sm">{profile.profileImages.length} dating photos</span>
+          </div>
+        )}
+
+        {/* Premium Badge */}
+        {profile.isPremium && (
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-yellow-500" />
+            <Badge variant="outline" className="text-yellow-600 border-yellow-200">
+              Premium Member
+            </Badge>
+          </div>
+        )}
+
+        {/* Last Updated */}
+        {profile.updatedAt && (
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
+            <span>Updated {new Date(profile.updatedAt).toLocaleDateString()}</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 // Mock data - in production this would come from an API
 const mockProfiles = [
