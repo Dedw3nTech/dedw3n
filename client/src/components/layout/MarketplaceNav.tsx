@@ -161,8 +161,24 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                       </div>
                     )}
                     {selectedCurrency.code === 'USD' && (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-red-500 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">🌍</div>
+                      <div className="w-full h-full bg-red-600 relative">
+                        {/* Red and white stripes */}
+                        <div className="absolute top-0 left-0 w-full h-full">
+                          <div className="h-full flex flex-col">
+                            <div className="h-1/6 bg-red-600"></div>
+                            <div className="h-1/6 bg-white"></div>
+                            <div className="h-1/6 bg-red-600"></div>
+                            <div className="h-1/6 bg-white"></div>
+                            <div className="h-1/6 bg-red-600"></div>
+                            <div className="h-1/6 bg-white"></div>
+                          </div>
+                        </div>
+                        {/* Blue canton with stars */}
+                        <div className="absolute top-0 left-0 w-2/5 h-3/5 bg-blue-800 flex items-center justify-center">
+                          <div className="text-white text-xs leading-none">
+                            ★★★<br/>★★★
+                          </div>
+                        </div>
                       </div>
                     )}
                     {selectedCurrency.code === 'EUR' && (
@@ -216,8 +232,24 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                         </div>
                       )}
                       {currency.code === 'USD' && (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-red-500 relative">
-                          <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">🌍</div>
+                        <div className="w-full h-full bg-red-600 relative">
+                          {/* Red and white stripes */}
+                          <div className="absolute top-0 left-0 w-full h-full">
+                            <div className="h-full flex flex-col">
+                              <div className="h-1/6 bg-red-600"></div>
+                              <div className="h-1/6 bg-white"></div>
+                              <div className="h-1/6 bg-red-600"></div>
+                              <div className="h-1/6 bg-white"></div>
+                              <div className="h-1/6 bg-red-600"></div>
+                              <div className="h-1/6 bg-white"></div>
+                            </div>
+                          </div>
+                          {/* Blue canton with stars */}
+                          <div className="absolute top-0 left-0 w-2/5 h-3/5 bg-blue-800 flex items-center justify-center">
+                            <div className="text-white text-xs leading-none">
+                              ★★★<br/>★★★
+                            </div>
+                          </div>
                         </div>
                       )}
                       {currency.code === 'EUR' && (
