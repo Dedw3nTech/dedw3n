@@ -49,6 +49,11 @@ export interface IStorage {
   getUserMessagingStats(userId: number): Promise<any>;
   deleteMessage(id: number, userId?: number): Promise<boolean>;
   
+  // Category-specific message operations
+  getMessagesByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]>;
+  getConversationsByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]>;
+  getUnreadCountByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<number>;
+  
   // Call operations
   createCallSession(callData: any): Promise<any>;
   updateCallSession(id: number, updateData: any): Promise<any>;
@@ -4074,6 +4079,120 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error rejecting friend request:', error);
       throw error;
+    }
+  }
+
+  // Category-specific message methods
+  async getMessagesByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]> {
+    try {
+      const results = await db
+        .select({
+          id: messages.id,
+          senderId: messages.senderId,
+          receiverId: messages.receiverId,
+          content: messages.content,
+          attachmentUrl: messages.attachmentUrl,
+          attachmentType: messages.attachmentType,
+          isRead: messages.isRead,
+          messageType: messages.messageType,
+          category: messages.category,
+          createdAt: messages.createdAt,
+          sender: {
+            id: users.id,
+            name: users.name,
+            username: users.username,
+            avatar: users.avatar
+          }
+        })
+        .from(messages)
+        .innerJoin(users, eq(messages.senderId, users.id))
+        .where(and(
+          or(eq(messages.senderId, userId), eq(messages.receiverId, userId)),
+          eq(messages.category, category)
+        ))
+        .orderBy(desc(messages.createdAt));
+      
+      return results;
+    } catch (error) {
+      console.error(`Error getting ${category} messages:`, error);
+      return [];
+    }
+  }
+
+  async getConversationsByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<any[]> {
+    try {
+      const results = await db
+        .select({
+          id: messages.id,
+          senderId: messages.senderId,
+          receiverId: messages.receiverId,
+          content: messages.content,
+          isRead: messages.isRead,
+          category: messages.category,
+          createdAt: messages.createdAt,
+          otherUser: {
+            id: users.id,
+            name: users.name,
+            username: users.username,
+            avatar: users.avatar
+          }
+        })
+        .from(messages)
+        .innerJoin(users, 
+          or(
+            and(eq(messages.senderId, users.id), eq(messages.receiverId, userId)),
+            and(eq(messages.receiverId, users.id), eq(messages.senderId, userId))
+          )
+        )
+        .where(and(
+          or(eq(messages.senderId, userId), eq(messages.receiverId, userId)),
+          eq(messages.category, category)
+        ))
+        .orderBy(desc(messages.createdAt));
+
+      // Group by conversation partner and get latest message
+      const conversationMap = new Map();
+      
+      for (const message of results) {
+        const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+        
+        if (!conversationMap.has(otherUserId)) {
+          conversationMap.set(otherUserId, {
+            id: otherUserId,
+            otherUser: message.otherUser,
+            lastMessage: message,
+            unreadCount: 0
+          });
+        }
+        
+        // Count unread messages from the other user
+        if (message.receiverId === userId && !message.isRead) {
+          conversationMap.get(otherUserId).unreadCount++;
+        }
+      }
+      
+      return Array.from(conversationMap.values());
+    } catch (error) {
+      console.error(`Error getting ${category} conversations:`, error);
+      return [];
+    }
+  }
+
+  async getUnreadCountByCategory(userId: number, category: 'marketplace' | 'community' | 'dating'): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(messages)
+        .where(and(
+          eq(messages.receiverId, userId),
+          eq(messages.isRead, false),
+          eq(messages.category, category)
+        ));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error(`Error getting ${category} unread count:`, error);
+      return 0;
     }
   }
 }

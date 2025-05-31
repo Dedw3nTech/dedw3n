@@ -25,6 +25,9 @@ export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'moderator', '
 // Define dating subscription levels enum
 export const datingSubscriptionEnum = pgEnum('dating_subscription', ['normal', 'vip', 'vvip']);
 
+// Define message category enum for different message sections
+export const messageCategoryEnum = pgEnum('message_category', ['marketplace', 'community', 'dating']);
+
 // Define regions enum
 export const regionEnum = pgEnum('region', [
   'Africa', 
@@ -189,6 +192,7 @@ export const messages = pgTable("messages", {
   attachmentType: text("attachment_type"),
   isRead: boolean("is_read").default(false),
   messageType: text("message_type").default("text"), // text, image, video, audio, file, call_request, call_missed, call_ended
+  category: messageCategoryEnum("category").default("marketplace"), // marketplace, community, dating
   createdAt: timestamp("created_at").defaultNow(),
 });
 
