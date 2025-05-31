@@ -13,7 +13,7 @@ interface VideoAdCampaignCardProps {
 
 export function VideoAdCampaignCard({ 
   videoSource = campaignVideo,
-  title = "Featured Campaign",
+  title = "Dedw3n|Marketplace",
   autoPlay = true,
   showControls = true
 }: VideoAdCampaignCardProps) {
@@ -84,22 +84,22 @@ export function VideoAdCampaignCard({
           </div>
         )}
 
+        {/* Title header overlay */}
+        <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pointer-events-none">
+          <p className="text-white text-sm font-medium">
+            {title}
+          </p>
+        </div>
+
         {/* Close button */}
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-2 right-2 h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
+          className="absolute top-2 right-2 h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white z-10"
           onClick={() => setIsVisible(false)}
         >
           <X className="h-3 w-3" />
         </Button>
-
-        {/* Title overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none">
-          <p className="text-white text-xs font-medium">
-            {title}
-          </p>
-        </div>
       </div>
     </Card>
   );
