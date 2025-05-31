@@ -139,67 +139,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   variant="ghost"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 >
-                  <div className="w-6 h-4 rounded border border-gray-200 overflow-hidden">
-                    {selectedCurrency.code === 'GBP' && (
-                      <div className="w-full h-full bg-blue-900 relative">
-                        {/* White diagonal crosses (St. Andrew's Cross) */}
-                        <div className="absolute inset-0" style={{background: 'linear-gradient(45deg, transparent 45%, white 45%, white 55%, transparent 55%)'}}>
-                        </div>
-                        <div className="absolute inset-0" style={{background: 'linear-gradient(-45deg, transparent 45%, white 45%, white 55%, transparent 55%)'}}>
-                        </div>
-                        {/* Red diagonal crosses */}
-                        <div className="absolute inset-0" style={{background: 'linear-gradient(45deg, transparent 47%, #dc2626 47%, #dc2626 53%, transparent 53%)'}}>
-                        </div>
-                        <div className="absolute inset-0" style={{background: 'linear-gradient(-45deg, transparent 47%, #dc2626 47%, #dc2626 53%, transparent 53%)'}}>
-                        </div>
-                        {/* White cross (St. George's Cross base) */}
-                        <div className="absolute top-0 left-1/2 w-2 h-full bg-white transform -translate-x-1/2"></div>
-                        <div className="absolute top-1/2 left-0 w-full h-2 bg-white transform -translate-y-1/2"></div>
-                        {/* Red cross (St. George's Cross) */}
-                        <div className="absolute top-0 left-1/2 w-1 h-full bg-red-600 transform -translate-x-1/2"></div>
-                        <div className="absolute top-1/2 left-0 w-full h-1 bg-red-600 transform -translate-y-1/2"></div>
-                      </div>
-                    )}
-                    {selectedCurrency.code === 'USD' && (
-                      <div className="w-full h-full bg-red-600 relative overflow-hidden">
-                        {/* Red and white stripes - 13 total */}
-                        <div className="absolute inset-0">
-                          <div className="w-full h-full flex flex-col">
-                            <div className="flex-1 bg-red-600"></div>
-                            <div className="flex-1 bg-white"></div>
-                            <div className="flex-1 bg-red-600"></div>
-                            <div className="flex-1 bg-white"></div>
-                            <div className="flex-1 bg-red-600"></div>
-                            <div className="flex-1 bg-white"></div>
-                            <div className="flex-1 bg-red-600"></div>
-                          </div>
-                        </div>
-                        {/* Blue canton with optimized stars */}
-                        <div className="absolute top-0 left-0 w-[40%] h-[54%] bg-blue-800 flex items-center justify-center">
-                          <div className="text-white text-[8px] leading-none font-bold opacity-90">
-                            ★★★★<br/>★★★★<br/>★★★★
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {selectedCurrency.code === 'EUR' && (
-                      <div className="w-full h-full bg-gradient-to-r from-blue-500 via-white to-blue-500 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-yellow-400 text-xs">★</div>
-                      </div>
-                    )}
-                    {selectedCurrency.code === 'INR' && (
-                      <div className="w-full h-full bg-gradient-to-b from-orange-500 via-white to-green-600"></div>
-                    )}
-                    {selectedCurrency.code === 'NGN' && (
-                      <div className="w-full h-full bg-gradient-to-b from-green-600 via-white to-green-600"></div>
-                    )}
-                    {selectedCurrency.code === 'ZAR' && (
-                      <div className="w-full h-full bg-gradient-to-br from-green-600 via-yellow-400 to-red-600"></div>
-                    )}
-                    {selectedCurrency.code === 'KES' && (
-                      <div className="w-full h-full bg-gradient-to-b from-black via-red-600 to-green-600"></div>
-                    )}
-                  </div>
+                  <div className="w-6 h-4 rounded border border-gray-200 bg-gray-100"></div>
                   <span className="text-sm font-medium">Currency</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -211,67 +151,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     onClick={() => setSelectedCurrency(currency)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="w-6 h-4 rounded border border-gray-200 overflow-hidden">
-                      {currency.code === 'GBP' && (
-                        <div className="w-full h-full bg-blue-900 relative">
-                          {/* White diagonal crosses (St. Andrew's Cross) */}
-                          <div className="absolute inset-0" style={{background: 'linear-gradient(45deg, transparent 45%, white 45%, white 55%, transparent 55%)'}}>
-                          </div>
-                          <div className="absolute inset-0" style={{background: 'linear-gradient(-45deg, transparent 45%, white 45%, white 55%, transparent 55%)'}}>
-                          </div>
-                          {/* Red diagonal crosses */}
-                          <div className="absolute inset-0" style={{background: 'linear-gradient(45deg, transparent 47%, #dc2626 47%, #dc2626 53%, transparent 53%)'}}>
-                          </div>
-                          <div className="absolute inset-0" style={{background: 'linear-gradient(-45deg, transparent 47%, #dc2626 47%, #dc2626 53%, transparent 53%)'}}>
-                          </div>
-                          {/* White cross (St. George's Cross base) */}
-                          <div className="absolute top-0 left-1/2 w-2 h-full bg-white transform -translate-x-1/2"></div>
-                          <div className="absolute top-1/2 left-0 w-full h-2 bg-white transform -translate-y-1/2"></div>
-                          {/* Red cross (St. George's Cross) */}
-                          <div className="absolute top-0 left-1/2 w-1 h-full bg-red-600 transform -translate-x-1/2"></div>
-                          <div className="absolute top-1/2 left-0 w-full h-1 bg-red-600 transform -translate-y-1/2"></div>
-                        </div>
-                      )}
-                      {currency.code === 'USD' && (
-                        <div className="w-full h-full bg-red-600 relative overflow-hidden">
-                          {/* Red and white stripes - 13 total */}
-                          <div className="absolute inset-0">
-                            <div className="w-full h-full flex flex-col">
-                              <div className="flex-1 bg-red-600"></div>
-                              <div className="flex-1 bg-white"></div>
-                              <div className="flex-1 bg-red-600"></div>
-                              <div className="flex-1 bg-white"></div>
-                              <div className="flex-1 bg-red-600"></div>
-                              <div className="flex-1 bg-white"></div>
-                              <div className="flex-1 bg-red-600"></div>
-                            </div>
-                          </div>
-                          {/* Blue canton with optimized stars */}
-                          <div className="absolute top-0 left-0 w-[40%] h-[54%] bg-blue-800 flex items-center justify-center">
-                            <div className="text-white text-[8px] leading-none font-bold opacity-90">
-                              ★★★★<br/>★★★★<br/>★★★★
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {currency.code === 'EUR' && (
-                        <div className="w-full h-full bg-gradient-to-r from-blue-500 via-white to-blue-500 relative">
-                          <div className="absolute inset-0 flex items-center justify-center text-yellow-400 text-xs">★</div>
-                        </div>
-                      )}
-                      {currency.code === 'INR' && (
-                        <div className="w-full h-full bg-gradient-to-b from-orange-500 via-white to-green-600"></div>
-                      )}
-                      {currency.code === 'NGN' && (
-                        <div className="w-full h-full bg-gradient-to-b from-green-600 via-white to-green-600"></div>
-                      )}
-                      {currency.code === 'ZAR' && (
-                        <div className="w-full h-full bg-gradient-to-br from-green-600 via-yellow-400 to-red-600"></div>
-                      )}
-                      {currency.code === 'KES' && (
-                        <div className="w-full h-full bg-gradient-to-b from-black via-red-600 to-green-600"></div>
-                      )}
-                    </div>
+                    <div className="w-6 h-4 rounded border border-gray-200 bg-gray-100"></div>
                     <div className="flex flex-col">
                       <span className="font-medium">{currency.symbol} {currency.code}</span>
                       <span className="text-xs text-gray-500">{currency.name}</span>
