@@ -139,8 +139,42 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   variant="ghost"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 >
-                  <span className="text-lg">{selectedCurrency.flag}</span>
-                  <span className="text-sm font-medium">{selectedCurrency.symbol}</span>
+                  <div className="w-6 h-4 rounded border border-gray-200 overflow-hidden">
+                    {selectedCurrency.code === 'GBP' && (
+                      <div className="w-full h-full bg-blue-800 relative">
+                        <div className="absolute inset-0 bg-white"></div>
+                        <div className="absolute top-0 left-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(0 0, 40% 0, 0 40%)'}}></div>
+                        <div className="absolute top-0 right-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(60% 0, 100% 0, 100% 40%)'}}></div>
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(0 60%, 0 100%, 40% 100%)'}}></div>
+                        <div className="absolute bottom-0 right-0 w-full h-full bg-blue-800" style={{clipPath: 'polygon(60% 100%, 100% 100%, 100% 60%)'}}></div>
+                        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-red-600 transform -translate-x-1/2"></div>
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-600 transform -translate-y-1/2"></div>
+                      </div>
+                    )}
+                    {selectedCurrency.code === 'USD' && (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-red-500 relative">
+                        <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">🌍</div>
+                      </div>
+                    )}
+                    {selectedCurrency.code === 'EUR' && (
+                      <div className="w-full h-full bg-gradient-to-r from-blue-500 via-white to-blue-500 relative">
+                        <div className="absolute inset-0 flex items-center justify-center text-yellow-400 text-xs">★</div>
+                      </div>
+                    )}
+                    {selectedCurrency.code === 'INR' && (
+                      <div className="w-full h-full bg-gradient-to-b from-orange-500 via-white to-green-600"></div>
+                    )}
+                    {selectedCurrency.code === 'NGN' && (
+                      <div className="w-full h-full bg-gradient-to-b from-green-600 via-white to-green-600"></div>
+                    )}
+                    {selectedCurrency.code === 'ZAR' && (
+                      <div className="w-full h-full bg-gradient-to-br from-green-600 via-yellow-400 to-red-600"></div>
+                    )}
+                    {selectedCurrency.code === 'KES' && (
+                      <div className="w-full h-full bg-gradient-to-b from-black via-red-600 to-green-600"></div>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">Currency</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
