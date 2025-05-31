@@ -799,6 +799,21 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
+      {/* Video Placeholder */}
+      <div className="mb-6">
+        <div className="w-full aspect-video bg-gradient-to-br from-blue-600 to-purple-700 rounded-lg flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="w-12 h-12 mx-auto mb-2 bg-white/20 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <p className="text-sm font-medium">Featured Content</p>
+            <p className="text-xs opacity-75">Discover new products</p>
+          </div>
+        </div>
+      </div>
+
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
         <div className="mb-4">
