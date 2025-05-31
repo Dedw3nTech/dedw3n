@@ -231,9 +231,7 @@ export default function DatingPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  const handleViewProfile = (username: string) => {
-    setLocation(`/profile/${username}`);
-  };
+
   
   // Dating profile filters and search (matching marketplace structure)
   const [searchTerm, setSearchTerm] = useState('');
@@ -337,7 +335,6 @@ export default function DatingPage() {
   };
 
   const handleViewProfile = (username: string) => {
-    // Navigate to user's profile page
     setLocation(`/profile/${username}`);
   };
   
