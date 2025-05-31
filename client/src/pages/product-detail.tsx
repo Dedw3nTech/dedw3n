@@ -86,6 +86,19 @@ export default function ProductDetail() {
   const [isConverting, setIsConverting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
+  // User search query for gift functionality
+  const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery({
+    queryKey: ['/api/users/search', giftSearchQuery],
+    queryFn: async () => {
+      if (giftSearchQuery.length >= 2) {
+        const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
+        return response;
+      }
+      return [];
+    },
+    enabled: giftSearchQuery.length >= 2,
+  });
+  
   // Force rerender when currency changes
   useEffect(() => {
     const handleCurrencyChange = () => {
@@ -225,6 +238,36 @@ export default function ProductDetail() {
         variant: "destructive"
       });
     }
+  });
+
+  // Send gift proposition mutation
+  const sendGiftMutation = useMutation({
+    mutationFn: async (recipientId: number) => {
+      if (!productId || !user) {
+        throw new Error('Product or user not available');
+      }
+      return apiRequest('POST', '/api/gifts/propose', {
+        recipientId,
+        productId,
+        message: `Hi! I'd like to send you this gift: ${product?.name}`,
+      });
+    },
+    onSuccess: () => {
+      setIsGiftSearchOpen(false);
+      setGiftSearchQuery('');
+      setSelectedRecipient(null);
+      toast({
+        title: 'Gift Proposition Sent',
+        description: 'Your gift proposition has been sent successfully!',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Gift Failed',
+        description: error.message || 'Failed to send gift proposition',
+        variant: 'destructive',
+      });
+    },
   });
 
   // Handle quantity change
@@ -985,15 +1028,15 @@ export default function ProductDetail() {
               )}
             </div>
             
-            {searchLoading && giftSearchQuery.length >= 2 && (
+            {userSearchLoading && giftSearchQuery.length >= 2 && (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             )}
             
-            {searchResults.length > 0 && (
+            {userSearchResults.length > 0 && (
               <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
-                {searchResults.map((user: any) => (
+                {userSearchResults.map((user: any) => (
                   <div
                     key={user.id}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
@@ -1020,7 +1063,7 @@ export default function ProductDetail() {
               </div>
             )}
             
-            {giftSearchQuery.length >= 2 && !searchLoading && searchResults.length === 0 && (
+            {giftSearchQuery.length >= 2 && !userSearchLoading && userSearchResults.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>No users found matching "{giftSearchQuery}"</p>

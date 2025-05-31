@@ -3034,7 +3034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUserId = req.user!.id;
       
       // Search users by username or name, excluding current user
-      const users = await db
+      const userResults = await db
         .select({
           id: users.id,
           username: users.username,
@@ -3053,7 +3053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
         .limit(10);
       
-      res.json(users);
+      res.json(userResults);
     } catch (error) {
       console.error('Error searching users:', error);
       res.status(500).json({ message: 'Failed to search users' });
