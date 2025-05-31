@@ -303,9 +303,6 @@ export default function MessagesPage() {
       {/* Social Header Navigation */}
       <div className="mb-6 border-b pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <p className="text-muted-foreground">Connect and chat with friends and community members</p>
-          </div>
           <div className="flex items-center gap-2">
             <Tabs defaultValue="all" className="w-full sm:w-auto">
               <TabsList>
@@ -467,9 +464,6 @@ export default function MessagesPage() {
           <div className="p-4 border-b">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Messages</h2>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-4 w-4" />
-              </Button>
             </div>
             
             {isSearching ? (
