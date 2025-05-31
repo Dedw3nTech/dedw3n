@@ -480,7 +480,7 @@ export default function ProfilePage() {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <p className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">{product.name}</p>
+                        <p className="text-xs font-medium text-gray-900 line-clamp-3 mb-1 h-12 leading-4">{product.name}</p>
                         <div className="flex items-center gap-1 mb-2">
                           <Gift className="h-3 w-3 text-green-600" />
                           <p className="text-sm font-bold text-green-600">${product.price}</p>
