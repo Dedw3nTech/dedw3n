@@ -3021,6 +3021,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gift proposition endpoints
+  app.post('/api/gifts/propose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { recipientId, productId, message } = req.body;
+      const senderId = req.user!.id;
+
+      if (!recipientId || !productId) {
+        return res.status(400).json({ message: 'Recipient ID and Product ID are required' });
+      }
+
+      // Check if product exists
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Check if recipient exists
+      const recipient = await storage.getUser(recipientId);
+      if (!recipient) {
+        return res.status(404).json({ message: 'Recipient not found' });
+      }
+
+      // Create gift proposition
+      const giftProposition = await storage.createGiftProposition({
+        senderId,
+        recipientId,
+        productId,
+        message: message || `I'd like to send you this gift: ${product.name}`,
+        status: 'pending'
+      });
+
+      res.json({ message: 'Gift proposition sent successfully', gift: giftProposition });
+    } catch (error) {
+      console.error('Error creating gift proposition:', error);
+      res.status(500).json({ message: 'Failed to send gift proposition' });
+    }
+  });
+
+  app.get('/api/gifts/sent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const sentGifts = await storage.getUserSentGifts(userId);
+      res.json(sentGifts);
+    } catch (error) {
+      console.error('Error getting sent gifts:', error);
+      res.status(500).json({ message: 'Failed to get sent gifts' });
+    }
+  });
+
+  app.get('/api/gifts/received', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const receivedGifts = await storage.getUserReceivedGifts(userId);
+      res.json(receivedGifts);
+    } catch (error) {
+      console.error('Error getting received gifts:', error);
+      res.status(500).json({ message: 'Failed to get received gifts' });
+    }
+  });
+
+  app.post('/api/gifts/:id/respond', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const giftId = parseInt(req.params.id);
+      const { action } = req.body; // 'accept' or 'reject'
+      const userId = req.user!.id;
+
+      if (isNaN(giftId)) {
+        return res.status(400).json({ message: 'Invalid gift ID' });
+      }
+
+      if (!action || !['accept', 'reject'].includes(action)) {
+        return res.status(400).json({ message: 'Action must be either accept or reject' });
+      }
+
+      // Get gift proposition
+      const gift = await storage.getGiftProposition(giftId);
+      if (!gift) {
+        return res.status(404).json({ message: 'Gift proposition not found' });
+      }
+
+      // Check if user is the recipient
+      if (gift.recipientId !== userId) {
+        return res.status(403).json({ message: 'You can only respond to gifts sent to you' });
+      }
+
+      // Check if gift is still pending
+      if (gift.status !== 'pending') {
+        return res.status(400).json({ message: 'Gift proposition has already been responded to' });
+      }
+
+      if (action === 'reject') {
+        // Simply update status to rejected
+        const updatedGift = await storage.updateGiftStatus(giftId, 'rejected');
+        res.json({ message: 'Gift proposition rejected', gift: updatedGift });
+      } else {
+        // Accept - we'll create payment intent in the frontend
+        const updatedGift = await storage.updateGiftStatus(giftId, 'accepted');
+        res.json({ message: 'Gift proposition accepted', gift: updatedGift });
+      }
+    } catch (error) {
+      console.error('Error responding to gift:', error);
+      res.status(500).json({ message: 'Failed to respond to gift proposition' });
+    }
+  });
+
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
   setupWebSocket(httpServer);
