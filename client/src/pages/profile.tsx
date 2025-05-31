@@ -237,11 +237,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span className="font-medium">{profile.rating}</span>
-                    <span className="text-gray-500">({profile.totalReviews} reviews)</span>
-                  </div>
+
 
                   <Badge variant="outline" className="mx-auto">
                     {profile.relationshipPreference === "dating" ? "Looking to Date" :
