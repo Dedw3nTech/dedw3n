@@ -756,8 +756,11 @@ export default function DatingPage() {
                       </div>
                       
                       {/* Bio - Always 3 lines for consistent card height */}
-                      <div className="h-12">
+                      <div className="h-12 relative">
                         <p className="text-sm text-gray-600 line-clamp-3">{profile.bio}</p>
+                        {profile.bio && profile.bio.length > 120 && (
+                          <span className="absolute bottom-0 right-0 bg-white text-gray-400 text-sm">...</span>
+                        )}
                       </div>
                       
                       {/* Interests */}
