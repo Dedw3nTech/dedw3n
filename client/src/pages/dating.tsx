@@ -757,7 +757,7 @@ export default function DatingPage() {
                       
                       {/* Relationship Preference */}
                       <div>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge className="text-xs bg-blue-500 text-white hover:bg-blue-600">
                           {profile.relationshipPreference === "dating" && "Looking to Date"}
                           {profile.relationshipPreference === "meeting" && "Open to Meeting"}
                           {profile.relationshipPreference === "marriage" && "Seeking Marriage"}
