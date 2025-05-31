@@ -268,7 +268,10 @@ export default function ProfilePage() {
                           />
                         </div>
                         <p className="text-xs font-medium text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-                        <p className="text-sm font-bold text-green-600">${product.price}</p>
+                        <div className="flex items-center gap-1">
+                          <Gift className="h-3 w-3 text-green-600" />
+                          <p className="text-sm font-bold text-green-600">${product.price}</p>
+                        </div>
                         
                         {/* Send Gift Button - Right Corner */}
                         <Button
