@@ -444,7 +444,7 @@ export default function ProductDetail() {
             <Button
               onClick={handleAddToCart}
               disabled={addToCartMutation.isPending || product.inventory <= 0}
-              className="flex-1"
+              className="flex-1 bg-black hover:bg-gray-800 text-white"
             >
               {addToCartMutation.isPending ? (
                 <>
