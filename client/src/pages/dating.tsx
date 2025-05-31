@@ -431,36 +431,23 @@ export default function DatingPage() {
         <div className="bg-white border-b border-gray-200 py-6">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              {/* Search Bar */}
-              <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                <div className="relative flex-1 md:w-96">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search profiles by name, interests, or bio..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                {/* Dating Room Tabs */}
-                <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-auto">
-                  <TabsList className="grid grid-cols-3 h-10">
-                    <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3">
-                      <Users className="h-4 w-4 flex-shrink-0" />
-                      Browse
-                    </TabsTrigger>
-                    <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3">
-                      <User className="h-4 w-4 flex-shrink-0" />
-                      Profile
-                    </TabsTrigger>
-                    <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3">
-                      <Heart className="h-4 w-4 flex-shrink-0" />
-                      Matches
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
+              {/* Dating Room Tabs */}
+              <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-auto">
+                <TabsList className="grid grid-cols-3 h-10">
+                  <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3">
+                    <Users className="h-4 w-4 flex-shrink-0" />
+                    Browse
+                  </TabsTrigger>
+                  <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3">
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    Profile
+                  </TabsTrigger>
+                  <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3">
+                    <Heart className="h-4 w-4 flex-shrink-0" />
+                    Matches
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
           </div>
         </div>
@@ -469,7 +456,7 @@ export default function DatingPage() {
         <div className="bg-white border-b border-gray-200 py-4">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* Results count and Filter Button */}
+              {/* Results count, Filter Button, and Search */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
                   Showing {filteredProfiles.length} profiles
@@ -574,6 +561,17 @@ export default function DatingPage() {
                     </div>
                   </SheetContent>
                 </Sheet>
+                
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search profiles..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
               </div>
               
               {/* Profiles per page, view controls, and sort */}
