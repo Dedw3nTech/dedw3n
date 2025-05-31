@@ -20,7 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -78,6 +78,12 @@ export default function Products() {
   const [selectedOfferProduct, setSelectedOfferProduct] = useState<any>(null);
   const [offerAmount, setOfferAmount] = useState('');
   const [offerMessage, setOfferMessage] = useState('');
+
+  // Gift functionality state
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [selectedGiftProduct, setSelectedGiftProduct] = useState<any>(null);
+  const [giftSearchQuery, setGiftSearchQuery] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
 
   // Liked products functionality
   const { data: likedProducts = [] } = useQuery({
@@ -258,6 +264,45 @@ export default function Products() {
       toast({
         title: "Error",
         description: "Failed to send offer. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // User search for gift recipients
+  const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery({
+    queryKey: ['/api/users/search', giftSearchQuery],
+    queryFn: async () => {
+      if (giftSearchQuery.length < 2) return [];
+      const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
+      return response.json();
+    },
+    enabled: giftSearchQuery.length >= 2,
+  });
+
+  // Gift sending mutation
+  const sendGiftMutation = useMutation({
+    mutationFn: async ({ productId, recipientId }: { productId: number; recipientId: number }) => {
+      const response = await apiRequest('POST', '/api/gifts/propose', {
+        productId,
+        recipientId
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Gift Sent!",
+        description: `Gift proposal sent to ${selectedRecipient?.username}`,
+      });
+      setGiftDialogOpen(false);
+      setGiftSearchQuery('');
+      setSelectedRecipient(null);
+      setSelectedGiftProduct(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send gift. Please try again.",
         variant: "destructive",
       });
     }
@@ -684,6 +729,18 @@ export default function Products() {
             Repost
           </Button>
           <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              title="Send as gift"
+              onClick={() => {
+                setSelectedGiftProduct(product);
+                setGiftDialogOpen(true);
+              }}
+            >
+              <Gift className="h-4 w-4 text-pink-500" />
+            </Button>
             <Button 
               variant="ghost" 
               size="icon" 
@@ -1302,6 +1359,124 @@ export default function Products() {
                 </>
               ) : (
                 'Send Offer'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Gift Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Send Gift</DialogTitle>
+            <DialogDescription>
+              Send this product as a gift to someone special
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedGiftProduct && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{selectedGiftProduct.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {formatPriceWithCurrency(selectedGiftProduct.price, currency)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    By {selectedGiftProduct.vendorName || 'Vendor'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="gift-search" className="text-sm font-medium mb-2 block">
+                Search for recipient
+              </Label>
+              <Input
+                id="gift-search"
+                type="text"
+                placeholder="Type name or username..."
+                value={giftSearchQuery}
+                onChange={(e) => setGiftSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            {userSearchLoading && giftSearchQuery.length >= 2 && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+            
+            {Array.isArray(userSearchResults) && userSearchResults.length > 0 && (
+              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
+                {userSearchResults.map((user: any) => (
+                  <div
+                    key={user.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedRecipient?.id === user.id
+                        ? 'bg-blue-100 border border-blue-300'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setSelectedRecipient(user)}
+                  >
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{user.username}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    {selectedRecipient?.id === user.id && (
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {giftSearchQuery.length >= 2 && !userSearchLoading && Array.isArray(userSearchResults) && userSearchResults.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>No users found matching "{giftSearchQuery}"</p>
+              </div>
+            )}
+            
+            {giftSearchQuery.length < 2 && giftSearchQuery.length > 0 && (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                Type at least 2 characters to search
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGiftDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedRecipient && selectedGiftProduct) {
+                  sendGiftMutation.mutate({
+                    productId: selectedGiftProduct.id,
+                    recipientId: selectedRecipient.id
+                  });
+                }
+              }}
+              disabled={sendGiftMutation.isPending || !selectedRecipient}
+              className="bg-pink-500 text-white hover:bg-pink-600"
+            >
+              {sendGiftMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Gift'
               )}
             </Button>
           </DialogFooter>
