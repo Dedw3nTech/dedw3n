@@ -296,17 +296,9 @@ export default function ProfilePage() {
               Back to Results
             </Button>
             <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">{profile.name}'s Profile</h1>
-                  <p className="text-sm text-gray-500">@{profile.username}</p>
-                </div>
-                <Badge className="text-xs bg-blue-500 text-white hover:bg-blue-600">
-                  {profile.relationshipPreference === "dating" && "Looking to Date"}
-                  {profile.relationshipPreference === "meeting" && "Open to Meeting"}
-                  {profile.relationshipPreference === "marriage" && "Seeking Marriage"}
-                  {profile.relationshipPreference === "casual" && "Casual Relationship"}
-                </Badge>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">{profile.name}'s Profile</h1>
+                <p className="text-sm text-gray-500">@{profile.username}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
