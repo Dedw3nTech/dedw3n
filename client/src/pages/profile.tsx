@@ -293,7 +293,7 @@ export default function ProfilePage() {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Dating
+              Back to search results
             </Button>
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-gray-900">{profile.name}'s Profile</h1>
