@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Heart, Gift, MessageCircle, User, Users, X, Search, SlidersHorizontal, MapPin, Calendar, ChevronDown, Share2, Plus, Flag } from "lucide-react";
+import { useCurrency, currencies, type Currency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -230,6 +231,7 @@ export default function DatingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
   
 
   
@@ -448,6 +450,35 @@ export default function DatingPage() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
+              
+              {/* Currency Selector */}
+              <div className="flex items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <span className="text-sm">
+                        {selectedCurrency.symbol}
+                        <span className="font-normal ml-1">Currency</span>
+                      </span>
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {currencies.map((currency) => (
+                      <DropdownMenuItem
+                        key={currency.code}
+                        onClick={() => setSelectedCurrency(currency)}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{currency.symbol} {currency.code}</span>
+                          <span className="text-xs text-gray-500">{currency.name}</span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
