@@ -469,11 +469,111 @@ export default function DatingPage() {
         <div className="bg-white border-b border-gray-200 py-4">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* Results count */}
+              {/* Results count and Filter Button */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
                   Showing {filteredProfiles.length} profiles
                 </span>
+                
+                {/* Filter Button */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Filters
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Filter Profiles</SheetTitle>
+                      <SheetDescription>
+                        Narrow down your search to find the perfect match
+                      </SheetDescription>
+                    </SheetHeader>
+                    
+                    <div className="mt-6 space-y-6">
+                      {/* Age Range Filter */}
+                      <div>
+                        <Label className="text-sm font-medium">Age Range: {ageRange[0]} - {ageRange[1]}</Label>
+                        <Slider
+                          value={ageRange}
+                          onValueChange={(value) => setAgeRange(value as [number, number])}
+                          max={65}
+                          min={18}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+                      
+                      {/* Relationship Type Filter */}
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Looking For</Label>
+                        <div className="space-y-2">
+                          {relationshipTypes.map((type) => (
+                            <div key={type} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={type}
+                                checked={selectedRelationshipTypes.includes(type)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedRelationshipTypes([...selectedRelationshipTypes, type]);
+                                  } else {
+                                    setSelectedRelationshipTypes(selectedRelationshipTypes.filter(t => t !== type));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={type} className="text-sm">{type}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Interests Filter */}
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Interests</Label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {interestOptions.map((interest) => (
+                            <div key={interest} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={interest}
+                                checked={selectedInterests.includes(interest)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedInterests([...selectedInterests, interest]);
+                                  } else {
+                                    setSelectedInterests(selectedInterests.filter(i => i !== interest));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={interest} className="text-sm">{interest}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Online/Active Filters */}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="online-only"
+                            checked={showOnlineOnly}
+                            onCheckedChange={(checked) => setShowOnlineOnly(checked === true)}
+                          />
+                          <Label htmlFor="online-only" className="text-sm">Online now</Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="active-only"
+                            checked={showActiveOnly}
+                            onCheckedChange={(checked) => setShowActiveOnly(checked === true)}
+                          />
+                          <Label htmlFor="active-only" className="text-sm">Active profiles only</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </div>
               
               {/* Profiles per page, view controls, and sort */}
