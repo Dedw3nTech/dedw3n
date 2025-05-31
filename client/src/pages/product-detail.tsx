@@ -46,6 +46,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function ProductDetail() {
   const [, setLocation] = useLocation();
@@ -58,6 +69,12 @@ export default function ProductDetail() {
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
   const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
   const [convertedDiscountPrice, setConvertedDiscountPrice] = useState<number | null>(null);
+  
+  // Review form state
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewContent, setReviewContent] = useState('');
   const [isConverting, setIsConverting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
@@ -148,6 +165,35 @@ export default function ProductDetail() {
     },
   });
 
+  // Review submission mutation
+  const submitReviewMutation = useMutation({
+    mutationFn: async (reviewData: { rating: number; title: string; content: string }) => {
+      if (!productId || !user) throw new Error('Product or user not available');
+      return apiRequest('POST', `/api/products/${productId}/reviews`, {
+        ...reviewData,
+        productId: productId
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'reviews'] });
+      setIsReviewDialogOpen(false);
+      setReviewRating(0);
+      setReviewTitle('');
+      setReviewContent('');
+      toast({
+        title: "Review Submitted",
+        description: "Thank you for your review!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit review",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Handle quantity change
   const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
@@ -188,6 +234,47 @@ export default function ProductDetail() {
       );
     }
     return stars;
+  };
+
+  // Interactive star rating for review form
+  const renderInteractiveStars = (rating: number, onRatingChange: (rating: number) => void) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-6 w-6 cursor-pointer transition-colors ${
+          i < rating
+            ? 'fill-yellow-400 text-yellow-400'
+            : 'fill-gray-200 text-gray-200 hover:fill-yellow-200 hover:text-yellow-200'
+        }`}
+        onClick={() => onRatingChange(i + 1)}
+      />
+    ));
+  };
+
+  // Handle review submission
+  const handleSubmitReview = () => {
+    if (!reviewRating) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!reviewContent.trim()) {
+      toast({
+        title: "Review Required",
+        description: "Please write a review",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    submitReviewMutation.mutate({
+      rating: reviewRating,
+      title: reviewTitle,
+      content: reviewContent
+    });
   };
   
   // Effect to handle currency conversion
