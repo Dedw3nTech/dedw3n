@@ -139,7 +139,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   variant="ghost"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 >
-                  <div className="w-6 h-4 rounded border border-gray-200 bg-gray-100"></div>
                   <span className="text-sm font-medium">Currency</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -151,7 +150,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     onClick={() => setSelectedCurrency(currency)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <div className="w-6 h-4 rounded border border-gray-200 bg-gray-100"></div>
+
                     <div className="flex flex-col">
                       <span className="font-medium">{currency.symbol} {currency.code}</span>
                       <span className="text-xs text-gray-500">{currency.name}</span>
