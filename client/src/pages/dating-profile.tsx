@@ -256,6 +256,90 @@ export default function DatingProfilePage() {
             </CardContent>
           </Card>
 
+          {/* Geographic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Geographic Information</CardTitle>
+              <CardDescription>
+                Help others find you based on your location preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    placeholder="e.g., United States"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="region">Region/State</Label>
+                  <Input
+                    id="region"
+                    placeholder="e.g., California"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    placeholder="e.g., Los Angeles"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Input
+                    id="timezone"
+                    placeholder="e.g., PST (GMT-8)"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Demographic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Demographic Information</CardTitle>
+              <CardDescription>
+                Share demographic details to help with better matching
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tribe">Tribe/Ethnicity</Label>
+                  <Input
+                    id="tribe"
+                    placeholder="e.g., African American, Hispanic, etc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="language">Primary Language</Label>
+                  <Input
+                    id="language"
+                    placeholder="e.g., English, Spanish, French"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="income">Income Range</Label>
+                  <Input
+                    id="income"
+                    placeholder="e.g., $50,000 - $75,000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="education">Education Level</Label>
+                  <Input
+                    id="education"
+                    placeholder="e.g., Bachelor's Degree"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Interests */}
           <Card>
             <CardHeader>
