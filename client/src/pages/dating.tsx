@@ -124,6 +124,7 @@ const sampleProfiles: DatingProfile[] = [
     bio: "Tech enthusiast and coffee lover. Looking for meaningful connections.",
     relationshipPreference: "meeting",
     isActive: true,
+    lastActive: new Date(Date.now() - 1 * 60 * 1000), // 1 minute ago (online)
     interests: ["Technology", "Coffee", "Movies"],
     wishlist: [
       {
@@ -149,6 +150,7 @@ const sampleProfiles: DatingProfile[] = [
     bio: "Art teacher who loves painting and good conversations. Looking for someone special.",
     relationshipPreference: "marriage",
     isActive: true,
+    lastActive: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago (away)
     interests: ["Art", "Reading", "Cooking"],
     wishlist: [
       {
