@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Heart, Gift, MessageCircle, User, Users, X, Search, SlidersHorizontal, MapPin, Calendar, ChevronDown, Share2, Plus } from "lucide-react";
+import { Heart, Gift, MessageCircle, User, Users, X, Search, SlidersHorizontal, MapPin, Calendar, ChevronDown, Share2, Plus, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -739,17 +739,9 @@ export default function DatingPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStartConversation(profile.username)}>
-                              <MessageCircle className="mr-2 h-4 w-4" />
-                              Message
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Heart className="mr-2 h-4 w-4" />
-                              Like Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Share2 className="mr-2 h-4 w-4" />
-                              Share Profile
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                              <Flag className="mr-2 h-4 w-4 text-red-600" />
+                              Report
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
