@@ -398,29 +398,50 @@ export default function ProductDetail() {
           <div className="mb-6">
             <div className="flex flex-col space-y-2">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  {product.discountPrice && product.discountPrice < product.price ? (
-                    <>
-                      <span className="text-2xl font-bold text-primary">
-                        {formatPrice(product.discountPrice)}
-                      </span>
-                      <span className="text-lg text-gray-500 line-through">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {product.discountPrice && product.discountPrice < product.price ? (
+                      <>
+                        <span className="text-2xl font-bold text-primary">
+                          {formatPrice(product.discountPrice)}
+                        </span>
+                        <span className="text-lg text-gray-500 line-through">
+                          {formatPrice(product.price)}
+                        </span>
+                        <Badge className="bg-red-500">
+                          Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                        </Badge>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold text-gray-900">
                         {formatPrice(product.price)}
                       </span>
-                      <Badge className="bg-red-500">
-                        Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-                      </Badge>
-                    </>
-                  ) : (
-                    <span className="text-2xl font-bold text-gray-900">
-                      {formatPrice(product.price)}
-                    </span>
-                  )}
-                  {product.location && (
-                    <span className="text-lg font-bold text-gray-700">
-                      • {product.location}
-                    </span>
-                  )}
+                    )}
+                  </div>
+                  
+                  {/* Send Offer Button */}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (user) {
+                        // Handle send offer logic
+                        toast({
+                          title: "Send Offer",
+                          description: "Offer functionality coming soon",
+                        });
+                      } else {
+                        toast({
+                          title: "Login Required",
+                          description: "Please log in to send an offer",
+                          variant: "destructive"
+                        });
+                        setLocation('/auth');
+                      }
+                    }}
+                    className="p-2 hover:bg-gray-100"
+                  >
+                    <span className="text-black font-bold">Send Offer</span>
+                  </Button>
                 </div>
               </div>
               
@@ -615,28 +636,7 @@ export default function ProductDetail() {
               <span className="text-black text-lg font-bold">+</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (user) {
-                  toast({
-                    title: "Offer Sent",
-                    description: "Your offer has been sent to the product owner!",
-                  });
-                } else {
-                  toast({
-                    title: "Login Required",
-                    description: "Please log in to send an offer",
-                    variant: "destructive"
-                  });
-                  setLocation('/auth');
-                }
-              }}
-              className="p-2 hover:bg-gray-100"
-            >
-              <span className="text-black font-bold">Send Offer</span>
-            </Button>
+
           </div>
         </div>
       </div>
