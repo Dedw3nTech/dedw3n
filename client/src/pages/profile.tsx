@@ -205,6 +205,26 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Bio & Interests */}
+            <Card>
+              <CardHeader>
+                <CardTitle>About {profile.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Interests</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.interests.map((interest, i) => (
+                      <Badge key={i} variant="outline">
+                        {interest}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
           </div>
 
@@ -293,37 +313,8 @@ export default function ProfilePage() {
 
                 <Separator className="my-6" />
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full">
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                </div>
-
                 <div className="text-xs text-gray-500 text-center mt-4">
                   Member since {profile.memberSince}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Bio & Interests */}
-            <Card>
-              <CardHeader>
-                <CardTitle>About {profile.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Interests</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((interest, i) => (
-                      <Badge key={i} variant="outline">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </CardContent>
             </Card>
