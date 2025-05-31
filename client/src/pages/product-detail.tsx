@@ -727,13 +727,69 @@ export default function ProductDetail() {
               <div className="text-center py-12">
                 <p className="text-gray-500">This product has no reviews yet.</p>
                 {user && (
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => setLocation(`/review/${productId}`)}
-                  >
-                    Write a Review
-                  </Button>
+                  <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="mt-4">
+                        Write a Review
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Write a Review</DialogTitle>
+                        <DialogDescription>
+                          Share your experience with this product
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="rating">Rating</Label>
+                          <div className="flex gap-1">
+                            {renderInteractiveStars(reviewRating, setReviewRating)}
+                          </div>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="title">Title (optional)</Label>
+                          <Input
+                            id="title"
+                            value={reviewTitle}
+                            onChange={(e) => setReviewTitle(e.target.value)}
+                            placeholder="Brief summary of your review"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="content">Review</Label>
+                          <Textarea
+                            id="content"
+                            value={reviewContent}
+                            onChange={(e) => setReviewContent(e.target.value)}
+                            placeholder="Tell others about your experience with this product..."
+                            rows={4}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsReviewDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleSubmitReview}
+                          disabled={submitReviewMutation.isPending}
+                        >
+                          {submitReviewMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            'Submit Review'
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             ) : (
@@ -761,9 +817,67 @@ export default function ProductDetail() {
                     ))}
                     {user && (
                       <div className="mt-8 text-center">
-                        <Button onClick={() => setLocation(`/review/${productId}`)}>
-                          Write a Review
-                        </Button>
+                        <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button>Write a Review</Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Write a Review</DialogTitle>
+                              <DialogDescription>
+                                Share your experience with this product
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor="rating">Rating</Label>
+                                <div className="flex gap-1">
+                                  {renderInteractiveStars(reviewRating, setReviewRating)}
+                                </div>
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="title">Title (optional)</Label>
+                                <Input
+                                  id="title"
+                                  value={reviewTitle}
+                                  onChange={(e) => setReviewTitle(e.target.value)}
+                                  placeholder="Brief summary of your review"
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor="content">Review</Label>
+                                <Textarea
+                                  id="content"
+                                  value={reviewContent}
+                                  onChange={(e) => setReviewContent(e.target.value)}
+                                  placeholder="Tell others about your experience with this product..."
+                                  rows={4}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setIsReviewDialogOpen(false)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                onClick={handleSubmitReview}
+                                disabled={submitReviewMutation.isPending}
+                              >
+                                {submitReviewMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Submitting...
+                                  </>
+                                ) : (
+                                  'Submit Review'
+                                )}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     )}
                   </div>
