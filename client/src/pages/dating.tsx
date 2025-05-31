@@ -433,17 +433,17 @@ export default function DatingPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               {/* Dating Room Tabs */}
               <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-auto">
-                <TabsList className="grid grid-cols-3 h-10">
-                  <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3">
-                    <Users className="h-4 w-4 flex-shrink-0" />
+                <TabsList className="grid grid-cols-3 h-10 bg-transparent border-0 p-0">
+                  <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
+                    <Users className="h-4 w-4 flex-shrink-0 text-black" />
                     Browse
                   </TabsTrigger>
-                  <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3">
-                    <User className="h-4 w-4 flex-shrink-0" />
+                  <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
+                    <User className="h-4 w-4 flex-shrink-0 text-black" />
                     Profile
                   </TabsTrigger>
-                  <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3">
-                    <Heart className="h-4 w-4 flex-shrink-0" />
+                  <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
+                    <Heart className="h-4 w-4 flex-shrink-0 text-black" />
                     Matches
                   </TabsTrigger>
                 </TabsList>
