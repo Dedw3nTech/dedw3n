@@ -106,6 +106,27 @@ const sampleProfiles: DatingProfile[] = [
         price: 129.99,
         imageUrl: "https://placehold.co/100x100/green/white?text=Hiking+Boots",
         link: "/product/123"
+      },
+      {
+        id: 2,
+        name: "Camera Backpack",
+        price: 89.99,
+        imageUrl: "https://placehold.co/100x100/gray/white?text=Camera+Bag",
+        link: "/product/124"
+      },
+      {
+        id: 3,
+        name: "Travel Journal",
+        price: 24.99,
+        imageUrl: "https://placehold.co/100x100/blue/white?text=Journal",
+        link: "/product/125"
+      },
+      {
+        id: 4,
+        name: "Waterproof Jacket",
+        price: 159.99,
+        imageUrl: "https://placehold.co/100x100/orange/white?text=Jacket",
+        link: "/product/126"
       }
     ]
   },
@@ -133,6 +154,34 @@ const sampleProfiles: DatingProfile[] = [
         price: 199.99,
         imageUrl: "https://placehold.co/100x100/brown/white?text=Coffee+Machine",
         link: "/product/456"
+      },
+      {
+        id: 5,
+        name: "Wireless Headphones",
+        price: 149.99,
+        imageUrl: "https://placehold.co/100x100/black/white?text=Headphones",
+        link: "/product/457"
+      },
+      {
+        id: 6,
+        name: "Smart Watch",
+        price: 299.99,
+        imageUrl: "https://placehold.co/100x100/silver/black?text=Watch",
+        link: "/product/458"
+      },
+      {
+        id: 7,
+        name: "Programming Books",
+        price: 79.99,
+        imageUrl: "https://placehold.co/100x100/red/white?text=Books",
+        link: "/product/459"
+      },
+      {
+        id: 8,
+        name: "Laptop Stand",
+        price: 59.99,
+        imageUrl: "https://placehold.co/100x100/gray/white?text=Stand",
+        link: "/product/460"
       }
     ]
   },
@@ -285,6 +334,11 @@ export default function DatingPage() {
     
     // Redirect to checkout page
     setLocation("/checkout");
+  };
+
+  const handleViewProfile = (username: string) => {
+    // Navigate to user's profile page
+    setLocation(`/profile/${username}`);
   };
   
   // Handling message initiation
@@ -721,7 +775,7 @@ export default function DatingPage() {
                       {/* Wishlist Preview */}
                       {profile.wishlist.length > 0 && (
                         <div className="border-t pt-3">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mb-2">
                             <span className="text-xs text-gray-500">
                               {profile.wishlist.length} wishlist item{profile.wishlist.length !== 1 ? 's' : ''}
                             </span>
@@ -735,6 +789,41 @@ export default function DatingPage() {
                               Send Gift
                             </Button>
                           </div>
+                          
+                          {/* Wishlist Product Images */}
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            {profile.wishlist.slice(0, 3).map((item, index) => (
+                              <a
+                                key={index}
+                                href={item.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="relative rounded-md overflow-hidden aspect-square border hover:border-blue-500 transition-colors group"
+                              >
+                                <img 
+                                  src={item.imageUrl} 
+                                  alt={item.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-1">
+                                  <p className="text-xs font-medium truncate">{item.name}</p>
+                                  <p className="text-xs text-gray-200">${item.price.toFixed(2)}</p>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                          
+                          {/* Show More Link */}
+                          {profile.wishlist.length > 3 && (
+                            <div className="text-center">
+                              <button
+                                onClick={() => handleViewProfile(profile.username)}
+                                className="text-xs text-blue-500 hover:text-blue-700 hover:underline transition-colors"
+                              >
+                                Show more ({profile.wishlist.length - 3} more items)
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
