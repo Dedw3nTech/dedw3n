@@ -11,7 +11,7 @@ import { MessagingProvider } from "@/hooks/use-messaging";
 import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
 import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
-import { CurrencyProvider } from "@/hooks/use-currency";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";

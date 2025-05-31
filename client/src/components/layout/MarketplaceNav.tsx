@@ -1,8 +1,10 @@
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
+import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, ShoppingBag, Store, Heart, PoundSterling } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -12,6 +14,7 @@ interface MarketplaceNavProps {
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
   const [, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
@@ -130,13 +133,33 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <span className="text-sm font-medium">Vendor Dashboard</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-            >
-              <PoundSterling className="h-4 w-4" />
-              <span className="text-sm font-medium">Currency</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                >
+                  <span className="text-lg">{selectedCurrency.flag}</span>
+                  <span className="text-sm font-medium">{selectedCurrency.symbol}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {currencies.map((currency) => (
+                  <DropdownMenuItem
+                    key={currency.code}
+                    onClick={() => setSelectedCurrency(currency)}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <span className="text-lg">{currency.flag}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{currency.symbol} {currency.code}</span>
+                      <span className="text-xs text-gray-500">{currency.name}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

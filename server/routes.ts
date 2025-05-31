@@ -3165,6 +3165,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Currency conversion endpoints
+  const currencies = {
+    GBP: { name: 'British Pound', symbol: '£', flag: '🇬🇧', rate: 1.27 },
+    USD: { name: 'US Dollar', symbol: '$', flag: '🌍', rate: 1.00 },
+    EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺', rate: 1.08 },
+    INR: { name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳', rate: 0.012 },
+    NGN: { name: 'Nigerian Naira', symbol: '₦', flag: '🇳🇬', rate: 0.0007 },
+    ZAR: { name: 'South African Rand', symbol: 'R', flag: '🇿🇦', rate: 0.055 },
+    KES: { name: 'Kenyan Shilling', symbol: 'KSh', flag: '🇰🇪', rate: 0.008 },
+  };
+
+  app.get('/api/currencies', (req: Request, res: Response) => {
+    res.json(currencies);
+  });
+
+  app.post('/api/convert-price', (req: Request, res: Response) => {
+    try {
+      const { price, fromCurrency = 'USD', toCurrency } = req.body;
+      
+      if (!price || !toCurrency) {
+        return res.status(400).json({ message: 'Price and target currency are required' });
+      }
+
+      const fromRate = currencies[fromCurrency as keyof typeof currencies]?.rate || 1;
+      const toRate = currencies[toCurrency as keyof typeof currencies]?.rate || 1;
+      
+      // Convert to USD first, then to target currency
+      const usdPrice = price * fromRate;
+      const convertedPrice = usdPrice / toRate;
+      
+      res.json({
+        originalPrice: price,
+        convertedPrice: Number(convertedPrice.toFixed(2)),
+        fromCurrency,
+        toCurrency,
+        rate: toRate / fromRate
+      });
+    } catch (error) {
+      console.error('Error converting price:', error);
+      res.status(500).json({ message: 'Failed to convert price' });
+    }
+  });
+
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
   setupWebSocket(httpServer);
