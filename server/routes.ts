@@ -3021,6 +3021,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User search endpoint for gift functionality
+  app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        return res.json([]);
+      }
+      
+      const searchTerm = q.trim();
+      const currentUserId = req.user!.id;
+      
+      // Search users by username or name, excluding current user
+      const users = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(
+          and(
+            or(
+              like(users.username, `%${searchTerm}%`),
+              like(users.name, `%${searchTerm}%`)
+            ),
+            sql`${users.id} != ${currentUserId}`
+          )
+        )
+        .limit(10);
+      
+      res.json(users);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      res.status(500).json({ message: 'Failed to search users' });
+    }
+  });
+
   // Gift proposition endpoints
   app.post('/api/gifts/propose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

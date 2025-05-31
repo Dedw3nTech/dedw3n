@@ -23,7 +23,9 @@ import {
   MessageSquare,
   Users,
   Heart,
-  Gift
+  Gift,
+  Search,
+  X
 } from 'lucide-react';
 import { 
   supportedCurrencies, 
@@ -76,6 +78,11 @@ export default function ProductDetail() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
+
+  // Gift search state
+  const [isGiftSearchOpen, setIsGiftSearchOpen] = useState(false);
+  const [giftSearchQuery, setGiftSearchQuery] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
@@ -153,6 +160,17 @@ export default function ProductDetail() {
       return response.json();
     },
     enabled: productId !== null,
+  });
+
+  // Search users for gift functionality
+  const { data: searchResults = [], isLoading: searchLoading } = useQuery({
+    queryKey: ['/api/users/search', giftSearchQuery],
+    queryFn: async () => {
+      if (!giftSearchQuery || giftSearchQuery.length < 2) return [];
+      const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
+      return response.json();
+    },
+    enabled: giftSearchQuery.length >= 2,
   });
 
   // Add to cart mutation
@@ -662,12 +680,7 @@ export default function ProductDetail() {
               size="sm"
               onClick={() => {
                 if (user) {
-                  // Send gift to dating room member
-                  toast({
-                    title: "Send as Gift",
-                    description: "Choose someone from dating room to send this gift to!",
-                  });
-                  setLocation(`/dating?gift=${productId}`);
+                  setIsGiftSearchOpen(true);
                 } else {
                   toast({
                     title: "Login Required",
@@ -938,6 +951,123 @@ export default function ProductDetail() {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Gift Search Dialog */}
+      <Dialog open={isGiftSearchOpen} onOpenChange={setIsGiftSearchOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Send as Gift</DialogTitle>
+            <DialogDescription>
+              Search for a user to send this product as a gift
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Type username or name to search..."
+                value={giftSearchQuery}
+                onChange={(e) => setGiftSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+              {giftSearchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setGiftSearchQuery('');
+                    setSelectedRecipient(null);
+                  }}
+                  className="absolute right-2 top-2 h-6 w-6 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            
+            {searchLoading && giftSearchQuery.length >= 2 && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+            
+            {searchResults.length > 0 && (
+              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
+                {searchResults.map((user: any) => (
+                  <div
+                    key={user.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedRecipient?.id === user.id
+                        ? 'bg-primary/10 border-primary'
+                        : 'hover:bg-gray-50 border-transparent'
+                    } border`}
+                    onClick={() => setSelectedRecipient(user)}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium">
+                      {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{user.name || user.username}</p>
+                      <p className="text-xs text-gray-500">@{user.username}</p>
+                    </div>
+                    {selectedRecipient?.id === user.id && (
+                      <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {giftSearchQuery.length >= 2 && !searchLoading && searchResults.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>No users found matching "{giftSearchQuery}"</p>
+              </div>
+            )}
+            
+            {giftSearchQuery.length < 2 && giftSearchQuery.length > 0 && (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                Type at least 2 characters to search
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsGiftSearchOpen(false);
+                setGiftSearchQuery('');
+                setSelectedRecipient(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedRecipient) {
+                  sendGiftMutation.mutate(selectedRecipient.id);
+                }
+              }}
+              disabled={!selectedRecipient || sendGiftMutation.isPending}
+            >
+              {sendGiftMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Gift className="mr-2 h-4 w-4" />
+                  Send Gift
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       {/* Similar products section - can be implemented in the future */}
     </div>
   );
