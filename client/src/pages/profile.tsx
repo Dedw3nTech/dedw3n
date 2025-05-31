@@ -538,7 +538,7 @@ export default function ProfilePage() {
             <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
               <h4 className="font-medium text-gray-800 mb-2">Disclaimer:</h4>
               <p className="text-xs text-gray-700 leading-relaxed">
-                When you send a gift, the recipient will receive an approval message and can choose to accept or refuse. Only after the recipient accepts will you receive a payment link to complete the purchase. By accepting your gift, the recipient is under no obligation to perform any action or entertain the sender; it is merely a token of appreciation within the African culture. The recipient retains the right to reject, refund, or keep the gift without any expectation of counter-performance. Please note that Dedw3n Ltd. does not provide refunds for gifts. By clicking the "Send Gift" button, you acknowledge, understand and accept the (T&C's) terms and conditions, as well as the disclaimer.
+                When you send a gift, the recipient will receive an approval message and can choose to accept or refuse. If accepted, both users will automatically match and you will receive a payment link to complete the purchase. By accepting your gift, the recipient is under no obligation to perform any action or entertain the sender; it is merely a token of appreciation within the African culture. The recipient retains the right to reject, refund, or keep the gift without any expectation of counter-performance. Please note that Dedw3n Ltd. does not provide refunds for gifts. By clicking the "Send Gift" button, you acknowledge, understand and accept the (T&C's) terms and conditions, as well as the disclaimer.
               </p>
             </div>
           </div>
