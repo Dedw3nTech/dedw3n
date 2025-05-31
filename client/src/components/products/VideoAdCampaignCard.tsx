@@ -1,30 +1,90 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
 
-export function VideoAdCampaignCard() {
+interface VideoAdCampaignCardProps {
+  videoSource?: string;
+  title?: string;
+  autoPlay?: boolean;
+  showControls?: boolean;
+}
+
+export function VideoAdCampaignCard({ 
+  videoSource = campaignVideo,
+  title = "Featured Campaign",
+  autoPlay = true,
+  showControls = true
+}: VideoAdCampaignCardProps) {
   const [isVisible, setIsVisible] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   if (!isVisible) {
     return null;
   }
 
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   return (
     <Card className="w-full overflow-hidden">
       <div className="relative">
         <video
+          ref={videoRef}
           className="w-full h-48 object-cover"
-          autoPlay
+          autoPlay={autoPlay}
           loop
-          muted
+          muted={isMuted}
           playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
         >
-          <source src={campaignVideo} type="video/mp4" />
+          <source src={videoSource} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         
+        {/* Video controls overlay */}
+        {showControls && (
+          <div className="absolute bottom-2 left-2 flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
+              onClick={togglePlay}
+            >
+              {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
+              onClick={toggleMute}
+            >
+              {isMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+            </Button>
+          </div>
+        )}
+
+        {/* Close button */}
         <Button
           variant="ghost"
           size="sm"
@@ -33,6 +93,13 @@ export function VideoAdCampaignCard() {
         >
           <X className="h-3 w-3" />
         </Button>
+
+        {/* Title overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none">
+          <p className="text-white text-xs font-medium">
+            {title}
+          </p>
+        </div>
       </div>
     </Card>
   );
