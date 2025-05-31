@@ -118,7 +118,7 @@ export default function UserMenu() {
           </Link>
           <Link href="/messages" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-message-3-line mr-2 text-blue-600"></i> Messages
+              <i className="ri-message-3-line mr-2"></i> Messages
             </div>
             {unreadMessages?.count > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
@@ -128,7 +128,7 @@ export default function UserMenu() {
           </Link>
           <Link href="/notifications" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-notification-3-line mr-2 text-blue-600"></i> Notifications
+              <i className="ri-notification-3-line mr-2"></i> Notifications
             </div>
             {unreadNotifications?.count > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
