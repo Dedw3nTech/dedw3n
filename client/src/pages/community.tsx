@@ -21,7 +21,7 @@ import { useLocation } from "wouter";
 
 // Community-specific promotional images
 import communityTopPromo from "@assets/Dedw3n Business commHeader.png";
-import communityBottomPromo from "@assets/Dedw3n Business B2C Footer.png";
+import communityBottomPromo from "@assets/Dedw3n comm Footer.png";
 import communityMidPromo from "@assets/Dedw3n Business II (1).png";
 
 interface Post {
