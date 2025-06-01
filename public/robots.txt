@@ -1,24 +1,25 @@
 User-agent: *
 Allow: /
-Allow: /products
-Allow: /wall
-Allow: /dating
-Allow: /search
-Allow: /vendors
-Allow: /faq
-Allow: /contact
-Allow: /privacy
-Allow: /terms
-Allow: /shipping
 
-Disallow: /admin
+# Only block truly sensitive areas
+Disallow: /admin/
 Disallow: /api/
-Disallow: /vendor-dashboard
-Disallow: /social-console
-Disallow: /ai-insights
-Disallow: /social-insights
+Disallow: /checkout
+Disallow: /cart
+Disallow: /settings
+Disallow: /profile-settings
+Disallow: /wallet
 
+# Block dynamic user-specific content to avoid duplicate content issues
+Disallow: /messages/
+Disallow: /posts/
+Disallow: /notifications/
+
+# Allow all important public pages (no need to explicitly allow with Allow: / above)
+# This includes: /products, /wall, /dating, /contact, /faq, /privacy, /terms, etc.
+
+# Sitemap location
 Sitemap: https://dedw3n.com/sitemap.xml
 
-# Crawl-delay for respectful crawling
+# Crawl delay for respectful crawling
 Crawl-delay: 1
