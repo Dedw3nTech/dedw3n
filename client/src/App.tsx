@@ -200,7 +200,7 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/community-guidelines" component={CommunityGuidelines} />
       <Route path="/remove-ads" component={RemoveAdsPage} />
-      <ProtectedRoute path="/sitemap" component={SiteMap} />
+      <Route path="/sitemap" component={SiteMap} />
       <Route path="/api-test" component={ApiTestPage} />
       
       {/* Protected routes - require authentication */}
