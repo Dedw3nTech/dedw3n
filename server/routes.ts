@@ -428,10 +428,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(pageContent);
   });
   
-  // XML Sitemap route for search engines
+  // XML Sitemap route for search engines (must be before other routes to avoid conflicts)
   app.get('/sitemap.xml', (req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'application/xml');
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    try {
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${req.protocol}://${req.get('host')}/</loc>
@@ -464,12 +467,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>${req.protocol}://${req.get('host')}/community</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>${req.protocol}://${req.get('host')}/contact</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
@@ -493,8 +490,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>${req.protocol}://${req.get('host')}/faq</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>${req.protocol}://${req.get('host')}/privacy</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${req.protocol}://${req.get('host')}/terms</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
 </urlset>`;
-    res.send(sitemap);
+      
+      res.send(sitemap);
+    } catch (error) {
+      console.error('Error generating sitemap:', error);
+      res.status(500).send('Error generating sitemap');
+    }
   });
 
   // Contact form API endpoint
