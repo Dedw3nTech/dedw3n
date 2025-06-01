@@ -7,8 +7,7 @@ interface PageTitleOptions {
 
 export function usePageTitle({ title, suffix = 'Dedw3n' }: PageTitleOptions) {
   useEffect(() => {
-    const fullTitle = title ? `${title} | ${suffix}` : suffix;
-    document.title = fullTitle;
+    document.title = suffix;
     
     // Update meta description based on page
     const metaDescription = document.querySelector('meta[name="description"]');
