@@ -19,6 +19,11 @@ import { AdPostCard } from "@/components/AdPostCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 import { useLocation } from "wouter";
 
+// Community-specific promotional images
+import communityTopPromo from "@assets/Dedw3n Business B2C Header.png";
+import communityBottomPromo from "@assets/Dedw3n Business B2C Footer.png";
+import communityMidPromo from "@assets/Dedw3n Business II (1).png";
+
 interface Post {
   id: number;
   userId: number;
@@ -52,6 +57,43 @@ interface CommunityFeedResponse {
 }
 
 const POSTS_PER_PAGE = 10;
+
+// Community Advertisement Components
+function CommunityTopPromoSection() {
+  return (
+    <div className="w-full mb-6">
+      <img 
+        src={communityTopPromo}
+        alt="Dedwen Community - Connect and Share"
+        className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
+      />
+    </div>
+  );
+}
+
+function CommunityMidPromoSection() {
+  return (
+    <div className="w-full my-8">
+      <img 
+        src={communityMidPromo}
+        alt="Dedwen Community Features"
+        className="w-full h-[150px] sm:h-[200px] md:h-[250px] object-cover rounded-lg"
+      />
+    </div>
+  );
+}
+
+function CommunityBottomPromoSection() {
+  return (
+    <div className="w-full mt-8">
+      <img 
+        src={communityBottomPromo}
+        alt="Join the Dedwen Community"
+        className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
+      />
+    </div>
+  );
+}
 
 export default function CommunityPage() {
   const { user } = useAuth();
@@ -222,7 +264,8 @@ export default function CommunityPage() {
   return (
     <Container className="py-6">
       <div className="max-w-7xl mx-auto">
-
+        {/* Top Community Advertisement */}
+        <CommunityTopPromoSection />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -344,8 +387,14 @@ export default function CommunityPage() {
               {uniquePosts.map((post, index) => (
                 <div key={`${post.id}-${index}`}>
                   <PostCard post={post} />
-                  {/* Insert advertisement every 4 posts */}
-                  {(index + 1) % 4 === 0 && (
+                  {/* Insert community mid advertisement every 6 posts */}
+                  {(index + 1) % 6 === 0 && (
+                    <div className="mt-6">
+                      <CommunityMidPromoSection />
+                    </div>
+                  )}
+                  {/* Insert regular advertisement every 4 posts (offset from mid promo) */}
+                  {(index + 1) % 4 === 0 && (index + 1) % 6 !== 0 && (
                     <div className="mt-6">
                       <AdPostCard />
                     </div>
@@ -415,6 +464,9 @@ export default function CommunityPage() {
             </div>
           </div>
         </div>
+
+        {/* Bottom Community Advertisement */}
+        <CommunityBottomPromoSection />
       </div>
     </Container>
   );
