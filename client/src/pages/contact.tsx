@@ -156,7 +156,7 @@ export default function Contact() {
                   <Mail className="h-6 w-6 text-primary mt-1" />
                   <div>
                     <h3 className="font-semibold">Email</h3>
-                    <p className="text-gray-600">support@dedw3n.com</p>
+                    <p className="text-gray-600">help@dedw3n.com</p>
                   </div>
                 </div>
 
