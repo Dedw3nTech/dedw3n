@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import { useCurrency } from "@/hooks/use-currency";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
@@ -47,6 +48,9 @@ export default function Home() {
   // List of supported currencies
   const supportedCurrencies: CurrencyCode[] = ['GBP', 'USD', 'EUR', 'CNY', 'INR', 'BRL'];
   
+  // Set page title
+  usePageTitle({ title: 'Home' });
+
   // Force rerender when currency changes
   useEffect(() => {
     const handleCurrencyChange = () => {
