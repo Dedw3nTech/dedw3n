@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Contact() {
@@ -15,6 +15,8 @@ export default function Contact() {
     subject: "",
     message: ""
   });
+  const [titleUpload, setTitleUpload] = useState<File | null>(null);
+  const [textUpload, setTextUpload] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -26,17 +28,37 @@ export default function Contact() {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'title' | 'text') => {
+    const file = e.target.files?.[0] || null;
+    if (type === 'title') {
+      setTitleUpload(file);
+    } else {
+      setTextUpload(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('message', formData.message);
+      
+      if (titleUpload) {
+        formDataToSend.append('titleUpload', titleUpload);
+      }
+      
+      if (textUpload) {
+        formDataToSend.append('textUpload', textUpload);
+      }
+
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
       const result = await response.json();
@@ -54,6 +76,8 @@ export default function Contact() {
           subject: "",
           message: ""
         });
+        setTitleUpload(null);
+        setTextUpload(null);
       } else {
         toast({
           title: "Failed to send message",
@@ -144,6 +168,45 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title-upload" className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Title Upload
+                    </Label>
+                    <Input
+                      id="title-upload"
+                      type="file"
+                      onChange={(e) => handleFileChange(e, 'title')}
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      className="cursor-pointer"
+                    />
+                    {titleUpload && (
+                      <p className="text-sm text-gray-600">
+                        Selected: {titleUpload.name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="text-upload" className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Text Upload file
+                    </Label>
+                    <Input
+                      id="text-upload"
+                      type="file"
+                      onChange={(e) => handleFileChange(e, 'text')}
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      className="cursor-pointer"
+                    />
+                    {textUpload && (
+                      <p className="text-sm text-gray-600">
+                        Selected: {textUpload.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 
                 <Button 
