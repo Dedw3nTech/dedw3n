@@ -107,10 +107,10 @@ export default function Partnerships() {
               Contact Us for Partnerships
             </a>
             <a
-              href="mailto:partnerships@dedw3n.com"
+              href="mailto:info@dedw3n.com"
               className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
             >
-              partnerships@dedw3n.com
+              info@dedw3n.com
             </a>
           </div>
         </div>
