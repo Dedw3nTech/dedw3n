@@ -157,7 +157,6 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold">Email</h3>
                     <p className="text-gray-600">support@dedw3n.com</p>
-                    <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
                   </div>
                 </div>
 
