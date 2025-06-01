@@ -18,13 +18,7 @@ export default function Partnerships() {
       website: "https://paypal.com",
       integration: "Secondary Payment Gateway"
     },
-    {
-      name: "Brevo (Sendinblue)",
-      category: "Email Marketing",
-      description: "Email delivery service for transactional emails, marketing campaigns, and notifications",
-      website: "https://brevo.com",
-      integration: "Email Service Provider"
-    },
+
     {
       name: "Neon Database",
       category: "Database Infrastructure",
@@ -39,55 +33,7 @@ export default function Partnerships() {
       website: "https://firebase.google.com",
       integration: "Authentication & File Storage"
     },
-    {
-      name: "Replit",
-      category: "Development Platform",
-      description: "Cloud development environment and hosting platform",
-      website: "https://replit.com",
-      integration: "Development & Hosting Platform"
-    },
-    {
-      name: "Vite",
-      category: "Build Tool",
-      description: "Fast build tool and development server for modern web applications",
-      website: "https://vitejs.dev",
-      integration: "Frontend Build System"
-    },
-    {
-      name: "Express.js",
-      category: "Backend Framework",
-      description: "Web application framework for Node.js backend services",
-      website: "https://expressjs.com",
-      integration: "Backend API Framework"
-    },
-    {
-      name: "Drizzle ORM",
-      category: "Database ORM",
-      description: "TypeScript ORM for database operations and schema management",
-      website: "https://orm.drizzle.team",
-      integration: "Database Object-Relational Mapping"
-    },
-    {
-      name: "Tailwind CSS",
-      category: "UI Framework",
-      description: "Utility-first CSS framework for rapid UI development",
-      website: "https://tailwindcss.com",
-      integration: "Frontend Styling Framework"
-    },
-    {
-      name: "React",
-      category: "Frontend Framework",
-      description: "JavaScript library for building user interfaces and components",
-      website: "https://react.dev",
-      integration: "Frontend UI Library"
-    },
-    {
-      name: "Radix UI",
-      category: "UI Components",
-      description: "Low-level UI primitives and accessible component library",
-      website: "https://radix-ui.com",
-      integration: "Component Library"
-    }
+
   ];
 
   const categories = Array.from(new Set(partners.map(p => p.category)));
