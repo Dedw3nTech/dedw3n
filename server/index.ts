@@ -45,6 +45,31 @@ if (!fs.existsSync(avatarsDir)) {
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 console.log(`Serving uploads from: ${path.join(__dirname, '../public/uploads')}`);
 
+// Serve favicon files with proper content types
+app.get('/favicon.ico', (req, res) => {
+  res.setHeader('Content-Type', 'image/x-icon');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/favicon.ico'));
+});
+
+app.get('/favicon.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/favicon.png'));
+});
+
+app.get('/logo-192.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/logo-192.png'));
+});
+
+app.get('/logo-512.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/logo-512.png'));
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
