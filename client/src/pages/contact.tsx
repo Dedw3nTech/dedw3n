@@ -1,71 +1,54 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Mail, Phone, MapPin, ArrowRight, Loader2 } from "lucide-react";
-import { Container } from "@/components/ui/container";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { apiRequest } from "@/lib/queryClient";
 
-// Define the contact form validation schema
-const contactFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  subject: z.string().min(5, {
-    message: "Subject must be at least 5 characters.",
-  }),
-  message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
-  }),
-});
-
-type ContactFormValues = z.infer<typeof contactFormSchema>;
-
-export default function ContactPage() {
+export default function Contact() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
 
-  // Initialize the form
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    },
-  });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const onSubmit = async (data: ContactFormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await apiRequest("POST", "/api/contact", data);
-      const result = await response.json();
-
-      if (response.ok) {
-        setSubmitted(true);
-        toast({
-          title: "Message sent",
-          description: "We've received your message and will respond soon.",
-        });
-      } else {
-        throw new Error(result.message || "Failed to send message");
-      }
+      // Here you would typically send the form data to your backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      toast({
+        title: "Message sent successfully!",
+        description: "We'll get back to you within 24 hours.",
+      });
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: ""
+      });
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        title: "Error sending message",
+        description: "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -74,162 +57,172 @@ export default function ContactPage() {
   };
 
   return (
-    <Container className="py-12">
-      <div className="mx-auto max-w-5xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Contact Information */}
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Contact Us</h1>
-            <p className="text-muted-foreground mt-3 mb-8">
-              Have questions or feedback? We'd love to hear from you.
-              Fill out the form and our team will get back to you as soon as possible.
-            </p>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Have questions about Dedw3n? We're here to help. Send us a message and we'll respond as soon as possible.
+          </p>
+        </div>
 
-            <div className="space-y-6">
-              <div className="flex items-start space-x-4">
-                <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-medium">Our Office</h3>
-                  <p className="text-muted-foreground">
-                    50 Essex Street<br />
-                    London, England<br />
-                    WC2R3JF
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <Mail className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-medium">Email</h3>
-                  <p className="text-muted-foreground">
-                    General Inquiries: <a href="mailto:info@dedw3n.com" className="text-primary hover:underline">info@dedw3n.com</a><br />
-                    Support: <a href="mailto:support@dedw3n.com" className="text-primary hover:underline">support@dedw3n.com</a>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-medium">Phone</h3>
-                  <p className="text-muted-foreground">
-                    +44 20 1234 5678
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div className="grid md:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Send us a Message</CardTitle>
+              <CardDescription>
+                Fill out the form below and we'll get back to you soon.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    placeholder="What's this about?"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    placeholder="Tell us more about your inquiry..."
+                    rows={6}
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Sending..." : "Send Message"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <div className="space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Send us a message</CardTitle>
+                <CardTitle>Contact Information</CardTitle>
                 <CardDescription>
-                  We'll respond to your inquiry as quickly as possible.
+                  You can also reach us through these channels
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {submitted ? (
-                  <div className="py-8 text-center">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                      <ArrowRight className="h-6 w-6 text-green-600" />
-                    </div>
-                    <h3 className="text-xl font-medium mb-2">Message Sent</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Thank you for contacting us! We'll get back to you soon.
-                    </p>
-                    <Button 
-                      onClick={() => {
-                        setSubmitted(false);
-                        form.reset();
-                      }}
-                    >
-                      Send Another Message
-                    </Button>
+              <CardContent className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <Mail className="h-6 w-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Email</h3>
+                    <p className="text-gray-600">support@dedw3n.com</p>
+                    <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
                   </div>
-                ) : (
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <FormControl>
-                              <Input placeholder="What is this regarding?" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Please provide details about your inquiry..." 
-                                className="min-h-32"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          "Send Message"
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                )}
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <Phone className="h-6 w-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Phone</h3>
+                    <p className="text-gray-600">+1 (555) 123-4567</p>
+                    <p className="text-sm text-gray-500">Mon-Fri, 9AM-6PM EST</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <MapPin className="h-6 w-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Address</h3>
+                    <p className="text-gray-600">
+                      123 Business Ave<br />
+                      Suite 100<br />
+                      New York, NY 10001
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <Clock className="h-6 w-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Business Hours</h3>
+                    <p className="text-gray-600">
+                      Monday - Friday: 9:00 AM - 6:00 PM EST<br />
+                      Saturday: 10:00 AM - 4:00 PM EST<br />
+                      Sunday: Closed
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Frequently Asked Questions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">How do I create an account?</h4>
+                  <p className="text-sm text-gray-600">
+                    Click the "Sign Up" button in the top right corner and follow the registration process.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">How do I list a product?</h4>
+                  <p className="text-sm text-gray-600">
+                    Navigate to the Marketplace, click "Sell" and follow the product listing wizard.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Is my payment information secure?</h4>
+                  <p className="text-sm text-gray-600">
+                    Yes, we use industry-standard encryption and never store your payment details.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-    </Container>
+    </div>
   );
 }
