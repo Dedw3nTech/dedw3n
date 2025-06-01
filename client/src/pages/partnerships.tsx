@@ -49,7 +49,7 @@ export default function Partnerships() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Technology Partners</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 text-left">Partnerships</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Dedw3n is built on a foundation of trusted technology partners and APIs that enable us to deliver 
             a secure, scalable, and feature-rich marketplace experience.
