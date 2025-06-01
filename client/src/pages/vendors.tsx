@@ -82,6 +82,7 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
 };
 
 export default function VendorsPage() {
+  usePageTitle("vendors");
   const { t } = useTranslation();
   const { user } = useAuth();
   const [, setLocation] = useLocation();

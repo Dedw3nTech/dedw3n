@@ -249,6 +249,7 @@ const COUNTRY_OPTIONS = [
 ];
 
 export default function SettingsPage() {
+  usePageTitle("settings");
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();

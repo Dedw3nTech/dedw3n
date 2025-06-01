@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function MessagesPage() {
+  usePageTitle("messages");
   const { username } = useParams();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();

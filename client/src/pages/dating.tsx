@@ -229,6 +229,7 @@ const sampleMatch: Match = {
 };
 
 export default function DatingPage() {
+  usePageTitle("dating");
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
