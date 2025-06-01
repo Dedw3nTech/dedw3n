@@ -111,7 +111,7 @@ export default function Contact() {
                     id="subject"
                     name="subject"
                     type="text"
-                    placeholder="What's this about?"
+                    placeholder="Subject"
                     value={formData.subject}
                     onChange={handleInputChange}
                     required
