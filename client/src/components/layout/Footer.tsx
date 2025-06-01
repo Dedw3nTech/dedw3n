@@ -16,7 +16,8 @@ export default function Footer() {
               <Link href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">Community Guidelines</Link>
               <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">Contact Us</Link>
               <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">FAQ</Link>
-              <Link href="/shipping" className="text-xs text-gray-600 hover:text-primary">Shipping </Link>
+              <Link href="/shipping" className="text-xs text-gray-600 hover:text-primary">Shipping</Link>
+              <Link href="/sitemap" className="text-xs text-gray-600 hover:text-primary">Site Map</Link>
             </div>
           </div>
           

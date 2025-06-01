@@ -148,6 +148,8 @@ import ContactPage from "@/pages/contact";
 import CommunityGuidelines from "@/pages/community-guidelines";
 import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
+import { SiteMap } from "@/components/layout/SiteMap";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 
 
@@ -198,6 +200,7 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/community-guidelines" component={CommunityGuidelines} />
       <Route path="/remove-ads" component={RemoveAdsPage} />
+      <Route path="/sitemap" component={SiteMap} />
       <Route path="/api-test" component={ApiTestPage} />
       
       {/* Protected routes - require authentication */}
@@ -290,6 +293,7 @@ function App() {
                         <div className="flex flex-col min-h-screen">
                           <OptimizedNavigation />
                           <MarketplaceNavWrapper />
+                          <Breadcrumbs />
                           
                           {/* New Section Above Main - Only show on marketplace pages */}
                           <MarketplacePromoSection />
