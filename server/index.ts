@@ -70,6 +70,18 @@ app.get('/logo-512.png', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/logo-512.png'));
 });
 
+app.get('/favicon-16x16.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/favicon-16x16.png'));
+});
+
+app.get('/favicon-32x32.png', (req, res) => {
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, '../public/favicon-32x32.png'));
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
