@@ -35,6 +35,7 @@ import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
 import { setupWebSocket } from "./websocket-handler";
+import { sendContactEmail } from "./email-service";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -365,6 +366,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       return res.status(500).json({ message: 'Failed to update notifications' });
+    }
+  });
+  
+  // Contact form submission endpoint
+  app.post('/api/contact', async (req: Request, res: Response) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      
+      // Basic validation
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Invalid email address' });
+      }
+      
+      // Store submission
+      const submission: ContactFormSubmission = {
+        id: submissionId++,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        subject: subject.trim(),
+        message: message.trim(),
+        submittedAt: new Date(),
+        status: 'new'
+      };
+      
+      contactSubmissions.push(submission);
+      
+      // Send email using Brevo
+      const emailSent = await sendContactEmail({
+        name: submission.name,
+        email: submission.email,
+        subject: submission.subject,
+        message: submission.message
+      });
+      
+      if (emailSent) {
+        return res.json({ 
+          success: true, 
+          message: 'Your message has been sent successfully. We\'ll get back to you soon!' 
+        });
+      } else {
+        return res.status(500).json({ 
+          message: 'There was an issue sending your message. Please try again or contact us directly.' 
+        });
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      return res.status(500).json({ 
+        message: 'An error occurred while processing your request. Please try again later.' 
+      });
     }
   });
   

@@ -31,21 +31,36 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // Here you would typically send the form data to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you within 24 hours.",
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: ""
-      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Message sent successfully!",
+          description: result.message || "We'll get back to you soon!",
+        });
+        
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: ""
+        });
+      } else {
+        toast({
+          title: "Failed to send message",
+          description: result.message || "Please try again or contact us directly.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error sending message",
