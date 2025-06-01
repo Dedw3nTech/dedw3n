@@ -63,7 +63,7 @@ export default function OptimizedNavigation() {
   const mainNavItems = [
     {
       title: "Marketplace",
-      href: "/products",
+      href: "/marketplace/b2c",
       icon: Store,
       isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
     },
