@@ -18,6 +18,13 @@ export default function Partnerships() {
       website: "https://paypal.com",
       integration: "Secondary Payment Gateway"
     },
+    {
+      name: "Pawapay",
+      category: "Payment Processing",
+      description: "Mobile payment platform enabling seamless transactions across Africa",
+      website: "https://pawapay.co.uk",
+      integration: "Mobile Payment Gateway for Africa"
+    },
 
     {
       name: "Neon Database",
