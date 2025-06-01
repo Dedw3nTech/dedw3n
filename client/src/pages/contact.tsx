@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -203,19 +204,31 @@ export default function Contact() {
                 <div>
                   <h4 className="font-semibold mb-2">How do I create an account?</h4>
                   <p className="text-sm text-gray-600">
-                    Click the "Sign Up" button in the top right corner and follow the registration process.
+                    Visit our <Link href="/register" className="text-blue-600 hover:underline">user registration page</Link> to create your account and start exploring our platform features.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">How do I list a product?</h4>
                   <p className="text-sm text-gray-600">
-                    Navigate to the Marketplace, click "Sell" and follow the product listing wizard.
+                    Go to our <Link href="/products" className="text-blue-600 hover:underline">marketplace section</Link> where you can browse products and access seller tools to list your items.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">How do I connect with others?</h4>
+                  <p className="text-sm text-gray-600">
+                    Explore our <Link href="/wall" className="text-blue-600 hover:underline">community platform</Link> to connect with other users, share experiences, and build your network.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">What dating features are available?</h4>
+                  <p className="text-sm text-gray-600">
+                    Discover meaningful connections through our <Link href="/dating" className="text-blue-600 hover:underline">dating platform</Link> with advanced matching and communication features.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Is my payment information secure?</h4>
                   <p className="text-sm text-gray-600">
-                    Yes, we use industry-standard encryption and never store your payment details.
+                    Yes, we use industry-standard encryption and never store your payment details directly on our servers.
                   </p>
                 </div>
               </CardContent>
