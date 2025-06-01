@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/layout/PageHeader";
@@ -69,6 +70,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export default function WallPage() {
+  usePageTitle({ title: 'Wall' });
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
