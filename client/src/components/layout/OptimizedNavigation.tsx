@@ -69,9 +69,9 @@ export default function OptimizedNavigation() {
     },
     {
       title: "Community",
-      href: "/wall",
+      href: "/community",
       icon: Users,
-      isActive: location.startsWith("/wall") || location.startsWith("/social") || location.startsWith("/communities"),
+      isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
     },
     {
       title: "Dating",
