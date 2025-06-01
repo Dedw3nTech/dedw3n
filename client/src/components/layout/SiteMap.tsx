@@ -12,7 +12,7 @@ export function SiteMap() {
     "User Account": [
       { name: "Login", path: "/login", description: "Sign in to your account" },
       { name: "Register", path: "/register", description: "Create a new account" },
-      { name: "Profile", path: "/profile", description: "Manage your profile settings" },
+      { name: "Profile Settings", path: "/profile-settings", description: "Manage your profile settings" },
       { name: "Messages", path: "/messages", description: "View your conversations" },
       { name: "Notifications", path: "/notifications", description: "Check your notifications" }
     ],
