@@ -134,38 +134,8 @@ export default function OptimizedNavigation() {
             ))}
           </nav>
 
-          {/* Right side - Quick access and user menu */}
+          {/* Right side - User menu only */}
           <div className="flex items-center space-x-2">
-            {/* Search */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 w-9 p-0"
-              onClick={() => {
-                // Toggle search functionality
-                console.log("Search clicked");
-              }}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-
-            {/* Quick access items for logged in users */}
-            {quickAccessItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0">
-                  <item.icon className="h-4 w-4" />
-                  {(item.count || 0) > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
-                    >
-                      {(item.count || 0) > 99 ? "99+" : item.count}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-            ))}
-
             {/* User menu or login */}
             {isLoggedIn ? (
               <UserMenu />
