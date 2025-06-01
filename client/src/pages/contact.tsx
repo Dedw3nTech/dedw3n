@@ -174,7 +174,7 @@ export default function Contact() {
                   <div className="space-y-2">
                     <Label htmlFor="title-upload" className="flex items-center gap-2">
                       <Upload className="h-4 w-4" />
-                      Text Upload file
+                      Upload File
                     </Label>
                     <Input
                       id="title-upload"
@@ -194,7 +194,7 @@ export default function Contact() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full"
+                  className="w-full bg-black hover:bg-gray-800 text-white"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Sending..." : "Send Message"}
