@@ -141,6 +141,7 @@ import LikedPage from "@/pages/liked";
 // Import footer pages
 import FAQPage from "@/pages/faq";
 import ShippingPage from "@/pages/shipping";
+import PartnershipsPage from "@/pages/partnerships";
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
 import CookiesPage from "@/pages/cookies";
@@ -195,6 +196,7 @@ function Router() {
       {/* Footer pages - publicly accessible */}
       <Route path="/faq" component={FAQPage} />
       <Route path="/shipping" component={ShippingPage} />
+      <Route path="/partnerships" component={PartnershipsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/cookies" component={CookiesPage} />
