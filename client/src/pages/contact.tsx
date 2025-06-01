@@ -217,7 +217,7 @@ export default function Contact() {
                   <Mail className="h-6 w-6 text-primary mt-1" />
                   <div>
                     <h3 className="font-semibold">Email</h3>
-                    <p className="text-gray-600">help@dedw3n.com</p>
+                    <a href="mailto:help@dedw3n.com" className="text-blue-600 hover:underline">help@dedw3n.com</a>
                   </div>
                 </div>
 
