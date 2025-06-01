@@ -36,6 +36,7 @@ import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
+import { upload } from "./multer-config";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -369,10 +370,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Contact form submission endpoint
-  app.post('/api/contact', async (req: Request, res: Response) => {
+  // Contact form submission endpoint with file upload support
+  app.post('/api/contact', upload.fields([
+    { name: 'titleUpload', maxCount: 1 },
+    { name: 'textUpload', maxCount: 1 }
+  ]), async (req: Request, res: Response) => {
     try {
       const { name, email, subject, message } = req.body;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       // Basic validation
       if (!name || !email || !subject || !message) {
@@ -383,6 +388,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({ message: 'Invalid email address' });
+      }
+      
+      // Process uploaded files
+      let titleFileInfo = null;
+      let textFileInfo = null;
+      
+      if (files?.titleUpload?.[0]) {
+        const file = files.titleUpload[0];
+        titleFileInfo = {
+          originalName: file.originalname,
+          filename: file.filename,
+          size: file.size,
+          mimetype: file.mimetype,
+          path: file.path
+        };
+      }
+      
+      if (files?.textUpload?.[0]) {
+        const file = files.textUpload[0];
+        textFileInfo = {
+          originalName: file.originalname,
+          filename: file.filename,
+          size: file.size,
+          mimetype: file.mimetype,
+          path: file.path
+        };
       }
       
       // Store submission
@@ -398,18 +429,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       contactSubmissions.push(submission);
       
+      // Create enhanced email content with file information
+      let emailMessage = message.trim();
+      if (titleFileInfo || textFileInfo) {
+        emailMessage += '\n\n--- Attached Files ---\n';
+        if (titleFileInfo) {
+          emailMessage += `Title Upload: ${titleFileInfo.originalName} (${(titleFileInfo.size / 1024).toFixed(2)} KB)\n`;
+        }
+        if (textFileInfo) {
+          emailMessage += `Text Upload: ${textFileInfo.originalName} (${(textFileInfo.size / 1024).toFixed(2)} KB)\n`;
+        }
+      }
+      
       // Send email using Brevo
       const emailSent = await sendContactEmail({
         name: submission.name,
         email: submission.email,
         subject: submission.subject,
-        message: submission.message
+        message: emailMessage
       });
       
       if (emailSent) {
         return res.json({ 
           success: true, 
-          message: 'Your message has been sent successfully. We\'ll get back to you soon!' 
+          message: 'Your message has been sent successfully. We\'ll get back to you soon!',
+          filesUploaded: {
+            titleUpload: titleFileInfo ? titleFileInfo.originalName : null,
+            textUpload: textFileInfo ? textFileInfo.originalName : null
+          }
         });
       } else {
         return res.status(500).json({ 
