@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, Loader2, RefreshCw, Star, Zap, TrendingUp } from "lucide-react";
+import { Users, Loader2, RefreshCw, Star, Zap, TrendingUp, MessageCircle, Video, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import { Container } from "@/components/ui/container";
@@ -17,6 +17,7 @@ import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
+import { useLocation } from "wouter";
 
 interface Post {
   id: number;
