@@ -35,7 +35,7 @@ import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import { registerMessageRoutes } from "./message-routes";
 import { setupWebSocket } from "./websocket-handler";
-import { sendContactEmail } from "./email-service";
+import { sendContactEmail, setBrevoApiKey } from "./email-service";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -421,6 +421,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ 
         message: 'An error occurred while processing your request. Please try again later.' 
       });
+    }
+  });
+  
+  // Configure Brevo API key
+  app.post('/api/brevo/configure', async (req: Request, res: Response) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ message: 'API key is required' });
+      }
+      
+      const success = setBrevoApiKey(apiKey.trim());
+      
+      if (success) {
+        return res.json({ success: true, message: 'Brevo API key configured successfully' });
+      } else {
+        return res.status(400).json({ message: 'Invalid API key format' });
+      }
+    } catch (error) {
+      console.error('Error configuring Brevo API key:', error);
+      return res.status(500).json({ message: 'Failed to configure API key' });
     }
   });
   

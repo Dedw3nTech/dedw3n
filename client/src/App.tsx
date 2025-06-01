@@ -148,6 +148,7 @@ import ContactPage from "@/pages/contact";
 import CommunityGuidelines from "@/pages/community-guidelines";
 import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
+import AdminEmail from "@/pages/admin-email";
 import { SiteMap } from "@/components/layout/SiteMap";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 

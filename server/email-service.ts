@@ -1,11 +1,28 @@
 import * as brevo from '@getbrevo/brevo';
 
-if (!process.env.BREVO_API_KEY) {
-  throw new Error("BREVO_API_KEY environment variable must be set");
+let apiInstance: brevo.TransactionalEmailsApi | null = null;
+let brevoApiKey: string | null = process.env.BREVO_API_KEY || null;
+
+function initializeBrevo(apiKey: string) {
+  brevoApiKey = apiKey;
+  apiInstance = new brevo.TransactionalEmailsApi();
+  apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
 }
 
-const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+// Initialize if API key is available
+if (brevoApiKey) {
+  initializeBrevo(brevoApiKey);
+}
+
+export function setBrevoApiKey(apiKey: string): boolean {
+  try {
+    initializeBrevo(apiKey);
+    return true;
+  } catch (error) {
+    console.error('Failed to initialize Brevo:', error);
+    return false;
+  }
+}
 
 interface ContactFormData {
   name: string;
@@ -15,6 +32,11 @@ interface ContactFormData {
 }
 
 export async function sendContactEmail(formData: ContactFormData): Promise<boolean> {
+  if (!apiInstance || !brevoApiKey) {
+    console.log('Brevo API not configured - email functionality disabled');
+    return false;
+  }
+
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     
