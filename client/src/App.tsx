@@ -199,6 +199,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/admin/email" component={AdminEmail} />
       <Route path="/community-guidelines" component={CommunityGuidelines} />
       <Route path="/remove-ads" component={RemoveAdsPage} />
       <Route path="/sitemap" component={SiteMap} />
