@@ -113,28 +113,27 @@ export default function OptimizedNavigation() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <Logo />
           </div>
 
-          {/* Main Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {mainNavItems.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className={cn(
-                  "flex h-10 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md",
-                  item.isActive && "bg-gray-100 text-primary"
-                )}
-              >
-                {item.title}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Right side - User menu only */}
+          {/* Right side - Navigation and User menu */}
           <div className="flex items-center space-x-1">
+            {/* Main Navigation */}
+            <nav className="hidden md:flex items-center space-x-1 mr-2">
+              {mainNavItems.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={cn(
+                    "flex h-10 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md",
+                    item.isActive && "bg-gray-100 text-primary"
+                  )}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
             {/* User menu or login */}
             {isLoggedIn ? (
               <UserMenu />
