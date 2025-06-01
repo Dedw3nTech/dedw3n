@@ -95,7 +95,7 @@ export default function Partnerships() {
         <div className="bg-white rounded-lg shadow-md p-8 mt-12">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Partnership Opportunities</h2>
           <p className="text-gray-600 mb-6">
-            We're always looking to partner with innovative technology companies that share our vision 
+            We're always looking to partner with innovative companies that share our vision 
             of creating the best marketplace experience. If you're interested in becoming a technology 
             partner or have a service that could benefit our platform, we'd love to hear from you.
           </p>
