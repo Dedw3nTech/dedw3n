@@ -52,6 +52,8 @@ import { useToast } from '@/hooks/use-toast';
 
 
 export default function Products() {
+  usePageTitle({ title: 'Products' });
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
