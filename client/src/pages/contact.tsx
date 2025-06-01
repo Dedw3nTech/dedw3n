@@ -175,9 +175,9 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold">Address</h3>
                     <p className="text-gray-600">
-                      123 Business Ave<br />
-                      Suite 100<br />
-                      New York, NY 10001
+                      50 Essex Street<br />
+                      London, England<br />
+                      WC2R 3JF
                     </p>
                   </div>
                 </div>
@@ -187,9 +187,7 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold">Business Hours</h3>
                     <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 6:00 PM EST<br />
-                      Saturday: 10:00 AM - 4:00 PM EST<br />
-                      Sunday: Closed
+                      Open 24 hours
                     </p>
                   </div>
                 </div>
