@@ -189,24 +189,7 @@ export default function Contact() {
                       </p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="text-upload" className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      Text Upload file
-                    </Label>
-                    <Input
-                      id="text-upload"
-                      type="file"
-                      onChange={(e) => handleFileChange(e, 'text')}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                      className="cursor-pointer"
-                    />
-                    {textUpload && (
-                      <p className="text-sm text-gray-600">
-                        Selected: {textUpload.name}
-                      </p>
-                    )}
-                  </div>
+
                 </div>
                 
                 <Button 
