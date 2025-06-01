@@ -116,7 +116,7 @@ export default function Partnerships() {
         </div>
 
         <div className="bg-gray-100 rounded-lg p-6 mt-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Security & Compliance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Disclaimer</h3>
           <p className="text-gray-600 text-sm">
             All our technology partners are carefully vetted for security, reliability, and compliance standards. 
             We ensure that every integration meets our strict requirements for data protection, privacy, and 
