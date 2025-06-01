@@ -128,14 +128,13 @@ export default function OptimizedNavigation() {
                   item.isActive && "bg-gray-100 text-primary"
                 )}
               >
-                <item.icon className="mr-2 h-4 w-4" />
                 {item.title}
               </Link>
             ))}
           </nav>
 
           {/* Right side - User menu only */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {/* User menu or login */}
             {isLoggedIn ? (
               <UserMenu />
