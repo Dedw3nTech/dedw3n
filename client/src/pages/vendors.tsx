@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Vendor } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { 

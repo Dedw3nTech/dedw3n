@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Heart, Gift, MessageCircle, User, Users, X, Search, SlidersHorizontal, MapPin, Calendar, ChevronDown, Share2, Plus, Flag } from "lucide-react";
 import { useCurrency, currencies, type Currency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
