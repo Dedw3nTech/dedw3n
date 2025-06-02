@@ -29,6 +29,10 @@ import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
 import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
 import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
 
+// Dating-specific promotional images (separate from marketplace images)
+import datingHeaderImage from "@assets/Dedw3n Business B2C Header (1).png"; // Using existing image as placeholder
+import datingFooterImage from "@assets/Dedw3n Business B2C Footer.png"; // Using existing image as placeholder
+
 // Market-specific promotional images - each market type has its own separate images
 const marketPromoImages = {
   b2c: {
@@ -43,6 +47,12 @@ const marketPromoImages = {
     top: c2cHeaderImage, // Currently: Dedw3n Business C2c header.png (diverse marketplace community with Dedw3n branding)
     bottom: c2cFooterImage, // Currently: Dedw3n Business C2C Footer.png (professional C2C marketplace scene with Dedw3n branding)
   },
+};
+
+// Dating-specific promotional images (completely separate from marketplace images)
+const datingPromoImages = {
+  header: datingHeaderImage, // Top header advertisement for dating page
+  footer: datingFooterImage, // Bottom footer advertisement for dating page
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -302,11 +312,17 @@ function App() {
                           {/* New Section Above Main - Only show on marketplace pages */}
                           <MarketplacePromoSection />
                           
+                          {/* Dating Header Advertisement - Only show on dating page */}
+                          <DatingHeaderPromoSection />
+                          
                           <main className="flex-grow">
                             <ApiErrorBoundary showHomeButton={false}>
                               <Router />
                             </ApiErrorBoundary>
                           </main>
+                          
+                          {/* Dating Footer Advertisement - Only show on dating page */}
+                          <DatingFooterPromoSection />
                           
                           {/* New Section Below Main - Only show on marketplace pages */}
                           <MarketplaceBottomPromoSection />
@@ -375,6 +391,45 @@ function MarketplaceBottomPromoSection() {
       <img 
         src={currentBottomPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
+        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+      />
+    </div>
+  );
+}
+
+// Dating-specific advertisement components (separate from marketplace)
+function DatingHeaderPromoSection() {
+  const [location] = useLocation();
+  
+  // Only show on dating page
+  const isDatingPage = location === "/dating";
+  
+  if (!isDatingPage) return null;
+  
+  return (
+    <div className="w-full" key="dating-header-promo">
+      <img 
+        src={datingPromoImages.header}
+        alt="Dedwen Dating - Find Your Perfect Match"
+        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+      />
+    </div>
+  );
+}
+
+function DatingFooterPromoSection() {
+  const [location] = useLocation();
+  
+  // Only show on dating page
+  const isDatingPage = location === "/dating";
+  
+  if (!isDatingPage) return null;
+  
+  return (
+    <div className="w-full" key="dating-footer-promo">
+      <img 
+        src={datingPromoImages.footer}
+        alt="Dedwen Dating - Premium Dating Experience"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
       />
     </div>
