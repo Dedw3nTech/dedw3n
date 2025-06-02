@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -141,15 +142,27 @@ export default function Contact() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    name="subject"
-                    type="text"
-                    placeholder="Subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
+                  <Select 
+                    value={formData.subject} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
                     required
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Marketplace">Marketplace</SelectItem>
+                      <SelectItem value="Community">Community</SelectItem>
+                      <SelectItem value="Dating">Dating</SelectItem>
+                      <SelectItem value="Shipping">Shipping</SelectItem>
+                      <SelectItem value="Payments">Payments</SelectItem>
+                      <SelectItem value="Complaints">Complaints</SelectItem>
+                      <SelectItem value="Legal">Legal</SelectItem>
+                      <SelectItem value="Advertisement">Advertisement</SelectItem>
+                      <SelectItem value="Partnership">Partnership</SelectItem>
+                      <SelectItem value="Tip">Tip</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
