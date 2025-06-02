@@ -30,7 +30,7 @@ import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
 import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
 
 // Dating-specific promotional images (separate from marketplace images)
-import datingHeaderImage from "@assets/Dedw3n Business B2C Header (1).png"; // Using existing image as placeholder
+import datingHeaderImage from "@assets/_Dedw3n Dating Header.png"; // Dating-specific header image
 import datingFooterImage from "@assets/Dedw3n Business B2C Footer.png"; // Using existing image as placeholder
 
 // Market-specific promotional images - each market type has its own separate images
