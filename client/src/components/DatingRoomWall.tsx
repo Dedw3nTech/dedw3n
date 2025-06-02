@@ -152,12 +152,7 @@ export function DatingRoomWall({ children }: DatingRoomWallProps) {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Dating Experience</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Select the perfect room for your dating journey. Each tier offers unique features to help you find your perfect match.
-        </p>
-      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {rooms.map((room) => {
