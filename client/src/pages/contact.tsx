@@ -101,9 +101,6 @@ export default function Contact() {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Have questions about Dedw3n? We're here to help. Send us a message and we'll respond as soon as possible.
-          </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-12">
