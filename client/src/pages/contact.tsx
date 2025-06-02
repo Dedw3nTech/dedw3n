@@ -160,6 +160,7 @@ export default function Contact() {
                       <SelectItem value="Legal">Legal</SelectItem>
                       <SelectItem value="Advertisement">Advertisement</SelectItem>
                       <SelectItem value="Partnership">Partnership</SelectItem>
+                      <SelectItem value="Technical Issues">Technical Issues</SelectItem>
                       <SelectItem value="Tip">Tip</SelectItem>
                     </SelectContent>
                   </Select>
