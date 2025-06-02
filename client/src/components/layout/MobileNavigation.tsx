@@ -40,13 +40,14 @@ export default function MobileNavigation() {
               </button>
             </Link>
             
-            <button
-              className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-blue-500" : "text-gray-500"}`}
-              onClick={() => handleViewChange("social")}
-            >
-              <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-blue-500" : ""}`}></i>
-              <span className="text-xs font-medium">Community</span>
-            </button>
+            <Link href="/community">
+              <button
+                className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-blue-500" : "text-gray-500"}`}
+              >
+                <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-blue-500" : ""}`}></i>
+                <span className="text-xs font-medium">Community</span>
+              </button>
+            </Link>
 
             <Link href="/dating">
               <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
