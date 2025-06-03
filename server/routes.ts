@@ -3549,6 +3549,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
+  // User language preference endpoints
+  app.get('/api/user/language', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({ 
+        language: user.preferredLanguage || 'EN',
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching user language:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/user/language', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { language } = req.body;
+      if (!language || typeof language !== 'string') {
+        return res.status(400).json({ message: 'Valid language code required' });
+      }
+
+      // Validate language code against supported languages
+      const supportedLanguages = ['EN', 'ES', 'FR', 'DE', 'IT', 'PT', 'RU', 'JA', 'ZH', 'KO', 'NL', 'PL', 'SV', 'DA', 'FI', 'NO', 'CS', 'HU', 'TR', 'AR', 'HI'];
+      if (!supportedLanguages.includes(language)) {
+        return res.status(400).json({ message: 'Unsupported language code' });
+      }
+
+      await db.update(users)
+        .set({ preferredLanguage: language })
+        .where(eq(users.id, userId));
+
+      res.json({ 
+        language,
+        success: true,
+        message: 'Language preference updated successfully' 
+      });
+    } catch (error) {
+      console.error('Error updating user language:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // DeepL Translation API endpoint with rate limiting
   app.post('/api/translate', async (req: Request, res: Response) => {
     try {

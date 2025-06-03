@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
 import UserMenu from "@/components/ui/user-menu";
 import { CurrencySelector } from "@/components/ui/currency-selector";
-import { LanguageSelector } from "@/components/ui/language-selector";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export default function OptimizedNavigation() {
   const [location] = useLocation();
@@ -147,7 +147,7 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Language Selector next to profile */}
                 <div className="hidden md:block">
-                  <LanguageSelector />
+                  <LanguageSwitcher variant="compact" />
                 </div>
                 <UserMenu />
               </div>
@@ -155,7 +155,7 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Language Selector for non-logged in users */}
                 <div className="hidden md:block">
-                  <LanguageSelector />
+                  <LanguageSwitcher variant="compact" />
                 </div>
                 <Link href="/login">
                   <Button variant="ghost" size="sm">
