@@ -37,6 +37,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
 import UserMenu from "@/components/ui/user-menu";
+import { CurrencySelector } from "@/components/ui/currency-selector";
 
 export default function OptimizedNavigation() {
   const [location] = useLocation();
@@ -117,8 +118,13 @@ export default function OptimizedNavigation() {
             <Logo />
           </div>
 
-          {/* Right side - Navigation and User menu */}
+          {/* Right side - Currency selector, Navigation and User menu */}
           <div className="flex items-center space-x-1">
+            {/* Currency Selector */}
+            <div className="hidden md:block mr-2">
+              <CurrencySelector />
+            </div>
+            
             {/* Main Navigation */}
             <nav className="hidden md:flex items-center space-x-1 mr-2">
               {mainNavItems.map((item) => (
@@ -164,6 +170,11 @@ export default function OptimizedNavigation() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                {/* Currency Selector for Mobile */}
+                <div className="p-2 border-b">
+                  <CurrencySelector />
+                </div>
+                
                 {mainNavItems.map((item) => (
                   <DropdownMenuItem key={item.title} asChild>
                     <Link href={item.href} className="flex items-center">

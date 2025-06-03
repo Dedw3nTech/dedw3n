@@ -5,12 +5,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
-import { useCurrency } from "@/hooks/use-currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
-import { convertCurrency, formatPriceWithCurrency, CurrencyCode } from "@/lib/currencyConverter";
 import { Product } from "@shared/schema";
 
 import {
@@ -37,16 +36,8 @@ export default function Home() {
   const { setView } = useView();
   const { user } = useAuth();
   const { setMarketType } = useMarketType();
-  const { currency } = useCurrency();
+  const { selectedCurrency, formatPrice } = useCurrency();
   const [, setLocation] = useLocation();
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
-  const [convertedPrices, setConvertedPrices] = useState<Record<number, number>>({});
-  const [convertedDiscountPrices, setConvertedDiscountPrices] = useState<Record<number, number>>({});
-  const [isConverting, setIsConverting] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
-  
-  // List of supported currencies
-  const supportedCurrencies: CurrencyCode[] = ['GBP', 'USD', 'EUR', 'CNY', 'INR', 'BRL'];
   
   // Set page title
   usePageTitle({ title: 'Home' });
