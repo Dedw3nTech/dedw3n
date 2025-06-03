@@ -50,7 +50,7 @@ export function useTranslatedText(originalText: string): string {
   const [translatedText, setTranslatedText] = useState(originalText);
 
   useEffect(() => {
-    if (selectedLanguage.code === 'EN' || !originalText.trim()) {
+    if (selectedLanguage.code === 'EN' || selectedLanguage.code === 'en' || !originalText.trim()) {
       setTranslatedText(originalText);
       return;
     }
