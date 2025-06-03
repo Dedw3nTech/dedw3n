@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Eye, Star, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Product {
   id: number;
@@ -18,6 +19,7 @@ interface Product {
 }
 
 export function LatestProductsCard() {
+  const { formatPrice } = useCurrency();
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products'],
     retry: false,
@@ -79,7 +81,7 @@ export function LatestProductsCard() {
                   
                   <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 mt-1 flex-wrap">
                     <span className="font-normal text-blue-600 whitespace-nowrap" style={{ fontSize: '12px' }}>
-                      ${product.price}
+                      {formatPrice(product.price)}
                     </span>
                     {product.rating && (
                       <div className="flex items-center gap-1">
