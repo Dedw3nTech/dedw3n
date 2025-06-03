@@ -88,48 +88,7 @@ export default function Home() {
     },
   });
   
-  // Effect to handle currency conversion when currency changes
-  useEffect(() => {
-    if (selectedCurrency === 'GBP' || (!featuredProducts?.length && !newProducts?.length)) {
-      setConvertedPrices({});
-      setConvertedDiscountPrices({});
-      return;
-    }
 
-    const allProducts = [...(featuredProducts || []), ...(newProducts || [])];
-    // Remove duplicates
-    const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.id, p])).values());
-    
-    const convertAllPrices = async () => {
-      try {
-        setIsConverting(true);
-        
-        const newConvertedPrices: Record<number, number> = {};
-        const newConvertedDiscountPrices: Record<number, number> = {};
-        
-        for (const product of uniqueProducts) {
-          // Convert main price
-          const newPrice = await convertCurrency(product.price, 'GBP', selectedCurrency);
-          newConvertedPrices[product.id] = newPrice;
-          
-          // Convert discount price if it exists
-          if (product.discountPrice && product.discountPrice < product.price) {
-            const newDiscountPrice = await convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
-            newConvertedDiscountPrices[product.id] = newDiscountPrice;
-          }
-        }
-        
-        setConvertedPrices(newConvertedPrices);
-        setConvertedDiscountPrices(newConvertedDiscountPrices);
-      } catch (error) {
-        console.error('Error converting currencies:', error);
-      } finally {
-        setIsConverting(false);
-      }
-    };
-    
-    convertAllPrices();
-  }, [selectedCurrency, featuredProducts, newProducts]);
 
   // Render product card
   const { toast } = useToast();
@@ -182,21 +141,7 @@ export default function Home() {
               <div className="font-bold">{formatPrice(product.price)}</div>
             )}
             
-            {/* Converted price display */}
-            {selectedCurrency !== 'GBP' && convertedPrices[product.id] && (
-              <div className="text-xs text-gray-600 mt-1">
-                {product.discountPrice && convertedDiscountPrices[product.id] ? (
-                  <div className="flex items-center">
-                    <span>{formatPriceWithCurrency(convertedDiscountPrices[product.id], selectedCurrency)}</span>
-                    <span className="ml-1 text-gray-400 line-through">
-                      {formatPriceWithCurrency(convertedPrices[product.id], selectedCurrency)}
-                    </span>
-                  </div>
-                ) : (
-                  <span>{formatPriceWithCurrency(convertedPrices[product.id], selectedCurrency)}</span>
-                )}
-              </div>
-            )}
+
           </div>
           <div className="flex space-x-2">
             <DropdownMenu>
@@ -257,18 +202,15 @@ export default function Home() {
           </div>
         </div>
         
-        {isConverting && (
-          <div className="w-full flex justify-center mt-2">
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-          </div>
-        )}
+
       </CardFooter>
     </Card>
   );
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="bg-black text-white rounded-xl p-8 shadow-lg">
+    <div className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <div className="bg-black text-white rounded-xl p-8 shadow-lg mb-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-center">Welcome to Dedw3n</h1>
           <p className="text-xl mb-10 text-center">
@@ -293,6 +235,33 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Featured Products Section */}
+      {featuredProducts.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Featured Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredProducts.map(renderProductCard)}
+          </div>
+        </div>
+      )}
+
+      {/* New Products Section */}
+      {newProducts.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">New Products</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {newProducts.map(renderProductCard)}
+          </div>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {(featuredLoading || newProductsLoading) && (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
