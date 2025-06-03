@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { TranslatedText } from "@/hooks/use-translated-text";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -137,7 +138,7 @@ export default function OptimizedNavigation() {
                     item.isActive && "bg-gray-100 text-primary"
                   )}
                 >
-                  {item.title}
+                  <TranslatedText>{item.title}</TranslatedText>
                 </Link>
               ))}
             </nav>
@@ -158,12 +159,12 @@ export default function OptimizedNavigation() {
                 </div>
                 <Link href="/login">
                   <Button variant="ghost" size="sm">
-                    Sign In
+                    <TranslatedText>Sign In</TranslatedText>
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button size="sm">
-                    Sign Up
+                    <TranslatedText>Sign Up</TranslatedText>
                   </Button>
                 </Link>
               </div>
