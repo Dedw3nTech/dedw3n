@@ -219,7 +219,7 @@ export default function Home() {
               className="px-8 bg-white/10 border-white/20 text-white hover:bg-white/20"
             >
               <Store className="mr-2 h-5 w-5" />
-              Become a Vendor
+              <TranslatedText>Become a Vendor</TranslatedText>
             </Button>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Market Type Selection */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Choose Your Market</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center"><TranslatedText>Choose Your Market</TranslatedText></h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -240,8 +240,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Store className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                <h3 className="text-xl font-bold mb-2">Business to Consumer</h3>
-                <p className="text-gray-600">Shop from businesses selling directly to customers</p>
+                <h3 className="text-xl font-bold mb-2"><TranslatedText>Business to Consumer</TranslatedText></h3>
+                <p className="text-gray-600"><TranslatedText>Shop from businesses selling directly to customers</TranslatedText></p>
               </CardContent>
             </Card>
             
@@ -254,8 +254,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Building className="h-12 w-12 mx-auto mb-4 text-green-600" />
-                <h3 className="text-xl font-bold mb-2">Business to Business</h3>
-                <p className="text-gray-600">Wholesale and bulk purchasing for businesses</p>
+                <h3 className="text-xl font-bold mb-2"><TranslatedText>Business to Business</TranslatedText></h3>
+                <p className="text-gray-600"><TranslatedText>Wholesale and bulk purchasing for businesses</TranslatedText></p>
               </CardContent>
             </Card>
             
@@ -268,8 +268,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Users className="h-12 w-12 mx-auto mb-4 text-purple-600" />
-                <h3 className="text-xl font-bold mb-2">Consumer to Consumer</h3>
-                <p className="text-gray-600">Buy and sell between individual users</p>
+                <h3 className="text-xl font-bold mb-2"><TranslatedText>Consumer to Consumer</TranslatedText></h3>
+                <p className="text-gray-600"><TranslatedText>Buy and sell between individual users</TranslatedText></p>
               </CardContent>
             </Card>
           </div>
@@ -287,7 +287,7 @@ export default function Home() {
         {!isLoading && featuredProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Featured Products</h2>
+              <h2 className="text-2xl font-bold"><TranslatedText>Featured Products</TranslatedText></h2>
               <Button 
                 variant="outline"
                 onClick={() => setLocation('/products')}
