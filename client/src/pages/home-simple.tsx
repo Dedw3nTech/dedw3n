@@ -292,7 +292,7 @@ export default function Home() {
                 variant="outline"
                 onClick={() => setLocation('/products')}
               >
-                View All
+                <TranslatedText>View All</TranslatedText>
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -310,7 +310,7 @@ export default function Home() {
                 variant="outline"
                 onClick={() => setLocation('/products')}
               >
-                View All
+                <TranslatedText>View All</TranslatedText>
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -322,7 +322,7 @@ export default function Home() {
         {/* Categories */}
         {!isLoading && categories.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
+            <h2 className="text-2xl font-bold mb-6"><TranslatedText>Shop by Category</TranslatedText></h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((category) => (
                 <Card 
