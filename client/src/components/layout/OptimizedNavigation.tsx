@@ -119,16 +119,11 @@ export default function OptimizedNavigation() {
             <Logo />
           </div>
 
-          {/* Right side - Currency selector, Language selector, Navigation and User menu */}
+          {/* Right side - Currency selector, Navigation and User menu */}
           <div className="flex items-center space-x-1">
             {/* Currency Selector */}
-            <div className="hidden md:block mr-1">
-              <CurrencySelector />
-            </div>
-            
-            {/* Language Selector */}
             <div className="hidden md:block mr-2">
-              <LanguageSelector />
+              <CurrencySelector />
             </div>
             
             {/* Main Navigation */}
@@ -148,9 +143,19 @@ export default function OptimizedNavigation() {
             </nav>
             {/* User menu or login */}
             {isLoggedIn ? (
-              <UserMenu />
+              <div className="flex items-center space-x-2">
+                {/* Language Selector next to profile */}
+                <div className="hidden md:block">
+                  <LanguageSelector />
+                </div>
+                <UserMenu />
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
+                {/* Language Selector for non-logged in users */}
+                <div className="hidden md:block">
+                  <LanguageSelector />
+                </div>
                 <Link href="/login">
                   <Button variant="ghost" size="sm">
                     Sign In
