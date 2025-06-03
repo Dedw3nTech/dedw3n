@@ -48,9 +48,15 @@ const processTranslationQueue = async () => {
 export function useTranslatedText(originalText: string): string {
   const { selectedLanguage } = useLanguage();
   const [translatedText, setTranslatedText] = useState(originalText);
+  const [currentLang, setCurrentLang] = useState(selectedLanguage.code);
 
   useEffect(() => {
-    console.log(`[Translation] Text: "${originalText}", Language: ${selectedLanguage.code}`);
+    console.log(`[Translation] Text: "${originalText}", Language: ${selectedLanguage.code}, Force Update: ${currentLang !== selectedLanguage.code}`);
+    
+    // Force update when language changes
+    if (currentLang !== selectedLanguage.code) {
+      setCurrentLang(selectedLanguage.code);
+    }
     
     if (selectedLanguage.code === 'EN' || selectedLanguage.code === 'en' || !originalText.trim()) {
       console.log(`[Translation] Skipping translation for ${selectedLanguage.code}`);
@@ -84,7 +90,7 @@ export function useTranslatedText(originalText: string): string {
       setTranslatedText(translated);
     });
     processTranslationQueue();
-  }, [originalText, selectedLanguage.code]);
+  }, [originalText, selectedLanguage.code, currentLang]);
 
   return translatedText;
 }
@@ -96,7 +102,9 @@ interface TranslatedTextProps {
 }
 
 export function TranslatedText({ children, className }: TranslatedTextProps) {
+  const { selectedLanguage } = useLanguage();
   const translatedText = useTranslatedText(children);
   
-  return <span className={className}>{translatedText}</span>;
+  // Force re-render with key when language changes
+  return <span key={`${children}-${selectedLanguage.code}`} className={className}>{translatedText}</span>;
 }
