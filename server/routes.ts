@@ -3544,8 +3544,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }>();
   const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
-  // DeepL Translation API endpoint
-  app.post('/api/translate', async (req: Request, res: Response) => {
+  // Rate limiting for translation requests
+  let lastTranslationRequest = 0;
+  const TRANSLATION_RATE_LIMIT = 500; // 500ms between requests
+  const translationQueue: Array<{ req: Request; res: Response; resolve: () => void }> = [];
+  let isProcessingTranslations = false;
+
+  const processTranslationQueue = async () => {
+    if (isProcessingTranslations || translationQueue.length === 0) return;
+    
+    isProcessingTranslations = true;
+    
+    while (translationQueue.length > 0) {
+      const { req, res, resolve } = translationQueue.shift()!;
+      
+      // Ensure rate limiting
+      const now = Date.now();
+      const timeSinceLastRequest = now - lastTranslationRequest;
+      if (timeSinceLastRequest < TRANSLATION_RATE_LIMIT) {
+        await new Promise(r => setTimeout(r, TRANSLATION_RATE_LIMIT - timeSinceLastRequest));
+      }
+      
+      lastTranslationRequest = Date.now();
+      await handleTranslationRequest(req, res);
+      resolve();
+      
+      // Small delay between processing requests
+      if (translationQueue.length > 0) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+    
+    isProcessingTranslations = false;
+  };
+
+  const handleTranslationRequest = async (req: Request, res: Response) => {
     try {
       const { text, targetLanguage } = req.body;
 
@@ -3651,6 +3684,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Translation error:', error);
       res.status(500).json({ message: 'Internal server error during translation' });
     }
+  };
+
+  // DeepL Translation API endpoint with rate limiting
+  app.post('/api/translate', async (req: Request, res: Response) => {
+    return new Promise<void>((resolve) => {
+      translationQueue.push({ req, res, resolve });
+      processTranslationQueue();
+    });
   });
 
   // Set up WebSocket server for messaging

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Global cache and rate limiting
@@ -13,7 +13,7 @@ const processTranslationQueue = async () => {
   isProcessing = true;
   
   while (requestQueue.length > 0) {
-    const batch = requestQueue.splice(0, 2); // Process 2 at a time
+    const batch = requestQueue.splice(0, 3); // Process 3 at a time
     
     await Promise.all(batch.map(async ({ text, targetLang, resolve }) => {
       try {
@@ -38,24 +38,24 @@ const processTranslationQueue = async () => {
     
     // Wait between batches to respect rate limits
     if (requestQueue.length > 0) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   }
   
   isProcessing = false;
 };
 
-export function useTranslatedText(originalText: string): string {
+export function useOptimizedTranslation(text: string): string {
   const { selectedLanguage } = useLanguage();
-  const [translatedText, setTranslatedText] = useState(originalText);
+  const [translatedText, setTranslatedText] = useState(text);
 
   useEffect(() => {
-    if (selectedLanguage.code === 'EN' || !originalText.trim()) {
-      setTranslatedText(originalText);
+    if (selectedLanguage.code === 'EN' || !text.trim()) {
+      setTranslatedText(text);
       return;
     }
 
-    const cacheKey = `${originalText}:${selectedLanguage.code}`;
+    const cacheKey = `${text}:${selectedLanguage.code}`;
     
     // Check cache first
     if (translationCache.has(cacheKey)) {
@@ -66,7 +66,7 @@ export function useTranslatedText(originalText: string): string {
     // Add to queue
     const promise = new Promise<string>((resolve) => {
       requestQueue.push({
-        text: originalText,
+        text,
         targetLang: selectedLanguage.code,
         resolve
       });
@@ -74,19 +74,13 @@ export function useTranslatedText(originalText: string): string {
 
     promise.then(setTranslatedText);
     processTranslationQueue();
-  }, [originalText, selectedLanguage.code]);
+  }, [text, selectedLanguage.code]);
 
   return translatedText;
 }
 
-// Component wrapper for easy translation
-interface TranslatedTextProps {
-  children: string;
-  className?: string;
-}
-
-export function TranslatedText({ children, className }: TranslatedTextProps) {
-  const translatedText = useTranslatedText(children);
-  
-  return <span className={className}>{translatedText}</span>;
+// Simple component wrapper
+export function TranslatedText({ children }: { children: string }) {
+  const translatedText = useOptimizedTranslation(children);
+  return <>{translatedText}</>;
 }
