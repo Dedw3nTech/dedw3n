@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
@@ -37,6 +38,7 @@ export default function Home() {
   const { user } = useAuth();
   const { setMarketType } = useMarketType();
   const { formatPrice: formatCurrencyPrice } = useCurrency();
+  const { selectedLanguage } = useLanguage();
   const [, setLocation] = useLocation();
   
   // Set page title
@@ -192,7 +194,7 @@ export default function Home() {
   const isLoading = featuredLoading || newLoading || categoriesLoading;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div key={`home-${selectedLanguage.code}`} className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
@@ -332,7 +334,7 @@ export default function Home() {
                 >
                   <CardContent className="text-center p-4">
                     <Tag className="h-8 w-8 mx-auto mb-2 text-gray-600" />
-                    <p className="text-sm font-medium">{category.name}</p>
+                    <p className="text-sm font-medium"><TranslatedText>{category.name}</TranslatedText></p>
                   </CardContent>
                 </Card>
               ))}
