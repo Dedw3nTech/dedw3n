@@ -10,6 +10,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@shared/schema";
+import { TranslatedText } from "@/hooks/use-translated-text";
 
 import {
   Dialog,
@@ -196,10 +197,10 @@ export default function Home() {
       <div className="bg-gradient-to-br from-blue-600 to-purple-700 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Welcome to Dedw3n Marketplace
+            <TranslatedText>Welcome to Dedw3n Marketplace</TranslatedText>
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Discover amazing products from trusted vendors worldwide
+            <TranslatedText>Discover amazing products from trusted vendors worldwide</TranslatedText>
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -209,7 +210,7 @@ export default function Home() {
               className="px-8"
             >
               <Search className="mr-2 h-5 w-5" />
-              Browse Products
+              <TranslatedText>Browse Products</TranslatedText>
             </Button>
             <Button 
               size="lg" 

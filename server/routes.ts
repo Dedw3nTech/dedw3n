@@ -3510,6 +3510,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Language code mapping for DeepL API
+  const deeplLanguageMap: Record<string, string> = {
+    'EN': 'EN-US',
+    'ES': 'ES',
+    'FR': 'FR', 
+    'DE': 'DE',
+    'IT': 'IT',
+    'PT': 'PT-PT',
+    'RU': 'RU',
+    'JA': 'JA',
+    'ZH': 'ZH',
+    'KO': 'KO',
+    'NL': 'NL',
+    'PL': 'PL',
+    'SV': 'SV',
+    'DA': 'DA',
+    'FI': 'FI',
+    'NO': 'NB',
+    'CS': 'CS',
+    'HU': 'HU',
+    'TR': 'TR',
+    'AR': 'AR',
+    'HI': 'HI'
+  };
+
   // DeepL Translation API endpoint
   app.post('/api/translate', async (req: Request, res: Response) => {
     try {
@@ -3519,9 +3544,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Text and target language are required' });
       }
 
+      // Skip translation if target language is English
+      if (targetLanguage === 'EN' || targetLanguage === 'EN-US') {
+        return res.json({ 
+          translatedText: text,
+          detectedSourceLanguage: 'EN',
+          targetLanguage
+        });
+      }
+
       if (!process.env.DEEPL_API_KEY) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
       }
+
+      // Map our language codes to DeepL format
+      const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
 
       // DeepL API endpoint (use the free version if using free tier)
       const apiUrl = process.env.DEEPL_API_KEY.endsWith(':fx') 
@@ -3530,7 +3567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const formData = new URLSearchParams();
       formData.append('text', text);
-      formData.append('target_lang', targetLanguage);
+      formData.append('target_lang', deeplTargetLang);
       formData.append('source_lang', 'EN'); // Assuming source is always English
 
       const response = await fetch(apiUrl, {
