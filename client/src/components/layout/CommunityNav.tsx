@@ -27,7 +27,7 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
   };
 
   return (
-    <div className="bg-white border-b-2 border-gray-300 py-8 shadow-sm">
+    <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-between items-center">
           <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">

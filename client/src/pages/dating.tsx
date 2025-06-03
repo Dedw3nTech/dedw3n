@@ -431,9 +431,6 @@ export default function DatingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Dating Navigation */}
-      <DatingNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      
       <DatingRoomWall>
 
         {/* Controls Bar (matching marketplace style) */}

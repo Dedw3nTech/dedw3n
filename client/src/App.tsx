@@ -64,6 +64,32 @@ import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
+import { CommunityNav } from "@/components/layout/CommunityNav";
+import { DatingNav } from "@/components/layout/DatingNav";
+
+// Community Navigation wrapper
+function CommunityNavWrapper() {
+  const [location] = useLocation();
+  
+  // Only show on community page
+  const isCommunityPage = location === "/community";
+  
+  if (!isCommunityPage) return null;
+  
+  return <CommunityNav />;
+}
+
+// Dating Navigation wrapper
+function DatingNavWrapper() {
+  const [location] = useLocation();
+  
+  // Only show on dating page
+  const isDatingPage = location === "/dating";
+  
+  if (!isDatingPage) return null;
+  
+  return <DatingNav />;
+}
 
 // Conditional MarketplaceNav wrapper
 function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: string; setSearchTerm?: (term: string) => void } = {}) {
@@ -308,6 +334,12 @@ function App() {
                           <OptimizedNavigation />
                           <MarketplaceNavWrapper />
                           <Breadcrumbs />
+                          
+                          {/* Community Navigation - Only show on community page */}
+                          <CommunityNavWrapper />
+                          
+                          {/* Dating Navigation - Only show on dating page */}
+                          <DatingNavWrapper />
                           
                           {/* New Section Above Main - Only show on marketplace pages */}
                           <MarketplacePromoSection />

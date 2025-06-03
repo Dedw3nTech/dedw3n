@@ -265,9 +265,6 @@ export default function CommunityPage() {
 
   return (
     <>
-      {/* Community Navigation */}
-      <CommunityNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      
       <Container className="py-6">
         <div className="max-w-7xl mx-auto">
           {/* Top Community Advertisement */}
