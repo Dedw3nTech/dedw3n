@@ -16,7 +16,7 @@ import { TrendingProductsToolbar } from "@/components/products/TrendingProductsT
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
-import { CommunityNav } from "@/components/layout/CommunityNav";
+
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 import { useLocation } from "wouter";
 
