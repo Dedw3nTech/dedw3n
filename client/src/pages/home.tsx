@@ -42,28 +42,9 @@ export default function Home() {
   // Set page title
   usePageTitle({ title: 'Home' });
 
-  // Force rerender when currency changes
-  useEffect(() => {
-    const handleCurrencyChange = () => {
-      console.log('Home page detected currency change');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('currency-changed', handleCurrencyChange);
-    
-    return () => {
-      window.removeEventListener('currency-changed', handleCurrencyChange);
-    };
-  }, []);
-  
   useEffect(() => {
     setView("marketplace");
   }, [setView]);
-  
-  // Update selected currency when the global currency changes
-  useEffect(() => {
-    setSelectedCurrency(currency);
-  }, [currency]);
 
   // Fetch featured products (limit to 6)
   const { 
