@@ -185,7 +185,7 @@ export default function OptimizedNavigation() {
                 {/* Currency and Language Selectors for Mobile */}
                 <div className="p-2 border-b space-y-2">
                   <CurrencySelector />
-                  <LanguageSelector />
+                  <LanguageSwitcher variant="default" />
                 </div>
                 
                 {mainNavItems.map((item) => (
