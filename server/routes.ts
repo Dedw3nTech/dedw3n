@@ -892,12 +892,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Add test endpoints for debugging
     app.get('/api/auth/test-auth', unifiedIsAuthenticated, (req: Request, res: Response) => {
       console.log('[DEBUG] Authentication successful in test-auth endpoint');
+      const user = req.user as any;
       res.json({
         message: 'Authentication successful',
         user: {
-          id: req.user?.id,
-          username: req.user?.username,
-          role: req.user?.role
+          id: user?.id,
+          username: user?.username,
+          role: user?.role
         }
       });
     });
@@ -3546,40 +3547,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rate limiting for translation requests
   let lastTranslationRequest = 0;
-  const TRANSLATION_RATE_LIMIT = 500; // 500ms between requests
-  const translationQueue: Array<{ req: Request; res: Response; resolve: () => void }> = [];
-  let isProcessingTranslations = false;
+  const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
-  const processTranslationQueue = async () => {
-    if (isProcessingTranslations || translationQueue.length === 0) return;
-    
-    isProcessingTranslations = true;
-    
-    while (translationQueue.length > 0) {
-      const { req, res, resolve } = translationQueue.shift()!;
-      
-      // Ensure rate limiting
+  // DeepL Translation API endpoint with rate limiting
+  app.post('/api/translate', async (req: Request, res: Response) => {
+    try {
+      // Rate limiting check
       const now = Date.now();
       const timeSinceLastRequest = now - lastTranslationRequest;
       if (timeSinceLastRequest < TRANSLATION_RATE_LIMIT) {
-        await new Promise(r => setTimeout(r, TRANSLATION_RATE_LIMIT - timeSinceLastRequest));
+        await new Promise(resolve => setTimeout(resolve, TRANSLATION_RATE_LIMIT - timeSinceLastRequest));
       }
-      
       lastTranslationRequest = Date.now();
-      await handleTranslationRequest(req, res);
-      resolve();
-      
-      // Small delay between processing requests
-      if (translationQueue.length > 0) {
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
-    
-    isProcessingTranslations = false;
-  };
 
-  const handleTranslationRequest = async (req: Request, res: Response) => {
-    try {
       const { text, targetLanguage } = req.body;
 
       if (!text || !targetLanguage) {
@@ -3684,15 +3664,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Translation error:', error);
       res.status(500).json({ message: 'Internal server error during translation' });
     }
-  };
-
-  // DeepL Translation API endpoint with rate limiting
-  app.post('/api/translate', async (req: Request, res: Response) => {
-    return new Promise<void>((resolve) => {
-      translationQueue.push({ req, res, resolve });
-      processTranslationQueue();
-    });
   });
+
+
 
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
