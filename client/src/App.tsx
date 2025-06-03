@@ -145,6 +145,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
+import TranslationTest from "@/pages/translation-test";
 
 
 
@@ -288,6 +289,9 @@ function Router() {
       {/* Admin routes */}
       <ProtectedRoute path="/admin" component={AdminDashboard} />
       <ProtectedRoute path="/admin/:tab" component={AdminDashboard} />
+      
+      {/* Translation test route */}
+      <Route path="/translation-test" component={TranslationTest} />
       
       <Route component={NotFound} />
     </Switch>

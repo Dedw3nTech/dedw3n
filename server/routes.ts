@@ -3582,10 +3582,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Map our language codes to DeepL format
       const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
 
-      // DeepL API endpoint (use the free version if using free tier)
-      const apiUrl = process.env.DEEPL_API_KEY.endsWith(':fx') 
-        ? 'https://api-free.deepl.com/v2/translate'
-        : 'https://api.deepl.com/v2/translate';
+      // Always use the free DeepL API endpoint
+      const apiUrl = 'https://api-free.deepl.com/v2/translate';
 
       const formData = new URLSearchParams();
       formData.append('text', text);
