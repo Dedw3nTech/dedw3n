@@ -23,7 +23,25 @@ export function useTranslatedText(originalText: string): string {
 
     const performTranslation = async () => {
       try {
-        const translated = await translateText(originalText);
+        // Call the translation API directly
+        const response = await fetch('/api/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: originalText,
+            targetLanguage: selectedLanguage.code,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Translation failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const translated = data.translatedText || originalText;
+        
         setTranslatedText(translated);
         // Cache the result
         localCache.set(cacheKey, translated);
@@ -37,7 +55,7 @@ export function useTranslatedText(originalText: string): string {
     };
 
     performTranslation();
-  }, [originalText, selectedLanguage.code, translateText]);
+  }, [originalText, selectedLanguage.code]);
 
   return translatedText;
 }
