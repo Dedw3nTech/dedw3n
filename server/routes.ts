@@ -3535,6 +3535,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     'HI': 'HI'
   };
 
+  // Translation cache to prevent rate limiting
+  const translationCache = new Map<string, { 
+    translatedText: string; 
+    detectedSourceLanguage?: string; 
+    targetLanguage: string;
+    timestamp: number 
+  }>();
+  const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+
   // DeepL Translation API endpoint
   app.post('/api/translate', async (req: Request, res: Response) => {
     try {
@@ -3550,6 +3559,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           translatedText: text,
           detectedSourceLanguage: 'EN',
           targetLanguage
+        });
+      }
+
+      // Create cache key
+      const cacheKey = `${text}:${targetLanguage}`;
+      
+      // Check cache first
+      const cached = translationCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        return res.json({
+          translatedText: cached.translatedText,
+          detectedSourceLanguage: cached.detectedSourceLanguage,
+          targetLanguage: cached.targetLanguage
         });
       }
 
@@ -3582,6 +3604,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('DeepL API error:', response.status, errorText);
+        
+        // For rate limiting, return original text as fallback
+        if (response.status === 429) {
+          const fallbackResult = {
+            translatedText: text, // Return original text
+            detectedSourceLanguage: 'EN',
+            targetLanguage,
+            timestamp: Date.now()
+          };
+          translationCache.set(cacheKey, fallbackResult);
+          return res.json({
+            translatedText: fallbackResult.translatedText,
+            detectedSourceLanguage: fallbackResult.detectedSourceLanguage,
+            targetLanguage: fallbackResult.targetLanguage
+          });
+        }
+        
         return res.status(response.status).json({ 
           message: 'Translation service error',
           details: errorText 
@@ -3594,10 +3633,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'No translation returned' });
       }
 
-      res.json({
+      const result = {
         translatedText: data.translations[0].text,
         detectedSourceLanguage: data.translations[0].detected_source_language,
-        targetLanguage
+        targetLanguage,
+        timestamp: Date.now()
+      };
+
+      // Cache the result
+      translationCache.set(cacheKey, result);
+
+      res.json({
+        translatedText: result.translatedText,
+        detectedSourceLanguage: result.detectedSourceLanguage,
+        targetLanguage: result.targetLanguage
       });
 
     } catch (error) {

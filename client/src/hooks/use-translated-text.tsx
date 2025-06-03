@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+// Local cache for translated text to reduce API calls
+const localCache = new Map<string, string>();
+
 export function useTranslatedText(originalText: string): string {
   const { selectedLanguage, translateText } = useLanguage();
   const [translatedText, setTranslatedText] = useState(originalText);
@@ -11,13 +14,25 @@ export function useTranslatedText(originalText: string): string {
       return;
     }
 
+    // Check local cache first
+    const cacheKey = `${originalText}:${selectedLanguage.code}`;
+    if (localCache.has(cacheKey)) {
+      setTranslatedText(localCache.get(cacheKey)!);
+      return;
+    }
+
     const performTranslation = async () => {
       try {
         const translated = await translateText(originalText);
         setTranslatedText(translated);
+        // Cache the result
+        localCache.set(cacheKey, translated);
       } catch (error) {
-        console.error('Translation failed:', error);
+        console.error('Translation error:', error);
+        // Fallback to original text on error
         setTranslatedText(originalText);
+        // Cache the fallback to prevent repeated failed requests
+        localCache.set(cacheKey, originalText);
       }
     };
 
