@@ -230,7 +230,7 @@ const sampleMatch: Match = {
 };
 
 export default function DatingPage() {
-  usePageTitle("dating");
+  usePageTitle({ title: "Dating" });
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -431,60 +431,10 @@ export default function DatingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Dating Navigation */}
+      <DatingNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      
       <DatingRoomWall>
-        {/* Header Section with Search */}
-        <div className="bg-white border-b border-gray-200 py-6">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              {/* Dating Room Tabs */}
-              <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-auto">
-                <TabsList className="grid grid-cols-3 h-10 bg-transparent border-0 p-0">
-                  <TabsTrigger value="browse" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
-                    <Users className="h-4 w-4 flex-shrink-0 text-black" />
-                    Browse
-                  </TabsTrigger>
-                  <TabsTrigger value="myprofile" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
-                    <User className="h-4 w-4 flex-shrink-0 text-black" />
-                    Profile
-                  </TabsTrigger>
-                  <TabsTrigger value="matches" className="flex items-center gap-2 text-sm px-3 bg-transparent border-0 text-black font-normal data-[state=active]:bg-transparent data-[state=active]:text-black data-[state=active]:shadow-none data-[state=active]:font-normal">
-                    <Heart className="h-4 w-4 flex-shrink-0 text-black" />
-                    Matches
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              
-              {/* Currency Selector */}
-              <div className="flex items-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <span className="text-sm">
-                        {selectedCurrency.symbol}
-                        <span className="font-normal ml-1">Currency</span>
-                      </span>
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {currencies.map((currency) => (
-                      <DropdownMenuItem
-                        key={currency.code}
-                        onClick={() => setSelectedCurrency(currency)}
-                        className="flex items-center gap-3 cursor-pointer"
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{currency.symbol} {currency.code}</span>
-                          <span className="text-xs text-gray-500">{currency.name}</span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Controls Bar (matching marketplace style) */}
         <div className="bg-white border-b border-gray-200 py-4">
