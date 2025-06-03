@@ -3510,6 +3510,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DeepL Translation API endpoint
+  app.post('/api/translate', async (req: Request, res: Response) => {
+    try {
+      const { text, targetLanguage } = req.body;
+
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ message: 'Text and target language are required' });
+      }
+
+      if (!process.env.DEEPL_API_KEY) {
+        return res.status(500).json({ message: 'DeepL API key not configured' });
+      }
+
+      // DeepL API endpoint (use the free version if using free tier)
+      const apiUrl = process.env.DEEPL_API_KEY.endsWith(':fx') 
+        ? 'https://api-free.deepl.com/v2/translate'
+        : 'https://api.deepl.com/v2/translate';
+
+      const formData = new URLSearchParams();
+      formData.append('text', text);
+      formData.append('target_lang', targetLanguage);
+      formData.append('source_lang', 'EN'); // Assuming source is always English
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepL API error:', response.status, errorText);
+        return res.status(response.status).json({ 
+          message: 'Translation service error',
+          details: errorText 
+        });
+      }
+
+      const data = await response.json();
+      
+      if (!data.translations || data.translations.length === 0) {
+        return res.status(500).json({ message: 'No translation returned' });
+      }
+
+      res.json({
+        translatedText: data.translations[0].text,
+        detectedSourceLanguage: data.translations[0].detected_source_language,
+        targetLanguage
+      });
+
+    } catch (error) {
+      console.error('Translation error:', error);
+      res.status(500).json({ message: 'Internal server error during translation' });
+    }
+  });
+
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
   setupWebSocket(httpServer);

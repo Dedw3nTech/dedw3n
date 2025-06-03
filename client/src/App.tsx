@@ -12,6 +12,7 @@ import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
 import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
@@ -329,7 +330,8 @@ function App() {
                 <SubscriptionProvider>
                   <MessagingProvider>
                     <CurrencyProvider>
-                      <ErrorBoundary>
+                      <LanguageProvider>
+                        <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <OptimizedNavigation />
                           <MarketplaceNavWrapper />
@@ -368,8 +370,9 @@ function App() {
                           {/* Chatbot will be implemented later when API key is available */}
                           {/* <ChatbotWindow /> */}
                         </div>
-                      </ErrorBoundary>
-                      <Toaster />
+                        </ErrorBoundary>
+                        <Toaster />
+                      </LanguageProvider>
                     </CurrencyProvider>
                   </MessagingProvider>
                 </SubscriptionProvider>
