@@ -234,7 +234,7 @@ export default function DatingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  const { selectedCurrency, setSelectedCurrency, formatPrice } = useCurrency();
   
 
   
@@ -784,7 +784,7 @@ export default function DatingPage() {
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-1">
                                   <p className="text-xs font-medium truncate">{item.name}</p>
-                                  <p className="text-xs text-gray-200">${item.price.toFixed(2)}</p>
+                                  <p className="text-xs text-gray-200">{formatPrice(item.price)}</p>
                                 </div>
                               </a>
                             ))}
@@ -1097,7 +1097,7 @@ export default function DatingPage() {
                 
                 <div className="flex-1">
                   <h4 className="font-medium text-sm">{gift.name}</h4>
-                  <p className="text-sm font-semibold text-green-600">${gift.price.toFixed(2)}</p>
+                  <p className="text-sm font-semibold text-green-600">{formatPrice(gift.price)}</p>
                   {gift.link && (
                     <p className="text-xs text-gray-500 truncate">From: {gift.link}</p>
                   )}
