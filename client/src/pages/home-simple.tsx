@@ -110,10 +110,10 @@ export default function Home() {
         
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isNew && (
-            <Badge className="bg-blue-500">New</Badge>
+            <Badge className="bg-blue-500"><TranslatedText>New</TranslatedText></Badge>
           )}
           {product.isOnSale && (
-            <Badge className="bg-red-500">Sale</Badge>
+            <Badge className="bg-red-500"><TranslatedText>Sale</TranslatedText></Badge>
           )}
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function Home() {
                   });
                 }}>
                   <Tag className="mr-2 h-4 w-4" />
-                  Send Offer
+                  <TranslatedText>Send Offer</TranslatedText>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
@@ -165,7 +165,7 @@ export default function Home() {
                   });
                 }}>
                   <Share2 className="mr-2 h-4 w-4" />
-                  Share
+                  <TranslatedText>Share</TranslatedText>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -279,7 +279,7 @@ export default function Home() {
         {isLoading && (
           <div className="text-center py-12">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-500">Loading products...</p>
+            <p className="text-gray-500"><TranslatedText>Loading products...</TranslatedText></p>
           </div>
         )}
 
@@ -305,7 +305,7 @@ export default function Home() {
         {!isLoading && newProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">New Arrivals</h2>
+              <h2 className="text-2xl font-bold"><TranslatedText>New Arrivals</TranslatedText></h2>
               <Button 
                 variant="outline"
                 onClick={() => setLocation('/products')}
