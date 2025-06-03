@@ -112,6 +112,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Save language preference both locally and in backend
   const handleSetLanguage = async (language: Language) => {
+    console.log(`[Language Context] Changing language from ${selectedLanguage.code} to ${language.code}`);
     setSelectedLanguage(language);
     localStorage.setItem('dedw3n-language', language.code);
     

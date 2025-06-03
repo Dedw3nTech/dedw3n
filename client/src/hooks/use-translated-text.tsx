@@ -50,7 +50,10 @@ export function useTranslatedText(originalText: string): string {
   const [translatedText, setTranslatedText] = useState(originalText);
 
   useEffect(() => {
+    console.log(`[Translation] Text: "${originalText}", Language: ${selectedLanguage.code}`);
+    
     if (selectedLanguage.code === 'EN' || selectedLanguage.code === 'en' || !originalText.trim()) {
+      console.log(`[Translation] Skipping translation for ${selectedLanguage.code}`);
       setTranslatedText(originalText);
       return;
     }
@@ -59,10 +62,14 @@ export function useTranslatedText(originalText: string): string {
     
     // Check cache first
     if (translationCache.has(cacheKey)) {
-      setTranslatedText(translationCache.get(cacheKey)!);
+      const cached = translationCache.get(cacheKey)!;
+      console.log(`[Translation] Using cached: "${originalText}" -> "${cached}"`);
+      setTranslatedText(cached);
       return;
     }
 
+    console.log(`[Translation] Queuing for translation: "${originalText}" to ${selectedLanguage.code}`);
+    
     // Add to queue
     const promise = new Promise<string>((resolve) => {
       requestQueue.push({
@@ -72,7 +79,10 @@ export function useTranslatedText(originalText: string): string {
       });
     });
 
-    promise.then(setTranslatedText);
+    promise.then((translated) => {
+      console.log(`[Translation] Received: "${originalText}" -> "${translated}"`);
+      setTranslatedText(translated);
+    });
     processTranslationQueue();
   }, [originalText, selectedLanguage.code]);
 
