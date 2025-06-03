@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { DatingRoomWall } from "@/components/DatingRoomWall";
+import { DatingNav } from "@/components/layout/DatingNav";
 import {
   Sheet,
   SheetContent,

@@ -16,6 +16,7 @@ import { TrendingProductsToolbar } from "@/components/products/TrendingProductsT
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
+import { CommunityNav } from "@/components/layout/CommunityNav";
 import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 import { useLocation } from "wouter";
 
@@ -101,6 +102,7 @@ export default function CommunityPage() {
   const queryClient = useQueryClient();
   const [isAdVisible, setIsAdVisible] = useState(true);
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country' | 'city'>('new');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Track if we've reached the end of feed to prevent unnecessary calls
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
@@ -262,13 +264,17 @@ export default function CommunityPage() {
   }
 
   return (
-    <Container className="py-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Top Community Advertisement */}
-        <CommunityTopPromoSection />
+    <>
+      {/* Community Navigation */}
+      <CommunityNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      
+      <Container className="py-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Top Community Advertisement */}
+          <CommunityTopPromoSection />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
@@ -468,6 +474,7 @@ export default function CommunityPage() {
         {/* Bottom Community Advertisement */}
         <CommunityBottomPromoSection />
       </div>
-    </Container>
+      </Container>
+    </>
   );
 }
