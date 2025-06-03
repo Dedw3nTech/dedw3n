@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
 import UserMenu from "@/components/ui/user-menu";
 import { CurrencySelector } from "@/components/ui/currency-selector";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 export default function OptimizedNavigation() {
   const [location] = useLocation();
@@ -118,11 +119,16 @@ export default function OptimizedNavigation() {
             <Logo />
           </div>
 
-          {/* Right side - Currency selector, Navigation and User menu */}
+          {/* Right side - Currency selector, Language selector, Navigation and User menu */}
           <div className="flex items-center space-x-1">
             {/* Currency Selector */}
-            <div className="hidden md:block mr-2">
+            <div className="hidden md:block mr-1">
               <CurrencySelector />
+            </div>
+            
+            {/* Language Selector */}
+            <div className="hidden md:block mr-2">
+              <LanguageSelector />
             </div>
             
             {/* Main Navigation */}
@@ -170,9 +176,10 @@ export default function OptimizedNavigation() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {/* Currency Selector for Mobile */}
-                <div className="p-2 border-b">
+                {/* Currency and Language Selectors for Mobile */}
+                <div className="p-2 border-b space-y-2">
                   <CurrencySelector />
+                  <LanguageSelector />
                 </div>
                 
                 {mainNavItems.map((item) => (
