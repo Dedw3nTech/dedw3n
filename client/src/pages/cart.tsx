@@ -139,7 +139,7 @@ export default function Cart() {
   if (error) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4">
-        <Card>
+        <Card className="border-none">
           <CardHeader>
             <CardTitle>Shopping Cart</CardTitle>
             <CardDescription>There was an error loading your cart</CardDescription>
@@ -161,7 +161,7 @@ export default function Cart() {
   if (cartItems.length === 0) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4">
-        <Card className="text-center">
+        <Card className="text-center border-none">
 
           <CardHeader>
             <div className="flex justify-center mb-4">
@@ -180,7 +180,7 @@ export default function Cart() {
   
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4">
-      <Card>
+      <Card className="border-none">
         <CardHeader>
           <CardTitle className="text-xl">Shopping Cart</CardTitle>
           <CardDescription>{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart</CardDescription>
