@@ -92,7 +92,7 @@ export default function UserMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <div className="flex items-center space-x-1">
-        <Link href="/profile">
+        <Link href="/wall">
           <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
             {user?.avatar ? (
               <AvatarImage
