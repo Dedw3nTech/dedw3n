@@ -246,10 +246,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               Privacy Policy
             </Button>
           </p>
-          
-          <p className="text-gray-500 mt-3" style={{ fontSize: '10px', fontWeight: 'normal', width: '100%' }}>
-            By agreeing to sign up for Dedw3n Ltd., you are accepting several important agreements. This includes the platform's Terms of Service, which outlines the rules and regulations for using the platform. You also accept the platform's Privacy Policy, which explains how your personal information will be collected, used, and protected. Finally, you agree to follow the Community Guidelines, which define acceptable behavior and content within the platform's community.
-          </p>
+
         </div>
       </DialogContent>
     </Dialog>
