@@ -1223,38 +1223,42 @@ export default function PostCard({
         {/* First line - Purchase actions */}
         <div className="flex justify-between w-full">
           <div className="flex gap-4">
-            {post.product && (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
-                    !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
-                  disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
-                >
-                  {addToCartMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ShoppingCart className="h-4 w-4" />
-                  )}
-                  <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
-                </Button>
+            {/* Buy Button - Always show for marketplace posts */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={() => requireAuth("buy", () => {
+                if (post.product?.id) {
+                  addToCartMutation.mutate(post.product.id);
+                } else {
+                  toast({
+                    title: "Product not available",
+                    description: "This item is not available for purchase right now",
+                    variant: "destructive",
+                  });
+                }
+              })}
+              disabled={addToCartMutation.isPending}
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
+              <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
+            </Button>
 
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
-                    !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  onClick={handleMakeOffer}
-                  disabled={!post.product && !post.isShoppable}
-                >
-                  <span>Make an Offer</span>
-                </Button>
-              </>
-            )}
+            {/* Make an Offer Button - Always show for marketplace posts */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600"
+              onClick={handleMakeOffer}
+            >
+              <Tag className="h-4 w-4" />
+              <span>Make an Offer</span>
+            </Button>
 
             {post.event && (
               <Button 
