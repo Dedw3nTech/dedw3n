@@ -152,6 +152,8 @@ export default function PostCard({
   const [selectedUser, setSelectedUser] = useState("");
   const [isFriendRequestModalOpen, setIsFriendRequestModalOpen] = useState(false);
   const [friendRequestMessage, setFriendRequestMessage] = useState("Hi! I'd like to be friends.");
+  const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
+  const [repostText, setRepostText] = useState("");
 
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1213,10 +1215,7 @@ export default function PostCard({
                 E-mail
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => requireAuth("repost", () => {
-                  setShareMessage(`Shared from @${post.user.username}`);
-                  repostMutation.mutate({ message: `Shared from @${post.user.username}` });
-                })}
+                onClick={() => requireAuth("repost", () => setIsRepostModalOpen(true))}
                 disabled={repostMutation.isPending}
               >
                 {repostMutation.isPending ? (
@@ -1508,6 +1507,92 @@ export default function PostCard({
                   Send Friend Request
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Repost Modal */}
+      <Dialog open={isRepostModalOpen} onOpenChange={setIsRepostModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Repost</DialogTitle>
+            <DialogDescription>
+              Do you want to add text to your repost?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-3">
+              <Button 
+                onClick={() => {
+                  setIsRepostModalOpen(false);
+                  setRepostText("");
+                  repostMutation.mutate({ message: `Shared from @${post.user.username}` });
+                }}
+                disabled={repostMutation.isPending}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {repostMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Reposting...
+                  </>
+                ) : (
+                  "Repost without text"
+                )}
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    or
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Add your thoughts about this post..."
+                  value={repostText}
+                  onChange={(e) => setRepostText(e.target.value)}
+                  className="min-h-[80px]"
+                />
+                <Button 
+                  onClick={() => {
+                    setIsRepostModalOpen(false);
+                    const message = repostText.trim() 
+                      ? `${repostText}\n\nShared from @${post.user.username}` 
+                      : `Shared from @${post.user.username}`;
+                    repostMutation.mutate({ message });
+                    setRepostText("");
+                  }}
+                  disabled={repostMutation.isPending}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {repostMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Reposting...
+                    </>
+                  ) : (
+                    "Repost with text"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsRepostModalOpen(false);
+                setRepostText("");
+              }}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
