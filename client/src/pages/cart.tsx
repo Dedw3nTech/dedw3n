@@ -10,7 +10,7 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart } from 'lucide-react';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { formatPrice } from '@/lib/utils';
@@ -164,6 +164,9 @@ export default function Cart() {
         <Card className="text-center">
 
           <CardHeader>
+            <div className="flex justify-center mb-4">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+            </div>
             <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
             <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
           </CardHeader>
