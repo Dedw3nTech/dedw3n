@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Users, Clock, Plus, Search, Filter, Heart, Share2, MessageCircle, Repeat2, Mail, Link as LinkIcon, MessageSquare, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Plus, Search, Filter, Heart, Share2, MessageCircle, Repeat2, Mail, Link as LinkIcon, MessageSquare, Loader2, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
@@ -72,6 +72,13 @@ export default function EventsPage() {
   const [repostEventId, setRepostEventId] = useState<number | null>(null);
   const [repostText, setRepostText] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  
+  // Gift modal states
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
+  const [giftEventId, setGiftEventId] = useState<number | null>(null);
+  const [giftMessage, setGiftMessage] = useState('');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [selectedGiftUser, setSelectedGiftUser] = useState<any>(null);
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -592,8 +599,18 @@ export default function EventsPage() {
                 <CardFooter className="px-6 pb-6 pt-0">
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-1">
-
-
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setGiftEventId(event.id);
+                          setIsGiftModalOpen(true);
+                        }}
+                      >
+                        <Gift className="h-4 w-4 mr-1 text-gray-600" />
+                        <span className="text-xs">Gift</span>
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="ghost">
@@ -727,6 +744,107 @@ export default function EventsPage() {
                 }}
               >
                 Repost
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Gift Event Modal */}
+        <Dialog open={isGiftModalOpen} onOpenChange={setIsGiftModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Gift Event</DialogTitle>
+              <DialogDescription>
+                Send this event as a gift to a friend.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="userSearch">Search Users</Label>
+                <Input
+                  id="userSearch"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Search for users..."
+                  className="w-full"
+                />
+              </div>
+              {userSearchQuery && (
+                <div className="max-h-32 overflow-y-auto border rounded-md">
+                  <div className="p-2 space-y-1">
+                    {/* Mock user list - in real app, this would fetch from API */}
+                    {[
+                      { id: 1, name: "John Doe", username: "@johndoe", avatar: "" },
+                      { id: 2, name: "Jane Smith", username: "@janesmith", avatar: "" },
+                      { id: 3, name: "Mike Johnson", username: "@mikej", avatar: "" }
+                    ]
+                      .filter(user => 
+                        user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                        user.username.toLowerCase().includes(userSearchQuery.toLowerCase())
+                      )
+                      .map(user => (
+                        <div
+                          key={user.id}
+                          className={`p-2 rounded cursor-pointer hover:bg-gray-100 ${
+                            selectedGiftUser?.id === user.id ? 'bg-blue-100' : ''
+                          }`}
+                          onClick={() => setSelectedGiftUser(user)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                              {user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{user.name}</p>
+                              <p className="text-xs text-gray-500">{user.username}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+              {selectedGiftUser && (
+                <div className="p-3 bg-blue-50 rounded-md">
+                  <p className="text-sm font-medium">Selected: {selectedGiftUser.name}</p>
+                  <p className="text-xs text-gray-600">{selectedGiftUser.username}</p>
+                </div>
+              )}
+              <div>
+                <Label htmlFor="giftMessage">Gift Message</Label>
+                <Textarea
+                  id="giftMessage"
+                  value={giftMessage}
+                  onChange={(e) => setGiftMessage(e.target.value)}
+                  placeholder="Add a personal message..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsGiftModalOpen(false);
+                  setGiftMessage("");
+                  setUserSearchQuery("");
+                  setSelectedGiftUser(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                disabled={!selectedGiftUser}
+                onClick={() => {
+                  // Handle gift sending logic here
+                  setIsGiftModalOpen(false);
+                  setGiftMessage("");
+                  setUserSearchQuery("");
+                  setSelectedGiftUser(null);
+                  toast({ title: "Event sent as gift successfully!" });
+                }}
+              >
+                Send Gift
               </Button>
             </DialogFooter>
           </DialogContent>
