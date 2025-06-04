@@ -262,7 +262,7 @@ export default function EventsPage() {
               Create Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Event</DialogTitle>
             </DialogHeader>
@@ -406,7 +406,7 @@ export default function EventsPage() {
                         />
                       </div>
                       {!user?.isVendor && (
-                        <p className="text-sm text-amber-600">
+                        <p className="text-sm text-black">
                           Note: Creating paid events requires a vendor account. 
                           <span className="text-blue-600 underline cursor-pointer hover:text-blue-800">
                             Upgrade to vendor
