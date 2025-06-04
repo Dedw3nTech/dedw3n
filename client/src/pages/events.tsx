@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Users, Clock, Plus, Search, Filter } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Plus, Search, Filter, Heart, Share2, MessageCircle, Repeat2, Mail, Link as LinkIcon, MessageSquare, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
@@ -57,6 +58,32 @@ export default function EventsPage() {
     tags: '',
     isFree: true,
     price: ''
+  });
+
+  // Social interaction states
+  const [likedEvents, setLikedEvents] = useState<number[]>([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [shareMessage, setShareMessage] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
+  const [repostText, setRepostText] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
+  const [likedEvents, setLikedEvents] = useState<Set<number>>(new Set());
+  const [repostText, setRepostText] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
+
+  // Fetch users for sharing
+  const { data: users = [] } = useQuery({
+    queryKey: ['/api/users'],
+    queryFn: async () => {
+      const response = await fetch('/api/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
+    },
+    enabled: isShareModalOpen
   });
 
   // Fetch events
@@ -150,6 +177,140 @@ export default function EventsPage() {
       });
     },
   });
+
+  // Social interaction mutations
+  const likeMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      return apiRequest('POST', `/api/events/${eventId}/like`);
+    },
+    onSuccess: (_, eventId) => {
+      setLikedEvents(prev => [...prev, eventId]);
+      toast({
+        title: 'Event Liked',
+        description: 'Event added to your favorites.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to like event',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      return apiRequest('DELETE', `/api/events/${eventId}/like`);
+    },
+    onSuccess: (_, eventId) => {
+      setLikedEvents(prev => prev.filter(id => id !== eventId));
+      toast({
+        title: 'Event Unliked',
+        description: 'Event removed from your favorites.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to unlike event',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const repostMutation = useMutation({
+    mutationFn: async ({ message }: { message: string }) => {
+      return apiRequest('POST', '/api/posts', {
+        content: message,
+        type: 'text'
+      });
+    },
+    onSuccess: () => {
+      setIsRepostModalOpen(false);
+      setRepostText('');
+      toast({
+        title: 'Event Shared',
+        description: 'Event has been shared to your feed.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to share event',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      return apiRequest('POST', '/api/messages', {
+        recipientId: parseInt(userId),
+        content: message
+      });
+    },
+    onSuccess: () => {
+      setIsShareModalOpen(false);
+      setShareMessage('');
+      setSelectedUser('');
+      toast({
+        title: 'Message Sent',
+        description: 'Event has been shared via message.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send message',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Helper functions for social interactions
+  const isEventLiked = (eventId: number) => likedEvents.includes(eventId);
+
+  const handleLikeToggle = (eventId: number) => {
+    if (isEventLiked(eventId)) {
+      unlikeMutation.mutate(eventId);
+    } else {
+      likeMutation.mutate(eventId);
+    }
+  };
+
+  const shareEventByEmail = (event: Event) => {
+    const subject = encodeURIComponent(`Check out this event: ${event.title}`);
+    const body = encodeURIComponent(`I thought you might be interested in this event:\n\n${event.title}\n\nDate: ${formatDate(event.date)}\nTime: ${event.time}\nLocation: ${event.location}\n\nOrganized by: ${event.organizer.name}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
+
+  const copyEventLinkToClipboard = async (event: Event) => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/events/${event.id}`);
+      toast({
+        title: 'Link Copied',
+        description: 'Event link has been copied to clipboard.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to copy link to clipboard.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const shareEventOnFeed = (event: Event) => {
+    const message = `Check out this amazing event: ${event.title}\n\nDate: ${formatDate(event.date)} at ${event.time}\nLocation: ${event.location}\n\nOrganized by ${event.organizer.name}`;
+    repostMutation.mutate({ message });
+  };
+
+  const shareEventViaMessage = (event: Event) => {
+    setSelectedEvent(event);
+    setShareMessage(`Check out this event: ${event.title}\n\nDate: ${formatDate(event.date)} at ${event.time}\nLocation: ${event.location}`);
+    setIsShareModalOpen(true);
+  };
 
   const handleCreateEvent = () => {
     if (!user) {
@@ -668,10 +829,251 @@ export default function EventsPage() {
                   </div>
                 </div>
               </CardContent>
+
+              <CardFooter className="flex flex-col gap-3 border-none">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => shareEventOnFeed(event)}
+                      className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+                      title="Share this event on your community feed"
+                    >
+                      Repost
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setIsRepostModalOpen(true);
+                      }}
+                      className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+                      title="Repost this event with your own commentary"
+                    >
+                      <Repeat2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-2 w-full">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9"
+                    title="Comment on this event"
+                  >
+                    <MessageCircle className="h-5 w-5 text-gray-600" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9"
+                    onClick={() => handleLikeToggle(event.id)}
+                    disabled={likeMutation.isPending || unlikeMutation.isPending}
+                    title={isEventLiked(event.id) ? 'Remove from your favorites' : 'Add to your favorites'}
+                  >
+                    <Heart 
+                      className={`h-5 w-5 ${isEventLiked(event.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
+                    />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-9 w-9"
+                        title="Share this event via email, message, or social media"
+                      >
+                        <Share2 className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Share Event</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => shareEventByEmail(event)}>
+                        <Mail className="h-4 w-4 mr-2 text-gray-600" />
+                        Share via Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => copyEventLinkToClipboard(event)}>
+                        <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
+                        Copy Link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareEventOnFeed(event)}>
+                        <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
+                        Share on Feed
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareEventViaMessage(event)}>
+                        <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                        Send via Message
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardFooter>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Share Modal */}
+      <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Share Event</DialogTitle>
+            <DialogDescription>
+              Send this event to a user via message
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="select-user" className="text-right font-medium">Send to</label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user: any) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name} (@{user.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <label htmlFor="share-message" className="text-right font-medium pt-2">
+                Message
+              </label>
+              <Textarea
+                id="share-message"
+                placeholder="Add a message..."
+                value={shareMessage}
+                onChange={(e) => setShareMessage(e.target.value)}
+                className="col-span-3 min-h-[80px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsShareModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedUser && shareMessage) {
+                  sendMessageMutation.mutate({ userId: selectedUser, message: shareMessage });
+                }
+              }}
+              disabled={sendMessageMutation.isPending || !selectedUser || !shareMessage}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {sendMessageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Repost Modal */}
+      <Dialog open={isRepostModalOpen} onOpenChange={setIsRepostModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Repost Event</DialogTitle>
+            <DialogDescription>
+              Do you want to add text to your repost?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-3">
+              <Button 
+                onClick={() => {
+                  setIsRepostModalOpen(false);
+                  setRepostText("");
+                  if (selectedEvent) {
+                    const message = `Check out this amazing event: ${selectedEvent.title}\n\nDate: ${formatDate(selectedEvent.date)} at ${selectedEvent.time}\nLocation: ${selectedEvent.location}\n\nOrganized by ${selectedEvent.organizer.name}`;
+                    repostMutation.mutate({ message });
+                  }
+                }}
+                disabled={repostMutation.isPending}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {repostMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Reposting...
+                  </>
+                ) : (
+                  "Repost without text"
+                )}
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    or
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Add your thoughts about this event..."
+                  value={repostText}
+                  onChange={(e) => setRepostText(e.target.value)}
+                  className="min-h-[80px]"
+                />
+                <Button 
+                  onClick={() => {
+                    setIsRepostModalOpen(false);
+                    if (selectedEvent) {
+                      const eventDetails = `Check out this amazing event: ${selectedEvent.title}\n\nDate: ${formatDate(selectedEvent.date)} at ${selectedEvent.time}\nLocation: ${selectedEvent.location}\n\nOrganized by ${selectedEvent.organizer.name}`;
+                      const message = repostText.trim() 
+                        ? `${repostText}\n\n${eventDetails}` 
+                        : eventDetails;
+                      repostMutation.mutate({ message });
+                      setRepostText("");
+                    }
+                  }}
+                  disabled={repostMutation.isPending}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {repostMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Reposting...
+                    </>
+                  ) : (
+                    "Repost with text"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsRepostModalOpen(false);
+                setRepostText("");
+              }}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
