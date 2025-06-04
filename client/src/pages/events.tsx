@@ -592,17 +592,7 @@ export default function EventsPage() {
                 <CardFooter className="px-6 pb-6 pt-0">
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleLikeEvent(event.id, event.isLiked || false)}
-                        disabled={likeEventMutation.isPending || unlikeEventMutation.isPending}
-                      >
-                        <Heart 
-                          className={`h-4 w-4 mr-1 ${event.isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-                        />
-                        <span className="text-xs">Like</span>
-                      </Button>
+
                       <Button size="sm" variant="ghost">
                         <MessageCircle className="h-4 w-4 mr-1 text-gray-600" />
                         <span className="text-xs">Comment</span>
