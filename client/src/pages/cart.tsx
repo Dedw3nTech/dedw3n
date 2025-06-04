@@ -162,16 +162,15 @@ export default function Cart() {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card className="text-center">
-          <CardHeader>
-            <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
-            <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
-          </CardHeader>
           <CardContent className="pt-6 pb-8">
             <div className="flex justify-center mb-6">
               <ShoppingCart className="h-16 w-16 text-muted-foreground" />
             </div>
-
           </CardContent>
+          <CardHeader>
+            <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
+            <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
+          </CardHeader>
           <CardFooter className="flex justify-center">
             <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">Browse Products</Button>
           </CardFooter>
