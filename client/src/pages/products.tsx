@@ -734,42 +734,42 @@ export default function Products() {
               Send Offer
             </Button>
           </div>
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-end gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8"
+              className="h-10 w-10"
               title="Send as gift"
               onClick={() => {
                 setSelectedGiftProduct(product);
                 setGiftDialogOpen(true);
               }}
             >
-              <Gift className="h-4 w-4 text-blue-500" />
+              <Gift className="h-5 w-5 text-blue-500" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8"
+              className="h-10 w-10"
               title="Add to Dating profile as gift"
             >
-              <Plus className="h-4 w-4 font-bold stroke-2" />
+              <Plus className="h-5 w-5 font-bold stroke-2" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8"
+              className="h-10 w-10"
               onClick={() => handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
               <Heart 
-                className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
+                className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
               />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Share2 className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Share2 className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
