@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -325,8 +325,9 @@ export default function ChatroomsPage() {
                 </div>
                 <Dialog open={isCreateRoomOpen} onOpenChange={setIsCreateRoomOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 w-8 p-0">
-                      <Plus className="h-4 w-4" />
+                    <Button size="sm" className="h-8 px-3 py-1">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Private Room
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
@@ -359,32 +360,39 @@ export default function ChatroomsPage() {
                       <div>
                         <Label>Invite Friends</Label>
                         <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-                          {/* Mock friends list - replace with actual friends data */}
-                          {[
-                            { id: 1, name: "Alice Johnson", username: "alice" },
-                            { id: 2, name: "Bob Smith", username: "bob" },
-                            { id: 3, name: "Carol Brown", username: "carol" }
-                          ].map((friend) => (
-                            <div key={friend.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`friend-${friend.id}`}
-                                checked={selectedFriends.includes(friend.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedFriends([...selectedFriends, friend.id]);
-                                  } else {
-                                    setSelectedFriends(selectedFriends.filter(id => id !== friend.id));
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`friend-${friend.id}`} className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                {friend.name}
-                              </Label>
-                            </div>
-                          ))}
+                          {friendsLoading ? (
+                            <div className="text-sm text-gray-500">Loading friends...</div>
+                          ) : friends.length === 0 ? (
+                            <div className="text-sm text-gray-500">No friends available to invite</div>
+                          ) : (
+                            friends.map((friend: any) => (
+                              <div key={friend.id} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`friend-${friend.id}`}
+                                  checked={selectedFriends.includes(friend.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedFriends([...selectedFriends, friend.id]);
+                                    } else {
+                                      setSelectedFriends(selectedFriends.filter(id => id !== friend.id));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`friend-${friend.id}`} className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    {friend.avatar ? (
+                                      <AvatarImage src={friend.avatar} alt={friend.username} />
+                                    ) : (
+                                      <AvatarFallback>
+                                        {friend.username?.charAt(0)?.toUpperCase() || 'U'}
+                                      </AvatarFallback>
+                                    )}
+                                  </Avatar>
+                                  {friend.username}
+                                </Label>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
 
