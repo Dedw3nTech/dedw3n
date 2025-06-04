@@ -265,9 +265,7 @@ export function ProfileSideCard() {
         <CardHeader className="pb-3">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
             <svg className="h-4 w-4 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"/>
-              <path d="M19 15L19.5 17L22 17.5L19.5 18L19 20L18.5 18L16 17.5L18.5 17L19 15Z" fill="currentColor" opacity="0.7"/>
-              <path d="M5 6L5.5 8L8 8.5L5.5 9L5 11L4.5 9L2 8.5L4.5 8L5 6Z" fill="currentColor" opacity="0.5"/>
+              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
             </svg>
             Trending Events
           </h3>
