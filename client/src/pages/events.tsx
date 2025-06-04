@@ -527,9 +527,16 @@ export default function EventsPage() {
                       <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-2">
                         {event.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {event.description}
-                      </p>
+                      <div className="text-sm text-gray-600">
+                        <p className="line-clamp-3">
+                          {event.description}
+                        </p>
+                        {event.description && event.description.length > 150 && (
+                          <Link href={`/event/${event.id}`} className="text-blue-600 hover:text-blue-800 text-xs mt-1 inline-block">
+                            Read more...
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
