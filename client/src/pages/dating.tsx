@@ -172,9 +172,6 @@ export default function DatingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-bold mb-4">Our Dating Rooms</h1>
-              <p className="text-gray-600 mb-6">
-                Discover exclusive dating experiences tailored to your lifestyle and income level
-              </p>
             </div>
 
             <Tabs defaultValue="normal" className="w-full">
