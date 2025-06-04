@@ -29,6 +29,7 @@ interface Message {
   createdAt: string;
   userId: number;
   username: string;
+  name?: string;
   avatar?: string;
 }
 
@@ -239,7 +240,14 @@ export default function ChatroomsPage() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">{msg.username || 'Anonymous'}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-sm">
+                                  {msg.name || msg.username || 'Anonymous'}
+                                </span>
+                                {msg.name && msg.username && (
+                                  <span className="text-xs text-gray-500">@{msg.username}</span>
+                                )}
+                              </div>
                               <span className="text-xs text-gray-500">
                                 {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                               </span>
