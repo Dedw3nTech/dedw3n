@@ -1172,7 +1172,7 @@ export default function PostCard({
             <Button 
               variant="ghost" 
               size="default"
-              className={`flex items-center gap-1 ${post.isLiked ? "text-blue-500" : ""}`}
+              className={`flex items-center gap-1 text-blue-500 ${post.isLiked ? "text-blue-600" : ""}`}
               onClick={() => requireAuth("like", handleLike)}
               disabled={likeMutation.isPending}
             >
@@ -1187,7 +1187,7 @@ export default function PostCard({
             <Button 
               variant="ghost" 
               size="default"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-blue-500"
               onClick={() => requireAuth("comment", handleComment)}
             >
               <MessageSquare className="h-5 w-5" />
@@ -1199,7 +1199,7 @@ export default function PostCard({
                 <Button 
                   variant="ghost" 
                   size="default"
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 text-blue-500"
                 >
                   <Share2 className="h-5 w-5" />
                   <span>{post.shares}</span>
