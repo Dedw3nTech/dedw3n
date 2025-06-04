@@ -46,7 +46,7 @@ export function SubscriptionWall({ children, featureName = 'Dating' }: Subscript
                 </li>
                 <li className="flex">
                   <Check className="mr-2 h-5 w-5 text-primary shrink-0" />
-                  <span>Send and receive unlimited gifts</span>
+                  <span>There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for £19.99</span>
                 </li>
                 <li className="flex">
                   <Check className="mr-2 h-5 w-5 text-primary shrink-0" />
