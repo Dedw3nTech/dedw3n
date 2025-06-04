@@ -657,23 +657,13 @@ export default function EventsPage() {
                         {event.isAttending ? 'Attending' : 'Join Event'}
                       </Button>
                     ) : (
-                      <div className="space-y-2">
-                        <Button
-                          onClick={() => handleBuyTicket(event.id)}
-                          disabled={buyTicketMutation.isPending}
-                          className="w-full bg-green-600 hover:bg-green-700"
-                        >
-                          {buyTicketMutation.isPending ? 'Processing...' : `Buy Ticket ${formatPrice(event.price || 0)}`}
-                        </Button>
-                        <Button
-                          onClick={() => handleAttendEvent(event.id)}
-                          disabled={attendEventMutation.isPending || event.isAttending}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          {event.isAttending ? 'Attending' : 'Join for Free'}
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={() => handleBuyTicket(event.id)}
+                        disabled={buyTicketMutation.isPending}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {buyTicketMutation.isPending ? 'Processing...' : `Buy Ticket ${formatPrice(event.price || 0)}`}
+                      </Button>
                     )}
                   </div>
                 </div>
