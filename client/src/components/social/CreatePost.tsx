@@ -25,7 +25,8 @@ import {
   Book,
   Megaphone,
   ShoppingBag,
-  Search
+  Search,
+  Calendar
 } from "lucide-react";
 import {
   Popover,
@@ -112,6 +113,11 @@ export default function CreatePost({
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
 
+  // Event tagging
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [eventSearchQuery, setEventSearchQuery] = useState("");
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+
   // Fetch communities that the user is a member of
   const { data: userCommunities, isLoading: isLoadingCommunities } = useQuery({
     queryKey: ["/api/users/communities"],
@@ -139,6 +145,22 @@ export default function CreatePost({
       return response.json();
     },
     enabled: isProductDialogOpen
+  });
+
+  // Fetch events for tagging
+  const { data: events, isLoading: isLoadingEvents } = useQuery({
+    queryKey: ["/api/events", eventSearchQuery],
+    queryFn: async () => {
+      const url = eventSearchQuery 
+        ? `/api/events?search=${encodeURIComponent(eventSearchQuery)}`
+        : "/api/events";
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch events");
+      }
+      return response.json();
+    },
+    enabled: isEventDialogOpen
   });
 
   // Create/Edit post mutation
@@ -251,6 +273,7 @@ export default function CreatePost({
       setSelectedCommunityId(communityId || null);
       setSelectedProduct(null);
       setIsShoppable(false);
+      setSelectedEvent(null);
       
       // Show success message
       toast({
@@ -445,6 +468,11 @@ export default function CreatePost({
     // Only add title if present
     if (title.trim()) {
       postData.title = title;
+    }
+    
+    // Add selected event if present
+    if (selectedEvent) {
+      postData.eventId = selectedEvent.id;
     }
     
     // Handle image if present - keep payload as small as possible
@@ -653,6 +681,107 @@ export default function CreatePost({
                     <Video className="h-3 w-3 mr-1 font-bold" />
                     <span className="font-semibold">Add Video</span>
                   </Button>
+                  
+                  {/* Events & Meetups button */}
+                  <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        size="sm"
+                        className="bg-black text-white hover:bg-gray-800"
+                      >
+                        <Calendar className="h-3 w-3 mr-1 font-bold" />
+                        <span className="font-semibold">{selectedEvent ? "Event Tagged" : "Share Event"}</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Select an Event to Share</DialogTitle>
+                        <DialogDescription>
+                          Share an event with your followers. They can view event details and purchase tickets directly from your post.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="my-4">
+                        <div className="flex gap-2 mb-4">
+                          <Input
+                            placeholder="Search events..."
+                            value={eventSearchQuery}
+                            onChange={(e) => setEventSearchQuery(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button variant="secondary" size="icon">
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <ScrollArea className="h-[300px] rounded-md border p-2">
+                          {isLoadingEvents ? (
+                            <div className="flex justify-center py-10">
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : events && events.length > 0 ? (
+                            <div className="space-y-3">
+                              {events.map((event: any) => (
+                                <div 
+                                  key={event.id}
+                                  className={`flex gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                                    selectedEvent?.id === event.id
+                                      ? "bg-primary/10 border border-primary/30"
+                                      : "hover:bg-muted"
+                                  }`}
+                                  onClick={() => setSelectedEvent(event)}
+                                >
+                                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0 bg-blue-50">
+                                    <div className="h-full w-full flex items-center justify-center">
+                                      <Calendar className="h-6 w-6 text-blue-600" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="font-medium text-sm">{event.title}</h3>
+                                    <p className="text-xs text-muted-foreground mb-1">
+                                      {event.location} • {new Date(event.startDate).toLocaleDateString()}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-semibold text-blue-600">
+                                        {event.price === 0 ? 'Free' : `£${event.price}`}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {event.attendees || 0} attending
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                              <p>No events found</p>
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsEventDialogOpen(false);
+                            setSelectedEvent(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setIsEventDialogOpen(false);
+                          }}
+                          disabled={!selectedEvent}
+                        >
+                          Confirm Selection
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   
                   {/* Product tagging button */}
                   <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
