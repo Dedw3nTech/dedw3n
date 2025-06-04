@@ -146,6 +146,8 @@ export default function OptimizedNavigation() {
                 <div className="hidden md:block">
                   <LanguageSwitcher variant="compact" />
                 </div>
+                {/* Separator */}
+                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Currency Selector between language switcher and profile */}
                 <div className="hidden md:block">
                   <CurrencySelector />
@@ -158,6 +160,8 @@ export default function OptimizedNavigation() {
                 <div className="hidden md:block">
                   <LanguageSwitcher variant="compact" />
                 </div>
+                {/* Separator */}
+                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Currency Selector for non-logged in users */}
                 <div className="hidden md:block">
                   <CurrencySelector />
