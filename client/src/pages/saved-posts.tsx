@@ -13,13 +13,15 @@ export default function SavedPosts() {
   const limit = 10;
   const offset = (page - 1) * limit;
   const [, setLocation] = useLocation();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   // Handle auth redirect using useEffect to prevent render loop
   useEffect(() => {
-    if (!isAuthLoading && !user) {
+    if (!isAuthLoading && !user && !hasRedirected) {
+      setHasRedirected(true);
       setLocation("/auth");
     }
-  }, [user, isAuthLoading]);
+  }, [user, isAuthLoading, hasRedirected, setLocation]);
 
   const {
     data: savedPosts,
@@ -29,13 +31,19 @@ export default function SavedPosts() {
   } = useQuery({
     queryKey: ["/api/saved-posts", page, limit],
     queryFn: async () => {
-      const response = await fetch(`/api/saved-posts?limit=${limit}&offset=${offset}`);
+      const response = await fetch(`/api/saved-posts?limit=${limit}&offset=${offset}`, {
+        credentials: 'include',
+        headers: {
+          'x-use-session': 'true',
+          'x-client-auth': 'true'
+        }
+      });
       if (!response.ok) {
         throw new Error("Failed to load saved posts");
       }
       return response.json();
     },
-    enabled: !!user,
+    enabled: !!user && !isAuthLoading,
   });
 
   if (isAuthLoading) {
