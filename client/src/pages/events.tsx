@@ -193,6 +193,16 @@ export default function EventsPage() {
           return b.attendeeCount - a.attendeeCount;
         case 'title':
           return a.title.localeCompare(b.title);
+        case 'price-asc':
+          // Free events (price = 0 or null) come first, then sort by price ascending
+          const priceA = a.isFree ? 0 : (a.price || 0);
+          const priceB = b.isFree ? 0 : (b.price || 0);
+          return priceA - priceB;
+        case 'price-desc':
+          // Sort by price descending, free events come last
+          const priceDescA = a.isFree ? 0 : (a.price || 0);
+          const priceDescB = b.isFree ? 0 : (b.price || 0);
+          return priceDescB - priceDescA;
         default:
           return 0;
       }
@@ -273,7 +283,7 @@ export default function EventsPage() {
             </Link>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button className="bg-black hover:bg-gray-800 text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Event
                 </Button>
@@ -468,6 +478,8 @@ export default function EventsPage() {
               <SelectItem value="date">Sort by Date</SelectItem>
               <SelectItem value="attendees">Sort by Popularity</SelectItem>
               <SelectItem value="title">Sort by Title</SelectItem>
+              <SelectItem value="price-asc">Sort by Price Ascending</SelectItem>
+              <SelectItem value="price-desc">Sort by Price Descending</SelectItem>
             </SelectContent>
           </Select>
         </div>
