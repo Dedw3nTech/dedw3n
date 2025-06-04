@@ -33,6 +33,14 @@ interface Message {
   avatar?: string;
 }
 
+interface ActiveUser {
+  id: number;
+  username: string;
+  name?: string;
+  avatar?: string;
+  lastSeen: string;
+}
+
 export default function ChatroomsPage() {
   const [selectedChatroom, setSelectedChatroom] = useState<Chatroom | null>(null);
   const [message, setMessage] = useState("");
@@ -50,6 +58,13 @@ export default function ChatroomsPage() {
     queryKey: ['/api/chatrooms', selectedChatroom?.id, 'messages'],
     enabled: !!selectedChatroom,
     refetchInterval: 5000, // Refetch every 5 seconds for real-time feel
+  });
+
+  // Fetch active users for selected chatroom
+  const { data: activeUsers = [], isLoading: loadingActiveUsers } = useQuery({
+    queryKey: ['/api/chatrooms', selectedChatroom?.id, 'users'],
+    enabled: !!selectedChatroom,
+    refetchInterval: 10000, // Refetch every 10 seconds to track online users
   });
 
   // Send message mutation
@@ -202,25 +217,27 @@ export default function ChatroomsPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="lg:col-span-3">
-          {selectedChatroom ? (
-            <Card className="h-full flex flex-col">
-              <CardHeader className="border-b">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${getChatroomBadgeColor(selectedChatroom.type)} text-white`}>
-                    {getChatroomIcon(selectedChatroom.type)}
+        <div className="lg:col-span-3 flex gap-4">
+          {/* Messages Panel */}
+          <div className="flex-1">
+            {selectedChatroom ? (
+              <Card className="h-full flex flex-col">
+                <CardHeader className="border-b">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full ${getChatroomBadgeColor(selectedChatroom.type)} text-white`}>
+                      {getChatroomIcon(selectedChatroom.type)}
+                    </div>
+                    <div>
+                      <CardTitle>{selectedChatroom.name}</CardTitle>
+                      <p className="text-sm text-gray-600">{selectedChatroom.description}</p>
+                    </div>
+                    <Badge variant="secondary" className="ml-auto">
+                      {selectedChatroom.type}
+                    </Badge>
                   </div>
-                  <div>
-                    <CardTitle>{selectedChatroom.name}</CardTitle>
-                    <p className="text-sm text-gray-600">{selectedChatroom.description}</p>
-                  </div>
-                  <Badge variant="secondary" className="ml-auto">
-                    {selectedChatroom.type}
-                  </Badge>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col p-0">
+                <CardContent className="flex-1 flex flex-col p-0">
                 {/* Messages */}
                 <ScrollArea className="flex-1 p-4">
                   {loadingMessages ? (
@@ -284,16 +301,63 @@ export default function ChatroomsPage() {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <Card className="h-full flex items-center justify-center">
-              <CardContent>
-                <div className="text-center text-gray-500">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-lg font-medium">Select a chatroom to start chatting</p>
-                  <p className="text-sm">Choose from Global, Regional, or Country-specific rooms</p>
-                </div>
-              </CardContent>
-            </Card>
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <CardContent>
+                  <div className="text-center text-gray-500">
+                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-lg font-medium">Select a chatroom to start chatting</p>
+                    <p className="text-sm">Choose from Global, Regional, or Country-specific rooms</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Active Users Panel */}
+          {selectedChatroom && (
+            <div className="w-64 flex-shrink-0">
+              <Card className="h-full">
+                <CardHeader className="border-b">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Online ({activeUsers.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px]">
+                    {loadingActiveUsers ? (
+                      <div className="p-4 text-center text-gray-500">Loading users...</div>
+                    ) : activeUsers.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">No active users</div>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {activeUsers.map((user: ActiveUser) => (
+                          <div key={user.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-50">
+                            <div className="relative">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="text-xs">
+                                  {user.name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">
+                                {user.name || user.username || 'Anonymous'}
+                              </div>
+                              {user.name && user.username && (
+                                <div className="text-xs text-gray-500">@{user.username}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </div>
