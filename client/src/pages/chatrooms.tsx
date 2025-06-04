@@ -85,6 +85,11 @@ export default function ChatroomsPage() {
     refetchInterval: 10000, // Refetch every 10 seconds to track online users
   });
 
+  // Fetch user friends for private room invitations
+  const { data: friends = [], isLoading: friendsLoading } = useQuery({
+    queryKey: ['/api/friends'],
+  });
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: { content: string; messageType: string; file?: File }) => {
@@ -389,13 +394,17 @@ export default function ChatroomsPage() {
                         </Button>
                         <Button 
                           onClick={() => {
-                            // Handle room creation
-                            console.log('Creating room:', { roomName, isAudioEnabled, selectedFriends });
-                            setIsCreateRoomOpen(false);
+                            if (roomName.trim()) {
+                              createPrivateRoomMutation.mutate({
+                                name: roomName.trim(),
+                                isAudioEnabled,
+                                invitedUsers: selectedFriends
+                              });
+                            }
                           }}
-                          disabled={!roomName.trim()}
+                          disabled={!roomName.trim() || createPrivateRoomMutation.isPending}
                         >
-                          Create Room
+                          {createPrivateRoomMutation.isPending ? 'Creating...' : 'Create Room'}
                         </Button>
                       </div>
                     </div>

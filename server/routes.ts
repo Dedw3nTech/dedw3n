@@ -3105,6 +3105,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Chatroom API endpoints
   
+  // Get user friends for private room invitations
+  app.get('/api/friends', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).userId;
+
+      const friends = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          avatar: users.avatar
+        })
+        .from(friendships)
+        .leftJoin(users, eq(friendships.friendId, users.id))
+        .where(and(
+          eq(friendships.userId, userId),
+          eq(friendships.status, 'accepted')
+        ));
+
+      res.json(friends);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      res.status(500).json({ message: 'Failed to fetch friends' });
+    }
+  });
+  
   // Get all chatrooms
   app.get('/api/chatrooms', async (req: Request, res: Response) => {
     try {
