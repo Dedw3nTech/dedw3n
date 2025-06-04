@@ -163,7 +163,7 @@ export default function Cart() {
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card className="text-center">
           <CardHeader>
-            <CardTitle style={{ fontSize: '20px' }}>Your Cart is Empty</CardTitle>
+            <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
             <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
           </CardHeader>
           <CardContent className="pt-6 pb-8">
@@ -186,7 +186,7 @@ export default function Cart() {
     <div className="container max-w-4xl mx-auto py-12 px-4">
       <Card>
         <CardHeader>
-          <CardTitle style={{ fontSize: '20px' }}>Shopping Cart</CardTitle>
+          <CardTitle className="text-xl">Shopping Cart</CardTitle>
           <CardDescription>{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart</CardDescription>
         </CardHeader>
         <CardContent>
