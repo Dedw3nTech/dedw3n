@@ -201,7 +201,7 @@ export default function DatingProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label>Open to Date</Label>
+                  <Label>Activate Dating Profile</Label>
                   <p className="text-sm text-gray-500">
                     {isActive ? "Your profile is visible to others" : "Your profile is hidden"}
                   </p>
