@@ -210,13 +210,15 @@ export default function WallPage() {
                   </p>
                 )}
                 
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setLocation(`/profile/${user.username}`)}
-                >
-                  View Full Profile
-                </Button>
+                {user && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setLocation(`/profile/${user.username}`)}
+                  >
+                    Your Profile
+                  </Button>
+                )}
               </div>
             </Card>
             

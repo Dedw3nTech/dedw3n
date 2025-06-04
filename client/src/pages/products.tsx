@@ -723,15 +723,17 @@ export default function Products() {
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-end items-center relative">
-          <Button
-            size="sm"
-            onClick={() => shareOnFeed(product)}
-            className="bg-black text-white hover:bg-gray-800 absolute left-0"
-          >
-            Repost
-          </Button>
-          <div className="flex items-center gap-1">
+        <CardFooter className="flex flex-col gap-3">
+          <div className="flex justify-start">
+            <Button
+              size="sm"
+              onClick={() => shareOnFeed(product)}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              Repost
+            </Button>
+          </div>
+          <div className="flex items-center justify-end gap-1">
             <Button 
               variant="ghost" 
               size="icon" 
