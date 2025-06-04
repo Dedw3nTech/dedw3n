@@ -49,6 +49,7 @@ import {
   SelectItem,
   SelectLabel,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import {
   Tabs,

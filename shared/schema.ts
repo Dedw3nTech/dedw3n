@@ -149,6 +149,7 @@ export const posts = pgTable("posts", {
   imageUrl: text("image_url"),
   videoUrl: text("video_url"),
   productId: integer("product_id").references(() => products.id),
+  eventId: integer("event_id").references(() => events.id), // Reference to shared events
   likes: integer("likes").default(0),
   comments: integer("comments").default(0),
   shares: integer("shares").default(0),
