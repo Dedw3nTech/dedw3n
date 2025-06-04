@@ -137,9 +137,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               Join Dedw3n
             </div>
           </DialogTitle>
-          <DialogDescription className="text-gray-600">
-            Sign in to unlock all features !
-          </DialogDescription>
+
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
