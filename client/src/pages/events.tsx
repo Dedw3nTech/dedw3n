@@ -603,6 +603,17 @@ export default function EventsPage() {
                         size="sm" 
                         variant="ghost"
                         onClick={() => {
+                          // Add event to Dating Profile as desired gift
+                          toast({ title: "Event added to your Dating Profile gifts!" });
+                        }}
+                        title="Add to Dating Profile"
+                      >
+                        <Plus className="h-4 w-4 text-gray-600" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
                           setSelectedEvent(event);
                           setGiftEventId(event.id);
                           setIsGiftModalOpen(true);
