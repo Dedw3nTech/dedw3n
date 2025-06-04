@@ -272,18 +272,18 @@ export function ProfileSideCard() {
         </CardHeader>
         <CardContent className="p-6 pt-0 space-y-3 text-[14px]">
           <div className="space-y-3">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-100">
               <div>
                 <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Tech Startup Meetup</h4>
                 <p className="text-xs text-gray-600 mt-1">London • Tonight 7 PM</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Free</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Free</span>
                   <span className="text-xs text-gray-500">50+ attending</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-100">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-100">
               <div>
                 <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Coffee & Code</h4>
                 <p className="text-xs text-gray-600 mt-1">Manchester • Tomorrow 10 AM</p>
@@ -294,12 +294,12 @@ export function ProfileSideCard() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-3 border border-orange-100">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-100">
               <div>
                 <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Art Gallery Opening</h4>
                 <p className="text-xs text-gray-600 mt-1">Birmingham • This Weekend</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">£15</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">£15</span>
                   <span className="text-xs text-gray-500">100+ attending</span>
                 </div>
               </div>
