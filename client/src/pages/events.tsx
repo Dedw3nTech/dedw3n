@@ -583,7 +583,7 @@ export default function EventsPage() {
                   <div className="mb-4">
                     {event.isFree ? (
                       <Badge variant="outline" className="text-xl font-bold text-green-600 border-green-300 px-6 py-3 border-2">
-                        Free Event
+                        Free
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="text-xl font-bold text-blue-600 border-blue-300 px-6 py-3 border-2">
