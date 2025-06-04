@@ -78,7 +78,6 @@ export function TrendingCategoriesCard() {
                   <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-1 text-[10px] text-gray-500 flex-wrap">
                     <span>{category.posts} posts</span>
                     <span>{category.tags} tags</span>
-                    <span>{category.shares} shares</span>
                   </div>
                 </div>
                 
