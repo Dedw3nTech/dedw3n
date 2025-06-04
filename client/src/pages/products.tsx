@@ -672,40 +672,7 @@ export default function Products() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost"
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (marketType === 'c2c') {
-                    setLocation(`/product/${product.id}`);
-                  } else {
-                    addToCartMutation.mutate(product.id);
-                  }
-                }}
-                disabled={addToCartMutation.isPending}
-                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-bold"
-              >
-                {addToCartMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  marketType === 'c2c' ? 'View' : 'Buy'
-                )}
-              </Button>
-              <Button 
-                variant="ghost"
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOfferProduct(product);
-                  setOfferDialogOpen(true);
-                }}
-                className="text-black hover:bg-transparent hover:text-gray-700 p-0 h-auto font-normal"
-              >
-                Send Offer
-              </Button>
-            </div>
+
           </div>
           
           <div className="text-sm text-gray-500">{product.category}</div>
@@ -725,14 +692,6 @@ export default function Products() {
         
         <CardFooter className="flex flex-col gap-3">
           <div className="flex justify-between items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => shareOnFeed(product)}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
-            >
-              Repost
-            </Button>
             <div className="flex items-center gap-2">
               <Button 
                 size="sm" 
@@ -753,19 +712,27 @@ export default function Products() {
                   marketType === 'c2c' ? 'View' : 'Buy'
                 )}
               </Button>
-              <Button 
+              <Button
                 variant="ghost"
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedOfferProduct(product);
-                  setOfferDialogOpen(true);
-                }}
+                size="sm"
+                onClick={() => shareOnFeed(product)}
                 className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
               >
-                Send Offer
+                Repost
               </Button>
             </div>
+            <Button 
+              variant="ghost"
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedOfferProduct(product);
+                setOfferDialogOpen(true);
+              }}
+              className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+            >
+              Send Offer
+            </Button>
           </div>
           <div className="flex items-center justify-end gap-1">
             <Button 
