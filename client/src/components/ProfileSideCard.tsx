@@ -257,6 +257,18 @@ export function ProfileSideCard() {
               Local Chat
             </Link>
           </Button>
+          
+          <div className="pt-2 border-t border-gray-100">
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
+            >
+              <Link href="/chatrooms">
+                View All Chat Rooms
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
