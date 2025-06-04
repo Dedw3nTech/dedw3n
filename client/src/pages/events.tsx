@@ -391,7 +391,7 @@ export default function EventsPage() {
                     </div>
                     {!newEvent.isFree && (
                       <div className="ml-6">
-                        <Label htmlFor="price">Price ({currency})</Label>
+                        <Label htmlFor="price">Price ({selectedCurrency.code})</Label>
                         <Input
                           id="price"
                           type="number"
@@ -551,7 +551,7 @@ export default function EventsPage() {
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                          {formatPriceWithCurrency(event.price || 0)}
+                          {formatPrice(event.price || 0)}
                         </Badge>
                       )}
                     </div>
