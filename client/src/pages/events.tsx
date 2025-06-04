@@ -39,6 +39,8 @@ export default function EventsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [filterBy, setFilterBy] = useState('all');
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -52,11 +54,13 @@ export default function EventsPage() {
 
   // Fetch events
   const { data: events = [], isLoading } = useQuery<Event[]>({
-    queryKey: ['/api/events', searchTerm, selectedCategory],
+    queryKey: ['/api/events', searchTerm, selectedCategory, sortBy, filterBy],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory !== 'all') params.append('category', selectedCategory);
+      if (sortBy) params.append('sortBy', sortBy);
+      if (filterBy !== 'all') params.append('filterBy', filterBy);
       
       const response = await fetch(`/api/events?${params}`);
       if (!response.ok) throw new Error('Failed to fetch events');
@@ -325,18 +329,52 @@ export default function EventsPage() {
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Category Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Date Filter */}
+          <Select value={filterBy} onValueChange={setFilterBy}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by date" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.value} value={category.value}>
-                  {category.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All Events</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="tomorrow">Tomorrow</SelectItem>
+              <SelectItem value="thisWeek">This Week</SelectItem>
+              <SelectItem value="thisMonth">This Month</SelectItem>
+              <SelectItem value="upcoming">Upcoming Only</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Sort Options */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Date (Nearest)</SelectItem>
+              <SelectItem value="dateDesc">Date (Latest)</SelectItem>
+              <SelectItem value="popularity">Most Popular</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="attendees">Most Attendees</SelectItem>
+              <SelectItem value="title">Alphabetical</SelectItem>
             </SelectContent>
           </Select>
         </div>

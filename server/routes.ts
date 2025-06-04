@@ -3748,7 +3748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Events & Meetups API endpoints
   app.get('/api/events', async (req: Request, res: Response) => {
     try {
-      const { search, category } = req.query;
+      const { search, category, sortBy, filterBy } = req.query;
       
       // Mock events data for demonstration
       const mockEvents = [
@@ -3827,6 +3827,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply category filter
       if (category && typeof category === 'string' && category !== 'all') {
         filteredEvents = filteredEvents.filter(event => event.category === category);
+      }
+
+      // Apply date filter
+      if (filterBy && typeof filterBy === 'string' && filterBy !== 'all') {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        const weekFromNow = new Date(today);
+        weekFromNow.setDate(today.getDate() + 7);
+        const weekStr = weekFromNow.toISOString().split('T')[0];
+        
+        const monthFromNow = new Date(today);
+        monthFromNow.setMonth(today.getMonth() + 1);
+        const monthStr = monthFromNow.toISOString().split('T')[0];
+
+        switch (filterBy) {
+          case 'today':
+            filteredEvents = filteredEvents.filter(event => event.date === todayStr);
+            break;
+          case 'tomorrow':
+            filteredEvents = filteredEvents.filter(event => event.date === tomorrowStr);
+            break;
+          case 'thisWeek':
+            filteredEvents = filteredEvents.filter(event => event.date >= todayStr && event.date <= weekStr);
+            break;
+          case 'thisMonth':
+            filteredEvents = filteredEvents.filter(event => event.date >= todayStr && event.date <= monthStr);
+            break;
+          case 'upcoming':
+            filteredEvents = filteredEvents.filter(event => event.date >= todayStr);
+            break;
+        }
+      }
+
+      // Apply sorting
+      if (sortBy && typeof sortBy === 'string') {
+        switch (sortBy) {
+          case 'date':
+            filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            break;
+          case 'dateDesc':
+            filteredEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            break;
+          case 'popularity':
+          case 'attendees':
+            filteredEvents.sort((a, b) => b.attendeeCount - a.attendeeCount);
+            break;
+          case 'newest':
+            filteredEvents.sort((a, b) => b.id - a.id);
+            break;
+          case 'title':
+            filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
+            break;
+          default:
+            // Default sort by date (nearest first)
+            filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        }
+      } else {
+        // Default sort by date (nearest first)
+        filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       }
 
       res.json(filteredEvents);
