@@ -273,6 +273,7 @@ function Router() {
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <Route path="/community" component={CommunityPage} />
+      <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/chatrooms" component={Chatrooms} />
