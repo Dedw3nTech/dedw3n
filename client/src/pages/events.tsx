@@ -31,6 +31,7 @@ interface Event {
   };
   isAttending?: boolean;
   tags?: string[];
+  image?: string;
 }
 
 export default function EventsPage() {
@@ -422,7 +423,23 @@ export default function EventsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <Card key={event.id} className="hover:shadow-lg transition-shadow">
+            <Card key={event.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+              {event.image && (
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img 
+                    src={event.image} 
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    {event.category && (
+                      <Badge variant="secondary" className="bg-white/90 text-gray-800 backdrop-blur-sm">
+                        {categories.find(c => c.value === event.category)?.label || event.category}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -433,7 +450,7 @@ export default function EventsPage() {
                       <span>by {event.organizer.name}</span>
                     </div>
                   </div>
-                  {event.category && (
+                  {event.category && !event.image && (
                     <Badge variant="secondary" className="ml-2">
                       {categories.find(c => c.value === event.category)?.label || event.category}
                     </Badge>

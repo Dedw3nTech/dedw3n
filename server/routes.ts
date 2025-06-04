@@ -3769,7 +3769,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             avatar: null
           },
           tags: ["networking", "technology", "startup"],
-          isAttending: false
+          isAttending: false,
+          image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&h=300&fit=crop"
         },
         {
           id: 2,
@@ -3788,7 +3789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             avatar: null
           },
           tags: ["gardening", "sustainability", "community"],
-          isAttending: false
+          isAttending: false,
+          image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500&h=300&fit=crop"
         },
         {
           id: 3,
@@ -3807,7 +3809,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             avatar: null
           },
           tags: ["business", "networking", "entrepreneur"],
-          isAttending: false
+          isAttending: false,
+          image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&h=300&fit=crop"
         },
         {
           id: 4,
@@ -3826,7 +3829,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             avatar: null
           },
           tags: ["dating", "social", "wine"],
-          isAttending: false
+          isAttending: false,
+          image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&h=300&fit=crop"
         },
         {
           id: 5,
@@ -3845,7 +3849,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             avatar: null
           },
           tags: ["dating", "professionals", "singles"],
-          isAttending: false
+          isAttending: false,
+          image: "https://images.unsplash.com/photo-1519671282429-b44660ead0a7?w=500&h=300&fit=crop"
         }
       ];
 
