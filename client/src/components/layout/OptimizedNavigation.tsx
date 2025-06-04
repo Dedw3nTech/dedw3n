@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { TranslatedText } from "@/hooks/use-translated-text";
 import { Badge } from "@/components/ui/badge";
+import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export default function OptimizedNavigation() {
   const [location] = useLocation();
+  const { showLoginPrompt } = useLoginPrompt();
   
   // User authentication state
   const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean }>({
@@ -157,11 +159,13 @@ export default function OptimizedNavigation() {
                 <div className="hidden md:block">
                   <LanguageSwitcher variant="compact" />
                 </div>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    <TranslatedText>Sign In</TranslatedText>
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => showLoginPrompt("login")}
+                >
+                  <TranslatedText>Log in</TranslatedText>
+                </Button>
                 <Link href="/register">
                   <Button size="sm">
                     <TranslatedText>Sign Up</TranslatedText>
