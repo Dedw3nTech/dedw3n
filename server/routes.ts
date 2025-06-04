@@ -4169,53 +4169,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Unified event registration endpoint for both free and paid events
-  app.post('/api/events/:id/register', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const eventId = parseInt(req.params.id);
-      const userId = req.user!.id;
-      
-      if (isNaN(eventId)) {
-        return res.status(400).json({ message: 'Invalid event ID' });
-      }
-
-      // Check if user is already registered
-      const existingRegistration = await storage.checkEventRegistration(userId, eventId);
-      if (existingRegistration) {
-        return res.status(400).json({ message: 'Already registered for this event' });
-      }
-
-      // Get event details to check pricing
-      const event = await storage.getEventById(eventId);
-      if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
-      }
-
-      // Create event registration
-      const registration = await storage.createEventRegistration({
-        eventId,
-        userId,
-        status: 'registered'
-      });
-
-      const responseMessage = event.price === 0 ? 'Successfully joined the event' : 'Ticket purchased successfully';
-      const responseData = {
-        message: responseMessage,
-        eventId,
-        userId,
-        registrationId: registration.id,
-        registeredAt: new Date().toISOString(),
-        status: 'confirmed',
-        ...(event.price > 0 && { ticketId: `ticket_${Date.now()}` })
-      };
-
-      res.json(responseData);
-    } catch (error) {
-      console.error('Error registering for event:', error);
-      res.status(500).json({ message: 'Failed to register for event' });
-    }
-  });
-
   // Event likes endpoints
   app.post('/api/events/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

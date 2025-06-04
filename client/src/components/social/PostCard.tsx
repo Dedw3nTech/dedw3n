@@ -62,8 +62,6 @@ import {
   Plus,
   Bookmark,
   Flag,
-  Calendar,
-  Ticket,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -122,17 +120,6 @@ interface Post {
     id: number;
     name: string;
     visibility: "public" | "private" | "secret";
-  } | null;
-  eventId?: number | null;
-  event?: {
-    id: number;
-    title: string;
-    price: number;
-    currency: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-    maxAttendees?: number | null;
   } | null;
   isLiked?: boolean;
 }
@@ -374,41 +361,6 @@ export default function PostCard({
     },
   });
 
-  // Save post mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest(
-        "POST",
-        `/api/posts/${post.id}/save`,
-        {}
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save post");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: post.isSaved ? "Post removed from saved" : "Post saved successfully",
-      });
-      
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["/api/feed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save post",
-        variant: "destructive",
-      });
-    },
-  });
-
 
 
   // Delete post mutation
@@ -523,39 +475,6 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to repost",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Event registration mutation
-  const eventRegistrationMutation = useMutation({
-    mutationFn: async () => {
-      if (!post.event) throw new Error("No event associated with this post");
-      
-      const response = await apiRequest(
-        "POST",
-        `/api/events/${post.event.id}/register`,
-        {}
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to register for event");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: post.event?.price === 0 ? "You've joined the event!" : "Ticket purchased successfully!",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to register for event",
         variant: "destructive",
       });
     },
@@ -686,14 +605,6 @@ export default function PostCard({
       amount: offerAmount, 
       message: offerMessage 
     });
-  };
-
-  const handleSavePost = () => {
-    if (!currentUser) {
-      showLoginPrompt("save post");
-      return;
-    }
-    saveMutation.mutate();
   };
 
   // Video player functions
@@ -1223,23 +1134,14 @@ export default function PostCard({
         {/* First line - Purchase actions */}
         <div className="flex justify-between w-full">
           <div className="flex gap-4">
-            {/* Buy Button - Always show for marketplace posts */}
             <Button 
               variant="ghost" 
               size="sm"
-              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={() => requireAuth("buy", () => {
-                if (post.product?.id) {
-                  addToCartMutation.mutate(post.product.id);
-                } else {
-                  toast({
-                    title: "Product not available",
-                    description: "This item is not available for purchase right now",
-                    variant: "destructive",
-                  });
-                }
-              })}
-              disabled={addToCartMutation.isPending}
+              className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
+                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
+              disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
             >
               {addToCartMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -1249,70 +1151,16 @@ export default function PostCard({
               <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
             </Button>
 
-            {/* Make an Offer Button - Always show for marketplace posts */}
             <Button 
               variant="ghost" 
               size="sm"
-              className="flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600"
+              className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
+                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               onClick={handleMakeOffer}
+              disabled={!post.product && !post.isShoppable}
             >
-              <Tag className="h-4 w-4" />
               <span>Make an Offer</span>
-            </Button>
-
-            {post.event && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
-                onClick={() => requireAuth("join-event", () => eventRegistrationMutation.mutate())}
-                disabled={eventRegistrationMutation.isPending}
-              >
-                {eventRegistrationMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : post.event.price === 0 ? (
-                  <Calendar className="h-4 w-4" />
-                ) : (
-                  <Ticket className="h-4 w-4" />
-                )}
-                <span>
-                  {eventRegistrationMutation.isPending 
-                    ? "Processing..." 
-                    : post.event.price === 0 
-                      ? "Join Event" 
-                      : "Buy Ticket"
-                  }
-                </span>
-              </Button>
-            )}
-
-            {/* Message/Friend Request Button */}
-            {currentUser && currentUser.id !== post.user.id && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                onClick={() => requireAuth("message", () => setIsFriendRequestModalOpen(true))}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>Message</span>
-              </Button>
-            )}
-
-            {/* Save Post Button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={`flex items-center gap-1 ${post.isSaved ? "text-yellow-500" : "text-gray-600"}`}
-              onClick={() => requireAuth("save", handleSavePost)}
-              disabled={saveMutation.isPending}
-            >
-              {saveMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Bookmark className={`h-4 w-4 ${post.isSaved ? "fill-current" : ""}`} />
-              )}
-              <span>{post.isSaved ? "Saved" : "Save"}</span>
             </Button>
           </div>
         </div>

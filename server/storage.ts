@@ -174,11 +174,6 @@ export interface IStorage {
   checkEventLiked(userId: number, eventId: number): Promise<boolean>;
   getUserLikedEvents(userId: number): Promise<Event[]>;
   
-  // Event registration operations
-  getEventById(eventId: number): Promise<Event | undefined>;
-  checkEventRegistration(userId: number, eventId: number): Promise<any>;
-  createEventRegistration(registration: { eventId: number; userId: number; status: string }): Promise<any>;
-  
   // Friend request operations
   createFriendRequest(request: { senderId: number, recipientId: number, message: string }): Promise<any>;
   getFriendRequest(senderId: number, recipientId: number): Promise<any>;
@@ -4429,74 +4424,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting user liked events:', error);
       return [];
-    }
-  }
-
-  // Event registration methods
-  async getEventById(eventId: number): Promise<Event | undefined> {
-    try {
-      const [event] = await db
-        .select({
-          id: eventsTable.id,
-          title: eventsTable.title,
-          description: eventsTable.description,
-          date: eventsTable.date,
-          time: eventsTable.time,
-          location: eventsTable.location,
-          category: eventsTable.category,
-          attendeeCount: eventsTable.attendeeCount,
-          maxAttendees: eventsTable.maxAttendees,
-          organizerId: eventsTable.organizerId,
-          image: eventsTable.image,
-          price: eventsTable.price,
-          currency: eventsTable.currency,
-          isFree: eventsTable.isFree,
-          createdAt: eventsTable.createdAt,
-          updatedAt: eventsTable.updatedAt
-        })
-        .from(eventsTable)
-        .where(eq(eventsTable.id, eventId));
-
-      return event;
-    } catch (error) {
-      console.error('Error getting event by ID:', error);
-      return undefined;
-    }
-  }
-
-  async checkEventRegistration(userId: number, eventId: number): Promise<any> {
-    try {
-      const [registration] = await db
-        .select()
-        .from(eventRegistrations)
-        .where(and(
-          eq(eventRegistrations.userId, userId),
-          eq(eventRegistrations.eventId, eventId)
-        ));
-
-      return registration;
-    } catch (error) {
-      console.error('Error checking event registration:', error);
-      return null;
-    }
-  }
-
-  async createEventRegistration(registration: { eventId: number; userId: number; status: string }): Promise<any> {
-    try {
-      const [newRegistration] = await db
-        .insert(eventRegistrations)
-        .values({
-          eventId: registration.eventId,
-          userId: registration.userId,
-          status: registration.status as any,
-          registeredAt: new Date()
-        })
-        .returning();
-
-      return newRegistration;
-    } catch (error) {
-      console.error('Error creating event registration:', error);
-      throw error;
     }
   }
 }
