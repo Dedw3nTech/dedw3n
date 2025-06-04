@@ -181,6 +181,7 @@ export default function EventsPage() {
     { value: 'education', label: 'Education' },
     { value: 'health', label: 'Health & Wellness' },
     { value: 'food', label: 'Food & Drink' },
+    { value: 'dating', label: 'Dating' },
     { value: 'community', label: 'Community' }
   ];
 

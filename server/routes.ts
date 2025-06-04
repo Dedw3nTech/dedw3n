@@ -3808,6 +3808,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["business", "networking", "entrepreneur"],
           isAttending: false
+        },
+        {
+          id: 4,
+          title: "Singles Wine Tasting",
+          description: "Meet new people while enjoying fine wines and appetizers",
+          date: "2025-06-15",
+          time: "18:30",
+          location: "Downtown Wine Bar",
+          category: "dating",
+          attendeeCount: 18,
+          maxAttendees: 25,
+          organizer: {
+            id: 4,
+            name: "Emma Wilson",
+            username: "emmawines",
+            avatar: null
+          },
+          tags: ["dating", "social", "wine"],
+          isAttending: false
+        },
+        {
+          id: 5,
+          title: "Speed Dating Night",
+          description: "Fast-paced dating event for professionals aged 25-35",
+          date: "2025-06-18",
+          time: "19:30",
+          location: "The Loft Event Space",
+          category: "dating",
+          attendeeCount: 24,
+          maxAttendees: 30,
+          organizer: {
+            id: 5,
+            name: "David Chen",
+            username: "davidevents",
+            avatar: null
+          },
+          tags: ["dating", "professionals", "singles"],
+          isAttending: false
         }
       ];
 
