@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Send, Users, Globe, MapPin, Flag, Image, Video, Paperclip, X } from "lucide-react";
+import { Send, Users, Globe, MapPin, Flag, Image, Video, Paperclip, X, Lock, Plus, Mic, MicOff, PhoneCall } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityNav } from "@/components/layout/CommunityNav";
 
@@ -14,12 +14,15 @@ interface Chatroom {
   id: number;
   name: string;
   description: string;
-  type: 'global' | 'regional' | 'country';
+  type: 'global' | 'regional' | 'country' | 'private';
   region?: string;
   country?: string;
   isActive: boolean;
   maxUsers: number;
   createdAt: string;
+  creatorId?: number;
+  isAudioEnabled?: boolean;
+  isVideoEnabled?: boolean;
 }
 
 interface Message {
@@ -202,6 +205,8 @@ export default function ChatroomsPage() {
         return <MapPin className="h-5 w-5" />;
       case 'country':
         return <Flag className="h-5 w-5" />;
+      case 'private':
+        return <Lock className="h-5 w-5" />;
       default:
         return <Users className="h-5 w-5" />;
     }
