@@ -114,13 +114,16 @@ export function LanguageSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <span 
-            className={`text-xs font-medium cursor-pointer ${className}`}
+            className={`text-xs font-medium cursor-pointer flex items-center gap-1 ${className}`}
             style={{ fontSize: '12px' }}
           >
             {isChanging ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              selectedLanguage.code
+              <>
+                {selectedLanguage.code}
+                <ChevronDown className="h-3 w-3" />
+              </>
             )}
           </span>
         </DropdownMenuTrigger>
