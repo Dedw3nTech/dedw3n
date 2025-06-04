@@ -185,7 +185,7 @@ export default function VendorDashboard() {
   if (!isLoadingVendor && !vendor && !isUserVendor) {
     return (
       <div className="container max-w-6xl mx-auto py-12 px-4">
-        <Card>
+        <Card className="border-0">
           <CardHeader>
             <CardTitle className="text-2xl">Become a Vendor</CardTitle>
             <CardDescription>
@@ -239,7 +239,7 @@ export default function VendorDashboard() {
   if (!isLoadingVendor && !vendor && isUserVendor) {
     return (
       <div className="container max-w-7xl mx-auto py-8 px-4">
-        <Card>
+        <Card className="border-0">
           <CardHeader>
             <CardTitle className="text-2xl">Vendor Dashboard</CardTitle>
             <CardDescription>
