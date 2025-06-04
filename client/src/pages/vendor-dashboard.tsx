@@ -145,7 +145,7 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <CardTitle>Access Denied</CardTitle>
+            <CardTitle>Vendor Account Not Found</CardTitle>
             <CardDescription>
               Unable to verify vendor access
             </CardDescription>
