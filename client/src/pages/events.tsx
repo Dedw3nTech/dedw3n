@@ -61,19 +61,13 @@ export default function EventsPage() {
   });
 
   // Social interaction states
-  const [likedEvents, setLikedEvents] = useState<number[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [shareMessage, setShareMessage] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostText, setRepostText] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
   const [likedEvents, setLikedEvents] = useState<Set<number>>(new Set());
-  const [repostText, setRepostText] = useState('');
-  const [selectedUser, setSelectedUser] = useState('');
 
   // Fetch users for sharing
   const { data: users = [] } = useQuery({
@@ -184,7 +178,7 @@ export default function EventsPage() {
       return apiRequest('POST', `/api/events/${eventId}/like`);
     },
     onSuccess: (_, eventId) => {
-      setLikedEvents(prev => [...prev, eventId]);
+      setLikedEvents(prev => new Set(prev).add(eventId));
       toast({
         title: 'Event Liked',
         description: 'Event added to your favorites.',
@@ -204,7 +198,11 @@ export default function EventsPage() {
       return apiRequest('DELETE', `/api/events/${eventId}/like`);
     },
     onSuccess: (_, eventId) => {
-      setLikedEvents(prev => prev.filter(id => id !== eventId));
+      setLikedEvents(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(eventId);
+        return newSet;
+      });
       toast({
         title: 'Event Unliked',
         description: 'Event removed from your favorites.',
@@ -269,7 +267,7 @@ export default function EventsPage() {
   });
 
   // Helper functions for social interactions
-  const isEventLiked = (eventId: number) => likedEvents.includes(eventId);
+  const isEventLiked = (eventId: number) => likedEvents.has(eventId);
 
   const handleLikeToggle = (eventId: number) => {
     if (isEventLiked(eventId)) {
