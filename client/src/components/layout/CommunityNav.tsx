@@ -9,7 +9,8 @@ import {
   MessageSquare, 
   Heart,
   UserPlus,
-  Settings
+  Settings,
+  Compass
 } from "lucide-react";
 
 interface CommunityNavProps {
@@ -47,7 +48,7 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
               className="flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors"
               onClick={() => setLocation("/explore")}
             >
-              <Search className="h-4 w-4" />
+              <Compass className="h-4 w-4" />
               <span className="text-sm font-medium">Explore</span>
             </div>
           </div>
