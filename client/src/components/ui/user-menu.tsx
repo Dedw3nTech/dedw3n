@@ -120,9 +120,9 @@ export default function UserMenu() {
             <div className="flex items-center">
               <i className="ri-message-3-line mr-2"></i> Messages
             </div>
-            {unreadMessages?.count > 0 && (
+            {(unreadMessages?.count || 0) > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
-                {unreadMessages.count}
+                {unreadMessages?.count || 0}
               </Badge>
             )}
           </Link>
@@ -130,9 +130,9 @@ export default function UserMenu() {
             <div className="flex items-center">
               <i className="ri-notification-3-line mr-2"></i> Notifications
             </div>
-            {unreadNotifications?.count > 0 && (
+            {(unreadNotifications?.count || 0) > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
-                {unreadNotifications.count}
+                {unreadNotifications?.count || 0}
               </Badge>
             )}
           </Link>

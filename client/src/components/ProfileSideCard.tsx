@@ -175,7 +175,7 @@ export function ProfileSideCard() {
               variant="outline" 
               className="w-full"
             >
-              <Link href={`/profile/${user.username}`}>
+              <Link href="/wall">
                 View Full Profile
               </Link>
             </Button>
