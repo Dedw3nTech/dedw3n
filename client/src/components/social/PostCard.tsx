@@ -1130,7 +1130,7 @@ export default function PostCard({
                             }
                             
                             if (post.product?.id) {
-                              addToCartMutation.mutate(post.product.id);
+                              addToCartMutation.mutate();
                             }
                           }}
                           disabled={addToCartMutation.isPending}
