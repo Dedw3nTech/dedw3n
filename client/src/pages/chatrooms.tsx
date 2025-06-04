@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Send, Users, Globe, MapPin, Flag } from "lucide-react";
+import { Send, Users, Globe, MapPin, Flag, Image, Video, Paperclip, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityNav } from "@/components/layout/CommunityNav";
 
@@ -44,7 +44,10 @@ interface ActiveUser {
 export default function ChatroomsPage() {
   const [selectedChatroom, setSelectedChatroom] = useState<Chatroom | null>(null);
   const [message, setMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch chatrooms
@@ -69,13 +72,18 @@ export default function ChatroomsPage() {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (messageData: { content: string }) => {
+    mutationFn: async (messageData: { content: string; messageType: string; file?: File }) => {
+      const formData = new FormData();
+      formData.append('content', messageData.content);
+      formData.append('messageType', messageData.messageType);
+      
+      if (messageData.file) {
+        formData.append('file', messageData.file);
+      }
+
       const response = await fetch(`/api/chatrooms/${selectedChatroom?.id}/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messageData),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -86,6 +94,11 @@ export default function ChatroomsPage() {
     },
     onSuccess: () => {
       setMessage("");
+      setSelectedFile(null);
+      setFilePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/chatrooms', selectedChatroom?.id, 'messages'] });
     },
   });
@@ -122,11 +135,53 @@ export default function ChatroomsPage() {
     }
   }, [chatrooms, selectedChatroom]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file type and size
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert('File size must be less than 10MB');
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/mpeg', 'video/quicktime'];
+    if (!validTypes.includes(file.type)) {
+      alert('Only images (JPEG, PNG, GIF) and videos (MP4, MPEG, MOV) are allowed');
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setFilePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !selectedChatroom) return;
+    if ((!message.trim() && !selectedFile) || !selectedChatroom) return;
 
-    sendMessageMutation.mutate({ content: message.trim() });
+    const messageType = selectedFile ? (selectedFile.type.startsWith('image/') ? 'image' : 'video') : 'text';
+    const content = selectedFile ? (selectedFile.name || 'Media file') : message.trim();
+
+    sendMessageMutation.mutate({ 
+      content, 
+      messageType,
+      file: selectedFile || undefined
+    });
   };
 
   const handleChatroomSelect = (chatroom: Chatroom) => {
@@ -270,7 +325,29 @@ export default function ChatroomsPage() {
                               </span>
                             </div>
                             <div className="text-sm text-gray-900 break-words">
-                              {msg.content}
+                              {msg.messageType === 'image' ? (
+                                <div className="space-y-2">
+                                  <img 
+                                    src={msg.content} 
+                                    alt="Shared image"
+                                    className="max-w-xs rounded-lg border"
+                                    style={{ maxHeight: '200px' }}
+                                  />
+                                </div>
+                              ) : msg.messageType === 'video' ? (
+                                <div className="space-y-2">
+                                  <video 
+                                    src={msg.content} 
+                                    controls
+                                    className="max-w-xs rounded-lg border"
+                                    style={{ maxHeight: '200px' }}
+                                  >
+                                    Your browser does not support the video tag.
+                                  </video>
+                                </div>
+                              ) : (
+                                msg.content
+                              )}
                             </div>
                           </div>
                         </div>
@@ -282,17 +359,97 @@ export default function ChatroomsPage() {
 
                 {/* Message Input */}
                 <div className="border-t p-4">
+                  {/* File Preview */}
+                  {filePreview && selectedFile && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          {selectedFile.type.startsWith('image/') ? (
+                            <img 
+                              src={filePreview} 
+                              alt="Preview"
+                              className="max-w-xs max-h-32 rounded border"
+                            />
+                          ) : (
+                            <video 
+                              src={filePreview} 
+                              className="max-w-xs max-h-32 rounded border"
+                              controls
+                            />
+                          )}
+                          <p className="text-sm text-gray-600 mt-2">
+                            {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveFile}
+                          className="text-gray-500 hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <div className="flex gap-2">
+                      {/* Image Upload Button */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (fileInputRef.current) {
+                            fileInputRef.current.accept = 'image/jpeg,image/png,image/gif';
+                            fileInputRef.current.click();
+                          }
+                        }}
+                        disabled={sendMessageMutation.isPending}
+                        title="Upload Image"
+                      >
+                        <Image className="h-4 w-4" />
+                      </Button>
+
+                      {/* Video Upload Button */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (fileInputRef.current) {
+                            fileInputRef.current.accept = 'video/mp4,video/mpeg,video/quicktime';
+                            fileInputRef.current.click();
+                          }
+                        }}
+                        disabled={sendMessageMutation.isPending}
+                        title="Upload Video"
+                      >
+                        <Video className="h-4 w-4" />
+                      </Button>
+
+                      {/* Hidden File Input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                        accept="image/jpeg,image/png,image/gif,video/mp4,video/mpeg,video/quicktime"
+                      />
+                    </div>
+
                     <Input
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder={`Message ${selectedChatroom.name}...`}
+                      placeholder={selectedFile ? "Add a caption..." : `Message ${selectedChatroom.name}...`}
                       className="flex-1"
                       disabled={sendMessageMutation.isPending}
                     />
                     <Button 
                       type="submit" 
-                      disabled={!message.trim() || sendMessageMutation.isPending}
+                      disabled={(!message.trim() && !selectedFile) || sendMessageMutation.isPending}
                       size="icon"
                     >
                       <Send className="h-4 w-4" />
