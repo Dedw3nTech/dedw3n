@@ -319,8 +319,8 @@ export default function ChatroomsPage() {
                       {getChatroomIcon(selectedChatroom.type)}
                     </div>
                     <div>
-                      <CardTitle>{selectedChatroom.name}</CardTitle>
-                      <p className="text-sm text-gray-600">{selectedChatroom.description}</p>
+                      <CardTitle>{getChatroomDisplayName(selectedChatroom)}</CardTitle>
+                      <p className="text-sm text-gray-600">{getChatroomDescription(selectedChatroom)}</p>
                     </div>
                     <Badge variant="secondary" className="ml-auto">
                       {selectedChatroom.type}
