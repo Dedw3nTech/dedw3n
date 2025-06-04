@@ -203,7 +203,7 @@ export default function DatingProfilePage() {
                 <div className="space-y-1">
                   <Label>Activate Dating Profile</Label>
                   <p className="text-sm text-gray-500">
-                    {isActive ? "Your profile is visible to others" : "Your profile is hidden"}
+                    {isActive ? "Your profile is visible to others" : "Your profile is not active"}
                   </p>
                 </div>
                 <Switch
