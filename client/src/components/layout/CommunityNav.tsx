@@ -41,17 +41,15 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
             </Button>
             
             {/* Search bar */}
-            {setSearchTerm && (
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search community..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-            )}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search community..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm?.(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
           </div>
           
           {/* Right corner buttons */}
