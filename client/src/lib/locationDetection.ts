@@ -13,6 +13,7 @@ const countryCurrencyMap: Record<string, string> = {
   'FR': 'EUR', // France - Euro
   'IT': 'EUR', // Italy - Euro
   'ES': 'EUR', // Spain - Euro
+  'AL': 'ALL', // Albania - Albanian Lek
   
   // Americas
   'US': 'USD', // United States - US Dollar
@@ -34,7 +35,7 @@ const countryCurrencyMap: Record<string, string> = {
 export const supportedLanguages = ['en'];
 
 // Currencies supported by our application
-export const supportedCurrencies = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL'];
+export const supportedCurrencies = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL', 'ALL'];
 
 export async function detectUserLocation(): Promise<LocationInfo> {
   try {

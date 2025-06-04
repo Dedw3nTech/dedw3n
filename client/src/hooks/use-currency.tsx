@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { detectUserLocation, getUserPreferredCurrency, saveUserCurrency, supportedCurrencies } from '@/lib/locationDetection';
 
-export type CurrencyType = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL';
+export type CurrencyType = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL' | 'ALL';
 
 // Symbol lookup for different currencies
 export const currencySymbols: Record<string, string> = {
@@ -11,6 +11,7 @@ export const currencySymbols: Record<string, string> = {
   CNY: '¥',
   INR: '₹',
   BRL: 'R$',
+  ALL: 'L',
 };
 
 interface CurrencyContextType {
