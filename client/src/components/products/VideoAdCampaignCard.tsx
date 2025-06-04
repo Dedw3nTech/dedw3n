@@ -19,35 +19,84 @@ interface VideoAdCampaignCardProps {
 }
 
 export function VideoAdCampaignCard({ 
-  youtubeVideoId = "JeQDacfz6eA",
+  videoSource = campaignVideo,
   title = "Dedw3n|Marketplace",
   description,
   category,
   targetAudience,
   price,
   badge,
-  autoPlay = false,
+  autoPlay = true,
+  showControls = true,
   marketType = 'b2c'
 }: VideoAdCampaignCardProps) {
   const [isVisible, setIsVisible] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   if (!isVisible) {
     return null;
   }
 
-  const youtubeEmbedUrl = `https://www.youtube.com/embed/${youtubeVideoId}${autoPlay ? '?autoplay=1&mute=1' : ''}`;
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
 
   return (
     <Card className="w-full overflow-hidden">
       <div className="relative">
-        <iframe
-          className="w-full h-48"
-          src={youtubeEmbedUrl}
-          title={title}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
+        <video
+          ref={videoRef}
+          className="w-full h-48 object-cover"
+          autoPlay={autoPlay}
+          loop
+          muted={isMuted}
+          playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        >
+          <source src={videoSource} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        
+        {/* Video controls overlay */}
+        {showControls && (
+          <div className="absolute bottom-2 left-2 flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
+              onClick={togglePlay}
+            >
+              {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
+              onClick={toggleMute}
+            >
+              {isMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+            </Button>
+          </div>
+        )}
 
         {/* Title header overlay */}
         <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pointer-events-none">
