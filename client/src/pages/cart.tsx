@@ -162,11 +162,7 @@ export default function Cart() {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card className="text-center">
-          <CardContent className="pt-6 pb-8">
-            <div className="flex justify-center">
-              <ShoppingCart className="h-16 w-16 text-muted-foreground" />
-            </div>
-          </CardContent>
+
           <CardHeader>
             <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
             <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
