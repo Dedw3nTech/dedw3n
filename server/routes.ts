@@ -3792,7 +3792,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["gardening", "sustainability", "community"],
           isAttending: false,
-          image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500&h=300&fit=crop"
+          image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500&h=300&fit=crop",
+          price: 0,
+          isFree: true
         },
         {
           id: 3,
@@ -3812,7 +3814,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["business", "networking", "entrepreneur"],
           isAttending: false,
-          image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&h=300&fit=crop"
+          image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&h=300&fit=crop",
+          price: 25,
+          isFree: false
         },
         {
           id: 4,
@@ -3832,7 +3836,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["dating", "social", "wine"],
           isAttending: false,
-          image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&h=300&fit=crop"
+          image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&h=300&fit=crop",
+          price: 35,
+          isFree: false
         },
         {
           id: 5,
@@ -3852,7 +3858,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["dating", "professionals", "singles"],
           isAttending: false,
-          image: "https://images.unsplash.com/photo-1519671282429-b44660ead0a7?w=500&h=300&fit=crop"
+          image: "https://images.unsplash.com/photo-1519671282429-b44660ead0a7?w=500&h=300&fit=crop",
+          price: 15,
+          isFree: false
         }
       ];
 
@@ -3999,6 +4007,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error joining event:', error);
       res.status(500).json({ message: 'Failed to join event' });
+    }
+  });
+
+  app.post('/api/events/:id/buy-ticket', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      // Mock ticket purchase response
+      res.json({ 
+        message: 'Ticket purchased successfully',
+        eventId,
+        userId: req.user!.id,
+        ticketId: `ticket_${Date.now()}`,
+        purchasedAt: new Date().toISOString(),
+        status: 'confirmed'
+      });
+    } catch (error) {
+      console.error('Error purchasing ticket:', error);
+      res.status(500).json({ message: 'Failed to purchase ticket' });
     }
   });
 
