@@ -9,13 +9,13 @@ import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, notificationSettings, reviews, carts,
   wallets, transactions, orders, orderItems, communities,
-  communityMembers, membershipTiers, memberships, events as eventsTable, eventAttendees,
+  communityMembers, membershipTiers, memberships, events as eventsTable,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
-  likedProducts, friendRequests, giftPropositions,
+  likedProducts, friendRequests, giftPropositions, likedEvents,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -27,7 +27,7 @@ import {
   type NotificationSettings, type InsertNotificationSettings,
   type LikedProduct, type InsertLikedProduct,
   type GiftProposition, type InsertGiftProposition,
-  type Event, type InsertEvent, type EventAttendee, type InsertEventAttendee
+  type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
@@ -164,6 +164,12 @@ export interface IStorage {
   unlikeProduct(userId: number, productId: number): Promise<boolean>;
   checkProductLiked(userId: number, productId: number): Promise<boolean>;
   getUserLikedProducts(userId: number): Promise<Product[]>;
+  
+  // Liked events operations
+  likeEvent(userId: number, eventId: number): Promise<LikedEvent>;
+  unlikeEvent(userId: number, eventId: number): Promise<boolean>;
+  checkEventLiked(userId: number, eventId: number): Promise<boolean>;
+  getUserLikedEvents(userId: number): Promise<Event[]>;
   
   // Friend request operations
   createFriendRequest(request: { senderId: number, recipientId: number, message: string }): Promise<any>;
@@ -4333,6 +4339,88 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error updating gift status:', error);
       return undefined;
+    }
+  }
+
+  // Liked events operations
+  async likeEvent(userId: number, eventId: number): Promise<LikedEvent> {
+    try {
+      const [newLike] = await db
+        .insert(likedEvents)
+        .values({ userId, eventId })
+        .returning();
+      return newLike;
+    } catch (error) {
+      console.error('Error liking event:', error);
+      throw new Error('Failed to like event');
+    }
+  }
+
+  async unlikeEvent(userId: number, eventId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(likedEvents)
+        .where(and(eq(likedEvents.userId, userId), eq(likedEvents.eventId, eventId)));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error unliking event:', error);
+      return false;
+    }
+  }
+
+  async checkEventLiked(userId: number, eventId: number): Promise<boolean> {
+    try {
+      const [like] = await db
+        .select()
+        .from(likedEvents)
+        .where(and(eq(likedEvents.userId, userId), eq(likedEvents.eventId, eventId)))
+        .limit(1);
+      return !!like;
+    } catch (error) {
+      console.error('Error checking if event is liked:', error);
+      return false;
+    }
+  }
+
+  async getUserLikedEvents(userId: number): Promise<Event[]> {
+    try {
+      const events = await db
+        .select({
+          id: eventsTable.id,
+          title: eventsTable.title,
+          description: eventsTable.description,
+          date: eventsTable.date,
+          time: eventsTable.time,
+          location: eventsTable.location,
+          category: eventsTable.category,
+          attendeeCount: eventsTable.attendeeCount,
+          maxAttendees: eventsTable.maxAttendees,
+          organizer: {
+            id: users.id,
+            name: users.name,
+            username: users.username,
+            avatar: users.avatar
+          },
+          image: eventsTable.image,
+          price: eventsTable.price,
+          currency: eventsTable.currency,
+          isFree: eventsTable.isFree,
+          createdAt: eventsTable.createdAt,
+          updatedAt: eventsTable.updatedAt
+        })
+        .from(likedEvents)
+        .innerJoin(eventsTable, eq(likedEvents.eventId, eventsTable.id))
+        .innerJoin(users, eq(eventsTable.organizerId, users.id))
+        .where(eq(likedEvents.userId, userId))
+        .orderBy(desc(likedEvents.createdAt));
+
+      return events.map(event => ({
+        ...event,
+        organizer: event.organizer
+      }));
+    } catch (error) {
+      console.error('Error getting user liked events:', error);
+      return [];
     }
   }
 }

@@ -1080,6 +1080,7 @@ export default function EventsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
