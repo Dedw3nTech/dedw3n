@@ -125,7 +125,7 @@ export function ProfileSideCard() {
             >
               <Link href="/events">
                 <Calendar className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Events & Meetups
+                Events
               </Link>
             </Button>
             
@@ -257,6 +257,95 @@ export function ProfileSideCard() {
               Local Chat
             </Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Trending Events & Meetups Card */}
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <svg className="h-4 w-4 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"/>
+              <path d="M19 15L19.5 17L22 17.5L19.5 18L19 20L18.5 18L16 17.5L18.5 17L19 15Z" fill="currentColor" opacity="0.7"/>
+              <path d="M5 6L5.5 8L8 8.5L5.5 9L5 11L4.5 9L2 8.5L4.5 8L5 6Z" fill="currentColor" opacity="0.5"/>
+            </svg>
+            Trending Events
+          </h3>
+        </CardHeader>
+        <CardContent className="p-6 pt-0 space-y-3 text-[14px]">
+          <div className="space-y-3">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Tech Startup Meetup</h4>
+                  <p className="text-xs text-gray-600 mt-1">London • Tonight 7 PM</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Free</span>
+                    <span className="text-xs text-gray-500">50+ attending</span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="bg-purple-600 hover:bg-purple-700 text-white h-7 px-3 text-xs"
+                  asChild
+                >
+                  <Link href="/events">Join</Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-100">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Coffee & Code</h4>
+                  <p className="text-xs text-gray-600 mt-1">Manchester • Tomorrow 10 AM</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">£5</span>
+                    <span className="text-xs text-gray-500">25+ attending</span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-3 text-xs"
+                  asChild
+                >
+                  <Link href="/events">Buy</Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-3 border border-orange-100">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Art Gallery Opening</h4>
+                  <p className="text-xs text-gray-600 mt-1">Birmingham • This Weekend</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">£15</span>
+                    <span className="text-xs text-gray-500">100+ attending</span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="bg-orange-600 hover:bg-orange-700 text-white h-7 px-3 text-xs"
+                  asChild
+                >
+                  <Link href="/events">Buy</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-gray-100">
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-center h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              <Link href="/events">
+                View All Events
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
