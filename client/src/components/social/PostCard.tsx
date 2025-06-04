@@ -62,6 +62,8 @@ import {
   Plus,
   Bookmark,
   Flag,
+  Calendar,
+  Ticket,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -120,6 +122,17 @@ interface Post {
     id: number;
     name: string;
     visibility: "public" | "private" | "secret";
+  } | null;
+  eventId?: number | null;
+  event?: {
+    id: number;
+    title: string;
+    price: number;
+    currency: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    maxAttendees?: number | null;
   } | null;
   isLiked?: boolean;
 }
@@ -475,6 +488,39 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to repost",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Event registration mutation
+  const eventRegistrationMutation = useMutation({
+    mutationFn: async () => {
+      if (!post.event) throw new Error("No event associated with this post");
+      
+      const response = await apiRequest(
+        "POST",
+        `/api/events/${post.event.id}/register`,
+        {}
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to register for event");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: post.event?.price === 0 ? "You've joined the event!" : "Ticket purchased successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to register for event",
         variant: "destructive",
       });
     },
@@ -1134,34 +1180,64 @@ export default function PostCard({
         {/* First line - Purchase actions */}
         <div className="flex justify-between w-full">
           <div className="flex gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
-                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
-              disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="h-4 w-4" />
-              )}
-              <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
-            </Button>
+            {post.product && (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
+                    !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
+                  disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
+                >
+                  {addToCartMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="h-4 w-4" />
+                  )}
+                  <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
+                </Button>
 
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
-                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              onClick={handleMakeOffer}
-              disabled={!post.product && !post.isShoppable}
-            >
-              <span>Make an Offer</span>
-            </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
+                    !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  onClick={handleMakeOffer}
+                  disabled={!post.product && !post.isShoppable}
+                >
+                  <span>Make an Offer</span>
+                </Button>
+              </>
+            )}
+
+            {post.event && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
+                onClick={() => requireAuth("join-event", () => eventRegistrationMutation.mutate())}
+                disabled={eventRegistrationMutation.isPending}
+              >
+                {eventRegistrationMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : post.event.price === 0 ? (
+                  <Calendar className="h-4 w-4" />
+                ) : (
+                  <Ticket className="h-4 w-4" />
+                )}
+                <span>
+                  {eventRegistrationMutation.isPending 
+                    ? "Processing..." 
+                    : post.event.price === 0 
+                      ? "Join Event" 
+                      : "Buy Ticket"
+                  }
+                </span>
+              </Button>
+            )}
           </div>
         </div>
 
