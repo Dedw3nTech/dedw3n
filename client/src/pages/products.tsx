@@ -835,6 +835,16 @@ export default function Products() {
         </div>
       )}
 
+      {/* C2C Video Ad Campaign */}
+      {marketType === 'c2c' && (
+        <div className="mb-6">
+          <VideoAdCampaignCard 
+            marketType="c2c"
+            entity="default"
+          />
+        </div>
+      )}
+
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
         <div className="mb-4">

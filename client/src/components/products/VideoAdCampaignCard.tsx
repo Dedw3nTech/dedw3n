@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
+import carSellingVideo from "@assets/car selling online  .mp4";
+import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
 
 interface VideoAdCampaignCardProps {
   videoSource?: string;
@@ -33,38 +35,17 @@ export function VideoAdCampaignCard({
   // Get entity-specific video and title based on market type and entity
   const getEntityContent = () => {
     if (marketType === 'b2b') {
-      switch (entity) {
-        case 'manufacturing':
-          return {
-            video: campaignVideo,
-            title: 'Manufacturing Solutions | Dedw3n B2B'
-          };
-        case 'retail':
-          return {
-            video: campaignVideo,
-            title: 'Retail Distribution | Dedw3n B2B'
-          };
-        case 'technology':
-          return {
-            video: campaignVideo,
-            title: 'Technology Services | Dedw3n B2B'
-          };
-        case 'healthcare':
-          return {
-            video: campaignVideo,
-            title: 'Healthcare Solutions | Dedw3n B2B'
-          };
-        case 'finance':
-          return {
-            video: campaignVideo,
-            title: 'Financial Services | Dedw3n B2B'
-          };
-        default:
-          return {
-            video: campaignVideo,
-            title: 'Business Solutions | Dedw3n B2B'
-          };
-      }
+      return {
+        video: carSellingVideo,
+        title: 'Dedw3n | Marketplace'
+      };
+    }
+    
+    if (marketType === 'c2c') {
+      return {
+        video: campaignVideo,
+        title: 'Dedw3n | Marketplace'
+      };
     }
     
     return {
