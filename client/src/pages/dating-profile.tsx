@@ -78,6 +78,7 @@ export default function DatingProfilePage() {
   const [relationshipType, setRelationshipType] = useState("");
   const [profileImages, setProfileImages] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(false);
+  const [showOnWall, setShowOnWall] = useState("");
   const [newInterest, setNewInterest] = useState("");
 
   // Fetch existing dating profile
@@ -197,7 +198,7 @@ export default function DatingProfilePage() {
                 Control whether your dating profile is visible to others
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label>Open to Date</Label>
@@ -209,6 +210,20 @@ export default function DatingProfilePage() {
                   checked={isActive}
                   onCheckedChange={setIsActive}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="showOnWall">Wall Display Options</Label>
+                <Select value={showOnWall} onValueChange={setShowOnWall}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose wall display option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="add-open-to-date-button">Add Open To Date Button On Wall</SelectItem>
+                    <SelectItem value="hide-from-wall">Hide from Wall</SelectItem>
+                    <SelectItem value="show-basic-info">Show Basic Info Only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
