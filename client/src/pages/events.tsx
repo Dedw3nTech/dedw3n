@@ -635,7 +635,12 @@ export default function EventsPage() {
                       </Button>
                     </div>
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                      {event.isAttending ? 'Attending' : 'Join Event'}
+                      {event.isAttending 
+                        ? 'Attending' 
+                        : (event.price === 0 || event.price === null || event.price === undefined) 
+                          ? 'Join Event' 
+                          : 'Buy Ticket'
+                      }
                     </Button>
                   </div>
                 </CardFooter>
