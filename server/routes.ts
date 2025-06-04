@@ -4033,6 +4033,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Event likes endpoints
+  app.post('/api/events/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      // Check if already liked
+      const alreadyLiked = await storage.checkEventLiked(userId, eventId);
+      if (alreadyLiked) {
+        return res.status(400).json({ message: 'Event already liked' });
+      }
+
+      const likedEvent = await storage.likeEvent(userId, eventId);
+      res.json({ 
+        message: 'Event liked successfully',
+        liked: true,
+        likedEvent
+      });
+    } catch (error) {
+      console.error('Error liking event:', error);
+      res.status(500).json({ message: 'Failed to like event' });
+    }
+  });
+
+  app.delete('/api/events/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      const success = await storage.unlikeEvent(userId, eventId);
+      if (!success) {
+        return res.status(404).json({ message: 'Event like not found' });
+      }
+
+      res.json({ 
+        message: 'Event unliked successfully',
+        liked: false
+      });
+    } catch (error) {
+      console.error('Error unliking event:', error);
+      res.status(500).json({ message: 'Failed to unlike event' });
+    }
+  });
+
+  app.get('/api/events/:id/liked', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      const isLiked = await storage.checkEventLiked(userId, eventId);
+      res.json({ liked: isLiked });
+    } catch (error) {
+      console.error('Error checking event like status:', error);
+      res.status(500).json({ message: 'Failed to check like status' });
+    }
+  });
+
+  app.get('/api/user/liked-events', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const likedEvents = await storage.getUserLikedEvents(userId);
+      res.json(likedEvents);
+    } catch (error) {
+      console.error('Error getting user liked events:', error);
+      res.status(500).json({ message: 'Failed to get liked events' });
+    }
+  });
+
   // User language preference endpoints
   app.get('/api/user/language', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
