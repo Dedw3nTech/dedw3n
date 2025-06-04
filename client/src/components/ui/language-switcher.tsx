@@ -138,7 +138,6 @@ export function LanguageSwitcher({
               className="flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span>{language.flag}</span>
                 <span className="text-sm">{language.name}</span>
               </div>
               {selectedLanguage.code === language.code && (
