@@ -335,8 +335,11 @@ export default function DatingPage() {
                       </div>
                     </div>
                     <div className="text-center pt-4">
-                      <Button onClick={showLoginPrompt} className="bg-purple-600 text-white hover:bg-purple-700 px-8">
-                        Join VVIP Room
+                      <Button 
+                        onClick={() => user ? setLocation("/dating-profile") : showLoginPrompt()} 
+                        className="bg-purple-600 text-white hover:bg-purple-700 px-8"
+                      >
+                        {user ? "Create Dating Profile" : "Join VVIP Room"}
                       </Button>
                     </div>
                   </CardContent>
