@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import dedw3nLogo from "@assets/Dedw3n Logo.png";
 import {
   Dialog,
   DialogContent,
@@ -126,7 +127,14 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl font-bold text-gray-900">Join Dedw3n</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+            <img 
+              src={dedw3nLogo} 
+              alt="Dedw3n Logo" 
+              className="w-8 h-8"
+            />
+            Join Dedw3n
+          </DialogTitle>
           <DialogDescription className="text-gray-600">
             Sign in to unlock all features !
           </DialogDescription>
