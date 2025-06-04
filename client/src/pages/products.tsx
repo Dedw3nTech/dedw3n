@@ -815,50 +815,12 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video content with marketplace-specific entities and properties */}
-      <div className="mb-6">
-        {marketType === 'b2b' && (
-          <VideoAdCampaignCard 
-            title="B2B Solutions | Dedw3n Business"
-            description="Expand your business with bulk purchasing and wholesale opportunities"
-            category="Wholesale Equipment"
-            targetAudience="Business Owners"
-            price="Starting from $5,000"
-            badge="Volume Discounts"
-            marketType="b2b"
-            autoPlay={false}
-            showControls={true}
-          />
-        )}
-        
-        {marketType === 'c2c' && (
-          <VideoAdCampaignCard 
-            title="C2C Marketplace | Dedw3n Community"
-            description="Find unique items from trusted community members in your area"
-            category="Pre-owned Goods"
-            targetAudience="Local Community"
-            price="$25 - $500"
-            badge="Negotiable"
-            marketType="c2c"
-            autoPlay={false}
-            showControls={true}
-          />
-        )}
-        
-        {marketType === 'b2c' && (
-          <VideoAdCampaignCard 
-            title="Dedw3n|Marketplace"
-            description="Discover trending products with exclusive deals and fast shipping"
-            category="Consumer Goods"
-            targetAudience="Shoppers"
-            price="Up to 50% Off"
-            badge="Free Shipping"
-            marketType="b2c"
-            autoPlay={true}
-            showControls={true}
-          />
-        )}
-      </div>
+      {/* Video Ad Campaign - only show in B2C marketplace */}
+      {marketType === 'b2c' && (
+        <div className="mb-6">
+          <VideoAdCampaignCard />
+        </div>
+      )}
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
