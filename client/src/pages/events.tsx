@@ -52,7 +52,9 @@ export default function EventsPage() {
     location: '',
     category: '',
     maxAttendees: '',
-    tags: ''
+    tags: '',
+    isFree: true,
+    price: ''
   });
 
   // Fetch events
@@ -87,7 +89,9 @@ export default function EventsPage() {
         location: '',
         category: '',
         maxAttendees: '',
-        tags: ''
+        tags: '',
+        isFree: true,
+        price: ''
       });
       toast({
         title: 'Event Created',
@@ -164,10 +168,31 @@ export default function EventsPage() {
       return;
     }
 
+    // Check if paid event requires vendor account
+    if (!newEvent.isFree && !user.isVendor) {
+      toast({
+        title: 'Vendor Account Required',
+        description: 'Creating paid events requires a vendor account. Please upgrade to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate price for paid events
+    if (!newEvent.isFree && (!newEvent.price || parseFloat(newEvent.price) <= 0)) {
+      toast({
+        title: 'Invalid Price',
+        description: 'Please enter a valid price for paid events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const eventData = {
       ...newEvent,
       maxAttendees: newEvent.maxAttendees ? parseInt(newEvent.maxAttendees) : null,
-      tags: newEvent.tags ? newEvent.tags.split(',').map(tag => tag.trim()) : []
+      tags: newEvent.tags ? newEvent.tags.split(',').map(tag => tag.trim()) : [],
+      price: newEvent.isFree ? 0 : parseFloat(newEvent.price || '0')
     };
 
     createEventMutation.mutate(eventData);
@@ -332,6 +357,65 @@ export default function EventsPage() {
                   onChange={(e) => setNewEvent({ ...newEvent, tags: e.target.value })}
                   placeholder="e.g. networking, startup, tech"
                 />
+              </div>
+              
+              {/* Pricing Options */}
+              <div>
+                <Label className="text-base font-medium">Event Pricing</Label>
+                <div className="space-y-3 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="free"
+                      name="pricing"
+                      checked={newEvent.isFree}
+                      onChange={() => setNewEvent({ ...newEvent, isFree: true, price: '' })}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <Label htmlFor="free" className="text-sm font-normal">
+                      Free Event
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="paid"
+                      name="pricing"
+                      checked={!newEvent.isFree}
+                      onChange={() => setNewEvent({ ...newEvent, isFree: false })}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <Label htmlFor="paid" className="text-sm font-normal">
+                      Paid Event
+                    </Label>
+                  </div>
+                  
+                  {!newEvent.isFree && (
+                    <div className="ml-6 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-medium">$</span>
+                        <Input
+                          type="number"
+                          value={newEvent.price}
+                          onChange={(e) => setNewEvent({ ...newEvent, price: e.target.value })}
+                          placeholder="0.00"
+                          className="w-24"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      {!user?.isVendor && (
+                        <p className="text-sm text-amber-600">
+                          Note: Creating paid events requires a vendor account. 
+                          <span className="text-blue-600 underline cursor-pointer hover:text-blue-800">
+                            Upgrade to vendor
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="flex gap-2 pt-4">
