@@ -57,7 +57,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 
 interface CreatePostProps {
