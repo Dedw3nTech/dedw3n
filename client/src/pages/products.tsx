@@ -815,10 +815,31 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video Ad Campaign - only show in B2C marketplace */}
+      {/* Video Ad Campaign - show in both B2C and B2B marketplace */}
       {marketType === 'b2c' && (
         <div className="mb-6">
-          <VideoAdCampaignCard />
+          <VideoAdCampaignCard 
+            marketType="b2c"
+            entity="default"
+          />
+        </div>
+      )}
+
+      {/* B2B Video Ad Campaign with different entities */}
+      {marketType === 'b2b' && (
+        <div className="mb-6 space-y-4">
+          <VideoAdCampaignCard 
+            marketType="b2b"
+            entity="manufacturing"
+          />
+          <VideoAdCampaignCard 
+            marketType="b2b"
+            entity="technology"
+          />
+          <VideoAdCampaignCard 
+            marketType="b2b"
+            entity="healthcare"
+          />
         </div>
       )}
 

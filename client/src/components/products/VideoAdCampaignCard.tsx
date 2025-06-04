@@ -9,13 +9,17 @@ interface VideoAdCampaignCardProps {
   title?: string;
   autoPlay?: boolean;
   showControls?: boolean;
+  entity?: string;
+  marketType?: 'b2c' | 'b2b' | 'c2c';
 }
 
 export function VideoAdCampaignCard({ 
   videoSource = campaignVideo,
   title = "Dedw3n|Marketplace",
   autoPlay = true,
-  showControls = true
+  showControls = true,
+  entity = "default",
+  marketType = "b2c"
 }: VideoAdCampaignCardProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -25,6 +29,51 @@ export function VideoAdCampaignCard({
   if (!isVisible) {
     return null;
   }
+
+  // Get entity-specific video and title based on market type and entity
+  const getEntityContent = () => {
+    if (marketType === 'b2b') {
+      switch (entity) {
+        case 'manufacturing':
+          return {
+            video: campaignVideo,
+            title: 'Manufacturing Solutions | Dedw3n B2B'
+          };
+        case 'retail':
+          return {
+            video: campaignVideo,
+            title: 'Retail Distribution | Dedw3n B2B'
+          };
+        case 'technology':
+          return {
+            video: campaignVideo,
+            title: 'Technology Services | Dedw3n B2B'
+          };
+        case 'healthcare':
+          return {
+            video: campaignVideo,
+            title: 'Healthcare Solutions | Dedw3n B2B'
+          };
+        case 'finance':
+          return {
+            video: campaignVideo,
+            title: 'Financial Services | Dedw3n B2B'
+          };
+        default:
+          return {
+            video: campaignVideo,
+            title: 'Business Solutions | Dedw3n B2B'
+          };
+      }
+    }
+    
+    return {
+      video: videoSource,
+      title: title
+    };
+  };
+
+  const entityContent = getEntityContent();
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -57,7 +106,7 @@ export function VideoAdCampaignCard({
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
         >
-          <source src={videoSource} type="video/mp4" />
+          <source src={entityContent.video} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         
@@ -87,7 +136,7 @@ export function VideoAdCampaignCard({
         {/* Title header overlay */}
         <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pointer-events-none">
           <p className="text-white text-sm font-medium">
-            {title}
+            {entityContent.title}
           </p>
         </div>
 
