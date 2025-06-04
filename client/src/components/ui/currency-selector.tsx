@@ -22,7 +22,7 @@ export function CurrencySelector() {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <span className="text-xs font-medium cursor-pointer" style={{ fontSize: '12px' }}>
-          <span className="font-medium">{selectedCurrency.code}</span>
+          <span className="font-medium">{selectedCurrency.symbol} {selectedCurrency.code}</span>
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -32,9 +32,8 @@ export function CurrencySelector() {
             onClick={() => handleCurrencyChange(currency)}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <span className="text-lg">{currency.flag}</span>
             <div className="flex-1">
-              <div className="font-medium">{currency.code}</div>
+              <div className="font-medium">{currency.symbol} {currency.code}</div>
               <div className="text-xs text-muted-foreground">{currency.name}</div>
             </div>
             {selectedCurrency.code === currency.code && (
