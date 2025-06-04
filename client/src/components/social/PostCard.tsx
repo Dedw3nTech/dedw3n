@@ -122,6 +122,7 @@ interface Post {
     visibility: "public" | "private" | "secret";
   } | null;
   isLiked?: boolean;
+  isSaved?: boolean;
 }
 
 // Component props
@@ -356,6 +357,42 @@ export default function PostCard({
       toast({
         title: "Error",
         description: error.message || "Failed to send friend request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Save post mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(
+        post.isSaved ? "DELETE" : "POST",
+        `/api/posts/${post.id}/save`,
+        {}
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save post");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: post.isSaved ? "Post unsaved" : "Post saved",
+        description: post.isSaved ? "Post removed from saved posts" : "Post saved to your collection",
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/saved"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save post",
         variant: "destructive",
       });
     },
@@ -605,6 +642,10 @@ export default function PostCard({
       amount: offerAmount, 
       message: offerMessage 
     });
+  };
+
+  const handleSavePost = () => {
+    saveMutation.mutate();
   };
 
   // Video player functions
@@ -1235,6 +1276,20 @@ export default function PostCard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            <Button 
+              variant="ghost" 
+              size="default"
+              className={`flex items-center gap-1 text-blue-500 ${post.isSaved ? "text-blue-600" : ""}`}
+              onClick={() => requireAuth("save", handleSavePost)}
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Bookmark className={`h-5 w-5 ${post.isSaved ? "fill-current" : ""}`} />
+              )}
+            </Button>
           </div>
         </div>
 
