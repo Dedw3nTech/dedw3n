@@ -84,6 +84,7 @@ export default function EventsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('date');
+  const [selectedLocation, setSelectedLocation] = useState('global');
 
   // Event likes mutations
   const likeEventMutation = useMutation({
@@ -176,6 +177,21 @@ export default function EventsPage() {
     createEventMutation.mutate(eventData);
   };
 
+  // Define location filter options
+  const locationOptions = [
+    { value: 'global', label: 'Global' },
+    { value: 'my-city', label: 'My City' },
+    { value: 'my-country', label: 'My Country' },
+    { value: 'my-region', label: 'My Region' }
+  ];
+
+  // Mock user location data (in real app, this would come from user profile/geolocation)
+  const userLocation = {
+    city: 'London',
+    country: 'United Kingdom',
+    region: 'Europe'
+  };
+
   // Filter and sort events
   const filteredAndSortedEvents = events
     .filter((event: Event) => {
@@ -183,7 +199,27 @@ export default function EventsPage() {
                           event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           event.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      
+      // Location filtering
+      let matchesLocation = true;
+      if (selectedLocation !== 'global') {
+        const eventLocation = event.location.toLowerCase();
+        switch (selectedLocation) {
+          case 'my-city':
+            matchesLocation = eventLocation.includes(userLocation.city.toLowerCase());
+            break;
+          case 'my-country':
+            matchesLocation = eventLocation.includes(userLocation.country.toLowerCase()) ||
+                            eventLocation.includes('uk') || eventLocation.includes('britain');
+            break;
+          case 'my-region':
+            matchesLocation = eventLocation.includes(userLocation.region.toLowerCase()) ||
+                            eventLocation.includes('european') || eventLocation.includes('europe');
+            break;
+        }
+      }
+      
+      return matchesSearch && matchesCategory && matchesLocation;
     })
     .sort((a: Event, b: Event) => {
       switch (sortBy) {
@@ -466,6 +502,19 @@ export default function EventsPage() {
               {categories.map((category) => (
                 <SelectItem key={category.value} value={category.value}>
                   {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <SelectTrigger className="w-full md:w-40">
+              <MapPin className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {locationOptions.map((location) => (
+                <SelectItem key={location.value} value={location.value}>
+                  {location.label}
                 </SelectItem>
               ))}
             </SelectContent>
