@@ -3236,6 +3236,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get active users in chatroom
+  app.get('/api/chatrooms/:id/users', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      const activeUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          lastSeen: chatroomMembers.lastSeenAt
+        })
+        .from(chatroomMembers)
+        .leftJoin(users, eq(chatroomMembers.userId, users.id))
+        .where(eq(chatroomMembers.chatroomId, chatroomId))
+        .where(eq(chatroomMembers.isOnline, true));
+
+      res.json(activeUsers);
+    } catch (error) {
+      console.error('Error fetching active users:', error);
+      res.status(500).json({ message: 'Failed to fetch active users' });
+    }
+  });
+
   // Dating profile endpoint - using fallback auth
   app.get('/api/dating-profile', async (req: Request, res: Response) => {
     try {
