@@ -152,7 +152,20 @@ export default function VendorDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              There was an error verifying your vendor status. Please try logging in again or contact support if the issue persists.
+              To create your vendor profile, please{' '}
+              <span 
+                className="text-blue-600 cursor-pointer hover:underline"
+                onClick={() => setLocation('/vendor-register')}
+              >
+                click here
+              </span>
+              . If you encounter an error while having a vendor account, please attempt to log in again. Should the issue persist, do not hesitate to contact support for assistance.{' '}
+              <span 
+                className="text-blue-600 cursor-pointer hover:underline"
+                onClick={() => setLocation('/contact')}
+              >
+                Contact Us
+              </span>
             </p>
             <div className="space-y-2">
               <Button onClick={() => setLocation('/vendor-register')} className="bg-black text-white hover:bg-gray-800">
