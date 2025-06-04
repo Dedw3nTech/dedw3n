@@ -151,6 +151,7 @@ export default function DatingProfilePage() {
       relationshipType,
       profileImages,
       isActive,
+      datingRoomTier,
     };
 
     updateProfileMutation.mutate(profileData);

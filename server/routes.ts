@@ -3324,6 +3324,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dating profiles by tier endpoint
+  app.get('/api/dating-profiles/:tier', async (req: Request, res: Response) => {
+    try {
+      console.log('[DEBUG] /api/dating-profiles/:tier called');
+      
+      let authenticatedUser = null;
+      
+      // Authentication check (same as dating-profile endpoint)
+      try {
+        if (req.user) {
+          authenticatedUser = req.user;
+          console.log('[DEBUG] Dating profiles by tier - Session user found:', authenticatedUser.id);
+        } else {
+          // Try manual session check
+          const sessionUserId = req.session?.passport?.user;
+          if (sessionUserId) {
+            const user = await storage.getUser(sessionUserId);
+            if (user) {
+              authenticatedUser = user;
+              console.log('[DEBUG] Dating profiles by tier - Session fallback user found:', user.id);
+            }
+          }
+        }
+        
+        // If no session auth, try Authorization header
+        if (!authenticatedUser) {
+          const authHeader = req.headers.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            try {
+              const payload = verifyToken(token);
+              if (payload) {
+                const user = await storage.getUser(payload.userId);
+                if (user) {
+                  authenticatedUser = user;
+                  console.log('[DEBUG] Dating profiles by tier - JWT user found:', user.id);
+                }
+              }
+            } catch (jwtError) {
+              console.log('[DEBUG] Dating profiles by tier - JWT verification failed');
+            }
+          }
+        }
+        
+        if (!authenticatedUser) {
+          console.log('[DEBUG] Dating profiles by tier - No authentication found');
+          return res.status(401).json({ 
+            message: 'Unauthorized - No valid authentication' 
+          });
+        }
+
+        const { tier } = req.params;
+        
+        // Validate tier parameter
+        if (!['normal', 'vip', 'vvip'].includes(tier)) {
+          return res.status(400).json({ message: 'Invalid tier' });
+        }
+
+        // Get user's dating profile to check their tier access
+        const userProfile = {
+          datingRoomTier: 'normal' // Default tier for now
+        };
+
+        // Check access permissions
+        const hasAccess = (requestedTier: string, userTier: string) => {
+          if (requestedTier === "normal") return true;
+          if (requestedTier === "vip") return userTier === "vip" || userTier === "vvip";
+          if (requestedTier === "vvip") return userTier === "vvip";
+          return false;
+        };
+
+        if (!hasAccess(tier, userProfile.datingRoomTier)) {
+          return res.status(403).json({ 
+            message: 'Access denied - insufficient tier level' 
+          });
+        }
+
+        // Mock dating profiles for different tiers (will be replaced with real database queries)
+        const datingProfiles: Record<string, any[]> = {
+          normal: [
+            {
+              id: 1,
+              userId: 101,
+              displayName: "Sarah M.",
+              age: 28,
+              bio: "Love hiking and coffee dates. Looking for genuine connections.",
+              location: "London, UK",
+              interests: ["Hiking", "Coffee", "Books", "Travel"],
+              lookingFor: "Long-term relationship",
+              relationshipType: "serious",
+              profileImages: [],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal"
+            },
+            {
+              id: 2,
+              userId: 102,
+              displayName: "Mike R.",
+              age: 32,
+              bio: "Entrepreneur and fitness enthusiast. Love trying new restaurants.",
+              location: "Manchester, UK",
+              interests: ["Fitness", "Business", "Food", "Music"],
+              lookingFor: "Someone adventurous",
+              relationshipType: "casual",
+              profileImages: [],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal"
+            }
+          ],
+          vip: [
+            {
+              id: 3,
+              userId: 103,
+              displayName: "Alexandra K.",
+              age: 29,
+              bio: "Investment banker who loves luxury travel and fine dining.",
+              location: "Canary Wharf, London",
+              interests: ["Finance", "Travel", "Wine", "Art"],
+              lookingFor: "Sophisticated partner",
+              relationshipType: "serious",
+              profileImages: [],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip"
+            },
+            {
+              id: 4,
+              userId: 104,
+              displayName: "James W.",
+              age: 35,
+              bio: "Tech executive passionate about innovation and philanthropy.",
+              location: "Kensington, London",
+              interests: ["Technology", "Philanthropy", "Sailing", "Chess"],
+              lookingFor: "Intellectual equal",
+              relationshipType: "serious",
+              profileImages: [],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip"
+            }
+          ],
+          vvip: [
+            {
+              id: 5,
+              userId: 105,
+              displayName: "Victoria S.",
+              age: 31,
+              bio: "International business mogul. Private jets and exclusive events.",
+              location: "Mayfair, London",
+              interests: ["Business", "Luxury", "Horses", "Opera"],
+              lookingFor: "Elite companion",
+              relationshipType: "exclusive",
+              profileImages: [],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip"
+            },
+            {
+              id: 6,
+              userId: 106,
+              displayName: "Richard H.",
+              age: 38,
+              bio: "Billionaire entrepreneur. Looking for someone who understands the high life.",
+              location: "Belgravia, London",
+              interests: ["Investments", "Yachts", "Polo", "Collecting"],
+              lookingFor: "Exceptional partner",
+              relationshipType: "exclusive",
+              profileImages: [],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip"
+            }
+          ]
+        };
+
+        // Filter out current user's profile
+        const profiles = datingProfiles[tier].filter(profile => profile.userId !== authenticatedUser.id);
+
+        console.log(`[DEBUG] Dating profiles by tier - Returning ${profiles.length} profiles for tier: ${tier}`);
+        return res.json(profiles);
+        
+      } catch (authError) {
+        console.error('[DEBUG] Dating profiles by tier - Authentication error:', authError);
+        return res.status(401).json({ 
+          message: 'Authentication error' 
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error fetching dating profiles by tier:', error);
+      res.status(500).json({ message: 'Failed to fetch dating profiles' });
+    }
+  });
+
   // User search endpoint for gift functionality
   app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
