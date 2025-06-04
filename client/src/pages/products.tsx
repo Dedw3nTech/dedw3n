@@ -815,12 +815,16 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video Ad Campaign - only show in B2C marketplace */}
-      {marketType === 'b2c' && (
-        <div className="mb-6">
-          <VideoAdCampaignCard />
-        </div>
-      )}
+      {/* Video Ad Campaign - show in all marketplace types */}
+      <div className="mb-6">
+        <VideoAdCampaignCard 
+          title={
+            marketType === 'b2b' ? 'B2B Solutions | Dedw3n Business' :
+            marketType === 'c2c' ? 'C2C Marketplace | Dedw3n Community' :
+            'Dedw3n|Marketplace'
+          }
+        />
+      </div>
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
