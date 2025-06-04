@@ -81,7 +81,7 @@ export default function DatingProfilePage() {
   const [newInterest, setNewInterest] = useState("");
 
   // Fetch existing dating profile
-  const { data: datingProfile, isLoading } = useQuery({
+  const { data: datingProfile, isLoading } = useQuery<DatingProfile>({
     queryKey: ["/api/dating-profile"],
     enabled: !!user,
   });
@@ -89,15 +89,16 @@ export default function DatingProfilePage() {
   // Load profile data when fetched
   useEffect(() => {
     if (datingProfile) {
-      setDisplayName(datingProfile.displayName || "");
-      setAge(datingProfile.age || 18);
-      setBio(datingProfile.bio || "");
-      setLocation(datingProfile.location || "");
-      setInterests(datingProfile.interests || []);
-      setLookingFor(datingProfile.lookingFor || "");
-      setRelationshipType(datingProfile.relationshipType || "");
-      setProfileImages(datingProfile.profileImages || []);
-      setIsActive(datingProfile.isActive || false);
+      const profile = datingProfile as DatingProfile;
+      setDisplayName(profile.displayName || "");
+      setAge(profile.age || 18);
+      setBio(profile.bio || "");
+      setLocation(profile.location || "");
+      setInterests(profile.interests || []);
+      setLookingFor(profile.lookingFor || "");
+      setRelationshipType(profile.relationshipType || "");
+      setProfileImages(profile.profileImages || []);
+      setIsActive(profile.isActive || false);
     }
   }, [datingProfile]);
 
@@ -199,7 +200,7 @@ export default function DatingProfilePage() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label>Profile Active</Label>
+                  <Label>Open to Date</Label>
                   <p className="text-sm text-gray-500">
                     {isActive ? "Your profile is visible to others" : "Your profile is hidden"}
                   </p>
