@@ -42,14 +42,14 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
               />
             </div>
             
-            {/* Explore button */}
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+            {/* Explore text with icon */}
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors"
               onClick={() => setLocation("/explore")}
             >
+              <Search className="h-4 w-4" />
               <span className="text-sm font-medium">Explore</span>
-            </Button>
+            </div>
           </div>
         </div>
       </div>
