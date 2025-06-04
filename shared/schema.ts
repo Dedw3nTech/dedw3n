@@ -45,6 +45,9 @@ export const regionEnum = pgEnum('region', [
 // Define product type enum
 export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 
+// Define event category enum
+export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -1190,10 +1193,48 @@ export type InsertSuspiciousDevice = z.infer<typeof insertSuspiciousDeviceSchema
 export type TrustedDevice = typeof trustedDevices.$inferSelect;
 export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
 
+// Community meetups table for local events
+export const communityEvents = pgTable("community_events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  date: date("date").notNull(),
+  time: text("time").notNull(),
+  location: text("location").notNull(),
+  category: eventCategoryEnum("category"),
+  maxAttendees: integer("max_attendees"),
+  organizerId: integer("organizer_id").notNull().references(() => users.id),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Event attendees table for tracking who's attending community events
+export const communityEventAttendees = pgTable("community_event_attendees", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => communityEvents.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  attendedAt: timestamp("attended_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueEventUser: unique().on(table.eventId, table.userId),
+  };
+});
+
 // Liked products schemas
 export const insertLikedProductSchema = createInsertSchema(likedProducts).omit({ id: true, createdAt: true });
 export type LikedProduct = typeof likedProducts.$inferSelect;
 export type InsertLikedProduct = z.infer<typeof insertLikedProductSchema>;
+
+// Community events schemas
+export const insertCommunityEventSchema = createInsertSchema(communityEvents).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCommunityEventAttendeeSchema = createInsertSchema(communityEventAttendees).omit({ id: true, attendedAt: true });
+
+// Community events types
+export type CommunityEvent = typeof communityEvents.$inferSelect;
+export type InsertCommunityEvent = z.infer<typeof insertCommunityEventSchema>;
+export type CommunityEventAttendee = typeof communityEventAttendees.$inferSelect;
+export type InsertCommunityEventAttendee = z.infer<typeof insertCommunityEventAttendeeSchema>;
 
 // Chatroom type enum
 export const chatroomTypeEnum = pgEnum('chatroom_type', ['global', 'regional', 'country']);

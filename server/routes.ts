@@ -3745,6 +3745,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
+  // Events & Meetups API endpoints
+  app.get('/api/events', async (req: Request, res: Response) => {
+    try {
+      const { search, category } = req.query;
+      
+      // Mock events data for demonstration
+      const mockEvents = [
+        {
+          id: 1,
+          title: "Tech Networking Meetup",
+          description: "Connect with local tech professionals and entrepreneurs",
+          date: "2025-06-15",
+          time: "18:00",
+          location: "Downtown Tech Hub, 123 Innovation St",
+          category: "tech",
+          attendeeCount: 24,
+          maxAttendees: 50,
+          organizer: {
+            id: 1,
+            name: "Alex Johnson",
+            username: "alextech",
+            avatar: null
+          },
+          tags: ["networking", "technology", "startup"],
+          isAttending: false
+        },
+        {
+          id: 2,
+          title: "Community Garden Workshop",
+          description: "Learn sustainable gardening techniques with your neighbors",
+          date: "2025-06-20",
+          time: "10:00",
+          location: "Central Park Community Garden",
+          category: "community",
+          attendeeCount: 15,
+          maxAttendees: 30,
+          organizer: {
+            id: 2,
+            name: "Sarah Green",
+            username: "sarahgarden",
+            avatar: null
+          },
+          tags: ["gardening", "sustainability", "community"],
+          isAttending: false
+        },
+        {
+          id: 3,
+          title: "Local Business Networking",
+          description: "Monthly gathering for local business owners and entrepreneurs",
+          date: "2025-06-25",
+          time: "19:00",
+          location: "Business Center Conference Room A",
+          category: "business",
+          attendeeCount: 32,
+          maxAttendees: 40,
+          organizer: {
+            id: 3,
+            name: "Mike Rodriguez",
+            username: "mikebiz",
+            avatar: null
+          },
+          tags: ["business", "networking", "entrepreneur"],
+          isAttending: false
+        }
+      ];
+
+      let filteredEvents = mockEvents;
+
+      // Apply search filter
+      if (search && typeof search === 'string') {
+        const searchTerm = search.toLowerCase();
+        filteredEvents = filteredEvents.filter(event => 
+          event.title.toLowerCase().includes(searchTerm) ||
+          event.description.toLowerCase().includes(searchTerm) ||
+          event.location.toLowerCase().includes(searchTerm) ||
+          event.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      // Apply category filter
+      if (category && typeof category === 'string' && category !== 'all') {
+        filteredEvents = filteredEvents.filter(event => event.category === category);
+      }
+
+      res.json(filteredEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      res.status(500).json({ message: 'Failed to fetch events' });
+    }
+  });
+
+  app.post('/api/events', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { title, description, date, time, location, category, maxAttendees, tags } = req.body;
+      
+      if (!title || !date || !time || !location) {
+        return res.status(400).json({ message: 'Title, date, time, and location are required' });
+      }
+
+      // Mock event creation response
+      const newEvent = {
+        id: Date.now(), // Simple ID generation for demo
+        title,
+        description: description || '',
+        date,
+        time,
+        location,
+        category: category || 'community',
+        attendeeCount: 1, // Creator is automatically attending
+        maxAttendees: maxAttendees || null,
+        organizer: {
+          id: req.user!.id,
+          name: req.user!.name,
+          username: req.user!.username,
+          avatar: req.user!.avatar
+        },
+        tags: Array.isArray(tags) ? tags : [],
+        isAttending: true
+      };
+
+      res.status(201).json(newEvent);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      res.status(500).json({ message: 'Failed to create event' });
+    }
+  });
+
+  app.post('/api/events/:id/attend', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      // Mock attendance response
+      res.json({ 
+        message: 'Successfully joined the event',
+        eventId,
+        userId: req.user!.id,
+        attendedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error joining event:', error);
+      res.status(500).json({ message: 'Failed to join event' });
+    }
+  });
+
   // User language preference endpoints
   app.get('/api/user/language', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

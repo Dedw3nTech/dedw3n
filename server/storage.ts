@@ -9,7 +9,7 @@ import {
   users, vendors, products, categories, posts, comments,
   likes, messages, notifications, notificationSettings, reviews, carts,
   wallets, transactions, orders, orderItems, communities,
-  communityMembers, membershipTiers, memberships, events,
+  communityMembers, membershipTiers, memberships, events as eventsTable, eventAttendees,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
   videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
@@ -26,7 +26,8 @@ import {
   type Connection, type InsertConnection, type Notification, type InsertNotification,
   type NotificationSettings, type InsertNotificationSettings,
   type LikedProduct, type InsertLikedProduct,
-  type GiftProposition, type InsertGiftProposition
+  type GiftProposition, type InsertGiftProposition,
+  type Event, type InsertEvent, type EventAttendee, type InsertEventAttendee
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
