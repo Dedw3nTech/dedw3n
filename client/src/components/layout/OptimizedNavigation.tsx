@@ -166,11 +166,12 @@ export default function OptimizedNavigation() {
                 >
                   <TranslatedText>Log in</TranslatedText>
                 </Button>
-                <Link href="/register">
-                  <Button size="sm">
-                    <TranslatedText>Sign Up</TranslatedText>
-                  </Button>
-                </Link>
+                <Button 
+                  size="sm"
+                  onClick={() => showLoginPrompt("register")}
+                >
+                  <TranslatedText>Sign Up</TranslatedText>
+                </Button>
               </div>
             )}
 
