@@ -816,45 +816,12 @@ export default function Products() {
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
       {/* Video content based on marketplace type */}
-      {marketType === 'b2c' && (
-        <div className="mb-6">
-          <VideoAdCampaignCard />
-        </div>
-      )}
-      
-      {marketType === 'b2b' && (
-        <div className="mb-6">
-          <B2BVideoCard 
-            title="B2B Wholesale Solutions"
-            description="Expand your business with bulk purchasing and wholesale opportunities"
-            targetAudience="Retailers & Distributors"
-            businessType="Wholesale"
-            minOrderValue={5000}
-            currency="USD"
-            autoPlay={false}
-            showControls={true}
-            showBusinessInfo={true}
-          />
-        </div>
-      )}
-      
-      {marketType === 'c2c' && (
-        <div className="mb-6">
-          <C2CVideoCard 
-            title="Community Marketplace"
-            description="Find unique items from trusted community members near you"
-            sellerName="Community Member"
-            location="Your Local Area"
-            price={75}
-            currency="USD"
-            condition="Excellent"
-            autoPlay={false}
-            showControls={true}
-            showSellerInfo={true}
-            isNegotiable={true}
-          />
-        </div>
-      )}
+      <div className="mb-6">
+        <VideoManager 
+          autoPlay={false}
+          showControls={true}
+        />
+      </div>
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
