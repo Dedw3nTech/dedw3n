@@ -582,11 +582,11 @@ export default function EventsPage() {
                   
                   <div className="mb-4">
                     {event.isFree ? (
-                      <Badge variant="outline" className="text-sm font-semibold text-green-600 border-green-200 px-3 py-1">
+                      <Badge variant="outline" className="text-xl font-bold text-green-600 border-green-300 px-6 py-3 border-2">
                         Free Event
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-sm font-semibold text-blue-600 border-blue-200 px-3 py-1">
+                      <Badge variant="outline" className="text-xl font-bold text-blue-600 border-blue-300 px-6 py-3 border-2">
                         {formatPrice(event.price || 0)}
                       </Badge>
                     )}
