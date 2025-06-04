@@ -113,21 +113,16 @@ export function LanguageSwitcher({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`h-8 px-2 ${className}`}
-            disabled={isChanging}
+          <span 
+            className={`text-xs font-medium cursor-pointer ${className}`}
+            style={{ fontSize: '12px' }}
           >
             {isChanging ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>
-                <span className="text-xs font-medium">{selectedLanguage.code}</span>
-                <ChevronDown className="h-3 w-3 ml-1" />
-              </>
+              selectedLanguage.code
             )}
-          </Button>
+          </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           {supportedLanguages.map((language) => (
