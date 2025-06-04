@@ -19,7 +19,7 @@ export default function SavedPosts() {
     if (!isAuthLoading && !user) {
       setLocation("/auth");
     }
-  }, [user, isAuthLoading, setLocation]);
+  }, [user, isAuthLoading]);
 
   const {
     data: savedPosts,
