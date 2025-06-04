@@ -107,7 +107,7 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-start h-10"
             >
-              <Link href="/chatrooms">
+              <Link href="/community/chatrooms">
                 <svg className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   {/* First talking cloud */}
                   <path d="M7 9c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5v-2.5h1c2.8 0 5-2.2 5-5s-2.2-5-5-5H7z" fill="currentColor" opacity="0.7"/>
@@ -230,7 +230,7 @@ export function ProfileSideCard() {
             variant="ghost" 
             className="w-full justify-start h-10 text-[14px]"
           >
-            <Link href="/chatrooms?room=global">
+            <Link href="/community/chatrooms?room=global">
               <Globe className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Global Chat
             </Link>
@@ -241,7 +241,7 @@ export function ProfileSideCard() {
             variant="ghost" 
             className="w-full justify-start h-10 text-[14px]"
           >
-            <Link href="/chatrooms?room=regional">
+            <Link href="/community/chatrooms?room=regional">
               <MapPin className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Regional Chat
             </Link>
@@ -252,7 +252,7 @@ export function ProfileSideCard() {
             variant="ghost" 
             className="w-full justify-start h-10 text-[14px]"
           >
-            <Link href="/chatrooms?room=country">
+            <Link href="/community/chatrooms?room=country">
               <Flag className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
               Local Chat
             </Link>
@@ -264,7 +264,7 @@ export function ProfileSideCard() {
               variant="ghost" 
               className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
             >
-              <Link href="/chatrooms">
+              <Link href="/community/chatrooms">
                 View All Chat Rooms
               </Link>
             </Button>
