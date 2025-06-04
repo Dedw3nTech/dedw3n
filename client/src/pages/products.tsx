@@ -705,6 +705,7 @@ export default function Products() {
                 }}
                 disabled={addToCartMutation.isPending}
                 className="bg-black text-white hover:bg-gray-800 font-bold"
+                title={marketType === 'c2c' ? 'View product details and seller information' : 'Add this product to your shopping cart'}
               >
                 {addToCartMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -717,6 +718,7 @@ export default function Products() {
                 size="sm"
                 onClick={() => shareOnFeed(product)}
                 className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+                title="Share this product on your community feed for others to see"
               >
                 Repost
               </Button>
@@ -730,6 +732,7 @@ export default function Products() {
                 setOfferDialogOpen(true);
               }}
               className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+              title="Make a custom offer to the seller with your preferred price"
             >
               Send Offer
             </Button>
@@ -738,8 +741,8 @@ export default function Products() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-10 w-10"
-              title="Send as gift"
+              className="h-9 w-9"
+              title="Send this product as a gift to someone special"
               onClick={() => {
                 setSelectedGiftProduct(product);
                 setGiftDialogOpen(true);
@@ -750,17 +753,18 @@ export default function Products() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-10 w-10"
-              title="Add to Dating profile as gift"
+              className="h-9 w-9"
+              title="Add this product to your dating profile as a potential gift"
             >
               <Plus className="h-5 w-5 font-bold stroke-2" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-10 w-10"
+              className="h-9 w-9"
               onClick={() => handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
+              title={isProductLiked(product.id) ? 'Remove from your favorites' : 'Add to your favorites'}
             >
               <Heart 
                 className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
@@ -768,7 +772,12 @@ export default function Products() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-9 w-9"
+                  title="Share this product via email, message, or social media"
+                >
                   <Share2 className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
