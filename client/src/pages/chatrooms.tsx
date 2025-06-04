@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Send, Users, Globe, MapPin, Flag, Image, Video, Paperclip, X, Lock, Plus, Mic, MicOff, PhoneCall } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CommunityNav } from "@/components/layout/CommunityNav";
@@ -49,6 +52,10 @@ export default function ChatroomsPage() {
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
+  const [roomName, setRoomName] = useState("");
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [selectedFriends, setSelectedFriends] = useState<number[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -126,6 +133,34 @@ export default function ChatroomsPage() {
       }
 
       return response.json();
+    },
+  });
+
+  // Create private room mutation
+  const createPrivateRoomMutation = useMutation({
+    mutationFn: async (roomData: { name: string; isAudioEnabled: boolean; invitedUsers: number[] }) => {
+      const response = await fetch('/api/chatrooms/private', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(roomData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create private room');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chatrooms'] });
+      setIsCreateRoomOpen(false);
+      setRoomName("");
+      setSelectedFriends([]);
+      setIsAudioEnabled(true);
+      // Automatically select the newly created room
+      if (data.chatroom) {
+        setSelectedChatroom(data.chatroom);
+      }
     },
   });
 
@@ -278,9 +313,94 @@ export default function ChatroomsPage() {
         <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Available Rooms
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Available Rooms
+                </div>
+                <Dialog open={isCreateRoomOpen} onOpenChange={setIsCreateRoomOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="h-8 w-8 p-0">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Create Private Room</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="roomName">Room Name</Label>
+                        <Input 
+                          id="roomName"
+                          value={roomName}
+                          onChange={(e) => setRoomName(e.target.value)}
+                          placeholder="Enter room name..."
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="audioEnabled"
+                          checked={isAudioEnabled}
+                          onCheckedChange={(checked) => setIsAudioEnabled(checked as boolean)}
+                        />
+                        <Label htmlFor="audioEnabled" className="flex items-center gap-2">
+                          <Mic className="h-4 w-4" />
+                          Enable Audio Conference
+                        </Label>
+                      </div>
+
+                      <div>
+                        <Label>Invite Friends</Label>
+                        <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                          {/* Mock friends list - replace with actual friends data */}
+                          {[
+                            { id: 1, name: "Alice Johnson", username: "alice" },
+                            { id: 2, name: "Bob Smith", username: "bob" },
+                            { id: 3, name: "Carol Brown", username: "carol" }
+                          ].map((friend) => (
+                            <div key={friend.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`friend-${friend.id}`}
+                                checked={selectedFriends.includes(friend.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedFriends([...selectedFriends, friend.id]);
+                                  } else {
+                                    setSelectedFriends(selectedFriends.filter(id => id !== friend.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`friend-${friend.id}`} className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                {friend.name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setIsCreateRoomOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            // Handle room creation
+                            console.log('Creating room:', { roomName, isAudioEnabled, selectedFriends });
+                            setIsCreateRoomOpen(false);
+                          }}
+                          disabled={!roomName.trim()}
+                        >
+                          Create Room
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>

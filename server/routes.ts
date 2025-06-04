@@ -3116,6 +3116,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create private room
+  app.post('/api/chatrooms/private', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { name, isAudioEnabled, invitedUsers } = req.body;
+      const userId = (req as any).userId;
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: 'Room name is required' });
+      }
+
+      // Create the private chatroom
+      const newChatroom = await db.insert(chatrooms).values({
+        name: name.trim(),
+        description: `Private room created by user ${userId}`,
+        type: 'private',
+        creatorId: userId,
+        isAudioEnabled: isAudioEnabled || false,
+        isVideoEnabled: false,
+        isActive: true,
+        maxUsers: 10
+      }).returning();
+
+      const chatroomId = newChatroom[0].id;
+
+      // Create invitations for selected friends
+      if (invitedUsers && invitedUsers.length > 0) {
+        const invitations = invitedUsers.map((invitedUserId: number) => ({
+          chatroomId,
+          invitedBy: userId,
+          invitedUser: invitedUserId,
+          status: 'pending'
+        }));
+
+        await db.insert(privateRoomInvitations).values(invitations);
+      }
+
+      // If audio is enabled, create an audio session
+      if (isAudioEnabled) {
+        const sessionId = `audio_${chatroomId}_${Date.now()}`;
+        await db.insert(audioSessions).values({
+          chatroomId,
+          sessionId,
+          hostId: userId,
+          isActive: true,
+          participantCount: 1,
+          maxParticipants: 10
+        });
+      }
+
+      res.json({ 
+        message: 'Private room created successfully', 
+        chatroom: newChatroom[0] 
+      });
+    } catch (error) {
+      console.error('Error creating private room:', error);
+      res.status(500).json({ message: 'Failed to create private room' });
+    }
+  });
+
   // Get chatroom messages
   app.get('/api/chatrooms/:id/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
