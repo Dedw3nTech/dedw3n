@@ -31,9 +31,7 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
             <span className="font-bold text-black text-xl">
               Dedw3n
             </span>
-            <button className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors">
-              Button
-            </button>
+
             <span className="ml-2 text-blue-500 text-sm font-medium">
               Beta Version
             </span>
