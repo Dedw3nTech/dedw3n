@@ -374,6 +374,41 @@ export default function PostCard({
     },
   });
 
+  // Save post mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(
+        "POST",
+        `/api/posts/${post.id}/save`,
+        {}
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save post");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: post.isSaved ? "Post removed from saved" : "Post saved successfully",
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["/api/feed"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save post",
+        variant: "destructive",
+      });
+    },
+  });
+
 
 
   // Delete post mutation
@@ -651,6 +686,14 @@ export default function PostCard({
       amount: offerAmount, 
       message: offerMessage 
     });
+  };
+
+  const handleSavePost = () => {
+    if (!currentUser) {
+      showLoginPrompt("save post");
+      return;
+    }
+    saveMutation.mutate();
   };
 
   // Video player functions
@@ -1238,6 +1281,35 @@ export default function PostCard({
                 </span>
               </Button>
             )}
+
+            {/* Message/Friend Request Button */}
+            {currentUser && currentUser.id !== post.user.id && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                onClick={() => requireAuth("message", () => setIsFriendRequestModalOpen(true))}
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>Message</span>
+              </Button>
+            )}
+
+            {/* Save Post Button */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex items-center gap-1 ${post.isSaved ? "text-yellow-500" : "text-gray-600"}`}
+              onClick={() => requireAuth("save", handleSavePost)}
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Bookmark className={`h-4 w-4 ${post.isSaved ? "fill-current" : ""}`} />
+              )}
+              <span>{post.isSaved ? "Saved" : "Save"}</span>
+            </Button>
           </div>
         </div>
 
