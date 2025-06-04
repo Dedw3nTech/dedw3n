@@ -50,30 +50,31 @@ export function ProfileSideCard() {
     <div className="w-full">
       <Card className="w-full">
         <CardHeader className="pb-3">
-          <div className="flex flex-col items-center text-center">
-            <Avatar className="h-16 w-16 mb-3">
-              <AvatarImage src={user.avatar} alt={user.name || user.username} />
-              <AvatarFallback className="text-lg font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            
-            <h3 className="font-semibold text-lg text-gray-900">
-              {user.name || user.username}
-            </h3>
-            
-            <p className="text-sm text-blue-500 mb-3">
-              @{user.username}
-            </p>
-            
-            {user.datingEnabled && (
-              <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200">
-                <Heart className="h-3 w-3 mr-1" />
-                Open to Date
-              </Badge>
-            )}
-
-          </div>
+          <Link href="/wall" className="block">
+            <div className="flex flex-col items-center text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
+              <Avatar className="h-16 w-16 mb-3">
+                <AvatarImage src={user.avatar} alt={user.name || user.username} />
+                <AvatarFallback className="text-lg font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              
+              <h3 className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors">
+                {user.name || user.username}
+              </h3>
+              
+              <p className="text-sm text-blue-500 mb-3 hover:text-blue-700 transition-colors">
+                @{user.username}
+              </p>
+              
+              {user.datingEnabled && (
+                <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200">
+                  <Heart className="h-3 w-3 mr-1" />
+                  Open to Date
+                </Badge>
+              )}
+            </div>
+          </Link>
         </CardHeader>
         
         <CardContent className="space-y-3">
