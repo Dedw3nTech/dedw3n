@@ -1171,26 +1171,26 @@ export default function PostCard({
           <div className="flex gap-4">
             <Button 
               variant="ghost" 
-              size="sm"
+              size="default"
               className={`flex items-center gap-1 ${post.isLiked ? "text-blue-500" : ""}`}
               onClick={() => requireAuth("like", handleLike)}
               disabled={likeMutation.isPending}
             >
               {likeMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <ThumbsUp className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`} />
+                <ThumbsUp className={`h-5 w-5 ${post.isLiked ? "fill-current" : ""}`} />
               )}
               <span>{post.likes}</span>
             </Button>
             
             <Button 
               variant="ghost" 
-              size="sm"
+              size="default"
               className="flex items-center gap-1"
               onClick={() => requireAuth("comment", handleComment)}
             >
-              <MessageSquare className="h-4 w-4" />
+              <MessageSquare className="h-5 w-5" />
               <span>{post.comments}</span>
             </Button>
             
@@ -1198,10 +1198,10 @@ export default function PostCard({
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  size="sm"
+                  size="default"
                   className="flex items-center gap-1"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-5 w-5" />
                   <span>{post.shares}</span>
                 </Button>
               </DropdownMenuTrigger>
