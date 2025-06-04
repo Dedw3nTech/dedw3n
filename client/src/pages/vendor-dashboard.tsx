@@ -142,7 +142,7 @@ export default function VendorDashboard() {
   if (vendorError) {
     return (
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
-        <Card>
+        <Card className="border-0">
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
             <CardTitle>Vendor Account Not Found</CardTitle>
