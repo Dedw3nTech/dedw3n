@@ -16,6 +16,7 @@ import {
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
+  chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -27,7 +28,9 @@ import {
   type NotificationSettings, type InsertNotificationSettings,
   type LikedProduct, type InsertLikedProduct,
   type GiftProposition, type InsertGiftProposition,
-  type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent
+  type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
+  type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
+  type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
