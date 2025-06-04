@@ -1130,103 +1130,111 @@ export default function PostCard({
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between border-t pt-4 pb-4">
-        <div className="flex gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
-              !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
-            disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
-          >
-            {addToCartMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ShoppingCart className="h-4 w-4" />
-            )}
-            <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
-          </Button>
+      <CardFooter className="flex flex-col gap-3 border-t pt-4 pb-4">
+        {/* First line - Purchase actions */}
+        <div className="flex justify-between w-full">
+          <div className="flex gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
+                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
+              disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
+              <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
+            </Button>
 
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
-              !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            onClick={handleMakeOffer}
-            disabled={!post.product && !post.isShoppable}
-          >
-            <span>Make an Offer</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex items-center gap-1 ${post.isLiked ? "text-blue-500" : ""}`}
-            onClick={() => requireAuth("like", handleLike)}
-            disabled={likeMutation.isPending}
-          >
-            {likeMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ThumbsUp className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`} />
-            )}
-            <span>{post.likes}</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => requireAuth("comment", handleComment)}
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>{post.comments}</span>
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Share2 className="h-4 w-4" />
-                <span>{post.shares}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => requireAuth("share", () => setIsShareModalOpen(true))}
-              >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Message
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  const subject = `Check out this post from ${post.user.name}`;
-                  const body = `${post.content}\n\nView original post: ${window.location.origin}/post/${post.id}`;
-                  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-                }}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                E-mail
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => requireAuth("repost", () => setIsRepostModalOpen(true))}
-                disabled={repostMutation.isPending}
-              >
-                {repostMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Repeat2 className="mr-2 h-4 w-4" />
-                )}
-                Repost
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
+                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={handleMakeOffer}
+              disabled={!post.product && !post.isShoppable}
+            >
+              <span>Make an Offer</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Second line - Social actions */}
+        <div className="flex justify-between w-full">
+          <div className="flex gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex items-center gap-1 ${post.isLiked ? "text-blue-500" : ""}`}
+              onClick={() => requireAuth("like", handleLike)}
+              disabled={likeMutation.isPending}
+            >
+              {likeMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ThumbsUp className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`} />
+              )}
+              <span>{post.likes}</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => requireAuth("comment", handleComment)}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>{post.comments}</span>
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>{post.shares}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => requireAuth("share", () => setIsShareModalOpen(true))}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Message
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const subject = `Check out this post from ${post.user.name}`;
+                    const body = `${post.content}\n\nView original post: ${window.location.origin}/post/${post.id}`;
+                    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                  }}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  E-mail
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => requireAuth("repost", () => setIsRepostModalOpen(true))}
+                  disabled={repostMutation.isPending}
+                >
+                  {repostMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Repeat2 className="mr-2 h-4 w-4" />
+                  )}
+                  Repost
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
       </CardFooter>
