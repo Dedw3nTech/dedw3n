@@ -163,7 +163,7 @@ export default function Cart() {
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card className="text-center">
           <CardContent className="pt-6 pb-8">
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center">
               <ShoppingCart className="h-16 w-16 text-muted-foreground" />
             </div>
           </CardContent>
