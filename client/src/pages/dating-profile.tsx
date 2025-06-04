@@ -194,9 +194,7 @@ export default function DatingProfilePage() {
                 {isActive ? <Eye className="h-5 w-5 text-green-500" /> : <EyeOff className="h-5 w-5 text-gray-400" />}
                 Profile Status
               </CardTitle>
-              <CardDescription>
-                Control whether your dating profile is visible to others
-              </CardDescription>
+
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
