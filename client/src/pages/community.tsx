@@ -12,6 +12,7 @@ import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
 import { VideoAdCampaignCard } from "@/components/products/VideoAdCampaignCard";
+import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
@@ -459,6 +460,12 @@ export default function CommunityPage() {
           {/* Products Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
+              <VideoDisplayCard 
+                marketType="b2c" 
+                title="Dedw3n Community Features" 
+                autoPlay={true}
+                showControls={true}
+              />
               <TrendingCategoriesCard />
               <VideoAdCampaignCard />
               <LatestProductsCard />
