@@ -170,9 +170,7 @@ export default function Cart() {
             <div className="flex justify-center mb-6">
               <ShoppingCart className="h-16 w-16 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground">
-              Browse our products and add items to your cart to see them here.
-            </p>
+
           </CardContent>
           <CardFooter className="flex justify-center">
             <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">Browse Products</Button>
