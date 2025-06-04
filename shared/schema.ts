@@ -589,6 +589,18 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Liked events for user favorites
+export const likedEvents = pgTable("liked_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueLikedEvent: unique().on(table.userId, table.eventId),
+  };
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
@@ -686,6 +698,9 @@ export const insertLikeSchema = createInsertSchema(likes)
 export const insertFollowSchema = createInsertSchema(follows)
   .omit({ id: true, createdAt: true });
 
+export const insertLikedEventSchema = createInsertSchema(likedEvents)
+  .omit({ id: true, createdAt: true });
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -768,6 +783,9 @@ export type InsertLike = z.infer<typeof insertLikeSchema>;
 
 export type Follow = typeof follows.$inferSelect;
 export type InsertFollow = z.infer<typeof insertFollowSchema>;
+
+export type LikedEvent = typeof likedEvents.$inferSelect;
+export type InsertLikedEvent = z.infer<typeof insertLikedEventSchema>;
 
 // Video model for short-form, stories, live streams, and recorded videos
 export const videos = pgTable("videos", {
