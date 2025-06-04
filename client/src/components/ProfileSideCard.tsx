@@ -77,7 +77,7 @@ export function ProfileSideCard() {
           </Link>
         </CardHeader>
         
-        <CardContent className="space-y-3 bg-blue-900">
+        <CardContent className="space-y-3">
           {/* Quick Actions */}
           <div className="space-y-2">
             <Button 
