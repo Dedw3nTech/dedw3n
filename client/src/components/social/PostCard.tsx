@@ -1167,6 +1167,7 @@ export default function PostCard({
 
         {/* Second line - Social actions */}
         <div className="flex justify-between w-full">
+          <div></div>
           <div className="flex gap-4">
             <Button 
               variant="ghost" 
