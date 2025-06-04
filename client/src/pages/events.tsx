@@ -641,16 +641,26 @@ export default function EventsPage() {
                     </Link>
                   </div>
                   
-                  <div className="mb-4">
-                    {event.isFree ? (
-                      <Badge variant="outline" className="text-xl font-bold text-green-600 border-green-300 px-6 py-3 border-2">
-                        Free
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xl font-bold text-blue-600 border-blue-300 px-6 py-3 border-2">
-                        {formatPrice(event.price || 0)}
-                      </Badge>
-                    )}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      {event.isFree ? (
+                        <Badge variant="outline" className="text-xl font-bold text-green-600 border-green-300 px-6 py-3 border-2">
+                          Free
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xl font-bold text-blue-600 border-blue-300 px-6 py-3 border-2">
+                          {formatPrice(event.price || 0)}
+                        </Badge>
+                      )}
+                    </div>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      {event.isAttending 
+                        ? 'Attending' 
+                        : (event.price === 0 || event.price === null || event.price === undefined) 
+                          ? 'Join Event' 
+                          : 'Buy Ticket'
+                      }
+                    </Button>
                   </div>
                   
                   {event.tags && event.tags.length > 0 && (
@@ -670,7 +680,7 @@ export default function EventsPage() {
                 </CardContent>
                 
                 <CardFooter className="px-6 pb-6 pt-0">
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center justify-center w-full">
                     <div className="flex items-center gap-1">
                       <Button 
                         size="sm" 
@@ -735,14 +745,6 @@ export default function EventsPage() {
                         <span className="text-xs">Repost</span>
                       </Button>
                     </div>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                      {event.isAttending 
-                        ? 'Attending' 
-                        : (event.price === 0 || event.price === null || event.price === undefined) 
-                          ? 'Join Event' 
-                          : 'Buy Ticket'
-                      }
-                    </Button>
                   </div>
                 </CardFooter>
               </Card>
