@@ -3152,7 +3152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Send message to chatroom
-  app.post('/api/chatrooms/:id/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/chatrooms/:id/messages', upload.single('file'), unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const chatroomId = parseInt(req.params.id);
       const userId = (req.user as any)?.id;
@@ -3165,11 +3165,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'User not authenticated' });
       }
 
+      let content = req.body.content || '';
+      let messageType = req.body.messageType || 'text';
+
+      // Handle file upload
+      if (req.file) {
+        const fileUrl = `/uploads/${req.file.filename}`;
+        content = fileUrl;
+        
+        // Determine message type based on file type
+        if (req.file.mimetype.startsWith('image/')) {
+          messageType = 'image';
+        } else if (req.file.mimetype.startsWith('video/')) {
+          messageType = 'video';
+        }
+      }
+
       const messageData = insertChatroomMessageSchema.parse({
         chatroomId,
         userId,
-        content: req.body.content,
-        messageType: req.body.messageType || 'text'
+        content,
+        messageType
       });
 
       const [newMessage] = await db.insert(chatroomMessages).values(messageData).returning();
