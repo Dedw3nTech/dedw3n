@@ -50,6 +50,11 @@ export default function ChatroomsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
+  // Fetch user data
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/me'],
+  });
+
   // Fetch chatrooms
   const { data: chatrooms = [], isLoading: loadingChatrooms } = useQuery({
     queryKey: ['/api/chatrooms'],
@@ -215,6 +220,37 @@ export default function ChatroomsPage() {
     }
   };
 
+  // Get personalized chatroom display name
+  const getChatroomDisplayName = (chatroom: Chatroom) => {
+    if (chatroom.type === 'regional' && chatroom.name === 'My City' && user?.city) {
+      return user.city;
+    }
+    if (chatroom.type === 'regional' && chatroom.name === 'London' && user?.city) {
+      return user.city;
+    }
+    if (chatroom.type === 'country' && chatroom.name === 'My Country' && user?.country) {
+      return user.country;
+    }
+    if (chatroom.type === 'regional' && chatroom.name === 'My Region' && user?.region) {
+      return user.region;
+    }
+    return chatroom.name;
+  };
+
+  // Get personalized chatroom description
+  const getChatroomDescription = (chatroom: Chatroom) => {
+    if (chatroom.type === 'regional' && (chatroom.name === 'My City' || chatroom.name === 'London') && user?.city) {
+      return `Connect with people in ${user.city} and discover what's happening in your city`;
+    }
+    if (chatroom.type === 'country' && chatroom.name === 'My Country' && user?.country) {
+      return `Connect with people from ${user.country}`;
+    }
+    if (chatroom.type === 'regional' && chatroom.name === 'My Region' && user?.region) {
+      return `Chat with people in ${user.region}`;
+    }
+    return chatroom.description;
+  };
+
   if (loadingChatrooms) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -256,7 +292,7 @@ export default function ChatroomsPage() {
                         {getChatroomIcon(chatroom.type)}
                       </div>
                       <div className="text-left flex-1">
-                        <div className="font-medium">{chatroom.name}</div>
+                        <div className="font-medium">{getChatroomDisplayName(chatroom)}</div>
                         <div className="text-xs text-gray-500 capitalize">
                           {chatroom.type}
                           {chatroom.region && ` • ${chatroom.region}`}
