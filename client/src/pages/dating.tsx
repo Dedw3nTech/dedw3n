@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Crown, Gem, Lock, MessageCircle, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield } from "lucide-react";
+import { useLoginPrompt } from "@/hooks/use-login-prompt";
+import { useLocation } from "wouter";
 
 
 interface DatingProfile {
@@ -32,6 +35,8 @@ interface User {
 
 export default function DatingPage() {
   const [selectedTier, setSelectedTier] = useState("normal");
+  const { showLoginPrompt } = useLoginPrompt();
+  const [, setLocation] = useLocation();
 
   // Fetch current user
   const { data: user } = useQuery<User>({
@@ -158,6 +163,191 @@ export default function DatingPage() {
       </Card>
     );
   };
+
+  // Show informational tabs for logged-out users or users without dating profile
+  if (!user || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50">      
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold mb-4">Dating Rooms</h1>
+              <p className="text-gray-600 mb-6">
+                Discover exclusive dating experiences tailored to your lifestyle and income level
+              </p>
+            </div>
+
+            <Tabs defaultValue="normal" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-8">
+                <TabsTrigger value="normal" className="flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  Normal Room
+                </TabsTrigger>
+                <TabsTrigger value="vip" className="flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  VIP Room
+                </TabsTrigger>
+                <TabsTrigger value="vvip" className="flex items-center gap-2">
+                  <Gem className="h-4 w-4" />
+                  VVIP Room
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="normal" className="space-y-6">
+                <Card>
+                  <CardHeader className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Heart className="h-8 w-8 text-red-500" />
+                      <CardTitle className="text-2xl">Normal Dating Room</CardTitle>
+                    </div>
+                    <p className="text-3xl font-bold text-green-600">FREE</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Features Included
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• Browse dating profiles</li>
+                          <li>• Send and receive messages</li>
+                          <li>• Basic matching algorithm</li>
+                          <li>• Standard profile visibility</li>
+                          <li>• Community chat access</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Heart className="h-5 w-5" />
+                          Perfect For
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• Anyone starting their dating journey</li>
+                          <li>• Casual dating and friendships</li>
+                          <li>• Exploring the platform features</li>
+                          <li>• Building connections</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="text-center pt-4">
+                      <Button 
+                        onClick={() => user ? setLocation("/dating-profile") : showLoginPrompt()} 
+                        className="bg-black text-white hover:bg-gray-800 px-8"
+                      >
+                        {user ? "Create Dating Profile" : "Join Normal Room"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="vip" className="space-y-6">
+                <Card>
+                  <CardHeader className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Crown className="h-8 w-8 text-yellow-600" />
+                      <CardTitle className="text-2xl">VIP Dating Room</CardTitle>
+                    </div>
+                    <p className="text-3xl font-bold text-yellow-600">£199.99/month</p>
+                    <p className="text-sm text-gray-600">For earners over £150,000 per year</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Star className="h-5 w-5" />
+                          Premium Features
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• All Normal Room features</li>
+                          <li>• Priority profile visibility</li>
+                          <li>• Advanced matching filters</li>
+                          <li>• Verified income profiles</li>
+                          <li>• Exclusive VIP events</li>
+                          <li>• Personal dating concierge</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Shield className="h-5 w-5" />
+                          Exclusive Access
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• High-earning professionals</li>
+                          <li>• Verified income verification</li>
+                          <li>• Quality over quantity matching</li>
+                          <li>• Private VIP chat rooms</li>
+                          <li>• Premium customer support</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="text-center pt-4">
+                      <Button 
+                        onClick={() => user ? setLocation("/dating-profile") : showLoginPrompt()} 
+                        className="bg-yellow-600 text-white hover:bg-yellow-700 px-8"
+                      >
+                        {user ? "Create Dating Profile" : "Join VIP Room"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="vvip" className="space-y-6">
+                <Card>
+                  <CardHeader className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Gem className="h-8 w-8 text-purple-600" />
+                      <CardTitle className="text-2xl">VVIP Dating Room</CardTitle>
+                    </div>
+                    <p className="text-3xl font-bold text-purple-600">£1,999.99/month</p>
+                    <p className="text-sm text-gray-600">For earners over £1,500,000 per year</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Gem className="h-5 w-5" />
+                          Ultra-Premium Features
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• All VIP Room features</li>
+                          <li>• White-glove dating service</li>
+                          <li>• Personal matchmaker assigned</li>
+                          <li>• Luxury date experiences</li>
+                          <li>• Private jet/yacht introductions</li>
+                          <li>• Global elite network access</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Crown className="h-5 w-5" />
+                          Elite Lifestyle
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>• Ultra-high net worth individuals</li>
+                          <li>• Celebrity and VIP profiles</li>
+                          <li>• Absolute privacy and discretion</li>
+                          <li>• Bespoke introduction services</li>
+                          <li>• 24/7 premium concierge</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="text-center pt-4">
+                      <Button onClick={showLoginPrompt} className="bg-purple-600 text-white hover:bg-purple-700 px-8">
+                        Join VVIP Room
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">      
