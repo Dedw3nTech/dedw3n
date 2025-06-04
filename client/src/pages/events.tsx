@@ -593,10 +593,7 @@ export default function EventsPage() {
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-1">
 
-                      <Button size="sm" variant="ghost">
-                        <MessageCircle className="h-4 w-4 mr-1 text-gray-600" />
-                        <span className="text-xs">Comment</span>
-                      </Button>
+
                       <Button 
                         size="sm" 
                         className="bg-black hover:bg-gray-800 text-white"
