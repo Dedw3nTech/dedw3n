@@ -3770,7 +3770,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           tags: ["networking", "technology", "startup"],
           isAttending: false,
-          image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&h=300&fit=crop"
+          image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&h=300&fit=crop",
+          price: 0,
+          isFree: true
         },
         {
           id: 2,

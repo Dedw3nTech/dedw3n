@@ -32,6 +32,8 @@ interface Event {
   isAttending?: boolean;
   tags?: string[];
   image?: string;
+  price?: number;
+  isFree?: boolean;
 }
 
 export default function EventsPage() {
@@ -122,6 +124,27 @@ export default function EventsPage() {
     },
   });
 
+  // Buy ticket mutation
+  const buyTicketMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      return apiRequest('POST', `/api/events/${eventId}/buy-ticket`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/events'] });
+      toast({
+        title: 'Ticket Purchased',
+        description: 'Your ticket has been purchased successfully.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to purchase ticket',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleCreateEvent = () => {
     if (!user) {
       toast({
@@ -160,6 +183,18 @@ export default function EventsPage() {
       return;
     }
     attendEventMutation.mutate(eventId);
+  };
+
+  const handleBuyTicket = (eventId: number) => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to purchase tickets.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    buyTicketMutation.mutate(eventId);
   };
 
   const formatDate = (dateString: string) => {
@@ -505,18 +540,55 @@ export default function EventsPage() {
                     </div>
                   )}
                   
-                  <div className="pt-2">
-                    <Button
-                      onClick={() => handleAttendEvent(event.id)}
-                      disabled={attendEventMutation.isPending || event.isAttending}
-                      className={`w-full ${
-                        event.isAttending 
-                          ? 'bg-green-600 hover:bg-green-700' 
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
-                    >
-                      {event.isAttending ? 'Attending' : 'Join Event'}
-                    </Button>
+                  {/* Price Information */}
+                  {event.price !== undefined && (
+                    <div className="pt-2 pb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Price:</span>
+                        <span className="font-semibold text-lg">
+                          {event.isFree || event.price === 0 ? (
+                            <span className="text-green-600">Free</span>
+                          ) : (
+                            <span className="text-blue-600">${event.price}</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="pt-2 space-y-2">
+                    {/* Show different buttons based on event type */}
+                    {event.isFree || event.price === 0 ? (
+                      <Button
+                        onClick={() => handleAttendEvent(event.id)}
+                        disabled={attendEventMutation.isPending || event.isAttending}
+                        className={`w-full ${
+                          event.isAttending 
+                            ? 'bg-green-600 hover:bg-green-700' 
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        {event.isAttending ? 'Attending' : 'Join Event'}
+                      </Button>
+                    ) : (
+                      <div className="space-y-2">
+                        <Button
+                          onClick={() => handleBuyTicket(event.id)}
+                          disabled={buyTicketMutation.isPending}
+                          className="w-full bg-green-600 hover:bg-green-700"
+                        >
+                          {buyTicketMutation.isPending ? 'Processing...' : 'Buy Ticket'}
+                        </Button>
+                        <Button
+                          onClick={() => handleAttendEvent(event.id)}
+                          disabled={attendEventMutation.isPending || event.isAttending}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {event.isAttending ? 'Attending' : 'Join for Free'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
