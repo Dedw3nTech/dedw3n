@@ -1467,6 +1467,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get saved posts for current user
+  app.get('/api/saved-posts', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const savedPosts = await storage.getSavedPosts(userId, { limit, offset });
+      res.json(savedPosts);
+    } catch (error) {
+      console.error('Error getting saved posts:', error);
+      res.status(500).json({ message: 'Failed to get saved posts' });
+    }
+  });
+
   // Get user profile by ID
   app.get('/api/users/:id/profile', unifiedIsAuthenticated, async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, BookmarkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,14 @@ export default function SavedPosts() {
   const [page, setPage] = useState(1);
   const limit = 10;
   const offset = (page - 1) * limit;
+  const [, setLocation] = useLocation();
+
+  // Handle auth redirect using useEffect to prevent render loop
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      setLocation("/auth");
+    }
+  }, [user, isAuthLoading, setLocation]);
 
   const {
     data: savedPosts,
@@ -38,11 +46,7 @@ export default function SavedPosts() {
     );
   }
 
-  const [, setLocation] = useLocation();
-  
   if (!user) {
-    // Redirect to auth page if not logged in
-    setLocation("/auth");
     return null;
   }
 
