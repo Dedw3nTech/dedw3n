@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Globe, MapPin, Flag } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Globe, MapPin, Flag, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -115,6 +115,17 @@ export function ProfileSideCard() {
                   <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
                 </svg>
                 Chatrooms
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-10"
+            >
+              <Link href="/events">
+                <Calendar className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
+                Events & Meetups
               </Link>
             </Button>
             

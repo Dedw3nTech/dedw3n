@@ -175,6 +175,7 @@ import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
 import VendorRegisterPage from "@/pages/vendor-register";
 import LikedPage from "@/pages/liked";
+import EventsPage from "@/pages/events";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";

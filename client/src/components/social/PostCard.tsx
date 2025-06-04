@@ -695,7 +695,7 @@ export default function PostCard({
           <div className="flex items-center gap-2">
             <Avatar 
               className="h-10 w-10 cursor-pointer"
-              onClick={() => setLocation(`/profile/${post.user.username}`)}
+              onClick={() => setLocation(`/wall`)}
             >
               {post.user && post.user.avatar ? (
                 <AvatarImage 
@@ -713,13 +713,13 @@ export default function PostCard({
                   <div>
                     <p 
                       className="font-medium cursor-pointer hover:underline"
-                      onClick={() => setLocation(`/profile/${post.user.username}`)}
+                      onClick={() => setLocation(`/wall`)}
                     >
                       {post.user.name}
                     </p>
                     <p 
                       className="text-xs text-blue-600 cursor-pointer hover:underline"
-                      onClick={() => setLocation(`/profile/${post.user.username}`)}
+                      onClick={() => setLocation(`/wall`)}
                     >
                       @{post.user.username}
                     </p>
