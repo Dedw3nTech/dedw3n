@@ -1801,7 +1801,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null; city: string | null; country: string | null; region: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]> {
+  async getAllPostsPaginated(limit: number, offset: number, currentUserId?: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null; city: string | null; country: string | null; region: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean; isSaved: boolean })[]> {
     try {
       const postsWithUsers = await db
         .select({
@@ -1823,6 +1823,33 @@ export class DatabaseStorage implements IStorage {
         .limit(limit)
         .offset(offset);
 
+      // If currentUserId is provided, check which posts are liked and saved by this user
+      const postIds = postsWithUsers.map(p => p.post.id);
+      let likedPostIds: number[] = [];
+      let savedPostIds: number[] = [];
+
+      if (currentUserId && postIds.length > 0) {
+        // Get liked posts
+        const likedPosts = await db
+          .select({ postId: likes.postId })
+          .from(likes)
+          .where(and(
+            eq(likes.userId, currentUserId),
+            sql`${likes.postId} = ANY(${postIds})`
+          ));
+        likedPostIds = likedPosts.map(l => l.postId);
+
+        // Get saved posts
+        const savedPostsData = await db
+          .select({ postId: savedPosts.postId })
+          .from(savedPosts)
+          .where(and(
+            eq(savedPosts.userId, currentUserId),
+            sql`${savedPosts.postId} = ANY(${postIds})`
+          ));
+        savedPostIds = savedPostsData.map(s => s.postId);
+      }
+
       return postsWithUsers.map(({ post, user }) => ({
         ...post,
         user,
@@ -1831,8 +1858,9 @@ export class DatabaseStorage implements IStorage {
           comments: post.comments || 0,
           shares: post.shares || 0
         },
-        isLiked: false,
-        isShared: false
+        isLiked: likedPostIds.includes(post.id),
+        isShared: false,
+        isSaved: savedPostIds.includes(post.id)
       }));
     } catch (error) {
       console.error('Error getting paginated posts:', error);

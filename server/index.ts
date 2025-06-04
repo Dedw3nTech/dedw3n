@@ -282,11 +282,11 @@ app.use((req, res, next) => {
           posts = await storage.getPostsByLocation(userId, sortBy, limit, offset);
         } else {
           // Fallback to all posts if user not authenticated
-          posts = await storage.getAllPostsPaginated(limit, offset);
+          posts = await storage.getAllPostsPaginated(limit, offset, userId);
         }
       } else {
         // Default to all posts for other sort types
-        posts = await storage.getAllPostsPaginated(limit, offset);
+        posts = await storage.getAllPostsPaginated(limit, offset, userId);
       }
       
       // Check if there are more posts available
