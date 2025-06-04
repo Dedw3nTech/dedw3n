@@ -112,8 +112,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/upload-product',
     '/vendor-dashboard',
     '/become-vendor',
-    '/liked',
-    '/chatrooms'
+    '/liked'
   ];
   
   // Check if current path should show the marketplace nav
@@ -274,11 +273,11 @@ function Router() {
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <Route path="/community" component={CommunityPage} />
+      <ProtectedRoute path="/community/chatrooms" component={Chatrooms} />
       <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/event/:id" component={EventDetailPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
-      <ProtectedRoute path="/chatrooms" component={Chatrooms} />
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       
