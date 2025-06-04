@@ -564,20 +564,11 @@ export default function EventsPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
                         {event.category}
                       </Badge>
-                      {event.isFree ? (
-                        <Badge variant="outline" className="text-xs text-green-600 border-green-200">
-                          Free
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                          {formatPrice(event.price || 0)}
-                        </Badge>
-                      )}
                     </div>
                     <Link href={`/wall`}>
                       <div className="flex items-center text-sm text-gray-600 hover:text-blue-600 cursor-pointer">
@@ -587,6 +578,18 @@ export default function EventsPage() {
                         <span className="text-xs">{event.organizer.name}</span>
                       </div>
                     </Link>
+                  </div>
+                  
+                  <div className="mb-4">
+                    {event.isFree ? (
+                      <Badge variant="outline" className="text-sm font-semibold text-green-600 border-green-200 px-3 py-1">
+                        Free Event
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-sm font-semibold text-blue-600 border-blue-200 px-3 py-1">
+                        {formatPrice(event.price || 0)}
+                      </Badge>
+                    )}
                   </div>
                   
                   {event.tags && event.tags.length > 0 && (
