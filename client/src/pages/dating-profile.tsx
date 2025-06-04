@@ -182,9 +182,6 @@ export default function DatingProfilePage() {
             <Heart className="h-8 w-8 text-red-500" />
             Dating Profile
           </h1>
-          <p className="text-gray-600 mt-2">
-            Create and manage your dating profile to connect with others
-          </p>
         </div>
 
         <div className="space-y-6">
