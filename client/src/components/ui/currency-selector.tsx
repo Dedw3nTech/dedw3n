@@ -21,11 +21,9 @@ export function CurrencySelector() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9 px-3 gap-1">
-          <span className="text-lg">{selectedCurrency.flag}</span>
+        <span className="text-xs font-medium cursor-pointer" style={{ fontSize: '12px' }}>
           <span className="font-medium">{selectedCurrency.code}</span>
-          <ChevronDown className="h-3 w-3" />
-        </Button>
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {currencies.map((currency: Currency) => (

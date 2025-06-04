@@ -28,10 +28,9 @@ export function CurrencySelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-1 px-2 h-7 rounded-md cursor-pointer hover:bg-accent">
-          <span className="text-xs font-medium">{symbol} {currency}</span>
-          <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-        </div>
+        <span className="text-xs font-medium cursor-pointer" style={{ fontSize: '12px' }}>
+          {symbol} {currency}
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[180px]">
         {supportedCurrencies.map((code) => (
