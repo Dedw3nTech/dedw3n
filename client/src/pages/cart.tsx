@@ -175,7 +175,7 @@ export default function Cart() {
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Button onClick={handleContinueShopping}>Browse Products</Button>
+            <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">Browse Products</Button>
           </CardFooter>
         </Card>
       </div>
