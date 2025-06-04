@@ -594,17 +594,6 @@ export default function EventsPage() {
                     <div className="flex items-center gap-1">
 
 
-                      <Button 
-                        size="sm" 
-                        className="bg-black hover:bg-gray-800 text-white"
-                        onClick={() => {
-                          setSelectedEvent(event);
-                          setIsRepostModalOpen(true);
-                        }}
-                      >
-                        <Repeat2 className="h-4 w-4 mr-1" />
-                        <span className="text-xs">Repost</span>
-                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="ghost">
@@ -633,6 +622,17 @@ export default function EventsPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      <Button 
+                        size="sm" 
+                        className="bg-black hover:bg-gray-800 text-white"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setIsRepostModalOpen(true);
+                        }}
+                      >
+                        <Repeat2 className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Repost</span>
+                      </Button>
                     </div>
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                       {event.isAttending ? 'Attending' : 'Join Event'}
