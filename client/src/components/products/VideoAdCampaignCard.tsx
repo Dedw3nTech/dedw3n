@@ -1,21 +1,34 @@
 import { useState, useRef } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Volume2, VolumeX, Play, Pause, Building2, Users, Store } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
 
 interface VideoAdCampaignCardProps {
   videoSource?: string;
   title?: string;
+  description?: string;
+  category?: string;
+  targetAudience?: string;
+  price?: string;
+  badge?: string;
   autoPlay?: boolean;
   showControls?: boolean;
+  marketType?: 'b2b' | 'b2c' | 'c2c';
 }
 
 export function VideoAdCampaignCard({ 
   videoSource = campaignVideo,
   title = "Dedw3n|Marketplace",
+  description,
+  category,
+  targetAudience,
+  price,
+  badge,
   autoPlay = true,
-  showControls = true
+  showControls = true,
+  marketType = 'b2c'
 }: VideoAdCampaignCardProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -101,6 +114,71 @@ export function VideoAdCampaignCard({
           <X className="h-3 w-3" />
         </Button>
       </div>
+
+      {/* Content area with marketplace-specific properties */}
+      {(description || category || targetAudience || price || badge) && (
+        <CardContent className="pt-3">
+          {description && (
+            <p className="text-sm text-gray-600 mb-3">{description}</p>
+          )}
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+            {marketType === 'b2b' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Building2 className="h-3 w-3" />
+                Business
+              </Badge>
+            )}
+            {marketType === 'c2c' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                Community
+              </Badge>
+            )}
+            {marketType === 'b2c' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Store className="h-3 w-3" />
+                Retail
+              </Badge>
+            )}
+            
+            {category && (
+              <Badge variant="outline">{category}</Badge>
+            )}
+            
+            {targetAudience && (
+              <Badge variant="outline">{targetAudience}</Badge>
+            )}
+            
+            {badge && (
+              <Badge variant="destructive">{badge}</Badge>
+            )}
+          </div>
+
+          {price && (
+            <div className="text-lg font-bold text-green-600 mb-3">
+              {price}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              className="bg-black hover:bg-gray-800 text-white flex-1"
+            >
+              {marketType === 'b2b' ? 'Get Quote' : 
+               marketType === 'c2c' ? 'Contact Seller' : 
+               'Shop Now'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+            >
+              Learn More
+            </Button>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
