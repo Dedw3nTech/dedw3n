@@ -524,7 +524,9 @@ export default function EventsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-2">
+                      <h3 className={`font-semibold text-lg text-gray-900 mb-1 ${
+                        event.title.length > 50 ? 'line-clamp-3' : 'line-clamp-2'
+                      }`}>
                         {event.title}
                       </h3>
                       <div className="text-sm text-gray-600">
