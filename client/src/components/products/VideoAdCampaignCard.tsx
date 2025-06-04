@@ -43,7 +43,7 @@ export function VideoAdCampaignCard({
     
     if (marketType === 'c2c') {
       return {
-        video: campaignVideo,
+        video: motivationalVideo,
         title: 'Dedw3n | Marketplace'
       };
     }
