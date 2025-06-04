@@ -726,15 +726,15 @@ export default function Products() {
         <CardFooter className="flex flex-col gap-3">
           <div className="flex justify-between items-center">
             <Button
+              variant="ghost"
               size="sm"
               onClick={() => shareOnFeed(product)}
-              className="bg-black text-white hover:bg-gray-800"
+              className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
             >
               Repost
             </Button>
             <div className="flex items-center gap-2">
               <Button 
-                variant="ghost"
                 size="sm" 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -745,7 +745,7 @@ export default function Products() {
                   }
                 }}
                 disabled={addToCartMutation.isPending}
-                className="text-black hover:bg-transparent hover:text-gray-700 font-bold"
+                className="bg-black text-white hover:bg-gray-800 font-bold"
               >
                 {addToCartMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
