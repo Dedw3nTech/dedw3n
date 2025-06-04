@@ -133,35 +133,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <span className="text-sm font-medium">Vendor Dashboard</span>
             </Button>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-                >
-                  <span className="text-sm">
-                    <span className="font-bold">{selectedCurrency.symbol} {selectedCurrency.code}</span>
-                    <span className="font-normal ml-1">Currency</span>
-                  </span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {currencies.map((currency) => (
-                  <DropdownMenuItem
-                    key={currency.code}
-                    onClick={() => setSelectedCurrency(currency)}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
 
-                    <div className="flex flex-col">
-                      <span className="font-medium">{currency.symbol} {currency.code}</span>
-                      <span className="text-xs text-gray-500">{currency.name}</span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>
