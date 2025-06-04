@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { VideoManager } from '@/components/products/VideoManager';
+import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
@@ -815,13 +815,12 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video content based on marketplace type */}
-      <div className="mb-6">
-        <VideoManager 
-          autoPlay={false}
-          showControls={true}
-        />
-      </div>
+      {/* Video Ad Campaign - only show in B2C marketplace */}
+      {marketType === 'b2c' && (
+        <div className="mb-6">
+          <VideoAdCampaignCard />
+        </div>
+      )}
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
