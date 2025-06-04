@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Send, Users, Globe, MapPin, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { CommunityNav } from "@/components/layout/CommunityNav";
 
 interface Chatroom {
   id: number;
@@ -152,11 +153,13 @@ export default function ChatroomsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Chatrooms</h1>
-        <p className="text-gray-600 mt-2">Connect with people from around the world</p>
-      </div>
+    <div>
+      <CommunityNav />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Chatrooms</h1>
+          <p className="text-gray-600 mt-2">Connect with people from around the world</p>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[700px]">
         {/* Chatroom List */}
@@ -285,6 +288,7 @@ export default function ChatroomsPage() {
             </Card>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
