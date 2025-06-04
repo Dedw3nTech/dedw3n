@@ -32,6 +32,41 @@ export function VideoAdCampaignCard({
 
   // Get entity-specific video and title based on market type and entity
   const getEntityContent = () => {
+    if (marketType === 'b2b') {
+      switch (entity) {
+        case 'manufacturing':
+          return {
+            video: campaignVideo,
+            title: 'Manufacturing Solutions | Dedw3n B2B'
+          };
+        case 'retail':
+          return {
+            video: campaignVideo,
+            title: 'Retail Distribution | Dedw3n B2B'
+          };
+        case 'technology':
+          return {
+            video: campaignVideo,
+            title: 'Technology Services | Dedw3n B2B'
+          };
+        case 'healthcare':
+          return {
+            video: campaignVideo,
+            title: 'Healthcare Solutions | Dedw3n B2B'
+          };
+        case 'finance':
+          return {
+            video: campaignVideo,
+            title: 'Financial Services | Dedw3n B2B'
+          };
+        default:
+          return {
+            video: campaignVideo,
+            title: 'Business Solutions | Dedw3n B2B'
+          };
+      }
+    }
+    
     return {
       video: videoSource,
       title: "Dedw3n | Marketplace"
