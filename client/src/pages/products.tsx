@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
+import { VideoManager } from '@/components/products/VideoManager';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
@@ -815,10 +815,44 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video Ad Campaign - only show in B2C marketplace */}
+      {/* Video content based on marketplace type */}
       {marketType === 'b2c' && (
         <div className="mb-6">
           <VideoAdCampaignCard />
+        </div>
+      )}
+      
+      {marketType === 'b2b' && (
+        <div className="mb-6">
+          <B2BVideoCard 
+            title="B2B Wholesale Solutions"
+            description="Expand your business with bulk purchasing and wholesale opportunities"
+            targetAudience="Retailers & Distributors"
+            businessType="Wholesale"
+            minOrderValue={5000}
+            currency="USD"
+            autoPlay={false}
+            showControls={true}
+            showBusinessInfo={true}
+          />
+        </div>
+      )}
+      
+      {marketType === 'c2c' && (
+        <div className="mb-6">
+          <C2CVideoCard 
+            title="Community Marketplace"
+            description="Find unique items from trusted community members near you"
+            sellerName="Community Member"
+            location="Your Local Area"
+            price={75}
+            currency="USD"
+            condition="Excellent"
+            autoPlay={false}
+            showControls={true}
+            showSellerInfo={true}
+            isNegotiable={true}
+          />
         </div>
       )}
 
