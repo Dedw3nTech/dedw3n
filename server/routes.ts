@@ -3750,6 +3750,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, category, sortBy, filterBy } = req.query;
       
+      // Get current user for friend attendee checking
+      const currentUserId = req.user?.id;
+      
       // Mock events data for demonstration
       const mockEvents = [
         {
@@ -3772,7 +3775,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAttending: false,
           image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&h=300&fit=crop",
           price: 0,
-          isFree: true
+          isFree: true,
+          friendsAttending: currentUserId ? ["Sarah Chen", "Mike Davis"] : []
         },
         {
           id: 2,
@@ -3794,7 +3798,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAttending: false,
           image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500&h=300&fit=crop",
           price: 0,
-          isFree: true
+          isFree: true,
+          friendsAttending: currentUserId ? ["Emma Johnson"] : []
         },
         {
           id: 3,
@@ -3816,7 +3821,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAttending: false,
           image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=500&h=300&fit=crop",
           price: 25,
-          isFree: false
+          isFree: false,
+          friendsAttending: currentUserId ? ["Alex Thompson", "Jessica Liu", "Carlos Martinez"] : []
         },
         {
           id: 4,
@@ -3838,7 +3844,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAttending: false,
           image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&h=300&fit=crop",
           price: 35,
-          isFree: false
+          isFree: false,
+          friendsAttending: currentUserId ? ["Rachel Green"] : []
         },
         {
           id: 5,

@@ -537,6 +537,12 @@ export default function EventsPage() {
                       <Users className="h-4 w-4 mr-2 text-blue-500" />
                       {event.attendeeCount} attending
                       {event.maxAttendees && ` (${event.maxAttendees} max)`}
+                      {event.friendsAttending && event.friendsAttending.length > 0 && (
+                        <div className="ml-2 text-xs text-blue-600">
+                          • {event.friendsAttending.slice(0, 2).join(', ')}
+                          {event.friendsAttending.length > 2 && ` +${event.friendsAttending.length - 2} more friends`}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
