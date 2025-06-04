@@ -174,6 +174,7 @@ import BecomeVendorPage from "@/pages/become-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
 import VendorRegisterPage from "@/pages/vendor-register";
 import LikedPage from "@/pages/liked";
+import SavedPosts from "@/pages/saved-posts";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
 
@@ -260,6 +261,7 @@ function Router() {
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
       <ProtectedRoute path="/liked" component={LikedPage} />
+      <ProtectedRoute path="/saved-posts" component={SavedPosts} />
       <ProtectedRoute path="/add-product" component={AddProduct} />
       <ProtectedRoute path="/upload-product" component={UploadProduct} />
       <ProtectedRoute path="/members" component={MembersPage} />
