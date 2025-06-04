@@ -825,24 +825,12 @@ export default function Products() {
         </div>
       )}
 
-      {/* B2B Video Ad Campaign with different entities */}
+      {/* B2B Video Ad Campaign */}
       {marketType === 'b2b' && (
-        <div className="mb-6 space-y-4">
-          <VideoAdCampaignCard 
-            marketType="b2b"
-            entity="manufacturing"
-          />
+        <div className="mb-6">
           <VideoAdCampaignCard 
             marketType="b2b"
             entity="technology"
-          />
-          <VideoAdCampaignCard 
-            marketType="b2b"
-            entity="healthcare"
-          />
-          <VideoAdCampaignCard 
-            marketType="b2b"
-            entity="finance"
           />
         </div>
       )}
