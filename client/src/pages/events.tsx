@@ -266,6 +266,51 @@ export default function EventsPage() {
     },
   });
 
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      return apiRequest('POST', '/api/messages', { receiverId: parseInt(userId), content: message });
+    },
+    onSuccess: () => {
+      setIsShareModalOpen(false);
+      setShareMessage('');
+      setSelectedUser('');
+      toast({
+        title: 'Message Sent',
+        description: 'Event shared successfully via message.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send message',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Repost mutation
+  const repostMutation = useMutation({
+    mutationFn: async ({ message }: { message: string }) => {
+      return apiRequest('POST', '/api/posts', { content: message });
+    },
+    onSuccess: () => {
+      setIsRepostModalOpen(false);
+      setRepostText('');
+      toast({
+        title: 'Event Reposted',
+        description: 'Event shared to your community feed.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to repost event',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Helper functions for social interactions
   const isEventLiked = (eventId: number) => likedEvents.has(eventId);
 
