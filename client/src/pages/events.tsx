@@ -38,6 +38,7 @@ interface Event {
   price?: number;
   isFree?: boolean;
   isLiked?: boolean;
+  friendsAttending?: string[];
 }
 
 export default function EventsPage() {
@@ -70,6 +71,7 @@ export default function EventsPage() {
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostEventId, setRepostEventId] = useState<number | null>(null);
   const [repostText, setRepostText] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -605,6 +607,17 @@ export default function EventsPage() {
                         <MessageCircle className="h-4 w-4 mr-1 text-gray-600" />
                         <span className="text-xs">Comment</span>
                       </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-black hover:bg-gray-800 text-white"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setIsRepostModalOpen(true);
+                        }}
+                      >
+                        <Repeat2 className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Repost</span>
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="ghost">
@@ -711,6 +724,17 @@ export default function EventsPage() {
                 }}
               >
                 Cancel
+              </Button>
+              <Button 
+                className="bg-black hover:bg-gray-800 text-white"
+                onClick={() => {
+                  // Handle repost logic here
+                  setIsRepostModalOpen(false);
+                  setRepostText("");
+                  toast({ title: "Event reposted successfully!" });
+                }}
+              >
+                Repost
               </Button>
             </DialogFooter>
           </DialogContent>
