@@ -275,78 +275,35 @@ export function ProfileSideCard() {
         <CardContent className="p-6 pt-0 space-y-3 text-[14px]">
           <div className="space-y-3">
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-100">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Tech Startup Meetup</h4>
+                <p className="text-xs text-gray-600 mt-1">London • Tonight 7 PM</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Free</span>
+                  <span className="text-xs text-gray-500">50+ attending</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Tech Startup Meetup</h4>
-                  <p className="text-xs text-gray-600 mt-1">London • Tonight 7 PM</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Free</span>
-                    <span className="text-xs text-gray-500">50+ attending</span>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="bg-purple-600 hover:bg-purple-700 text-white h-7 px-3 text-xs flex-shrink-0"
-                  asChild
-                >
-                  <Link href="/events">Join</Link>
-                </Button>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-100">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.5 3H6c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h12.5l3.5-9-3.5-9zM6 19V5h11.5l2.5 7-2.5 7H6z"/>
-                    <path d="M9 8h2v2H9zM9 12h6v2H9z"/>
-                  </svg>
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Coffee & Code</h4>
+                <p className="text-xs text-gray-600 mt-1">Manchester • Tomorrow 10 AM</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">£5</span>
+                  <span className="text-xs text-gray-500">25+ attending</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Coffee & Code</h4>
-                  <p className="text-xs text-gray-600 mt-1">Manchester • Tomorrow 10 AM</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">£5</span>
-                    <span className="text-xs text-gray-500">25+ attending</span>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white h-7 px-3 text-xs flex-shrink-0"
-                  asChild
-                >
-                  <Link href="/events">Buy</Link>
-                </Button>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-3 border border-orange-100">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Art Gallery Opening</h4>
+                <p className="text-xs text-gray-600 mt-1">Birmingham • This Weekend</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">£15</span>
+                  <span className="text-xs text-gray-500">100+ attending</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Art Gallery Opening</h4>
-                  <p className="text-xs text-gray-600 mt-1">Birmingham • This Weekend</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">£15</span>
-                    <span className="text-xs text-gray-500">100+ attending</span>
-                  </div>
-                </div>
-                <Button 
-                  size="sm" 
-                  className="bg-orange-600 hover:bg-orange-700 text-white h-7 px-3 text-xs flex-shrink-0"
-                  asChild
-                >
-                  <Link href="/events">Buy</Link>
-                </Button>
               </div>
             </div>
           </div>
