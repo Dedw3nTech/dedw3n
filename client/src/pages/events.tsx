@@ -12,6 +12,7 @@ import { Calendar, MapPin, Users, Clock, Plus, Search, Filter } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Event {
   id: number;
@@ -39,6 +40,7 @@ interface Event {
 export default function EventsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -633,7 +635,7 @@ export default function EventsPage() {
                           {event.isFree || event.price === 0 ? (
                             <span className="text-green-600">Free</span>
                           ) : (
-                            <span className="text-blue-600">${event.price}</span>
+                            <span className="text-blue-600">{formatPrice(event.price || 0)}</span>
                           )}
                         </span>
                       </div>
@@ -661,7 +663,7 @@ export default function EventsPage() {
                           disabled={buyTicketMutation.isPending}
                           className="w-full bg-green-600 hover:bg-green-700"
                         >
-                          {buyTicketMutation.isPending ? 'Processing...' : 'Buy Ticket'}
+                          {buyTicketMutation.isPending ? 'Processing...' : `Buy Ticket ${formatPrice(event.price || 0)}`}
                         </Button>
                         <Button
                           onClick={() => handleAttendEvent(event.id)}
