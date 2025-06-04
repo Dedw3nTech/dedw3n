@@ -79,6 +79,7 @@ export default function DatingProfilePage() {
   const [profileImages, setProfileImages] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(false);
   const [showOnWall, setShowOnWall] = useState(false);
+  const [datingRoomTier, setDatingRoomTier] = useState("normal");
   const [newInterest, setNewInterest] = useState("");
 
   // Fetch existing dating profile
@@ -221,6 +222,69 @@ export default function DatingProfilePage() {
                   checked={showOnWall}
                   onCheckedChange={setShowOnWall}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dating Room */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Dating Room
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Normal Tier */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    datingRoomTier === "normal" 
+                      ? "border-black bg-gray-50" 
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => setDatingRoomTier("normal")}
+                >
+                  <div className="text-center space-y-2">
+                    <h3 className="font-semibold text-lg">Normal</h3>
+                    <p className="text-2xl font-bold">Free</p>
+                    <p className="text-sm text-gray-600">Basic dating features</p>
+                  </div>
+                </div>
+
+                {/* VIP Tier */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    datingRoomTier === "vip" 
+                      ? "border-black bg-gray-50" 
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => setDatingRoomTier("vip")}
+                >
+                  <div className="text-center space-y-2">
+                    <h3 className="font-semibold text-lg">VIP</h3>
+                    <p className="text-2xl font-bold">£199.99</p>
+                    <p className="text-xs text-gray-500">/ month</p>
+                    <p className="text-sm text-gray-600">For users who make over £150,000 per year</p>
+                  </div>
+                </div>
+
+                {/* VVIP Tier */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    datingRoomTier === "vvip" 
+                      ? "border-black bg-gray-50" 
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => setDatingRoomTier("vvip")}
+                >
+                  <div className="text-center space-y-2">
+                    <h3 className="font-semibold text-lg">VVIP</h3>
+                    <p className="text-2xl font-bold">£1,999.99</p>
+                    <p className="text-xs text-gray-500">/ month</p>
+                    <p className="text-sm text-gray-600">For users who make over £1,500,000 per year</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
