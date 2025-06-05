@@ -65,7 +65,7 @@ export default function CheckoutNew() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { selectedCurrency, convertPrice } = useCurrency();
+  const { selectedCurrency, formatPrice } = useCurrency();
   
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'review'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
@@ -107,9 +107,9 @@ export default function CheckoutNew() {
   ];
 
   // Calculate totals
-  const subtotal = cartItems.reduce((sum: number, item: CartItem) => 
+  const subtotal = Array.isArray(cartItems) ? cartItems.reduce((sum: number, item: CartItem) => 
     sum + (item.product.price * item.quantity), 0
-  );
+  ) : 0;
   const shippingCost = subtotal > 50 ? 0 : 5.99; // Free shipping over £50
   const tax = subtotal * 0.2; // 20% VAT
   const total = subtotal + shippingCost + tax;
@@ -130,7 +130,7 @@ export default function CheckoutNew() {
     mutationFn: async (orderData: any) => {
       return apiRequest('POST', '/api/orders', orderData);
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       toast({
         title: "Order Placed Successfully",
         description: `Order #${response.id} has been created. You will receive a confirmation email shortly.`,
@@ -505,7 +505,7 @@ export default function CheckoutNew() {
                             <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           </div>
                           <p className="text-sm font-medium">
-                            {convertPrice(item.product.price * item.quantity, selectedCurrency)}
+                            {formatPrice(item.product.price * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -530,7 +530,7 @@ export default function CheckoutNew() {
                           Processing...
                         </>
                       ) : (
-                        `Place Order - ${convertPrice(total, currency)}`
+                        `Place Order - ${formatPrice(total)}`
                       )}
                     </Button>
                   </div>
@@ -548,12 +548,12 @@ export default function CheckoutNew() {
               <CardContent className="space-y-4">
                 {/* Items */}
                 <div className="space-y-2">
-                  {cartItems.map((item: CartItem) => (
+                  {Array.isArray(cartItems) && cartItems.map((item: CartItem) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="truncate">
                         {item.product.name} × {item.quantity}
                       </span>
-                      <span>{convertPrice(item.product.price * item.quantity, currency)}</span>
+                      <span>{formatPrice(item.product.price * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
@@ -564,7 +564,7 @@ export default function CheckoutNew() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>{convertPrice(subtotal, currency)}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -572,13 +572,13 @@ export default function CheckoutNew() {
                       {shippingCost === 0 ? (
                         <span className="text-green-600">Free</span>
                       ) : (
-                        convertPrice(shippingCost, currency)
+                        formatPrice(shippingCost)
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax (VAT)</span>
-                    <span>{convertPrice(tax, currency)}</span>
+                    <span>{formatPrice(tax)}</span>
                   </div>
                 </div>
 
@@ -586,13 +586,13 @@ export default function CheckoutNew() {
 
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{convertPrice(total, currency)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
 
                 {subtotal < 50 && (
                   <div className="bg-yellow-50 p-3 rounded-lg">
                     <p className="text-xs text-yellow-800">
-                      Add {convertPrice(50 - subtotal, currency)} more for free shipping!
+                      Add {formatPrice(50 - subtotal)} more for free shipping!
                     </p>
                   </div>
                 )}
