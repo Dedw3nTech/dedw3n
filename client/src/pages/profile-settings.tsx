@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
@@ -45,7 +46,8 @@ export default function ProfileSettingsPage() {
     region: '',
     country: '',
     city: '',
-    dateOfBirth: ''
+    dateOfBirth: '',
+    gender: ''
   });
 
   // Update form data when user data is available
@@ -59,7 +61,8 @@ export default function ProfileSettingsPage() {
         region: user.region || '',
         country: user.country || '',
         city: user.city || '',
-        dateOfBirth: user.dateOfBirth || ''
+        dateOfBirth: user.dateOfBirth || '',
+        gender: user.gender || ''
       });
     }
   }, [user]);
@@ -511,6 +514,20 @@ export default function ProfileSettingsPage() {
                         Age: {calculateAge(formData.dateOfBirth)} years old
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender" className="text-black">Gender</Label>
+                    <Select value={formData.gender || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
+                      <SelectTrigger className="text-black">
+                        <SelectValue placeholder="Select your gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Region Selection */}

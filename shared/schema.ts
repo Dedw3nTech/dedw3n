@@ -48,6 +48,9 @@ export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 // Define event category enum
 export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
+// Define gender enum
+export const genderEnum = pgEnum('gender', ['male', 'female', 'other']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -74,6 +77,7 @@ export const users = pgTable("users", {
   country: text("country"),
   city: text("city"),
   dateOfBirth: date("date_of_birth"),
+  gender: genderEnum("gender"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
