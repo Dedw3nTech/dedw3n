@@ -688,7 +688,7 @@ export default function DatingProfilePage() {
                     className={user && user.dateOfBirth ? "bg-gray-50 cursor-not-allowed" : ""}
                   />
                   {user && user.dateOfBirth && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-gray-600">
                       Age automatically calculated from your date of birth in profile settings
                     </p>
                   )}
@@ -715,7 +715,7 @@ export default function DatingProfilePage() {
                     </SelectContent>
                   </Select>
                   {user && user.gender && gender === user.gender && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-gray-600">
                       Auto-filled from your profile settings
                     </p>
                   )}
