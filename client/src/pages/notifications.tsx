@@ -364,7 +364,7 @@ const NotificationsPage = () => {
                 <Store className="h-4 w-4" />
                 Marketplace
                 {categorizedNotifications.marketplace.filter(n => !n.isRead).length > 0 && (
-                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 ml-1">
                     {categorizedNotifications.marketplace.filter(n => !n.isRead).length}
                   </span>
                 )}
@@ -373,7 +373,7 @@ const NotificationsPage = () => {
                 <Users className="h-4 w-4" />
                 Community
                 {categorizedNotifications.community.filter(n => !n.isRead).length > 0 && (
-                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 ml-1">
                     {categorizedNotifications.community.filter(n => !n.isRead).length}
                   </span>
                 )}
@@ -382,7 +382,7 @@ const NotificationsPage = () => {
                 <HeartHandshake className="h-4 w-4" />
                 Dating
                 {categorizedNotifications.dating.filter(n => !n.isRead).length > 0 && (
-                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 ml-1">
                     {categorizedNotifications.dating.filter(n => !n.isRead).length}
                   </span>
                 )}
