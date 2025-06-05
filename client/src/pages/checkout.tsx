@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowLeft, CreditCard, Globe, Smartphone, Building2, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import { useCurrency } from "@/hooks/use-currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Load Stripe conditionally
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 

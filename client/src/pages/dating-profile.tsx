@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useCurrency } from "@/hooks/use-currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera, FileText, Paperclip } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
@@ -288,7 +288,7 @@ export default function DatingProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { formatPrice } = useCurrency();
+  const { formatPriceFromGBP } = useCurrency();
 
   // Form state
   const [displayName, setDisplayName] = useState("");
@@ -818,7 +818,7 @@ export default function DatingProfilePage() {
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VIP</h3>
-                    <p className="text-2xl font-bold">{formatPrice(199.99)}</p>
+                    <p className="text-2xl font-bold">{formatPriceFromGBP(199.99)}</p>
                     <p className="text-xs text-gray-500">/ month</p>
                     <p className="text-sm text-gray-600">For users who make over {formatPrice(150000)} per year</p>
                     {isProcessingPayment && datingRoomTier === "vip" && (
