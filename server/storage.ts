@@ -1282,7 +1282,7 @@ export class DatabaseStorage implements IStorage {
           status: subscriptions.status,
           currentPeriodStart: subscriptions.currentPeriodStart,
           currentPeriodEnd: subscriptions.currentPeriodEnd,
-          expiresAt: subscriptions.expiresAt,
+          // expiresAt: subscriptions.expiresAt, // Temporarily commented out due to schema mismatch
           cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
           tier: subscriptions.tier,
           stripeCustomerId: subscriptions.stripeCustomerId,
