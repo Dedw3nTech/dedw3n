@@ -227,10 +227,15 @@ const NotificationsPage = () => {
   const [activeTab, setActiveTab] = useState("marketplace");
 
   // Fetch all notifications
-  const { data: allNotifications, isLoading } = useQuery({
+  const { data: allNotifications, isLoading, error } = useQuery({
     queryKey: ["/api/notifications"],
-    queryFn: undefined, // Use default fetcher
+    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
+
+  // Debug logging
+  console.log('Notifications query error:', error);
+  console.log('Notifications isLoading:', isLoading);
 
   // Categorize notifications
   const categorizedNotifications = allNotifications && Array.isArray(allNotifications)
