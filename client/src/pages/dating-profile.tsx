@@ -16,6 +16,21 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard } from "lucide-react";
 import { useLocation } from "wouter";
 
+// Calculate age from date of birth
+const calculateAge = (dateOfBirth: string): number => {
+  if (!dateOfBirth) return 18;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age >= 18 ? age : 18;
+};
+
 interface DatingProfile {
   id?: number;
   userId: number;
@@ -91,12 +106,23 @@ export default function DatingProfilePage() {
     enabled: !!user,
   });
 
+  // Auto-populate age from user's dateOfBirth
+  useEffect(() => {
+    if (user && user.dateOfBirth) {
+      const calculatedAge = calculateAge(user.dateOfBirth);
+      setAge(calculatedAge);
+    }
+  }, [user]);
+
   // Load profile data when fetched
   useEffect(() => {
     if (datingProfile) {
       const profile = datingProfile as DatingProfile;
       setDisplayName(profile.displayName || "");
-      setAge(profile.age || 18);
+      // Only set age from profile if user doesn't have dateOfBirth
+      if (!user || !user.dateOfBirth) {
+        setAge(profile.age || 18);
+      }
       setBio(profile.bio || "");
       setLocation(profile.location || "");
       setInterests(profile.interests || []);
@@ -105,7 +131,7 @@ export default function DatingProfilePage() {
       setProfileImages(profile.profileImages || []);
       setIsActive(profile.isActive || false);
     }
-  }, [datingProfile]);
+  }, [datingProfile, user]);
 
   // Update/Create dating profile mutation
   const updateProfileMutation = useMutation({
@@ -369,8 +395,20 @@ export default function DatingProfilePage() {
                     min="18"
                     max="100"
                     value={age}
+                    readOnly={!!(user && user.dateOfBirth)}
                     onChange={(e) => setAge(parseInt(e.target.value) || 18)}
+                    className={user && user.dateOfBirth ? "bg-gray-50 cursor-not-allowed" : ""}
                   />
+                  {user && user.dateOfBirth && (
+                    <p className="text-xs text-green-600">
+                      Age automatically calculated from your date of birth in profile settings
+                    </p>
+                  )}
+                  {(!user || !user.dateOfBirth) && (
+                    <p className="text-xs text-amber-600">
+                      Add your date of birth in profile settings for automatic age calculation
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="height">Height</Label>
