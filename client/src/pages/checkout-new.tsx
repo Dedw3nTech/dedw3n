@@ -197,6 +197,14 @@ export default function CheckoutNew() {
   const tax = subtotal * 0.2; // 20% VAT
   const total = subtotal + shippingCost + tax;
 
+  // Debug pricing calculations
+  console.log('Pricing Debug:', {
+    subtotal: subtotal.toFixed(2),
+    shippingCost: shippingCost.toFixed(2),
+    tax: tax.toFixed(2),
+    total: total.toFixed(2)
+  });
+
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
     setShippingInfo(prev => ({ ...prev, [field]: value }));
