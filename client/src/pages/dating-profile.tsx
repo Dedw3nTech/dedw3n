@@ -95,6 +95,21 @@ const ETHNICITY_OPTIONS = [
   "Other"
 ];
 
+const LANGUAGE_OPTIONS = [
+  "Afrikaans", "Albanian", "Amharic", "Arabic", "Armenian", "Azerbaijani",
+  "Basque", "Belarusian", "Bengali", "Bosnian", "Bulgarian", "Burmese",
+  "Catalan", "Chinese (Mandarin)", "Chinese (Cantonese)", "Croatian", "Czech",
+  "Danish", "Dutch", "English", "Estonian", "Finnish", "French",
+  "Georgian", "German", "Greek", "Gujarati", "Hebrew", "Hindi", "Hungarian",
+  "Icelandic", "Indonesian", "Irish", "Italian", "Japanese",
+  "Kannada", "Kazakh", "Khmer", "Korean", "Kurdish", "Kyrgyz",
+  "Lao", "Latvian", "Lithuanian", "Macedonian", "Malay", "Malayalam", "Maltese", "Marathi", "Mongolian",
+  "Nepali", "Norwegian", "Pashto", "Persian (Farsi)", "Polish", "Portuguese", "Punjabi",
+  "Romanian", "Russian", "Serbian", "Sinhala", "Slovak", "Slovenian", "Somali", "Spanish", "Swahili", "Swedish",
+  "Tagalog", "Tamil", "Telugu", "Thai", "Turkish", "Ukrainian", "Urdu", "Uzbek",
+  "Vietnamese", "Welsh", "Yoruba", "Zulu", "Other"
+];
+
 // Helper function to get accessible dating rooms based on income tier
 const getAccessibleDatingRooms = (incomeRange: string): string[] => {
   const tier = INCOME_TIERS.find(t => t.value === incomeRange);
@@ -698,12 +713,18 @@ export default function DatingProfilePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="language">Primary Language</Label>
-                  <Input
-                    id="language"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    placeholder="e.g., English, Spanish, French"
-                  />
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your primary language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGE_OPTIONS.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
