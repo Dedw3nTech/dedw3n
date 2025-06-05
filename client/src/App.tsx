@@ -207,6 +207,7 @@ import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
 import DatingProfilePage from "@/pages/dating-profile";
+import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
 
 import PremiumVideoPage from "@/pages/premium-video";
@@ -260,6 +261,7 @@ function Router() {
       <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
       <ProtectedRoute path="/cart" component={Cart} />
       <ProtectedRoute path="/checkout" component={Checkout} />
+      <ProtectedRoute path="/payment-gateway" component={PaymentGateway} />
       <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
       <ProtectedRoute path="/liked" component={LikedPage} />
       <ProtectedRoute path="/saved-posts" component={SavedPosts} />

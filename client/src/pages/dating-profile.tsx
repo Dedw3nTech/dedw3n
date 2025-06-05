@@ -551,27 +551,13 @@ export default function DatingProfilePage() {
 
     setIsProcessingPayment(true);
     try {
-      // Create payment intent for the selected tier
-      const amount = tier === "vip" ? 199.99 : 1999.99;
-      const response = await apiRequest("POST", "/api/create-payment-intent", {
-        amount,
-        currency: "gbp",
-        metadata: {
-          type: "dating_room_subscription",
-          tier,
-          userId: user?.id
-        }
-      });
-
-      const { clientSecret } = await response.json();
-      
-      // Redirect to payment page with client secret
-      navigateTo(`/checkout?clientSecret=${clientSecret}&type=dating_room&tier=${tier}`);
+      // Redirect to payment gateway to select payment method
+      navigateTo(`/payment-gateway?tier=${tier}&type=dating_room`);
       
     } catch (error) {
       toast({
-        title: "Payment Error",
-        description: "Failed to initialize payment. Please try again.",
+        title: "Navigation Error",
+        description: "Failed to navigate to payment gateway. Please try again.",
         variant: "destructive",
       });
     } finally {
