@@ -196,7 +196,7 @@ export default function DatingPage() {
                 <Card>
                   <CardHeader className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Heart className="h-8 w-8 text-red-500" />
+                      <Heart className="h-8 w-8 text-blue-500" />
                       <CardTitle className="text-2xl">Normal Dating Room</CardTitle>
                     </div>
                     <p className="text-3xl font-bold text-blue-600">FREE</p>
