@@ -3101,7 +3101,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create notification for liking product
         await storage.createNotification({
           userId,
-          type: 'like',
+          type: 'product_like',
+          title: 'Product Liked',
           content: `You liked "${product.name}"`,
           sourceId: product.id,
           sourceType: 'product'

@@ -138,14 +138,104 @@ const getNotificationIconStyle = (type: string) => {
   }
 };
 
+// Component for rendering notification items
+const NotificationItem = ({ notification, onMarkRead }: { 
+  notification: any; 
+  onMarkRead: (id: number) => void; 
+}) => (
+  <div
+    key={notification.id}
+    className={`p-4 hover:bg-gray-50 cursor-pointer transition duration-150 ${
+      !notification.isRead ? "bg-blue-50 border-l-4 border-blue-500" : ""
+    }`}
+    onClick={() => onMarkRead(notification.id)}
+  >
+    <div className="flex items-start">
+      <div
+        className={`h-10 w-10 rounded-full ${getNotificationIconStyle(
+          notification.type
+        )} flex items-center justify-center mr-4 flex-shrink-0`}
+      >
+        {getNotificationIcon(notification.type)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-base font-medium text-gray-900">
+          {notification.title || notification.content}
+        </p>
+        {notification.title && (
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.content}</p>
+        )}
+        <p className="text-xs text-gray-400 mt-2">
+          {notification.createdAt &&
+            formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+        </p>
+      </div>
+      {!notification.isRead && (
+        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+      )}
+    </div>
+  </div>
+);
+
+// Component for rendering notification section
+const NotificationSection = ({ 
+  notifications, 
+  isLoading, 
+  onMarkRead, 
+  emptyMessage,
+  emptyIcon: EmptyIcon
+}: {
+  notifications: any[];
+  isLoading: boolean;
+  onMarkRead: (id: number) => void;
+  emptyMessage: string;
+  emptyIcon: any;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!notifications || notifications.length === 0) {
+    return (
+      <div className="py-12 text-center text-gray-500">
+        <EmptyIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-lg font-medium">No {emptyMessage} notifications</p>
+        <p className="text-sm">You'll see {emptyMessage} activity here</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y">
+      {notifications.map((notification: any) => (
+        <NotificationItem 
+          key={notification.id} 
+          notification={notification} 
+          onMarkRead={onMarkRead} 
+        />
+      ))}
+    </div>
+  );
+};
+
 const NotificationsPage = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("marketplace");
 
-  // Fetch notifications
-  const { data: notifications, isLoading } = useQuery({
+  // Fetch all notifications
+  const { data: allNotifications, isLoading } = useQuery({
     queryKey: ["/api/notifications"],
     queryFn: undefined, // Use default fetcher
   });
+
+  // Categorize notifications
+  const categorizedNotifications = allNotifications && Array.isArray(allNotifications)
+    ? categorizeNotifications(allNotifications) 
+    : { marketplace: [], community: [], dating: [] };
 
   // Mutation to mark notification as read
   const markNotificationReadMutation = useMutation({
@@ -160,17 +250,17 @@ const NotificationsPage = () => {
       if (!response.ok) {
         throw new Error("Failed to mark notification as read");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread/count"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: `Failed to mark notification as read: ${error.message}`,
+        description: error.message || "Failed to mark notification as read",
         variant: "destructive",
       });
     },
@@ -189,7 +279,7 @@ const NotificationsPage = () => {
       if (!response.ok) {
         throw new Error("Failed to mark all notifications as read");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -200,80 +290,140 @@ const NotificationsPage = () => {
         description: "All notifications marked as read",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: `Failed to mark all notifications as read: ${error.message}`,
+        description: error.message || "Failed to mark all notifications as read",
         variant: "destructive",
       });
     },
   });
 
-  return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Notifications</h1>
-        <button
-          className="text-sm text-primary font-medium hover:underline"
-          onClick={() => markAllNotificationsReadMutation.mutate()}
-          disabled={markAllNotificationsReadMutation.isPending}
-        >
-          {markAllNotificationsReadMutation.isPending ? (
-            <span className="flex items-center">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Marking all as read...
-            </span>
-          ) : (
-            "Mark all as read"
-          )}
-        </button>
-      </div>
+  // Calculate total unread count
+  const totalUnread = allNotifications && Array.isArray(allNotifications)
+    ? allNotifications.filter((n: any) => !n.isRead).length 
+    : 0;
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : !notifications || !Array.isArray(notifications) || notifications.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">
-            <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No notifications yet</p>
-            <p className="text-sm">You'll see notifications about activity related to you here</p>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {notifications.map((notification: any) => (
-              <div
-                key={notification.id}
-                className={`p-4 hover:bg-gray-50 cursor-pointer transition duration-150 ${
-                  !notification.isRead ? "bg-gray-50" : ""
-                }`}
-                onClick={() => markNotificationReadMutation.mutate(notification.id)}
-              >
-                <div className="flex items-start">
-                  <div
-                    className={`h-10 w-10 rounded-full ${getNotificationIconStyle(
-                      notification.type
-                    )} flex items-center justify-center mr-4 flex-shrink-0`}
-                  >
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium text-gray-900">{notification.title}</p>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.content}</p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      {notification.createdAt &&
-                        formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                  {!notification.isRead && (
-                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2"></div>
-                  )}
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="border-b border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Stay updated with your marketplace, community, and dating activities
+                </p>
               </div>
-            ))}
+              <div className="flex items-center space-x-3">
+                {totalUnread > 0 && (
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    {totalUnread} unread
+                  </span>
+                )}
+                {allNotifications && allNotifications.length > 0 && (
+                  <button
+                    onClick={() => markAllNotificationsReadMutation.mutate()}
+                    disabled={markAllNotificationsReadMutation.isPending}
+                    className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {markAllNotificationsReadMutation.isPending ? (
+                      <div className="flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Marking all as read...
+                      </div>
+                    ) : (
+                      "Mark all as read"
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Tabbed Notifications */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1 m-6 mb-0">
+              <TabsTrigger value="marketplace" className="flex items-center gap-2">
+                <Store className="h-4 w-4" />
+                Marketplace
+                {categorizedNotifications.marketplace.filter(n => !n.isRead).length > 0 && (
+                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                    {categorizedNotifications.marketplace.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="community" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Community
+                {categorizedNotifications.community.filter(n => !n.isRead).length > 0 && (
+                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                    {categorizedNotifications.community.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="dating" className="flex items-center gap-2">
+                <HeartHandshake className="h-4 w-4" />
+                Dating
+                {categorizedNotifications.dating.filter(n => !n.isRead).length > 0 && (
+                  <span className="bg-primary text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                    {categorizedNotifications.dating.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="marketplace" className="p-6 pt-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Marketplace Activity</h3>
+                <p className="text-sm text-gray-600">
+                  Order updates, payment confirmations, product reviews, and vendor messages
+                </p>
+              </div>
+              <NotificationSection
+                notifications={categorizedNotifications.marketplace}
+                isLoading={isLoading}
+                onMarkRead={(id) => markNotificationReadMutation.mutate(id)}
+                emptyMessage="marketplace"
+                emptyIcon={Store}
+              />
+            </TabsContent>
+
+            <TabsContent value="community" className="p-6 pt-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Community Activity</h3>
+                <p className="text-sm text-gray-600">
+                  Likes, comments, follows, mentions, and community interactions
+                </p>
+              </div>
+              <NotificationSection
+                notifications={categorizedNotifications.community}
+                isLoading={isLoading}
+                onMarkRead={(id) => markNotificationReadMutation.mutate(id)}
+                emptyMessage="community"
+                emptyIcon={Users}
+              />
+            </TabsContent>
+
+            <TabsContent value="dating" className="p-6 pt-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Dating Activity</h3>
+                <p className="text-sm text-gray-600">
+                  Matches, messages, profile views, tier upgrades, and dating interactions
+                </p>
+              </div>
+              <NotificationSection
+                notifications={categorizedNotifications.dating}
+                isLoading={isLoading}
+                onMarkRead={(id) => markNotificationReadMutation.mutate(id)}
+                emptyMessage="dating"
+                emptyIcon={HeartHandshake}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
