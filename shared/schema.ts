@@ -793,6 +793,48 @@ export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type LikedEvent = typeof likedEvents.$inferSelect;
 export type InsertLikedEvent = z.infer<typeof insertLikedEventSchema>;
 
+// Dating profile model
+export const datingProfiles = pgTable("dating_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  displayName: text("display_name").notNull(),
+  age: integer("age").notNull(),
+  gender: text("gender"),
+  sexualOrientation: text("sexual_orientation"),
+  height: text("height"),
+  incomeRange: text("income_range"),
+  bio: text("bio"),
+  location: text("location"),
+  interests: text("interests").array(),
+  lookingFor: text("looking_for"),
+  relationshipType: text("relationship_type"),
+  profileImages: text("profile_images").array(),
+  isActive: boolean("is_active").default(false),
+  isPremium: boolean("is_premium").default(false),
+  datingRoomTier: text("dating_room_tier").default("normal"),
+  // Geographic Information
+  country: text("country"),
+  region: text("region"),
+  city: text("city"),
+  // Demographic Information
+  tribe: text("tribe"),
+  language: text("language"),
+  income: text("income"),
+  education: text("education"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueUserProfile: unique().on(table.userId),
+  };
+});
+
+export const insertDatingProfileSchema = createInsertSchema(datingProfiles)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export type DatingProfile = typeof datingProfiles.$inferSelect;
+export type InsertDatingProfile = z.infer<typeof insertDatingProfileSchema>;
+
 // Video model for short-form, stories, live streams, and recorded videos
 export const videos = pgTable("videos", {
   id: serial("id").primaryKey(),
