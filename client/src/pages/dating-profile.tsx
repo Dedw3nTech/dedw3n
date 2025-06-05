@@ -44,6 +44,7 @@ interface DatingProfile {
   profileImages: string[];
   isActive: boolean;
   isPremium: boolean;
+  secondaryLanguage?: string;
   createdAt?: string;
   updatedAt?: string;
 }
