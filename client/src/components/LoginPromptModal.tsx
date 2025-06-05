@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { 
@@ -22,7 +23,9 @@ import {
   MessageCircle,
   Share2,
   ShoppingBag,
-  Users
+  Users,
+  Globe,
+  Calendar
 } from "lucide-react";
 
 interface LoginPromptModalProps {
@@ -39,10 +42,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
+    name: "",
     username: "",
     email: "",
     password: "",
-    name: ""
+    region: "",
+    country: "",
+    city: "",
+    dateOfBirth: "",
+    gender: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,6 +179,64 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required={!isLogin}
               />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth" className="flex items-center">
+                <Calendar className="mr-2 h-4 w-4" />
+                Date of Birth
+              </Label>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                required={!isLogin}
+              />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <Globe className="mr-2 h-4 w-4" />
+                Location
+              </Label>
+              <div className="grid grid-cols-1 gap-2">
+                <Input
+                  placeholder="Region"
+                  value={formData.region}
+                  onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                />
+                <Input
+                  placeholder="Country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                />
+                <Input
+                  placeholder="City"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                />
+              </div>
             </div>
           )}
 
