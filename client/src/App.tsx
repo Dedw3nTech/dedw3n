@@ -132,6 +132,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
 }
 
 import NotFound from "@/pages/not-found";
+import NotFoundPage from "@/pages/NotFoundPage";
 import Home from "@/pages/home";
 import Social from "@/pages/social";
 import Chatrooms from "@/pages/chatrooms";
@@ -295,7 +296,7 @@ function Router() {
       <ProtectedRoute path="/admin/:tab" component={AdminDashboard} />
       
 
-      <Route component={NotFound} />
+      <Route component={NotFoundPage} />
     </Switch>
   );
 }
