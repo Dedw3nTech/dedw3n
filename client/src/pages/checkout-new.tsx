@@ -275,25 +275,16 @@ export default function CheckoutNew() {
     }
   ];
 
-  // Direct calculation matching shopping cart method
-  console.log('Checkout - Cart Items:', cartItems);
-  
+  // Calculate pricing using the same method as shopping cart
   const subtotal = Array.isArray(cartItems) 
-    ? cartItems.reduce((sum, item) => {
-        console.log(`Item: ${item.product.name}, Price: ${item.product.price}, Quantity: ${item.quantity}`);
-        return sum + (item.product.price * item.quantity);
-      }, 0) 
+    ? cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0) 
     : 0;
-  
-  console.log('Checkout - Calculated Subtotal:', subtotal);
   
   const freeShippingThreshold = 50;
   const shippingCost = subtotal >= freeShippingThreshold ? 0 : 5.99;
   const taxRate = 0.2; // 20% VAT
-  const tax = subtotal * taxRate;
-  const total = subtotal + shippingCost + tax;
-  
-  console.log('Checkout - Final Calculation:', { subtotal, shippingCost, tax, total });
+  const tax = Math.round(subtotal * taxRate * 100) / 100;
+  const total = Math.round((subtotal + shippingCost + tax) * 100) / 100;
 
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
@@ -929,59 +920,61 @@ export default function CheckoutNew() {
             )}
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div>
+          {/* Clean Order Summary */}
+          <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle className="text-lg font-semibold">Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Items */}
-                <div className="space-y-2">
-                  {Array.isArray(cartItems) && cartItems.map((item: CartItem) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="truncate">
-                        {item.product.name} × {item.quantity}
-                      </span>
-                      <span>{formatPrice(item.product.price * item.quantity)}</span>
-                    </div>
-                  ))}
-                </div>
+                {/* Cart Items */}
+                {Array.isArray(cartItems) && cartItems.length > 0 ? (
+                  <div className="space-y-3">
+                    {cartItems.map((item: CartItem) => (
+                      <div key={item.id} className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.product.name}</p>
+                          <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-semibold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No items in cart</p>
+                )}
 
                 <Separator />
 
-                {/* Pricing Breakdown */}
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                {/* Summary Calculations */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)} <small style={{color: 'red'}}>({subtotal})</small></span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span>Shipping</span>
-                    <span>
-                      {shippingCost === 0 ? (
-                        <span className="text-green-600">Free</span>
-                      ) : (
-                        formatPrice(shippingCost)
-                      )}
+                    <span className={shippingCost === 0 ? "text-green-600 font-medium" : ""}>
+                      {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span>Tax (VAT)</span>
-                    <span>{formatPrice(tax)} <small style={{color: 'red'}}>({tax})</small></span>
+                    <span>{formatPrice(tax)}</span>
                   </div>
                 </div>
 
                 <Separator />
 
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between items-center font-bold text-lg">
                   <span>Total</span>
                   <span>{formatPrice(total)}</span>
                 </div>
 
-                {subtotal < freeShippingThreshold && (
-                  <div className="bg-yellow-50 p-3 rounded-lg">
-                    <p className="text-xs text-yellow-800">
+                {/* Free Shipping Notice */}
+                {subtotal > 0 && subtotal < freeShippingThreshold && (
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                    <p className="text-xs text-blue-800">
                       Add {formatPrice(freeShippingThreshold - subtotal)} more for free shipping!
                     </p>
                   </div>
@@ -989,6 +982,7 @@ export default function CheckoutNew() {
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>
