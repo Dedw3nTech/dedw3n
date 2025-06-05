@@ -450,13 +450,7 @@ export default function CheckoutNew() {
       id: 'stripe',
       name: 'Credit/Debit Card',
       icon: <CreditCard className="h-5 w-5" />,
-      description: 'Secure payment with Visa, Mastercard, Amex'
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      icon: <div className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>,
-      description: 'Pay with your PayPal account or card'
+      description: 'Secure payment with Visa, Mastercard, Amex, PayPal'
     },
     {
       id: 'pawapay',
@@ -1055,11 +1049,7 @@ export default function CheckoutNew() {
                     />
                   )}
 
-                  {selectedPaymentMethod === 'paypal' && (
-                    <div className="text-center py-8 text-gray-500">
-                      PayPal integration coming soon
-                    </div>
-                  )}
+
 
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex items-center">
