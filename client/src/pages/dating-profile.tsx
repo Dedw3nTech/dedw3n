@@ -87,6 +87,7 @@ export default function DatingProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState<number>(18);
   const [gender, setGender] = useState("");
+  const [sexualOrientation, setSexualOrientation] = useState("");
   const [height, setHeight] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
@@ -154,8 +155,9 @@ export default function DatingProfilePage() {
       if (!user || !user.dateOfBirth) {
         setAge(profile.age || 18);
       }
-      // Load gender from existing profile if available
+      // Load gender and sexual orientation from existing profile if available
       if (profile.gender) setGender(profile.gender);
+      if (profile.sexualOrientation) setSexualOrientation(profile.sexualOrientation);
       setBio(profile.bio || "");
       setLocation(profile.location || "");
       setInterests(profile.interests || []);
@@ -216,6 +218,7 @@ export default function DatingProfilePage() {
       displayName: displayName.trim(),
       age,
       gender: gender.trim(),
+      sexualOrientation: sexualOrientation.trim(),
       bio: bio.trim(),
       location: location.trim(),
       interests,
@@ -488,6 +491,25 @@ export default function DatingProfilePage() {
                       Add your gender in profile settings for automatic fill
                     </p>
                   )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sexualOrientation">Sexual Orientation</Label>
+                  <Select value={sexualOrientation} onValueChange={setSexualOrientation}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your sexual orientation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="heterosexual">Heterosexual</SelectItem>
+                      <SelectItem value="asexual">Asexual</SelectItem>
+                      <SelectItem value="autosexual">Autosexual</SelectItem>
+                      <SelectItem value="bisexual">Bisexual</SelectItem>
+                      <SelectItem value="demisexual">Demisexual</SelectItem>
+                      <SelectItem value="gray-asexual">Gray-asexual</SelectItem>
+                      <SelectItem value="homosexual">Homosexual</SelectItem>
+                      <SelectItem value="pansexual">Pansexual</SelectItem>
+                      <SelectItem value="queer">Queer</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="height">Height</Label>
