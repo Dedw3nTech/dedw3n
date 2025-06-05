@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield } from "lucide-react";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useLocation } from "wouter";
-import { useCurrency } from "@/hooks/use-currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 
 interface DatingProfile {
@@ -38,7 +38,7 @@ export default function DatingPage() {
   const [selectedTier, setSelectedTier] = useState("normal");
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
-  const { formatAmount } = useCurrency();
+  const { formatPrice } = useCurrency();
 
   // Fetch current user
   const { data: user } = useQuery<User>({
@@ -200,7 +200,7 @@ export default function DatingPage() {
                       <CardTitle className="text-2xl">Normal Dating Room</CardTitle>
                     </div>
                     <p className="text-3xl font-bold text-blue-600">FREE</p>
-                    <p className="text-sm text-gray-600">/month limited, for unlimited upgrade {formatAmount(19.99)}</p>
+                    <p className="text-sm text-gray-600">/month limited, for unlimited upgrade {formatPrice(19.99)}</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
