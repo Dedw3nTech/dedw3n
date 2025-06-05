@@ -150,7 +150,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               onClick={() => setLocation("/dating/profile")}
             >
               <User className="h-4 w-4" />
-              <span className="text-sm font-medium">My Profile</span>
+              <span className="text-sm font-medium">My Dating Profile</span>
             </Button>
           </div>
         </div>
