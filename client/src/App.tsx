@@ -211,6 +211,9 @@ import DatingProfilePage from "@/pages/dating-profile";
 import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
 import CheckoutNew from "@/pages/checkout-new";
+import PawapayDepositCallback from "@/pages/pawapay-deposit-callback";
+import PawapayPayoutCallback from "@/pages/pawapay-payout-callback";
+import PawapayRefundCallback from "@/pages/pawapay-refund-callback";
 
 import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
@@ -241,6 +244,12 @@ function Router() {
       <Route path="/profile/:username" component={UserProfilePage} />
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/checkout-new" component={CheckoutNew} />
+      
+      {/* Pawapay callback routes */}
+      <Route path="/pawapay/deposit/callback" component={PawapayDepositCallback} />
+      <Route path="/pawapay/payout/callback" component={PawapayPayoutCallback} />
+      <Route path="/pawapay/refund/callback" component={PawapayRefundCallback} />
+      
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />

@@ -920,68 +920,7 @@ export default function CheckoutNew() {
             )}
           </div>
 
-          {/* Clean Order Summary */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Cart Items */}
-                {Array.isArray(cartItems) && cartItems.length > 0 ? (
-                  <div className="space-y-3">
-                    {cartItems.map((item: CartItem) => (
-                      <div key={item.id} className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{item.product.name}</p>
-                          <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                        </div>
-                        <p className="font-semibold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No items in cart</p>
-                )}
 
-                <Separator />
-
-                {/* Summary Calculations */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Shipping</span>
-                    <span className={shippingCost === 0 ? "text-green-600 font-medium" : ""}>
-                      {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Tax (VAT)</span>
-                    <span>{formatPrice(tax)}</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between items-center font-bold text-lg">
-                  <span>Total</span>
-                  <span>{formatPrice(total)}</span>
-                </div>
-
-                {/* Free Shipping Notice */}
-                {subtotal > 0 && subtotal < freeShippingThreshold && (
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                    <p className="text-xs text-blue-800">
-                      Add {formatPrice(freeShippingThreshold - subtotal)} more for free shipping!
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
 
         </div>
       </div>
