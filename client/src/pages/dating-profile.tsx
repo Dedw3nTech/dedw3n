@@ -574,6 +574,122 @@ export default function DatingProfilePage() {
     }
   };
 
+  // Submit application with tier-based validation
+  const submitApplication = async () => {
+    // First validate profile completeness
+    if (!displayName.trim()) {
+      toast({
+        title: "Error",
+        description: "Display name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedGifts.length < 3) {
+      toast({
+        title: "Error",
+        description: "Please select at least 3 gifts to showcase on your profile",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (profileImages.length < 3) {
+      toast({
+        title: "Error",
+        description: "Please upload at least 3 photos for your dating profile",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!income) {
+      toast({
+        title: "Error",
+        description: "Please select your income range to determine your tier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Determine tier based on income
+    const incomeValue = parseInt(income.replace(/[£,]/g, ''));
+    let tier = 1;
+    let tierName = "Tier 1 (£0 - £149,999)";
+    let requiresProof = false;
+
+    if (incomeValue >= 1500000) {
+      tier = 3;
+      tierName = "Tier 3 (£1,500,000+)";
+      requiresProof = true;
+    } else if (incomeValue >= 150000) {
+      tier = 2;
+      tierName = "Tier 2 (£150,000 - £1,499,999)";
+      requiresProof = true;
+    }
+
+    if (requiresProof) {
+      toast({
+        title: "Proof of Income Required",
+        description: `As a ${tierName} applicant, you must provide proof of income before your application can be approved. Please upload documentation such as payslips, tax returns, or bank statements.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Auto-approve tier 1 accounts
+    setIsProcessingPayment(true);
+    try {
+      const profileData = {
+        displayName: displayName.trim(),
+        age,
+        gender: gender.trim(),
+        sexualOrientation: sexualOrientation.trim(),
+        incomeRange: incomeRange.trim(),
+        bio: bio.trim(),
+        location: location.trim(),
+        interests,
+        lookingFor: lookingFor.trim(),
+        relationshipType,
+        profileImages,
+        isActive: true, // Auto-activate for tier 1
+        datingRoomTier: "normal",
+        // Geographic Information
+        country: country.trim(),
+        region: region.trim(),
+        city: city.trim(),
+        // Demographic Information
+        tribe: tribe.trim(),
+        language: language.trim(),
+        secondaryLanguage: secondaryLanguage.trim(),
+        income: income.trim(),
+        education: education.trim(),
+        roots: roots.trim(),
+        selectedGifts,
+      };
+
+      await updateProfileMutation.mutateAsync(profileData);
+      
+      toast({
+        title: "Application Approved!",
+        description: `Your ${tierName} dating profile has been automatically approved and activated. You can now access the dating rooms.`,
+      });
+
+      // Update local state
+      setIsActive(true);
+
+    } catch (error) {
+      toast({
+        title: "Application Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1238,13 +1354,14 @@ export default function DatingProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Save Button */}
+          {/* Action Buttons */}
           <Card>
-            <CardFooter className="flex justify-end pt-6">
+            <CardFooter className="flex justify-between pt-6">
               <Button
                 onClick={handleSaveProfile}
-                disabled={updateProfileMutation.isPending}
-                className="bg-black text-white hover:bg-gray-800"
+                disabled={updateProfileMutation.isPending || isProcessingPayment}
+                variant="outline"
+                className="flex items-center gap-2"
               >
                 {updateProfileMutation.isPending ? (
                   <>
@@ -1254,12 +1371,81 @@ export default function DatingProfilePage() {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save Dating Profile
+                    Save Draft
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={submitApplication}
+                disabled={updateProfileMutation.isPending || isProcessingPayment}
+                className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Submit Application
                   </>
                 )}
               </Button>
             </CardFooter>
           </Card>
+
+          {/* Tier Information */}
+          {income && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    Your Application Tier
+                  </h3>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Based on your income range, you qualify for:
+                  </p>
+                  
+                  {(() => {
+                    const incomeValue = parseInt(income.replace(/[£,]/g, ''));
+                    if (incomeValue >= 1500000) {
+                      return (
+                        <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
+                          <Badge className="bg-purple-600 text-white mb-2">Tier 3</Badge>
+                          <p className="text-purple-800 font-medium">£1,500,000+ Annual Income</p>
+                          <p className="text-sm text-purple-700 mt-2">
+                            Access to all dating rooms • Requires income verification
+                          </p>
+                        </div>
+                      );
+                    } else if (incomeValue >= 150000) {
+                      return (
+                        <div className="bg-gold-100 border border-yellow-400 rounded-lg p-4">
+                          <Badge className="bg-yellow-600 text-white mb-2">Tier 2</Badge>
+                          <p className="text-yellow-800 font-medium">£150,000 - £1,499,999 Annual Income</p>
+                          <p className="text-sm text-yellow-700 mt-2">
+                            Access to VIP and Normal rooms • Requires income verification
+                          </p>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+                          <Badge className="bg-green-600 text-white mb-2">Tier 1</Badge>
+                          <p className="text-green-800 font-medium">£0 - £149,999 Annual Income</p>
+                          <p className="text-sm text-green-700 mt-2">
+                            Access to Normal dating room • Auto-approved
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
