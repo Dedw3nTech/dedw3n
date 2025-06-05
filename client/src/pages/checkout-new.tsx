@@ -954,7 +954,7 @@ export default function CheckoutNew() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <span>{formatPrice(subtotal)} <small style={{color: 'red'}}>({subtotal})</small></span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -968,7 +968,7 @@ export default function CheckoutNew() {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax (VAT)</span>
-                    <span>{formatPrice(tax)}</span>
+                    <span>{formatPrice(tax)} <small style={{color: 'red'}}>({tax})</small></span>
                   </div>
                 </div>
 
