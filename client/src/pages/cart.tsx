@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { formatPrice } from '@/lib/utils';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 
 export default function Cart() {
   const [, setLocation] = useLocation();
@@ -121,10 +122,9 @@ export default function Cart() {
     setLocation('/');
   };
   
-  // Calculate total price
-  const totalPrice = cartItems.reduce((total: number, item: any) => {
-    return total + (item.product?.price || 0) * item.quantity;
-  }, 0);
+  // Calculate pricing using centralized system
+  const pricing = calculatePricing(cartItems);
+  const { subtotal, shippingCost, tax, total } = pricing;
   
   // Loading state
   if (isLoading) {

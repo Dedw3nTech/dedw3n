@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { calculatePricing, amountNeededForFreeShipping } from "@/lib/pricing";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -189,13 +190,9 @@ export default function CheckoutNew() {
     }
   ];
 
-  // Calculate totals
-  const subtotal = Array.isArray(cartItems) ? cartItems.reduce((sum: number, item: CartItem) => 
-    sum + (item.product.price * item.quantity), 0
-  ) : 0;
-  const shippingCost = subtotal > 50 ? 0 : 5.99; // Free shipping over £50
-  const tax = subtotal * 0.2; // 20% VAT
-  const total = subtotal + shippingCost + tax;
+  // Calculate totals using centralized pricing system
+  const pricing = calculatePricing(cartItems);
+  const { subtotal, shippingCost, tax, total } = pricing;
 
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
@@ -213,10 +210,6 @@ export default function CheckoutNew() {
     if (currentStep === 'payment' && total > 0 && !clientSecret) {
       const createPaymentIntent = async () => {
         try {
-          console.log('Creating payment intent with total:', total);
-          console.log('Cart items:', cartItems);
-          console.log('Calculated values:', { subtotal, shippingCost, tax, total });
-          
           const response = await apiRequest('POST', '/api/create-payment-intent', { 
             amount: total 
           });
@@ -233,7 +226,7 @@ export default function CheckoutNew() {
       };
       createPaymentIntent();
     }
-  }, [currentStep, total, clientSecret, cartItems, subtotal, shippingCost, tax]);
+  }, [currentStep, total, clientSecret]);
 
   // Process order
   const processOrderMutation = useMutation({
@@ -688,10 +681,10 @@ export default function CheckoutNew() {
                   <span>{formatPrice(total)}</span>
                 </div>
 
-                {subtotal < 50 && (
+                {amountNeededForFreeShipping(subtotal) > 0 && (
                   <div className="bg-yellow-50 p-3 rounded-lg">
                     <p className="text-xs text-yellow-800">
-                      Add {formatPrice(50 - subtotal)} more for free shipping!
+                      Add {formatPrice(amountNeededForFreeShipping(subtotal))} more for free shipping!
                     </p>
                   </div>
                 )}
