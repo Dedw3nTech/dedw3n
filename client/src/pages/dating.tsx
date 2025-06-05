@@ -417,21 +417,6 @@ export default function DatingPage() {
                 <AccessDeniedCard tier={selectedTier} />
               </div>
             )}
-              </div>
-            </div>
-
-            {/* Sidebar with Video */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="sticky top-6">
-                <VideoDisplayCard 
-                  title="Dating Experience"
-                  entity="dating"
-                  marketType="b2c"
-                  autoPlay={true}
-                  showControls={true}
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
