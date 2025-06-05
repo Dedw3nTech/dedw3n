@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { storage } from './storage';
+import crypto from 'crypto';
 
 // Pawapay transaction types
 interface PawapayTransaction {
@@ -21,9 +22,54 @@ interface PawapayTransaction {
 // In-memory storage for Pawapay transactions (in production, use database)
 const pawapayTransactions = new Map<string, PawapayTransaction>();
 
+// Pawapay webhook signature verification
+const PAWAPAY_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYZe9jhnaZKw9ykMBe2IwRg6AgVMx
+2JRE3RMIdf4YazZTaQaUO19uDI5UO0QsTG699UeI+emd63/GY1PyOpf1rw==
+-----END PUBLIC KEY-----`;
+
+const PAWAPAY_PUBLIC_KEY_ID = 'HTTP_EC_P256_KEY:1';
+
+function verifyWebhookSignature(payload: string, signature: string, keyId: string): boolean {
+  try {
+    if (keyId !== PAWAPAY_PUBLIC_KEY_ID) {
+      console.error('Invalid Pawapay public key ID:', keyId);
+      return false;
+    }
+
+    // Extract signature from base64
+    const signatureBuffer = Buffer.from(signature, 'base64');
+    
+    // Create verifier
+    const verifier = crypto.createVerify('SHA256');
+    verifier.update(payload);
+    
+    // Verify signature
+    return verifier.verify(PAWAPAY_PUBLIC_KEY, signatureBuffer);
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error);
+    return false;
+  }
+}
+
 // Process deposit callback from Pawapay
 export async function handleDepositCallback(req: Request, res: Response) {
   try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
     const {
       transactionId,
       status,
@@ -95,6 +141,21 @@ export async function handleDepositCallback(req: Request, res: Response) {
 // Process payout callback from Pawapay
 export async function handlePayoutCallback(req: Request, res: Response) {
   try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
     const {
       payoutId,
       status,
@@ -167,6 +228,21 @@ export async function handlePayoutCallback(req: Request, res: Response) {
 // Process refund callback from Pawapay
 export async function handleRefundCallback(req: Request, res: Response) {
   try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
     const {
       refundId,
       status,
