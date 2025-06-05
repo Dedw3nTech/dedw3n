@@ -405,7 +405,7 @@ export default function CheckoutNew() {
                         variant="outline"
                         size="sm"
                         onClick={autoFillShippingInfo}
-                        className="flex items-center"
+                        className="flex items-center bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                       >
                         <User className="h-4 w-4 mr-1" />
                         Use Saved Address
