@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check } from "lucide-react";
+import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
 // Product interface for marketplace gifts
@@ -387,6 +387,7 @@ export default function DatingProfilePage() {
       if (profile.education) setEducation(profile.education);
       if (profile.roots) setRoots(profile.roots);
       if (profile.selectedGifts) setSelectedGifts(profile.selectedGifts);
+      if (profile.profileImages) setProfileImages(profile.profileImages);
     }
   }, [datingProfile, user]);
 
@@ -431,6 +432,15 @@ export default function DatingProfilePage() {
       toast({
         title: "Error",
         description: "Please select at least 3 gifts to showcase on your profile",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (profileImages.length < 3) {
+      toast({
+        title: "Error",
+        description: "Please upload at least 3 photos for your dating profile",
         variant: "destructive",
       });
       return;
@@ -688,7 +698,7 @@ export default function DatingProfilePage() {
                     className={user && user.dateOfBirth ? "bg-gray-50 cursor-not-allowed" : ""}
                   />
                   {user && user.dateOfBirth && (
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-green-600">
                       Age automatically calculated from your date of birth in profile settings
                     </p>
                   )}
@@ -715,7 +725,7 @@ export default function DatingProfilePage() {
                     </SelectContent>
                   </Select>
                   {user && user.gender && gender === user.gender && (
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-green-600">
                       Auto-filled from your profile settings
                     </p>
                   )}
