@@ -3870,6 +3870,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getUserLikedProductsCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(likedProducts)
+        .where(eq(likedProducts.userId, userId));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting user liked products count:', error);
+      return 0;
+    }
+  }
+
   async getUserFollowingCount(userId: number): Promise<number> {
     return this.getFollowingCount(userId);
   }

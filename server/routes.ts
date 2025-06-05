@@ -3117,6 +3117,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get count of user's liked products
+  app.get('/api/liked-products/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUserLikedProductsCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting liked products count:', error);
+      res.status(500).json({ message: 'Failed to get liked products count' });
+    }
+  });
+
   // Friend request routes
   app.post("/api/friends/request", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
