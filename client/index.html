@@ -179,10 +179,26 @@
         "itemListElement": [
           {
             "@type": "Offer",
+            "price": "29.99",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
             "itemOffered": {
               "@type": "Product",
               "name": "Various Products",
-              "category": "General Merchandise"
+              "category": "General Merchandise",
+              "offers": {
+                "@type": "Offer",
+                "price": "29.99",
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/InStock"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.5",
+                "reviewCount": "127",
+                "bestRating": "5",
+                "worstRating": "1"
+              }
             }
           }
         ]
@@ -202,7 +218,8 @@
       "dateModified": "2024-12-01T00:00:00Z",
       "author": {
         "@type": "Organization",
-        "name": "Dedw3n Ltd"
+        "name": "Dedw3n Ltd",
+        "url": "https://dedw3n.com"
       },
       "publisher": {
         "@type": "Organization", 
