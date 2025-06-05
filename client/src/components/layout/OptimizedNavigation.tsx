@@ -150,7 +150,7 @@ export default function OptimizedNavigation() {
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Currency Selector between language switcher and profile */}
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-1 mr-4">
                   <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
                   <CurrencySelector />
                 </div>
@@ -166,7 +166,7 @@ export default function OptimizedNavigation() {
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Currency Selector for non-logged in users */}
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-1 mr-4">
                   <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
                   <CurrencySelector />
                 </div>
