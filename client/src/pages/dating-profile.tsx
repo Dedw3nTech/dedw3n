@@ -1518,7 +1518,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
                           <Badge className="bg-purple-600 text-white mb-2">Tier 3</Badge>
-                          <p className="text-purple-800 font-medium">£1,500,000+ Annual Income</p>
+                          <p className="text-purple-800 font-medium">{formatPrice(1500000)}+ Annual Income</p>
                           <p className="text-sm text-purple-700 mt-2">
                             Access to all dating rooms • Requires income verification
                           </p>
@@ -1528,7 +1528,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-gold-100 border border-yellow-400 rounded-lg p-4">
                           <Badge className="bg-yellow-600 text-white mb-2">Tier 2</Badge>
-                          <p className="text-yellow-800 font-medium">£150,000 - £1,499,999 Annual Income</p>
+                          <p className="text-yellow-800 font-medium">{formatPrice(150000)} - {formatPrice(1499999)} Annual Income</p>
                           <p className="text-sm text-yellow-700 mt-2">
                             Access to VIP and Normal rooms • Requires income verification
                           </p>
@@ -1538,7 +1538,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-green-100 border border-green-300 rounded-lg p-4">
                           <Badge className="bg-green-600 text-white mb-2">Tier 1</Badge>
-                          <p className="text-green-800 font-medium">£0 - £149,999 Annual Income</p>
+                          <p className="text-green-800 font-medium">{formatPrice(0)} - {formatPrice(149999)} Annual Income</p>
                           <p className="text-sm text-green-700 mt-2">
                             Access to Normal dating room • Auto-approved
                           </p>

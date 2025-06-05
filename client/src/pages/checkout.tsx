@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowLeft, CreditCard, Globe, Smartphone, Building2, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { useCurrency } from "@/hooks/use-currency";
 
 // Load Stripe conditionally
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
@@ -257,6 +258,7 @@ export default function Checkout() {
   const [type, setType] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const { formatPrice } = useCurrency();
 
   // Get URL parameters and initialize payment
   useEffect(() => {
@@ -310,7 +312,7 @@ export default function Checkout() {
       case "vip":
         return {
           name: "VIP Dating Room",
-          price: "£199.99",
+          price: formatPrice(199.99),
           period: "per month",
           features: [
             "Advanced matching algorithms",
@@ -323,7 +325,7 @@ export default function Checkout() {
       case "vvip":
         return {
           name: "VVIP Dating Room",
-          price: "£1,999.99",
+          price: formatPrice(1999.99),
           period: "per month",
           features: [
             "Exclusive VVIP member pool",
