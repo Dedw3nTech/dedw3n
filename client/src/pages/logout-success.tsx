@@ -6,6 +6,7 @@ import { queryClient } from "@/lib/queryClient";
 
 // Import the Dedwen logo
 import dedwenLogo from "../assets/d3-black-logo.png";
+import newDedwenLogo from "@assets/Dedw3n Logo_1749096270700.png";
 
 export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
@@ -107,6 +108,15 @@ export default function LogoutSuccess() {
 
         
         <div className="text-center space-y-4">
+          {/* Dedw3n Logo */}
+          <div className="flex justify-center mb-6">
+            <img 
+              src={newDedwenLogo} 
+              alt="Dedw3n Logo" 
+              className="w-16 h-16 object-contain"
+            />
+          </div>
+          
           <h1 className="text-2xl font-bold text-black">
             You have successfully logged out
           </h1>
