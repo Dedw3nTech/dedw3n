@@ -173,24 +173,12 @@ export default function PaymentGateway() {
 
     setIsProcessing(true);
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (selectedPaymentMethod === "stripe") {
-        navigate(`/checkout?tier=${selectedTier}&type=${typeFromUrl}`);
-      } else if (selectedPaymentMethod === "paypal") {
-        navigate(`/paypal-checkout?tier=${selectedTier}&type=${typeFromUrl}`);
-      } else {
-        toast({
-          title: "Payment Method Coming Soon",
-          description: `${selectedMethod?.name} integration is in development. Please use card payment for now.`,
-          variant: "destructive",
-        });
-      }
+      // Navigate to general checkout with selected payment method and tier
+      navigate(`/checkout?payment_method=${selectedPaymentMethod}&tier=${selectedTier}&type=${typeFromUrl}`);
     } catch (error) {
       toast({
-        title: "Payment Error",
-        description: "Failed to process payment. Please try again.",
+        title: "Navigation Error",
+        description: "Failed to navigate to checkout. Please try again.",
         variant: "destructive",
       });
     } finally {
