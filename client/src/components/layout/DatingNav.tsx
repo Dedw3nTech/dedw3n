@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { 
   User, 
   Star,
-  Settings
+  Settings,
+  Compass
 } from "lucide-react";
 
 interface DatingProfile {
@@ -56,6 +57,18 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
           
           {/* Right corner buttons */}
           <div className="flex items-center gap-2">
+            {/* Browse Dating Profiles button - only visible if dating account is active */}
+            {datingProfile && datingProfile.isActive && (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                onClick={() => setLocation("/dating")}
+              >
+                <Compass className="h-4 w-4" />
+                <span className="text-sm font-medium">Browse Profiles</span>
+              </Button>
+            )}
+            
             {/* My Dating Profile button - only visible if dating account is active */}
             {datingProfile && datingProfile.isActive && (
               <Button
