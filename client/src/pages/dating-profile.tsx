@@ -117,13 +117,27 @@ export default function DatingProfilePage() {
     enabled: !!user,
   });
 
-  // Auto-populate age from user's dateOfBirth
+  // Auto-populate fields from user's main profile (excluding bio and display name)
   useEffect(() => {
-    if (user && user.dateOfBirth) {
-      const calculatedAge = calculateAge(user.dateOfBirth);
-      setAge(calculatedAge);
+    if (user) {
+      // Auto-populate age from dateOfBirth
+      if (user.dateOfBirth) {
+        const calculatedAge = calculateAge(user.dateOfBirth);
+        setAge(calculatedAge);
+      }
+      
+      // Auto-populate geographic information
+      if (user.country && !country) {
+        setCountry(user.country);
+      }
+      if (user.region && !region) {
+        setRegion(user.region);
+      }
+      if (user.city && !city) {
+        setCity(user.city);
+      }
     }
-  }, [user]);
+  }, [user, country, region, city]);
 
   // Load profile data when fetched
   useEffect(() => {
@@ -141,6 +155,15 @@ export default function DatingProfilePage() {
       setRelationshipType(profile.relationshipType || "");
       setProfileImages(profile.profileImages || []);
       setIsActive(profile.isActive || false);
+      
+      // Load geographic and demographic data if available
+      if (profile.country) setCountry(profile.country);
+      if (profile.region) setRegion(profile.region);
+      if (profile.city) setCity(profile.city);
+      if (profile.tribe) setTribe(profile.tribe);
+      if (profile.language) setLanguage(profile.language);
+      if (profile.income) setIncome(profile.income);
+      if (profile.education) setEducation(profile.education);
     }
   }, [datingProfile, user]);
 
@@ -192,6 +215,15 @@ export default function DatingProfilePage() {
       profileImages,
       isActive,
       datingRoomTier,
+      // Geographic Information
+      country: country.trim(),
+      region: region.trim(),
+      city: city.trim(),
+      // Demographic Information
+      tribe: tribe.trim(),
+      language: language.trim(),
+      income: income.trim(),
+      education: education.trim(),
     };
 
     updateProfileMutation.mutate(profileData);
@@ -469,24 +501,44 @@ export default function DatingProfilePage() {
                   <Label htmlFor="country">Country</Label>
                   <Input
                     id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
                     placeholder="e.g., United States"
                   />
+                  {user && user.country && country === user.country && (
+                    <p className="text-xs text-green-600">
+                      Auto-filled from your profile
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="region">Region</Label>
                   <Input
                     id="region"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
                     placeholder="e.g., California"
                   />
+                  {user && user.region && region === user.region && (
+                    <p className="text-xs text-green-600">
+                      Auto-filled from your profile
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     placeholder="e.g., Los Angeles"
                   />
+                  {user && user.city && city === user.city && (
+                    <p className="text-xs text-green-600">
+                      Auto-filled from your profile
+                    </p>
+                  )}
                 </div>
-
               </div>
             </CardContent>
           </Card>
@@ -505,6 +557,8 @@ export default function DatingProfilePage() {
                   <Label htmlFor="tribe">Tribe/Ethnicity</Label>
                   <Input
                     id="tribe"
+                    value={tribe}
+                    onChange={(e) => setTribe(e.target.value)}
                     placeholder="e.g., African American, Hispanic, etc."
                   />
                 </div>
@@ -512,6 +566,8 @@ export default function DatingProfilePage() {
                   <Label htmlFor="language">Primary Language</Label>
                   <Input
                     id="language"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
                     placeholder="e.g., English, Spanish, French"
                   />
                 </div>
@@ -519,6 +575,8 @@ export default function DatingProfilePage() {
                   <Label htmlFor="income">Income Range</Label>
                   <Input
                     id="income"
+                    value={income}
+                    onChange={(e) => setIncome(e.target.value)}
                     placeholder="e.g., $50,000 - $75,000"
                   />
                 </div>
@@ -526,6 +584,8 @@ export default function DatingProfilePage() {
                   <Label htmlFor="education">Education Level</Label>
                   <Input
                     id="education"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
                     placeholder="e.g., Bachelor's Degree"
                   />
                 </div>
