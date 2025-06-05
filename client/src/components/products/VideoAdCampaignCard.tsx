@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
+import newCafeVideo from "@assets/Cafe_1749111451530.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
 import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
 import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
@@ -49,8 +50,9 @@ export function VideoAdCampaignCard({
       };
     }
     
+    // Default B2C uses the new cafe video
     return {
-      video: videoSource,
+      video: newCafeVideo,
       title: "Dedw3n | Community"
     };
   };
