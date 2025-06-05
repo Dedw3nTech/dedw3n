@@ -83,6 +83,18 @@ const INCOME_TIERS = [
   { value: "tier3", label: "Tier 3: £1,500,000+", tier: 3, min: 1500000, max: Infinity },
 ];
 
+const ETHNICITY_OPTIONS = [
+  "Arab",
+  "Asian (East Asian)",
+  "Asian (South Asian)",
+  "Black, American, Caribbean or African",
+  "Mixed",
+  "Native American",
+  "Persian",
+  "White",
+  "Other"
+];
+
 // Helper function to get accessible dating rooms based on income tier
 const getAccessibleDatingRooms = (incomeRange: string): string[] => {
   const tier = INCOME_TIERS.find(t => t.value === incomeRange);
@@ -671,12 +683,18 @@ export default function DatingProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="tribe">Ethnicity</Label>
-                  <Input
-                    id="tribe"
-                    value={tribe}
-                    onChange={(e) => setTribe(e.target.value)}
-                    placeholder="e.g., African American, Hispanic, etc."
-                  />
+                  <Select value={tribe} onValueChange={setTribe}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your ethnicity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ETHNICITY_OPTIONS.map((ethnicity) => (
+                        <SelectItem key={ethnicity} value={ethnicity}>
+                          {ethnicity}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="language">Primary Language</Label>
