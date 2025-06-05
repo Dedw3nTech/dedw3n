@@ -14,26 +14,46 @@ import {
   Package,
   DollarSign,
   Loader2,
+  Store,
+  HeartHandshake,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Function to categorize notifications by section
+const categorizeNotifications = (notifications: any[]) => {
+  const marketplace = notifications.filter(n => 
+    ['order', 'order_status', 'payment', 'review', 'cart', 'product_like', 'vendor'].includes(n.type)
+  );
+  
+  const community = notifications.filter(n => 
+    ['like', 'comment', 'follow', 'mention', 'connection_request', 'post', 'community_join'].includes(n.type)
+  );
+  
+  const dating = notifications.filter(n => 
+    ['match', 'message', 'profile_view', 'tier_upgrade', 'dating_like', 'super_like', 'boost'].includes(n.type)
+  );
+  
+  return { marketplace, community, dating };
+};
 
 // Function to get notification icon based on type
 const getNotificationIcon = (type: string) => {
   switch (type) {
+    // Community notifications
     case "like":
+    case "dating_like":
       return <Heart className="h-4 w-4 text-white" />;
     case "comment":
       return <MessageSquare className="h-4 w-4 text-white" />;
     case "follow":
+    case "connection_request":
       return <Users className="h-4 w-4 text-white" />;
     case "mention":
       return <Bell className="h-4 w-4 text-white" />;
-    case "system":
-      return <AlertCircle className="h-4 w-4 text-white" />;
-    case "connection_request":
-      return <Users className="h-4 w-4 text-white" />;
+    
+    // Marketplace notifications
     case "order":
-      return <Package className="h-4 w-4 text-white" />;
     case "order_status":
       return <Package className="h-4 w-4 text-white" />;
     case "payment":
@@ -41,7 +61,26 @@ const getNotificationIcon = (type: string) => {
     case "review":
       return <Star className="h-4 w-4 text-white" />;
     case "cart":
+    case "product_like":
       return <ShoppingCart className="h-4 w-4 text-white" />;
+    case "vendor":
+      return <Store className="h-4 w-4 text-white" />;
+    
+    // Dating notifications
+    case "match":
+    case "super_like":
+      return <HeartHandshake className="h-4 w-4 text-white" />;
+    case "message":
+      return <MessageSquare className="h-4 w-4 text-white" />;
+    case "profile_view":
+      return <Users className="h-4 w-4 text-white" />;
+    case "tier_upgrade":
+    case "boost":
+      return <Star className="h-4 w-4 text-white" />;
+    
+    // System notifications
+    case "system":
+      return <AlertCircle className="h-4 w-4 text-white" />;
     default:
       return <Bell className="h-4 w-4 text-white" />;
   }
@@ -50,20 +89,24 @@ const getNotificationIcon = (type: string) => {
 // Function to get notification icon style based on type
 const getNotificationIconStyle = (type: string) => {
   switch (type) {
+    // Community notifications
     case "like":
+    case "dating_like":
       return "bg-red-500";
     case "comment":
+    case "message":
       return "bg-blue-500";
     case "follow":
+    case "connection_request":
       return "bg-green-500";
     case "mention":
       return "bg-purple-500";
-    case "system":
-      return "bg-yellow-500";
-    case "connection_request":
-      return "bg-indigo-500";
+    case "post":
+    case "community_join":
+      return "bg-violet-500";
+    
+    // Marketplace notifications
     case "order":
-      return "bg-orange-500";
     case "order_status":
       return "bg-orange-500";
     case "payment":
@@ -71,7 +114,25 @@ const getNotificationIconStyle = (type: string) => {
     case "review":
       return "bg-amber-500";
     case "cart":
+    case "product_like":
       return "bg-cyan-500";
+    case "vendor":
+      return "bg-teal-500";
+    
+    // Dating notifications
+    case "match":
+      return "bg-pink-500";
+    case "super_like":
+      return "bg-rose-500";
+    case "profile_view":
+      return "bg-indigo-500";
+    case "tier_upgrade":
+    case "boost":
+      return "bg-yellow-500";
+    
+    // System notifications
+    case "system":
+      return "bg-gray-500";
     default:
       return "bg-gray-500";
   }
