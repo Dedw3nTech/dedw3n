@@ -16,6 +16,129 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
+// Product interface for marketplace gifts
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  description?: string;
+  category?: string;
+}
+
+// GiftsSelection component
+interface GiftsSelectionProps {
+  selectedGifts: number[];
+  onGiftsChange: (gifts: number[]) => void;
+}
+
+function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
+  const { data: products, isLoading } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
+  const toggleGift = (productId: number) => {
+    if (selectedGifts.includes(productId)) {
+      onGiftsChange(selectedGifts.filter(id => id !== productId));
+    } else {
+      onGiftsChange([...selectedGifts, productId]);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Loading gifts...</span>
+      </div>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-500">No gifts available in the marketplace</p>
+        <p className="text-sm text-gray-400 mt-2">
+          Visit the <Link href="/marketplace" className="text-blue-600 hover:underline">marketplace</Link> to browse available items
+        </p>
+      </div>
+    );
+  }
+
+  const selectedCount = selectedGifts.length;
+  const isValidSelection = selectedCount >= 3;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          Select at least 3 gifts to showcase on your profile
+        </p>
+        <Badge variant={isValidSelection ? "default" : "secondary"}>
+          {selectedCount}/3+ selected
+        </Badge>
+      </div>
+
+      {!isValidSelection && selectedCount > 0 && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-700">
+            Please select at least {3 - selectedCount} more gift{3 - selectedCount !== 1 ? 's' : ''} to complete this section.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {products.slice(0, 12).map((product) => {
+          const isSelected = selectedGifts.includes(product.id);
+          return (
+            <div
+              key={product.id}
+              className={`relative border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
+                isSelected 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => toggleGift(product.id)}
+            >
+              {isSelected && (
+                <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+              )}
+              
+              <div className="aspect-square bg-gray-100 rounded-md mb-2 flex items-center justify-center">
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                ) : (
+                  <Gift className="h-8 w-8 text-gray-400" />
+                )}
+              </div>
+              
+              <h4 className="text-sm font-medium truncate mb-1">{product.name}</h4>
+              <p className="text-xs text-gray-600">£{product.price.toFixed(2)}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {products.length > 12 && (
+        <div className="text-center pt-4">
+          <Link href="/marketplace">
+            <Button variant="outline" size="sm">
+              View More Gifts in Marketplace
+            </Button>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Calculate age from date of birth
 const calculateAge = (dateOfBirth: string): number => {
   if (!dateOfBirth) return 18;
@@ -46,6 +169,7 @@ interface DatingProfile {
   isPremium: boolean;
   secondaryLanguage?: string;
   roots?: string;
+  selectedGifts?: number[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -196,6 +320,7 @@ export default function DatingProfilePage() {
   const [income, setIncome] = useState("");
   const [education, setEducation] = useState("");
   const [roots, setRoots] = useState("");
+  const [selectedGifts, setSelectedGifts] = useState<number[]>([]);
 
   // Fetch existing dating profile
   const { data: datingProfile, isLoading } = useQuery<DatingProfile>({
@@ -914,7 +1039,23 @@ export default function DatingProfilePage() {
           </Card>
 
           {/* Gifts */}
-          <GiftsSection />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                Gifts
+              </CardTitle>
+              <CardDescription>
+                Select at least 3 gifts from the marketplace or events to showcase on your profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <GiftsSelection 
+                selectedGifts={selectedGifts}
+                onGiftsChange={setSelectedGifts}
+              />
+            </CardContent>
+          </Card>
 
           {/* Profile Pictures */}
           <Card>

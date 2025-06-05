@@ -823,6 +823,8 @@ export const datingProfiles = pgTable("dating_profiles", {
   income: text("income"),
   education: text("education"),
   roots: text("roots"),
+  // Selected gifts for profile showcase
+  selectedGifts: integer("selected_gifts").array().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => {
