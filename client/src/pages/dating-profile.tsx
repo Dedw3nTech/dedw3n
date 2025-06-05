@@ -111,6 +111,13 @@ const LANGUAGE_OPTIONS = [
   "Vietnamese", "Welsh", "Yoruba", "Zulu", "Other"
 ];
 
+const EDUCATION_LEVELS = [
+  "High School",
+  "Bachelor's",
+  "Master's",
+  "Doctorate"
+];
+
 // Helper function to get accessible dating rooms based on income tier
 const getAccessibleDatingRooms = (incomeRange: string): string[] => {
   const tier = INCOME_TIERS.find(t => t.value === incomeRange);
@@ -749,12 +756,18 @@ export default function DatingProfilePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="education">Education Level</Label>
-                  <Input
-                    id="education"
-                    value={education}
-                    onChange={(e) => setEducation(e.target.value)}
-                    placeholder="e.g., Bachelor's Degree"
-                  />
+                  <Select value={education} onValueChange={setEducation}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your education level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EDUCATION_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
