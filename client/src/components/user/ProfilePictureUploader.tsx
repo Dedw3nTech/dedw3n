@@ -155,13 +155,24 @@ export function ProfilePictureUploader({
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative group">
-        <UserAvatar 
-          userId={userId} 
-          username={username} 
-          size="xl"
-          className={`cursor-pointer border-2 ${uploadComplete ? 'border-green-500' : 'border-primary/20 hover:border-primary/50'} transition-colors`}
-          onClick={triggerFileInput}
-        />
+        {previewImage ? (
+          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors cursor-pointer">
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className="w-full h-full object-cover"
+              onClick={triggerFileInput}
+            />
+          </div>
+        ) : (
+          <UserAvatar 
+            userId={userId} 
+            username={username} 
+            size="xl"
+            className={`cursor-pointer border-2 ${uploadComplete ? 'border-green-500' : 'border-primary/20 hover:border-primary/50'} transition-colors`}
+            onClick={triggerFileInput}
+          />
+        )}
         
         {uploadComplete && (
           <div className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full h-7 w-7 flex items-center justify-center border-2 border-white">
