@@ -77,6 +77,28 @@ const HEIGHT_OPTIONS = (() => {
   return heights;
 })();
 
+const INCOME_TIERS = [
+  { value: "tier1", label: "Tier 1: £0 - £149,999", tier: 1, min: 0, max: 149999 },
+  { value: "tier2", label: "Tier 2: £150,000 - £1,499,999", tier: 2, min: 150000, max: 1499999 },
+  { value: "tier3", label: "Tier 3: £1,500,000+", tier: 3, min: 1500000, max: Infinity },
+];
+
+// Helper function to get accessible dating rooms based on income tier
+const getAccessibleDatingRooms = (incomeRange: string): string[] => {
+  const tier = INCOME_TIERS.find(t => t.value === incomeRange);
+  if (!tier) return ["normal"]; // Default to normal room only
+  
+  switch (tier.tier) {
+    case 3: // Tier 3: Access to all rooms
+      return ["normal", "vip", "vvip"];
+    case 2: // Tier 2: Access to VIP and Normal
+      return ["normal", "vip"];
+    case 1: // Tier 1: Access to Normal only
+    default:
+      return ["normal"];
+  }
+};
+
 export default function DatingProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -89,6 +111,7 @@ export default function DatingProfilePage() {
   const [gender, setGender] = useState("");
   const [sexualOrientation, setSexualOrientation] = useState("");
   const [height, setHeight] = useState("");
+  const [incomeRange, setIncomeRange] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -155,9 +178,10 @@ export default function DatingProfilePage() {
       if (!user || !user.dateOfBirth) {
         setAge(profile.age || 18);
       }
-      // Load gender and sexual orientation from existing profile if available
+      // Load gender, sexual orientation, and income range from existing profile if available
       if (profile.gender) setGender(profile.gender);
       if (profile.sexualOrientation) setSexualOrientation(profile.sexualOrientation);
+      if (profile.incomeRange) setIncomeRange(profile.incomeRange);
       setBio(profile.bio || "");
       setLocation(profile.location || "");
       setInterests(profile.interests || []);
@@ -219,6 +243,7 @@ export default function DatingProfilePage() {
       age,
       gender: gender.trim(),
       sexualOrientation: sexualOrientation.trim(),
+      incomeRange: incomeRange.trim(),
       bio: bio.trim(),
       location: location.trim(),
       interests,
@@ -525,6 +550,39 @@ export default function DatingProfilePage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="incomeRange">Income Range</Label>
+                  <Select value={incomeRange} onValueChange={setIncomeRange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your income range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INCOME_TIERS.map((tier) => (
+                        <SelectItem key={tier.value} value={tier.value}>
+                          {tier.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Income tier determines dating room access
+                  </p>
+                  {incomeRange && (
+                    <div className="text-xs bg-blue-50 p-2 rounded">
+                      <p className="font-medium text-blue-800">Dating Room Access:</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {getAccessibleDatingRooms(incomeRange).map((room) => (
+                          <span 
+                            key={room} 
+                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
+                          >
+                            {room.charAt(0).toUpperCase() + room.slice(1)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
