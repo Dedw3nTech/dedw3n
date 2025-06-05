@@ -100,6 +100,17 @@ export default function DatingProfilePage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [, navigateTo] = useLocation();
 
+  // Geographic Information
+  const [country, setCountry] = useState("");
+  const [region, setRegion] = useState("");
+  const [city, setCity] = useState("");
+
+  // Demographic Information
+  const [tribe, setTribe] = useState("");
+  const [language, setLanguage] = useState("");
+  const [income, setIncome] = useState("");
+  const [education, setEducation] = useState("");
+
   // Fetch existing dating profile
   const { data: datingProfile, isLoading } = useQuery<DatingProfile>({
     queryKey: ["/api/dating-profile"],
