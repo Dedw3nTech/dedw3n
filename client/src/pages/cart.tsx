@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { formatPrice } from '@/lib/utils';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 
@@ -21,6 +21,7 @@ export default function Cart() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatPriceFromGBP } = useCurrency();
   
   // Show authentication message if not logged in
   if (!user) {
@@ -266,10 +267,10 @@ export default function Cart() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                      {formatPrice(item.product?.price || 0)}
+                      {formatPriceFromGBP(item.product?.price || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                      {formatPrice((item.product?.price || 0) * item.quantity)}
+                      {formatPriceFromGBP((item.product?.price || 0) * item.quantity)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
@@ -289,7 +290,7 @@ export default function Cart() {
                     Subtotal
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
-                    {formatPrice(subtotal)}
+                    {formatPriceFromGBP(subtotal)}
                   </td>
                   <td></td>
                 </tr>
@@ -301,7 +302,7 @@ export default function Cart() {
                     {shippingCost === 0 ? (
                       <span className="text-green-600">Free</span>
                     ) : (
-                      formatPrice(shippingCost)
+                      formatPriceFromGBP(shippingCost)
                     )}
                   </td>
                   <td></td>
@@ -311,7 +312,7 @@ export default function Cart() {
                     Tax (VAT)
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
-                    {formatPrice(tax)}
+                    {formatPriceFromGBP(tax)}
                   </td>
                   <td></td>
                 </tr>
@@ -320,7 +321,7 @@ export default function Cart() {
                     Total
                   </th>
                   <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                    {formatPrice(total)}
+                    {formatPriceFromGBP(total)}
                   </td>
                   <td></td>
                 </tr>
@@ -332,7 +333,7 @@ export default function Cart() {
           {amountNeededForFreeShipping(subtotal, pricingConfig) > 0 && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                Add {formatPrice(amountNeededForFreeShipping(subtotal, pricingConfig))} more to qualify for free shipping!
+                Add {formatPriceFromGBP(amountNeededForFreeShipping(subtotal, pricingConfig))} more to qualify for free shipping!
               </p>
             </div>
           )}
