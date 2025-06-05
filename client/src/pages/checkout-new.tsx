@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { calculatePricing, amountNeededForFreeShipping } from "@/lib/pricing";
+
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -275,18 +275,16 @@ export default function CheckoutNew() {
     }
   ];
 
-  // TODO: Get vendor-specific pricing config from product data
-  // For now using default configuration, but this should be dynamic based on vendor/product
-  const pricingConfig = {
-    // Example: Different vendors could have different thresholds/rates
-    // freeShippingThreshold: vendor?.freeShippingThreshold || 50,
-    // shippingCost: vendor?.shippingCost || 5.99,
-    // taxRate: vendor?.taxRate || 0.2
-  };
+  // Direct calculation matching shopping cart method
+  const subtotal = Array.isArray(cartItems) 
+    ? cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0) 
+    : 0;
   
-  // Calculate totals using centralized pricing system with vendor config
-  const pricing = calculatePricing(cartItems, pricingConfig);
-  const { subtotal, shippingCost, tax, total } = pricing;
+  const freeShippingThreshold = 50;
+  const shippingCost = subtotal >= freeShippingThreshold ? 0 : 5.99;
+  const taxRate = 0.2; // 20% VAT
+  const tax = subtotal * taxRate;
+  const total = subtotal + shippingCost + tax;
 
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
@@ -972,10 +970,10 @@ export default function CheckoutNew() {
                   <span>{formatPrice(total)}</span>
                 </div>
 
-                {amountNeededForFreeShipping(subtotal) > 0 && (
+                {subtotal < freeShippingThreshold && (
                   <div className="bg-yellow-50 p-3 rounded-lg">
                     <p className="text-xs text-yellow-800">
-                      Add {formatPrice(amountNeededForFreeShipping(subtotal))} more for free shipping!
+                      Add {formatPrice(freeShippingThreshold - subtotal)} more for free shipping!
                     </p>
                   </div>
                 )}
