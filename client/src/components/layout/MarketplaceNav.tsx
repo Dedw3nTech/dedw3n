@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -24,7 +24,13 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     queryKey: ['/api/liked-products/count'],
   });
   
+  // Fetch notifications count
+  const { data: notificationsData } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/unread/count'],
+  });
+  
   const likedProductsCount = likedProductsData?.count || 0;
+  const notificationsCount = notificationsData?.count || 0;
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
@@ -130,6 +136,22 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                 )}
               </div>
               <span className="text-sm font-medium">Liked</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
+              onClick={() => setLocation("/notifications")}
+            >
+              <div className="relative">
+                <Bell className="h-4 w-4" />
+                {notificationsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                    {notificationsCount > 99 ? '99+' : notificationsCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-medium">Notifications</span>
             </Button>
             
             <Button
