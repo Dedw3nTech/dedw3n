@@ -20,6 +20,13 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
+    // Special handling for events to show proper community hierarchy
+    if (path === '/events') {
+      breadcrumbs.push({ label: 'Community', path: '/wall' });
+      breadcrumbs.push({ label: 'Events & Meetups' });
+      return breadcrumbs;
+    }
+    
     // Define route mappings for better breadcrumb labels
     const routeLabels: Record<string, string> = {
       'products': 'Marketplace',
