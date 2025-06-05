@@ -20,18 +20,32 @@ interface PricingBreakdown {
   total: number;
 }
 
-// Configuration constants
-export const PRICING_CONFIG = {
+// Default pricing configuration - can be overridden per vendor/product
+export const DEFAULT_PRICING_CONFIG = {
   FREE_SHIPPING_THRESHOLD: 50,
   SHIPPING_COST: 5.99,
   TAX_RATE: 0.2, // 20% VAT
 } as const;
 
+interface PricingConfig {
+  freeShippingThreshold?: number;
+  shippingCost?: number;
+  taxRate?: number;
+}
+
 /**
  * Calculate complete pricing breakdown for cart items
  * This is the single source of truth for all pricing calculations
+ * Supports vendor-specific pricing configurations
  */
-export function calculatePricing(cartItems: CartItem[]): PricingBreakdown {
+export function calculatePricing(cartItems: CartItem[], config: PricingConfig = {}): PricingBreakdown {
+  // Merge with default configuration
+  const pricingConfig = {
+    freeShippingThreshold: config.freeShippingThreshold ?? DEFAULT_PRICING_CONFIG.FREE_SHIPPING_THRESHOLD,
+    shippingCost: config.shippingCost ?? DEFAULT_PRICING_CONFIG.SHIPPING_COST,
+    taxRate: config.taxRate ?? DEFAULT_PRICING_CONFIG.TAX_RATE,
+  };
+
   // Calculate subtotal from cart items
   const subtotal = Array.isArray(cartItems) 
     ? cartItems.reduce((sum: number, item: CartItem) => 
@@ -39,13 +53,13 @@ export function calculatePricing(cartItems: CartItem[]): PricingBreakdown {
       ) 
     : 0;
 
-  // Calculate shipping cost
-  const shippingCost = subtotal >= PRICING_CONFIG.FREE_SHIPPING_THRESHOLD 
+  // Calculate shipping cost based on vendor/product rules
+  const shippingCost = subtotal >= pricingConfig.freeShippingThreshold 
     ? 0 
-    : PRICING_CONFIG.SHIPPING_COST;
+    : pricingConfig.shippingCost;
 
-  // Calculate tax (VAT on subtotal only)
-  const tax = subtotal * PRICING_CONFIG.TAX_RATE;
+  // Calculate tax based on vendor/product tax rate
+  const tax = subtotal * pricingConfig.taxRate;
 
   // Calculate total
   const total = subtotal + shippingCost + tax;
@@ -73,16 +87,18 @@ export function formatPricingDisplay(pricing: PricingBreakdown, formatPrice: (am
 /**
  * Check if order qualifies for free shipping
  */
-export function qualifiesForFreeShipping(subtotal: number): boolean {
-  return subtotal >= PRICING_CONFIG.FREE_SHIPPING_THRESHOLD;
+export function qualifiesForFreeShipping(subtotal: number, config: PricingConfig = {}): boolean {
+  const threshold = config.freeShippingThreshold ?? DEFAULT_PRICING_CONFIG.FREE_SHIPPING_THRESHOLD;
+  return subtotal >= threshold;
 }
 
 /**
  * Calculate amount needed for free shipping
  */
-export function amountNeededForFreeShipping(subtotal: number): number {
-  if (qualifiesForFreeShipping(subtotal)) {
+export function amountNeededForFreeShipping(subtotal: number, config: PricingConfig = {}): number {
+  const threshold = config.freeShippingThreshold ?? DEFAULT_PRICING_CONFIG.FREE_SHIPPING_THRESHOLD;
+  if (subtotal >= threshold) {
     return 0;
   }
-  return PRICING_CONFIG.FREE_SHIPPING_THRESHOLD - subtotal;
+  return threshold - subtotal;
 }

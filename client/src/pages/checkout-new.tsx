@@ -190,8 +190,17 @@ export default function CheckoutNew() {
     }
   ];
 
-  // Calculate totals using centralized pricing system
-  const pricing = calculatePricing(cartItems);
+  // TODO: Get vendor-specific pricing config from product data
+  // For now using default configuration, but this should be dynamic based on vendor/product
+  const pricingConfig = {
+    // Example: Different vendors could have different thresholds/rates
+    // freeShippingThreshold: vendor?.freeShippingThreshold || 50,
+    // shippingCost: vendor?.shippingCost || 5.99,
+    // taxRate: vendor?.taxRate || 0.2
+  };
+  
+  // Calculate totals using centralized pricing system with vendor config
+  const pricing = calculatePricing(cartItems, pricingConfig);
   const { subtotal, shippingCost, tax, total } = pricing;
 
   // Handle shipping form changes
