@@ -246,11 +246,11 @@ export default function VendorRegisterPage() {
                   <h3 className="text-xl font-semibold">Private Vendor Registration</h3>
                 </div>
                 <Button 
-                  variant="ghost" 
+                  className="bg-black text-white hover:bg-gray-800"
                   size="sm"
                   onClick={() => setVendorType(null)}
                 >
-                  Change Type
+                  Change to Business Vendor
                 </Button>
               </div>
 
@@ -451,11 +451,11 @@ export default function VendorRegisterPage() {
                   <h3 className="text-xl font-semibold">Business Vendor Registration</h3>
                 </div>
                 <Button 
-                  variant="ghost" 
+                  className="bg-black text-white hover:bg-gray-800"
                   size="sm"
                   onClick={() => setVendorType(null)}
                 >
-                  Change Type
+                  Change to Private Vendor
                 </Button>
               </div>
 
