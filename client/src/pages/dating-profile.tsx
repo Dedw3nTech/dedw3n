@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 // Calculate age from date of birth
 const calculateAge = (dateOfBirth: string): number => {
@@ -392,10 +392,18 @@ export default function DatingProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">
             Dating Dashboard
           </h1>
+          {user && (
+            <Link href={`/profile/${user.id}`}>
+              <Button variant="outline" className="flex items-center gap-2 text-blue-600 border-blue-600 hover:bg-blue-50">
+                <Heart className="h-4 w-4" />
+                Dating Profile
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="space-y-6">
