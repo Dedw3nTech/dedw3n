@@ -430,7 +430,7 @@ export default function DatingProfilePage() {
 
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio">About you</Label>
                 <Textarea
                   id="bio"
                   value={bio}
@@ -475,13 +475,7 @@ export default function DatingProfilePage() {
                     placeholder="e.g., Los Angeles"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Input
-                    id="timezone"
-                    placeholder="e.g., PST (GMT-8)"
-                  />
-                </div>
+
               </div>
             </CardContent>
           </Card>
