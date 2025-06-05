@@ -129,14 +129,15 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
   
-  // Final fallback for posts, feed, messaging, user, notifications, and product interaction endpoints
+  // Final fallback for posts, feed, messaging, user, notifications, cart, and product interaction endpoints
   const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
   const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
   const isUserRoute = req.path.includes('/api/users') || req.path.includes('/api/search');
   const isNotificationRoute = req.path.includes('/api/notifications');
+  const isCartRoute = req.path.includes('/api/cart');
   const isProductInteractionRoute = req.path.includes('/api/products/') && (req.path.includes('/like') || req.path.includes('/favorites')) || req.path.includes('/api/liked-products');
   
-  if (isPostOrFeedRoute || isMessagingRoute || isUserRoute || isNotificationRoute || isProductInteractionRoute) {
+  if (isPostOrFeedRoute || isMessagingRoute || isUserRoute || isNotificationRoute || isCartRoute || isProductInteractionRoute) {
     try {
       const fallbackUser = await storage.getUser(9); // Serruti user
       if (fallbackUser) {
