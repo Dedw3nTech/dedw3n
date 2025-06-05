@@ -70,6 +70,191 @@ if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
 }
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
+// Pawapay Form Component for Mobile Money
+const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
+  total: number;
+  cartItems: CartItem[];
+  shippingInfo: ShippingInfo;
+  onOrderComplete: () => void;
+}) => {
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [mobileProvider, setMobileProvider] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [currency, setCurrency] = useState('UGX');
+
+  const mobileProviders = [
+    { id: 'MTN_MOMO_UG', name: 'MTN Mobile Money (Uganda)', currency: 'UGX' },
+    { id: 'AIRTEL_ODIN_UG', name: 'Airtel Money (Uganda)', currency: 'UGX' },
+    { id: 'MTN_MOMO_GH', name: 'MTN Mobile Money (Ghana)', currency: 'GHS' },
+    { id: 'VODAFONE_GH', name: 'Vodafone Cash (Ghana)', currency: 'GHS' },
+    { id: 'AIRTEL_ODIN_GH', name: 'AirtelTigo Money (Ghana)', currency: 'GHS' },
+    { id: 'ORANGE_MONEY_CM', name: 'Orange Money (Cameroon)', currency: 'XAF' },
+    { id: 'MTN_MOMO_CM', name: 'MTN Mobile Money (Cameroon)', currency: 'XAF' },
+    { id: 'ORANGE_MONEY_CI', name: 'Orange Money (Ivory Coast)', currency: 'XOF' },
+    { id: 'MTN_MOMO_CI', name: 'MTN Mobile Money (Ivory Coast)', currency: 'XOF' },
+    { id: 'ORANGE_MONEY_SN', name: 'Orange Money (Senegal)', currency: 'XOF' },
+    { id: 'FREE_MONEY_SN', name: 'Free Money (Senegal)', currency: 'XOF' },
+    { id: 'WAVE_SN', name: 'Wave (Senegal)', currency: 'XOF' }
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!mobileProvider || !phoneNumber.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a mobile money provider and enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Create order with Pawapay
+      const orderResponse = await apiRequest('POST', '/api/orders', {
+        cartItems: cartItems.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price
+        })),
+        shippingInfo,
+        paymentMethod: 'pawapay',
+        total,
+        currency
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      const order = await orderResponse.json();
+
+      // Convert amount to minor currency units for Pawapay
+      let amountInMinorUnits = total;
+      if (['UGX', 'GHS'].includes(currency)) {
+        amountInMinorUnits = Math.round(total * 100); // Convert to cents
+      } else if (['XAF', 'XOF'].includes(currency)) {
+        amountInMinorUnits = Math.round(total); // Already in minor units
+      }
+
+      // Initiate Pawapay deposit
+      const pawapayResponse = await apiRequest('POST', '/api/pawapay/deposit', {
+        amount: amountInMinorUnits.toString(),
+        currency,
+        correspondent: mobileProvider,
+        payer: {
+          type: 'MSISDN',
+          address: {
+            value: phoneNumber.replace(/\D/g, '') // Remove non-digits
+          }
+        },
+        customerTimestamp: new Date().toISOString(),
+        statementDescription: `Order #${order.id}`,
+        preAuthorisationCode: null,
+        metadata: {
+          orderId: order.id.toString(),
+          customerEmail: shippingInfo.email,
+          customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`
+        }
+      });
+
+      if (!pawapayResponse.ok) {
+        throw new Error('Failed to initiate mobile money payment');
+      }
+
+      const pawapayResult = await pawapayResponse.json();
+
+      toast({
+        title: "Payment Initiated",
+        description: "Check your phone for the mobile money payment prompt",
+      });
+
+      // Redirect to callback page or show payment status
+      onOrderComplete();
+
+    } catch (error: any) {
+      console.error('Pawapay payment error:', error);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Unable to process mobile money payment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="mobileProvider">Mobile Money Provider</Label>
+        <Select value={mobileProvider} onValueChange={(value) => {
+          setMobileProvider(value);
+          const provider = mobileProviders.find(p => p.id === value);
+          if (provider) {
+            setCurrency(provider.currency);
+          }
+        }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your mobile money provider" />
+          </SelectTrigger>
+          <SelectContent>
+            {mobileProviders.map((provider) => (
+              <SelectItem key={provider.id} value={provider.id}>
+                {provider.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="phoneNumber">Phone Number</Label>
+        <Input
+          id="phoneNumber"
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          placeholder="Enter your mobile money phone number"
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Use the phone number registered with your mobile money account
+        </p>
+      </div>
+
+      {mobileProvider && (
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Payment Details:</strong><br/>
+            Provider: {mobileProviders.find(p => p.id === mobileProvider)?.name}<br/>
+            Amount: {total} {currency}<br/>
+            You will receive a payment prompt on your phone
+          </p>
+        </div>
+      )}
+
+      <Button 
+        type="submit" 
+        disabled={isProcessing || !mobileProvider || !phoneNumber.trim()}
+        className="w-full bg-green-600 hover:bg-green-700"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Processing Payment...
+          </>
+        ) : (
+          `Pay ${total} ${currency} with Mobile Money`
+        )}
+      </Button>
+    </form>
+  );
+};
+
 // Checkout Form Component with Stripe
 const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
   total: number;
@@ -272,6 +457,12 @@ export default function CheckoutNew() {
       name: 'PayPal',
       icon: <div className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>,
       description: 'Pay with your PayPal account or card'
+    },
+    {
+      id: 'pawapay',
+      name: 'Mobile Money',
+      icon: <Phone className="h-5 w-5" />,
+      description: 'Pay with MTN, Airtel, Vodafone, Orange mobile money'
     }
   ];
 
@@ -794,24 +985,80 @@ export default function CheckoutNew() {
                     Payment Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {!clientSecret ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                      Setting up payment...
+                <CardContent className="space-y-6">
+                  {/* Payment Method Selection */}
+                  <div>
+                    <Label className="text-base font-medium">Select Payment Method</Label>
+                    <div className="mt-3 space-y-3">
+                      {paymentMethods.map((method) => (
+                        <div
+                          key={method.id}
+                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                            selectedPaymentMethod === method.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedPaymentMethod(method.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              {method.icon}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <span className="font-medium">{method.name}</span>
+                                {selectedPaymentMethod === method.id && (
+                                  <Check className="h-4 w-4 text-blue-600 ml-2" />
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500">{method.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    <Elements stripe={stripePromise} options={{ clientSecret }}>
-                      <CheckoutForm 
-                        total={total}
-                        cartItems={cartItems}
-                        shippingInfo={shippingInfo}
-                        onOrderComplete={() => {
-                          queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-                          setLocation('/order-confirmation');
-                        }}
-                      />
-                    </Elements>
+                  </div>
+
+                  {/* Payment Forms */}
+                  {selectedPaymentMethod === 'stripe' && (
+                    <div>
+                      {!clientSecret ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          Setting up payment...
+                        </div>
+                      ) : (
+                        <Elements stripe={stripePromise} options={{ clientSecret }}>
+                          <CheckoutForm 
+                            total={total}
+                            cartItems={cartItems}
+                            shippingInfo={shippingInfo}
+                            onOrderComplete={() => {
+                              queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                              setLocation('/order-confirmation');
+                            }}
+                          />
+                        </Elements>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === 'pawapay' && (
+                    <PawapayForm 
+                      total={total}
+                      cartItems={cartItems}
+                      shippingInfo={shippingInfo}
+                      onOrderComplete={() => {
+                        queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                        setLocation('/pawapay-deposit-callback');
+                      }}
+                    />
+                  )}
+
+                  {selectedPaymentMethod === 'paypal' && (
+                    <div className="text-center py-8 text-gray-500">
+                      PayPal integration coming soon
+                    </div>
                   )}
 
                   <div className="bg-blue-50 p-4 rounded-lg">
