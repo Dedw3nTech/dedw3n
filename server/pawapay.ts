@@ -72,11 +72,10 @@ export async function handleDepositCallback(req: Request, res: Response) {
       console.log(`Deposit failed: ${errorMessage} (Code: ${errorCode})`);
       
       if (req.user?.id) {
-        await storage.createNotification(req.user.id, {
+        await storage.createNotification({
+          userId: req.user.id,
           type: 'payment',
-          title: 'Deposit Failed',
-          message: `Your deposit could not be processed. ${errorMessage || 'Please try again.'}`,
-          data: { transactionId, errorCode, errorMessage }
+          content: `Your deposit could not be processed. ${errorMessage || 'Please try again.'}`
         });
       }
     }
@@ -135,22 +134,20 @@ export async function handlePayoutCallback(req: Request, res: Response) {
       console.log(`Payout successful: ${amount} ${currency} to ${recipientPhone}`);
       
       if (req.user?.id) {
-        await storage.createNotification(req.user.id, {
+        await storage.createNotification({
+          userId: req.user.id,
           type: 'payment',
-          title: 'Payout Sent',
-          message: `Your payout of ${amount} ${currency} has been sent successfully.`,
-          data: { payoutId, amount, currency, recipientPhone }
+          content: `Your payout of ${amount} ${currency} has been sent successfully.`
         });
       }
     } else if (status === 'FAILED') {
       console.log(`Payout failed: ${errorMessage} (Code: ${errorCode})`);
       
       if (req.user?.id) {
-        await storage.createNotification(req.user.id, {
+        await storage.createNotification({
+          userId: req.user.id,
           type: 'payment',
-          title: 'Payout Failed',
-          message: `Your payout could not be sent. ${errorMessage || 'Please contact support.'}`,
-          data: { payoutId, errorCode, errorMessage }
+          content: `Your payout could not be sent. ${errorMessage || 'Please contact support.'}`
         });
       }
     }
@@ -214,22 +211,20 @@ export async function handleRefundCallback(req: Request, res: Response) {
       console.log(`Refund successful: ${amount} ${currency} for transaction ${originalTransactionId}`);
       
       if (req.user?.id) {
-        await storage.createNotification(req.user.id, {
+        await storage.createNotification({
+          userId: req.user.id,
           type: 'payment',
-          title: 'Refund Processed',
-          message: `Your refund of ${amount} ${currency} has been processed successfully.`,
-          data: { refundId, amount, currency, originalTransactionId }
+          content: `Your refund of ${amount} ${currency} has been processed successfully.`
         });
       }
     } else if (status === 'FAILED') {
       console.log(`Refund failed: ${errorMessage} (Code: ${errorCode})`);
       
       if (req.user?.id) {
-        await storage.createNotification(req.user.id, {
+        await storage.createNotification({
+          userId: req.user.id,
           type: 'payment',
-          title: 'Refund Failed',
-          message: `Your refund could not be processed. ${errorMessage || 'Please contact support.'}`,
-          data: { refundId, errorCode, errorMessage, originalTransactionId }
+          content: `Your refund could not be processed. ${errorMessage || 'Please contact support.'}`
         });
       }
     }
