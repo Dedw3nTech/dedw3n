@@ -110,6 +110,7 @@ export default function Products() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
       toast({
         title: "Product Liked",
         description: "Product added to your liked items!",
@@ -140,6 +141,7 @@ export default function Products() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
       toast({
         title: "Product Unliked",
         description: "Product removed from your liked items.",
