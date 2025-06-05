@@ -13,6 +13,13 @@ export function Breadcrumbs() {
     const segments = path.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [{ label: 'Home', path: '/' }];
     
+    // Special handling for dating-profile to show proper hierarchy
+    if (path === '/dating-profile') {
+      breadcrumbs.push({ label: 'Dating', path: '/dating' });
+      breadcrumbs.push({ label: 'Dating Profile' });
+      return breadcrumbs;
+    }
+    
     // Define route mappings for better breadcrumb labels
     const routeLabels: Record<string, string> = {
       'products': 'Marketplace',
