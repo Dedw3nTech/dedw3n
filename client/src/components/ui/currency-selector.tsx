@@ -21,8 +21,9 @@ export function CurrencySelector() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <span className="text-xs font-medium cursor-pointer" style={{ fontSize: '12px' }}>
+        <span className="text-xs font-medium cursor-pointer flex items-center gap-1" style={{ fontSize: '12px' }}>
           <span className="font-medium">{selectedCurrency.symbol} {selectedCurrency.code}</span>
+          <ChevronDown className="h-3 w-3" />
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
