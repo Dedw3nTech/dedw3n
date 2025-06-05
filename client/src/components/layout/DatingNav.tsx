@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
-  Search, 
   User, 
   Star,
   Settings
@@ -50,19 +48,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               }`} />
             </div>
 
-            
-            {/* Search bar */}
-            {setSearchTerm && (
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search profiles..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-            )}
+
           </div>
           
           {/* Right corner buttons */}
