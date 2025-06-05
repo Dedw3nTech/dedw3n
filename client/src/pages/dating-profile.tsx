@@ -820,7 +820,7 @@ export default function DatingProfilePage() {
                     <h3 className="font-semibold text-lg">VIP</h3>
                     <p className="text-2xl font-bold">{formatPriceFromGBP(199.99)}</p>
                     <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over {formatPrice(150000)} per year</p>
+                    <p className="text-sm text-gray-600">For users who make over {formatPriceFromGBP(150000)} per year</p>
                     {isProcessingPayment && datingRoomTier === "vip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -841,9 +841,9 @@ export default function DatingProfilePage() {
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VVIP</h3>
-                    <p className="text-2xl font-bold">{formatPrice(1999.99)}</p>
+                    <p className="text-2xl font-bold">{formatPriceFromGBP(1999.99)}</p>
                     <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over {formatPrice(1500000)} per year</p>
+                    <p className="text-sm text-gray-600">For users who make over {formatPriceFromGBP(1500000)} per year</p>
                     {isProcessingPayment && datingRoomTier === "vvip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1518,7 +1518,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
                           <Badge className="bg-purple-600 text-white mb-2">Tier 3</Badge>
-                          <p className="text-purple-800 font-medium">{formatPrice(1500000)}+ Annual Income</p>
+                          <p className="text-purple-800 font-medium">{formatPriceFromGBP(1500000)}+ Annual Income</p>
                           <p className="text-sm text-purple-700 mt-2">
                             Access to all dating rooms • Requires income verification
                           </p>
@@ -1528,7 +1528,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-gold-100 border border-yellow-400 rounded-lg p-4">
                           <Badge className="bg-yellow-600 text-white mb-2">Tier 2</Badge>
-                          <p className="text-yellow-800 font-medium">{formatPrice(150000)} - {formatPrice(1499999)} Annual Income</p>
+                          <p className="text-yellow-800 font-medium">{formatPriceFromGBP(150000)} - {formatPriceFromGBP(1499999)} Annual Income</p>
                           <p className="text-sm text-yellow-700 mt-2">
                             Access to VIP and Normal rooms • Requires income verification
                           </p>
@@ -1538,7 +1538,7 @@ export default function DatingProfilePage() {
                       return (
                         <div className="bg-green-100 border border-green-300 rounded-lg p-4">
                           <Badge className="bg-green-600 text-white mb-2">Tier 1</Badge>
-                          <p className="text-green-800 font-medium">{formatPrice(0)} - {formatPrice(149999)} Annual Income</p>
+                          <p className="text-green-800 font-medium">{formatPriceFromGBP(0)} - {formatPriceFromGBP(149999)} Annual Income</p>
                           <p className="text-sm text-green-700 mt-2">
                             Access to Normal dating room • Auto-approved
                           </p>
