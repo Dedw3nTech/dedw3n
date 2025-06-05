@@ -210,6 +210,7 @@ import PostDetailPage from "@/pages/post-detail";
 import DatingProfilePage from "@/pages/dating-profile";
 import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
+import CheckoutNew from "@/pages/checkout-new";
 
 import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
@@ -239,6 +240,7 @@ function Router() {
       <Route path="/dating" component={DatingPage} />
       <Route path="/profile/:username" component={UserProfilePage} />
       <ProtectedRoute path="/checkout" component={Checkout} />
+      <ProtectedRoute path="/checkout-new" component={CheckoutNew} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />

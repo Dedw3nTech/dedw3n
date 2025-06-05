@@ -65,7 +65,7 @@ export default function CheckoutNew() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { currency, convertPrice } = useCurrency();
+  const { selectedCurrency, convertPrice } = useCurrency();
   
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'review'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
@@ -85,7 +85,7 @@ export default function CheckoutNew() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch cart items
-  const { data: cartItems = [], isLoading: isCartLoading } = useQuery({
+  const { data: cartItems = [], isLoading: isCartLoading } = useQuery<CartItem[]>({
     queryKey: ['/api/cart'],
     enabled: !!user,
   });
@@ -505,7 +505,7 @@ export default function CheckoutNew() {
                             <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           </div>
                           <p className="text-sm font-medium">
-                            {convertPrice(item.product.price * item.quantity, currency)}
+                            {convertPrice(item.product.price * item.quantity, selectedCurrency)}
                           </p>
                         </div>
                       ))}

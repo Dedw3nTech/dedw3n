@@ -113,7 +113,7 @@ export default function Cart() {
   
   // Proceed to checkout handler
   const handleCheckout = () => {
-    setLocation('/checkout');
+    setLocation('/checkout-new');
   };
   
   // Continue shopping handler
