@@ -250,12 +250,8 @@ function Router() {
       <Route path="/api-test" component={ApiTestPage} />
       
       {/* Protected routes - require authentication */}
-      <Route path="/social">
-        <Redirect to="/wall" />
-      </Route>
-      <Route path="/social/:tab">
-        <Redirect to="/wall" />
-      </Route>
+      <ProtectedRoute path="/social" component={WallPage} />
+      <ProtectedRoute path="/social/:tab" component={WallPage} />
       <ProtectedRoute path="/social-console" component={SocialConsolePage} />
       <ProtectedRoute path="/social-insights" component={SocialInsightsPage} />
       <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
