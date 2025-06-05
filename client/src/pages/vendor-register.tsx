@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 // Private Vendor Schema
 const privateVendorSchema = z.object({
@@ -123,19 +124,7 @@ export default function VendorRegisterPage() {
 
   const registerVendorMutation = useMutation({
     mutationFn: async (data: PrivateVendorForm | BusinessVendorForm) => {
-      const response = await fetch("/api/vendors/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Registration failed");
-      }
-
+      const response = await apiRequest("POST", "/api/vendors/register", data);
       return response.json();
     },
     onSuccess: (data) => {
