@@ -138,10 +138,10 @@ export default function VendorRegisterPage() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Registration Successful",
-        description: "Your vendor application has been submitted successfully. You'll receive an email confirmation shortly.",
+        description: data.message,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors/me"] });
