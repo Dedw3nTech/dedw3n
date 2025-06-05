@@ -65,7 +65,21 @@ const DialogHeader = ({
       className
     )}
     {...props}
-  />
+  >
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex items-center justify-center mb-4"
+    >
+      <img 
+        src={logoImage} 
+        alt="Dedw3n Logo" 
+        className="h-12 w-12 object-contain"
+      />
+    </motion.div>
+    {props.children}
+  </div>
 )
 DialogHeader.displayName = "DialogHeader"
 
