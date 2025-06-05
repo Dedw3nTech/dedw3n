@@ -25,23 +25,23 @@ export default function NotFoundPage() {
         </div>
 
         <div className="space-y-4">
-          <Link href="/">
-            <button className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+          <div>
+            <Link href="/" className="text-black text-base hover:underline">
               Go to Homepage
-            </button>
-          </Link>
+            </Link>
+          </div>
           
-          <Link href="/products">
-            <button className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+          <div>
+            <Link href="/products" className="text-black text-base hover:underline">
               Browse Marketplace
-            </button>
-          </Link>
+            </Link>
+          </div>
           
-          <Link href="/wall">
-            <button className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+          <div>
+            <Link href="/wall" className="text-black text-base hover:underline">
               Visit Community
-            </button>
-          </Link>
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 text-sm text-gray-500">
