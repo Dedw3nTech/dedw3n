@@ -8,8 +8,7 @@ import {
   MessageCircle, 
   User, 
   Star,
-  Settings,
-  Gift
+  Settings
 } from "lucide-react";
 
 interface DatingNavProps {
@@ -124,15 +123,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm font-medium">Messages</span>
             </Button>
-            
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/dating/gifts")}
-            >
-              <Gift className="h-4 w-4" />
-              <span className="text-sm font-medium">Send Gift</span>
-            </Button>
+
 
             
             <Button
