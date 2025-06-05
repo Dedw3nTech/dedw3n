@@ -670,7 +670,7 @@ export default function DatingProfilePage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tribe">Tribe/Ethnicity</Label>
+                  <Label htmlFor="tribe">Ethnicity</Label>
                   <Input
                     id="tribe"
                     value={tribe}
@@ -687,15 +687,7 @@ export default function DatingProfilePage() {
                     placeholder="e.g., English, Spanish, French"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="income">Income Range</Label>
-                  <Input
-                    id="income"
-                    value={income}
-                    onChange={(e) => setIncome(e.target.value)}
-                    placeholder="e.g., $50,000 - $75,000"
-                  />
-                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="education">Education Level</Label>
                   <Input
