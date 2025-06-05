@@ -1393,6 +1393,95 @@ export default function DatingProfilePage() {
             </CardContent>
           </Card>
 
+          {/* Income Verification Upload - Only for Tier 2 and Tier 3 */}
+          {income && (() => {
+            const incomeValue = parseInt(income.replace(/[£,]/g, ''));
+            const requiresProof = incomeValue >= 150000;
+            
+            if (!requiresProof) return null;
+            
+            return (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-orange-800">
+                    <FileText className="h-5 w-5" />
+                    Income Verification Required
+                  </CardTitle>
+                  <CardDescription className="text-orange-700">
+                    {incomeValue >= 1500000 
+                      ? "As a Tier 3 applicant (£1,500,000+), please upload proof of income to verify your eligibility for all dating rooms."
+                      : "As a Tier 2 applicant (£150,000 - £1,499,999), please upload proof of income to verify your eligibility for VIP dating rooms."
+                    }
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Upload Area */}
+                    <div className="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleDocumentUpload}
+                        className="hidden"
+                        id="income-documents"
+                      />
+                      <label htmlFor="income-documents" className="cursor-pointer">
+                        <div className="flex flex-col items-center gap-2">
+                          <Paperclip className="h-8 w-8 text-orange-500" />
+                          <p className="text-sm font-medium text-orange-800">
+                            Click to upload documents
+                          </p>
+                          <p className="text-xs text-orange-600">
+                            PDF, JPG, PNG files only • Max 10MB per file
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Document List */}
+                    {incomeDocuments.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-orange-800">Uploaded Documents:</h4>
+                        {incomeDocuments.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-orange-200">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-orange-600" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                                <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => removeDocument(index)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Requirements */}
+                    <div className="bg-white p-4 rounded-lg border border-orange-200">
+                      <h4 className="font-medium text-orange-800 mb-2">Acceptable Documents:</h4>
+                      <ul className="text-sm text-orange-700 space-y-1">
+                        <li>• Recent payslips (last 3 months)</li>
+                        <li>• Tax returns or P60</li>
+                        <li>• Bank statements showing salary deposits</li>
+                        <li>• Employment contract with salary details</li>
+                        <li>• Accountant's letter for self-employed</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           {/* Action Buttons */}
           <Card>
             <CardFooter className="flex justify-between pt-6">
