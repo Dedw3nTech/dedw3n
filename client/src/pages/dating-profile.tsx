@@ -1501,7 +1501,7 @@ export default function DatingProfilePage() {
               <Button
                 onClick={submitApplication}
                 disabled={updateProfileMutation.isPending || isProcessingPayment}
-                className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                className="bg-black text-white hover:bg-gray-800 flex items-center gap-2"
               >
                 {isProcessingPayment ? (
                   "Processing..."
