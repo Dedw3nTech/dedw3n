@@ -13,7 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X } from "lucide-react";
+import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface DatingProfile {
   id?: number;
@@ -81,6 +82,8 @@ export default function DatingProfilePage() {
   const [showOnWall, setShowOnWall] = useState(false);
   const [datingRoomTier, setDatingRoomTier] = useState("normal");
   const [newInterest, setNewInterest] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [, navigateTo] = useLocation();
 
   // Fetch existing dating profile
   const { data: datingProfile, isLoading } = useQuery<DatingProfile>({
@@ -168,6 +171,43 @@ export default function DatingProfilePage() {
   // Remove interest
   const removeInterest = (interest: string) => {
     setInterests(interests.filter(i => i !== interest));
+  };
+
+  // Payment processing for dating room tiers
+  const processDatingRoomPayment = async (tier: string) => {
+    if (tier === "normal") {
+      setDatingRoomTier(tier);
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      // Create payment intent for the selected tier
+      const amount = tier === "vip" ? 199.99 : 1999.99;
+      const response = await apiRequest("POST", "/api/create-payment-intent", {
+        amount,
+        currency: "gbp",
+        metadata: {
+          type: "dating_room_subscription",
+          tier,
+          userId: user?.id
+        }
+      });
+
+      const { clientSecret } = await response.json();
+      
+      // Redirect to payment page with client secret
+      navigate(`/checkout?clientSecret=${clientSecret}&type=dating_room&tier=${tier}`);
+      
+    } catch (error) {
+      toast({
+        title: "Payment Error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   if (isLoading) {
