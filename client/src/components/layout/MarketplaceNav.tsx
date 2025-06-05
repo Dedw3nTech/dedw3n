@@ -138,22 +138,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <span className="text-sm font-medium">Liked</span>
             </Button>
 
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => setLocation("/notifications")}
-            >
-              <div className="relative">
-                <Bell className="h-4 w-4" />
-                {notificationsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {notificationsCount > 99 ? '99+' : notificationsCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium">Notifications</span>
-            </Button>
-            
+
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
