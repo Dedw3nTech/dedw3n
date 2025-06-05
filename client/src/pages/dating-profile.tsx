@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard } from "lucide-react";
+import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
 // Calculate age from date of birth
@@ -912,6 +912,9 @@ export default function DatingProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Gifts */}
+          <GiftsSection />
 
           {/* Profile Pictures */}
           <Card>
