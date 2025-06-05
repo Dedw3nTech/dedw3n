@@ -276,15 +276,24 @@ export default function CheckoutNew() {
   ];
 
   // Direct calculation matching shopping cart method
+  console.log('Checkout - Cart Items:', cartItems);
+  
   const subtotal = Array.isArray(cartItems) 
-    ? cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0) 
+    ? cartItems.reduce((sum, item) => {
+        console.log(`Item: ${item.product.name}, Price: ${item.product.price}, Quantity: ${item.quantity}`);
+        return sum + (item.product.price * item.quantity);
+      }, 0) 
     : 0;
+  
+  console.log('Checkout - Calculated Subtotal:', subtotal);
   
   const freeShippingThreshold = 50;
   const shippingCost = subtotal >= freeShippingThreshold ? 0 : 5.99;
   const taxRate = 0.2; // 20% VAT
   const tax = subtotal * taxRate;
   const total = subtotal + shippingCost + tax;
+  
+  console.log('Checkout - Final Calculation:', { subtotal, shippingCost, tax, total });
 
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
