@@ -315,6 +315,7 @@ export default function DatingPage() {
                         </h3>
                         <ul className="space-y-2 text-sm">
                           <li>• All VIP Room features</li>
+                          <li>• Unlimited gifts</li>
                           <li>• White-glove dating service</li>
                           <li>• Personal matchmaker assigned</li>
                           <li>• Luxury date experiences</li>
