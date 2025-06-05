@@ -212,10 +212,14 @@ import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
 
 import PremiumVideoPage from "@/pages/premium-video";
+import VideoDemo from "@/pages/video-demo";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/video-demo">
+        <VideoDemo />
+      </Route>
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>

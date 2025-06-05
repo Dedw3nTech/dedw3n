@@ -13,6 +13,7 @@ import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
 import { VideoAdCampaignCard } from "@/components/products/VideoAdCampaignCard";
 import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
+import { IndependentVideoCard } from "@/components/products/IndependentVideoCard";
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
@@ -380,6 +381,28 @@ export default function CommunityPage() {
 
             {/* Posts Feed */}
             <div className="space-y-6">
+              {/* Independent Cafe Video Entity - Separate from other video components */}
+              {uniquePosts.length > 2 && (
+                <div className="mb-6">
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Video className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Independent Video</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">New Cafe Experience</span>
+                    </div>
+                    <IndependentVideoCard 
+                      title="Cafe Experience - Independent Video Entity"
+                      autoPlay={true}
+                      showControls={true}
+                      showInfo={true}
+                    />
+                    <div className="mt-3 text-xs text-gray-500">
+                      This video operates independently with its own properties and controls, separate from other video entities on the website.
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {uniquePosts.map((post, index) => (
                 <div key={`${post.id}-${index}`}>
                   <PostCard post={post} />
