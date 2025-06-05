@@ -1,11 +1,29 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { 
   User, 
   Star,
   Settings
 } from "lucide-react";
+
+interface DatingProfile {
+  id?: number;
+  userId: number;
+  displayName: string;
+  age: number;
+  bio: string;
+  location: string;
+  interests: string[];
+  lookingFor: string;
+  relationshipType: string;
+  profileImages: string[];
+  isActive: boolean;
+  isPremium: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 interface DatingNavProps {
   searchTerm?: string;
@@ -15,6 +33,14 @@ interface DatingNavProps {
 export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
   const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState<string>("discover");
+
+  // Fetch current user's dating profile to check if active
+  const { data: datingProfile } = useQuery<DatingProfile>({
+    queryKey: ["/api/dating-profile"],
+    retry: false,
+    // Suppress errors since not all users have dating profiles
+    meta: { suppressErrors: true }
+  });
 
   const handleSectionChange = (section: string, path: string) => {
     setActiveSection(section);
@@ -29,7 +55,19 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
           </div>
           
           {/* Right corner buttons */}
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-2">
+            {/* My Dating Profile button - only visible if dating account is active */}
+            {datingProfile && datingProfile.isActive && (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                onClick={() => setLocation(`/profile/${datingProfile.userId}`)}
+              >
+                <User className="h-4 w-4" />
+                <span className="text-sm font-medium">My Dating Profile</span>
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
