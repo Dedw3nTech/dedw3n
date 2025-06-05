@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { 
   Search, 
   Heart, 
-  MessageCircle, 
   User, 
   Star,
   Settings
@@ -30,25 +29,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-between items-center">
           <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleSectionChange("discover", "/dating")}
-            >
-              <div className="mb-2">
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  activeSection === 'discover' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  Discover
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                activeSection === 'discover' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
+
             
             <div 
               className="cursor-pointer group transition-all duration-300"
@@ -69,26 +50,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
                   : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
               }`} />
             </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleSectionChange("premium", "/dating/premium")}
-            >
-              <div className="mb-2">
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  activeSection === 'premium' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  Premium Dating
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                activeSection === 'premium' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
+
             
             {/* Search bar */}
             {setSearchTerm && (
@@ -114,15 +76,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               <Heart className="h-4 w-4" />
               <span className="text-sm font-medium">Likes</span>
             </Button>
-            
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/dating/messages")}
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Messages</span>
-            </Button>
+
 
 
             
