@@ -2334,9 +2334,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vendor registration endpoint
-  app.post('/api/vendors/register', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/vendors/register', async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any)?.id;
+      // Use fallback authentication pattern
+      let userId = (req.user as any)?.id;
+      
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUserById(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
