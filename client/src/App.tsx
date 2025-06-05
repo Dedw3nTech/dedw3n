@@ -222,6 +222,9 @@ function Router() {
       <Route path="/" component={Products} />
 
       <Route path="/logout-success" component={LogoutSuccess} />
+      <Route path="/marketplace/b2c" component={Products} />
+      <Route path="/marketplace/b2b" component={Products} />
+      <Route path="/marketplace/c2c" component={Products} />
       <Route path="/marketplace" component={Products} />
       <Route path="/products" component={Products} />
       <Route path="/product/:id" component={ProductDetail} />
