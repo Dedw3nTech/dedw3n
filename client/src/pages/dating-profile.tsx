@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera } from "lucide-react";
+import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera, FileText, Paperclip } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
 // Product interface for marketplace gifts
@@ -321,6 +321,11 @@ export default function DatingProfilePage() {
   const [education, setEducation] = useState("");
   const [roots, setRoots] = useState("");
   const [selectedGifts, setSelectedGifts] = useState<number[]>([]);
+  
+  // File upload states
+  const [incomeDocuments, setIncomeDocuments] = useState<File[]>([]);
+  const [isUploadingDocuments, setIsUploadingDocuments] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Fetch existing dating profile
   const { data: datingProfile, isLoading } = useQuery<DatingProfile>({
@@ -629,7 +634,7 @@ export default function DatingProfilePage() {
       requiresProof = true;
     }
 
-    if (requiresProof) {
+    if (requiresProof && incomeDocuments.length === 0) {
       toast({
         title: "Proof of Income Required",
         description: `As a ${tierName} applicant, you must provide proof of income before your application can be approved. Please upload documentation such as payslips, tax returns, or bank statements.`,
@@ -688,6 +693,40 @@ export default function DatingProfilePage() {
     } finally {
       setIsProcessingPayment(false);
     }
+  };
+
+  // Document upload handlers
+  const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files).filter(file => {
+        // Validate file type (PDF, JPG, PNG)
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        return allowedTypes.includes(file.type);
+      });
+      
+      if (newFiles.length !== files.length) {
+        toast({
+          title: "Invalid File Type",
+          description: "Only PDF, JPG, and PNG files are allowed for income verification.",
+          variant: "destructive",
+        });
+      }
+      
+      setIncomeDocuments(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeDocument = (index: number) => {
+    setIncomeDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   if (isLoading) {
