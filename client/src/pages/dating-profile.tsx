@@ -86,6 +86,7 @@ export default function DatingProfilePage() {
   // Form state
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState<number>(18);
+  const [gender, setGender] = useState("");
   const [height, setHeight] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
@@ -126,6 +127,11 @@ export default function DatingProfilePage() {
         setAge(calculatedAge);
       }
       
+      // Auto-populate gender from main profile
+      if (user.gender && !gender) {
+        setGender(user.gender);
+      }
+      
       // Auto-populate geographic information
       if (user.country && !country) {
         setCountry(user.country);
@@ -137,17 +143,19 @@ export default function DatingProfilePage() {
         setCity(user.city);
       }
     }
-  }, [user, country, region, city]);
+  }, [user, gender, country, region, city]);
 
   // Load profile data when fetched
   useEffect(() => {
     if (datingProfile) {
-      const profile = datingProfile as DatingProfile;
+      const profile = datingProfile as any;
       setDisplayName(profile.displayName || "");
       // Only set age from profile if user doesn't have dateOfBirth
       if (!user || !user.dateOfBirth) {
         setAge(profile.age || 18);
       }
+      // Load gender from existing profile if available
+      if (profile.gender) setGender(profile.gender);
       setBio(profile.bio || "");
       setLocation(profile.location || "");
       setInterests(profile.interests || []);
@@ -207,6 +215,7 @@ export default function DatingProfilePage() {
     const profileData = {
       displayName: displayName.trim(),
       age,
+      gender: gender.trim(),
       bio: bio.trim(),
       location: location.trim(),
       interests,
@@ -420,7 +429,7 @@ export default function DatingProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Display Name *</Label>
                   <Input
@@ -450,6 +459,24 @@ export default function DatingProfilePage() {
                   {(!user || !user.dateOfBirth) && (
                     <p className="text-xs text-amber-600">
                       Add your date of birth in profile settings for automatic age calculation
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select value={gender} onValueChange={setGender}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {user && user.gender && gender === user.gender && (
+                    <p className="text-xs text-green-600">
+                      Auto-filled from your profile
                     </p>
                   )}
                 </div>
