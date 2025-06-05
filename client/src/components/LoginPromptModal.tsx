@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import RegionSelector from "@/components/RegionSelector";
 import { 
   User, 
   Eye, 
@@ -284,23 +285,20 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 <Globe className="mr-2 h-4 w-4" />
                 Location
               </Label>
-              <div className="grid grid-cols-1 gap-2">
-                <Input
-                  placeholder="Region"
-                  value={formData.region}
-                  onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                />
-                <Input
-                  placeholder="Country"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                />
-                <Input
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
-              </div>
+              <RegionSelector 
+                currentRegion={formData.region}
+                currentCountry={formData.country}
+                currentCity={formData.city}
+                onRegionChange={(region) => {
+                  setFormData(prev => ({ ...prev, region }));
+                }}
+                onCountryChange={(country) => {
+                  setFormData(prev => ({ ...prev, country }));
+                }}
+                onCityChange={(city) => {
+                  setFormData(prev => ({ ...prev, city }));
+                }}
+              />
             </div>
           )}
 
