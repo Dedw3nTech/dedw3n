@@ -74,15 +74,7 @@ function CommunityTopPromoSection() {
 }
 
 function CommunityMidPromoSection() {
-  return (
-    <div className="w-full my-8">
-      <img 
-        src={communityMidPromo}
-        alt="Dedwen Community Features"
-        className="w-full h-[150px] sm:h-[200px] md:h-[250px] object-cover rounded-lg"
-      />
-    </div>
-  );
+  return null;
 }
 
 function CommunityBottomPromoSection() {
