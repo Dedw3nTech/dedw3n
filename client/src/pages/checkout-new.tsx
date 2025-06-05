@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatPrice } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { convertCurrency, getCurrencySymbol, convertForPawapay } from "@/lib/currency-converter";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
@@ -82,6 +83,8 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
   const [mobileProvider, setMobileProvider] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [currency, setCurrency] = useState('UGX');
+  const [convertedAmount, setConvertedAmount] = useState<number>(0);
+  const [exchangeRate, setExchangeRate] = useState<number>(0);
 
   const mobileProviders = [
     // Uganda
@@ -222,23 +225,12 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
 
       const order = await orderResponse.json();
 
-      // Convert amount to minor currency units for Pawapay
-      let amountInMinorUnits = total;
+      // Use converted amount if available, otherwise use original total
+      const paymentAmount = convertedAmount > 0 ? convertedAmount : total;
       
-      // Currencies that use cents (divide by 100)
-      const centsCurrencies = ['UGX', 'GHS', 'RWF', 'KES', 'TZS', 'ZMW', 'MWK', 'MGA'];
-      
-      // Currencies that are already in minor units (no conversion needed)
-      const minorUnitCurrencies = ['XAF', 'XOF', 'GNF', 'CDF', 'SLL', 'LRD'];
-      
-      if (centsCurrencies.includes(currency)) {
-        amountInMinorUnits = Math.round(total * 100); // Convert to cents
-      } else if (minorUnitCurrencies.includes(currency)) {
-        amountInMinorUnits = Math.round(total); // Already in minor units
-      } else {
-        // Default to cents conversion for unknown currencies
-        amountInMinorUnits = Math.round(total * 100);
-      }
+      // Convert amount to minor currency units for Pawapay using currency converter
+      const pawapayConversion = convertForPawapay(total, currency);
+      const amountInMinorUnits = pawapayConversion.minorUnits;
 
       // Initiate Pawapay deposit
       const pawapayResponse = await apiRequest('POST', '/api/pawapay/deposit', {
@@ -296,6 +288,16 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
           const provider = mobileProviders.find(p => p.id === value);
           if (provider) {
             setCurrency(provider.currency);
+            // Convert GBP total to selected currency
+            try {
+              const conversion = convertCurrency(total, 'GBP', provider.currency);
+              setConvertedAmount(conversion.convertedAmount);
+              setExchangeRate(conversion.exchangeRate);
+            } catch (error) {
+              console.error('Currency conversion error:', error);
+              setConvertedAmount(total);
+              setExchangeRate(1);
+            }
           }
         }}>
           <SelectTrigger>
@@ -327,12 +329,22 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
       </div>
 
       {mobileProvider && (
-        <div className="bg-blue-50 p-3 rounded-lg">
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-800">
             <strong>Payment Details:</strong><br/>
             Provider: {mobileProviders.find(p => p.id === mobileProvider)?.name}<br/>
-            Amount: {total} {currency}<br/>
-            You will receive a payment prompt on your phone
+            <span className="block mt-2">
+              <strong>Original Amount:</strong> £{total} GBP<br/>
+              <strong>Local Amount:</strong> {getCurrencySymbol(currency)} {convertedAmount > 0 ? convertedAmount.toLocaleString() : total} {currency}
+              {exchangeRate > 0 && exchangeRate !== 1 && (
+                <span className="text-xs block mt-1 text-blue-600">
+                  Exchange Rate: 1 GBP = {exchangeRate.toLocaleString()} {currency}
+                </span>
+              )}
+            </span>
+            <span className="block mt-2 text-blue-600">
+              You will receive a payment prompt on your phone
+            </span>
           </p>
         </div>
       )}
@@ -348,7 +360,9 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
             Processing Payment...
           </>
         ) : (
-          `Pay ${total} ${currency} with Mobile Money`
+          convertedAmount > 0 
+            ? `Pay ${getCurrencySymbol(currency)} ${convertedAmount.toLocaleString()} ${currency} with Mobile Money`
+            : `Pay £${total} GBP with Mobile Money`
         )}
       </Button>
     </form>
