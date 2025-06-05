@@ -16,6 +16,9 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
+// Import events header advertisement image
+import eventsHeaderPromo from '@assets/Dedw3n Business commHeader.png';
+
 interface Event {
   id: number;
   title: string;
@@ -300,6 +303,19 @@ export default function EventsPage() {
     { value: 'dating', label: 'Dating' }
   ];
 
+  // Events Header Advertisement Component
+  function EventsHeaderPromoSection() {
+    return (
+      <div className="w-full mb-6">
+        <img 
+          src={eventsHeaderPromo}
+          alt="Dedwen Events & Meetups - Connect and Network"
+          className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4">
       <div className="space-y-6">
@@ -481,6 +497,9 @@ export default function EventsPage() {
             </Dialog>
           </div>
         </div>
+
+        {/* Events Header Advertisement */}
+        <EventsHeaderPromoSection />
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
