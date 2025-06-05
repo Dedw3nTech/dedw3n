@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { CreditCard, Smartphone, Building2, Globe, ArrowLeft, Check, Star } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
-interface PaymentMethod {
-  id: string;
-  name: string;
+// Redirect to the new checkout page
+export default function PaymentGateway() {
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    setLocation('/checkout-new');
+  }, [setLocation]);
+
+  return null;
+}
   description: string;
   icon: React.ReactNode;
   available: boolean;
