@@ -262,6 +262,7 @@ export default function DatingPage() {
                         </h3>
                         <ul className="space-y-2 text-sm">
                           <li>• All Normal Room features</li>
+                          <li>• Unlimited gifts</li>
                           <li>• Priority profile visibility</li>
                           <li>• Advanced matching filters</li>
                           <li>• Verified income profiles</li>
