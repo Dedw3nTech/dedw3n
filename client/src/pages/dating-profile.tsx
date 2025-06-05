@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/hooks/use-currency";
 import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera, FileText, Paperclip } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
@@ -287,6 +288,7 @@ export default function DatingProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
 
   // Form state
   const [displayName, setDisplayName] = useState("");
@@ -816,9 +818,9 @@ export default function DatingProfilePage() {
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VIP</h3>
-                    <p className="text-2xl font-bold">£199.99</p>
+                    <p className="text-2xl font-bold">{formatPrice(199.99)}</p>
                     <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over £150,000 per year</p>
+                    <p className="text-sm text-gray-600">For users who make over {formatPrice(150000)} per year</p>
                     {isProcessingPayment && datingRoomTier === "vip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -839,9 +841,9 @@ export default function DatingProfilePage() {
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VVIP</h3>
-                    <p className="text-2xl font-bold">£1,999.99</p>
+                    <p className="text-2xl font-bold">{formatPrice(1999.99)}</p>
                     <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over £1,500,000 per year</p>
+                    <p className="text-sm text-gray-600">For users who make over {formatPrice(1500000)} per year</p>
                     {isProcessingPayment && datingRoomTier === "vvip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
