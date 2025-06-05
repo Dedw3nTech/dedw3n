@@ -622,6 +622,312 @@ export default function ProfileSettingsPage() {
           </div>
         </TabsContent>
 
+        {/* Shipping Tab */}
+        <TabsContent value="shipping">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-black flex items-center">
+                <Globe className="mr-2 h-5 w-5" />
+                Shipping Information
+              </CardTitle>
+              <CardDescription className="text-black">
+                Save your shipping details for faster checkout
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="shippingFirstName" className="text-black">First Name</Label>
+                  <Input
+                    id="shippingFirstName"
+                    name="shippingFirstName"
+                    value={formData.shippingFirstName}
+                    onChange={handleInputChange}
+                    placeholder="Enter first name"
+                    className="bg-white text-black"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="shippingLastName" className="text-black">Last Name</Label>
+                  <Input
+                    id="shippingLastName"
+                    name="shippingLastName"
+                    value={formData.shippingLastName}
+                    onChange={handleInputChange}
+                    placeholder="Enter last name"
+                    className="bg-white text-black"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="shippingPhone" className="text-black">Phone Number</Label>
+                <Input
+                  id="shippingPhone"
+                  name="shippingPhone"
+                  type="tel"
+                  value={formData.shippingPhone}
+                  onChange={handleInputChange}
+                  placeholder="Enter phone number"
+                  className="bg-white text-black"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="shippingAddress" className="text-black">Address</Label>
+                <Input
+                  id="shippingAddress"
+                  name="shippingAddress"
+                  value={formData.shippingAddress}
+                  onChange={handleInputChange}
+                  placeholder="Enter street address"
+                  className="bg-white text-black"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="shippingCity" className="text-black">City</Label>
+                  <Input
+                    id="shippingCity"
+                    name="shippingCity"
+                    value={formData.shippingCity}
+                    onChange={handleInputChange}
+                    placeholder="Enter city"
+                    className="bg-white text-black"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="shippingState" className="text-black">State/County</Label>
+                  <Input
+                    id="shippingState"
+                    name="shippingState"
+                    value={formData.shippingState}
+                    onChange={handleInputChange}
+                    placeholder="Enter state/county"
+                    className="bg-white text-black"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="shippingZipCode" className="text-black">Postal Code</Label>
+                  <Input
+                    id="shippingZipCode"
+                    name="shippingZipCode"
+                    value={formData.shippingZipCode}
+                    onChange={handleInputChange}
+                    placeholder="Enter postal code"
+                    className="bg-white text-black"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="shippingCountry" className="text-black">Country</Label>
+                <Select 
+                  value={formData.shippingCountry} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, shippingCountry: value }))}
+                >
+                  <SelectTrigger className="bg-white text-black">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="Australia">Australia</SelectItem>
+                    <SelectItem value="Germany">Germany</SelectItem>
+                    <SelectItem value="France">France</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="shippingSpecialInstructions" className="text-black">Special Instructions (Optional)</Label>
+                <Textarea
+                  id="shippingSpecialInstructions"
+                  name="shippingSpecialInstructions"
+                  value={formData.shippingSpecialInstructions}
+                  onChange={handleInputChange}
+                  placeholder="Any special delivery instructions..."
+                  rows={3}
+                  className="bg-white text-black"
+                />
+              </div>
+
+              <Button 
+                onClick={handleProfileUpdate}
+                disabled={isUpdating}
+                className="w-full bg-black text-white hover:bg-gray-800"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Save Shipping Information"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Billing Tab */}
+        <TabsContent value="billing">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-black flex items-center">
+                <Heart className="mr-2 h-5 w-5" />
+                Billing Information
+              </CardTitle>
+              <CardDescription className="text-black">
+                Save your billing details for faster checkout
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="useShippingAsBilling"
+                  checked={formData.useShippingAsBilling}
+                  onChange={(e) => setFormData(prev => ({ ...prev, useShippingAsBilling: e.target.checked }))}
+                  className="rounded"
+                />
+                <Label htmlFor="useShippingAsBilling" className="text-black">
+                  Use shipping address as billing address
+                </Label>
+              </div>
+
+              {!formData.useShippingAsBilling && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="billingFirstName" className="text-black">First Name</Label>
+                      <Input
+                        id="billingFirstName"
+                        name="billingFirstName"
+                        value={formData.billingFirstName}
+                        onChange={handleInputChange}
+                        placeholder="Enter first name"
+                        className="bg-white text-black"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="billingLastName" className="text-black">Last Name</Label>
+                      <Input
+                        id="billingLastName"
+                        name="billingLastName"
+                        value={formData.billingLastName}
+                        onChange={handleInputChange}
+                        placeholder="Enter last name"
+                        className="bg-white text-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="billingPhone" className="text-black">Phone Number</Label>
+                    <Input
+                      id="billingPhone"
+                      name="billingPhone"
+                      type="tel"
+                      value={formData.billingPhone}
+                      onChange={handleInputChange}
+                      placeholder="Enter phone number"
+                      className="bg-white text-black"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="billingAddress" className="text-black">Address</Label>
+                    <Input
+                      id="billingAddress"
+                      name="billingAddress"
+                      value={formData.billingAddress}
+                      onChange={handleInputChange}
+                      placeholder="Enter street address"
+                      className="bg-white text-black"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="billingCity" className="text-black">City</Label>
+                      <Input
+                        id="billingCity"
+                        name="billingCity"
+                        value={formData.billingCity}
+                        onChange={handleInputChange}
+                        placeholder="Enter city"
+                        className="bg-white text-black"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="billingState" className="text-black">State/County</Label>
+                      <Input
+                        id="billingState"
+                        name="billingState"
+                        value={formData.billingState}
+                        onChange={handleInputChange}
+                        placeholder="Enter state/county"
+                        className="bg-white text-black"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="billingZipCode" className="text-black">Postal Code</Label>
+                      <Input
+                        id="billingZipCode"
+                        name="billingZipCode"
+                        value={formData.billingZipCode}
+                        onChange={handleInputChange}
+                        placeholder="Enter postal code"
+                        className="bg-white text-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="billingCountry" className="text-black">Country</Label>
+                    <Select 
+                      value={formData.billingCountry} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, billingCountry: value }))}
+                    >
+                      <SelectTrigger className="bg-white text-black">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="United States">United States</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="Germany">Germany</SelectItem>
+                        <SelectItem value="France">France</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              <Button 
+                onClick={handleProfileUpdate}
+                disabled={isUpdating}
+                className="w-full bg-black text-white hover:bg-gray-800"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Save Billing Information"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );
