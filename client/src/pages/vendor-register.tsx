@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,13 +7,14 @@ import { z } from "zod";
 import { Store, User, Building, Mail, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 // Private Vendor Schema
 const privateVendorSchema = z.object({
@@ -58,6 +59,7 @@ export default function VendorRegisterPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Private Vendor Form
   const privateForm = useForm<PrivateVendorForm>({
@@ -76,6 +78,25 @@ export default function VendorRegisterPage() {
       website: "",
     },
   });
+
+  // Auto-fill private vendor form with user profile data
+  useEffect(() => {
+    if (user && vendorType === "private") {
+      privateForm.reset({
+        vendorType: "private",
+        storeName: user.name ? `${user.name}'s Store` : "",
+        description: "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        city: user.city || "",
+        state: user.state || "",
+        zipCode: user.zipCode || "",
+        country: user.country || "",
+        website: user.website || "",
+      });
+    }
+  }, [user, vendorType, privateForm]);
 
   // Business Vendor Form
   const businessForm = useForm<BusinessVendorForm>({
@@ -146,16 +167,7 @@ export default function VendorRegisterPage() {
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <Card>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Store className="h-12 w-12 text-primary" />
-          </div>
-          <CardTitle className="text-3xl">Become a Vendor</CardTitle>
-          <CardDescription>
-            Join our marketplace and start selling your products to customers worldwide
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {/* Vendor Type Selection */}
           {!vendorType && (
             <div className="space-y-6">
