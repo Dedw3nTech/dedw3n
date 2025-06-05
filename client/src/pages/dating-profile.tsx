@@ -386,6 +386,7 @@ export default function DatingProfilePage() {
       if (profile.income) setIncome(profile.income);
       if (profile.education) setEducation(profile.education);
       if (profile.roots) setRoots(profile.roots);
+      if (profile.selectedGifts) setSelectedGifts(profile.selectedGifts);
     }
   }, [datingProfile, user]);
 
@@ -426,6 +427,15 @@ export default function DatingProfilePage() {
       return;
     }
 
+    if (selectedGifts.length < 3) {
+      toast({
+        title: "Error",
+        description: "Please select at least 3 gifts to showcase on your profile",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const profileData = {
       displayName: displayName.trim(),
       age,
@@ -451,6 +461,7 @@ export default function DatingProfilePage() {
       income: income.trim(),
       education: education.trim(),
       roots: roots.trim(),
+      selectedGifts,
     };
 
     updateProfileMutation.mutate(profileData);
