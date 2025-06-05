@@ -44,6 +44,7 @@ interface CurrencyContextType {
   setSelectedCurrency: (currency: Currency) => void;
   convertPrice: (priceInUSD: number) => number;
   formatPrice: (priceInUSD: number) => string;
+  formatPriceFromGBP: (priceInGBP: number) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -60,12 +61,25 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return `${selectedCurrency.symbol}${convertedPrice.toFixed(2)}`;
   };
 
+  const formatPriceFromGBP = (priceInGBP: number): string => {
+    if (selectedCurrency.code === 'GBP') {
+      return `${selectedCurrency.symbol}${priceInGBP.toFixed(2)}`;
+    }
+    // Convert from GBP to selected currency
+    // First convert GBP to USD (GBP rate is 1.27, so 1 GBP = 1.27 USD)
+    const priceInUSD = priceInGBP * 1.27;
+    // Then convert USD to selected currency
+    const convertedPrice = priceInUSD / selectedCurrency.rate;
+    return `${selectedCurrency.symbol}${convertedPrice.toFixed(2)}`;
+  };
+
   return (
     <CurrencyContext.Provider value={{
       selectedCurrency,
       setSelectedCurrency,
       convertPrice,
-      formatPrice
+      formatPrice,
+      formatPriceFromGBP
     }}>
       {children}
     </CurrencyContext.Provider>
@@ -80,7 +94,8 @@ export function useCurrency() {
       selectedCurrency: currencies[0], // Default to GBP
       setSelectedCurrency: () => {},
       convertPrice: (priceInUSD: number) => priceInUSD / currencies[0].rate,
-      formatPrice: (priceInUSD: number) => `${currencies[0].symbol}${(priceInUSD / currencies[0].rate).toFixed(2)}`
+      formatPrice: (priceInUSD: number) => `${currencies[0].symbol}${(priceInUSD / currencies[0].rate).toFixed(2)}`,
+      formatPriceFromGBP: (priceInGBP: number) => `${currencies[0].symbol}${priceInGBP.toFixed(2)}`
     };
   }
   return context;

@@ -38,7 +38,7 @@ export default function DatingPage() {
   const [selectedTier, setSelectedTier] = useState("normal");
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatPriceFromGBP } = useCurrency();
 
   // Fetch current user
   const { data: user } = useQuery<User>({
@@ -250,8 +250,8 @@ export default function DatingPage() {
                       <Crown className="h-8 w-8 text-yellow-600" />
                       <CardTitle className="text-2xl">VIP Dating Room</CardTitle>
                     </div>
-                    <p className="text-3xl font-bold text-yellow-600">{formatPrice(254.39)}/month</p>
-                    <p className="text-sm text-gray-600">For earners over {formatPrice(190.55)} per year</p>
+                    <p className="text-3xl font-bold text-yellow-600">{formatPriceFromGBP(199.99)}/month</p>
+                    <p className="text-sm text-gray-600">For earners over {formatPriceFromGBP(150000)} per year</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
