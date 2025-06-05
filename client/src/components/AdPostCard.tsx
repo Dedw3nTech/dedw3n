@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import campaignImage from "@assets/98967833-7D1A-41E7-AF00-635D7E14BECF_1749108934392.png";
+import campaignImage from "@assets/Copy of Pre Launch Campaingn Notification_1749109720371.png";
 
 export function AdPostCard() {
   return (
