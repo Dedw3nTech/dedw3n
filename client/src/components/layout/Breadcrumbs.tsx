@@ -19,6 +19,7 @@ export function Breadcrumbs() {
       'product': 'Product Details',
       'wall': 'Community',
       'dating': 'Dating',
+      'dating-profile': 'Dating Profile',
       'contact': 'Contact',
       'login': 'Sign In',
       'register': 'Sign Up',
