@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
-import { Loader2, Store, Heart, Globe } from 'lucide-react';
+import { Loader2, Store, Heart, Globe, Calendar } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -29,7 +29,8 @@ export default function ProfileSettingsPage() {
     avatar: '',
     region: '',
     country: '',
-    city: ''
+    city: '',
+    dateOfBirth: ''
   });
 
   // Update form data when user data is available
@@ -456,6 +457,30 @@ export default function ProfileSettingsPage() {
                       rows={4}
                       className="text-black"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth" className="text-black flex items-center">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Date of Birth
+                    </Label>
+                    <Input
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth || ''}
+                      onChange={handleInputChange}
+                      className="text-black"
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    />
+                    <p className="text-xs text-gray-600">
+                      You must be 18 or older to use this platform. Your age will be calculated automatically.
+                    </p>
+                    {formData.dateOfBirth && (
+                      <p className="text-sm text-green-600">
+                        Age: {calculateAge(formData.dateOfBirth)} years old
+                      </p>
+                    )}
                   </div>
 
                   {/* Region Selection */}

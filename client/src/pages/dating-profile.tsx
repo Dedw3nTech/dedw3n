@@ -389,15 +389,7 @@ export default function DatingProfilePage() {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Your city, country"
-                />
-              </div>
+
 
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
