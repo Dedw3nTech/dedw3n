@@ -480,7 +480,18 @@ export class DatabaseStorage implements IStorage {
   async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
     try {
       const notificationsList = await db
-        .select()
+        .select({
+          id: notifications.id,
+          userId: notifications.userId,
+          type: notifications.type,
+          title: notifications.title,
+          content: notifications.content,
+          isRead: notifications.isRead,
+          sourceType: notifications.sourceType,
+          sourceId: notifications.sourceId,
+          actorId: notifications.actorId,
+          createdAt: notifications.createdAt
+        })
         .from(notifications)
         .where(eq(notifications.userId, userId))
         .orderBy(desc(notifications.createdAt))
