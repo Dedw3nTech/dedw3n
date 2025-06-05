@@ -399,8 +399,8 @@ export default function DatingProfilePage() {
           {user && (
             <Link href={`/profile/${user.id}`}>
               <Button variant="outline" className="flex items-center gap-2 text-blue-600 border-blue-600 hover:bg-blue-50">
-                <Heart className="h-4 w-4" />
-                Dating Profile
+                <User className="h-4 w-4" />
+                View My Dating Profile
               </Button>
             </Link>
           )}
