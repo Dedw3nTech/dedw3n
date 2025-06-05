@@ -66,7 +66,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
           </div>
           
           {/* Right corner buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
