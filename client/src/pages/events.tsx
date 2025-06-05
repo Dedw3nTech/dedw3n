@@ -18,7 +18,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 
 // Import events advertisement images
 import eventsHeaderPromo from '@assets/Dedw3n Business commHeader.png';
-import eventsFooterPromo from '@assets/Copy of Dedw3n comm Footer.png';
+import eventsFooterPromo from '@assets/Dedw3n comm Footer_1749108826266.png';
 
 interface Event {
   id: number;
