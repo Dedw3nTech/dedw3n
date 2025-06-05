@@ -15,6 +15,21 @@ import { Loader2, Store, Heart, Globe, Calendar } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
+// Calculate age from date of birth
+const calculateAge = (dateOfBirth: string): number => {
+  if (!dateOfBirth) return 0;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+};
+
 export default function ProfileSettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,7 +58,8 @@ export default function ProfileSettingsPage() {
         avatar: user.avatar || '',
         region: user.region || '',
         country: user.country || '',
-        city: user.city || ''
+        city: user.city || '',
+        dateOfBirth: user.dateOfBirth || ''
       });
     }
   }, [user]);
@@ -131,6 +147,19 @@ export default function ProfileSettingsPage() {
       return;
     }
 
+    // Validate age requirement
+    if (formData.dateOfBirth) {
+      const age = calculateAge(formData.dateOfBirth);
+      if (age < 18) {
+        toast({
+          title: "Age Requirement Not Met",
+          description: "You must be at least 18 years old to use this platform.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       setIsUpdating(true);
       
@@ -162,7 +191,8 @@ export default function ProfileSettingsPage() {
         formData.name === user.name && 
         formData.username === user.username && 
         formData.bio === user.bio && 
-        formData.avatar === user.avatar
+        formData.avatar === user.avatar &&
+        formData.dateOfBirth === user.dateOfBirth
       ) {
         toast({
           title: 'No changes detected',
