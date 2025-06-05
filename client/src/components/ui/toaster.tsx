@@ -9,6 +9,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useLocation } from "wouter"
 import dedwenLogo from "@assets/Dedw3n Logo_1749080607700.png"
+import newDedwenLogo from "@assets/Dedw3n Logo_1749096101995.png"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -27,7 +28,7 @@ export function Toaster() {
             >
               <div className="flex items-start gap-3 w-full">
                 <img 
-                  src={dedwenLogo} 
+                  src={newDedwenLogo} 
                   alt="Dedw3n Logo" 
                   className="w-8 h-8 flex-shrink-0 mt-1"
                 />
@@ -62,11 +63,18 @@ export function Toaster() {
         // Default toast for non-error messages
         return (
           <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
+            <div className="flex items-start gap-3 w-full">
+              <img 
+                src={newDedwenLogo} 
+                alt="Dedw3n Logo" 
+                className="w-6 h-6 flex-shrink-0 mt-1"
+              />
+              <div className="flex-1 grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
             </div>
             {action}
             <ToastClose />
