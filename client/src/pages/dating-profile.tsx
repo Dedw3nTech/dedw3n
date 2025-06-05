@@ -490,6 +490,53 @@ export default function DatingProfilePage() {
     setInterests(interests.filter(i => i !== interest));
   };
 
+  // Photo upload functions
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setProfileImages(prev => [...prev, event.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setProfileImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    setProfileImages(prev => {
+      const newImages = [...prev];
+      const [movedImage] = newImages.splice(fromIndex, 1);
+      newImages.splice(toIndex, 0, movedImage);
+      return newImages;
+    });
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    if (fromIndex !== toIndex) {
+      moveImage(fromIndex, toIndex);
+    }
+  };
+
   // Payment processing for dating room tiers
   const processDatingRoomPayment = async (tier: string) => {
     if (tier === "normal") {
@@ -1082,18 +1129,112 @@ export default function DatingProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
+                <Camera className="h-5 w-5" />
                 Profile Pictures
               </CardTitle>
               <CardDescription>
-                Add photos to make your profile more attractive (Coming Soon)
+                Upload at least 3 photos for your dating profile. First photo will be your main profile picture. Drag to reorder.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Photo upload feature coming soon</p>
+            <CardContent className="space-y-4">
+              {/* Upload Area */}
+              <div className="relative">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  id="image-upload"
+                />
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 mb-1">Click to upload photos or drag and drop</p>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+                </div>
               </div>
+
+              {/* Photo Gallery */}
+              {profileImages.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {profileImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-move"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                    >
+                      <img
+                        src={image}
+                        alt={`Profile ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Main Photo Badge */}
+                      {index === 0 && (
+                        <div className="absolute top-2 left-2">
+                          <Badge className="bg-blue-600 text-white text-xs">
+                            <Star className="h-3 w-3 mr-1" />
+                            Main
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      {/* Drag Handle */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-black/50 rounded p-1">
+                          <GripVertical className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      
+                      {/* Remove Button */}
+                      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeImage(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Position Indicator */}
+                      <div className="absolute bottom-2 left-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {index + 1}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Photo Requirements Info */}
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${profileImages.length >= 3 ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={profileImages.length >= 3 ? 'text-green-600' : 'text-gray-500'}>
+                    {profileImages.length}/3 minimum photos
+                  </span>
+                </div>
+                
+                {profileImages.length > 0 && (
+                  <p className="text-gray-500">
+                    Drag photos to reorder • First photo is your main picture
+                  </p>
+                )}
+              </div>
+
+              {profileImages.length < 3 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-sm text-amber-800">
+                    <strong>Required:</strong> Please upload at least 3 photos to activate your dating profile.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
