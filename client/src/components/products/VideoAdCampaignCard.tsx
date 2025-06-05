@@ -7,6 +7,7 @@ import newCafeVideo from "@assets/Cafe_1749111451530.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
 import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
 import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
+import newPhoneFingerVideo from "@assets/Phone finger _1749112701077.mp4";
 
 interface VideoAdCampaignCardProps {
   videoSource?: string;
@@ -18,7 +19,7 @@ interface VideoAdCampaignCardProps {
 }
 
 export function VideoAdCampaignCard({ 
-  videoSource = phoneFingerVideo,
+  videoSource = newPhoneFingerVideo,
   title = "Dedw3n | Community",
   autoPlay = true,
   showControls = true,
@@ -50,9 +51,9 @@ export function VideoAdCampaignCard({
       };
     }
     
-    // Default B2C uses the new cafe video
+    // Default B2C uses the new finger video
     return {
-      video: newCafeVideo,
+      video: newPhoneFingerVideo,
       title: "Dedw3n | Community"
     };
   };
