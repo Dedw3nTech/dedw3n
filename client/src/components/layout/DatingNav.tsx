@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, 
-  Heart, 
   User, 
   Star,
   Settings
@@ -67,19 +66,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
           </div>
           
           {/* Right corner buttons */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/dating/likes")}
-            >
-              <Heart className="h-4 w-4" />
-              <span className="text-sm font-medium">Likes</span>
-            </Button>
-
-
-
-            
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
