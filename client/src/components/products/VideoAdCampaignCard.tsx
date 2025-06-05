@@ -5,6 +5,7 @@ import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
 import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
+import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
 
 interface VideoAdCampaignCardProps {
   videoSource?: string;
@@ -16,7 +17,7 @@ interface VideoAdCampaignCardProps {
 }
 
 export function VideoAdCampaignCard({ 
-  videoSource = campaignVideo,
+  videoSource = phoneFingerVideo,
   title = "Dedw3n|Marketplace",
   autoPlay = true,
   showControls = true,
