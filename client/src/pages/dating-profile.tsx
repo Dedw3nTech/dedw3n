@@ -464,8 +464,12 @@ export default function DatingProfilePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender</Label>
-                  <Select value={gender} onValueChange={setGender}>
-                    <SelectTrigger>
+                  <Select 
+                    value={gender} 
+                    onValueChange={setGender}
+                    disabled={!!(user && user.gender)}
+                  >
+                    <SelectTrigger className={user && user.gender ? "bg-gray-50 cursor-not-allowed" : ""}>
                       <SelectValue placeholder="Select your gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -476,7 +480,12 @@ export default function DatingProfilePage() {
                   </Select>
                   {user && user.gender && gender === user.gender && (
                     <p className="text-xs text-green-600">
-                      Auto-filled from your profile
+                      Auto-filled from your profile settings
+                    </p>
+                  )}
+                  {(!user || !user.gender) && (
+                    <p className="text-xs text-amber-600">
+                      Add your gender in profile settings for automatic fill
                     </p>
                   )}
                 </div>
