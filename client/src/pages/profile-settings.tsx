@@ -47,7 +47,27 @@ export default function ProfileSettingsPage() {
     country: '',
     city: '',
     dateOfBirth: '',
-    gender: ''
+    gender: '',
+    // Shipping Information
+    shippingFirstName: '',
+    shippingLastName: '',
+    shippingPhone: '',
+    shippingAddress: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingZipCode: '',
+    shippingCountry: '',
+    shippingSpecialInstructions: '',
+    // Billing Information
+    billingFirstName: '',
+    billingLastName: '',
+    billingPhone: '',
+    billingAddress: '',
+    billingCity: '',
+    billingState: '',
+    billingZipCode: '',
+    billingCountry: '',
+    useShippingAsBilling: true
   });
 
   // Update form data when user data is available
@@ -62,7 +82,27 @@ export default function ProfileSettingsPage() {
         country: user.country || '',
         city: user.city || '',
         dateOfBirth: user.dateOfBirth || '',
-        gender: user.gender || ''
+        gender: user.gender || '',
+        // Shipping Information
+        shippingFirstName: user.shippingFirstName || '',
+        shippingLastName: user.shippingLastName || '',
+        shippingPhone: user.shippingPhone || '',
+        shippingAddress: user.shippingAddress || '',
+        shippingCity: user.shippingCity || '',
+        shippingState: user.shippingState || '',
+        shippingZipCode: user.shippingZipCode || '',
+        shippingCountry: user.shippingCountry || '',
+        shippingSpecialInstructions: user.shippingSpecialInstructions || '',
+        // Billing Information
+        billingFirstName: user.billingFirstName || '',
+        billingLastName: user.billingLastName || '',
+        billingPhone: user.billingPhone || '',
+        billingAddress: user.billingAddress || '',
+        billingCity: user.billingCity || '',
+        billingState: user.billingState || '',
+        billingZipCode: user.billingZipCode || '',
+        billingCountry: user.billingCountry || '',
+        useShippingAsBilling: user.useShippingAsBilling !== false
       });
     }
   }, [user]);
@@ -327,6 +367,8 @@ export default function ProfileSettingsPage() {
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
           <TabsTrigger value="profile" className="flex-1 text-black">Profile</TabsTrigger>
+          <TabsTrigger value="shipping" className="flex-1 text-black">Shipping</TabsTrigger>
+          <TabsTrigger value="billing" className="flex-1 text-black">Billing</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">

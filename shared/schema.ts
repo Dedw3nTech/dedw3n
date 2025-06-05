@@ -78,6 +78,27 @@ export const users = pgTable("users", {
   city: text("city"),
   dateOfBirth: date("date_of_birth"),
   gender: genderEnum("gender"),
+  // Shipping Information
+  shippingFirstName: text("shipping_first_name"),
+  shippingLastName: text("shipping_last_name"),
+  shippingPhone: text("shipping_phone"),
+  shippingAddress: text("shipping_address"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingZipCode: text("shipping_zip_code"),
+  shippingCountry: text("shipping_country"),
+  shippingSpecialInstructions: text("shipping_special_instructions"),
+  // Billing Information
+  billingFirstName: text("billing_first_name"),
+  billingLastName: text("billing_last_name"),
+  billingPhone: text("billing_phone"),
+  billingAddress: text("billing_address"),
+  billingCity: text("billing_city"),
+  billingState: text("billing_state"),
+  billingZipCode: text("billing_zip_code"),
+  billingCountry: text("billing_country"),
+  // Profile preferences
+  useShippingAsBilling: boolean("use_shipping_as_billing").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
