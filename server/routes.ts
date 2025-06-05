@@ -4442,6 +4442,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add comprehensive SEO and Search Console fixes
+  
+  // Handle trailing slashes - redirect to remove trailing slash
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.length > 1 && req.path.endsWith('/')) {
+      const newPath = req.path.slice(0, -1);
+      return res.redirect(301, newPath + (req.url.includes('?') ? req.url.substring(req.path.length) : ''));
+    }
+    next();
+  });
+
+  // Handle old URL patterns and redirects to prevent "Page with redirect" issues
+  app.get('/products.html', (req: Request, res: Response) => {
+    res.redirect(301, '/products');
+  });
+  
+  app.get('/community.html', (req: Request, res: Response) => {
+    res.redirect(301, '/community');
+  });
+  
+  app.get('/dating.html', (req: Request, res: Response) => {
+    res.redirect(301, '/dating');
+  });
+
+  // Handle case-sensitive URL variations
+  app.get('/Products', (req: Request, res: Response) => {
+    res.redirect(301, '/products');
+  });
+  
+  app.get('/Community', (req: Request, res: Response) => {
+    res.redirect(301, '/community');
+  });
+  
+  app.get('/Dating', (req: Request, res: Response) => {
+    res.redirect(301, '/dating');
+  });
+
+  // Add canonical URL headers for API responses
+  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+    const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    res.set('Link', `<${canonicalUrl}>; rel="canonical"`);
+    next();
+  });
+
+  // Handle soft 404s - pages that should return 404 but don't
+  const invalidPaths = [
+    '/undefined',
+    '/null',
+    '/favicon.ico.map',
+    '/robots.txt.backup',
+    '/sitemap.xml.old',
+    '/wp-admin',
+    '/wp-content',
+    '/admin.php',
+    '/login.php'
+  ];
+
+  invalidPaths.forEach(path => {
+    app.get(path, (req: Request, res: Response) => {
+      res.status(404).json({ 
+        error: 'Not Found',
+        message: 'The requested resource does not exist',
+        path: req.path
+      });
+    });
+  });
+
+  // Catch-all handler for invalid API routes
+  app.use('/api/*', (req: Request, res: Response) => {
+    res.status(404).json({
+      error: 'API endpoint not found',
+      message: `The API endpoint ${req.path} does not exist`,
+      path: req.path
+    });
+  });
+
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
   setupWebSocket(httpServer);
