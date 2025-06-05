@@ -200,7 +200,7 @@ export default function DatingPage() {
                       <CardTitle className="text-2xl">Normal Dating Room</CardTitle>
                     </div>
                     <p className="text-3xl font-bold text-blue-600">FREE</p>
-                    <p className="text-sm text-gray-600">month limited, for unlimited upgrade {formatPrice(19.99)}</p>
+                    <p className="text-sm text-gray-600">month limited, for unlimited upgrade £19.99</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
@@ -215,7 +215,7 @@ export default function DatingPage() {
                           <li>• Basic matching algorithm</li>
                           <li>• Standard profile visibility</li>
                           <li>• Community chat access</li>
-                          <li>• There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for {formatPrice(19.99)}</li>
+                          <li>• There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for £19.99</li>
                         </ul>
                       </div>
                       <div>
