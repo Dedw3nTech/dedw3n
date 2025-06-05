@@ -84,18 +84,108 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
   const [currency, setCurrency] = useState('UGX');
 
   const mobileProviders = [
+    // Uganda
     { id: 'MTN_MOMO_UG', name: 'MTN Mobile Money (Uganda)', currency: 'UGX' },
     { id: 'AIRTEL_ODIN_UG', name: 'Airtel Money (Uganda)', currency: 'UGX' },
+    
+    // Ghana
     { id: 'MTN_MOMO_GH', name: 'MTN Mobile Money (Ghana)', currency: 'GHS' },
     { id: 'VODAFONE_GH', name: 'Vodafone Cash (Ghana)', currency: 'GHS' },
     { id: 'AIRTEL_ODIN_GH', name: 'AirtelTigo Money (Ghana)', currency: 'GHS' },
+    
+    // Cameroon
     { id: 'ORANGE_MONEY_CM', name: 'Orange Money (Cameroon)', currency: 'XAF' },
     { id: 'MTN_MOMO_CM', name: 'MTN Mobile Money (Cameroon)', currency: 'XAF' },
+    
+    // Ivory Coast
     { id: 'ORANGE_MONEY_CI', name: 'Orange Money (Ivory Coast)', currency: 'XOF' },
     { id: 'MTN_MOMO_CI', name: 'MTN Mobile Money (Ivory Coast)', currency: 'XOF' },
+    
+    // Senegal
     { id: 'ORANGE_MONEY_SN', name: 'Orange Money (Senegal)', currency: 'XOF' },
     { id: 'FREE_MONEY_SN', name: 'Free Money (Senegal)', currency: 'XOF' },
-    { id: 'WAVE_SN', name: 'Wave (Senegal)', currency: 'XOF' }
+    { id: 'WAVE_SN', name: 'Wave (Senegal)', currency: 'XOF' },
+    
+    // Burkina Faso
+    { id: 'ORANGE_MONEY_BF', name: 'Orange Money (Burkina Faso)', currency: 'XOF' },
+    { id: 'MOOV_MONEY_BF', name: 'Moov Money (Burkina Faso)', currency: 'XOF' },
+    
+    // Mali
+    { id: 'ORANGE_MONEY_ML', name: 'Orange Money (Mali)', currency: 'XOF' },
+    { id: 'MOOV_MONEY_ML', name: 'Moov Money (Mali)', currency: 'XOF' },
+    
+    // Niger
+    { id: 'ORANGE_MONEY_NE', name: 'Orange Money (Niger)', currency: 'XOF' },
+    { id: 'MOOV_MONEY_NE', name: 'Moov Money (Niger)', currency: 'XOF' },
+    
+    // Benin
+    { id: 'MTN_MOMO_BJ', name: 'MTN Mobile Money (Benin)', currency: 'XOF' },
+    { id: 'MOOV_MONEY_BJ', name: 'Moov Money (Benin)', currency: 'XOF' },
+    
+    // Guinea-Bissau
+    { id: 'ORANGE_MONEY_GW', name: 'Orange Money (Guinea-Bissau)', currency: 'XOF' },
+    
+    // Guinea
+    { id: 'ORANGE_MONEY_GN', name: 'Orange Money (Guinea)', currency: 'GNF' },
+    { id: 'MTN_MOMO_GN', name: 'MTN Mobile Money (Guinea)', currency: 'GNF' },
+    
+    // Rwanda
+    { id: 'MTN_MOMO_RW', name: 'MTN Mobile Money (Rwanda)', currency: 'RWF' },
+    { id: 'AIRTEL_ODIN_RW', name: 'Airtel Money (Rwanda)', currency: 'RWF' },
+    
+    // Kenya
+    { id: 'SAFARICOM_KE', name: 'M-Pesa Kenya (Safaricom)', currency: 'KES' },
+    { id: 'AIRTEL_ODIN_KE', name: 'Airtel Money (Kenya)', currency: 'KES' },
+    
+    // Tanzania
+    { id: 'VODACOM_TZ', name: 'M-Pesa Tanzania (Vodacom)', currency: 'TZS' },
+    { id: 'AIRTEL_ODIN_TZ', name: 'Airtel Money (Tanzania)', currency: 'TZS' },
+    { id: 'TIGO_PESA_TZ', name: 'Tigo Pesa (Tanzania)', currency: 'TZS' },
+    
+    // Zambia
+    { id: 'MTN_MOMO_ZM', name: 'MTN Mobile Money (Zambia)', currency: 'ZMW' },
+    { id: 'AIRTEL_ODIN_ZM', name: 'Airtel Money (Zambia)', currency: 'ZMW' },
+    
+    // Malawi
+    { id: 'AIRTEL_ODIN_MW', name: 'Airtel Money (Malawi)', currency: 'MWK' },
+    { id: 'TNM_MPAMBA_MW', name: 'TNM Mpamba (Malawi)', currency: 'MWK' },
+    
+    // Madagascar
+    { id: 'AIRTEL_ODIN_MG', name: 'Airtel Money (Madagascar)', currency: 'MGA' },
+    { id: 'ORANGE_MONEY_MG', name: 'Orange Money (Madagascar)', currency: 'MGA' },
+    
+    // Chad
+    { id: 'AIRTEL_ODIN_TD', name: 'Airtel Money (Chad)', currency: 'XAF' },
+    { id: 'MOOV_MONEY_TD', name: 'Moov Money (Chad)', currency: 'XAF' },
+    
+    // Congo (Republic)
+    { id: 'AIRTEL_ODIN_CG', name: 'Airtel Money (Congo)', currency: 'XAF' },
+    { id: 'MTN_MOMO_CG', name: 'MTN Mobile Money (Congo)', currency: 'XAF' },
+    
+    // Democratic Republic of Congo
+    { id: 'AIRTEL_ODIN_CD', name: 'Airtel Money (DRC)', currency: 'CDF' },
+    { id: 'ORANGE_MONEY_CD', name: 'Orange Money (DRC)', currency: 'CDF' },
+    { id: 'VODACOM_MPESA_CD', name: 'Vodacom M-Pesa (DRC)', currency: 'CDF' },
+    
+    // Gabon
+    { id: 'AIRTEL_ODIN_GA', name: 'Airtel Money (Gabon)', currency: 'XAF' },
+    { id: 'MOOV_MONEY_GA', name: 'Moov Money (Gabon)', currency: 'XAF' },
+    
+    // Central African Republic
+    { id: 'ORANGE_MONEY_CF', name: 'Orange Money (CAR)', currency: 'XAF' },
+    { id: 'MOOV_MONEY_CF', name: 'Moov Money (CAR)', currency: 'XAF' },
+    
+    // Togo
+    { id: 'MOOV_MONEY_TG', name: 'Moov Money (Togo)', currency: 'XOF' },
+    { id: 'T_MONEY_TG', name: 'T-Money (Togo)', currency: 'XOF' },
+    
+    // Sierra Leone
+    { id: 'ORANGE_MONEY_SL', name: 'Orange Money (Sierra Leone)', currency: 'SLL' },
+    { id: 'AIRTEL_ODIN_SL', name: 'Airtel Money (Sierra Leone)', currency: 'SLL' },
+    
+    // Liberia
+    { id: 'ORANGE_MONEY_LR', name: 'Orange Money (Liberia)', currency: 'LRD' },
+    { id: 'MTN_MOMO_LR', name: 'MTN Mobile Money (Liberia)', currency: 'LRD' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,10 +224,20 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
 
       // Convert amount to minor currency units for Pawapay
       let amountInMinorUnits = total;
-      if (['UGX', 'GHS'].includes(currency)) {
+      
+      // Currencies that use cents (divide by 100)
+      const centsCurrencies = ['UGX', 'GHS', 'RWF', 'KES', 'TZS', 'ZMW', 'MWK', 'MGA'];
+      
+      // Currencies that are already in minor units (no conversion needed)
+      const minorUnitCurrencies = ['XAF', 'XOF', 'GNF', 'CDF', 'SLL', 'LRD'];
+      
+      if (centsCurrencies.includes(currency)) {
         amountInMinorUnits = Math.round(total * 100); // Convert to cents
-      } else if (['XAF', 'XOF'].includes(currency)) {
+      } else if (minorUnitCurrencies.includes(currency)) {
         amountInMinorUnits = Math.round(total); // Already in minor units
+      } else {
+        // Default to cents conversion for unknown currencies
+        amountInMinorUnits = Math.round(total * 100);
       }
 
       // Initiate Pawapay deposit
