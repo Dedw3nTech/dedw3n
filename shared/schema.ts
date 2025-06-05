@@ -822,6 +822,7 @@ export const datingProfiles = pgTable("dating_profiles", {
   secondaryLanguage: text("secondary_language"),
   income: text("income"),
   education: text("education"),
+  roots: text("roots"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => {
