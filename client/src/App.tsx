@@ -229,6 +229,7 @@ function Router() {
       <Route path="/search" component={SearchPage} />
       <Route path="/dating" component={DatingPage} />
       <Route path="/profile/:username" component={UserProfilePage} />
+      <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />

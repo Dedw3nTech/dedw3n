@@ -197,7 +197,7 @@ export default function DatingProfilePage() {
       const { clientSecret } = await response.json();
       
       // Redirect to payment page with client secret
-      navigate(`/checkout?clientSecret=${clientSecret}&type=dating_room&tier=${tier}`);
+      navigateTo(`/checkout?clientSecret=${clientSecret}&type=dating_room&tier=${tier}`);
       
     } catch (error) {
       toast({
@@ -284,7 +284,7 @@ export default function DatingProfilePage() {
                       ? "border-black bg-gray-50" 
                       : "border-gray-200 hover:border-gray-300"
                   }`}
-                  onClick={() => setDatingRoomTier("normal")}
+                  onClick={() => processDatingRoomPayment("normal")}
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">Normal</h3>
@@ -299,14 +299,20 @@ export default function DatingProfilePage() {
                     datingRoomTier === "vip" 
                       ? "border-black bg-gray-50" 
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => setDatingRoomTier("vip")}
+                  } ${isProcessingPayment ? "opacity-50 pointer-events-none" : ""}`}
+                  onClick={() => processDatingRoomPayment("vip")}
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VIP</h3>
                     <p className="text-2xl font-bold">£199.99</p>
                     <p className="text-xs text-gray-500">/ month</p>
                     <p className="text-sm text-gray-600">For users who make over £150,000 per year</p>
+                    {isProcessingPayment && datingRoomTier === "vip" && (
+                      <div className="flex items-center justify-center mt-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-xs">Processing...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -316,14 +322,20 @@ export default function DatingProfilePage() {
                     datingRoomTier === "vvip" 
                       ? "border-black bg-gray-50" 
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => setDatingRoomTier("vvip")}
+                  } ${isProcessingPayment ? "opacity-50 pointer-events-none" : ""}`}
+                  onClick={() => processDatingRoomPayment("vvip")}
                 >
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold text-lg">VVIP</h3>
                     <p className="text-2xl font-bold">£1,999.99</p>
                     <p className="text-xs text-gray-500">/ month</p>
                     <p className="text-sm text-gray-600">For users who make over £1,500,000 per year</p>
+                    {isProcessingPayment && datingRoomTier === "vvip" && (
+                      <div className="flex items-center justify-center mt-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-xs">Processing...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

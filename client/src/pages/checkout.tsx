@@ -1,502 +1,256 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { formatPrice } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { useQuery } from '@tanstack/react-query';
-import { CheckoutForm } from '@/components/payment/CheckoutForm';
-import { WalletPaymentForm } from '@/components/payment/WalletPaymentForm';
-import { PaypalPaymentForm } from '@/components/payment/PaypalPaymentForm';
-import MobileMoneyForm from '@/components/payment/MobileMoneyForm';
-import ShippingOptions from '@/components/shipping/ShippingOptions';
-import MultiCarrierShipping from '@/components/shipping/MultiCarrierShipping';
-import { AddressForm } from '@/components/shipping/AddressForm';
-import { Loader2, CreditCard, Wallet, CreditCardIcon, Phone } from 'lucide-react';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@/components/ui/tabs';
+import { useEffect, useState } from "react";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, ArrowLeft, CreditCard } from "lucide-react";
+import { useLocation } from "wouter";
 
-// Initialize Stripe with publishable key (will be available only when keys are set up)
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+// Load Stripe
+if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+}
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-export default function Checkout() {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [orderTotal, setOrderTotal] = useState(0);
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [shippingCost, setShippingCost] = useState(0);
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState<any>(null);
-  const [addressValid, setAddressValid] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState<any>(null);
-  const [checkoutStep, setCheckoutStep] = useState<'shipping' | 'payment'>('shipping');
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet' | 'paypal' | 'mobile-money'>('stripe');
-  const [paymentComplete, setPaymentComplete] = useState(false);
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
+const CheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => void }) => {
+  const stripe = useStripe();
+  const elements = useElements();
   const { toast } = useToast();
-  
-  // Fetch user's wallet
-  const { data: wallet } = useQuery({
-    queryKey: ['/api/wallets/me'],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest('GET', '/api/wallets/me');
-        if (res.ok) {
-          return res.json();
-        }
-        return null;
-      } catch (error) {
-        console.error('Error fetching wallet:', error);
-        return null;
-      }
-    },
-    enabled: !!user && checkoutStep === 'payment'
-  });
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      setLocation('/auth');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
       return;
     }
 
-    // Fetch cart items
-    const fetchCartItems = async () => {
-      try {
-        const response = await apiRequest('GET', '/api/cart');
-        const items = await response.json();
-        setCartItems(items);
-        
-        // Calculate total
-        const total = items.reduce((sum: number, item: any) => {
-          return sum + (item.product?.price || 0) * item.quantity;
-        }, 0);
-        
-        console.log('Cart items:', items);
-        console.log('Calculated total:', total);
-        
-        setOrderTotal(total);
-        
-        if (items.length === 0) {
-          setError('Your cart is empty');
-          setLoading(false);
-          return;
-        }
-        
-        // Validate total
-        if (total <= 0) {
-          setError('Total amount must be greater than 0');
-          setLoading(false);
-          return;
-        }
-
-        setLoading(false);
-      } catch (err: any) {
-        setError(`Error loading cart: ${err.message}`);
-        setLoading(false);
-      }
-    };
-
-    fetchCartItems();
-  }, [user, setLocation]);
-
-  // Handle shipping method selection
-  const handleShippingMethodChange = (method: any, cost: number) => {
-    setSelectedShippingMethod(method);
-    setShippingCost(cost);
-  };
-
-  // Handle address validation
-  const handleSubmit = (address: any) => {
-    setShippingAddress(address);
-    setAddressValid(true);
-  };
-
-  // Continue to payment step
-  const handleContinueToPayment = async () => {
-    if (!addressValid || !selectedShippingMethod) {
-      toast({
-        title: "Cannot proceed",
-        description: !addressValid 
-          ? "Please validate your shipping address first" 
-          : "Please select a shipping method",
-        variant: "destructive"
-      });
-      return;
-    }
+    setIsProcessing(true);
 
     try {
-      setLoading(true);
-      
-      // Move to payment step first (this allows wallet payment option without Stripe being initialized)
-      setCheckoutStep('payment');
-      
-      // If using Stripe payment, we need to create a payment intent
-      if (stripePromise && user) {
-        // Include shipping cost in the total
-        const totalWithShipping = orderTotal + shippingCost;
-        
-        // Ensure total is at least £0.30 (30 pence) as Stripe has a minimum charge amount
-        const minAmount = Math.max(totalWithShipping, 0.3);
-        console.log('Amount being sent to Stripe (with shipping):', minAmount);
-        
-        const response = await apiRequest('POST', '/api/payments/create-intent', {
-          amount: minAmount,
-          currency: 'gbp',
-          metadata: {
-            userId: user.id,
-            items: JSON.stringify(cartItems.map((item: any) => ({
-              id: item.productId,
-              quantity: item.quantity
-            }))),
-            shipping: JSON.stringify({
-              method: selectedShippingMethod.id,
-              cost: shippingCost,
-              address: shippingAddress
-            })
-          }
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/dating-profile?payment=success&tier=${tier}`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Payment Failed",
+          description: error.message || "An error occurred during payment processing.",
+          variant: "destructive",
         });
-        
-        const data = await response.json();
-        console.log('Payment intent created:', data);
-        setClientSecret(data.clientSecret);
-      } else if (paymentMethod === 'stripe') {
-        // Only show error if Stripe is selected but not available
-        setError('Stripe is not configured. Please set up your VITE_STRIPE_PUBLIC_KEY.');
+      } else {
+        // Payment succeeded
+        toast({
+          title: "Payment Successful",
+          description: `Successfully upgraded to ${tier.toUpperCase()} dating room!`,
+        });
+        onSuccess();
       }
-      
-      setLoading(false);
-    } catch (err: any) {
-      console.error('Error initializing payment:', err);
-      setError(`Could not initialize payment: ${err.message || 'Unknown error'}`);
-      setLoading(false);
+    } catch (error) {
+      toast({
+        title: "Payment Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Go back to shipping step
-  const handleBackToShipping = () => {
-    setCheckoutStep('shipping');
+  const getTierDetails = (tier: string) => {
+    switch (tier) {
+      case "vip":
+        return {
+          name: "VIP Dating Room",
+          price: "£199.99",
+          period: "per month",
+          features: [
+            "Advanced matching algorithms",
+            "Priority profile visibility",
+            "Unlimited messaging",
+            "Video chat features"
+          ]
+        };
+      case "vvip":
+        return {
+          name: "VVIP Dating Room",
+          price: "£1,999.99",
+          period: "per month",
+          features: [
+            "Exclusive VVIP member pool",
+            "Personal dating concierge",
+            "Premium profile features",
+            "Private video events",
+            "Background verification"
+          ]
+        };
+      default:
+        return {
+          name: "Unknown Tier",
+          price: "N/A",
+          period: "",
+          features: []
+        };
+    }
   };
 
-  // Go back to cart
-  const handleBackToCart = () => {
-    setLocation('/cart');
+  const tierDetails = getTierDetails(tier);
+
+  return (
+    <div className="space-y-6">
+      {/* Order Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold">{tierDetails.name}</h3>
+                <p className="text-sm text-gray-600">{tierDetails.period}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-lg">{tierDetails.price}</p>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-2">Included Features:</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                {tierDetails.features.map((feature, index) => (
+                  <li key={index} className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <PaymentElement />
+            
+            <Button
+              type="submit"
+              disabled={!stripe || !elements || isProcessing}
+              className="w-full bg-black hover:bg-gray-800 text-white"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing Payment...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pay {tierDetails.price}
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default function Checkout() {
+  const [, setLocation] = useLocation();
+  const [clientSecret, setClientSecret] = useState("");
+  const [tier, setTier] = useState("");
+
+  // Get URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientSecretParam = urlParams.get("clientSecret");
+    const tierParam = urlParams.get("tier");
+
+    if (!clientSecretParam || !tierParam) {
+      // Redirect back to dating profile if missing parameters
+      setLocation("/dating-profile");
+      return;
+    }
+
+    setClientSecret(clientSecretParam);
+    setTier(tierParam);
+  }, [setLocation]);
+
+  const handlePaymentSuccess = () => {
+    // Redirect back to dating profile after successful payment
+    setTimeout(() => {
+      setLocation("/dating-profile?payment=success");
+    }, 2000);
   };
 
-  if (loading) {
+  if (!clientSecret || !tier) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container max-w-4xl mx-auto py-12 px-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Checkout</CardTitle>
-            <CardDescription>There was a problem with your checkout</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-red-50 text-red-800 p-4 rounded-md mb-4">
-              {error}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={handleBackToCart}>Back to Cart</Button>
-          </CardFooter>
-        </Card>
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-12 px-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Checkout</CardTitle>
-          <CardDescription>Complete your purchase</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4">Order Summary</h3>
-            <div className="border rounded-md overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Subtotal
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {cartItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.product?.name || 'Product'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{item.quantity}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                        {formatPrice(item.product?.price || 0)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                        {formatPrice((item.product?.price || 0) * item.quantity)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-50">
-                  <tr>
-                    <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                      Subtotal
-                    </th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                      {formatPrice(orderTotal)}
-                    </th>
-                  </tr>
-                  {selectedShippingMethod && (
-                    <tr>
-                      <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                        Shipping ({selectedShippingMethod.name})
-                      </th>
-                      <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                        {shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}
-                      </th>
-                    </tr>
-                  )}
-                  <tr>
-                    <th colSpan={3} className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                      {formatPrice(orderTotal + shippingCost)}
-                    </th>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/dating-profile")}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dating Profile
+          </Button>
+          
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Upgrade Your Dating Room
+            </h1>
+            <p className="text-gray-600">
+              Complete your payment to activate your {tier.toUpperCase()} dating room access
+            </p>
           </div>
+        </div>
 
-          {checkoutStep === 'shipping' && (
-            <>
-              <div className="space-y-8 mt-8">
-                <div>
-                  <AddressForm onSubmit={handleSubmit} />
-                </div>
-                
-                <div>
-                  <MultiCarrierShipping 
-                    orderTotal={orderTotal} 
-                    onShippingMethodChange={handleShippingMethodChange} 
-                  />
-                </div>
-              </div>
-            </>
-          )}
+        {/* Payment Form */}
+        <Elements
+          stripe={stripePromise}
+          options={{
+            clientSecret,
+            appearance: {
+              theme: 'stripe',
+              variables: {
+                colorPrimary: '#000000',
+              }
+            }
+          }}
+        >
+          <CheckoutForm tier={tier} onSuccess={handlePaymentSuccess} />
+        </Elements>
 
-          {checkoutStep === 'payment' && (
-            <div className="mt-8">
-              <h3 className="text-lg font-medium mb-4">Payment Method</h3>
-              
-              <Tabs 
-                defaultValue="stripe" 
-                value={paymentMethod} 
-                onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'wallet' | 'paypal' | 'mobile-money')}
-                className="w-full mb-6"
-              >
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="stripe" className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Credit Card
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="wallet" 
-                    className="flex items-center gap-2"
-                    disabled={!wallet}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    E-Wallet
-                  </TabsTrigger>
-                  <TabsTrigger value="paypal" className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-                      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" />
-                    </svg>
-                    PayPal
-                  </TabsTrigger>
-                  <TabsTrigger value="mobile-money" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Mobile Money
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="stripe" className="mt-4">
-                  {clientSecret && stripePromise ? (
-                    <Elements stripe={stripePromise} options={{ clientSecret }}>
-                      <CheckoutForm 
-                        onPaymentComplete={() => {
-                          setPaymentComplete(true);
-                          // Clear cart after successful payment
-                          queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-                        }}
-                      />
-                    </Elements>
-                  ) : (
-                    <div className="flex items-center justify-center p-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="wallet" className="mt-4">
-                  {wallet ? (
-                    <WalletPaymentForm
-                      amount={orderTotal + shippingCost}
-                      walletBalance={wallet.balance}
-                      walletCurrency={wallet.currency}
-                      onPaymentComplete={() => {
-                        setPaymentComplete(true);
-                        // Clear cart after successful payment
-                        queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-                      }}
-                      metadata={{
-                        userId: user?.id || 0,
-                        items: JSON.stringify(cartItems.map((item: any) => ({
-                          id: item.productId,
-                          quantity: item.quantity
-                        }))),
-                        shipping: JSON.stringify({
-                          method: selectedShippingMethod.id,
-                          cost: shippingCost,
-                          address: shippingAddress
-                        })
-                      }}
-                    />
-                  ) : (
-                    <Card className="p-6">
-                      <CardTitle className="text-center mb-4">No Wallet Found</CardTitle>
-                      <CardDescription className="text-center mb-6">
-                        You don't have an e-wallet set up yet. Please create a wallet to use this payment method.
-                      </CardDescription>
-                      <Button
-                        onClick={() => setLocation('/wallet')}
-                        className="w-full"
-                      >
-                        Set Up Wallet
-                      </Button>
-                    </Card>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="paypal" className="mt-4">
-                  <PaypalPaymentForm
-                    amount={orderTotal + shippingCost}
-                    currency="GBP"
-                    onPaymentComplete={() => {
-                      setPaymentComplete(true);
-                      // Clear cart after successful payment
-                      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-                    }}
-                    metadata={{
-                      userId: user?.id || 0,
-                      items: JSON.stringify(cartItems.map((item: any) => ({
-                        id: item.productId,
-                        quantity: item.quantity
-                      }))),
-                      shipping: JSON.stringify({
-                        method: selectedShippingMethod.id,
-                        cost: shippingCost,
-                        address: shippingAddress
-                      })
-                    }}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="mobile-money" className="mt-4">
-                  <div className="mb-3">
-                    <h4 className="text-base font-medium mb-2">African Mobile Money Payment with PawaPay</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Pay securely using your mobile money account from M-Pesa, MTN Money, Airtel Money, and other African mobile money providers.
-                    </p>
-                  </div>
-                  <MobileMoneyForm
-                    amount={orderTotal + shippingCost}
-                    onSuccess={() => {
-                      setPaymentComplete(true);
-                      // Clear cart after successful payment
-                      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-                      setLocation('/payment-success');
-                    }}
-                    metadata={{
-                      userId: user?.id || 0,
-                      items: JSON.stringify(cartItems.map((item: any) => ({
-                        id: item.productId,
-                        quantity: item.quantity
-                      }))),
-                      shipping: JSON.stringify({
-                        method: selectedShippingMethod.id,
-                        cost: shippingCost,
-                        address: shippingAddress
-                      })
-                    }}
-                  />
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          {checkoutStep === 'shipping' ? (
-            <>
-              <Button variant="outline" onClick={handleBackToCart}>
-                Back to Cart
-              </Button>
-              <Button 
-                onClick={handleContinueToPayment}
-                disabled={!addressValid || !selectedShippingMethod}
-              >
-                Continue to Payment
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={handleBackToShipping}>
-                Back to Shipping
-              </Button>
-              {paymentMethod === 'paypal' && (
-                <div className="text-sm text-muted-foreground">
-                  Please use the PayPal buttons above to complete your payment
-                </div>
-              )}
-            </>
-          )}
-        </CardFooter>
-      </Card>
+        {/* Security Notice */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>Your payment is secured by Stripe. We do not store your payment information.</p>
+        </div>
+      </div>
     </div>
   );
 }

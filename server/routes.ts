@@ -4441,7 +4441,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dating room payment processing
+  app.post('/api/dating-room/payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { tier } = req.body;
+      const userId = req.user!.id;
 
+      if (!tier || !['vip', 'vvip'].includes(tier)) {
+        return res.status(400).json({ message: 'Invalid tier specified' });
+      }
+
+      // Define pricing for each tier (in pence for GBP)
+      const tierPricing = {
+        vip: 19999, // £199.99 in pence
+        vvip: 199999 // £1,999.99 in pence
+      };
+
+      const amount = tierPricing[tier as keyof typeof tierPricing];
+
+      // Check if Stripe is configured
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ 
+          message: 'Payment processing not configured. Please contact support.' 
+        });
+      }
+
+      // Import Stripe only when needed
+      const { default: Stripe } = await import('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2023-10-16',
+      });
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: 'gbp',
+        metadata: {
+          userId: userId.toString(),
+          tier,
+          type: 'dating_room_upgrade'
+        }
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error('Error creating dating room payment intent:', error);
+      res.status(500).json({ 
+        message: 'Error creating payment intent: ' + error.message 
+      });
+    }
+  });
 
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
