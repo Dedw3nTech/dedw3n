@@ -24,24 +24,22 @@ export default function NotFoundPage() {
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <Link href="/" className="text-black text-base hover:underline">
-              Go to Homepage
-            </Link>
-          </div>
+        <div className="flex items-center justify-center space-x-4">
+          <Link href="/" className="text-black text-base hover:underline">
+            Go to Homepage
+          </Link>
           
-          <div>
-            <Link href="/products" className="text-black text-base hover:underline">
-              Browse Marketplace
-            </Link>
-          </div>
+          <span className="text-gray-400">|</span>
           
-          <div>
-            <Link href="/wall" className="text-black text-base hover:underline">
-              Visit Community
-            </Link>
-          </div>
+          <Link href="/products" className="text-black text-base hover:underline">
+            Browse Marketplace
+          </Link>
+          
+          <span className="text-gray-400">|</span>
+          
+          <Link href="/wall" className="text-black text-base hover:underline">
+            Visit Community
+          </Link>
         </div>
 
         <div className="mt-8 text-sm text-gray-500">
