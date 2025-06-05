@@ -131,7 +131,7 @@ export default function UserMenu() {
               <i className="ri-notification-3-line mr-2"></i> Notifications
             </div>
             {(unreadNotifications?.count || 0) > 0 && (
-              <Badge className="bg-blue-600 text-white text-xs ml-2">
+              <Badge className="bg-red-600 text-white text-xs ml-2">
                 {unreadNotifications?.count || 0}
               </Badge>
             )}
