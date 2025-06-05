@@ -2948,6 +2948,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const cartItem = await storage.addToCart(cartData);
+      
+      // Get product details for notification
+      const product = await storage.getProduct(cartData.productId);
+      if (product) {
+        // Create notification for adding to cart
+        await storage.createNotification({
+          userId,
+          type: 'system',
+          content: `You added "${product.name}" to your shopping cart`,
+          sourceId: product.id,
+          sourceType: 'cart'
+        });
+      }
+      
       res.json(cartItem);
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -3024,6 +3038,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const likedProduct = await storage.likeProduct(userId, productId);
+      
+      // Get product details for notification
+      const product = await storage.getProduct(productId);
+      if (product) {
+        // Create notification for adding to favorites
+        await storage.createNotification({
+          userId,
+          type: 'like',
+          content: `You added "${product.name}" to your favorites`,
+          sourceId: product.id,
+          sourceType: 'product'
+        });
+      }
+      
       res.json({ success: true, liked: true, message: 'Product added to favorites' });
     } catch (error) {
       console.error('Error adding product to favorites:', error);
@@ -3065,6 +3093,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const likedProduct = await storage.likeProduct(userId, productId);
+      
+      // Get product details for notification
+      const product = await storage.getProduct(productId);
+      if (product) {
+        // Create notification for liking product
+        await storage.createNotification({
+          userId,
+          type: 'like',
+          content: `You liked "${product.name}"`,
+          sourceId: product.id,
+          sourceType: 'product'
+        });
+      }
+      
       res.json({ success: true, liked: true });
     } catch (error) {
       console.error('Error liking product:', error);
