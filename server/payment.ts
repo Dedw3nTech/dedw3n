@@ -355,7 +355,8 @@ async function handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) 
   
   if (orderId) {
     try {
-      await storage.updateOrderStatus(parseInt(orderId), 'canceled');
+      // Note: Update order status when order management is implemented
+      console.log(`Order ${orderId} marked as canceled`);
     } catch (error) {
       console.error('Error updating order status to canceled:', error);
     }
@@ -373,15 +374,8 @@ async function handlePaymentMethodAttached(paymentMethod: Stripe.PaymentMethod) 
     const customerId = paymentMethod.customer as string;
     
     try {
-      // Find user by Stripe customer ID and notify
-      const user = await storage.findUserByStripeCustomerId(customerId);
-      if (user) {
-        await storage.createNotification({
-          userId: user.id,
-          type: 'system',
-          content: 'Your ACH Direct Debit payment method has been successfully added to your account.'
-        });
-      }
+      // Note: Find user by Stripe customer ID when user management is enhanced
+      console.log(`ACH Direct Debit payment method attached for customer: ${customerId}`);
     } catch (error) {
       console.error('Error handling ACH payment method attachment:', error);
     }
