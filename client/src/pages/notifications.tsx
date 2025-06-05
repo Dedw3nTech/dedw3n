@@ -44,51 +44,8 @@ const categorizeNotifications = (notifications: any[]) => {
 
 // Function to get notification icon based on type
 const getNotificationIcon = (type: string) => {
-  switch (type) {
-    // Community notifications
-    case "like":
-    case "dating_like":
-      return <Heart className="h-4 w-4 text-white" />;
-    case "comment":
-      return <MessageSquare className="h-4 w-4 text-white" />;
-    case "follow":
-    case "connection_request":
-      return <Users className="h-4 w-4 text-white" />;
-    case "mention":
-      return <Bell className="h-4 w-4 text-white" />;
-    
-    // Marketplace notifications
-    case "order":
-    case "order_status":
-      return <Package className="h-4 w-4 text-white" />;
-    case "payment":
-      return <DollarSign className="h-4 w-4 text-white" />;
-    case "review":
-      return <Star className="h-4 w-4 text-white" />;
-    case "cart":
-    case "product_like":
-      return <ShoppingCart className="h-4 w-4 text-white" />;
-    case "vendor":
-      return <Store className="h-4 w-4 text-white" />;
-    
-    // Dating notifications
-    case "match":
-    case "super_like":
-      return <HeartHandshake className="h-4 w-4 text-white" />;
-    case "message":
-      return <MessageSquare className="h-4 w-4 text-white" />;
-    case "profile_view":
-      return <Users className="h-4 w-4 text-white" />;
-    case "tier_upgrade":
-    case "boost":
-      return <Star className="h-4 w-4 text-white" />;
-    
-    // System notifications
-    case "system":
-      return <AlertCircle className="h-4 w-4 text-white" />;
-    default:
-      return <Bell className="h-4 w-4 text-white" />;
-  }
+  // Use marketplace (Store) icon for all notifications
+  return <Store className="h-4 w-4 text-white" />;
 };
 
 // Function to get notification icon style based on type
