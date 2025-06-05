@@ -333,7 +333,7 @@ const NotificationsPage = () => {
               </div>
               <div className="flex items-center space-x-3">
                 {totalUnread > 0 && (
-                  <span className="bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full">
+                  <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
                     {totalUnread} unread
                   </span>
                 )}
