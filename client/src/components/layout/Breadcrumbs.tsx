@@ -31,6 +31,10 @@ export function Breadcrumbs() {
     const routeLabels: Record<string, string> = {
       'products': 'Marketplace',
       'product': 'Product Details',
+      'marketplace': 'Marketplace',
+      'b2c': 'B2C Marketplace',
+      'b2b': 'B2B Marketplace', 
+      'c2c': 'C2C Marketplace',
       'wall': 'Community',
       'dating': 'Dating',
       'dating-profile': 'Dating Profile',
@@ -65,10 +69,16 @@ export function Breadcrumbs() {
       currentPath += `/${segment}`;
       const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
       
+      // Special handling for B2C - redirect to main B2C marketplace page
+      let finalPath = currentPath;
+      if (segment === 'b2c') {
+        finalPath = '/marketplace/b2c';
+      }
+      
       // Don't add path for the last segment (current page)
       breadcrumbs.push({
         label,
-        path: index === segments.length - 1 ? undefined : currentPath
+        path: index === segments.length - 1 ? undefined : finalPath
       });
     });
     

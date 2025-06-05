@@ -4479,6 +4479,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect(301, '/dating');
   });
 
+  // Redirect B2C page to main B2C marketplace
+  app.get('/b2c', (req: Request, res: Response) => {
+    res.redirect(301, '/marketplace/b2c');
+  });
+  
+  app.get('/B2C', (req: Request, res: Response) => {
+    res.redirect(301, '/marketplace/b2c');
+  });
+
   // Add canonical URL headers for API responses
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
