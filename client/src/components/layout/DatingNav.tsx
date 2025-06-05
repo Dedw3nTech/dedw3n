@@ -35,8 +35,8 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/dating-profile")}
             >
-              <User className="h-4 w-4" />
-              <span className="text-sm font-medium">My Dating Profile</span>
+              <Settings className="h-4 w-4" />
+              <span className="text-sm font-medium">Dating Dashboard</span>
             </Button>
           </div>
         </div>
