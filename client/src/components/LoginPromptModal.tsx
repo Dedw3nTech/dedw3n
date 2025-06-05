@@ -128,14 +128,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold text-gray-900">
-            <div className="flex items-center justify-center gap-2">
-              <img 
-                src={dedw3nLogo} 
-                alt="Dedw3n Logo" 
-                className="w-8 h-8"
-              />
-              Join Dedw3n
-            </div>
+            Join Dedw3n
           </DialogTitle>
 
         </DialogHeader>
