@@ -462,7 +462,7 @@ export default function DatingProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="region">Region/State</Label>
+                  <Label htmlFor="region">Region</Label>
                   <Input
                     id="region"
                     placeholder="e.g., California"
