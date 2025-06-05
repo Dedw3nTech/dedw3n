@@ -900,7 +900,7 @@ export default function DatingProfilePage() {
                     className={user && user.dateOfBirth ? "bg-gray-50 cursor-not-allowed" : ""}
                   />
                   {user && user.dateOfBirth && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Age automatically calculated from your date of birth in profile settings
                     </p>
                   )}
@@ -927,7 +927,7 @@ export default function DatingProfilePage() {
                     </SelectContent>
                   </Select>
                   {user && user.gender && gender === user.gender && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Auto-filled from your profile settings
                     </p>
                   )}
@@ -1042,7 +1042,7 @@ export default function DatingProfilePage() {
                     placeholder="e.g., United States"
                   />
                   {user && user.country && country === user.country && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Auto-filled from your profile
                     </p>
                   )}
@@ -1056,7 +1056,7 @@ export default function DatingProfilePage() {
                     placeholder="e.g., California"
                   />
                   {user && user.region && region === user.region && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Auto-filled from your profile
                     </p>
                   )}
@@ -1070,7 +1070,7 @@ export default function DatingProfilePage() {
                     placeholder="e.g., Los Angeles"
                   />
                   {user && user.city && city === user.city && (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Auto-filled from your profile
                     </p>
                   )}
