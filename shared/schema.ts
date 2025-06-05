@@ -253,13 +253,13 @@ export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   type: notificationTypeEnum("type").notNull(),
+  title: text("title"), // Title of the notification
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
   sourceId: integer("source_id"), // ID of the related item (post, comment, etc.)
   sourceType: text("source_type"), // Type of the related item
   actorId: integer("actor_id").references(() => users.id), // User who triggered the notification
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Notification settings model
