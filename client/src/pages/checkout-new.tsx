@@ -178,23 +178,46 @@ export default function CheckoutNew() {
   // Auto-fill shipping info from user profile
   const autoFillShippingInfo = () => {
     if (user) {
-      setShippingInfo({
-        firstName: user.shippingFirstName || user.name?.split(' ')[0] || '',
-        lastName: user.shippingLastName || user.name?.split(' ')[1] || '',
-        email: user.email || '',
-        phone: user.shippingPhone || '',
-        address: user.shippingAddress || '',
-        city: user.shippingCity || '',
-        state: user.shippingState || '',
-        zipCode: user.shippingZipCode || '',
-        country: user.shippingCountry || 'United Kingdom',
-        specialInstructions: user.shippingSpecialInstructions || ''
-      });
-      setIsAutoFilled(true);
-      toast({
-        title: "Address auto-filled",
-        description: "Your saved shipping information has been loaded",
-      });
+      const hasShippingData = user.shippingFirstName || user.shippingAddress;
+      
+      if (hasShippingData) {
+        setShippingInfo({
+          firstName: user.shippingFirstName || user.name?.split(' ')[0] || '',
+          lastName: user.shippingLastName || user.name?.split(' ')[1] || '',
+          email: user.email || '',
+          phone: user.shippingPhone || '',
+          address: user.shippingAddress || '',
+          city: user.shippingCity || '',
+          state: user.shippingState || '',
+          zipCode: user.shippingZipCode || '',
+          country: user.shippingCountry || 'United Kingdom',
+          specialInstructions: user.shippingSpecialInstructions || ''
+        });
+        setIsAutoFilled(true);
+        toast({
+          title: "Address auto-filled",
+          description: "Your saved shipping information has been loaded",
+        });
+      } else {
+        // Fill with basic user info if no shipping data
+        setShippingInfo({
+          firstName: user.name?.split(' ')[0] || '',
+          lastName: user.name?.split(' ')[1] || '',
+          email: user.email || '',
+          phone: '',
+          address: '',
+          city: user.city || '',
+          state: '',
+          zipCode: '',
+          country: user.country || 'United Kingdom',
+          specialInstructions: ''
+        });
+        toast({
+          title: "Basic info auto-filled",
+          description: "Name and email filled from profile. Complete shipping details in Profile Settings for full auto-fill.",
+          variant: "default",
+        });
+      }
     }
   };
 
@@ -400,17 +423,15 @@ export default function CheckoutNew() {
                       <Truck className="h-5 w-5 mr-2" />
                       Shipping Information
                     </div>
-                    {user && (user.shippingFirstName || user.shippingAddress) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={autoFillShippingInfo}
-                        className="flex items-center bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                      >
-                        <User className="h-4 w-4 mr-1" />
-                        Use Saved Address
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={autoFillShippingInfo}
+                      className="flex items-center bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                    >
+                      <User className="h-4 w-4 mr-1" />
+                      Auto-fill from Profile
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
