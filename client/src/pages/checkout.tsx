@@ -101,6 +101,7 @@ const StripeCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () =
 const PayPalCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => void }) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { formatPrice } = useCurrency();
 
   const handlePayPalPayment = async () => {
     setIsProcessing(true);
@@ -126,8 +127,8 @@ const PayPalCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () =
 
   const getTierPrice = (tier: string) => {
     switch (tier) {
-      case "vip": return "£199.99";
-      case "vvip": return "£1,999.99";
+      case "vip": return formatPrice(199.99);
+      case "vvip": return formatPrice(1999.99);
       default: return "N/A";
     }
   };
@@ -163,6 +164,7 @@ const PayPalCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () =
 // Bank Transfer Form Component
 const BankTransferForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => void }) => {
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const [transferDetails, setTransferDetails] = useState({
     accountHolder: "",
     bankName: "",
@@ -183,8 +185,8 @@ const BankTransferForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => 
 
   const getTierPrice = (tier: string) => {
     switch (tier) {
-      case "vip": return "£199.99";
-      case "vvip": return "£1,999.99";
+      case "vip": return formatPrice(199.99);
+      case "vvip": return formatPrice(1999.99);
       default: return "N/A";
     }
   };
