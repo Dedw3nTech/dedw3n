@@ -2362,8 +2362,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      // Add userId to the request data before validation
+      const dataWithUserId = {
+        ...req.body,
+        userId
+      };
+
       // Validate the request body using the vendor schema
-      const validatedData = insertVendorSchema.parse(req.body);
+      const validatedData = insertVendorSchema.parse(dataWithUserId);
 
       // Check if user already has this type of vendor account
       const existingVendor = await storage.checkVendorAccountExists(userId, validatedData.vendorType);
