@@ -275,18 +275,58 @@ export default function Cart() {
                 ))}
               </tbody>
               <tfoot className="bg-gray-50">
+                <tr className="border-t">
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    Subtotal
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPrice(subtotal)}
+                  </td>
+                  <td></td>
+                </tr>
                 <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    Shipping
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {shippingCost === 0 ? (
+                      <span className="text-green-600">Free</span>
+                    ) : (
+                      formatPrice(shippingCost)
+                    )}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    Tax (VAT)
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPrice(tax)}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr className="border-t">
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                     Total
                   </th>
                   <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                    {formatPrice(totalPrice)}
+                    {formatPrice(total)}
                   </td>
                   <td></td>
                 </tr>
               </tfoot>
             </table>
           </div>
+          
+          {/* Free shipping notification */}
+          {amountNeededForFreeShipping(subtotal) > 0 && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                Add {formatPrice(amountNeededForFreeShipping(subtotal))} more to qualify for free shipping!
+              </p>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
