@@ -141,44 +141,46 @@ export default function OptimizedNavigation() {
             </nav>
             {/* User menu or login */}
             {isLoggedIn ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 {/* Currency Selector */}
-                <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
+                <div className="hidden lg:flex items-center gap-0.5">
+                  <span className="text-gray-600 text-xs">Currency</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
-                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
+                <div className="hidden lg:block h-3 w-px bg-gray-300 mx-1"></div>
                 {/* Language Selector between currency selector and profile */}
-                <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Language</span>
+                <div className="hidden lg:flex items-center gap-0.5 mr-2">
+                  <span className="text-gray-600 text-xs">Language</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <UserMenu />
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 {/* Currency Selector for non-logged in users */}
-                <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
+                <div className="hidden lg:flex items-center gap-0.5">
+                  <span className="text-gray-600 text-xs">Currency</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
-                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
+                <div className="hidden lg:block h-3 w-px bg-gray-300 mx-1"></div>
                 {/* Language Selector for non-logged in users */}
-                <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Language</span>
+                <div className="hidden lg:flex items-center gap-0.5 mr-2">
+                  <span className="text-gray-600 text-xs">Language</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  className="px-2 py-1 text-sm"
                   onClick={() => showLoginPrompt("login")}
                 >
                   <TranslatedText>Log in</TranslatedText>
                 </Button>
                 <Button 
                   size="sm"
+                  className="px-2 py-1 text-sm"
                   onClick={() => showLoginPrompt("register")}
                 >
                   <TranslatedText>Sign Up</TranslatedText>
