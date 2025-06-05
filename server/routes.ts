@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import Stripe from "stripe";
 // WebSocket implementation moved to messaging-suite.ts
 import { WebSocket } from 'ws';
 import * as fs from 'fs';
@@ -1282,6 +1283,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json({ message: 'JWT authentication validated' });
   });
   
+  // Initialize Stripe
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+  }
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2023-10-16",
+  });
+
+  // Stripe payment route for one-time payments
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "gbp",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
   // Register admin routes
   registerAdminRoutes(app);
   

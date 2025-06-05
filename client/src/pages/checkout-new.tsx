@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatPrice } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +63,86 @@ interface PaymentMethod {
   description: string;
 }
 
+// Initialize Stripe
+if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+}
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+// Checkout Form Component with Stripe
+const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
+  total: number;
+  cartItems: CartItem[];
+  shippingInfo: ShippingInfo;
+  onOrderComplete: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + '/order-confirmation',
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Payment Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Payment Successful",
+          description: "Your order has been placed successfully!",
+        });
+        onOrderComplete();
+      }
+    } catch (error) {
+      toast({
+        title: "Payment Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement />
+      <Button 
+        type="submit" 
+        disabled={!stripe || !elements || isProcessing}
+        className="w-full"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Processing Payment...
+          </>
+        ) : (
+          `Complete Order - ${formatPrice(total)}`
+        )}
+      </Button>
+    </form>
+  );
+};
+
 export default function CheckoutNew() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -83,6 +165,7 @@ export default function CheckoutNew() {
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
 
   // Fetch cart items
   const { data: cartItems = [], isLoading: isCartLoading } = useQuery<CartItem[]>({
@@ -124,6 +207,29 @@ export default function CheckoutNew() {
     const required = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode', 'country'];
     return required.every(field => shippingInfo[field as keyof ShippingInfo]?.trim() !== '');
   };
+
+  // Create payment intent when proceeding to payment
+  useEffect(() => {
+    if (currentStep === 'payment' && total > 0 && !clientSecret) {
+      const createPaymentIntent = async () => {
+        try {
+          const response = await apiRequest('POST', '/api/create-payment-intent', { 
+            amount: total 
+          });
+          const data = await response.json();
+          setClientSecret(data.clientSecret);
+        } catch (error) {
+          toast({
+            title: "Payment Setup Failed",
+            description: "Unable to initialize payment. Please try again.",
+            variant: "destructive",
+          });
+          setCurrentStep('shipping');
+        }
+      };
+      createPaymentIntent();
+    }
+  }, [currentStep, total, clientSecret]);
 
   // Process order
   const processOrderMutation = useMutation({
