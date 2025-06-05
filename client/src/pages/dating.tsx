@@ -212,6 +212,7 @@ export default function DatingPage() {
                           <li>• Basic matching algorithm</li>
                           <li>• Standard profile visibility</li>
                           <li>• Community chat access</li>
+                          <li>• There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for £19.99</li>
                         </ul>
                       </div>
                       <div>
