@@ -479,14 +479,26 @@ export class DatabaseStorage implements IStorage {
   
   async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
     try {
-      const notificationsList = await db
-        .select()
-        .from(notifications)
-        .where(eq(notifications.userId, userId))
-        .orderBy(desc(notifications.createdAt))
-        .limit(limit);
+      const result = await db.execute(
+        sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
+            FROM notifications 
+            WHERE user_id = ${userId} 
+            ORDER BY created_at DESC 
+            LIMIT ${limit}`
+      );
       
-      return notificationsList;
+      return result.rows.map(row => ({
+        id: row.id as number,
+        userId: row.user_id as number,
+        type: row.type as any,
+        title: row.title as string,
+        content: row.content as string,
+        isRead: row.is_read as boolean,
+        sourceId: row.source_id as number,
+        sourceType: row.source_type as string,
+        actorId: row.actor_id as number,
+        createdAt: row.created_at as Date
+      }));
     } catch (error) {
       console.error('Error getting notifications:', error);
       return [];
