@@ -712,10 +712,10 @@ export default function DatingProfilePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="language">Primary Language</Label>
+                  <Label htmlFor="language">Secondary Language</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your primary language" />
+                      <SelectValue placeholder="Select your secondary language" />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.map((lang) => (
