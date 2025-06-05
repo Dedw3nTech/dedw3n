@@ -184,17 +184,20 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl font-bold text-gray-900">
-            Join Dedw3n
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600">
-            {isLogin ? "Welcome back! Sign in to your account." : "Create your account to get started with Dedw3n."}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex-shrink-0">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-2xl font-bold text-gray-900">
+              Join Dedw3n
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              {isLogin ? "Welcome back! Sign in to your account." : "Create your account to get started with Dedw3n."}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex-1 overflow-y-auto min-h-0 px-1">
+          <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -328,49 +331,49 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-black hover:bg-gray-900 text-white" 
-            disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
-          >
-            {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-          </Button>
-        </form>
-
-        <div className="text-center">
-          <Separator className="my-4" />
-          <p className="text-sm text-gray-600">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto font-semibold text-blue-600"
-              onClick={() => setIsLogin(!isLogin)}
+            <Button 
+              type="submit" 
+              className="w-full bg-black hover:bg-gray-900 text-white" 
+              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
             >
-              {isLogin ? "Sign up" : "Sign in"}
+              {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
-          </p>
-        </div>
+          </form>
 
-        <div className="text-center pt-2">
-          <p className="text-xs text-gray-500">
-            By continuing, you agree to our{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto text-xs text-blue-600 underline"
-              onClick={() => setLocation("/terms")}
-            >
-              Terms of Service
-            </Button>{" "}
-            and{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto text-xs text-blue-600 underline"
-              onClick={() => setLocation("/privacy")}
-            >
-              Privacy Policy
-            </Button>
-          </p>
+          <div className="text-center">
+            <Separator className="my-4" />
+            <p className="text-sm text-gray-600">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto font-semibold text-blue-600"
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "Sign up" : "Sign in"}
+              </Button>
+            </p>
+          </div>
 
+          <div className="text-center pt-2">
+            <p className="text-xs text-gray-500">
+              By continuing, you agree to our{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto text-xs text-blue-600 underline"
+                onClick={() => setLocation("/terms")}
+              >
+                Terms of Service
+              </Button>{" "}
+              and{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto text-xs text-blue-600 underline"
+                onClick={() => setLocation("/privacy")}
+              >
+                Privacy Policy
+              </Button>
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
