@@ -175,7 +175,45 @@ export default function CheckoutNew() {
     enabled: !!user,
   });
 
-  // Auto-fill shipping info from user profile
+  // Auto-fill form when user data is available
+  useEffect(() => {
+    if (user && !isAutoFilled) {
+      const hasShippingData = user.shippingFirstName || user.shippingAddress;
+      
+      if (hasShippingData) {
+        setShippingInfo({
+          firstName: user.shippingFirstName || user.name?.split(' ')[0] || '',
+          lastName: user.shippingLastName || user.name?.split(' ')[1] || '',
+          email: user.email || '',
+          phone: user.shippingPhone || '',
+          address: user.shippingAddress || '',
+          city: user.shippingCity || '',
+          state: user.shippingState || '',
+          zipCode: user.shippingZipCode || '',
+          country: user.shippingCountry || 'United Kingdom',
+          specialInstructions: user.shippingSpecialInstructions || ''
+        });
+        setIsAutoFilled(true);
+      } else {
+        // Fill with basic user info if no shipping data
+        setShippingInfo({
+          firstName: user.name?.split(' ')[0] || '',
+          lastName: user.name?.split(' ')[1] || '',
+          email: user.email || '',
+          phone: '',
+          address: '',
+          city: user.city || '',
+          state: '',
+          zipCode: '',
+          country: user.country || 'United Kingdom',
+          specialInstructions: ''
+        });
+        setIsAutoFilled(true);
+      }
+    }
+  }, [user, isAutoFilled]);
+
+  // Manual auto-fill function for button
   const autoFillShippingInfo = () => {
     if (user) {
       const hasShippingData = user.shippingFirstName || user.shippingAddress;
@@ -423,15 +461,12 @@ export default function CheckoutNew() {
                       <Truck className="h-5 w-5 mr-2" />
                       Shipping Information
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={autoFillShippingInfo}
-                      className="flex items-center bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                    >
-                      <User className="h-4 w-4 mr-1" />
-                      Auto-fill from Profile
-                    </Button>
+                    {isAutoFilled && (
+                      <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                        <Check className="h-3 w-3 mr-1" />
+                        Auto-filled from Profile
+                      </Badge>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
