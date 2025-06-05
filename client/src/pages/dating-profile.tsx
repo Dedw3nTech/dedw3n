@@ -1485,42 +1485,87 @@ export default function DatingProfilePage() {
           {/* Action Buttons */}
           <Card>
             <CardFooter className="flex justify-between pt-6">
-              <Button
-                onClick={handleSaveProfile}
-                disabled={updateProfileMutation.isPending || isProcessingPayment}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                {updateProfileMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Draft
-                  </>
-                )}
-              </Button>
+              {/* Edit and Delete buttons - only visible for profile owner */}
+              {user && datingProfile && datingProfile.userId === user.id && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={updateProfileMutation.isPending || isProcessingPayment}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Edit Profile
+                      </>
+                    )}
+                  </Button>
 
-              <Button
-                onClick={submitApplication}
-                disabled={updateProfileMutation.isPending || isProcessingPayment}
-                className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Submit Application
-                  </>
-                )}
-              </Button>
+                  <Button
+                    onClick={() => {
+                      // Add delete confirmation logic here
+                      if (window.confirm("Are you sure you want to delete your dating profile? This action cannot be undone.")) {
+                        // Call delete API
+                        apiRequest("DELETE", "/api/dating-profile")
+                          .then(() => {
+                            toast({
+                              title: "Profile Deleted",
+                              description: "Your dating profile has been deleted successfully.",
+                            });
+                            queryClient.invalidateQueries({ queryKey: ["/api/dating-profile"] });
+                            navigateTo("/dating");
+                          })
+                          .catch(() => {
+                            toast({
+                              title: "Error",
+                              description: "Failed to delete profile. Please try again.",
+                              variant: "destructive",
+                            });
+                          });
+                      }
+                    }}
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Submit Application button - only for new profiles or incomplete ones */}
+              {(!datingProfile || !datingProfile.isActive) && (
+                <Button
+                  onClick={submitApplication}
+                  disabled={updateProfileMutation.isPending || isProcessingPayment}
+                  className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Submit Application
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {/* Profile status for approved profiles */}
+              {datingProfile && datingProfile.isActive && (
+                <div className="flex items-center gap-2 text-green-600">
+                  <Check className="h-4 w-4" />
+                  <span className="text-sm font-medium">Profile Active</span>
+                </div>
+              )}
             </CardFooter>
           </Card>
 
