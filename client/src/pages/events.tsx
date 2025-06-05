@@ -16,8 +16,9 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
-// Import events header advertisement image
+// Import events advertisement images
 import eventsHeaderPromo from '@assets/Dedw3n Business commHeader.png';
+import eventsFooterPromo from '@assets/Copy of Dedw3n comm Footer.png';
 
 interface Event {
   id: number;
@@ -310,6 +311,19 @@ export default function EventsPage() {
         <img 
           src={eventsHeaderPromo}
           alt="Dedwen Events & Meetups - Connect and Network"
+          className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
+        />
+      </div>
+    );
+  }
+
+  // Events Footer Advertisement Component
+  function EventsFooterPromoSection() {
+    return (
+      <div className="w-full mt-8">
+        <img 
+          src={eventsFooterPromo}
+          alt="Join Dedwen Events Community - Network and Connect"
           className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
         />
       </div>
@@ -954,6 +968,9 @@ export default function EventsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Events Footer Advertisement */}
+        <EventsFooterPromoSection />
 
       </div>
     </div>
