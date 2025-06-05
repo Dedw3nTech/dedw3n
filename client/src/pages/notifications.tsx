@@ -237,6 +237,10 @@ const NotificationsPage = () => {
     ? categorizeNotifications(allNotifications) 
     : { marketplace: [], community: [], dating: [] };
 
+  // Debug logging
+  console.log('All notifications:', allNotifications);
+  console.log('Categorized notifications:', categorizedNotifications);
+
   // Mutation to mark notification as read
   const markNotificationReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
