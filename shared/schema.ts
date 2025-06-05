@@ -819,6 +819,7 @@ export const datingProfiles = pgTable("dating_profiles", {
   // Demographic Information
   tribe: text("tribe"),
   language: text("language"),
+  secondaryLanguage: text("secondary_language"),
   income: text("income"),
   education: text("education"),
   createdAt: timestamp("created_at").defaultNow(),

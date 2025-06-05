@@ -160,6 +160,7 @@ export default function DatingProfilePage() {
   // Demographic Information
   const [tribe, setTribe] = useState("");
   const [language, setLanguage] = useState("");
+  const [secondaryLanguage, setSecondaryLanguage] = useState("");
   const [income, setIncome] = useState("");
   const [education, setEducation] = useState("");
 
@@ -223,6 +224,7 @@ export default function DatingProfilePage() {
       if (profile.city) setCity(profile.city);
       if (profile.tribe) setTribe(profile.tribe);
       if (profile.language) setLanguage(profile.language);
+      if (profile.secondaryLanguage) setSecondaryLanguage(profile.secondaryLanguage);
       if (profile.income) setIncome(profile.income);
       if (profile.education) setEducation(profile.education);
     }
@@ -286,6 +288,7 @@ export default function DatingProfilePage() {
       // Demographic Information
       tribe: tribe.trim(),
       language: language.trim(),
+      secondaryLanguage: secondaryLanguage.trim(),
       income: income.trim(),
       education: education.trim(),
     };
@@ -716,6 +719,22 @@ export default function DatingProfilePage() {
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your primary language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGE_OPTIONS.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="secondaryLanguage">Secondary Language</Label>
+                  <Select value={secondaryLanguage} onValueChange={setSecondaryLanguage}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your secondary language" />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.map((lang) => (
