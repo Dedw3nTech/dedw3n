@@ -25,6 +25,7 @@ import { registerShippingRoutes } from "./shipping";
 import { registerImageRoutes } from "./image-handler";
 import { registerMediaRoutes } from "./media-handler";
 import { registerMobileMoneyRoutes } from "./mobile-money";
+import { registerPawapayRoutes } from "./pawapay";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
 import { registerSubscriptionRoutes } from "./subscription";

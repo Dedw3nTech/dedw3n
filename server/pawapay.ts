@@ -63,11 +63,10 @@ export async function handleDepositCallback(req: Request, res: Response) {
       console.log(`Deposit successful: ${amount} ${currency} for user ${req.user.id}`);
       
       // Create notification for user
-      await storage.createNotification(req.user.id, {
+      await storage.createNotification({
+        userId: req.user.id,
         type: 'payment',
-        title: 'Deposit Successful',
-        message: `Your deposit of ${amount} ${currency} has been processed successfully.`,
-        data: { transactionId, amount, currency }
+        content: `Your deposit of ${amount} ${currency} has been processed successfully.`
       });
     } else if (status === 'FAILED') {
       console.log(`Deposit failed: ${errorMessage} (Code: ${errorCode})`);

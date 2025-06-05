@@ -315,6 +315,10 @@ app.use((req, res, next) => {
   registerMediaRoutes(app);
   registerMulterRoutes(app);
   
+  // Register Pawapay callback routes
+  const { registerPawapayRoutes } = await import('./pawapay.js');
+  registerPawapayRoutes(app);
+  
   // Register all API routes first
   const server = await registerRoutes(app);
   
