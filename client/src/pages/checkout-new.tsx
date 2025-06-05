@@ -197,14 +197,6 @@ export default function CheckoutNew() {
   const tax = subtotal * 0.2; // 20% VAT
   const total = subtotal + shippingCost + tax;
 
-  // Debug pricing calculations
-  console.log('Pricing Debug:', {
-    subtotal: subtotal.toFixed(2),
-    shippingCost: shippingCost.toFixed(2),
-    tax: tax.toFixed(2),
-    total: total.toFixed(2)
-  });
-
   // Handle shipping form changes
   const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
     setShippingInfo(prev => ({ ...prev, [field]: value }));
@@ -221,6 +213,10 @@ export default function CheckoutNew() {
     if (currentStep === 'payment' && total > 0 && !clientSecret) {
       const createPaymentIntent = async () => {
         try {
+          console.log('Creating payment intent with total:', total);
+          console.log('Cart items:', cartItems);
+          console.log('Calculated values:', { subtotal, shippingCost, tax, total });
+          
           const response = await apiRequest('POST', '/api/create-payment-intent', { 
             amount: total 
           });
@@ -237,7 +233,7 @@ export default function CheckoutNew() {
       };
       createPaymentIntent();
     }
-  }, [currentStep, total, clientSecret]);
+  }, [currentStep, total, clientSecret, cartItems, subtotal, shippingCost, tax]);
 
   // Process order
   const processOrderMutation = useMutation({
