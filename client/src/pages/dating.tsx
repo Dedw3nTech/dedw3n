@@ -303,8 +303,8 @@ export default function DatingPage() {
                       <Gem className="h-8 w-8 text-purple-600" />
                       <CardTitle className="text-2xl">VVIP Dating Room</CardTitle>
                     </div>
-                    <p className="text-3xl font-bold text-purple-600">{formatPrice(2539.99)}/month</p>
-                    <p className="text-sm text-gray-600">For earners over {formatPrice(1905500)} per year</p>
+                    <p className="text-3xl font-bold text-purple-600">{formatPriceFromGBP(1999.99)}/month</p>
+                    <p className="text-sm text-gray-600">For earners over {formatPriceFromGBP(1500000)} per year</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
