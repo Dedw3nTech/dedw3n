@@ -53,8 +53,54 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     gender: ""
   });
 
+  const [ageError, setAgeError] = useState("");
+
+  // Calculate age from date of birth
+  const calculateAge = (dateOfBirth: string) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  // Validate age when date of birth changes
+  const handleDateOfBirthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    setFormData({ ...formData, dateOfBirth: dateValue });
+    
+    if (dateValue) {
+      const age = calculateAge(dateValue);
+      if (age < 18) {
+        setAgeError("You must be at least 18 years old to create an account.");
+      } else {
+        setAgeError("");
+      }
+    } else {
+      setAgeError("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Age verification for signup
+    if (!isLogin && formData.dateOfBirth) {
+      const age = calculateAge(formData.dateOfBirth);
+      if (age < 18) {
+        toast({
+          title: "Age Verification Failed",
+          description: "You must be at least 18 years old to create an account.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     try {
       if (isLogin) {
@@ -71,7 +117,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          name: formData.name
+          name: formData.name,
+          dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender,
+          region: formData.region,
+          country: formData.country,
+          city: formData.city,
         });
         toast({
           title: "Account created!",
@@ -133,12 +184,14 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold text-gray-900">
             Join Dedw3n
           </DialogTitle>
-
+          <DialogDescription className="text-sm text-gray-600">
+            {isLogin ? "Welcome back! Sign in to your account." : "Create your account to get started with Dedw3n."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,9 +245,17 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 id="dateOfBirth"
                 type="date"
                 value={formData.dateOfBirth}
-                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                onChange={handleDateOfBirthChange}
                 required={!isLogin}
+                max={new Date().toISOString().split('T')[0]}
+                className={ageError ? "border-red-500" : ""}
               />
+              {ageError && (
+                <p className="text-sm text-red-500 flex items-center mt-1">
+                  <Calendar className="mr-1 h-3 w-3" />
+                  {ageError}
+                </p>
+              )}
             </div>
           )}
 
@@ -267,7 +328,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-          <Button type="submit" className="w-full bg-black hover:bg-gray-900 text-white" disabled={loginMutation.isPending || registerMutation.isPending}>
+          <Button 
+            type="submit" 
+            className="w-full bg-black hover:bg-gray-900 text-white" 
+            disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
+          >
             {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
         </form>
