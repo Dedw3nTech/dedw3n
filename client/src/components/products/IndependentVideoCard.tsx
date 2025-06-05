@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause, Info } from "lucide-react";
-import newCafeVideo from "@assets/Cafe_1749111451530.mp4";
+import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
 
 interface IndependentVideoCardProps {
   title?: string;
@@ -13,7 +13,7 @@ interface IndependentVideoCardProps {
 }
 
 export function IndependentVideoCard({ 
-  title = "Cafe Experience",
+  title = "Mobile Interaction Experience",
   autoPlay = true,
   showControls = true,
   showInfo = true,
@@ -91,7 +91,7 @@ export function IndependentVideoCard({
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
         >
-          <source src={newCafeVideo} type="video/mp4" />
+          <source src={phoneFingerVideo} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         

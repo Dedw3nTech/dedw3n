@@ -388,16 +388,16 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <Video className="h-4 w-4 text-blue-600" />
                       <span className="text-sm font-medium text-gray-700">Independent Video</span>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">New Cafe Experience</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Mobile Interaction</span>
                     </div>
                     <IndependentVideoCard 
-                      title="Cafe Experience - Independent Video Entity"
+                      title="Mobile Interaction Experience - Independent Video Entity"
                       autoPlay={true}
                       showControls={true}
                       showInfo={true}
                     />
                     <div className="mt-3 text-xs text-gray-500">
-                      This video operates independently with its own properties and controls, separate from other video entities on the website.
+                      This mobile interaction video operates independently with its own properties and controls, separate from other video entities on the website.
                     </div>
                   </div>
                 </div>
