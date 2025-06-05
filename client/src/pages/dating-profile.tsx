@@ -1492,15 +1492,9 @@ export default function DatingProfilePage() {
                 className="flex items-center gap-2"
               >
                 {updateProfileMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
+                  "Saving..."
                 ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </>
+                  "Save Changes"
                 )}
               </Button>
 
@@ -1510,15 +1504,9 @@ export default function DatingProfilePage() {
                 className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
               >
                 {isProcessingPayment ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
+                  "Processing..."
                 ) : (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Submit Application
-                  </>
+                  "Submit Application"
                 )}
               </Button>
             </CardFooter>
