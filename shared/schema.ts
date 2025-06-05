@@ -107,6 +107,7 @@ export const users = pgTable("users", {
 export const vendors = pgTable("vendors", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  vendorType: text("vendor_type").notNull().default("private"), // private or business
   storeName: text("store_name").notNull(),
   businessName: text("business_name").notNull(),
   description: text("description"),

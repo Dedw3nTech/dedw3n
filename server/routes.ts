@@ -2344,9 +2344,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the request body using the vendor schema
       const validatedData = insertVendorSchema.parse(req.body);
 
+      // Auto-approve private vendors, require manual approval for business vendors
+      const isApproved = validatedData.vendorType === 'private';
+
       const vendorData = {
         userId,
-        ...validatedData
+        ...validatedData,
+        isApproved
       };
 
       const vendor = await storage.createVendor(vendorData);
@@ -2354,9 +2358,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Also update the user to mark them as a vendor
       await storage.updateUser(userId, { isVendor: true });
       
+      // Create appropriate success message based on vendor type
+      const message = isApproved 
+        ? "Private vendor account approved and activated successfully!"
+        : "Business vendor application submitted successfully. Your account will be reviewed and approved within 24-48 hours.";
+      
       res.status(201).json({
-        message: "Vendor registration successful",
-        vendor
+        message,
+        vendor,
+        approved: isApproved
       });
     } catch (error: any) {
       console.error("Error registering vendor:", error);
