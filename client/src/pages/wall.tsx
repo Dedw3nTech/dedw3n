@@ -122,6 +122,13 @@ export default function WallPage() {
     // Using default query function from queryClient which includes auth headers
   });
 
+  // Fetch dating profile to check if "Show on Wall" is enabled
+  const { data: datingProfile } = useQuery({
+    queryKey: ["/api/dating-profile"],
+    enabled: !!user,
+    retry: false, // Don't retry if user doesn't have a dating profile
+  });
+
   // Handle post creation success
   const handlePostSuccess = () => {
     // Refetch all feeds
@@ -185,11 +192,11 @@ export default function WallPage() {
                 
                 {/* Status indicators */}
                 <div className="flex flex-col gap-2 mb-3">
-                  {/* Dating status indicator */}
-                  {user.datingProfileActive && (
-                    <div className="flex items-center justify-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      Open to Date
+                  {/* Dating status indicator - only show if user has enabled "Show on Wall" in dating profile */}
+                  {datingProfile?.showOnWall && (
+                    <div className="flex items-center justify-center bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-xs font-medium">
+                      <div className="w-2 h-2 bg-pink-500 rounded-full mr-2"></div>
+                      Open to Date Badge
                     </div>
                   )}
                   

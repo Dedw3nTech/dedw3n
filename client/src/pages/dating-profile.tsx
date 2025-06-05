@@ -254,7 +254,7 @@ export default function DatingProfilePage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label>Add Open To Date Button On Wall</Label>
+                  <Label>Add Open To Badge Button On Your Wall</Label>
                   <p className="text-sm text-gray-500">
                     {showOnWall ? "Dating button will appear on your wall" : "Dating button hidden from wall"}
                   </p>
