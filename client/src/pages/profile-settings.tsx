@@ -229,18 +229,39 @@ export default function ProfileSettingsPage() {
       
       console.log('Submitting profile update:', updatedFormData);
       
-      // Check if there are any changes
-      if (
-        formData.name === user.name && 
-        formData.username === user.username && 
-        formData.bio === user.bio && 
-        formData.avatar === user.avatar &&
-        formData.dateOfBirth === user.dateOfBirth &&
-        formData.gender === user.gender &&
-        formData.region === user.region &&
-        formData.country === user.country &&
-        formData.city === user.city
-      ) {
+      // Check if there are any changes (including shipping and billing fields)
+      const hasChanges = 
+        formData.name !== user.name || 
+        formData.username !== user.username || 
+        formData.bio !== user.bio || 
+        formData.avatar !== user.avatar ||
+        formData.dateOfBirth !== user.dateOfBirth ||
+        formData.gender !== user.gender ||
+        formData.region !== user.region ||
+        formData.country !== user.country ||
+        formData.city !== user.city ||
+        // Shipping fields
+        formData.shippingFirstName !== (user.shippingFirstName || '') ||
+        formData.shippingLastName !== (user.shippingLastName || '') ||
+        formData.shippingPhone !== (user.shippingPhone || '') ||
+        formData.shippingAddress !== (user.shippingAddress || '') ||
+        formData.shippingCity !== (user.shippingCity || '') ||
+        formData.shippingState !== (user.shippingState || '') ||
+        formData.shippingZipCode !== (user.shippingZipCode || '') ||
+        formData.shippingCountry !== (user.shippingCountry || '') ||
+        formData.shippingSpecialInstructions !== (user.shippingSpecialInstructions || '') ||
+        // Billing fields
+        formData.billingFirstName !== (user.billingFirstName || '') ||
+        formData.billingLastName !== (user.billingLastName || '') ||
+        formData.billingPhone !== (user.billingPhone || '') ||
+        formData.billingAddress !== (user.billingAddress || '') ||
+        formData.billingCity !== (user.billingCity || '') ||
+        formData.billingState !== (user.billingState || '') ||
+        formData.billingZipCode !== (user.billingZipCode || '') ||
+        formData.billingCountry !== (user.billingCountry || '') ||
+        formData.useShippingAsBilling !== (user.useShippingAsBilling || false);
+      
+      if (!hasChanges) {
         toast({
           title: 'No changes detected',
           description: 'No changes were made to your profile',
