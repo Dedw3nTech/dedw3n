@@ -62,15 +62,24 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
 
   const formatPriceFromGBP = (priceInGBP: number): string => {
+    let convertedPrice: number;
+    
     if (selectedCurrency.code === 'GBP') {
-      return `${selectedCurrency.symbol}${priceInGBP.toFixed(2)}`;
+      convertedPrice = priceInGBP;
+    } else {
+      // Convert from GBP to selected currency
+      // First convert GBP to USD (GBP rate is 1.27, so 1 GBP = 1.27 USD)
+      const priceInUSD = priceInGBP * 1.27;
+      // Then convert USD to selected currency
+      convertedPrice = priceInUSD / selectedCurrency.rate;
     }
-    // Convert from GBP to selected currency
-    // First convert GBP to USD (GBP rate is 1.27, so 1 GBP = 1.27 USD)
-    const priceInUSD = priceInGBP * 1.27;
-    // Then convert USD to selected currency
-    const convertedPrice = priceInUSD / selectedCurrency.rate;
-    return `${selectedCurrency.symbol}${convertedPrice.toFixed(2)}`;
+    
+    // Format without .00 for whole numbers, with .xx for decimals
+    const formatted = convertedPrice % 1 === 0 
+      ? convertedPrice.toLocaleString() 
+      : convertedPrice.toFixed(2);
+    
+    return `${selectedCurrency.symbol}${formatted}`;
   };
 
   return (
@@ -95,7 +104,10 @@ export function useCurrency() {
       setSelectedCurrency: () => {},
       convertPrice: (priceInUSD: number) => priceInUSD / currencies[0].rate,
       formatPrice: (priceInUSD: number) => `${currencies[0].symbol}${(priceInUSD / currencies[0].rate).toFixed(2)}`,
-      formatPriceFromGBP: (priceInGBP: number) => `${currencies[0].symbol}${priceInGBP.toFixed(2)}`
+      formatPriceFromGBP: (priceInGBP: number) => {
+        const formatted = priceInGBP % 1 === 0 ? priceInGBP.toLocaleString() : priceInGBP.toFixed(2);
+        return `${currencies[0].symbol}${formatted}`;
+      }
     };
   }
   return context;
