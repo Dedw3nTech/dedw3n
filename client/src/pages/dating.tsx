@@ -8,7 +8,7 @@ import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield } from
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
+
 
 
 interface DatingProfile {
@@ -393,11 +393,8 @@ export default function DatingPage() {
             })}
           </div>
 
-          {/* Main Content with Sidebar */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Dating Profiles Grid */}
-            <div className="lg:col-span-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          {/* Dating Profiles Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
