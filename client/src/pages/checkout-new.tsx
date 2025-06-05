@@ -436,7 +436,7 @@ const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
             Processing Payment...
           </>
         ) : (
-          `Complete Order - ${formatPrice(total)}`
+          `Complete Order - ${formatPriceFromGBP(total)}`
         )}
       </Button>
     </form>
@@ -447,7 +447,7 @@ export default function CheckoutNew() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { selectedCurrency, formatPrice } = useCurrency();
+  const { selectedCurrency, formatPriceFromGBP } = useCurrency();
   
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'review'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
@@ -1237,7 +1237,7 @@ export default function CheckoutNew() {
                             <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           </div>
                           <p className="text-sm font-medium">
-                            {formatPrice(item.product.price * item.quantity)}
+                            {formatPriceFromGBP(item.product.price * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -1262,7 +1262,7 @@ export default function CheckoutNew() {
                           Processing...
                         </>
                       ) : (
-                        `Place Order - ${formatPrice(total)}`
+                        `Place Order - ${formatPriceFromGBP(total)}`
                       )}
                     </Button>
                   </div>
