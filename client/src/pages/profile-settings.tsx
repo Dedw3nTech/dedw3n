@@ -195,7 +195,11 @@ export default function ProfileSettingsPage() {
         formData.username === user.username && 
         formData.bio === user.bio && 
         formData.avatar === user.avatar &&
-        formData.dateOfBirth === user.dateOfBirth
+        formData.dateOfBirth === user.dateOfBirth &&
+        formData.gender === user.gender &&
+        formData.region === user.region &&
+        formData.country === user.country &&
+        formData.city === user.city
       ) {
         toast({
           title: 'No changes detected',
