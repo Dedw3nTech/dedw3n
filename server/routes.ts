@@ -288,7 +288,37 @@ interface ContactFormSubmission {
 const contactSubmissions: ContactFormSubmission[] = [];
 let submissionId = 1;
 
+// Stripe payment route for one-time payments
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Stripe payment intent creation
+  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(parseFloat(amount) * 100), // Convert to cents
+        currency: "gbp",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Stripe payment intent error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
   // Apply fraud risk middleware to all routes
   app.use(fraudRiskMiddleware);
   

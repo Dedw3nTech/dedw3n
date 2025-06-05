@@ -505,36 +505,28 @@ export default function CheckoutNew() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <CreditCard className="h-5 w-5 mr-2" />
-                    Payment Method
+                    Payment Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    {paymentMethods.map((method) => (
-                      <div
-                        key={method.id}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                          selectedPaymentMethod === method.id
-                            ? "border-black bg-gray-50"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                        onClick={() => setSelectedPaymentMethod(method.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {method.icon}
-                            <div>
-                              <h4 className="font-semibold">{method.name}</h4>
-                              <p className="text-sm text-gray-600">{method.description}</p>
-                            </div>
-                          </div>
-                          {selectedPaymentMethod === method.id && (
-                            <Check className="h-5 w-5 text-green-500" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {!clientSecret ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                      Setting up payment...
+                    </div>
+                  ) : (
+                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                      <CheckoutForm 
+                        total={total}
+                        cartItems={cartItems}
+                        shippingInfo={shippingInfo}
+                        onOrderComplete={() => {
+                          queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+                          setLocation('/order-confirmation');
+                        }}
+                      />
+                    </Elements>
+                  )}
 
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <div className="flex items-center">
@@ -551,9 +543,6 @@ export default function CheckoutNew() {
                       onClick={() => setCurrentStep('shipping')}
                     >
                       Back to Shipping
-                    </Button>
-                    <Button onClick={() => setCurrentStep('review')}>
-                      Review Order
                     </Button>
                   </div>
                 </CardContent>
