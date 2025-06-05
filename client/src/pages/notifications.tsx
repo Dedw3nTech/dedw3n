@@ -22,9 +22,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Function to categorize notifications by section
 const categorizeNotifications = (notifications: any[]) => {
-  const marketplace = notifications.filter(n => 
-    ['order', 'order_status', 'payment', 'review', 'cart', 'product_like', 'vendor'].includes(n.type)
-  );
+  const marketplace = notifications.filter(n => {
+    // Include system notifications that are marketplace-related
+    if (n.type === 'system' && n.sourceType === 'cart') return true;
+    if (n.type === 'system' && n.sourceType === 'product') return true;
+    if (n.type === 'system' && n.sourceType === 'order') return true;
+    // Include other marketplace notification types
+    return ['order', 'order_status', 'payment', 'review', 'cart', 'product_like', 'vendor'].includes(n.type);
+  });
   
   const community = notifications.filter(n => 
     ['like', 'comment', 'follow', 'mention', 'connection_request', 'post', 'community_join'].includes(n.type)
@@ -336,7 +341,7 @@ const NotificationsPage = () => {
                   <button
                     onClick={() => markAllNotificationsReadMutation.mutate()}
                     disabled={markAllNotificationsReadMutation.isPending}
-                    className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
                     {markAllNotificationsReadMutation.isPending ? (
                       <div className="flex items-center">
