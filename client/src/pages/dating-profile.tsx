@@ -34,6 +34,7 @@ interface GiftsSelectionProps {
 }
 
 function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
+  const { formatPriceFromGBP } = useCurrency();
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
@@ -121,7 +122,7 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
               </div>
               
               <h4 className="text-sm font-medium truncate mb-1">{product.name}</h4>
-              <p className="text-xs text-gray-600">£{product.price.toFixed(2)}</p>
+              <p className="text-xs text-gray-600">{formatPriceFromGBP(product.price)}</p>
             </div>
           );
         })}
