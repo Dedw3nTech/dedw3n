@@ -1,52 +1,52 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Store, User, Building, Mail, MapPin } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Store, Building, Phone, Mail, MapPin, User, Users } from "lucide-react";
 
-// Private Vendor Schema - For individual sellers
+// Private Vendor Schema
 const privateVendorSchema = z.object({
   vendorType: z.literal("private"),
   storeName: z.string().min(2, "Store name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
-  address: z.string().min(5, "Please enter a valid address"),
-  city: z.string().min(2, "Please enter a valid city"),
-  state: z.string().min(2, "Please enter a valid state"),
-  zipCode: z.string().min(5, "Please enter a valid zip code"),
-  country: z.string().min(2, "Please enter a valid country"),
-  website: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().min(2, "State must be at least 2 characters"),
+  zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
+  country: z.string().min(2, "Country must be at least 2 characters"),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
-// Business Vendor Schema - For registered businesses
+// Business Vendor Schema
 const businessVendorSchema = z.object({
   vendorType: z.literal("business"),
   storeName: z.string().min(2, "Store name must be at least 2 characters"),
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  businessType: z.string().min(1, "Please select a business type"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Please enter a valid phone number"),
-  address: z.string().min(5, "Please enter a valid address"),
-  city: z.string().min(2, "Please enter a valid city"),
-  state: z.string().min(2, "Please enter a valid state"),
-  zipCode: z.string().min(5, "Please enter a valid zip code"),
-  country: z.string().min(2, "Please enter a valid country"),
-  taxId: z.string().min(1, "Tax ID is required for business vendors"),
-  website: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
-  businessRegistrationNumber: z.string().min(1, "Business registration number is required"),
+  businessType: z.enum(["sole_proprietorship", "partnership", "corporation", "llc", "other"]),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().min(2, "State must be at least 2 characters"),
+  zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
+  country: z.string().min(2, "Country must be at least 2 characters"),
+  taxId: z.string().min(5, "Tax ID must be at least 5 characters"),
+  businessRegistrationNumber: z.string().min(5, "Registration number must be at least 5 characters"),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
   businessLicense: z.string().optional(),
 });
 
@@ -54,11 +54,12 @@ type PrivateVendorForm = z.infer<typeof privateVendorSchema>;
 type BusinessVendorForm = z.infer<typeof businessVendorSchema>;
 
 export default function VendorRegisterPage() {
+  const [vendorType, setVendorType] = useState<"private" | "business" | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [vendorType, setVendorType] = useState<"private" | "business" | null>(null);
 
+  // Private Vendor Form
   const privateForm = useForm<PrivateVendorForm>({
     resolver: zodResolver(privateVendorSchema),
     defaultValues: {
@@ -76,6 +77,7 @@ export default function VendorRegisterPage() {
     },
   });
 
+  // Business Vendor Form
   const businessForm = useForm<BusinessVendorForm>({
     resolver: zodResolver(businessVendorSchema),
     defaultValues: {
@@ -83,7 +85,7 @@ export default function VendorRegisterPage() {
       storeName: "",
       businessName: "",
       description: "",
-      businessType: "",
+      businessType: "sole_proprietorship",
       email: "",
       phone: "",
       address: "",
@@ -92,8 +94,8 @@ export default function VendorRegisterPage() {
       zipCode: "",
       country: "",
       taxId: "",
-      website: "",
       businessRegistrationNumber: "",
+      website: "",
       businessLicense: "",
     },
   });
@@ -719,233 +721,6 @@ export default function VendorRegisterPage() {
               </Form>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-                        <FormControl>
-                          <Input placeholder="Your Business Name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Store Description *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe your store and the products you sell..."
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="businessType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Type *</FormLabel>
-                        <FormControl>
-                          <select 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                            {...field}
-                          >
-                            <option value="">Select Business Type</option>
-                            <option value="individual">Individual</option>
-                            <option value="sole_proprietorship">Sole Proprietorship</option>
-                            <option value="partnership">Partnership</option>
-                            <option value="corporation">Corporation</option>
-                            <option value="llc">LLC</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Website (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://yourwebsite.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Mail className="h-5 w-5 mr-2" />
-                  Contact Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Email *</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="business@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="+1 (555) 123-4567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Address Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  Business Address
-                </h3>
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 Business Street" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="City" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="State" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Zip Code *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="12345" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Country" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Tax Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <Building className="h-5 w-5 mr-2" />
-                  Tax Information
-                </h3>
-                <FormField
-                  control={form.control}
-                  name="taxId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tax ID / EIN (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12-3456789" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-center pt-6">
-                <div className="space-y-2">
-                  <Button 
-                    type="submit" 
-                    size="lg"
-                    className="bg-black text-white hover:bg-gray-800 w-full min-w-[200px]"
-                    disabled={registerVendorMutation.isPending}
-                  >
-                    {registerVendorMutation.isPending ? "Submitting..." : "Submit Application"}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="lg"
-                    className="w-full"
-                    onClick={() => setLocation("/vendor-dashboard")}
-                  >
-                    Back to Dashboard
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </Form>
         </CardContent>
       </Card>
     </div>
