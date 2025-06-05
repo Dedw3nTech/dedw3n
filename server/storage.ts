@@ -113,11 +113,15 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   listCategories(): Promise<Category[]>;
   
-  // Vendor operations
-  getVendorByUserId(userId: number): Promise<Vendor | undefined>;
+  // Vendor Sub-Account operations
+  getVendorByUserId(userId: number): Promise<Vendor | undefined>; // Legacy method - gets first vendor
+  getVendorByUserIdAndType(userId: number, vendorType: 'private' | 'business'): Promise<Vendor | undefined>;
+  getUserVendorAccounts(userId: number): Promise<Vendor[]>; // Gets all vendor accounts for a user
   getVendor(id: number): Promise<Vendor | undefined>;
   getVendors(limit?: number): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
+  updateVendorStatus(id: number, isActive: boolean): Promise<Vendor | undefined>;
+  checkVendorAccountExists(userId: number, vendorType: 'private' | 'business'): Promise<boolean>;
   
   // Product operations
   listProducts(): Promise<Product[]>;
@@ -733,10 +737,44 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(categories);
   }
   
-  // Vendor methods
+  // Vendor Sub-Account methods
   async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
+    // Legacy method - returns first vendor account found
     const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
     return vendor;
+  }
+
+  async getVendorByUserIdAndType(userId: number, vendorType: 'private' | 'business'): Promise<Vendor | undefined> {
+    const [vendor] = await db.select().from(vendors).where(
+      and(eq(vendors.userId, userId), eq(vendors.vendorType, vendorType))
+    );
+    return vendor;
+  }
+
+  async getUserVendorAccounts(userId: number): Promise<Vendor[]> {
+    return await db.select().from(vendors).where(eq(vendors.userId, userId));
+  }
+
+  async checkVendorAccountExists(userId: number, vendorType: 'private' | 'business'): Promise<boolean> {
+    const vendor = await this.getVendorByUserIdAndType(userId, vendorType);
+    return !!vendor;
+  }
+
+  async updateVendorStatus(id: number, isActive: boolean): Promise<Vendor | undefined> {
+    try {
+      const [updatedVendor] = await db
+        .update(vendors)
+        .set({
+          isActive,
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, id))
+        .returning();
+      return updatedVendor;
+    } catch (error) {
+      console.error('Error updating vendor status:', error);
+      return undefined;
+    }
   }
   
   async getVendors(limit: number = 50): Promise<Vendor[]> {

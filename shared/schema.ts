@@ -103,11 +103,11 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Vendor model
+// Vendor Sub-Account model - Users can have separate private and business vendor accounts
 export const vendors = pgTable("vendors", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  vendorType: text("vendor_type").notNull().default("private"), // private or business
+  vendorType: text("vendor_type", { enum: ["private", "business"] }).notNull(),
   storeName: text("store_name").notNull(),
   businessName: text("business_name").notNull(),
   description: text("description"),
@@ -125,9 +125,13 @@ export const vendors = pgTable("vendors", {
   rating: doublePrecision("rating").default(0),
   ratingCount: integer("rating_count").default(0),
   isApproved: boolean("is_approved").default(false),
+  isActive: boolean("is_active").default(true), // Allow users to activate/deactivate vendor accounts
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  // Ensure user can only have one vendor account per type
+  uniqueUserVendorType: unique("unique_user_vendor_type").on(table.userId, table.vendorType),
+}));
 
 // Product model
 export const products = pgTable("products", {

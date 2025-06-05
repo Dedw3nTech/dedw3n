@@ -2333,14 +2333,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vendor registration endpoint
+  // Vendor Sub-Account registration endpoint
   app.post('/api/vendors/register', async (req: Request, res: Response) => {
     try {
       // Use fallback authentication pattern
       let userId = (req.user as any)?.id;
       
       if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUserById(req.session.passport.user);
+        const sessionUser = await storage.getUser(req.session.passport.user);
         userId = sessionUser?.id;
       }
       
@@ -2351,29 +2351,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the request body using the vendor schema
       const validatedData = insertVendorSchema.parse(req.body);
 
+      // Check if user already has this type of vendor account
+      const existingVendor = await storage.checkVendorAccountExists(userId, validatedData.vendorType);
+      if (existingVendor) {
+        return res.status(400).json({ 
+          message: `You already have a ${validatedData.vendorType} vendor account. Users can only have one account per vendor type.`
+        });
+      }
+
       // Auto-approve private vendors, require manual approval for business vendors
       const isApproved = validatedData.vendorType === 'private';
 
       const vendorData = {
         userId,
         ...validatedData,
-        isApproved
+        isApproved,
+        isActive: true
       };
 
       const vendor = await storage.createVendor(vendorData);
       
-      // Also update the user to mark them as a vendor
-      await storage.updateUser(userId, { isVendor: true });
+      // Update the user to mark them as a vendor if they don't already have vendor accounts
+      const userVendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (userVendorAccounts.length === 1) {
+        // First vendor account - mark user as vendor
+        await storage.updateUser(userId, { isVendor: true });
+      }
       
       // Create appropriate success message based on vendor type
       const message = isApproved 
-        ? "Private vendor account approved and activated successfully!"
+        ? "Private vendor account approved and activated successfully! You can now start selling immediately."
         : "Business vendor application submitted successfully. Your account will be reviewed and approved within 24-48 hours.";
       
       res.status(201).json({
         message,
         vendor,
-        approved: isApproved
+        approved: isApproved,
+        vendorType: validatedData.vendorType
       });
     } catch (error: any) {
       console.error("Error registering vendor:", error);
@@ -2383,7 +2397,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: error.errors
         });
       }
+      if (error.code === '23505') { // PostgreSQL unique constraint violation
+        return res.status(400).json({ 
+          message: "You already have a vendor account of this type" 
+        });
+      }
       res.status(500).json({ message: "Failed to register as vendor" });
+    }
+  });
+
+  // Get user's vendor accounts endpoint
+  app.get('/api/vendors/user/accounts', async (req: Request, res: Response) => {
+    try {
+      let userId = (req.user as any)?.id;
+      
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      
+      res.json({
+        vendorAccounts,
+        hasPrivateVendor: vendorAccounts.some(v => v.vendorType === 'private'),
+        hasBusinessVendor: vendorAccounts.some(v => v.vendorType === 'business'),
+        canCreatePrivate: !vendorAccounts.some(v => v.vendorType === 'private'),
+        canCreateBusiness: !vendorAccounts.some(v => v.vendorType === 'business')
+      });
+    } catch (error: any) {
+      console.error("Error fetching user vendor accounts:", error);
+      res.status(500).json({ message: "Failed to fetch vendor accounts" });
     }
   });
 
