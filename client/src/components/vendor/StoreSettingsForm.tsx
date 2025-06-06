@@ -67,7 +67,7 @@ const vendorSettingsSchema = z.object({
   unitSystem: z.enum(["metric", "imperial"]).default("metric"),
   weightSystem: z.enum(["kg", "lbs", "g", "oz"]).default("kg"),
   timezone: z.string().default("Europe/London"),
-  billingCycle: z.enum(["monthly", "quarterly", "yearly"]).default("monthly"),
+
 }).refine((data) => {
   if (data.hasSalesManager) {
     return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
@@ -241,7 +241,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
       unitSystem: vendor?.unitSystem || "metric",
       weightSystem: vendor?.weightSystem || "kg",
       timezone: vendor?.timezone || "Europe/London",
-      billingCycle: vendor?.billingCycle || "monthly",
+
     },
   });
 
@@ -262,7 +262,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
         unitSystem: vendor.unitSystem || "metric",
         weightSystem: vendor.weightSystem || "kg",
         timezone: vendor.timezone || "Europe/London",
-        billingCycle: vendor.billingCycle || "monthly",
+
       });
     }
   }, [vendor, form]);
@@ -703,31 +703,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="billingCycle"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Commission Billing Cycle</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select billing cycle" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="monthly">Monthly (10% commission)</SelectItem>
-                            <SelectItem value="quarterly">Quarterly (10% commission)</SelectItem>
-                            <SelectItem value="yearly">Yearly (10% commission)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          How often commission fees are charged
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                 </div>
               </div>
 
