@@ -166,7 +166,7 @@ import AddProduct from "@/pages/add-product";
 import UploadProduct from "@/pages/upload-product";
 import MembersPage from "@/pages/members";
 import WalletPage from "@/pages/wallet";
-import VendorAnalytics from "@/pages/vendor-analytics";
+import VendorAnalyticsPage from "@/pages/vendor-analytics";
 import SpendingAnalytics from "@/pages/spending-analytics";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
@@ -288,7 +288,7 @@ function Router() {
       <ProtectedRoute path="/members" component={MembersPage} />
       <ProtectedRoute path="/wallet" component={WalletPage} />
       <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
-      <ProtectedRoute path="/vendor-analytics" component={VendorAnalytics} />
+      <ProtectedRoute path="/vendor-analytics" component={VendorAnalyticsPage} />
       <ProtectedRoute path="/analytics" component={Analytics} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />

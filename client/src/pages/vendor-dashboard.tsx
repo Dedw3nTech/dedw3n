@@ -443,6 +443,10 @@ export default function VendorDashboard() {
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Product
                 </Button>
+                <Button onClick={() => setLocation('/vendor-analytics')} className="bg-black text-white hover:bg-gray-800">
+                  <BarChart className="mr-2 h-4 w-4" />
+                  Deep Analytics
+                </Button>
               </div>
             </div>
 
