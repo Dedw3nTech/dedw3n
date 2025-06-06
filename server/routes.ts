@@ -4942,7 +4942,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
           averageOrderValue: sql<number>`AVG(${orderItems.totalPrice})::numeric`,
           fulfillmentRate: sql<number>`
-            (COUNT(CASE WHEN ${orderItems.status} = 'delivered' THEN 1 END)::float / COUNT(*)::float)::numeric
+            CASE 
+              WHEN COUNT(*) = 0 THEN 0
+              ELSE (COUNT(CASE WHEN ${orderItems.status} = 'delivered' THEN 1 END)::float / COUNT(*)::float)::numeric
+            END
           `
         })
         .from(orderItems)
@@ -5052,7 +5055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasOrdered: sql<boolean>`
             EXISTS(
               SELECT 1 FROM ${orderItems} oi 
-              WHERE oi.vendorId = ${vendorId} AND oi.userId = ${users.id}
+              WHERE oi.vendor_id = ${vendorId} AND oi.user_id = ${users.id}
             )
           `
         })

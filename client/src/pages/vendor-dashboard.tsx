@@ -23,7 +23,8 @@ import {
   BarChart,
   Store,
   Loader2,
-  PlusCircle
+  PlusCircle,
+  TrendingUp
 } from "lucide-react";
 
 // Import vendor components
@@ -383,7 +384,7 @@ export default function VendorDashboard() {
                 value="analytics"
                 className="justify-start px-3 py-2 h-auto font-normal"
               >
-                <BarChart className="h-4 w-4 mr-2" />
+                <TrendingUp className="h-4 w-4 mr-2" />
                 Analytics
               </TabsTrigger>
               <TabsTrigger
