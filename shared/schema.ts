@@ -81,6 +81,21 @@ export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social
 // Define gender enum
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other']);
 
+// Define analytics period enum
+export const analyticsPeriodEnum = pgEnum('analytics_period', ['daily', 'weekly', 'monthly', 'quarterly', 'yearly']);
+
+// Define device type enum
+export const deviceTypeEnum = pgEnum('device_type', ['desktop', 'mobile', 'tablet']);
+
+// Define traffic source enum
+export const trafficSourceEnum = pgEnum('traffic_source', ['direct', 'search', 'social', 'email', 'referral', 'paid']);
+
+// Define conversion type enum
+export const conversionTypeEnum = pgEnum('conversion_type', ['view', 'add_to_cart', 'checkout', 'purchase', 'search']);
+
+// Define demographic enum
+export const demographicTypeEnum = pgEnum('demographic_type', ['age_group', 'gender', 'location', 'income_level']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -1229,9 +1244,216 @@ export type InsertFlaggedImage = z.infer<typeof insertFlaggedImageSchema>;
 export type ModerationReport = typeof moderationReports.$inferSelect;
 export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
 
+// Vendor Analytics Tables
+
+// Product Views Analytics
+export const productViews = pgTable("product_views", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: text("session_id"),
+  deviceType: deviceTypeEnum("device_type").notNull(),
+  trafficSource: trafficSourceEnum("traffic_source").notNull(),
+  country: text("country"),
+  region: text("region"),
+  city: text("city"),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  duration: integer("duration").default(0), // in seconds
+  bounceRate: boolean("bounce_rate").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Conversion Tracking
+export const conversionEvents = pgTable("conversion_events", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  productId: integer("product_id").references(() => products.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: text("session_id"),
+  conversionType: conversionTypeEnum("conversion_type").notNull(),
+  value: doublePrecision("value").default(0),
+  currency: text("currency").default("GBP"),
+  deviceType: deviceTypeEnum("device_type").notNull(),
+  trafficSource: trafficSourceEnum("traffic_source").notNull(),
+  conversionPath: json("conversion_path").$type<string[]>(),
+  timeToConversion: integer("time_to_conversion"), // in seconds
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Search Analytics
+export const searchAnalytics = pgTable("search_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  searchQuery: text("search_query").notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  sessionId: text("session_id"),
+  resultsFound: integer("results_found").default(0),
+  clickedProductId: integer("clicked_product_id").references(() => products.id, { onDelete: "set null" }),
+  clickPosition: integer("click_position"),
+  deviceType: deviceTypeEnum("device_type").notNull(),
+  converted: boolean("converted").default(false),
+  conversionValue: doublePrecision("conversion_value").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Session Analytics
+export const sessionAnalytics = pgTable("session_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  deviceType: deviceTypeEnum("device_type").notNull(),
+  trafficSource: trafficSourceEnum("traffic_source").notNull(),
+  country: text("country"),
+  ageGroup: text("age_group"),
+  gender: genderEnum("gender"),
+  pageViews: integer("page_views").default(1),
+  sessionDuration: integer("session_duration").default(0), // in seconds
+  bounced: boolean("bounced").default(false),
+  converted: boolean("converted").default(false),
+  conversionValue: doublePrecision("conversion_value").default(0),
+  productsViewed: json("products_viewed").$type<number[]>(),
+  cartValue: doublePrecision("cart_value").default(0),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+});
+
+// Competitor Analysis
+export const competitorAnalytics = pgTable("competitor_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  competitorVendorId: integer("competitor_vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  averagePrice: doublePrecision("average_price").default(0),
+  totalProducts: integer("total_products").default(0),
+  monthlyRevenue: doublePrecision("monthly_revenue").default(0),
+  marketShare: doublePrecision("market_share").default(0),
+  rating: doublePrecision("rating").default(0),
+  reviewCount: integer("review_count").default(0),
+  analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
+});
+
+// Financial Analytics
+export const financialAnalytics = pgTable("financial_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  period: analyticsPeriodEnum("period").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  grossRevenue: doublePrecision("gross_revenue").default(0),
+  netRevenue: doublePrecision("net_revenue").default(0),
+  totalCosts: doublePrecision("total_costs").default(0),
+  platformFees: doublePrecision("platform_fees").default(0),
+  shippingCosts: doublePrecision("shipping_costs").default(0),
+  marketingCosts: doublePrecision("marketing_costs").default(0),
+  grossProfit: doublePrecision("gross_profit").default(0),
+  netProfit: doublePrecision("net_profit").default(0),
+  profitMargin: doublePrecision("profit_margin").default(0),
+  averageOrderValue: doublePrecision("average_order_value").default(0),
+  totalOrders: integer("total_orders").default(0),
+  totalRefunds: doublePrecision("total_refunds").default(0),
+  refundRate: doublePrecision("refund_rate").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Product Performance Analytics
+export const productAnalytics = pgTable("product_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  period: analyticsPeriodEnum("period").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  views: integer("views").default(0),
+  uniqueViews: integer("unique_views").default(0),
+  cartAdds: integer("cart_adds").default(0),
+  purchases: integer("purchases").default(0),
+  revenue: doublePrecision("revenue").default(0),
+  conversionRate: doublePrecision("conversion_rate").default(0),
+  averageTimeOnPage: integer("average_time_on_page").default(0),
+  bounceRate: doublePrecision("bounce_rate").default(0),
+  inventorySold: integer("inventory_sold").default(0),
+  inventoryRemaining: integer("inventory_remaining").default(0),
+  averageRating: doublePrecision("average_rating").default(0),
+  reviewCount: integer("review_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Market Trends Analytics
+export const marketTrends = pgTable("market_trends", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  period: analyticsPeriodEnum("period").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  trendDirection: text("trend_direction").notNull(), // 'up', 'down', 'stable'
+  growthRate: doublePrecision("growth_rate").default(0),
+  marketDemand: doublePrecision("market_demand").default(0),
+  seasonalityFactor: doublePrecision("seasonality_factor").default(1),
+  competitorCount: integer("competitor_count").default(0),
+  averagePrice: doublePrecision("average_price").default(0),
+  priceVolatility: doublePrecision("price_volatility").default(0),
+  searchVolume: integer("search_volume").default(0),
+  recommendedActions: json("recommended_actions").$type<string[]>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Product Forecasting
+export const productForecasts = pgTable("product_forecasts", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  forecastPeriod: analyticsPeriodEnum("forecast_period").notNull(),
+  forecastDate: date("forecast_date").notNull(),
+  predictedSales: integer("predicted_sales").default(0),
+  predictedRevenue: doublePrecision("predicted_revenue").default(0),
+  confidenceLevel: doublePrecision("confidence_level").default(0),
+  seasonalAdjustment: doublePrecision("seasonal_adjustment").default(1),
+  trendAdjustment: doublePrecision("trend_adjustment").default(1),
+  historicalAccuracy: doublePrecision("historical_accuracy").default(0),
+  recommendedInventory: integer("recommended_inventory").default(0),
+  recommendedPrice: doublePrecision("recommended_price").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Demographic Analytics
+export const demographicAnalytics = pgTable("demographic_analytics", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  period: analyticsPeriodEnum("period").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  ageGroup: text("age_group").notNull(),
+  gender: genderEnum("gender"),
+  country: text("country"),
+  region: text("region"),
+  incomeLevel: text("income_level"),
+  totalUsers: integer("total_users").default(0),
+  totalOrders: integer("total_orders").default(0),
+  totalRevenue: doublePrecision("total_revenue").default(0),
+  averageOrderValue: doublePrecision("average_order_value").default(0),
+  conversionRate: doublePrecision("conversion_rate").default(0),
+  returnRate: doublePrecision("return_rate").default(0),
+  lifetimeValue: doublePrecision("lifetime_value").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Add schemas for new tables
 export const insertUserSessionSchema = createInsertSchema(userSessions).omit({ id: true, createdAt: true });
 export const insertTrafficAnalyticsSchema = createInsertSchema(trafficAnalytics).omit({ id: true, createdAt: true });
+export const insertProductViewSchema = createInsertSchema(productViews).omit({ id: true, createdAt: true });
+export const insertConversionEventSchema = createInsertSchema(conversionEvents).omit({ id: true, createdAt: true });
+export const insertSearchAnalyticsSchema = createInsertSchema(searchAnalytics).omit({ id: true, createdAt: true });
+export const insertSessionAnalyticsSchema = createInsertSchema(sessionAnalytics).omit({ id: true, startedAt: true });
+export const insertCompetitorAnalyticsSchema = createInsertSchema(competitorAnalytics).omit({ id: true, analyzedAt: true });
+export const insertFinancialAnalyticsSchema = createInsertSchema(financialAnalytics).omit({ id: true, createdAt: true });
+export const insertProductAnalyticsSchema = createInsertSchema(productAnalytics).omit({ id: true, createdAt: true });
+export const insertMarketTrendsSchema = createInsertSchema(marketTrends).omit({ id: true, createdAt: true });
+export const insertProductForecastSchema = createInsertSchema(productForecasts).omit({ id: true, createdAt: true });
+export const insertDemographicAnalyticsSchema = createInsertSchema(demographicAnalytics).omit({ id: true, createdAt: true });
 
 // Add types for new tables
 export type UserSession = typeof userSessions.$inferSelect;
@@ -1239,6 +1461,36 @@ export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 
 export type TrafficAnalytic = typeof trafficAnalytics.$inferSelect;
 export type InsertTrafficAnalytic = z.infer<typeof insertTrafficAnalyticsSchema>;
+
+export type ProductView = typeof productViews.$inferSelect;
+export type InsertProductView = z.infer<typeof insertProductViewSchema>;
+
+export type ConversionEvent = typeof conversionEvents.$inferSelect;
+export type InsertConversionEvent = z.infer<typeof insertConversionEventSchema>;
+
+export type SearchAnalytics = typeof searchAnalytics.$inferSelect;
+export type InsertSearchAnalytics = z.infer<typeof insertSearchAnalyticsSchema>;
+
+export type SessionAnalytics = typeof sessionAnalytics.$inferSelect;
+export type InsertSessionAnalytics = z.infer<typeof insertSessionAnalyticsSchema>;
+
+export type CompetitorAnalytics = typeof competitorAnalytics.$inferSelect;
+export type InsertCompetitorAnalytics = z.infer<typeof insertCompetitorAnalyticsSchema>;
+
+export type FinancialAnalytics = typeof financialAnalytics.$inferSelect;
+export type InsertFinancialAnalytics = z.infer<typeof insertFinancialAnalyticsSchema>;
+
+export type ProductAnalytics = typeof productAnalytics.$inferSelect;
+export type InsertProductAnalytics = z.infer<typeof insertProductAnalyticsSchema>;
+
+export type MarketTrends = typeof marketTrends.$inferSelect;
+export type InsertMarketTrends = z.infer<typeof insertMarketTrendsSchema>;
+
+export type ProductForecast = typeof productForecasts.$inferSelect;
+export type InsertProductForecast = z.infer<typeof insertProductForecastSchema>;
+
+export type DemographicAnalytics = typeof demographicAnalytics.$inferSelect;
+export type InsertDemographicAnalytics = z.infer<typeof insertDemographicAnalyticsSchema>;
 
 // Saved posts schema and types
 export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({ id: true, createdAt: true });

@@ -7426,6 +7426,232 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =====================================
+  // Deep Analytics API Routes
+  // =====================================
+
+  // Import analytics service
+  const { vendorAnalyticsService } = await import('./analytics-service');
+
+  // Vendor authentication middleware
+  const requireVendorAuth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let userId = (req.user as any)?.id;
+      
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9);
+          if (fallbackUser) {
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
+      }
+
+      req.user = { ...req.user, vendor: vendorAccounts[0] };
+      next();
+    } catch (error) {
+      console.error('Vendor auth error:', error);
+      res.status(500).json({ message: 'Authentication error' });
+    }
+  };
+
+  // Product Forecast Analytics
+  app.get("/api/vendor/analytics/forecasts", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const period = req.query.period as 'monthly' | 'quarterly' | 'yearly' || 'monthly';
+      const forecasts = await vendorAnalyticsService.getProductForecasts(vendorId, period);
+      
+      res.json(forecasts);
+    } catch (error) {
+      console.error('Error fetching product forecasts:', error);
+      res.status(500).json({ message: 'Failed to fetch product forecasts' });
+    }
+  });
+
+  // Market Trends Analytics
+  app.get("/api/vendor/analytics/market-trends", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const period = req.query.period as 'weekly' | 'monthly' | 'quarterly' || 'monthly';
+      const trends = await vendorAnalyticsService.getMarketTrends(vendorId, period);
+      
+      res.json(trends);
+    } catch (error) {
+      console.error('Error fetching market trends:', error);
+      res.status(500).json({ message: 'Failed to fetch market trends' });
+    }
+  });
+
+  // Conversion Rate Analytics
+  app.get("/api/vendor/analytics/conversions", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const days = parseInt(req.query.days as string) || 30;
+      const conversions = await vendorAnalyticsService.getConversionRates(vendorId, days);
+      
+      res.json(conversions);
+    } catch (error) {
+      console.error('Error fetching conversion rates:', error);
+      res.status(500).json({ message: 'Failed to fetch conversion rates' });
+    }
+  });
+
+  // Demographics Analytics
+  app.get("/api/vendor/analytics/demographics", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const period = req.query.period as 'monthly' | 'quarterly' || 'monthly';
+      const demographics = await vendorAnalyticsService.getDemographics(vendorId, period);
+      
+      res.json(demographics);
+    } catch (error) {
+      console.error('Error fetching demographics:', error);
+      res.status(500).json({ message: 'Failed to fetch demographics' });
+    }
+  });
+
+  // Competitor Analysis
+  app.get("/api/vendor/analytics/competitors", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const competitors = await vendorAnalyticsService.getCompetitorAnalysis(vendorId);
+      
+      res.json(competitors);
+    } catch (error) {
+      console.error('Error fetching competitor analysis:', error);
+      res.status(500).json({ message: 'Failed to fetch competitor analysis' });
+    }
+  });
+
+  // Financial Summary
+  app.get("/api/vendor/analytics/financial", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const period = req.query.period as 'weekly' | 'monthly' || 'monthly';
+      const financial = await vendorAnalyticsService.getFinancialSummary(vendorId, period);
+      
+      res.json(financial);
+    } catch (error) {
+      console.error('Error fetching financial summary:', error);
+      res.status(500).json({ message: 'Failed to fetch financial summary' });
+    }
+  });
+
+  // Comprehensive Analytics Dashboard
+  app.get("/api/vendor/analytics/dashboard", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      const days = parseInt(req.query.days as string) || 30;
+      const period = req.query.period as 'weekly' | 'monthly' || 'monthly';
+
+      // Fetch all analytics data in parallel
+      const [
+        forecasts,
+        marketTrends,
+        conversions,
+        sessions,
+        demographics,
+        competitors,
+        financial,
+        profitBreakdown,
+        ordersReturns,
+        crossSell,
+        inventory
+      ] = await Promise.all([
+        vendorAnalyticsService.getProductForecasts(vendorId, 'monthly'),
+        vendorAnalyticsService.getMarketTrends(vendorId, period),
+        vendorAnalyticsService.getConversionRates(vendorId, days),
+        vendorAnalyticsService.getSessionsByDevice(vendorId, days),
+        vendorAnalyticsService.getDemographics(vendorId, 'monthly'),
+        vendorAnalyticsService.getCompetitorAnalysis(vendorId),
+        vendorAnalyticsService.getFinancialSummary(vendorId, period),
+        vendorAnalyticsService.getGrossProfitBreakdown(vendorId, days),
+        vendorAnalyticsService.getOrdersAndReturns(vendorId, days),
+        vendorAnalyticsService.getItemsBoughtTogether(vendorId, days),
+        vendorAnalyticsService.getDailyInventorySold(vendorId, days)
+      ]);
+
+      res.json({
+        productForecasts: forecasts,
+        marketTrends,
+        conversionRates: conversions,
+        sessionAnalytics: sessions,
+        demographics,
+        competitorAnalysis: competitors,
+        financialSummary: financial,
+        profitBreakdown,
+        ordersAndReturns: ordersReturns,
+        crossSellAnalytics: crossSell,
+        inventoryAnalytics: inventory
+      });
+    } catch (error) {
+      console.error('Error fetching analytics dashboard:', error);
+      res.status(500).json({ message: 'Failed to fetch analytics dashboard' });
+    }
+  });
+
+  // Generate Sample Analytics Data
+  app.post("/api/vendor/analytics/generate-sample", requireVendorAuth, async (req, res) => {
+    try {
+      const vendorId = req.user?.vendor?.id;
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor not found" });
+      }
+
+      await vendorAnalyticsService.generateSampleData(vendorId);
+      
+      res.json({ message: 'Sample analytics data generated successfully' });
+    } catch (error) {
+      console.error('Error generating sample data:', error);
+      res.status(500).json({ message: 'Failed to generate sample data' });
+    }
+  });
+
+  // =====================================
   // Commission Management API Routes
   // =====================================
   

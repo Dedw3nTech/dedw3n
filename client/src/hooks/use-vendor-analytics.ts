@@ -1,168 +1,207 @@
 import { useQuery } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import { Product } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
 
-// Type definitions for analytics data
-export interface OrderStats {
-  totalOrders: number;
-  pendingOrders: number;
-  shippedOrders: number;
-  deliveredOrders: number;
-  canceledOrders: number;
+// Types for analytics data
+export interface ProductForecast {
+  productId: number;
+  productName: string;
+  predictedSales: number;
+  predictedRevenue: number;
+  confidenceLevel: number;
+  recommendedInventory: number;
+  recommendedPrice: number;
+  forecastDate: string;
 }
 
-export interface ProfitLoss {
+export interface MarketTrend {
+  category: string;
+  trendDirection: 'up' | 'down' | 'stable';
+  growthRate: number;
+  marketDemand: number;
+  competitorCount: number;
+  averagePrice: number;
+  searchVolume: number;
+  recommendedActions: string[];
+  period: string;
+}
+
+export interface ConversionRate {
+  date: string;
+  totalViews: number;
+  cartAdds: number;
+  checkouts: number;
+  purchases: number;
+  totalValue: number;
+  conversionRate: number;
+  checkoutRate: number;
+}
+
+export interface SessionAnalytics {
+  deviceType: 'desktop' | 'mobile' | 'tablet';
+  totalSessions: number;
+  avgDuration: number;
+  conversions: number;
+  totalValue: number;
+  bounceRate: number;
+  conversionRate: number;
+  avgDurationMinutes: number;
+}
+
+export interface Demographics {
+  ageGroup: string;
+  gender: 'male' | 'female' | 'other' | null;
+  country: string;
+  totalUsers: number;
+  totalOrders: number;
   totalRevenue: number;
-  totalCost: number;
+  averageOrderValue: number;
+  conversionRate: number;
+  lifetimeValue: number;
+}
+
+export interface CompetitorAnalysis {
+  competitorId: number;
+  competitorName: string;
+  category: string;
+  averagePrice: number;
+  totalProducts: number;
+  monthlyRevenue: number;
+  marketShare: number;
+  rating: number;
+  reviewCount: number;
+}
+
+export interface FinancialSummary {
+  period: string;
+  startDate: string;
+  endDate: string;
+  grossRevenue: number;
+  netRevenue: number;
+  totalCosts: number;
+  platformFees: number;
+  shippingCosts: number;
+  marketingCosts: number;
+  grossProfit: number;
   netProfit: number;
+  profitMargin: number;
+  averageOrderValue: number;
+  totalOrders: number;
+  totalRefunds: number;
+  refundRate: number;
+}
+
+export interface ProfitBreakdown {
+  productId: number;
+  productName: string;
+  totalSales: number;
+  grossRevenue: number;
+  productCost: number;
+  grossProfit: number;
   profitMargin: number;
 }
 
-export interface TopProduct {
-  product: Product;
-  totalSold: number;
+export interface OrdersReturns {
+  productId: number;
+  productName: string;
+  totalOrders: number;
+  totalQuantity: number;
+  totalRevenue: number;
+  deliveredOrders: number;
+  cancelledOrders: number;
+  returnedOrders: number;
+  returnRate: number;
+  cancellationRate: number;
+}
+
+export interface CrossSellData {
+  product_a_id: number;
+  product_a_name: string;
+  product_b_id: number;
+  product_b_name: string;
+  frequency: number;
+}
+
+export interface InventoryData {
+  date: string;
+  productId: number;
+  productName: string;
+  quantitySold: number;
   revenue: number;
+  currentStock: number;
 }
 
-export interface TopBuyer {
-  user: {
-    id: number;
-    username: string;
-    name: string;
-    email: string;
-  };
-  totalSpent: number;
-  orderCount: number;
+export interface AnalyticsDashboard {
+  productForecasts: ProductForecast[];
+  marketTrends: MarketTrend[];
+  conversionRates: ConversionRate[];
+  sessionAnalytics: SessionAnalytics[];
+  demographics: Demographics[];
+  competitorAnalysis: CompetitorAnalysis[];
+  financialSummary: FinancialSummary[];
+  profitBreakdown: ProfitBreakdown[];
+  ordersAndReturns: OrdersReturns[];
+  crossSellAnalytics: CrossSellData[];
+  inventoryAnalytics: InventoryData[];
 }
 
-export type RevenuePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
+// Custom hooks for individual analytics sections
+export const useProductForecasts = (period: 'monthly' | 'quarterly' | 'yearly' = 'monthly') => {
+  return useQuery<ProductForecast[]>({
+    queryKey: ['/api/vendor/analytics/forecasts', period],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/forecasts?period=${period}`).then(res => res.json()),
+  });
+};
 
-export function useVendorAnalytics(vendorId: number) {
-  const { toast } = useToast();
-  const { user } = useAuth();
+export const useMarketTrends = (period: 'weekly' | 'monthly' | 'quarterly' = 'monthly') => {
+  return useQuery<MarketTrend[]>({
+    queryKey: ['/api/vendor/analytics/market-trends', period],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/market-trends?period=${period}`).then(res => res.json()),
+  });
+};
 
-  // Determine if the queries should be enabled
-  const isEnabled = !!vendorId && !!user && !!user.isVendor;
+export const useConversionRates = (days: number = 30) => {
+  return useQuery<ConversionRate[]>({
+    queryKey: ['/api/vendor/analytics/conversions', days],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/conversions?days=${days}`).then(res => res.json()),
+  });
+};
 
-  // Total Sales
-  const {
-    data: totalSalesData,
-    isLoading: isLoadingTotalSales,
-    error: totalSalesError
-  } = useQuery<{ totalSales: number }>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/total-sales`],
-    enabled: isEnabled,
+export const useDemographics = (period: 'monthly' | 'quarterly' = 'monthly') => {
+  return useQuery<Demographics[]>({
+    queryKey: ['/api/vendor/analytics/demographics', period],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/demographics?period=${period}`).then(res => res.json()),
+  });
+};
+
+export const useCompetitorAnalysis = () => {
+  return useQuery<CompetitorAnalysis[]>({
+    queryKey: ['/api/vendor/analytics/competitors'],
+    queryFn: () => apiRequest('GET', '/api/vendor/analytics/competitors').then(res => res.json()),
+  });
+};
+
+export const useFinancialSummary = (period: 'weekly' | 'monthly' = 'monthly') => {
+  return useQuery<FinancialSummary[]>({
+    queryKey: ['/api/vendor/analytics/financial', period],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/financial?period=${period}`).then(res => res.json()),
+  });
+};
+
+// Comprehensive dashboard hook
+export const useAnalyticsDashboard = (days: number = 30, period: 'weekly' | 'monthly' = 'monthly') => {
+  return useQuery<AnalyticsDashboard>({
+    queryKey: ['/api/vendor/analytics/dashboard', days, period],
+    queryFn: () => apiRequest('GET', `/api/vendor/analytics/dashboard?days=${days}&period=${period}`).then(res => res.json()),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchInterval: 10 * 60 * 1000, // 10 minutes
   });
+};
 
-  // Order Stats
-  const {
-    data: orderStatsData,
-    isLoading: isLoadingOrderStats,
-    error: orderStatsError
-  } = useQuery<OrderStats>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/order-stats`],
-    enabled: isEnabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+// Generate sample data hook
+export const useGenerateSampleData = () => {
+  return useQuery({
+    queryKey: ['/api/vendor/analytics/generate-sample'],
+    queryFn: () => apiRequest('POST', '/api/vendor/analytics/generate-sample').then(res => res.json()),
+    enabled: false, // Only run when manually triggered
   });
-
-  // Revenue data with period parameter
-  const getRevenueData = (period: RevenuePeriod = 'monthly') => {
-    return useQuery<Record<string, number>>({
-      queryKey: [`/api/vendors/${vendorId}/analytics/revenue`, period],
-      enabled: isEnabled,
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-    });
-  };
-
-  // Top Products
-  const {
-    data: topProductsData,
-    isLoading: isLoadingTopProducts,
-    error: topProductsError
-  } = useQuery<TopProduct[]>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/top-products`],
-    enabled: isEnabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // Profit/Loss
-  const {
-    data: profitLossData,
-    isLoading: isLoadingProfitLoss,
-    error: profitLossError
-  } = useQuery<ProfitLoss>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/profit-loss`],
-    enabled: isEnabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-  
-  // Top Buyers
-  const {
-    data: topBuyersData,
-    isLoading: isLoadingTopBuyers,
-    error: topBuyersError
-  } = useQuery<TopBuyer[]>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/top-buyers`],
-    enabled: isEnabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // Handle errors with toasts
-  if (totalSalesError) {
-    toast({
-      title: "Error loading sales data",
-      description: (totalSalesError as Error).message,
-      variant: "destructive",
-    });
-  }
-
-  if (orderStatsError) {
-    toast({
-      title: "Error loading order statistics",
-      description: (orderStatsError as Error).message,
-      variant: "destructive",
-    });
-  }
-
-  if (topProductsError) {
-    toast({
-      title: "Error loading top products",
-      description: (topProductsError as Error).message,
-      variant: "destructive",
-    });
-  }
-
-  if (profitLossError) {
-    toast({
-      title: "Error loading profit/loss data",
-      description: (profitLossError as Error).message,
-      variant: "destructive",
-    });
-  }
-  
-  if (topBuyersError) {
-    toast({
-      title: "Error loading top buyers data",
-      description: (topBuyersError as Error).message,
-      variant: "destructive",
-    });
-  }
-
-  return {
-    totalSales: totalSalesData?.totalSales || 0,
-    orderStats: orderStatsData,
-    topProducts: topProductsData || [],
-    topBuyers: topBuyersData || [],
-    profitLoss: profitLossData,
-    getRevenueData,
-    isLoading: isLoadingTotalSales || isLoadingOrderStats || isLoadingTopProducts || isLoadingProfitLoss || isLoadingTopBuyers,
-  };
-}
+};
