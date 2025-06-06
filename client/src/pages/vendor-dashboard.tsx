@@ -34,6 +34,7 @@ import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
+  const { formatPriceFromGBP } = useCurrency();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [vendorId, setVendorId] = useState<number | null>(null);
@@ -414,7 +415,7 @@ export default function VendorDashboard() {
                     {isLoadingSummary ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      `$${(summary?.totalRevenue || 0).toFixed(2)}`
+                      formatPriceFromGBP(summary?.totalRevenue || 0)
                     )}
                   </div>
                 </CardContent>
