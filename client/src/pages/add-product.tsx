@@ -69,6 +69,10 @@ const productSchema = z.object({
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
+  // Service-specific fields
+  serviceDuration: z.string().optional(),
+  serviceType: z.enum(['onetime', 'recurring', 'subscription', 'consultation']).optional(),
+  serviceLocation: z.enum(['online', 'onsite', 'office', 'flexible']).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -109,6 +113,9 @@ export default function AddProduct() {
       requiresShipping: true,
       seoTitle: '',
       seoDescription: '',
+      serviceDuration: '',
+      serviceType: undefined,
+      serviceLocation: undefined,
     },
   });
 
@@ -461,7 +468,8 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              {/* Inventory Section */}
+              {/* Inventory Section - Only show for products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Inventory</CardTitle>
@@ -559,8 +567,10 @@ export default function AddProduct() {
                   )}
                 </CardContent>
               </Card>
+              )}
 
-              {/* Shipping Section */}
+              {/* Shipping Section - Only show for products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Shipping</CardTitle>
@@ -655,8 +665,10 @@ export default function AddProduct() {
                   )}
                 </CardContent>
               </Card>
+              )}
               
-              {/* Variants */}
+              {/* Variants - Only show for products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Variants</CardTitle>
@@ -668,6 +680,80 @@ export default function AddProduct() {
                   </Button>
                 </CardContent>
               </Card>
+              )}
+
+              {/* Service-specific fields */}
+              {form.watch('offeringType') === 'service' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Service Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="serviceDuration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Duration</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., 1 hour, 30 minutes" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="serviceType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="onetime">One-time Service</SelectItem>
+                                <SelectItem value="recurring">Recurring Service</SelectItem>
+                                <SelectItem value="subscription">Subscription</SelectItem>
+                                <SelectItem value="consultation">Consultation</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="serviceLocation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service Location</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select location type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="online">Online/Remote</SelectItem>
+                              <SelectItem value="onsite">On-site/Client Location</SelectItem>
+                              <SelectItem value="office">My Office/Studio</SelectItem>
+                              <SelectItem value="flexible">Flexible</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Product Organization */}
               <Card>
