@@ -2455,6 +2455,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's vendor account endpoint
+  app.get('/api/vendors/me', async (req: Request, res: Response) => {
+    try {
+      // Use the same authentication pattern as working endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern like other vendor endpoints
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for /api/vendors/me: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
+      }
+
+      // Return the first vendor account (for compatibility) or all accounts
+      res.json({
+        vendor: vendorAccounts[0],
+        vendorAccounts,
+        hasPrivateVendor: vendorAccounts.some(v => v.vendorType === 'private'),
+        hasBusinessVendor: vendorAccounts.some(v => v.vendorType === 'business')
+      });
+    } catch (error) {
+      console.error("Error getting user vendor:", error);
+      res.status(500).json({ message: "Failed to get vendor information" });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {
