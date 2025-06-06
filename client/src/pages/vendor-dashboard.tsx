@@ -394,9 +394,13 @@ export default function VendorDashboard() {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
               <div className="flex gap-3">
-                <Button onClick={() => setLocation('/vendor-register?type=business')} className="bg-black text-white hover:bg-gray-800">
+                <Button 
+                  onClick={handleCreateBusinessVendor} 
+                  className="bg-black text-white hover:bg-gray-800"
+                  disabled={createBusinessVendorMutation.isPending}
+                >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Create Business Vendor
+                  {createBusinessVendorMutation.isPending ? "Creating..." : "Create Business Vendor"}
                 </Button>
                 <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                   <PlusCircle className="mr-2 h-4 w-4" />
