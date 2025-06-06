@@ -26,7 +26,8 @@ import {
   PlusCircle,
   TrendingUp,
   Tag,
-  Megaphone
+  Megaphone,
+  DollarSign
 } from "lucide-react";
 
 // Import vendor components
@@ -43,6 +44,7 @@ import { calculateBadgeLevel } from "@/lib/vendor-badges";
 import DiscountForm from "@/components/vendor/DiscountForm";
 import DiscountList from "@/components/vendor/DiscountList";
 import MarketingCampaigns from "@/components/vendor/MarketingCampaigns";
+import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -338,7 +340,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -366,6 +368,10 @@ export default function VendorDashboard() {
           <TabsTrigger value="marketing" className="flex items-center">
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
+          </TabsTrigger>
+          <TabsTrigger value="commission" className="flex items-center">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Commission
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />
@@ -605,6 +611,11 @@ export default function VendorDashboard() {
           {/* Marketing Tab */}
           <TabsContent value="marketing" className="mt-0 space-y-6">
             <MarketingCampaigns />
+          </TabsContent>
+
+          {/* Commission Tab */}
+          <TabsContent value="commission" className="mt-0 space-y-6">
+            {vendorId && <VendorCommissionDashboard vendorId={vendorId} />}
           </TabsContent>
 
           {/* Analytics Tab */}
