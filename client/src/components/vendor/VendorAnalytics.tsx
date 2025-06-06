@@ -1,94 +1,68 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, PieChart, Pie, Cell } from "recharts";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 interface VendorAnalyticsProps {
   vendorId: number;
 }
 
 export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
-  const [revenuePeriod, setRevenuePeriod] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
   const [activeTab, setActiveTab] = useState("revenue");
+  const [revenuePeriod, setRevenuePeriod] = useState("monthly");
 
-  // Fetch revenue data
+  // Revenue analytics
   const { data: revenueData, isLoading: isLoadingRevenue } = useQuery({
-    queryKey: ["/api/vendors", vendorId, "analytics/revenue", revenuePeriod],
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${vendorId}/analytics/revenue?period=${revenuePeriod}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch revenue data");
-      }
-      return response.json();
-    },
-    enabled: !!vendorId,
+    queryKey: ['/api/vendors', vendorId, 'analytics/revenue', revenuePeriod],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/revenue?period=${revenuePeriod}`).then(res => res.json()),
+    enabled: !!vendorId
   });
 
-  // Fetch top products data
-  const { data: topProductsData, isLoading: isLoadingTopProducts } = useQuery({
-    queryKey: ["/api/vendors", vendorId, "analytics/top-products"],
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${vendorId}/analytics/top-products`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch top products data");
-      }
-      return response.json();
-    },
-    enabled: !!vendorId,
-  });
-
-  // Fetch profit/loss data
+  // Profit/Loss analytics
   const { data: profitLossData, isLoading: isLoadingProfitLoss } = useQuery({
-    queryKey: ["/api/vendors", vendorId, "analytics/profit-loss"],
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${vendorId}/analytics/profit-loss`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch profit/loss data");
-      }
-      return response.json();
-    },
-    enabled: !!vendorId,
+    queryKey: ['/api/vendors', vendorId, 'analytics/profit-loss'],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/profit-loss`).then(res => res.json()),
+    enabled: !!vendorId
   });
 
-  // Fetch order stats data
-  const { data: orderStatsData, isLoading: isLoadingOrderStats } = useQuery({
-    queryKey: ["/api/vendors", vendorId, "analytics/order-stats"],
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${vendorId}/analytics/order-stats`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch order stats data");
-      }
-      return response.json();
-    },
-    enabled: !!vendorId,
+  // Metrics analytics
+  const { data: metricsData, isLoading: isLoadingMetrics } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'analytics/metrics'],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/metrics`).then(res => res.json()),
+    enabled: !!vendorId
   });
 
-  // Fetch top buyers data
-  const { data: topBuyersData, isLoading: isLoadingTopBuyers } = useQuery({
-    queryKey: ["/api/vendors", vendorId, "analytics/top-buyers"],
-    queryFn: async () => {
-      const response = await fetch(`/api/vendors/${vendorId}/analytics/top-buyers`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch top buyers data");
-      }
-      return response.json();
-    },
-    enabled: !!vendorId,
+  // Competitors analytics
+  const { data: competitorsData, isLoading: isLoadingCompetitors } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'analytics/competitors'],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/competitors`).then(res => res.json()),
+    enabled: !!vendorId
+  });
+
+  // Leads analytics
+  const { data: leadsData, isLoading: isLoadingLeads } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'analytics/leads'],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/leads`).then(res => res.json()),
+    enabled: !!vendorId
   });
 
   // Colors for charts
@@ -99,10 +73,10 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="products">Top Products</TabsTrigger>
           <TabsTrigger value="profitLoss">Profit/Loss</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="customers">Top Customers</TabsTrigger>
+          <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          <TabsTrigger value="competitors">Competitors</TabsTrigger>
+          <TabsTrigger value="leads">Leads</TabsTrigger>
         </TabsList>
 
         {/* Revenue Tab */}
@@ -110,7 +84,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Revenue Analysis</h3>
             <div className="w-40">
-              <Select value={revenuePeriod} onValueChange={(value) => setRevenuePeriod(value as any)}>
+              <Select value={revenuePeriod} onValueChange={setRevenuePeriod}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
@@ -167,44 +141,6 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </Card>
         </TabsContent>
 
-        {/* Top Products Tab */}
-        <TabsContent value="products" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Selling Products</CardTitle>
-              <CardDescription>
-                Your best performing products by sales volume
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingTopProducts ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : topProductsData && topProductsData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={topProductsData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="productName" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [value, 'Units Sold']} />
-                    <Legend />
-                    <Bar dataKey="unitsSold" fill="#8884d8" name="Units Sold" />
-                    <Bar dataKey="revenue" fill="#82ca9d" name="Revenue ($)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No product sales data available yet
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Profit/Loss Tab */}
         <TabsContent value="profitLoss" className="space-y-4">
           <Card>
@@ -227,7 +163,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-blue-600">
-                        ${profitLossData.revenue?.toFixed(2) || "0.00"}
+                        ${Number(profitLossData.revenue || 0).toFixed(2)}
                       </div>
                     </CardContent>
                   </Card>
@@ -237,7 +173,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-red-600">
-                        ${profitLossData.expenses?.toFixed(2) || "0.00"}
+                        ${Number(profitLossData.expenses || 0).toFixed(2)}
                       </div>
                     </CardContent>
                   </Card>
@@ -246,8 +182,8 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                       <CardTitle className="text-md font-medium">Profit</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-2xl font-bold ${(profitLossData.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${profitLossData.profit?.toFixed(2) || "0.00"}
+                      <div className={`text-2xl font-bold ${Number(profitLossData.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${Number(profitLossData.profit || 0).toFixed(2)}
                       </div>
                     </CardContent>
                   </Card>
@@ -287,68 +223,30 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </Card>
         </TabsContent>
 
-        {/* Orders Tab */}
-        <TabsContent value="orders" className="space-y-4">
+        {/* Metrics Tab */}
+        <TabsContent value="metrics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Order Statistics</CardTitle>
+              <CardTitle>Business Metrics</CardTitle>
               <CardDescription>
-                Your order performance metrics
+                Key performance indicators for your business
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">
-              {isLoadingOrderStats ? (
+              {isLoadingMetrics ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <Skeleton className="w-full h-full" />
                 </div>
-              ) : orderStatsData ? (
+              ) : metricsData ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Orders by Status</h4>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <PieChart>
-                        <Pie
-                          data={orderStatsData.ordersByStatus}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={60}
-                          fill="#8884d8"
-                          dataKey="count"
-                          nameKey="status"
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {orderStatsData.ordersByStatus.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => [value, 'Orders']} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Orders Over Time</h4>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <LineChart
-                        data={orderStatsData.ordersByPeriod}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="period" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => [value, 'Orders']} />
-                        <Line type="monotone" dataKey="count" stroke="#8884d8" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="col-span-1 md:col-span-2 grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <Card className="shadow-none border border-muted">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl font-bold">
-                          {orderStatsData.totalOrders || 0}
+                          {Number(metricsData.totalOrders || 0)}
                         </div>
                       </CardContent>
                     </Card>
@@ -358,69 +256,138 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl font-bold">
-                          ${orderStatsData.averageOrderValue?.toFixed(2) || "0.00"}
+                          ${Number(metricsData.averageOrderValue || 0).toFixed(2)}
                         </div>
                       </CardContent>
                     </Card>
                     <Card className="shadow-none border border-muted">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Order Fulfillment</CardTitle>
+                        <CardTitle className="text-sm font-medium">Fulfillment Rate</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl font-bold">
-                          {orderStatsData.fulfillmentRate ? (orderStatsData.fulfillmentRate * 100).toFixed(0) : "0"}%
+                          {(Number(metricsData.fulfillmentRate || 0) * 100).toFixed(0)}%
                         </div>
                       </CardContent>
                     </Card>
                   </div>
+                  
+                  {metricsData.ordersByStatus && metricsData.ordersByStatus.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Orders by Status</h4>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie
+                            data={metricsData.ordersByStatus}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="count"
+                            nameKey="status"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {metricsData.ordersByStatus.map((entry: any, index: number) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => [value, 'Orders']} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No order statistics available yet
+                  No metrics data available yet
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Top Customers Tab */}
-        <TabsContent value="customers" className="space-y-4">
+        {/* Competitors Tab */}
+        <TabsContent value="competitors" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Top Customers</CardTitle>
+              <CardTitle>Competitor Analysis</CardTitle>
               <CardDescription>
-                Your most valuable customers by purchase volume
+                Other vendors in your categories
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">
-              {isLoadingTopBuyers ? (
+              {isLoadingCompetitors ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <Skeleton className="w-full h-full" />
                 </div>
-              ) : topBuyersData && topBuyersData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={topBuyersData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    layout="vertical"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="customerName" width={150} />
-                    <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === "totalSpent") return [`$${Number(value).toFixed(2)}`, 'Total Spent'];
-                        return [value, name === "orderCount" ? 'Orders' : name];
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="totalSpent" fill="#8884d8" name="Total Spent ($)" />
-                    <Bar dataKey="orderCount" fill="#82ca9d" name="Order Count" />
-                  </BarChart>
-                </ResponsiveContainer>
+              ) : competitorsData && competitorsData.length > 0 ? (
+                <div className="space-y-4 max-h-72 overflow-y-auto">
+                  {competitorsData.map((competitor: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{competitor.storeName}</h4>
+                        <p className="text-sm text-muted-foreground">{competitor.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {Number(competitor.productCount)} products
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Avg: ${Number(competitor.averagePrice || 0).toFixed(2)}
+                        </div>
+                        <div className="text-sm font-medium text-green-600">
+                          ${Number(competitor.totalSales || 0).toFixed(2)} sales
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No customer purchase data available yet
+                  No competitor data available yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Leads Tab */}
+        <TabsContent value="leads" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Potential Leads</CardTitle>
+              <CardDescription>
+                Users who have shown interest in your products
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-80">
+              {isLoadingLeads ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Skeleton className="w-full h-full" />
+                </div>
+              ) : leadsData && leadsData.length > 0 ? (
+                <div className="space-y-4 max-h-72 overflow-y-auto">
+                  {leadsData.map((lead: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{lead.username}</h4>
+                        <p className="text-sm text-muted-foreground">{lead.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {Number(lead.viewCount)} product views
+                        </div>
+                        <Badge variant={lead.hasOrdered ? "default" : "secondary"}>
+                          {lead.hasOrdered ? "Customer" : "Lead"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  No leads data available yet
                 </div>
               )}
             </CardContent>

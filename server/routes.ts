@@ -10,8 +10,8 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq, or, like, sql } from "drizzle-orm";
-import { users, products } from "@shared/schema";
+import { eq, or, like, sql, and, ne, inArray, desc } from "drizzle-orm";
+import { users, products, orders, vendors, carts, orderItems } from "@shared/schema";
 
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -4847,6 +4847,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
         path: req.path
       });
     });
+  });
+
+  // Vendor Analytics endpoints
+  app.get('/api/vendors/:vendorId/analytics/revenue', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const period = req.query.period as string || 'monthly';
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Get revenue data from orders through orderItems
+      const revenueData = await db
+        .select({
+          period: sql<string>`DATE_TRUNC('${sql.raw(period)}', ${orders.createdAt})::text`,
+          revenue: sql<number>`SUM(${orderItems.totalPrice})::numeric`
+        })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(eq(orderItems.vendorId, vendorId))
+        .groupBy(sql`DATE_TRUNC('${sql.raw(period)}', ${orders.createdAt})`)
+        .orderBy(sql`DATE_TRUNC('${sql.raw(period)}', ${orders.createdAt})`);
+
+      res.json(revenueData);
+    } catch (error) {
+      console.error('Error fetching revenue analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch revenue analytics' });
+    }
+  });
+
+  app.get('/api/vendors/:vendorId/analytics/profit-loss', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Calculate profit/loss from orders and products
+      const [revenueResult] = await db
+        .select({
+          revenue: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)::numeric`
+        })
+        .from(orders)
+        .innerJoin(products, eq(orders.productId, products.id))
+        .where(eq(products.vendorId, vendorId));
+
+      const [expensesResult] = await db
+        .select({
+          expenses: sql<number>`COALESCE(SUM(${products.price} * 0.3), 0)::numeric`
+        })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      const revenue = revenueResult?.revenue || 0;
+      const expenses = expensesResult?.expenses || 0;
+      const profit = revenue - expenses;
+
+      // Get revenue by category
+      const categoryRevenue = await db
+        .select({
+          category: products.category,
+          value: sql<number>`SUM(${orders.totalAmount})::numeric`
+        })
+        .from(orders)
+        .innerJoin(products, eq(orders.productId, products.id))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.category);
+
+      res.json({
+        revenue,
+        expenses,
+        profit,
+        categories: categoryRevenue
+      });
+    } catch (error) {
+      console.error('Error fetching profit/loss analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch profit/loss analytics' });
+    }
+  });
+
+  app.get('/api/vendors/:vendorId/analytics/metrics', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Get key business metrics
+      const [orderStats] = await db
+        .select({
+          totalOrders: sql<number>`COUNT(*)::numeric`,
+          averageOrderValue: sql<number>`AVG(${orders.totalAmount})::numeric`,
+          fulfillmentRate: sql<number>`
+            (COUNT(CASE WHEN ${orders.status} = 'delivered' THEN 1 END)::float / COUNT(*)::float)::numeric
+          `
+        })
+        .from(orders)
+        .innerJoin(products, eq(orders.productId, products.id))
+        .where(eq(products.vendorId, vendorId));
+
+      const [productCount] = await db
+        .select({
+          count: sql<number>`COUNT(*)::numeric`
+        })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      const [customerCount] = await db
+        .select({
+          count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`
+        })
+        .from(orders)
+        .innerJoin(products, eq(orders.productId, products.id))
+        .where(eq(products.vendorId, vendorId));
+
+      res.json({
+        totalOrders: orderStats?.totalOrders || 0,
+        averageOrderValue: orderStats?.averageOrderValue || 0,
+        fulfillmentRate: orderStats?.fulfillmentRate || 0,
+        totalProducts: productCount?.count || 0,
+        totalCustomers: customerCount?.count || 0,
+        ordersByStatus: await db
+          .select({
+            status: orders.status,
+            count: sql<number>`COUNT(*)::numeric`
+          })
+          .from(orders)
+          .innerJoin(products, eq(orders.productId, products.id))
+          .where(eq(products.vendorId, vendorId))
+          .groupBy(orders.status)
+      });
+    } catch (error) {
+      console.error('Error fetching metrics analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch metrics analytics' });
+    }
+  });
+
+  app.get('/api/vendors/:vendorId/analytics/competitors', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Get vendor's categories
+      const vendorCategories = await db
+        .select({ category: products.category })
+        .from(products)
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.category);
+
+      if (vendorCategories.length === 0) {
+        return res.json([]);
+      }
+
+      // Find competitors in same categories
+      const competitors = await db
+        .select({
+          vendorId: vendors.id,
+          storeName: vendors.storeName,
+          category: products.category,
+          productCount: sql<number>`COUNT(${products.id})::numeric`,
+          averagePrice: sql<number>`AVG(${products.price})::numeric`,
+          totalSales: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)::numeric`
+        })
+        .from(vendors)
+        .innerJoin(products, eq(vendors.id, products.vendorId))
+        .leftJoin(orders, eq(products.id, orders.productId))
+        .where(
+          and(
+            ne(vendors.id, vendorId),
+            inArray(products.category, vendorCategories.map(c => c.category))
+          )
+        )
+        .groupBy(vendors.id, vendors.storeName, products.category)
+        .orderBy(desc(sql`COALESCE(SUM(${orders.totalAmount}), 0)`))
+        .limit(10);
+
+      res.json(competitors);
+    } catch (error) {
+      console.error('Error fetching competitor analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch competitor analytics' });
+    }
+  });
+
+  app.get('/api/vendors/:vendorId/analytics/leads', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Get potential leads from product views and cart additions
+      const leads = await db
+        .select({
+          userId: users.id,
+          username: users.username,
+          email: users.email,
+          viewCount: sql<number>`COUNT(DISTINCT ${products.id})::numeric`,
+          lastActivity: sql<string>`MAX(${products.createdAt})::text`,
+          hasOrdered: sql<boolean>`
+            EXISTS(
+              SELECT 1 FROM ${orders} o 
+              INNER JOIN ${products} p ON o.productId = p.id 
+              WHERE p.vendorId = ${vendorId} AND o.userId = ${users.id}
+            )
+          `
+        })
+        .from(users)
+        .innerJoin(cart, eq(users.id, cart.userId))
+        .innerJoin(products, eq(cart.productId, products.id))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(users.id, users.username, users.email)
+        .having(sql`COUNT(DISTINCT ${products.id}) > 0`)
+        .orderBy(desc(sql`COUNT(DISTINCT ${products.id})`))
+        .limit(50);
+
+      res.json(leads);
+    } catch (error) {
+      console.error('Error fetching leads analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch leads analytics' });
+    }
   });
 
   // Catch-all handler for invalid API routes
