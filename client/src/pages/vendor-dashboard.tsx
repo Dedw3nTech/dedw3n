@@ -25,7 +25,8 @@ import {
   Loader2,
   PlusCircle,
   TrendingUp,
-  Tag
+  Tag,
+  Megaphone
 } from "lucide-react";
 
 // Import vendor components
@@ -336,7 +337,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -360,6 +361,10 @@ export default function VendorDashboard() {
           <TabsTrigger value="promotions" className="flex items-center">
             <Tag className="h-4 w-4 mr-2" />
             Promotions
+          </TabsTrigger>
+          <TabsTrigger value="marketing" className="flex items-center">
+            <Megaphone className="h-4 w-4 mr-2" />
+            Marketing
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />

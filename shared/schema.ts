@@ -1211,6 +1211,238 @@ export type NotificationSettings = typeof notificationSettings.$inferSelect;
 export type InsertNotificationSettings = z.infer<typeof insertNotificationSettingsSchema>;
 
 // =====================================
+// Marketing Campaign Schema
+// =====================================
+
+// Campaign status enum
+export const campaignStatusEnum = pgEnum("campaign_status", ["draft", "active", "paused", "completed", "cancelled"]);
+
+// Campaign type enum
+export const campaignTypeEnum = pgEnum("campaign_type", ["awareness", "conversion", "retention", "engagement", "lead_generation"]);
+
+// Marketing channel enum
+export const marketingChannelEnum = pgEnum("marketing_channel", [
+  "social_media", "email", "sms", "google_ads", "facebook_ads", "instagram_ads", 
+  "youtube_ads", "linkedin_ads", "twitter_ads", "tiktok_ads", "snapchat_ads",
+  "display_ads", "search_ads", "influencer", "affiliate", "content_marketing",
+  "direct_mail", "print_ads", "radio", "tv", "podcast", "webinar", "event",
+  "referral", "organic_search", "word_of_mouth", "other"
+]);
+
+// Budget type enum
+export const budgetTypeEnum = pgEnum("budget_type", ["daily", "total", "monthly"]);
+
+// Marketing campaigns table
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: campaignTypeEnum("type").notNull(),
+  status: campaignStatusEnum("status").notNull().default("draft"),
+  
+  // Budget and goals
+  budgetAmount: decimal("budget_amount", { precision: 10, scale: 2 }),
+  budgetType: budgetTypeEnum("budget_type"),
+  targetAudience: text("target_audience"),
+  primaryGoal: varchar("primary_goal", { length: 100 }),
+  secondaryGoals: json("secondary_goals").$type<string[]>(),
+  
+  // Targeting
+  ageRangeMin: integer("age_range_min"),
+  ageRangeMax: integer("age_range_max"),
+  genderTarget: varchar("gender_target", { length: 20 }),
+  locationTargets: json("location_targets").$type<string[]>(),
+  interestTargets: json("interest_targets").$type<string[]>(),
+  behaviorTargets: json("behavior_targets").$type<string[]>(),
+  
+  // Timeline
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  
+  // Performance tracking
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  cost: decimal("cost", { precision: 10, scale: 2 }).default("0"),
+  
+  // Metadata
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorIdIdx: index('idx_campaigns_vendor_id').on(table.vendorId),
+    statusIdx: index('idx_campaigns_status').on(table.status),
+    typeIdx: index('idx_campaigns_type').on(table.type),
+    startDateIdx: index('idx_campaigns_start_date').on(table.startDate),
+    endDateIdx: index('idx_campaigns_end_date').on(table.endDate),
+    activeIdx: index('idx_campaigns_active').on(table.isActive),
+  };
+});
+
+// Campaign activities (individual marketing initiatives within a campaign)
+export const campaignActivities = pgTable("campaign_activities", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull().references(() => marketingCampaigns.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  channel: marketingChannelEnum("channel").notNull(),
+  
+  // Activity details
+  content: text("content"),
+  mediaUrls: json("media_urls").$type<string[]>(),
+  targetUrl: varchar("target_url", { length: 500 }),
+  callToAction: varchar("call_to_action", { length: 100 }),
+  
+  // Budget allocation
+  budgetAllocated: decimal("budget_allocated", { precision: 10, scale: 2 }),
+  actualSpend: decimal("actual_spend", { precision: 10, scale: 2 }).default("0"),
+  
+  // Scheduling
+  scheduledDate: timestamp("scheduled_date"),
+  publishedDate: timestamp("published_date"),
+  
+  // Performance tracking
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  engagements: integer("engagements").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  
+  // Metrics
+  clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 4 }),
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 4 }),
+  costPerClick: decimal("cost_per_click", { precision: 10, scale: 2 }),
+  costPerConversion: decimal("cost_per_conversion", { precision: 10, scale: 2 }),
+  returnOnAdSpend: decimal("return_on_ad_spend", { precision: 5, scale: 2 }),
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    campaignIdIdx: index('idx_activities_campaign_id').on(table.campaignId),
+    channelIdx: index('idx_activities_channel').on(table.channel),
+    scheduledDateIdx: index('idx_activities_scheduled_date').on(table.scheduledDate),
+    publishedDateIdx: index('idx_activities_published_date').on(table.publishedDate),
+    activeIdx: index('idx_activities_active').on(table.isActive),
+  };
+});
+
+// Campaign touchpoints (tracking customer interactions)
+export const campaignTouchpoints = pgTable("campaign_touchpoints", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull().references(() => marketingCampaigns.id, { onDelete: "cascade" }),
+  activityId: integer("activity_id").references(() => campaignActivities.id, { onDelete: "set null" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  
+  // Touchpoint details
+  touchpointType: varchar("touchpoint_type", { length: 50 }).notNull(), // impression, click, engagement, conversion
+  channel: marketingChannelEnum("channel").notNull(),
+  source: varchar("source", { length: 100 }),
+  medium: varchar("medium", { length: 100 }),
+  
+  // Attribution
+  isFirstTouch: boolean("is_first_touch").default(false),
+  isLastTouch: boolean("is_last_touch").default(false),
+  attributionWeight: decimal("attribution_weight", { precision: 3, scale: 2 }).default("1.00"),
+  
+  // Conversion tracking
+  conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }),
+  productId: integer("product_id").references(() => products.id, { onDelete: "set null" }),
+  
+  // Technical data
+  sessionId: varchar("session_id", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  referrerUrl: text("referrer_url"),
+  landingPageUrl: text("landing_page_url"),
+  
+  // Metadata
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    campaignIdIdx: index('idx_touchpoints_campaign_id').on(table.campaignId),
+    activityIdIdx: index('idx_touchpoints_activity_id').on(table.activityId),
+    userIdIdx: index('idx_touchpoints_user_id').on(table.userId),
+    touchpointTypeIdx: index('idx_touchpoints_type').on(table.touchpointType),
+    channelIdx: index('idx_touchpoints_channel').on(table.channel),
+    createdAtIdx: index('idx_touchpoints_created_at').on(table.createdAt),
+  };
+});
+
+// Campaign products (products being promoted in campaigns)
+export const campaignProducts = pgTable("campaign_products", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull().references(() => marketingCampaigns.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  
+  // Product-specific campaign settings
+  featured: boolean("featured").default(false),
+  discountOffered: decimal("discount_offered", { precision: 5, scale: 2 }),
+  promotionalPrice: decimal("promotional_price", { precision: 10, scale: 2 }),
+  
+  // Performance tracking for this product in the campaign
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  views: integer("views").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    campaignProductIdx: index('idx_campaign_products_campaign_product').on(table.campaignId, table.productId),
+    campaignIdIdx: index('idx_campaign_products_campaign_id').on(table.campaignId),
+    productIdIdx: index('idx_campaign_products_product_id').on(table.productId),
+    featuredIdx: index('idx_campaign_products_featured').on(table.featured),
+  };
+});
+
+// Campaign analytics snapshots (daily/weekly/monthly rollups)
+export const campaignAnalytics = pgTable("campaign_analytics", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull().references(() => marketingCampaigns.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // daily, weekly, monthly
+  
+  // Performance metrics
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  engagements: integer("engagements").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  cost: decimal("cost", { precision: 10, scale: 2 }).default("0"),
+  
+  // Calculated metrics
+  clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 4 }),
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 4 }),
+  costPerClick: decimal("cost_per_click", { precision: 10, scale: 2 }),
+  costPerConversion: decimal("cost_per_conversion", { precision: 10, scale: 2 }),
+  returnOnAdSpend: decimal("return_on_ad_spend", { precision: 5, scale: 2 }),
+  
+  // Audience metrics
+  reach: integer("reach").default(0),
+  frequency: decimal("frequency", { precision: 3, scale: 2 }),
+  newVisitors: integer("new_visitors").default(0),
+  returningVisitors: integer("returning_visitors").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    campaignDateIdx: index('idx_analytics_campaign_date').on(table.campaignId, table.date),
+    campaignIdIdx: index('idx_analytics_campaign_id').on(table.campaignId),
+    dateIdx: index('idx_analytics_date').on(table.date),
+    periodIdx: index('idx_analytics_period').on(table.period),
+  };
+});
+
+// =====================================
 // Fraud Prevention Schema
 // =====================================
 
@@ -1420,6 +1652,27 @@ export const insertVendorPaymentInfoSchema = createInsertSchema(vendorPaymentInf
 // Vendor payment information types
 export type VendorPaymentInfo = typeof vendorPaymentInfo.$inferSelect;
 export type InsertVendorPaymentInfo = z.infer<typeof insertVendorPaymentInfoSchema>;
+
+// Marketing campaign schemas and types
+export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns).omit({ id: true, createdAt: true, updatedAt: true });
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+export type InsertMarketingCampaign = z.infer<typeof insertMarketingCampaignSchema>;
+
+export const insertCampaignActivitySchema = createInsertSchema(campaignActivities).omit({ id: true, createdAt: true, updatedAt: true });
+export type CampaignActivity = typeof campaignActivities.$inferSelect;
+export type InsertCampaignActivity = z.infer<typeof insertCampaignActivitySchema>;
+
+export const insertCampaignTouchpointSchema = createInsertSchema(campaignTouchpoints).omit({ id: true, createdAt: true });
+export type CampaignTouchpoint = typeof campaignTouchpoints.$inferSelect;
+export type InsertCampaignTouchpoint = z.infer<typeof insertCampaignTouchpointSchema>;
+
+export const insertCampaignProductSchema = createInsertSchema(campaignProducts).omit({ id: true, createdAt: true, updatedAt: true });
+export type CampaignProduct = typeof campaignProducts.$inferSelect;
+export type InsertCampaignProduct = z.infer<typeof insertCampaignProductSchema>;
+
+export const insertCampaignAnalyticsSchema = createInsertSchema(campaignAnalytics).omit({ id: true, createdAt: true });
+export type CampaignAnalytics = typeof campaignAnalytics.$inferSelect;
+export type InsertCampaignAnalytics = z.infer<typeof insertCampaignAnalyticsSchema>;
 
 // Chatroom type enum
 export const chatroomTypeEnum = pgEnum('chatroom_type', ['global', 'regional', 'country', 'private']);

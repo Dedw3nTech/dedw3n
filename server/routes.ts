@@ -6511,6 +6511,359 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =====================================
+  // Marketing Campaign Routes
+  // =====================================
+
+  // Get all campaigns for a vendor
+  app.get('/api/vendors/:vendorId/campaigns', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (!vendorId) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      const campaigns = await db
+        .select()
+        .from(marketingCampaigns)
+        .where(eq(marketingCampaigns.vendorId, vendorId))
+        .orderBy(desc(marketingCampaigns.createdAt));
+
+      res.json(campaigns);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      res.status(500).json({ message: 'Failed to fetch campaigns' });
+    }
+  });
+
+  // Create a new marketing campaign
+  app.post('/api/vendors/:vendorId/campaigns', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (!vendorId) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      const campaignData = insertMarketingCampaignSchema.parse({
+        ...req.body,
+        vendorId
+      });
+
+      const [newCampaign] = await db
+        .insert(marketingCampaigns)
+        .values(campaignData)
+        .returning();
+
+      res.status(201).json(newCampaign);
+    } catch (error: any) {
+      console.error('Error creating campaign:', error);
+      if (error.issues) {
+        return res.status(400).json({ message: 'Validation error', errors: error.issues });
+      }
+      res.status(500).json({ message: 'Failed to create campaign' });
+    }
+  });
+
+  // Update a marketing campaign
+  app.put('/api/campaigns/:id', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const updateData = req.body;
+      delete updateData.id;
+      delete updateData.createdAt;
+      delete updateData.updatedAt;
+
+      const [updatedCampaign] = await db
+        .update(marketingCampaigns)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(marketingCampaigns.id, campaignId))
+        .returning();
+
+      if (!updatedCampaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      res.json(updatedCampaign);
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      res.status(500).json({ message: 'Failed to update campaign' });
+    }
+  });
+
+  // Delete a marketing campaign
+  app.delete('/api/campaigns/:id', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const [deletedCampaign] = await db
+        .delete(marketingCampaigns)
+        .where(eq(marketingCampaigns.id, campaignId))
+        .returning();
+
+      if (!deletedCampaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      res.json({ message: 'Campaign deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      res.status(500).json({ message: 'Failed to delete campaign' });
+    }
+  });
+
+  // Get campaign activities
+  app.get('/api/campaigns/:campaignId/activities', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const activities = await db
+        .select()
+        .from(campaignActivities)
+        .where(eq(campaignActivities.campaignId, campaignId))
+        .orderBy(desc(campaignActivities.createdAt));
+
+      res.json(activities);
+    } catch (error) {
+      console.error('Error fetching campaign activities:', error);
+      res.status(500).json({ message: 'Failed to fetch activities' });
+    }
+  });
+
+  // Create campaign activity
+  app.post('/api/campaigns/:campaignId/activities', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const activityData = insertCampaignActivitySchema.parse({
+        ...req.body,
+        campaignId
+      });
+
+      const [newActivity] = await db
+        .insert(campaignActivities)
+        .values(activityData)
+        .returning();
+
+      res.status(201).json(newActivity);
+    } catch (error: any) {
+      console.error('Error creating activity:', error);
+      if (error.issues) {
+        return res.status(400).json({ message: 'Validation error', errors: error.issues });
+      }
+      res.status(500).json({ message: 'Failed to create activity' });
+    }
+  });
+
+  // Add products to campaign
+  app.post('/api/campaigns/:campaignId/products', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const { productIds, featured = false, discountOffered = null, promotionalPrice = null } = req.body;
+
+      if (!Array.isArray(productIds) || productIds.length === 0) {
+        return res.status(400).json({ message: 'Product IDs array is required' });
+      }
+
+      const campaignProducts = productIds.map(productId => ({
+        campaignId,
+        productId: parseInt(productId),
+        featured,
+        discountOffered,
+        promotionalPrice
+      }));
+
+      const newCampaignProducts = await db
+        .insert(campaignProducts)
+        .values(campaignProducts)
+        .returning();
+
+      res.status(201).json(newCampaignProducts);
+    } catch (error) {
+      console.error('Error adding products to campaign:', error);
+      res.status(500).json({ message: 'Failed to add products to campaign' });
+    }
+  });
+
+  // Get campaign products
+  app.get('/api/campaigns/:campaignId/products', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const campaignProducts = await db
+        .select({
+          id: campaignProducts.id,
+          campaignId: campaignProducts.campaignId,
+          productId: campaignProducts.productId,
+          featured: campaignProducts.featured,
+          discountOffered: campaignProducts.discountOffered,
+          promotionalPrice: campaignProducts.promotionalPrice,
+          impressions: campaignProducts.impressions,
+          clicks: campaignProducts.clicks,
+          views: campaignProducts.views,
+          conversions: campaignProducts.conversions,
+          revenue: campaignProducts.revenue,
+          createdAt: campaignProducts.createdAt,
+          updatedAt: campaignProducts.updatedAt,
+          // Product details
+          productName: products.name,
+          productPrice: products.price,
+          productImage: products.imageUrl
+        })
+        .from(campaignProducts)
+        .leftJoin(products, eq(campaignProducts.productId, products.id))
+        .where(eq(campaignProducts.campaignId, campaignId));
+
+      res.json(campaignProducts);
+    } catch (error) {
+      console.error('Error fetching campaign products:', error);
+      res.status(500).json({ message: 'Failed to fetch campaign products' });
+    }
+  });
+
+  // Track campaign touchpoint
+  app.post('/api/campaigns/:campaignId/touchpoints', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const touchpointData = insertCampaignTouchpointSchema.parse({
+        ...req.body,
+        campaignId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      const [newTouchpoint] = await db
+        .insert(campaignTouchpoints)
+        .values(touchpointData)
+        .returning();
+
+      res.status(201).json(newTouchpoint);
+    } catch (error: any) {
+      console.error('Error creating touchpoint:', error);
+      if (error.issues) {
+        return res.status(400).json({ message: 'Validation error', errors: error.issues });
+      }
+      res.status(500).json({ message: 'Failed to create touchpoint' });
+    }
+  });
+
+  // Get campaign analytics
+  app.get('/api/campaigns/:campaignId/analytics', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      const { period = 'daily', startDate, endDate } = req.query;
+
+      let analyticsQuery = db
+        .select()
+        .from(campaignAnalytics)
+        .where(and(
+          eq(campaignAnalytics.campaignId, campaignId),
+          eq(campaignAnalytics.period, period as string)
+        ));
+
+      if (startDate && endDate) {
+        analyticsQuery = analyticsQuery.where(
+          and(
+            gte(campaignAnalytics.date, startDate as string),
+            lte(campaignAnalytics.date, endDate as string)
+          )
+        );
+      }
+
+      const analytics = await analyticsQuery.orderBy(desc(campaignAnalytics.date));
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching campaign analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch campaign analytics' });
+    }
+  });
+
+  // Get campaign performance summary
+  app.get('/api/campaigns/:campaignId/performance', async (req: Request, res: Response) => {
+    try {
+      const campaignId = parseInt(req.params.campaignId);
+      if (!campaignId) {
+        return res.status(400).json({ message: 'Invalid campaign ID' });
+      }
+
+      // Get campaign details
+      const [campaign] = await db
+        .select()
+        .from(marketingCampaigns)
+        .where(eq(marketingCampaigns.id, campaignId));
+
+      if (!campaign) {
+        return res.status(404).json({ message: 'Campaign not found' });
+      }
+
+      // Get touchpoint summary
+      const touchpointSummary = await db
+        .select({
+          touchpointType: campaignTouchpoints.touchpointType,
+          channel: campaignTouchpoints.channel,
+          count: sql<number>`COUNT(*)::integer`
+        })
+        .from(campaignTouchpoints)
+        .where(eq(campaignTouchpoints.campaignId, campaignId))
+        .groupBy(campaignTouchpoints.touchpointType, campaignTouchpoints.channel);
+
+      // Get activity performance
+      const activityPerformance = await db
+        .select({
+          id: campaignActivities.id,
+          name: campaignActivities.name,
+          channel: campaignActivities.channel,
+          impressions: campaignActivities.impressions,
+          clicks: campaignActivities.clicks,
+          conversions: campaignActivities.conversions,
+          revenue: campaignActivities.revenue,
+          actualSpend: campaignActivities.actualSpend,
+          clickThroughRate: campaignActivities.clickThroughRate,
+          conversionRate: campaignActivities.conversionRate,
+          returnOnAdSpend: campaignActivities.returnOnAdSpend
+        })
+        .from(campaignActivities)
+        .where(eq(campaignActivities.campaignId, campaignId));
+
+      res.json({
+        campaign,
+        touchpointSummary,
+        activityPerformance
+      });
+    } catch (error) {
+      console.error('Error fetching campaign performance:', error);
+      res.status(500).json({ message: 'Failed to fetch campaign performance' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
