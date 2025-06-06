@@ -204,6 +204,7 @@ export const products = pgTable("products", {
   continueSellingWhenOutOfStock: boolean("continue_selling_when_out_of_stock").default(false),
   requiresShipping: boolean("requires_shipping").default(true),
   shippingCarrier: text("shipping_carrier"), // Shipping carrier selection
+  shippingIncluded: boolean("shipping_included").default(false), // Whether shipping cost is included in price
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   productCode: varchar("product_code", { length: 50 }).unique(),

@@ -67,6 +67,7 @@ const productSchema = z.object({
   continueSellingWhenOutOfStock: z.boolean().default(false),
   requiresShipping: z.boolean().default(true),
   shippingCarrier: z.string().optional(),
+  shippingIncluded: z.boolean().default(false),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -113,6 +114,7 @@ export default function AddProduct() {
       continueSellingWhenOutOfStock: false,
       requiresShipping: true,
       shippingCarrier: '',
+      shippingIncluded: false,
       seoTitle: '',
       seoDescription: '',
       serviceDuration: '',
@@ -467,6 +469,27 @@ export default function AddProduct() {
                       )}
                     />
                   </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="shippingIncluded"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Include shipping costs in price</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Choose whether shipping costs are included in the product price or calculated separately at checkout
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 
