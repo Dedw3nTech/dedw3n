@@ -48,6 +48,7 @@ export const currencies: Currency[] = [
   { code: 'DOP', name: 'Dominican Peso', symbol: '$', flag: '🇩🇴', rate: 0.017 },
   { code: 'MXN', name: 'Mexican Peso', symbol: '$', flag: '🇲🇽', rate: 0.049 },
   { code: 'CAD', name: 'Canadian Dollar', symbol: '$', flag: '🇨🇦', rate: 0.73 },
+  { code: 'JMD', name: 'Jamaican Dollar', symbol: 'J$', flag: '🇯🇲', rate: 0.0065 },
   { code: 'ALL', name: 'Albanian Lek', symbol: 'L', flag: '🇦🇱', rate: 0.011 },
 ];
 

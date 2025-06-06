@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { useCurrency, currencies, Currency } from "@/contexts/CurrencyContext";
 
 export function CurrencySelector() {
@@ -26,19 +26,22 @@ export function CurrencySelector() {
           <ChevronDown className="h-3 w-3" />
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-64 max-h-64 overflow-y-auto">
         {currencies.map((currency: Currency) => (
           <DropdownMenuItem
             key={currency.code}
             onClick={() => handleCurrencyChange(currency)}
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center justify-between cursor-pointer"
           >
-            <div className="flex-1">
-              <div className="font-medium">{currency.symbol} {currency.code}</div>
-              <div className="text-xs text-muted-foreground">{currency.name}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{currency.flag}</span>
+              <div>
+                <div className="font-medium">{currency.symbol} {currency.code}</div>
+                <div className="text-xs text-muted-foreground">{currency.name}</div>
+              </div>
             </div>
             {selectedCurrency.code === currency.code && (
-              <div className="w-2 h-2 bg-primary rounded-full" />
+              <Check className="h-4 w-4" />
             )}
           </DropdownMenuItem>
         ))}
