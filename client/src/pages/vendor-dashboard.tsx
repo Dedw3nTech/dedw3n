@@ -340,7 +340,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -369,10 +369,7 @@ export default function VendorDashboard() {
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="commission" className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Commission
-          </TabsTrigger>
+
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
@@ -526,6 +523,12 @@ export default function VendorDashboard() {
               </Card>
             </div>
 
+            {/* Commission Dashboard Section */}
+            {vendorId && (
+              <div className="mt-8">
+                <VendorCommissionDashboard vendorId={vendorId} />
+              </div>
+            )}
 
           </TabsContent>
 
@@ -613,10 +616,7 @@ export default function VendorDashboard() {
             <MarketingCampaigns />
           </TabsContent>
 
-          {/* Commission Tab */}
-          <TabsContent value="commission" className="mt-0 space-y-6">
-            {vendorId && <VendorCommissionDashboard vendorId={vendorId} />}
-          </TabsContent>
+
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="mt-0 space-y-6">
