@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Edit, Eye, MoreHorizontal, Plus, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Table,
@@ -21,27 +21,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ProductsListProps {
   vendorId?: number;
 }
 
 export default function ProductsList({ vendorId }: ProductsListProps) {
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch vendor products
   const { data: products, isLoading } = useQuery({
