@@ -34,6 +34,7 @@ import {
   Video,
   Building,
   Compass,
+  TrendingUp,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -89,6 +90,12 @@ export default function OptimizedNavigation() {
       href: "/contact",
       icon: MessageSquare,
       isActive: location.startsWith("/contact"),
+    },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: TrendingUp,
+      isActive: location.startsWith("/analytics"),
     },
   ];
 
