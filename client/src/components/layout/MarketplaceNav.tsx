@@ -3,6 +3,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslatedText } from '@/hooks/use-translated-text';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   const { marketType, setMarketType } = useMarketType();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { cartItemCount } = useCart();
+
+  // Translated text for marketplace headers
+  const c2cText = useTranslatedText("Buy from a friend (C2C)");
+  const b2cText = useTranslatedText("Buy from a store (B2C)");
+  const b2bText = useTranslatedText("Business (B2B)");
+  const searchPlaceholder = useTranslatedText("Search products...");
+  const likedText = useTranslatedText("Liked");
+  const cartText = useTranslatedText("Shopping Cart");
+  const ordersText = useTranslatedText("Orders & Returns");
+  const vendorText = useTranslatedText("Vendor Dashboard");
 
   // Fetch liked products count
   const { data: likedProductsData } = useQuery<{ count: number }>({
@@ -57,7 +68,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  Buy from a friend (C2C)
+                  {c2cText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -80,7 +91,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  Buy from a store (B2C)
+                  {b2cText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -103,7 +114,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  Business (B2B)
+                  {b2bText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -118,7 +129,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder={searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-10"
@@ -142,7 +153,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">Liked</span>
+              <span className="text-sm font-medium">{likedText}</span>
             </Button>
 
 
@@ -159,7 +170,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">Shopping Cart</span>
+              <span className="text-sm font-medium">{cartText}</span>
             </Button>
             
             <Button
@@ -175,7 +186,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">Orders & Returns</span>
+              <span className="text-sm font-medium">{ordersText}</span>
             </Button>
             
             <Button
