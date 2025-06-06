@@ -395,9 +395,12 @@ export default function VendorDashboard() {
               <div>
                 <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
                 {vendor && (
-                  <p className="text-blue-600 text-xs font-normal mt-1">
-                    Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
-                  </p>
+                  <>
+                    {console.log('Vendor data in dashboard:', vendor)}
+                    <p className="text-blue-600 text-xs font-normal mt-1">
+                      Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
+                    </p>
+                  </>
                 )}
               </div>
               <div className="flex gap-3">
