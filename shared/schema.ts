@@ -45,6 +45,9 @@ export const regionEnum = pgEnum('region', [
 // Define product type enum
 export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 
+// Define product status enum
+export const productStatusEnum = pgEnum('product_status', ['active', 'draft', 'archived']);
+
 // Define vendor badge level enum
 export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor', 'elite_vendor']);
 
@@ -184,6 +187,24 @@ export const products = pgTable("products", {
   isNew: boolean("is_new").default(false),
   isOnSale: boolean("is_on_sale").default(false),
   productType: productTypeEnum("product_type").default('product').notNull(),
+  // New Shopify-style fields
+  status: productStatusEnum("status").default('active').notNull(),
+  publishedOnOnlineStore: boolean("published_on_online_store").default(true),
+  publishedOnPointOfSale: boolean("published_on_point_of_sale").default(false),
+  publishedOnShop: boolean("published_on_shop").default(true),
+  vendor: text("vendor"), // Custom vendor field separate from vendorId
+  collections: text("collections").array().default([]),
+  tags: text("tags").array().default([]),
+  weight: doublePrecision("weight"), // Product weight
+  weightUnit: text("weight_unit").default('kg'), // kg, lb, oz, g
+  dimensions: text("dimensions"), // Format: "L x W x H"
+  sku: text("sku"), // Stock Keeping Unit
+  barcode: text("barcode"),
+  trackQuantity: boolean("track_quantity").default(true),
+  continueSellingWhenOutOfStock: boolean("continue_selling_when_out_of_stock").default(false),
+  requiresShipping: boolean("requires_shipping").default(true),
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
