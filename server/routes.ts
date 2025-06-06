@@ -5112,6 +5112,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/vendors/:vendorId/analytics/reviews', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Get reviews data for vendor's products
+      const reviewsData = await db
+        .select({
+          productId: reviews.productId,
+          productName: products.name,
+          rating: reviews.rating,
+          comment: reviews.content,
+          customerName: users.name,
+          isVerified: sql<boolean>`
+            EXISTS(
+              SELECT 1 FROM ${orderItems} oi 
+              INNER JOIN ${orders} o ON oi.order_id = o.id
+              WHERE o.user_id = ${reviews.userId} AND oi.product_id = ${reviews.productId}
+            )
+          `,
+          createdAt: reviews.createdAt
+        })
+        .from(reviews)
+        .innerJoin(products, eq(reviews.productId, products.id))
+        .innerJoin(users, eq(reviews.userId, users.id))
+        .where(eq(products.vendorId, vendorId))
+        .orderBy(desc(reviews.createdAt))
+        .limit(100);
+
+      res.json(reviewsData);
+    } catch (error) {
+      console.error('Error fetching reviews analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch reviews analytics' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
