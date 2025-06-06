@@ -564,11 +564,9 @@ export default function VendorDashboard() {
 
           {/* Marketing Tab */}
           <TabsContent value="marketing" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Marketing & Promotions</h2>
             
             {/* Marketing Campaigns Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Marketing Campaigns</h3>
               <MarketingCampaigns />
             </div>
             
@@ -576,7 +574,7 @@ export default function VendorDashboard() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold">Promotions & Discounts</h3>
+                  <h3 className="text-2xl font-bold">Promotions & Discounts</h3>
                   <p className="text-muted-foreground">Manage discount codes and automatic promotions</p>
                 </div>
               </div>
@@ -591,7 +589,7 @@ export default function VendorDashboard() {
                 <TabsContent value="discount-codes" className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="text-md font-semibold">Discount Codes</h4>
-                    <Button onClick={() => {
+                    <Button className="bg-black hover:bg-gray-800" onClick={() => {
                       setDiscountFormType("discount-code");
                       setDiscountFormOpen(true);
                     }}>
@@ -607,7 +605,7 @@ export default function VendorDashboard() {
                 <TabsContent value="auto-discounts" className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="text-md font-semibold">Automatic Discounts</h4>
-                    <Button onClick={() => {
+                    <Button className="bg-black hover:bg-gray-800" onClick={() => {
                       setDiscountFormType("automatic");
                       setDiscountFormOpen(true);
                     }}>

@@ -180,7 +180,7 @@ export default function MarketingCampaigns() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-black hover:bg-gray-800">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Campaign
             </Button>
