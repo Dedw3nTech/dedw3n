@@ -164,10 +164,6 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Commission Dashboard</h2>
-          <p className="text-muted-foreground">
-            Track your monthly commission payments and tier status
-          </p>
         </div>
         {commissionData.vendor.accountStatus !== 'active' && (
           <Badge variant="destructive">
