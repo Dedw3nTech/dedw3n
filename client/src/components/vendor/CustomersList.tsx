@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, Mail, Phone, ExternalLink, ShoppingBag, Calendar, MapPin, User, CreditCard, Globe, Building2 } from "lucide-react";
+import { Search, Loader2, Mail, Phone, ExternalLink, ShoppingBag, Calendar, MapPin, User, CreditCard, Globe, Building2, TrendingUp, Users, Target, MessageSquare, BarChart3, PieChart } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Table,
@@ -52,6 +52,8 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   const [sortBy, setSortBy] = useState("recent");
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const [segmentFilter, setSegmentFilter] = useState("all");
+  const [analyticsView, setAnalyticsView] = useState("overview");
   const { formatPriceFromGBP } = useCurrency();
 
   // Fetch customers
@@ -67,17 +69,77 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
     enabled: !!vendorId,
   });
 
-  // Filter customers based on search query
+  // Fetch customer segmentation analytics
+  const { data: segmentationData, isLoading: isLoadingSegmentation } = useQuery({
+    queryKey: ["/api/vendors", vendorId, "analytics/segmentation"],
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${vendorId}/analytics/segmentation`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch segmentation data");
+      }
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  // Fetch customer lifetime value analytics
+  const { data: lifetimeValueData, isLoading: isLoadingLTV } = useQuery({
+    queryKey: ["/api/vendors", vendorId, "analytics/lifetime-value"],
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${vendorId}/analytics/lifetime-value`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch lifetime value data");
+      }
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  // Fetch customer service interactions
+  const { data: serviceInteractions, isLoading: isLoadingService } = useQuery({
+    queryKey: ["/api/vendors", vendorId, "analytics/service-interactions"],
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${vendorId}/analytics/service-interactions`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch service interactions");
+      }
+      return response.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  // Filter customers based on search query and segment
   const filteredCustomers = customers?.filter((customer: any) => {
-    if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      customer.name?.toLowerCase().includes(query) ||
-      customer.email?.toLowerCase().includes(query) ||
-      customer.phone?.toLowerCase().includes(query)
-    );
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        customer.name?.toLowerCase().includes(query) ||
+        customer.email?.toLowerCase().includes(query) ||
+        customer.phone?.toLowerCase().includes(query)
+      );
+      if (!matchesSearch) return false;
+    }
+
+    // Segment filter
+    if (segmentFilter !== "all") {
+      const customerSegment = getCustomerSegment(customer);
+      if (customerSegment.toLowerCase() !== segmentFilter.toLowerCase()) return false;
+    }
+
+    return true;
   }) || [];
+
+  // Helper function to determine customer segment
+  const getCustomerSegment = (customer: any) => {
+    const totalSpent = customer.totalSpent || 0;
+    const totalOrders = customer.totalOrders || 0;
+    
+    if (totalSpent >= 1000 && totalOrders >= 10) return 'VIP';
+    if (totalSpent >= 500 && totalOrders >= 5) return 'Premium';
+    if (totalSpent >= 100 && totalOrders >= 2) return 'Regular';
+    return 'New';
+  };
 
   // Sort customers based on selected sort option
   const sortedCustomers = [...filteredCustomers].sort((a: any, b: any) => {
@@ -155,8 +217,58 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-6">
+      {/* Analytics Tabs */}
+      <Tabs value={analyticsView} onValueChange={setAnalyticsView}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="segmentation">Segmentation</TabsTrigger>
+          <TabsTrigger value="lifetime-value">Lifetime Value</TabsTrigger>
+          <TabsTrigger value="service-interactions">Service History</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab - Traditional Customer List */}
+        <TabsContent value="overview" className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-2 flex-1">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search customers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Segments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Segments</SelectItem>
+                  <SelectItem value="vip">VIP</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="regular">Regular</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recent Activity</SelectItem>
+                  <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                  <SelectItem value="orders_high">Most Orders</SelectItem>
+                  <SelectItem value="amount_high">Highest Spent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Customer Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
