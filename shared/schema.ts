@@ -166,6 +166,10 @@ export const vendors = pgTable("vendors", {
   accountSuspensionReason: text("account_suspension_reason"),
   paymentIssueNotifiedAt: timestamp("payment_issue_notified_at"),
   paymentFailureCount: integer("payment_failure_count").default(0),
+  // Sales Manager fields
+  hasSalesManager: boolean("has_sales_manager").default(false),
+  salesManagerName: text("sales_manager_name"),
+  salesManagerId: text("sales_manager_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({

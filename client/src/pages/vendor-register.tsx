@@ -30,6 +30,18 @@ const privateVendorSchema = z.object({
   zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
   country: z.string().min(2, "Country must be at least 2 characters"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
+  hasSalesManager: z.boolean().default(false),
+  salesManagerName: z.string().optional(),
+  salesManagerId: z.string().optional(),
+}).refine((data) => {
+  if (data.hasSalesManager) {
+    return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
+           data.salesManagerId && data.salesManagerId.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Sales Manager name and ID are required when Sales Manager is selected",
+  path: ["salesManagerName"],
 });
 
 // Business Vendor Schema
@@ -50,6 +62,18 @@ const businessVendorSchema = z.object({
   businessRegistrationNumber: z.string().min(5, "Registration number must be at least 5 characters"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
   businessLicense: z.string().optional(),
+  hasSalesManager: z.boolean().default(false),
+  salesManagerName: z.string().optional(),
+  salesManagerId: z.string().optional(),
+}).refine((data) => {
+  if (data.hasSalesManager) {
+    return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
+           data.salesManagerId && data.salesManagerId.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Sales Manager name and ID are required when Sales Manager is selected",
+  path: ["salesManagerName"],
 });
 
 type PrivateVendorForm = z.infer<typeof privateVendorSchema>;
@@ -89,6 +113,9 @@ export default function VendorRegisterPage() {
       zipCode: "",
       country: "",
       website: "",
+      hasSalesManager: false,
+      salesManagerName: "",
+      salesManagerId: "",
     },
   });
 
