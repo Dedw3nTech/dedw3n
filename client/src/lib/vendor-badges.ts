@@ -22,9 +22,9 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
     icon: Badge,
     minSales: 0,
     minTransactions: 0,
-    color: "bg-gray-500",
-    bgColor: "bg-gray-50",
-    textColor: "text-gray-700"
+    color: "bg-blue-500",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700"
   },
   {
     level: "level_2_vendor", 
@@ -33,9 +33,9 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
     icon: Award,
     minSales: 100,
     minTransactions: 25,
-    color: "bg-blue-500",
-    bgColor: "bg-blue-50",
-    textColor: "text-blue-700"
+    color: "bg-indigo-500",
+    bgColor: "bg-indigo-50",
+    textColor: "text-indigo-700"
   },
   {
     level: "top_vendor",
