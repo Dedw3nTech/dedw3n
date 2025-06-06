@@ -340,7 +340,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -358,10 +358,7 @@ export default function VendorDashboard() {
             <Truck className="h-4 w-4 mr-2" />
             Shipping
           </TabsTrigger>
-          <TabsTrigger value="promotions" className="flex items-center">
-            <Tag className="h-4 w-4 mr-2" />
-            Promotions
-          </TabsTrigger>
+
           <TabsTrigger value="marketing" className="flex items-center">
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
@@ -566,58 +563,66 @@ export default function VendorDashboard() {
             </div>
           </TabsContent>
 
-          {/* Promotions Tab */}
-          <TabsContent value="promotions" className="mt-0 space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Promotions & Discounts</h2>
-                <p className="text-muted-foreground">Manage discount codes and automatic promotions</p>
-              </div>
-            </div>
 
-            <Tabs defaultValue="discount-codes" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
-                <TabsTrigger value="auto-discounts">Automatic Discounts</TabsTrigger>
-              </TabsList>
-
-              {/* Discount Codes Tab */}
-              <TabsContent value="discount-codes" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Discount Codes</h3>
-                  <Button onClick={() => {
-                    setDiscountFormType("discount-code");
-                    setDiscountFormOpen(true);
-                  }}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create Code
-                  </Button>
-                </div>
-
-                <DiscountList vendorId={vendorId} type="discount-code" />
-              </TabsContent>
-
-              {/* Automatic Discounts Tab */}
-              <TabsContent value="auto-discounts" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Automatic Discounts</h3>
-                  <Button onClick={() => {
-                    setDiscountFormType("automatic");
-                    setDiscountFormOpen(true);
-                  }}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create Auto Discount
-                  </Button>
-                </div>
-
-                <DiscountList vendorId={vendorId} type="automatic" />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
 
           {/* Marketing Tab */}
           <TabsContent value="marketing" className="mt-0 space-y-6">
-            <MarketingCampaigns />
+            <h2 className="text-2xl font-bold tracking-tight">Marketing & Promotions</h2>
+            
+            {/* Marketing Campaigns Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Marketing Campaigns</h3>
+              <MarketingCampaigns />
+            </div>
+            
+            {/* Promotions & Discounts Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">Promotions & Discounts</h3>
+                  <p className="text-muted-foreground">Manage discount codes and automatic promotions</p>
+                </div>
+              </div>
+
+              <Tabs defaultValue="discount-codes" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
+                  <TabsTrigger value="auto-discounts">Automatic Discounts</TabsTrigger>
+                </TabsList>
+
+                {/* Discount Codes Tab */}
+                <TabsContent value="discount-codes" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-md font-semibold">Discount Codes</h4>
+                    <Button onClick={() => {
+                      setDiscountFormType("discount-code");
+                      setDiscountFormOpen(true);
+                    }}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Create Code
+                    </Button>
+                  </div>
+
+                  <DiscountList vendorId={vendorId} type="discount-code" />
+                </TabsContent>
+
+                {/* Automatic Discounts Tab */}
+                <TabsContent value="auto-discounts" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-md font-semibold">Automatic Discounts</h4>
+                    <Button onClick={() => {
+                      setDiscountFormType("automatic");
+                      setDiscountFormOpen(true);
+                    }}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Create Auto Discount
+                    </Button>
+                  </div>
+
+                  <DiscountList vendorId={vendorId} type="automatic" />
+                </TabsContent>
+              </Tabs>
+            </div>
           </TabsContent>
 
 
