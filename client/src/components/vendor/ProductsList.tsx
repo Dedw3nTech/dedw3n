@@ -92,7 +92,6 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <h2 className="text-2xl font-bold">Products</h2>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
           <Input
