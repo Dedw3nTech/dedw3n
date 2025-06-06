@@ -4,6 +4,7 @@ import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
 import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-orm";
+import { generateProductCode } from "./product-code-generator";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -1386,7 +1387,22 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createProduct(product: InsertProduct): Promise<Product> {
-    const [newProduct] = await db.insert(products).values(product).returning();
+    // Generate unique product code if the product is being published
+    const productData = { ...product };
+    
+    // Check if the product is being published (status is 'active' and published on any channel)
+    const isPublished = productData.status === 'active' && 
+                       (productData.publishedOnOnlineStore || productData.publishedOnPointOfSale || productData.publishedOnShop);
+    
+    if (isPublished && !productData.productCode) {
+      // Get vendor to extract user ID
+      const vendor = await this.getVendor(productData.vendorId);
+      if (vendor) {
+        productData.productCode = generateProductCode(vendor.userId);
+      }
+    }
+    
+    const [newProduct] = await db.insert(products).values(productData).returning();
     return newProduct;
   }
   

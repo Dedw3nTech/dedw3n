@@ -205,6 +205,7 @@ export const products = pgTable("products", {
   requiresShipping: boolean("requires_shipping").default(true),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
+  productCode: varchar("product_code", { length: 50 }).unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
