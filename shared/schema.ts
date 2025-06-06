@@ -45,11 +45,11 @@ export const regionEnum = pgEnum('region', [
 // Define product type enum
 export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 
-// Define event category enum
-export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
-
 // Define vendor badge level enum
 export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor']);
+
+// Define event category enum
+export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
 // Define gender enum
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other']);

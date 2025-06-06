@@ -5808,6 +5808,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
   }
 
+  // Vendor Badge System API Endpoints
+  app.get('/api/vendors/:vendorId/badge/stats', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      const badgeStats = await getVendorBadgeStats(vendorId);
+      res.json(badgeStats);
+    } catch (error) {
+      console.error('Error fetching vendor badge stats:', error);
+      res.status(500).json({ error: 'Failed to fetch vendor badge stats' });
+    }
+  });
+
+  app.post('/api/vendors/:vendorId/badge/update', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      const newBadgeLevel = await updateVendorBadge(vendorId);
+      res.json({ 
+        success: true, 
+        newBadgeLevel,
+        message: 'Vendor badge updated successfully' 
+      });
+    } catch (error) {
+      console.error('Error updating vendor badge:', error);
+      res.status(500).json({ error: 'Failed to update vendor badge' });
+    }
+  });
+
+  app.post('/api/vendors/badges/update-all', async (req: Request, res: Response) => {
+    try {
+      await updateAllVendorBadges();
+      res.json({ 
+        success: true, 
+        message: 'All vendor badges updated successfully' 
+      });
+    } catch (error) {
+      console.error('Error updating all vendor badges:', error);
+      res.status(500).json({ error: 'Failed to update all vendor badges' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
