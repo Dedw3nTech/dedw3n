@@ -179,37 +179,28 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
             <TrendingUp className="h-5 w-5" />
             Commission Tier System
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Your commission rate is determined by your monthly sales volume
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium">Standard Tier</h4>
                 <Badge className="bg-gray-100 text-gray-800">10%</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                Under £10,000 monthly sales
+                Basic commission rate
               </p>
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Premium Tier</h4>
-                <Badge className="bg-blue-100 text-blue-800">10%</Badge>
+                <h4 className="font-medium">Sales Manager</h4>
+                <Badge className="bg-blue-100 text-blue-800">10% + 2.5%</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                £10,000+ monthly sales
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Enterprise Tier</h4>
-                <Badge className="bg-purple-100 text-purple-800">12.5%</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                £50,000+ monthly sales
+                10% commission + 2.5% Sales Manager Fee
               </p>
             </div>
           </div>
