@@ -53,9 +53,6 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   // New Shopify-style fields
   status: z.enum(['active', 'draft', 'archived']).default('active'),
-  publishedOnOnlineStore: z.boolean().default(true),
-  publishedOnPointOfSale: z.boolean().default(false),
-  publishedOnShop: z.boolean().default(true),
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -96,9 +93,6 @@ export default function AddProduct() {
       isOnSale: false,
       // New Shopify-style field defaults
       status: 'active',
-      publishedOnOnlineStore: true,
-      publishedOnPointOfSale: false,
-      publishedOnShop: true,
       vendor: '',
       collections: [],
       tags: [],
@@ -724,66 +718,7 @@ export default function AddProduct() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Publishing</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="publishedOnOnlineStore"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-normal">Online Store</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="publishedOnPointOfSale"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-normal">Point of Sale</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="publishedOnShop"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-normal">Shop</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader>
