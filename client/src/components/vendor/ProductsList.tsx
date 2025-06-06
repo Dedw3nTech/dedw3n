@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Edit, Eye, MoreHorizontal, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Table,
@@ -21,16 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ProductsListProps {
   vendorId?: number;
@@ -53,83 +43,33 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
     enabled: !!vendorId,
   });
 
-  // Delete product mutation
-  const deleteProductMutation = useMutation({
-    mutationFn: async (productId: number) => {
-      const response = await apiRequest("DELETE", `/api/products/${productId}`);
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Product Deleted",
-        description: "Your product has been deleted successfully.",
-      });
-      
-      // Invalidate products query
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      
-      // Close dialog
-      setIsDeleteDialogOpen(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: `Failed to delete product: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
-
   // Filter products based on search query
   const filteredProducts = products?.filter((product: any) => {
     if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
     return (
-      product.name?.toLowerCase().includes(query) ||
-      product.description?.toLowerCase().includes(query) ||
-      product.category?.toLowerCase().includes(query)
+      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  // Handle view product details
   const handleViewProduct = (productId: number) => {
     setLocation(`/product/${productId}`);
   };
 
-  // Handle edit product
   const handleEditProduct = (productId: number) => {
-    setLocation(`/edit-product/${productId}`);
+    setLocation(`/vendor-dashboard/edit-product/${productId}`);
   };
 
-  // Handle delete product
-  const handleDeleteProduct = (product: any) => {
-    setSelectedProduct(product);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // Handle add product
-  const handleAddProduct = () => {
-    setLocation("/add-product");
-  };
-
-  // Handle confirm delete
-  const handleConfirmDelete = () => {
-    if (!selectedProduct) return;
-    deleteProductMutation.mutate(selectedProduct.id);
-  };
-
-  // Format price with discount
   const formatPrice = (price: number, discountPrice?: number) => {
     if (discountPrice && discountPrice < price) {
       return (
-        <div>
-          <span className="line-through text-muted-foreground text-sm mr-2">${price.toFixed(2)}</span>
-          <span className="text-green-600 font-medium">${discountPrice.toFixed(2)}</span>
+        <div className="flex flex-col">
+          <span className="text-sm line-through text-muted-foreground">
+            ${price.toFixed(2)}
+          </span>
+          <span className="text-green-600 font-medium">
+            ${discountPrice.toFixed(2)}
+          </span>
         </div>
       );
     }
@@ -138,15 +78,21 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Products</h2>
+        </div>
+        <div className="h-64 flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <h2 className="text-2xl font-bold">Products</h2>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -156,10 +102,7 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button onClick={handleAddProduct}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+
       </div>
 
       {!products || products.length === 0 ? (
@@ -168,10 +111,6 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
           <p className="text-muted-foreground mt-2 mb-4">
             Start adding products to your store
           </p>
-          <Button onClick={handleAddProduct}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Your First Product
-          </Button>
         </div>
       ) : (
         <div className="rounded-md border">
@@ -256,13 +195,6 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteProduct(product)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -272,43 +204,6 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
           </Table>
         </div>
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the product "{selectedProduct?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteProductMutation.isPending}
-            >
-              {deleteProductMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Product
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
