@@ -361,10 +361,7 @@ export default function VendorDashboard() {
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Analytics
-          </TabsTrigger>
+
         </TabsList>
       </Tabs>
 
@@ -626,11 +623,7 @@ export default function VendorDashboard() {
 
 
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
-            {vendorId && <VendorAnalytics vendorId={vendorId} />}
-          </TabsContent>
+
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="mt-0 space-y-6">
