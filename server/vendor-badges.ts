@@ -20,19 +20,19 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
   },
   {
     level: "level_2_vendor", 
-    name: "Verified Vendor",
+    name: "Level 1 Vendor",
     minSales: 100,
     minTransactions: 25
   },
   {
     level: "top_vendor",
-    name: "Top Vendor",
+    name: "Level 2 Vendor",
     minSales: 1000,
     minTransactions: 250
   },
   {
     level: "infinity_vendor",
-    name: "Infinity Vendor",
+    name: "Level 3 Vendor",
     minSales: 10000,
     minTransactions: 2500
   }

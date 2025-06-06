@@ -28,7 +28,7 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
   },
   {
     level: "level_2_vendor", 
-    name: "Verified Vendor",
+    name: "Level 1 Vendor",
     description: "£100+ sales, 25+ transactions",
     icon: Award,
     minSales: 100,
@@ -39,22 +39,22 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
   },
   {
     level: "top_vendor",
-    name: "Top Vendor",
+    name: "Level 2 Vendor",
     description: "£1,000+ sales, 250+ transactions", 
     icon: Star,
     minSales: 1000,
     minTransactions: 250,
-    color: "bg-purple-500",
-    bgColor: "bg-purple-50",
-    textColor: "text-purple-700"
+    color: "bg-green-500",
+    bgColor: "bg-green-50",
+    textColor: "text-green-700"
   },
   {
     level: "infinity_vendor",
-    name: "Infinity Vendor",
-    description: "£10,000+ sales, 2,500+ transactions",
+    name: "Level 4 Vendor",
+    description: "£100,000+ sales, 5,000+ transactions",
     icon: Crown,
-    minSales: 10000,
-    minTransactions: 2500,
+    minSales: 100000,
+    minTransactions: 5000,
     color: "bg-gradient-to-r from-yellow-400 to-orange-500",
     bgColor: "bg-gradient-to-r from-yellow-50 to-orange-50",
     textColor: "text-orange-700"

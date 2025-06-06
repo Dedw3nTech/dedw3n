@@ -46,7 +46,7 @@ export const regionEnum = pgEnum('region', [
 export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 
 // Define vendor badge level enum
-export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor']);
+export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor', 'elite_vendor']);
 
 // Define discount type enum
 export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed_amount', 'buy_x_get_y', 'free_shipping']);
