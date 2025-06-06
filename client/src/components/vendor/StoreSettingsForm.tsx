@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -34,6 +35,10 @@ const vendorSettingsSchema = z.object({
   hasSalesManager: z.boolean().default(false),
   salesManagerName: z.string().optional(),
   salesManagerId: z.string().optional(),
+  unitSystem: z.enum(["metric", "imperial"]).default("metric"),
+  weightSystem: z.enum(["kg", "lbs", "g", "oz"]).default("kg"),
+  timezone: z.string().default("Europe/London"),
+  billingCycle: z.enum(["monthly", "quarterly", "yearly"]).default("monthly"),
 }).refine((data) => {
   if (data.hasSalesManager) {
     return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
@@ -69,6 +74,10 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
       hasSalesManager: vendor?.hasSalesManager || false,
       salesManagerName: vendor?.salesManagerName || "",
       salesManagerId: vendor?.salesManagerId || "",
+      unitSystem: vendor?.unitSystem || "metric",
+      weightSystem: vendor?.weightSystem || "kg",
+      timezone: vendor?.timezone || "Europe/London",
+      billingCycle: vendor?.billingCycle || "monthly",
     },
   });
 
@@ -86,6 +95,10 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
         hasSalesManager: vendor.hasSalesManager || false,
         salesManagerName: vendor.salesManagerName || "",
         salesManagerId: vendor.salesManagerId || "",
+        unitSystem: vendor.unitSystem || "metric",
+        weightSystem: vendor.weightSystem || "kg",
+        timezone: vendor.timezone || "Europe/London",
+        billingCycle: vendor.billingCycle || "monthly",
       });
     }
   }, [vendor, form]);
@@ -433,6 +446,125 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* System Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">System Settings</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="unitSystem"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit System</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit system" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="metric">Metric (cm, m, km)</SelectItem>
+                            <SelectItem value="imperial">Imperial (in, ft, yd, mi)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Default unit system for measurements
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="weightSystem"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Default Weight System</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select weight system" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                            <SelectItem value="g">Grams (g)</SelectItem>
+                            <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                            <SelectItem value="oz">Ounces (oz)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Default weight unit for products
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="timezone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Time Zone</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select timezone" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Europe/London">London (GMT)</SelectItem>
+                            <SelectItem value="Europe/Paris">Paris (CET)</SelectItem>
+                            <SelectItem value="America/New_York">New York (EST)</SelectItem>
+                            <SelectItem value="America/Los_Angeles">Los Angeles (PST)</SelectItem>
+                            <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
+                            <SelectItem value="Asia/Shanghai">Shanghai (CST)</SelectItem>
+                            <SelectItem value="Australia/Sydney">Sydney (AEDT)</SelectItem>
+                            <SelectItem value="Africa/Johannesburg">Johannesburg (SAST)</SelectItem>
+                            <SelectItem value="Africa/Cairo">Cairo (EET)</SelectItem>
+                            <SelectItem value="Africa/Lagos">Lagos (WAT)</SelectItem>
+                            <SelectItem value="Africa/Nairobi">Nairobi (EAT)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Your local timezone for order processing
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="billingCycle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Commission Billing Cycle</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select billing cycle" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="monthly">Monthly (10% commission)</SelectItem>
+                            <SelectItem value="quarterly">Quarterly (10% commission)</SelectItem>
+                            <SelectItem value="yearly">Yearly (10% commission)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          How often commission fees are charged
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
               
               <div className="flex justify-end">
