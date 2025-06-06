@@ -36,7 +36,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Plus } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 
 // Product form schema
@@ -611,9 +612,27 @@ export default function AddProduct() {
                             </FormItem>
                           )}
                         />
+                      
+                      <Button type="button" variant="outline" className="w-full">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add customs information
+                      </Button>
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+              
+              {/* Variants */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Variants</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button type="button" variant="outline" className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add options like size or color
+                  </Button>
                 </CardContent>
               </Card>
 
