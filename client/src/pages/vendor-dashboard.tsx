@@ -338,7 +338,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -370,10 +370,6 @@ export default function VendorDashboard() {
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
           </TabsTrigger>
         </TabsList>
       </Tabs>
