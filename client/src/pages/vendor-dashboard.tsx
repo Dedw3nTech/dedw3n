@@ -42,6 +42,7 @@ import { BadgeProgress } from "@/components/vendor/BadgeProgress";
 import { calculateBadgeLevel } from "@/lib/vendor-badges";
 import DiscountForm from "@/components/vendor/DiscountForm";
 import DiscountList from "@/components/vendor/DiscountList";
+import MarketingCampaigns from "@/components/vendor/MarketingCampaigns";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -592,6 +593,11 @@ export default function VendorDashboard() {
                 <DiscountList vendorId={vendorId} type="automatic" />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* Marketing Tab */}
+          <TabsContent value="marketing" className="mt-0 space-y-6">
+            <MarketingCampaigns />
           </TabsContent>
 
           {/* Analytics Tab */}
