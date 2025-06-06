@@ -2508,7 +2508,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/vendors/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { storeName, description, logo, contactEmail, contactPhone, website, address } = req.body;
+      const { 
+        storeName, 
+        description, 
+        logo, 
+        contactEmail, 
+        contactPhone, 
+        website, 
+        address,
+        hasSalesManager,
+        salesManagerName,
+        salesManagerId,
+        unitSystem,
+        weightSystem,
+        timezone,
+        billingCycle
+      } = req.body;
 
       // Find vendor by user ID
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
@@ -2528,6 +2543,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contactPhone: contactPhone || vendor.contactPhone,
           website: website || vendor.website,
           address: address || vendor.address,
+          hasSalesManager: hasSalesManager !== undefined ? hasSalesManager : vendor.hasSalesManager,
+          salesManagerName: salesManagerName || vendor.salesManagerName,
+          salesManagerId: salesManagerId || vendor.salesManagerId,
+          unitSystem: unitSystem || vendor.unitSystem,
+          weightSystem: weightSystem || vendor.weightSystem,
+          timezone: timezone || vendor.timezone,
+          billingCycle: billingCycle || vendor.billingCycle,
           updatedAt: new Date(),
         })
         .where(eq(vendors.id, vendor.id))

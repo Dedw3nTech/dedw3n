@@ -191,6 +191,11 @@ export const vendors = pgTable("vendors", {
   hasSalesManager: boolean("has_sales_manager").default(false),
   salesManagerName: text("sales_manager_name"),
   salesManagerId: text("sales_manager_id"),
+  // System Settings fields
+  unitSystem: text("unit_system").default("metric"), // metric, imperial
+  weightSystem: text("weight_system").default("kg"), // kg, lbs, g, oz
+  timezone: text("timezone").default("Europe/London"),
+  billingCycle: text("billing_cycle").default("monthly"), // monthly, quarterly, yearly
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
