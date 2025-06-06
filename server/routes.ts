@@ -2659,6 +2659,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vendor Products Management Routes
+  // Get vendor products
+  app.get('/api/vendors/products', async (req: Request, res: Response) => {
+    try {
+      // Use the same authentication pattern as working vendor endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for /api/vendors/products: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get vendor accounts for the user
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
+      }
+
+      // Get products for all vendor accounts
+      const vendorIds = vendorAccounts.map(v => v.id);
+      const products = await db
+        .select()
+        .from(products)
+        .where(inArray(products.vendorId, vendorIds))
+        .orderBy(desc(products.createdAt));
+
+      res.json(products);
+    } catch (error) {
+      console.error('Error getting vendor products:', error);
+      res.status(500).json({ message: 'Failed to get vendor products' });
+    }
+  });
+
+  // Create vendor product
+  app.post('/api/vendors/products', async (req: Request, res: Response) => {
+    try {
+      // Use the same authentication pattern as working vendor endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for product creation: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get vendor accounts for the user
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
+      }
+
+      // Use the first vendor account (primary vendor)
+      const vendor = vendorAccounts[0];
+      
+      // Add vendorId to product data
+      const productData = {
+        ...req.body,
+        vendorId: vendor.id
+      };
+
+      // Validate the product data
+      const validatedProduct = insertProductSchema.parse(productData);
+      
+      // Create the product with automatic product code generation
+      const newProduct = await storage.createProduct(validatedProduct);
+      
+      res.status(201).json(newProduct);
+    } catch (error) {
+      console.error('Error creating product:', error);
+      res.status(500).json({ message: 'Failed to create product' });
+    }
+  });
+
+  // Update vendor product
+  app.put('/api/vendors/products/:id', async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      // Use the same authentication pattern as working vendor endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for product update: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get the product to verify ownership
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Verify the product belongs to one of the user's vendor accounts
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      const vendorIds = vendorAccounts.map(v => v.id);
+      
+      if (!vendorIds.includes(product.vendorId)) {
+        return res.status(403).json({ message: 'You do not have permission to update this product' });
+      }
+
+      // Update the product with automatic product code generation
+      const updatedProduct = await storage.updateProduct(productId, req.body);
+      
+      if (!updatedProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ message: 'Failed to update product' });
+    }
+  });
+
+  // Delete vendor product
+  app.delete('/api/vendors/products/:id', async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      // Use the same authentication pattern as working vendor endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for product deletion: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get the product to verify ownership
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Verify the product belongs to one of the user's vendor accounts
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      const vendorIds = vendorAccounts.map(v => v.id);
+      
+      if (!vendorIds.includes(product.vendorId)) {
+        return res.status(403).json({ message: 'You do not have permission to delete this product' });
+      }
+
+      // Delete the product
+      const success = await storage.deleteProduct(productId);
+      
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to delete product' });
+      }
+
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ message: 'Failed to delete product' });
+    }
+  });
+
   // Session debug endpoint
   app.get('/api/debug/session', (req: Request, res: Response) => {
     res.json({

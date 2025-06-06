@@ -177,28 +177,30 @@ export default function AddProduct() {
   // Create product mutation
   const createProductMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
-      if (!vendorId) throw new Error('Vendor ID not available');
-      
-      const response = await apiRequest('POST', '/api/products', {
-        ...data,
-        vendorId,
-      });
+      const response = await apiRequest('POST', '/api/vendors/products', data);
       return response.json();
     },
     onSuccess: (data) => {
       toast({
         title: 'Product Added',
-        description: 'Your product has been added successfully.',
+        description: data.productCode 
+          ? `Product created successfully with code: ${data.productCode}`
+          : 'Your product has been added successfully.',
       });
       
-      // Reset form
-      form.reset();
+      // Update form with the generated product code if available
+      if (data.productCode) {
+        form.setValue('productCode', data.productCode);
+      }
       
       // Invalidate products query
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
       
-      // Navigate to the product page
-      setLocation(`/product/${data.id}`);
+      // Don't navigate immediately to show the generated product code
+      setTimeout(() => {
+        setLocation(`/product/${data.id}`);
+      }, 2000);
     },
     onError: (error: any) => {
       toast({
