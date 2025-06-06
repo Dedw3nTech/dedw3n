@@ -44,6 +44,14 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
+    // Special handling for add-product to show proper vendor hierarchy
+    if (path === '/add-product') {
+      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: 'Private Vendor Dashboard', path: '/vendor-dashboard' });
+      breadcrumbs.push({ label: 'Add Product/Service' });
+      return breadcrumbs;
+    }
+    
     // Special handling for vendor registration to show marketplace hierarchy
     if (path === '/vendor-register') {
       breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
