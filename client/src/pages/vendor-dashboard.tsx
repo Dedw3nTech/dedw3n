@@ -343,6 +343,10 @@ export default function VendorDashboard() {
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
           </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center">
             <Package className="h-4 w-4 mr-2" />
             Products
@@ -370,10 +374,6 @@ export default function VendorDashboard() {
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
           </TabsTrigger>
         </TabsList>
       </Tabs>
