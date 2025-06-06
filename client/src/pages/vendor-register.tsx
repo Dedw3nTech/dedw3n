@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { z } from "zod";
-import { Store, User, Building, Mail, MapPin } from "lucide-react";
+import { Store, User, Building, Mail, MapPin, CheckCircle, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
@@ -61,6 +61,18 @@ export default function VendorRegisterPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Check existing vendor accounts
+  const { data: vendorStatus } = useQuery({
+    queryKey: ["/api/vendors/manage", "check-status"],
+    queryFn: async () => {
+      const response = await apiRequest("POST", "/api/vendors/manage", {
+        action: "check-status"
+      });
+      return response.json();
+    },
+    enabled: !!user,
+  });
 
   // Private Vendor Form
   const privateForm = useForm<PrivateVendorForm>({
@@ -171,22 +183,66 @@ export default function VendorRegisterPage() {
                 <p className="text-gray-600 mb-8">
                   Select the type of vendor account that best describes your business
                 </p>
+                
+                {/* Existing Vendor Accounts Status */}
+                {vendorStatus && vendorStatus.vendorAccounts && vendorStatus.vendorAccounts.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <h4 className="text-sm font-semibold text-blue-800 mb-2">Your Existing Vendor Accounts</h4>
+                    <div className="space-y-2">
+                      {vendorStatus.vendorAccounts.map((vendor: any) => (
+                        <div key={vendor.id} className="flex items-center justify-between text-sm">
+                          <span className="text-blue-700 capitalize">{vendor.vendorType} Vendor</span>
+                          <span className="text-green-600 font-medium">✓ Active</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <RadioGroup 
                 value={vendorType || ""} 
-                onValueChange={(value) => setVendorType(value as "private" | "business")}
+                onValueChange={(value) => {
+                  // Prevent selection of existing vendor types
+                  if (value === "private" && vendorStatus?.hasPrivateVendor) {
+                    return;
+                  }
+                  if (value === "business" && vendorStatus?.hasBusinessVendor) {
+                    return;
+                  }
+                  setVendorType(value as "private" | "business");
+                }}
                 className="grid grid-cols-1 md:grid-cols-2 gap-6"
               >
                 {/* Private Vendor Option */}
                 <div className="space-y-2">
                   <Label 
                     htmlFor="private" 
-                    className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                    className={`flex flex-col items-center p-6 border-2 rounded-lg transition-colors relative ${
+                      vendorStatus?.hasPrivateVendor 
+                        ? "border-green-200 bg-green-50 cursor-not-allowed opacity-75" 
+                        : "border-gray-200 cursor-pointer hover:border-primary"
+                    }`}
                   >
-                    <RadioGroupItem value="private" id="private" className="mb-4" />
-                    <User className="h-12 w-12 text-primary mb-3" />
+                    {vendorStatus?.hasPrivateVendor ? (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                    ) : (
+                      <RadioGroupItem 
+                        value="private" 
+                        id="private" 
+                        className="mb-4"
+                        disabled={vendorStatus?.hasPrivateVendor}
+                      />
+                    )}
+                    <User className={`h-12 w-12 mb-3 ${vendorStatus?.hasPrivateVendor ? "text-green-600" : "text-primary"}`} />
                     <span className="text-lg font-semibold">Private Vendor</span>
+                    {vendorStatus?.hasPrivateVendor && (
+                      <span className="text-sm text-green-600 font-medium mb-2">
+                        ✓ Account Already Created
+                      </span>
+                    )}
                     <span className="text-sm text-gray-600 text-center mt-2">
                       Perfect for individuals selling personal items, handmade products, or small-scale businesses
                     </span>
@@ -203,11 +259,31 @@ export default function VendorRegisterPage() {
                 <div className="space-y-2">
                   <Label 
                     htmlFor="business" 
-                    className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                    className={`flex flex-col items-center p-6 border-2 rounded-lg transition-colors relative ${
+                      vendorStatus?.hasBusinessVendor 
+                        ? "border-green-200 bg-green-50 cursor-not-allowed opacity-75" 
+                        : "border-gray-200 cursor-pointer hover:border-primary"
+                    }`}
                   >
-                    <RadioGroupItem value="business" id="business" className="mb-4" />
-                    <Building className="h-12 w-12 text-primary mb-3" />
+                    {vendorStatus?.hasBusinessVendor ? (
+                      <div className="absolute top-2 right-2">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                    ) : (
+                      <RadioGroupItem 
+                        value="business" 
+                        id="business" 
+                        className="mb-4"
+                        disabled={vendorStatus?.hasBusinessVendor}
+                      />
+                    )}
+                    <Building className={`h-12 w-12 mb-3 ${vendorStatus?.hasBusinessVendor ? "text-green-600" : "text-primary"}`} />
                     <span className="text-lg font-semibold">Business Vendor</span>
+                    {vendorStatus?.hasBusinessVendor && (
+                      <span className="text-sm text-green-600 font-medium mb-2">
+                        ✓ Account Already Created
+                      </span>
+                    )}
                     <span className="text-sm text-gray-600 text-center mt-2">
                       Ideal for registered businesses, companies, and professional retailers
                     </span>
