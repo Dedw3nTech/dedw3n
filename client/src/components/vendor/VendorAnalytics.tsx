@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +30,7 @@ interface VendorAnalyticsProps {
 export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const [activeTab, setActiveTab] = useState("revenue");
   const [revenuePeriod, setRevenuePeriod] = useState("monthly");
+  const { formatPriceFromGBP } = useCurrency();
 
   // Revenue analytics
   const { data: revenueData, isLoading: isLoadingRevenue } = useQuery({
@@ -120,7 +122,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     <XAxis dataKey="period" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
+                      formatter={(value) => [formatPriceFromGBP(Number(value)), 'Revenue']}
                     />
                     <Legend />
                     <Line
@@ -163,7 +165,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-blue-600">
-                        ${Number(profitLossData.revenue || 0).toFixed(2)}
+                        {formatPriceFromGBP(Number(profitLossData.revenue || 0))}
                       </div>
                     </CardContent>
                   </Card>
@@ -173,7 +175,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold text-red-600">
-                        ${Number(profitLossData.expenses || 0).toFixed(2)}
+                        {formatPriceFromGBP(Number(profitLossData.expenses || 0))}
                       </div>
                     </CardContent>
                   </Card>
@@ -183,7 +185,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     </CardHeader>
                     <CardContent>
                       <div className={`text-2xl font-bold ${Number(profitLossData.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${Number(profitLossData.profit || 0).toFixed(2)}
+                        {formatPriceFromGBP(Number(profitLossData.profit || 0))}
                       </div>
                     </CardContent>
                   </Card>
@@ -256,7 +258,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                       </CardHeader>
                       <CardContent>
                         <div className="text-xl font-bold">
-                          ${Number(metricsData.averageOrderValue || 0).toFixed(2)}
+                          {formatPriceFromGBP(Number(metricsData.averageOrderValue || 0))}
                         </div>
                       </CardContent>
                     </Card>
