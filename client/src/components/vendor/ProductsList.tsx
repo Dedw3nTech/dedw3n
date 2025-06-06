@@ -81,9 +81,6 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Products</h2>
-        </div>
         <div className="h-64 flex items-center justify-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
