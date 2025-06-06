@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Plus } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 
@@ -53,6 +54,7 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   // New Shopify-style fields
   status: z.enum(['active', 'draft', 'archived']).default('active'),
+  offeringType: z.enum(['product', 'service']).default('product'),
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -93,6 +95,7 @@ export default function AddProduct() {
       isOnSale: false,
       // New Shopify-style field defaults
       status: 'active',
+      offeringType: 'product',
       vendor: '',
       collections: [],
       tags: [],
@@ -300,6 +303,42 @@ export default function AddProduct() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="flex items-center gap-2 mb-6">
         <h1 className="text-2xl font-bold">Add Product / Service</h1>
+      </div>
+      
+      {/* Offering Type Selection */}
+      <div className="mb-6">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="offeringType"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>What are you offering?</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-row space-x-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="product" id="product" />
+                      <label htmlFor="product" className="text-sm font-medium cursor-pointer">
+                        Product
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="service" id="service" />
+                      <label htmlFor="service" className="text-sm font-medium cursor-pointer">
+                        Service
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Form>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
