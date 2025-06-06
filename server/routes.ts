@@ -3648,6 +3648,301 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== ORDERS & RETURNS API ENDPOINTS =====
+
+  // Get user's orders with optional status filter
+  app.get('/api/orders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const status = req.query.status as string;
+      
+      let query = db.select({
+        id: orders.id,
+        totalAmount: orders.totalAmount,
+        status: orders.status,
+        shippingAddress: orders.shippingAddress,
+        shippingCost: orders.shippingCost,
+        paymentMethod: orders.paymentMethod,
+        paymentStatus: orders.paymentStatus,
+        notes: orders.notes,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+      }).from(orders).where(eq(orders.userId, userId));
+
+      if (status) {
+        query = query.where(eq(orders.status, status));
+      }
+
+      const userOrders = await query.orderBy(desc(orders.createdAt));
+      res.json(userOrders);
+    } catch (error) {
+      console.error('Error fetching user orders:', error);
+      res.status(500).json({ message: 'Failed to fetch orders' });
+    }
+  });
+
+  // Get specific order details with items
+  app.get('/api/orders/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const orderId = parseInt(req.params.id);
+
+      if (isNaN(orderId)) {
+        return res.status(400).json({ message: 'Invalid order ID' });
+      }
+
+      // Get order details
+      const orderResult = await db.select().from(orders)
+        .where(and(eq(orders.id, orderId), eq(orders.userId, userId)))
+        .limit(1);
+
+      if (orderResult.length === 0) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+
+      const order = orderResult[0];
+
+      // Get order items with product and vendor details
+      const orderItemsResult = await db.select({
+        id: orderItems.id,
+        quantity: orderItems.quantity,
+        unitPrice: orderItems.unitPrice,
+        discount: orderItems.discount,
+        totalPrice: orderItems.totalPrice,
+        status: orderItems.status,
+        product: {
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          images: products.images,
+        },
+        vendor: {
+          id: vendors.id,
+          storeName: vendors.storeName,
+        }
+      }).from(orderItems)
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .leftJoin(vendors, eq(orderItems.vendorId, vendors.id))
+        .where(eq(orderItems.orderId, orderId));
+
+      res.json({
+        ...order,
+        items: orderItemsResult
+      });
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      res.status(500).json({ message: 'Failed to fetch order details' });
+    }
+  });
+
+  // Create a return request
+  app.post('/api/returns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const returnData = insertReturnSchema.parse(req.body);
+
+      // Verify the order item belongs to the user
+      const orderItemResult = await db.select({
+        orderItem: orderItems,
+        order: orders
+      }).from(orderItems)
+        .leftJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(eq(orderItems.id, returnData.orderItemId))
+        .limit(1);
+
+      if (orderItemResult.length === 0 || orderItemResult[0].order?.userId !== userId) {
+        return res.status(404).json({ message: 'Order item not found or unauthorized' });
+      }
+
+      const newReturn = await db.insert(returns).values({
+        ...returnData,
+        userId,
+      }).returning();
+
+      res.status(201).json(newReturn[0]);
+    } catch (error) {
+      console.error('Error creating return request:', error);
+      res.status(500).json({ message: 'Failed to create return request' });
+    }
+  });
+
+  // Get user's returns
+  app.get('/api/returns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const status = req.query.status as string;
+
+      let query = db.select({
+        id: returns.id,
+        reason: returns.reason,
+        description: returns.description,
+        status: returns.status,
+        requestedQuantity: returns.requestedQuantity,
+        approvedQuantity: returns.approvedQuantity,
+        refundAmount: returns.refundAmount,
+        returnShippingCost: returns.returnShippingCost,
+        vendorNotes: returns.vendorNotes,
+        customerNotes: returns.customerNotes,
+        returnTrackingNumber: returns.returnTrackingNumber,
+        images: returns.images,
+        createdAt: returns.createdAt,
+        updatedAt: returns.updatedAt,
+        orderItem: {
+          id: orderItems.id,
+          quantity: orderItems.quantity,
+          unitPrice: orderItems.unitPrice,
+          totalPrice: orderItems.totalPrice,
+        },
+        product: {
+          id: products.id,
+          name: products.name,
+          images: products.images,
+        },
+        vendor: {
+          id: vendors.id,
+          storeName: vendors.storeName,
+        }
+      }).from(returns)
+        .leftJoin(orderItems, eq(returns.orderItemId, orderItems.id))
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .leftJoin(vendors, eq(returns.vendorId, vendors.id))
+        .where(eq(returns.userId, userId));
+
+      if (status) {
+        query = query.where(eq(returns.status, status));
+      }
+
+      const userReturns = await query.orderBy(desc(returns.createdAt));
+      res.json(userReturns);
+    } catch (error) {
+      console.error('Error fetching user returns:', error);
+      res.status(500).json({ message: 'Failed to fetch returns' });
+    }
+  });
+
+  // Get specific return details
+  app.get('/api/returns/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const returnId = parseInt(req.params.id);
+
+      if (isNaN(returnId)) {
+        return res.status(400).json({ message: 'Invalid return ID' });
+      }
+
+      const returnResult = await db.select({
+        return: returns,
+        orderItem: orderItems,
+        product: products,
+        vendor: vendors,
+        order: orders
+      }).from(returns)
+        .leftJoin(orderItems, eq(returns.orderItemId, orderItems.id))
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .leftJoin(vendors, eq(returns.vendorId, vendors.id))
+        .leftJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(and(eq(returns.id, returnId), eq(returns.userId, userId)))
+        .limit(1);
+
+      if (returnResult.length === 0) {
+        return res.status(404).json({ message: 'Return not found' });
+      }
+
+      res.json(returnResult[0]);
+    } catch (error) {
+      console.error('Error fetching return details:', error);
+      res.status(500).json({ message: 'Failed to fetch return details' });
+    }
+  });
+
+  // Update return status (for vendors)
+  app.patch('/api/returns/:id/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const returnId = parseInt(req.params.id);
+      const { status, vendorNotes, approvedQuantity, refundAmount } = req.body;
+
+      if (isNaN(returnId)) {
+        return res.status(400).json({ message: 'Invalid return ID' });
+      }
+
+      // Verify the return belongs to a vendor product owned by the current user
+      const returnResult = await db.select({
+        return: returns,
+        vendor: vendors
+      }).from(returns)
+        .leftJoin(vendors, eq(returns.vendorId, vendors.id))
+        .where(eq(returns.id, returnId))
+        .limit(1);
+
+      if (returnResult.length === 0) {
+        return res.status(404).json({ message: 'Return not found' });
+      }
+
+      if (returnResult[0].vendor?.userId !== req.user!.id) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+
+      const updateData: any = { status, updatedAt: new Date() };
+      
+      if (vendorNotes !== undefined) updateData.vendorNotes = vendorNotes;
+      if (approvedQuantity !== undefined) updateData.approvedQuantity = approvedQuantity;
+      if (refundAmount !== undefined) updateData.refundAmount = refundAmount;
+      
+      if (status === 'processing') {
+        updateData.processedAt = new Date();
+      } else if (status === 'completed') {
+        updateData.completedAt = new Date();
+      }
+
+      const updatedReturn = await db.update(returns)
+        .set(updateData)
+        .where(eq(returns.id, returnId))
+        .returning();
+
+      res.json(updatedReturn[0]);
+    } catch (error) {
+      console.error('Error updating return status:', error);
+      res.status(500).json({ message: 'Failed to update return status' });
+    }
+  });
+
+  // Cancel return request (customer only, if status is 'requested')
+  app.patch('/api/returns/:id/cancel', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const returnId = parseInt(req.params.id);
+
+      if (isNaN(returnId)) {
+        return res.status(400).json({ message: 'Invalid return ID' });
+      }
+
+      const returnResult = await db.select().from(returns)
+        .where(and(eq(returns.id, returnId), eq(returns.userId, userId)))
+        .limit(1);
+
+      if (returnResult.length === 0) {
+        return res.status(404).json({ message: 'Return not found' });
+      }
+
+      if (returnResult[0].status !== 'requested') {
+        return res.status(400).json({ message: 'Can only cancel requested returns' });
+      }
+
+      const updatedReturn = await db.update(returns)
+        .set({ 
+          status: 'cancelled',
+          updatedAt: new Date()
+        })
+        .where(eq(returns.id, returnId))
+        .returning();
+
+      res.json(updatedReturn[0]);
+    } catch (error) {
+      console.error('Error cancelling return:', error);
+      res.status(500).json({ message: 'Failed to cancel return' });
+    }
+  });
+
   // Development testing endpoints
   if (process.env.NODE_ENV === 'development') {
     // Test login endpoint for development

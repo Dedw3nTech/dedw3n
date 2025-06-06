@@ -179,6 +179,7 @@ import LikedPage from "@/pages/liked";
 import SavedPosts from "@/pages/saved-posts";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
+import OrdersReturnsPage from "@/pages/orders-returns";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";
@@ -304,6 +305,7 @@ function Router() {
       <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/orders-returns" component={OrdersReturnsPage} />
       
       {/* Product detail routes */}
       <Route path="/product/:id" component={ProductDetail} />
