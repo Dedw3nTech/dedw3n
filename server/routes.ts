@@ -2562,6 +2562,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search users for store assignment
+  app.get("/api/vendor/search-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      const { query } = req.query;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+
+      const users = await storage.searchUsersForStore(query);
+      res.json(users);
+    } catch (error: any) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ error: "Failed to search users" });
+    }
+  });
+
+  // Get store users
+  app.get("/api/vendor/store-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      const vendor = vendorAccounts[0];
+      const storeUsers = await storage.getStoreUsers(vendor.id);
+      res.json(storeUsers);
+    } catch (error: any) {
+      console.error("Error fetching store users:", error);
+      res.status(500).json({ error: "Failed to fetch store users" });
+    }
+  });
+
+  // Assign user to store
+  app.post("/api/vendor/store-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      const vendor = vendorAccounts[0];
+      const { userId: targetUserId, role } = req.body;
+      if (!targetUserId || !role) {
+        return res.status(400).json({ error: "User ID and role are required" });
+      }
+
+      if (!['marketer', 'merchandiser', 'manager'].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      const storeUser = await storage.assignUserToStore({
+        vendorId: vendor.id,
+        userId: targetUserId,
+        role,
+        assignedBy: userId,
+        isActive: true,
+      });
+
+      res.json(storeUser);
+    } catch (error: any) {
+      console.error("Error assigning user to store:", error);
+      res.status(500).json({ error: "Failed to assign user to store" });
+    }
+  });
+
+  // Update store user role
+  app.put("/api/vendor/store-users/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      const vendor = vendorAccounts[0];
+      const { id } = req.params;
+      const { role, isActive } = req.body;
+
+      if (role && !['marketer', 'merchandiser', 'manager'].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      const updatedStoreUser = await storage.updateStoreUser(parseInt(id), vendor.id, {
+        role,
+        isActive,
+      });
+
+      res.json(updatedStoreUser);
+    } catch (error: any) {
+      console.error("Error updating store user:", error);
+      res.status(500).json({ error: "Failed to update store user" });
+    }
+  });
+
+  // Remove user from store
+  app.delete("/api/vendor/store-users/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      const vendor = vendorAccounts[0];
+      const { id } = req.params;
+      await storage.removeUserFromStore(parseInt(id), vendor.id);
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error removing user from store:", error);
+      res.status(500).json({ error: "Failed to remove user from store" });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {

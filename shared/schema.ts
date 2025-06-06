@@ -206,6 +206,23 @@ export const vendors = pgTable("vendors", {
   uniqueUserVendorType: unique("unique_user_vendor_type").on(table.userId, table.vendorType),
 }));
 
+// Store Users model - Users assigned to vendor stores with specific roles
+export const storeUsers = pgTable("store_users", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: storeUserRoleEnum("role").notNull(),
+  assignedBy: integer("assigned_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Ensure a user can only have one role per store
+  uniqueUserStore: unique("unique_user_store").on(table.vendorId, table.userId),
+  vendorIdIdx: index("store_users_vendor_id_idx").on(table.vendorId),
+  userIdIdx: index("store_users_user_id_idx").on(table.userId),
+}));
+
 // Product model
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
@@ -757,6 +774,16 @@ export const insertUserSchema = createInsertSchema(users)
 
 export const insertVendorSchema = createInsertSchema(vendors)
   .omit({ id: true, rating: true, ratingCount: true, isApproved: true, createdAt: true, updatedAt: true });
+
+// Store Users schemas
+export const insertStoreUserSchema = createInsertSchema(storeUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertStoreUser = z.infer<typeof insertStoreUserSchema>;
+export type StoreUser = typeof storeUsers.$inferSelect;
   
 export const vendorUpdateSchema = z.object({
   storeName: z.string().min(3).max(100).optional(),

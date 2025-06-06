@@ -254,6 +254,13 @@ export interface IStorage {
   getUserSentGifts(userId: number): Promise<GiftProposition[]>;
   getUserReceivedGifts(userId: number): Promise<GiftProposition[]>;
   updateGiftStatus(id: number, status: string, paymentIntentId?: string): Promise<GiftProposition | undefined>;
+
+  // Store user management operations
+  searchUsersForStore(query: string): Promise<User[]>;
+  getStoreUsers(vendorId: number): Promise<any[]>;
+  assignUserToStore(storeUserData: any): Promise<any>;
+  updateStoreUser(id: number, vendorId: number, updates: any): Promise<any>;
+  removeUserFromStore(id: number, vendorId: number): Promise<boolean>;
 }
 
 // Database storage implementation
