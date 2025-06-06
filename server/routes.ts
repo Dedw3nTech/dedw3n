@@ -2897,6 +2897,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Automatic Commission Charging Routes
+  
+  // Trigger automatic commission charging (admin/cron endpoint)
+  app.post('/api/commission/auto-charge', async (req: Request, res: Response) => {
+    try {
+      console.log('[Commission] Manual trigger for automatic commission charging');
+      
+      const results = await commissionService.processAutomaticCommissionCharging();
+      
+      res.json({
+        success: true,
+        message: `Processed ${results.length} vendors for automatic commission charging`,
+        results
+      });
+    } catch (error) {
+      console.error('Error in automatic commission charging:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to process automatic commission charging',
+        error: error.message 
+      });
+    }
+  });
+
+  // Get commission payment redirect URL for vendor
+  app.get('/api/vendors/:vendorId/commission/:periodId/payment-url', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const periodId = parseInt(req.params.periodId);
+      const userId = (req.user as any)?.id;
+
+      // Verify vendor ownership
+      const vendor = await storage.getUserVendorAccounts(userId);
+      const hasAccess = vendor.some(v => v.id === vendorId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: 'Access denied to this vendor account' });
+      }
+
+      const paymentData = await commissionService.generatePaymentRedirectUrl(vendorId, periodId);
+      
+      res.json(paymentData);
+    } catch (error) {
+      console.error('Error generating payment URL:', error);
+      res.status(500).json({ 
+        message: 'Failed to generate payment URL',
+        error: error.message 
+      });
+    }
+  });
+
+  // Process overdue automatic charges and suspensions
+  app.post('/api/commission/process-overdue', async (req: Request, res: Response) => {
+    try {
+      console.log('[Commission] Processing overdue automatic charges');
+      
+      const suspensions = await commissionService.processOverdueAutomaticCharges();
+      
+      res.json({
+        success: true,
+        message: `Processed ${suspensions.length} overdue charges`,
+        suspensions
+      });
+    } catch (error) {
+      console.error('Error processing overdue charges:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to process overdue charges',
+        error: error.message 
+      });
+    }
+  });
+
+  // Commission payment completion webhook
+  app.post('/api/commission/payment-success', async (req: Request, res: Response) => {
+    try {
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: 'Payment intent ID required' });
+      }
+      
+      await commissionService.handlePaymentSuccess(paymentIntentId);
+      
+      res.json({
+        success: true,
+        message: 'Commission payment processed successfully'
+      });
+    } catch (error) {
+      console.error('Error processing commission payment:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to process commission payment',
+        error: error.message 
+      });
+    }
+  });
+
   // Session debug endpoint
   app.get('/api/debug/session', (req: Request, res: Response) => {
     res.json({
