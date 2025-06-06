@@ -56,6 +56,21 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
   });
 
+  // Update form values when vendor data changes
+  useEffect(() => {
+    if (vendor) {
+      form.reset({
+        storeName: vendor.storeName || "",
+        description: vendor.description || "",
+        logo: vendor.logo || "",
+        contactEmail: vendor.contactEmail || "",
+        contactPhone: vendor.contactPhone || "",
+        website: vendor.website || "",
+        address: vendor.address || "",
+      });
+    }
+  }, [vendor, form]);
+
   // Update vendor settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: VendorSettingsFormValues) => {

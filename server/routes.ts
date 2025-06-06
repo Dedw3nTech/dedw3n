@@ -2503,6 +2503,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update vendor settings
+  app.put('/api/vendors/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { storeName, description, logo, contactEmail, contactPhone, website, address } = req.body;
+
+      // Find vendor by user ID
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: 'No vendor accounts found' });
+      }
+
+      // Update the first vendor account (primary vendor)
+      const vendor = vendorAccounts[0];
+      const updatedVendor = await db
+        .update(vendors)
+        .set({
+          storeName: storeName || vendor.storeName,
+          description: description || vendor.description,
+          logo: logo || vendor.logo,
+          contactEmail: contactEmail || vendor.contactEmail,
+          contactPhone: contactPhone || vendor.contactPhone,
+          website: website || vendor.website,
+          address: address || vendor.address,
+          updatedAt: new Date(),
+        })
+        .where(eq(vendors.id, vendor.id))
+        .returning();
+
+      res.json({ vendor: updatedVendor[0], message: 'Settings updated successfully' });
+    } catch (error) {
+      console.error('Error updating vendor settings:', error);
+      res.status(500).json({ message: 'Failed to update settings' });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {
