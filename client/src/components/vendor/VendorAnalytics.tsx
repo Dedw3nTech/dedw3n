@@ -1,497 +1,278 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageSquare, User, Brain } from "lucide-react";
-import PredictiveAnalytics from "./PredictiveAnalytics";
 import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Package, 
+  ShoppingCart, 
+  Users,
+  Eye,
+  Calendar,
+  Star,
+  Target
+} from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+
+interface VendorAnalyticsData {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalViews: number;
+  conversionRate: number;
+  averageOrderValue: number;
+  topProducts: Array<{
+    id: number;
+    name: string;
+    orders: number;
+    revenue: number;
+  }>;
+  monthlyStats: Array<{
+    month: string;
+    orders: number;
+    revenue: number;
+    views: number;
+  }>;
+  recentOrders: Array<{
+    id: number;
+    customerName: string;
+    amount: number;
+    status: string;
+    createdAt: string;
+  }>;
+  performanceMetrics: {
+    salesGrowth: number;
+    orderGrowth: number;
+    viewGrowth: number;
+    rating: number;
+    badgeLevel: string;
+  };
+}
 
 interface VendorAnalyticsProps {
   vendorId: number;
 }
 
 export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
-  const [activeTab, setActiveTab] = useState("revenue");
-  const [revenuePeriod, setRevenuePeriod] = useState("monthly");
   const { formatPriceFromGBP } = useCurrency();
-
-  // Revenue analytics
-  const { data: revenueData, isLoading: isLoadingRevenue } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/revenue', revenuePeriod],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/revenue?period=${revenuePeriod}`).then(res => res.json()),
-    enabled: !!vendorId
+  
+  const { data: analyticsData, isLoading } = useQuery<VendorAnalyticsData>({
+    queryKey: ["/api/vendor/analytics", vendorId],
   });
 
-  // Profit/Loss analytics
-  const { data: profitLossData, isLoading: isLoadingProfitLoss } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/profit-loss'],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/profit-loss`).then(res => res.json()),
-    enabled: !!vendorId
-  });
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
-  // Metrics analytics
-  const { data: metricsData, isLoading: isLoadingMetrics } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/metrics'],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/metrics`).then(res => res.json()),
-    enabled: !!vendorId
-  });
-
-  // Competitors analytics
-  const { data: competitorsData, isLoading: isLoadingCompetitors } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/competitors'],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/competitors`).then(res => res.json()),
-    enabled: !!vendorId
-  });
-
-  // Leads analytics
-  const { data: leadsData, isLoading: isLoadingLeads } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/leads'],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/leads`).then(res => res.json()),
-    enabled: !!vendorId
-  });
-
-  // Reviews analytics
-  const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'analytics/reviews'],
-    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/reviews`).then(res => res.json()),
-    enabled: !!vendorId
-  });
-
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  if (!analyticsData) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              No analytics data available
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="profitLoss">Profit/Loss</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="competitors">Competitors</TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          <TabsTrigger value="predictive">
-            <Brain className="h-4 w-4 mr-1" />
-            AI Insights
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Revenue Tab */}
-        <TabsContent value="revenue" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Revenue Analysis</h3>
-            <div className="w-40">
-              <Select value={revenuePeriod} onValueChange={setRevenuePeriod}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Performance Badge */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Performance Overview</span>
+            <Badge variant="outline" className="text-lg px-3 py-1">
+              {analyticsData.performanceMetrics.badgeLevel}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <Star className="h-5 w-5 text-yellow-500 fill-current" />
+            <span className="text-lg font-semibold">
+              {analyticsData.performanceMetrics.rating.toFixed(1)} / 5.0
+            </span>
           </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue Over Time</CardTitle>
-              <CardDescription>
-                Your revenue trends over the selected period
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingRevenue ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : revenueData && revenueData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={revenueData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value) => [formatPriceFromGBP(Number(value)), 'Revenue']}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                      name="Revenue"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatPriceFromGBP(analyticsData.totalRevenue)}
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {analyticsData.performanceMetrics.salesGrowth >= 0 ? (
+                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No revenue data available for this period
-                </div>
+                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              {Math.abs(analyticsData.performanceMetrics.salesGrowth)}% from last month
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Profit/Loss Tab */}
-        <TabsContent value="profitLoss" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profit & Loss Summary</CardTitle>
-              <CardDescription>
-                Your financial performance overview
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingProfitLoss ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : profitLossData ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-                  <Card className="shadow-none border border-muted">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-md font-medium">Revenue</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {formatPriceFromGBP(Number(profitLossData.revenue || 0))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-none border border-muted">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-md font-medium">Expenses</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-red-600">
-                        {formatPriceFromGBP(Number(profitLossData.expenses || 0))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-none border border-muted">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-md font-medium">Profit</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className={`text-2xl font-bold ${Number(profitLossData.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPriceFromGBP(Number(profitLossData.profit || 0))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  {profitLossData.categories && profitLossData.categories.length > 0 && (
-                    <div className="col-span-3 h-40">
-                      <h4 className="text-sm font-medium mb-2">Revenue by Category</h4>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={profitLossData.categories}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            nameKey="category"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {profitLossData.categories.map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.totalOrders}</div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {analyticsData.performanceMetrics.orderGrowth >= 0 ? (
+                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No profit/loss data available yet
-                </div>
+                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              {Math.abs(analyticsData.performanceMetrics.orderGrowth)}% from last month
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Metrics Tab */}
-        <TabsContent value="metrics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Metrics</CardTitle>
-              <CardDescription>
-                Key performance indicators for your business
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingMetrics ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : metricsData ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                  <div className="grid grid-cols-1 gap-4">
-                    <Card className="shadow-none border border-muted">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          {Number(metricsData.totalOrders || 0)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-none border border-muted">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Avg. Order Value</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          {formatPriceFromGBP(Number(metricsData.averageOrderValue || 0))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-none border border-muted">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Fulfillment Rate</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          {(Number(metricsData.fulfillmentRate || 0) * 100).toFixed(0)}%
-                        </div>
-                      </CardContent>
-                    </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Product Views</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.totalViews.toLocaleString()}</div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {analyticsData.performanceMetrics.viewGrowth >= 0 ? (
+                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+              )}
+              {Math.abs(analyticsData.performanceMetrics.viewGrowth)}% from last month
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.conversionRate.toFixed(1)}%</div>
+            <div className="text-xs text-muted-foreground">
+              Avg Order: {formatPriceFromGBP(analyticsData.averageOrderValue)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={analyticsData.monthlyStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatPriceFromGBP(Number(value))} />
+                <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Orders Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Order Volume</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analyticsData.monthlyStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="orders" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Products */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Performing Products</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {analyticsData.topProducts.map((product, index) => (
+              <div key={product.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Badge variant="secondary" className="w-8 h-8 rounded-full flex items-center justify-center">
+                    {index + 1}
+                  </Badge>
+                  <div>
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-sm text-muted-foreground">{product.orders} orders</div>
                   </div>
-                  
-                  {metricsData.ordersByStatus && metricsData.ordersByStatus.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Orders by Status</h4>
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={metricsData.ordersByStatus}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="count"
-                            nameKey="status"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {metricsData.ordersByStatus.map((entry: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value) => [value, 'Orders']} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
                 </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No metrics data available yet
+                <div className="text-right">
+                  <div className="font-semibold">{formatPriceFromGBP(product.revenue)}</div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Competitors Tab */}
-        <TabsContent value="competitors" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Competitor Analysis</CardTitle>
-              <CardDescription>
-                Other vendors in your categories
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingCompetitors ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
+      {/* Recent Orders */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {analyticsData.recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <div className="font-medium">{order.customerName}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
-              ) : competitorsData && competitorsData.length > 0 ? (
-                <div className="space-y-4 max-h-72 overflow-y-auto">
-                  {competitorsData.map((competitor: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{competitor.storeName}</h4>
-                        <p className="text-sm text-muted-foreground">{competitor.category}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {Number(competitor.productCount)} products
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Avg: {formatPriceFromGBP(Number(competitor.averagePrice || 0))}
-                        </div>
-                        <div className="text-sm font-medium text-green-600">
-                          {formatPriceFromGBP(Number(competitor.totalSales || 0))} sales
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-right">
+                  <div className="font-semibold">{formatPriceFromGBP(order.amount)}</div>
+                  <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                    {order.status}
+                  </Badge>
                 </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No competitor data available yet
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Leads Tab */}
-        <TabsContent value="leads" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Potential Leads</CardTitle>
-              <CardDescription>
-                Users who have shown interest in your products
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingLeads ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : leadsData && leadsData.length > 0 ? (
-                <div className="space-y-4 max-h-72 overflow-y-auto">
-                  {leadsData.map((lead: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{lead.username}</h4>
-                        <p className="text-sm text-muted-foreground">{lead.email}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {Number(lead.viewCount)} product views
-                        </div>
-                        <Badge variant={lead.hasOrdered ? "default" : "secondary"}>
-                          {lead.hasOrdered ? "Customer" : "Lead"}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No leads data available yet
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Reviews Tab */}
-        <TabsContent value="reviews" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-              <CardDescription>
-                Reviews and feedback from customers on your products
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              {isLoadingReviews ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ) : reviewsData && reviewsData.length > 0 ? (
-                <div className="space-y-4 max-h-72 overflow-y-auto">
-                  {reviewsData.map((review: any, index: number) => (
-                    <div key={index} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{review.customerName}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < review.rating
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                            <span className="text-sm text-muted-foreground ml-1">
-                              {review.rating}/5
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{review.productName}</span>
-                        </div>
-                        {review.comment && (
-                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                            "{review.comment}"
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Order #{review.orderId}</span>
-                        {review.isVerified && (
-                          <Badge variant="secondary" className="text-xs">
-                            Verified Purchase
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No reviews available yet
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Predictive Analytics Tab */}
-        <TabsContent value="predictive" className="space-y-4">
-          <PredictiveAnalytics vendorId={vendorId} />
-        </TabsContent>
-      </Tabs>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

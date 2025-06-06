@@ -145,6 +145,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
+import Analytics from "@/pages/analytics";
 
 
 
@@ -286,6 +287,7 @@ function Router() {
       <ProtectedRoute path="/wallet" component={WalletPage} />
       <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
       <ProtectedRoute path="/vendor-analytics" component={VendorAnalytics} />
+      <ProtectedRoute path="/analytics" component={Analytics} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />

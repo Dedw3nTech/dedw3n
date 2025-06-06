@@ -650,7 +650,7 @@ export default function VendorDashboard() {
         open={discountFormOpen}
         onOpenChange={setDiscountFormOpen}
         type={discountFormType}
-        vendorId={vendorId}
+        vendorId={vendorId || 0}
       />
     </div>
   );
