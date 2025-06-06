@@ -68,6 +68,7 @@ const productSchema = z.object({
   requiresShipping: z.boolean().default(true),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
+  productCode: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -800,6 +801,35 @@ export default function AddProduct() {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Code</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="productCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unique Product Code</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Generated automatically when published"
+                          disabled
+                          className="bg-gray-50"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        A unique product code will be automatically generated when the product is published. Format: 001{"{userId}"}{"{day}"}/{"{month}"}/{"{year}"}
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

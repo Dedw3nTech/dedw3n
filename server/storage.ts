@@ -130,6 +130,7 @@ export interface IStorage {
   getPopularProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
+  updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
   getTopSellingProducts(limit: number): Promise<any[]>;
   
@@ -1420,6 +1421,41 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined> {
+    try {
+      // Get the current product and vendor info
+      const currentProduct = await this.getProduct(id);
+      if (!currentProduct) {
+        return undefined;
+      }
+
+      const updateData = { ...updates };
+      
+      // Check if the product is being published and doesn't have a product code
+      const isBeingPublished = updateData.status === 'active' && 
+                              (updateData.publishedOnOnlineStore || updateData.publishedOnPointOfSale || updateData.publishedOnShop);
+      
+      if (isBeingPublished && !currentProduct.productCode && !updateData.productCode) {
+        // Get vendor to extract user ID
+        const vendor = await this.getVendor(currentProduct.vendorId);
+        if (vendor) {
+          updateData.productCode = generateProductCode(vendor.userId);
+        }
+      }
+
+      const [updatedProduct] = await db
+        .update(products)
+        .set(updateData)
+        .where(eq(products.id, id))
+        .returning();
+      
+      return updatedProduct;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      return undefined;
+    }
+  }
+
   async deleteProduct(id: number): Promise<boolean> {
     try {
       await db.delete(products).where(eq(products.id, id));
