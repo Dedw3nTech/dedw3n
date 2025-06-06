@@ -195,7 +195,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               onClick={() => setLocation("/vendor-dashboard")}
             >
               <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">Vendor Dashboard</span>
+              <span className="text-sm font-medium">{vendorText}</span>
             </Button>
             
 
