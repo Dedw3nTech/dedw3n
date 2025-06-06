@@ -21,6 +21,7 @@ export function CurrencySelector() {
       CNY: 'Chinese Yuan',
       INR: 'Indian Rupee',
       BRL: 'Brazilian Real',
+      JMD: 'Jamaican Dollar',
     };
     return names[code];
   };

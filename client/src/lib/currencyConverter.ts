@@ -1,7 +1,7 @@
-export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL';
+export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL' | 'JMD';
 
 // List of supported currencies
-export const supportedCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL'];
+export const supportedCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL', 'JMD'];
 
 // Symbol lookup for different currencies
 export const currencySymbols: Record<CurrencyCode, string> = {
@@ -11,6 +11,7 @@ export const currencySymbols: Record<CurrencyCode, string> = {
   CNY: '¥',
   INR: '₹',
   BRL: 'R$',
+  JMD: 'J$',
 };
 
 // Exchange rates with GBP as the base currency
@@ -22,6 +23,7 @@ export const exchangeRates: Record<CurrencyCode, number> = {
   CNY: 9.07,     // 1 GBP = 9.07 CNY
   INR: 104.43,   // 1 GBP = 104.43 INR
   BRL: 6.35,     // 1 GBP = 6.35 BRL
+  JMD: 195.50,   // 1 GBP = 195.50 JMD
 };
 
 /**
@@ -108,6 +110,7 @@ export function formatCurrency(
     CNY: "zh-CN",
     INR: "hi-IN",
     BRL: "pt-BR",
+    JMD: "en-JM",
   };
   
   const locale = currencyLocales[currencyCode] || "en-GB";
@@ -176,6 +179,7 @@ export function getFormattedExchangeRate(
     CNY: '¥',
     INR: '₹',
     BRL: 'R$',
+    JMD: 'J$',
   };
 
   return `1 ${symbols[fromCurrency]} = ${rate.toFixed(4)} ${symbols[toCurrency]}`;
