@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Edit, Eye, MoreHorizontal, Plus, Search } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Edit, Eye, MoreHorizontal, Plus, Search, Trash2, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Table,
@@ -21,6 +21,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ProductsListProps {
   vendorId?: number;
