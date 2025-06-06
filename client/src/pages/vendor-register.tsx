@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -158,6 +159,9 @@ export default function VendorRegisterPage() {
       businessRegistrationNumber: "",
       website: "",
       businessLicense: "",
+      hasSalesManager: false,
+      salesManagerName: "",
+      salesManagerId: "",
     },
   });
 
@@ -518,6 +522,67 @@ export default function VendorRegisterPage() {
                     </div>
                   </div>
 
+                  {/* Sales Manager Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <User className="h-5 w-5 mr-2" />
+                      Sales Manager
+                    </h4>
+                    <FormField
+                      control={privateForm.control}
+                      name="hasSalesManager"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Do you have a Sales Manager?
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Sales Managers earn an additional 2.5% commission on your sales
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {privateForm.watch("hasSalesManager") && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
+                        <FormField
+                          control={privateForm.control}
+                          name="salesManagerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sales Manager Name *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={privateForm.control}
+                          name="salesManagerId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sales Manager ID Number *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter ID number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   {/* Submit Button */}
                   <div className="flex justify-center space-x-4 pt-6">
                     <Button 
@@ -808,6 +873,67 @@ export default function VendorRegisterPage() {
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Sales Manager Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold flex items-center">
+                      <User className="h-5 w-5 mr-2" />
+                      Sales Manager
+                    </h4>
+                    <FormField
+                      control={businessForm.control}
+                      name="hasSalesManager"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Do you have a Sales Manager?
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Sales Managers earn an additional 2.5% commission on your sales
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {businessForm.watch("hasSalesManager") && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
+                        <FormField
+                          control={businessForm.control}
+                          name="salesManagerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sales Manager Name *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={businessForm.control}
+                          name="salesManagerId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sales Manager ID Number *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter ID number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Submit Button */}
