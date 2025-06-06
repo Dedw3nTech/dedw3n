@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell } from 'lucide-react';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;

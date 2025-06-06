@@ -96,6 +96,12 @@ export const conversionTypeEnum = pgEnum('conversion_type', ['view', 'add_to_car
 // Define demographic enum
 export const demographicTypeEnum = pgEnum('demographic_type', ['age_group', 'gender', 'location', 'income_level']);
 
+// Define return status enum
+export const returnStatusEnum = pgEnum('return_status', ['requested', 'approved', 'rejected', 'processing', 'shipped', 'completed', 'cancelled']);
+
+// Define return reason enum
+export const returnReasonEnum = pgEnum('return_reason', ['defective', 'wrong_item', 'not_as_described', 'damaged_in_transit', 'changed_mind', 'size_issue', 'quality_issue', 'other']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -526,6 +532,30 @@ export const orderItems = pgTable("order_items", {
   totalPrice: doublePrecision("total_price").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, shipped, delivered, returned
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Returns model for handling product returns
+export const returns = pgTable("returns", {
+  id: serial("id").primaryKey(),
+  orderItemId: integer("order_item_id").notNull().references(() => orderItems.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
+  reason: returnReasonEnum("reason").notNull(),
+  description: text("description"),
+  status: returnStatusEnum("status").notNull().default("requested"),
+  requestedQuantity: integer("requested_quantity").notNull(),
+  approvedQuantity: integer("approved_quantity").default(0),
+  refundAmount: doublePrecision("refund_amount").default(0),
+  returnShippingCost: doublePrecision("return_shipping_cost").default(0),
+  vendorNotes: text("vendor_notes"),
+  customerNotes: text("customer_notes"),
+  returnShippingAddress: text("return_shipping_address"),
+  returnTrackingNumber: varchar("return_tracking_number", { length: 100 }),
+  images: text("images").array().default([]),
+  processedAt: timestamp("processed_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Community model for public, private, and secret communities
@@ -2449,5 +2479,17 @@ export const insertPromotionalCampaignSchema = createInsertSchema(promotionalCam
 
 export type PromotionalCampaign = typeof promotionalCampaigns.$inferSelect;
 export type InsertPromotionalCampaign = z.infer<typeof insertPromotionalCampaignSchema>;
+
+// Returns schema types
+export const insertReturnSchema = createInsertSchema(returns).omit({
+  id: true,
+  processedAt: true,
+  completedAt: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = z.infer<typeof insertReturnSchema>;
 
 
