@@ -146,7 +146,13 @@ export default function VendorRegisterPage() {
   });
 
   const onPrivateSubmit = (data: PrivateVendorForm) => {
-    registerVendorMutation.mutate(data);
+    // Map private vendor form data to match server schema expectations
+    const serverData = {
+      ...data,
+      businessName: data.storeName, // Map storeName to businessName for server
+      businessType: "individual", // Set default business type for private vendors
+    };
+    registerVendorMutation.mutate(serverData);
   };
 
   const onBusinessSubmit = (data: BusinessVendorForm) => {
