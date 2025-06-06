@@ -380,6 +380,13 @@ export default function VendorDashboard() {
                 Shipping
               </TabsTrigger>
               <TabsTrigger
+                value="analytics"
+                className="justify-start px-3 py-2 h-auto font-normal"
+              >
+                <BarChart className="h-4 w-4 mr-2" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger
                 value="settings"
                 className="justify-start px-3 py-2 h-auto font-normal"
               >
@@ -518,6 +525,12 @@ export default function VendorDashboard() {
           <TabsContent value="shipping" className="mt-0 space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Shipping</h2>
             <ShippingManager vendorId={vendorId || undefined} />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="mt-0 space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
+            {vendorId && <VendorAnalytics vendorId={vendorId} />}
           </TabsContent>
 
           {/* Settings Tab */}
