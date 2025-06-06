@@ -6617,6 +6617,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get vendor customers
+  app.get('/api/vendors/:vendorId/customers', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get customers who have made orders from this vendor
+      const customerOrders = await db
+        .select({
+          userId: orders.userId,
+          totalOrders: sql<number>`count(${orders.id})`,
+          totalSpent: sql<number>`sum(${orders.total})`,
+          lastPurchaseDate: sql<string>`max(${orders.createdAt})`
+        })
+        .from(orders)
+        .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .leftJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(orders.userId);
+      
+      // Get user details for these customers
+      const customerIds = customerOrders.map(order => order.userId);
+      
+      if (customerIds.length === 0) {
+        return res.json([]);
+      }
+      
+      const customers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          username: users.username,
+          avatar: users.avatar,
+          phone: users.phone,
+          location: sql<string>`concat(${users.city}, ', ', ${users.country})`
+        })
+        .from(users)
+        .where(sql`${users.id} IN (${sql.raw(customerIds.join(','))})`);
+      
+      // Combine customer data with order statistics
+      const customersWithStats = customers.map(customer => {
+        const orderStats = customerOrders.find(order => order.userId === customer.id);
+        const totalSpent = Number(orderStats?.totalSpent || 0);
+        const totalOrders = Number(orderStats?.totalOrders || 0);
+        
+        // Determine customer tier based on spending
+        let tier = 'Regular';
+        if (totalSpent >= 5000) tier = 'VIP';
+        else if (totalSpent >= 1000) tier = 'Premium';
+        
+        return {
+          ...customer,
+          totalOrders,
+          totalSpent,
+          lastPurchaseDate: orderStats?.lastPurchaseDate || null,
+          tier
+        };
+      });
+      
+      res.json(customersWithStats);
+    } catch (error) {
+      console.error('Error fetching vendor customers:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Discount and Promotions Management API Routes
   
   // Get all discounts for a vendor

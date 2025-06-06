@@ -133,42 +133,11 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
 
-  // Mock customers data for demonstration
-  const customers: Customer[] = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      username: 'johndoe',
-      avatar: '',
-      phone: '+1234567890',
-      location: 'New York, USA',
-      totalOrders: 15,
-      totalSpent: 2500,
-      lastPurchaseDate: '2024-12-01',
-      tier: 'VIP'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      username: 'janesmith',
-      totalOrders: 8,
-      totalSpent: 800,
-      lastPurchaseDate: '2024-11-15',
-      tier: 'Premium'
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike@example.com',
-      username: 'mikej',
-      totalOrders: 3,
-      totalSpent: 150,
-      lastPurchaseDate: '2024-10-20',
-      tier: 'Regular'
-    }
-  ];
+  // Fetch real customer data
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+    queryKey: [`/api/vendors/${vendorId}/customers`],
+    enabled: !!vendorId,
+  });
 
   // Fetch customer segmentation data
   const { data: segmentationData, isLoading: isLoadingSegmentation } = useQuery<CustomerSegmentation>({
@@ -366,12 +335,22 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedCustomers.length === 0 ? (
+                {isLoadingCustomers ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex flex-col items-center space-y-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        <p className="text-muted-foreground">Loading customers...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : sortedCustomers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <User className="h-12 w-12 text-muted-foreground" />
                         <p className="text-muted-foreground">No customers found</p>
+                        <p className="text-xs text-muted-foreground">Customers will appear here once they make purchases</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -458,180 +437,30 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
 
         {/* Segmentation Tab */}
         <TabsContent value="segmentation" className="space-y-4">
-          {isLoadingSegmentation ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {segmentationData?.segments?.map((segment, index) => (
-                  <Card key={segment.segment}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center space-x-2">
-                        <Users className="h-4 w-4" />
-                        <span>{segment.segment} Customers</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{segment.customerCount}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Avg: {formatPriceFromGBP(segment.avgSpent)} per customer
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Target className="h-5 w-5" />
-                    <span>Customer Segments Analysis</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Segment</TableHead>
-                        <TableHead>Customers</TableHead>
-                        <TableHead>Avg Spent</TableHead>
-                        <TableHead>Avg Orders</TableHead>
-                        <TableHead>Last Purchase (Days)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {segmentationData?.segments?.map((segment) => (
-                        <TableRow key={segment.segment}>
-                          <TableCell>
-                            <Badge className={`${segment.segment === 'VIP' ? 'bg-purple-100 text-purple-800' : 
-                              segment.segment === 'Premium' ? 'bg-blue-100 text-blue-800' :
-                              segment.segment === 'Regular' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'}`}>
-                              {segment.segment}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{segment.customerCount}</TableCell>
-                          <TableCell>{formatPriceFromGBP(segment.avgSpent)}</TableCell>
-                          <TableCell>{Math.round(segment.avgOrders)}</TableCell>
-                          <TableCell>{Math.round(segment.lastPurchaseAvg)} days</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center py-12">
+            <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">
+              Customer Segmentation Analytics
+            </h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Analytics data will be available once you have sufficient customer transaction history.
+              This feature provides insights into customer segments based on purchase patterns.
+            </p>
+          </div>
         </TabsContent>
 
         {/* Lifetime Value Tab */}
         <TabsContent value="lifetime-value" className="space-y-4">
-          {isLoadingLTV ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>Avg LTV</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatPriceFromGBP(lifetimeValueData?.summary?.avgLTV || 0)}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {lifetimeValueData?.summary?.totalCustomers || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Top Tier</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {lifetimeValueData?.summary?.topTierCustomers || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Churn Risk</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600">
-                      {lifetimeValueData?.summary?.churnRisk || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Customer Lifetime Value Analysis</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Total Spent</TableHead>
-                        <TableHead>Orders</TableHead>
-                        <TableHead>Avg Order</TableHead>
-                        <TableHead>Predicted LTV</TableHead>
-                        <TableHead>Days Since Last</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lifetimeValueData?.customers?.slice(0, 20).map((customer) => (
-                        <TableRow key={customer.userId}>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={customer.avatar} />
-                                <AvatarFallback className="text-xs">
-                                  {getInitials(customer.customerName)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{customer.customerName}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{formatPriceFromGBP(customer.totalSpent)}</TableCell>
-                          <TableCell>{customer.totalOrders}</TableCell>
-                          <TableCell>{formatPriceFromGBP(customer.avgOrderValue)}</TableCell>
-                          <TableCell className="font-medium text-green-600">
-                            {formatPriceFromGBP(customer.predictedLTV)}
-                          </TableCell>
-                          <TableCell>
-                            <span className={customer.daysSinceLastPurchase > 90 ? 'text-red-600' : 'text-muted-foreground'}>
-                              {Math.round(customer.daysSinceLastPurchase)} days
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center py-12">
+            <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">
+              Customer Lifetime Value Analytics
+            </h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Lifetime value predictions will be calculated once you have sufficient transaction data.
+              This feature helps identify your most valuable customers and predict future revenue.
+            </p>
+          </div>
         </TabsContent>
 
         {/* Service Interactions Tab */}
