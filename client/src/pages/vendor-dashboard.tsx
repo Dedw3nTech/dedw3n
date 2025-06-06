@@ -34,6 +34,9 @@ import CustomersList from "@/components/vendor/CustomersList";
 import ShippingManager from "@/components/vendor/ShippingManager";
 import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
 import VendorAnalytics from "@/components/vendor/VendorAnalytics";
+import { VendorBadge } from "@/components/vendor/VendorBadge";
+import { BadgeProgress } from "@/components/vendor/BadgeProgress";
+import { calculateBadgeLevel } from "@/lib/vendor-badges";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -336,6 +339,30 @@ export default function VendorDashboard() {
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
             </div>
+            
+            {/* Vendor Badge Display */}
+            {vendor && (
+              <div className="mt-3 space-y-2">
+                <VendorBadge 
+                  level={calculateBadgeLevel(
+                    vendor.totalSalesAmount || 0, 
+                    vendor.totalTransactions || 0
+                  )}
+                  size="md"
+                  showTooltip={true}
+                  className="mb-2"
+                />
+                <BadgeProgress
+                  currentLevel={calculateBadgeLevel(
+                    vendor.totalSalesAmount || 0, 
+                    vendor.totalTransactions || 0
+                  )}
+                  totalSales={vendor.totalSalesAmount || 0}
+                  totalTransactions={vendor.totalTransactions || 0}
+                  className="text-xs"
+                />
+              </div>
+            )}
           </div>
 
           <Tabs
