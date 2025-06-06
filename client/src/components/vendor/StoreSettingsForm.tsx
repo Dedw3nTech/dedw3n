@@ -439,6 +439,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                 <Button
                   type="submit"
                   disabled={updateSettingsMutation.isPending}
+                  className="bg-black hover:bg-gray-800 text-white"
                 >
                   {updateSettingsMutation.isPending ? (
                     <>
