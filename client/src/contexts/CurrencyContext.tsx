@@ -58,6 +58,8 @@ interface CurrencyContextType {
   convertPrice: (priceInUSD: number) => number;
   formatPrice: (priceInUSD: number) => string;
   formatPriceFromGBP: (priceInGBP: number) => string;
+  formatCurrency: (amount: number, fromCurrency?: string) => string;
+  convertCurrency: (amount: number, fromCurrency: string, toCurrency?: string) => number;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
