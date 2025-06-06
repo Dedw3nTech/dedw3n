@@ -3650,6 +3650,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== ORDERS & RETURNS API ENDPOINTS =====
 
+  // Get orders notification count - counts orders that need user attention
+  app.get('/api/orders/notifications/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Count orders that need attention: processing, shipped (ready for delivery confirmation), and recent delivered orders
+      const notificationOrders = await db.select({
+        count: sql<number>`count(*)`
+      }).from(orders)
+        .where(and(
+          eq(orders.userId, userId),
+          or(
+            eq(orders.status, 'processing'),
+            eq(orders.status, 'shipped'),
+            and(
+              eq(orders.status, 'delivered'),
+              sql`${orders.updatedAt} >= NOW() - INTERVAL '7 days'` // Delivered in last 7 days
+            )
+          )
+        ));
+
+      const count = notificationOrders[0]?.count || 0;
+      res.json({ count });
+    } catch (error) {
+      console.error('Error fetching orders notification count:', error);
+      res.status(500).json({ message: 'Failed to fetch notification count' });
+    }
+  });
+
   // Get user's orders with optional status filter
   app.get('/api/orders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
