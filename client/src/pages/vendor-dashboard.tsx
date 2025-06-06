@@ -28,7 +28,6 @@ import {
 
 // Import vendor components
 import ProductsList from "@/components/vendor/ProductsList";
-import VendorAnalytics from "@/components/vendor/VendorAnalytics";
 import OrdersList from "@/components/vendor/OrdersList";
 import CustomersList from "@/components/vendor/CustomersList";
 import ShippingManager from "@/components/vendor/ShippingManager";
@@ -37,6 +36,7 @@ import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
 export default function VendorDashboard() {
   const { user } = useAuth();
   const { formatPriceFromGBP } = useCurrency();
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [vendorId, setVendorId] = useState<number | null>(null);
@@ -486,11 +486,7 @@ export default function VendorDashboard() {
               </Card>
             </div>
 
-            {/* Analytics */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium">Analytics Overview</h3>
-              {vendorId && <VendorAnalytics vendorId={vendorId} />}
-            </div>
+
           </TabsContent>
 
           {/* Products Tab */}
