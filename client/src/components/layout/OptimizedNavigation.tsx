@@ -133,7 +133,7 @@ export default function OptimizedNavigation() {
                   href={item.href}
                   className={cn(
                     "flex h-10 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md",
-                    item.isActive && "bg-gray-100 text-gray-700"
+                    item.isActive && "bg-gray-100 text-gray-700 text-xs"
                   )}
                 >
                   <TranslatedText>{item.title}</TranslatedText>
