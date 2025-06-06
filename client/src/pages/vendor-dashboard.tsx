@@ -24,7 +24,8 @@ import {
   Store,
   Loader2,
   PlusCircle,
-  TrendingUp
+  TrendingUp,
+  Tag
 } from "lucide-react";
 
 // Import vendor components
@@ -38,6 +39,7 @@ import { VendorPaymentInfo } from "@/components/vendor/VendorPaymentInfo";
 import { VendorBadge } from "@/components/vendor/VendorBadge";
 import { BadgeProgress } from "@/components/vendor/BadgeProgress";
 import { calculateBadgeLevel } from "@/lib/vendor-badges";
+import DiscountForm from "@/components/vendor/DiscountForm";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -352,6 +354,10 @@ export default function VendorDashboard() {
             <Truck className="h-4 w-4 mr-2" />
             Shipping
           </TabsTrigger>
+          <TabsTrigger value="promotions" className="flex items-center">
+            <Tag className="h-4 w-4 mr-2" />
+            Promotions
+          </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
@@ -529,6 +535,77 @@ export default function VendorDashboard() {
           <TabsContent value="shipping" className="mt-0 space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Shipping</h2>
             <ShippingManager vendorId={vendorId || undefined} />
+          </TabsContent>
+
+          {/* Promotions Tab */}
+          <TabsContent value="promotions" className="mt-0 space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Promotions & Discounts</h2>
+                <p className="text-muted-foreground">Manage discount codes and automatic promotions</p>
+              </div>
+            </div>
+
+            <Tabs defaultValue="discount-codes" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
+                <TabsTrigger value="auto-discounts">Automatic Discounts</TabsTrigger>
+              </TabsList>
+
+              {/* Discount Codes Tab */}
+              <TabsContent value="discount-codes" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Discount Codes</h3>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Code
+                  </Button>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Active Discount Codes</CardTitle>
+                    <CardDescription>
+                      Codes customers can enter at checkout
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Tag className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No discount codes created yet</p>
+                      <p className="text-sm">Create your first discount code to get started</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Automatic Discounts Tab */}
+              <TabsContent value="auto-discounts" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Automatic Discounts</h3>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Auto Discount
+                  </Button>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Active Automatic Discounts</CardTitle>
+                    <CardDescription>
+                      Discounts that apply automatically based on conditions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No automatic discounts created yet</p>
+                      <p className="text-sm">Create conditions-based discounts for your customers</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* Analytics Tab */}
