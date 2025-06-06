@@ -115,15 +115,15 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   const [selectedRole, setSelectedRole] = useState<'marketer' | 'merchandiser' | 'online_store_manager'>('marketer');
 
   // Fetch store users
-  const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery({
-    queryKey: ['/api/vendors', vendor?.id, 'store-users'],
+  const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery<StoreUser[]>({
+    queryKey: ['/api/vendor/store-users'],
     enabled: !!vendor?.id
   });
 
   // Search users mutation
   const searchUsersMutation = useMutation({
     mutationFn: async (query: string) => {
-      const response = await apiRequest('GET', `/api/store-users/search?q=${encodeURIComponent(query)}`);
+      const response = await apiRequest('GET', `/api/vendor/search-users?query=${encodeURIComponent(query)}`);
       return response.json();
     },
     onSuccess: (data) => {
@@ -134,7 +134,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   // Assign user mutation
   const assignUserMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
-      const response = await apiRequest('POST', `/api/vendors/${vendor?.id}/store-users`, {
+      const response = await apiRequest('POST', `/api/vendor/store-users`, {
         userId,
         role
       });
@@ -163,7 +163,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
-      const response = await apiRequest('PATCH', `/api/vendors/${vendor?.id}/store-users/${id}`, updates);
+      const response = await apiRequest('PUT', `/api/vendor/store-users/${id}`, updates);
       return response.json();
     },
     onSuccess: () => {
@@ -932,7 +932,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                         <div className="mt-3 pt-3 border-t">
                           <p className="text-xs text-gray-500 mb-2">Permissions:</p>
                           <div className="flex flex-wrap gap-1">
-                            {rolePermissions[storeUser.role as keyof typeof rolePermissions]?.map((permission, index) => (
+                            {ROLE_PERMISSIONS[storeUser.role as keyof typeof ROLE_PERMISSIONS]?.map((permission: string, index: number) => (
                               <Badge key={index} variant="secondary" className="text-xs">
                                 {permission}
                               </Badge>
