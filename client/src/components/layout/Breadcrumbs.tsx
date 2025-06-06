@@ -59,6 +59,13 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
+    // Special handling for orders-returns to show marketplace hierarchy
+    if (path === '/orders-returns') {
+      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: 'Orders & Returns' });
+      return breadcrumbs;
+    }
+    
     // Define route mappings for better breadcrumb labels
     const routeLabels: Record<string, string> = {
       'products': 'Marketplace',
