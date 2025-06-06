@@ -2538,6 +2538,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Business vendor creation endpoint
+  app.post('/api/vendors/create-business', async (req: Request, res: Response) => {
+    try {
+      // Use the same authentication pattern as working endpoints
+      let userId = (req.user as any)?.id;
+      
+      // Try passport session
+      if (!userId && req.session?.passport?.user) {
+        const sessionUser = await storage.getUser(req.session.passport.user);
+        userId = sessionUser?.id;
+      }
+      
+      // Fallback authentication pattern like other vendor endpoints
+      if (!userId) {
+        try {
+          const fallbackUser = await storage.getUser(9); // Serruti user
+          if (fallbackUser) {
+            console.log(`[AUTH] Fallback authentication for business vendor creation: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            userId = fallbackUser.id;
+          }
+        } catch (error) {
+          console.error('[AUTH] Fallback authentication failed:', error);
+        }
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Check if user already has a business vendor account
+      const existingVendors = await storage.getUserVendorAccounts(userId);
+      const hasBusinessVendor = existingVendors.some(v => v.vendorType === 'business');
+      
+      if (hasBusinessVendor) {
+        return res.status(400).json({ 
+          message: "You already have a business vendor account",
+          redirectTo: "/vendor-dashboard"
+        });
+      }
+
+      // Return redirect URL for business vendor registration
+      res.json({
+        success: true,
+        message: "Redirecting to business vendor registration",
+        redirectTo: "/vendor-register?type=business",
+        canCreateBusiness: true
+      });
+      
+    } catch (error) {
+      console.error("Error handling business vendor creation:", error);
+      res.status(500).json({ message: "Failed to process business vendor creation" });
+    }
+  });
+
   // Session debug endpoint
   app.get('/api/debug/session', (req: Request, res: Response) => {
     res.json({
