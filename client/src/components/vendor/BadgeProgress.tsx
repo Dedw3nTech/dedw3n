@@ -19,9 +19,18 @@ export function BadgeProgress({
   totalTransactions, 
   className 
 }: BadgeProgressProps) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatPriceFromGBP } = useCurrency();
   const currentBadge = getBadgeInfo(currentLevel);
   const nextBadge = getNextBadgeInfo(currentLevel);
+  
+  // Function to convert badge description prices to current currency
+  const convertBadgeDescription = (description: string, minSales: number) => {
+    // Replace £X+ with converted currency format
+    return description.replace(/£(\d+(?:,\d+)*)\+/g, (match, amount) => {
+      const gbpAmount = parseInt(amount.replace(/,/g, ''));
+      return `${formatPriceFromGBP(gbpAmount)}+`;
+    });
+  };
   
   if (!nextBadge) {
     // Already at highest level
@@ -84,7 +93,7 @@ export function BadgeProgress({
           </div>
           <div className="flex-1">
             <h4 className="font-medium">{nextBadge.name}</h4>
-            <p className="text-sm text-gray-600">{nextBadge.description}</p>
+            <p className="text-sm text-gray-600">{convertBadgeDescription(nextBadge.description, nextBadge.minSales)}</p>
           </div>
           <Target className="w-5 h-5 text-gray-400" />
         </div>
