@@ -91,12 +91,6 @@ export default function OptimizedNavigation() {
       icon: MessageSquare,
       isActive: location.startsWith("/contact"),
     },
-    {
-      title: "Analytics",
-      href: "/analytics",
-      icon: TrendingUp,
-      isActive: location.startsWith("/analytics"),
-    },
   ];
 
   // Quick access items for authenticated users

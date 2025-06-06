@@ -158,19 +158,19 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/vendor-dashboard")}
+              onClick={() => setLocation("/orders-returns")}
             >
-              <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">Vendor Dashboard</span>
+              <Package className="h-4 w-4" />
+              <span className="text-sm font-medium">Orders & Returns</span>
             </Button>
             
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/orders-returns")}
+              onClick={() => setLocation("/vendor-dashboard")}
             >
-              <Package className="h-4 w-4" />
-              <span className="text-sm font-medium">Orders & Returns</span>
+              <Store className="h-4 w-4" />
+              <span className="text-sm font-medium">Vendor Dashboard</span>
             </Button>
             
 
