@@ -134,7 +134,13 @@ export default function Cart() {
   
   // Calculate pricing using centralized system with vendor config
   const pricing = calculatePricing(cartItems, pricingConfig);
-  const { subtotal, shippingCost, tax, total } = pricing;
+  const { subtotal, shippingCost, tax } = pricing;
+  
+  // Calculate 1.5% transaction commission on subtotal
+  const transactionCommission = subtotal * 0.015;
+  
+  // Recalculate total with commission
+  const total = subtotal + shippingCost + tax + transactionCommission;
   
   // Loading state
   if (isLoading) {
@@ -313,6 +319,15 @@ export default function Cart() {
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {formatPriceFromGBP(tax)}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    Dedw3n 1.5% Transaction Commission
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPriceFromGBP(transactionCommission)}
                   </td>
                   <td></td>
                 </tr>
