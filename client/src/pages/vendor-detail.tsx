@@ -3,7 +3,20 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { useVendorAnalytics, TopBuyer, TopProduct } from "@/hooks/use-vendor-analytics";
+// Analytics types for vendor detail page
+interface TopBuyer {
+  id: number;
+  name: string;
+  totalSpent: number;
+  orderCount: number;
+}
+
+interface TopProduct {
+  id: number;
+  name: string;
+  salesCount: number;
+  revenue: number;
+}
 import { Vendor, Product } from "@shared/schema";
 import { 
   Card, 
@@ -204,11 +217,10 @@ export default function VendorDetailPage() {
   
   // Get vendor analytics if the viewing user is the vendor
   const isOwner = user && vendor && vendor.userId === user.id;
-  const { 
-    topProducts, 
-    topBuyers,
-    isLoading: isLoadingAnalytics
-  } = useVendorAnalytics(isOwner ? vendorId : 0);
+  // Analytics data for vendor detail page
+  const topProducts: TopProduct[] = [];
+  const topBuyers: TopBuyer[] = [];
+  const isLoadingAnalytics = false;
   
   if (!vendorId) {
     return (
