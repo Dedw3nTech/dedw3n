@@ -18,7 +18,7 @@ import {
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
   chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
-  datingProfiles,
+  datingProfiles, storeUsers,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -33,7 +33,7 @@ import {
   type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
   type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
   type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
-  type DatingProfile, type InsertDatingProfile
+  type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
@@ -4558,6 +4558,113 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting user liked events:', error);
       return [];
+    }
+  }
+
+  // Store user management operations
+  async searchUsersForStore(query: string): Promise<User[]> {
+    try {
+      const searchResults = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          email: users.email,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(
+          or(
+            like(users.username, `%${query}%`),
+            like(users.name, `%${query}%`),
+            like(users.email, `%${query}%`)
+          )
+        )
+        .limit(10);
+      
+      return searchResults as User[];
+    } catch (error) {
+      console.error('Error searching users for store:', error);
+      return [];
+    }
+  }
+
+  async getStoreUsers(vendorId: number): Promise<any[]> {
+    try {
+      const storeUsersList = await db
+        .select({
+          id: storeUsers.id,
+          userId: storeUsers.userId,
+          role: storeUsers.role,
+          isActive: storeUsers.isActive,
+          createdAt: storeUsers.createdAt,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            email: users.email,
+            avatar: users.avatar
+          },
+          assignedByUser: {
+            id: users.id,
+            username: users.username,
+            name: users.name
+          }
+        })
+        .from(storeUsers)
+        .leftJoin(users, eq(storeUsers.userId, users.id))
+        .where(eq(storeUsers.vendorId, vendorId))
+        .orderBy(desc(storeUsers.createdAt));
+      
+      return storeUsersList;
+    } catch (error) {
+      console.error('Error getting store users:', error);
+      return [];
+    }
+  }
+
+  async assignUserToStore(storeUserData: InsertStoreUser): Promise<StoreUser> {
+    try {
+      const [newStoreUser] = await db
+        .insert(storeUsers)
+        .values(storeUserData)
+        .returning();
+      
+      return newStoreUser;
+    } catch (error) {
+      console.error('Error assigning user to store:', error);
+      throw new Error('Failed to assign user to store');
+    }
+  }
+
+  async updateStoreUser(id: number, vendorId: number, updates: Partial<StoreUser>): Promise<StoreUser | undefined> {
+    try {
+      const [updatedStoreUser] = await db
+        .update(storeUsers)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(and(eq(storeUsers.id, id), eq(storeUsers.vendorId, vendorId)))
+        .returning();
+      
+      return updatedStoreUser;
+    } catch (error) {
+      console.error('Error updating store user:', error);
+      return undefined;
+    }
+  }
+
+  async removeUserFromStore(id: number, vendorId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(storeUsers)
+        .where(and(eq(storeUsers.id, id), eq(storeUsers.vendorId, vendorId)));
+      
+      return true;
+    } catch (error) {
+      console.error('Error removing user from store:', error);
+      return false;
     }
   }
 }
