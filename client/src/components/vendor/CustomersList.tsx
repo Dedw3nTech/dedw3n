@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Loader2, Mail, Phone, ExternalLink, ShoppingBag, Calendar } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Table,
   TableBody,
@@ -51,6 +52,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   const [sortBy, setSortBy] = useState("recent");
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const { formatPriceFromGBP } = useCurrency();
 
   // Fetch customers
   const { data: customers, isLoading } = useQuery({
@@ -189,10 +191,10 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${customers?.reduce((avg: number, customer: any) => {
+              {formatPriceFromGBP(customers?.reduce((avg: number, customer: any) => {
                 const customerAvg = customer.totalSpent / (customer.totalOrders || 1);
                 return avg + customerAvg / (customers.length || 1);
-              }, 0).toFixed(2) || "0.00"}
+              }, 0) || 0)}
             </div>
           </CardContent>
         </Card>
@@ -371,7 +373,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <div className="text-lg font-bold">
-                            ${(selectedCustomer.totalSpent || 0).toFixed(2)}
+                            {formatPriceFromGBP(selectedCustomer.totalSpent || 0)}
                           </div>
                         </CardContent>
                       </Card>
@@ -383,7 +385,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                           <div className="text-lg font-bold">
-                            ${(selectedCustomer.totalSpent / (selectedCustomer.totalOrders || 1)).toFixed(2)}
+                            {formatPriceFromGBP(selectedCustomer.totalSpent / (selectedCustomer.totalOrders || 1))}
                           </div>
                         </CardContent>
                       </Card>
@@ -433,7 +435,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                               </TableCell>
                               <TableCell>{formatDate(order.createdAt || order.date)}</TableCell>
                               <TableCell>{order.items?.length || 0}</TableCell>
-                              <TableCell>${(order.total || 0).toFixed(2)}</TableCell>
+                              <TableCell>{formatPriceFromGBP(order.total || 0)}</TableCell>
                               <TableCell>
                                 <Badge variant="outline">{order.status}</Badge>
                               </TableCell>
