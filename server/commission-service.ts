@@ -446,9 +446,27 @@ export class CommissionService {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 
-    // Get current vendor status
+    // Get current vendor status with Sales Manager fields
     const vendor = await db
-      .select()
+      .select({
+        id: vendors.id,
+        userId: vendors.userId,
+        vendorType: vendors.vendorType,
+        storeName: vendors.storeName,
+        description: vendors.description,
+        logo: vendors.logo,
+        contactEmail: vendors.contactEmail,
+        contactPhone: vendors.contactPhone,
+        website: vendors.website,
+        address: vendors.address,
+        accountStatus: vendors.accountStatus,
+        paymentFailureCount: vendors.paymentFailureCount,
+        hasSalesManager: vendors.hasSalesManager,
+        salesManagerName: vendors.salesManagerName,
+        salesManagerId: vendors.salesManagerIdNumber,
+        createdAt: vendors.createdAt,
+        updatedAt: vendors.updatedAt
+      })
       .from(vendors)
       .where(eq(vendors.id, vendorId))
       .limit(1);

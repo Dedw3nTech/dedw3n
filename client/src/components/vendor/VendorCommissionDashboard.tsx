@@ -33,6 +33,9 @@ interface VendorCommissionData {
     storeName: string;
     accountStatus: string;
     paymentFailureCount: number;
+    hasSalesManager: boolean;
+    salesManagerName?: string;
+    salesManagerId?: string;
   };
   commissionPeriods: CommissionPeriod[];
   pendingPayments: CommissionPeriod[];
@@ -184,25 +187,40 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Standard Tier</h4>
-                <Badge className="bg-gray-100 text-gray-800">10%</Badge>
+          <div className="grid grid-cols-1 gap-4">
+            {!commissionData.vendor.hasSalesManager ? (
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">Standard Tier</h4>
+                  <Badge className="bg-gray-100 text-gray-800">10%</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Basic commission rate
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Basic commission rate
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Sales Manager</h4>
-                <Badge className="bg-blue-100 text-blue-800">10% + 2.5%</Badge>
+            ) : (
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">Sales Manager</h4>
+                  <Badge className="bg-blue-100 text-blue-800">10% + 2.5%</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  10% commission + 2.5% Sales Manager Fee
+                </p>
+                {commissionData.vendor.salesManagerName && (
+                  <div className="mt-2 pt-2 border-t">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Sales Manager:</strong> {commissionData.vendor.salesManagerName}
+                    </p>
+                    {commissionData.vendor.salesManagerId && (
+                      <p className="text-xs text-muted-foreground">
+                        <strong>ID:</strong> {commissionData.vendor.salesManagerId}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                10% commission + 2.5% Sales Manager Fee
-              </p>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
