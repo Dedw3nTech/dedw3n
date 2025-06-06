@@ -89,6 +89,10 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           <TabsTrigger value="competitors">Competitors</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          <TabsTrigger value="predictive">
+            <Brain className="h-4 w-4 mr-1" />
+            AI Insights
+          </TabsTrigger>
         </TabsList>
 
         {/* Revenue Tab */}
@@ -481,6 +485,11 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Predictive Analytics Tab */}
+        <TabsContent value="predictive" className="space-y-4">
+          <PredictiveAnalytics vendorId={vendorId} />
         </TabsContent>
       </Tabs>
     </div>
