@@ -39,6 +39,7 @@ import { registerMessageRoutes } from "./message-routes";
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
+import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 

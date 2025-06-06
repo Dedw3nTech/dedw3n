@@ -51,16 +51,17 @@ export function calculateBadgeLevel(totalSales: number, totalTransactions: numbe
 
 export async function updateVendorBadge(vendorId: number): Promise<BadgeLevel> {
   try {
-    // Calculate total sales and transactions for this vendor
+    // Calculate total sales and transactions for this vendor through orderItems
     const salesData = await db
       .select({
-        totalSales: sum(orders.totalAmount),
-        totalTransactions: count(orders.id)
+        totalSales: sum(orderItems.totalPrice),
+        totalTransactions: count(orderItems.id)
       })
-      .from(orders)
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
       .where(
         and(
-          eq(orders.vendorId, vendorId),
+          eq(orderItems.vendorId, vendorId),
           eq(orders.status, "completed")
         )
       );
