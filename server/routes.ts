@@ -2995,6 +2995,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for commission system (admin use)
+  app.post('/api/commission/test-system', async (req: Request, res: Response) => {
+    try {
+      console.log('[Commission Test] Starting comprehensive commission system test');
+      
+      const testResults = {
+        timestamp: new Date().toISOString(),
+        tests: [] as any[],
+        summary: {
+          total: 0,
+          passed: 0,
+          failed: 0
+        }
+      };
+
+      // Test 1: Monthly commission calculation
+      try {
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        
+        console.log('[Commission Test] Testing monthly commission processing...');
+        const monthlyResults = await commissionService.processMonthlyCommissions(currentMonth, currentYear);
+        
+        testResults.tests.push({
+          name: 'Monthly Commission Processing',
+          status: 'passed',
+          data: {
+            processedVendors: monthlyResults.length,
+            results: monthlyResults
+          }
+        });
+        testResults.summary.passed++;
+      } catch (error) {
+        testResults.tests.push({
+          name: 'Monthly Commission Processing',
+          status: 'failed',
+          error: error.message
+        });
+        testResults.summary.failed++;
+      }
+
+      // Test 2: Automatic commission charging
+      try {
+        console.log('[Commission Test] Testing automatic commission charging...');
+        const chargingResults = await commissionService.processAutomaticCommissionCharging();
+        
+        testResults.tests.push({
+          name: 'Automatic Commission Charging',
+          status: 'passed',
+          data: {
+            processedVendors: chargingResults.length,
+            results: chargingResults
+          }
+        });
+        testResults.summary.passed++;
+      } catch (error) {
+        testResults.tests.push({
+          name: 'Automatic Commission Charging',
+          status: 'failed',
+          error: error.message
+        });
+        testResults.summary.failed++;
+      }
+
+      // Test 3: Commission tier calculation
+      try {
+        console.log('[Commission Test] Testing commission tier calculation...');
+        const tier1 = commissionService.calculateCommissionTier(5000);
+        const tier2 = commissionService.calculateCommissionTier(15000);
+        const tier3 = commissionService.calculateCommissionTier(50000);
+        
+        testResults.tests.push({
+          name: 'Commission Tier Calculation',
+          status: 'passed',
+          data: {
+            tier1: { sales: 5000, ...tier1 },
+            tier2: { sales: 15000, ...tier2 },
+            tier3: { sales: 50000, ...tier3 }
+          }
+        });
+        testResults.summary.passed++;
+      } catch (error) {
+        testResults.tests.push({
+          name: 'Commission Tier Calculation',
+          status: 'failed',
+          error: error.message
+        });
+        testResults.summary.failed++;
+      }
+
+      // Test 4: Payment reminder system
+      try {
+        console.log('[Commission Test] Testing payment reminder system...');
+        await commissionService.sendPaymentReminders();
+        
+        testResults.tests.push({
+          name: 'Payment Reminder System',
+          status: 'passed',
+          data: { message: 'Payment reminders processed successfully' }
+        });
+        testResults.summary.passed++;
+      } catch (error) {
+        testResults.tests.push({
+          name: 'Payment Reminder System',
+          status: 'failed',
+          error: error.message
+        });
+        testResults.summary.failed++;
+      }
+
+      // Test 5: Overdue charges processing
+      try {
+        console.log('[Commission Test] Testing overdue charges processing...');
+        const overdueResults = await commissionService.processOverdueAutomaticCharges();
+        
+        testResults.tests.push({
+          name: 'Overdue Charges Processing',
+          status: 'passed',
+          data: {
+            processedCharges: overdueResults.length,
+            results: overdueResults
+          }
+        });
+        testResults.summary.passed++;
+      } catch (error) {
+        testResults.tests.push({
+          name: 'Overdue Charges Processing',
+          status: 'failed',
+          error: error.message
+        });
+        testResults.summary.failed++;
+      }
+
+      testResults.summary.total = testResults.summary.passed + testResults.summary.failed;
+      
+      console.log('[Commission Test] Test completed:', testResults.summary);
+      
+      res.json({
+        success: true,
+        message: 'Commission system test completed',
+        results: testResults
+      });
+    } catch (error) {
+      console.error('Error running commission system test:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to run commission system test',
+        error: error.message 
+      });
+    }
+  });
+
   // Session debug endpoint
   app.get('/api/debug/session', (req: Request, res: Response) => {
     res.json({
