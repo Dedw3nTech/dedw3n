@@ -34,6 +34,7 @@ import CustomersList from "@/components/vendor/CustomersList";
 import ShippingManager from "@/components/vendor/ShippingManager";
 import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
 import VendorAnalytics from "@/components/vendor/VendorAnalytics";
+import { VendorPaymentInfo } from "@/components/vendor/VendorPaymentInfo";
 import { VendorBadge } from "@/components/vendor/VendorBadge";
 import { BadgeProgress } from "@/components/vendor/BadgeProgress";
 import { calculateBadgeLevel } from "@/lib/vendor-badges";
@@ -540,6 +541,12 @@ export default function VendorDashboard() {
           <TabsContent value="settings" className="mt-0 space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Store Settings</h2>
             <StoreSettingsForm vendor={vendor} />
+            
+            {vendorId && (
+              <div className="mt-8">
+                <VendorPaymentInfo vendorId={vendorId} />
+              </div>
+            )}
           </TabsContent>
           </Tabs>
         </div>

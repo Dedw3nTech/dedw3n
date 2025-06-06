@@ -1,5 +1,5 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum, index, date } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, varchar, json, unique, primaryKey, pgEnum, index, date, decimal } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
@@ -1339,6 +1339,75 @@ export type CommunityEvent = typeof communityEvents.$inferSelect;
 export type InsertCommunityEvent = z.infer<typeof insertCommunityEventSchema>;
 export type CommunityEventAttendee = typeof communityEventAttendees.$inferSelect;
 export type InsertCommunityEventAttendee = z.infer<typeof insertCommunityEventAttendeeSchema>;
+
+// =====================================
+// Vendor Payment Information Schema
+// =====================================
+
+// Payment method enum
+export const paymentMethodEnum = pgEnum('payment_method', ['bank', 'mobile_money', 'paypal']);
+
+// Account type enum
+export const accountTypeEnum = pgEnum('account_type', ['checking', 'savings']);
+
+// Business type enum
+export const businessTypeEnum = pgEnum('business_type', ['individual', 'business', 'corporation']);
+
+// Payment schedule enum
+export const paymentScheduleEnum = pgEnum('payment_schedule', ['daily', 'weekly', 'monthly']);
+
+// Vendor payment information table
+export const vendorPaymentInfo = pgTable("vendor_payment_info", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  
+  // Bank Account Information
+  bankName: text("bank_name"),
+  accountNumber: text("account_number"),
+  routingNumber: text("routing_number"),
+  accountHolderName: text("account_holder_name"),
+  accountType: accountTypeEnum("account_type"),
+  
+  // Mobile Money Information
+  mobileMoneyProvider: text("mobile_money_provider"),
+  mobileMoneyNumber: text("mobile_money_number"),
+  
+  // PayPal Information
+  paypalEmail: text("paypal_email"),
+  
+  // Tax Information
+  taxId: text("tax_id"),
+  businessType: businessTypeEnum("business_type"),
+  
+  // Payment Settings
+  preferredPaymentMethod: paymentMethodEnum("preferred_payment_method").notNull(),
+  paymentSchedule: paymentScheduleEnum("payment_schedule").notNull().default('weekly'),
+  minimumPayoutAmount: decimal("minimum_payout_amount", { precision: 10, scale: 2 }).notNull().default('10.00'),
+  
+  // Status and Timestamps
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueVendor: unique().on(table.vendorId),
+    vendorIdIdx: index('idx_vendor_payment_vendor_id').on(table.vendorId),
+  };
+});
+
+// Vendor payment information schemas
+export const insertVendorPaymentInfoSchema = createInsertSchema(vendorPaymentInfo).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  isVerified: true,
+  verifiedAt: true 
+});
+
+// Vendor payment information types
+export type VendorPaymentInfo = typeof vendorPaymentInfo.$inferSelect;
+export type InsertVendorPaymentInfo = z.infer<typeof insertVendorPaymentInfoSchema>;
 
 // Chatroom type enum
 export const chatroomTypeEnum = pgEnum('chatroom_type', ['global', 'regional', 'country', 'private']);
