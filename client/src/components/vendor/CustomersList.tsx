@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, Mail, Phone, ExternalLink, ShoppingBag, Calendar } from "lucide-react";
+import { Search, Loader2, Mail, Phone, ExternalLink, ShoppingBag, Calendar, MapPin, User, CreditCard, Globe, Building2 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Table,
@@ -306,26 +306,67 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                   <TabsTrigger value="orders">Orders</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="profile" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TabsContent value="profile" className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-sm font-medium mb-2">Contact Information</h4>
-                      <div className="space-y-2">
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Personal Information
+                      </h4>
+                      <div className="space-y-3 pl-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-xs text-muted-foreground">Full Name</span>
+                            <p className="font-medium">{selectedCustomer.name || selectedCustomer.username || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">Username</span>
+                            <p className="font-medium">{selectedCustomer.username || 'N/A'}</p>
+                          </div>
+                        </div>
+                        {selectedCustomer.dateOfBirth && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Date of Birth</span>
+                            <p className="font-medium">{formatDate(selectedCustomer.dateOfBirth)}</p>
+                          </div>
+                        )}
+                        {selectedCustomer.gender && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Gender</span>
+                            <p className="font-medium capitalize">{selectedCustomer.gender}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Contact Information
+                      </h4>
+                      <div className="space-y-3 pl-6">
                         {selectedCustomer.email && (
                           <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <Mail className="h-3 w-3 text-muted-foreground" />
                             <span>{selectedCustomer.email}</span>
                           </div>
                         )}
                         {selectedCustomer.phone && (
                           <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <Phone className="h-3 w-3 text-muted-foreground" />
                             <span>{selectedCustomer.phone}</span>
+                          </div>
+                        )}
+                        {selectedCustomer.alternatePhone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <span>{selectedCustomer.alternatePhone} <span className="text-xs text-muted-foreground">(Alt)</span></span>
                           </div>
                         )}
                         {selectedCustomer.website && (
                           <div className="flex items-center gap-2">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                            <Globe className="h-3 w-3 text-muted-foreground" />
                             <a 
                               href={selectedCustomer.website} 
                               target="_blank" 
@@ -338,26 +379,118 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                         )}
                       </div>
                     </div>
-                    
+                  </div>
+
+                  {/* Address Information */}
+                  <div>
+                    <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Address Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-6">
+                      {/* Primary Address */}
+                      {(selectedCustomer.address || selectedCustomer.city || selectedCustomer.country) && (
+                        <div>
+                          <span className="text-xs text-muted-foreground mb-2 block">Primary Address</span>
+                          <div className="space-y-1 text-sm">
+                            {selectedCustomer.address && <p>{selectedCustomer.address}</p>}
+                            <p>
+                              {[selectedCustomer.city, selectedCustomer.state].filter(Boolean).join(', ')}
+                              {selectedCustomer.zipCode && ` ${selectedCustomer.zipCode}`}
+                            </p>
+                            {selectedCustomer.country && <p className="font-medium">{selectedCustomer.country}</p>}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Billing Address (if different) */}
+                      {(selectedCustomer.billingAddress || selectedCustomer.billingCity) && (
+                        <div>
+                          <span className="text-xs text-muted-foreground mb-2 block">Billing Address</span>
+                          <div className="space-y-1 text-sm">
+                            {selectedCustomer.billingAddress && <p>{selectedCustomer.billingAddress}</p>}
+                            <p>
+                              {[selectedCustomer.billingCity, selectedCustomer.billingState].filter(Boolean).join(', ')}
+                              {selectedCustomer.billingZipCode && ` ${selectedCustomer.billingZipCode}`}
+                            </p>
+                            {selectedCustomer.billingCountry && <p className="font-medium">{selectedCustomer.billingCountry}</p>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Account & Membership Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-sm font-medium mb-2">Customer Details</h4>
-                      <div className="space-y-2">
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        Account Information
+                      </h4>
+                      <div className="space-y-3 pl-6">
                         <div className="flex items-center gap-2">
-                          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                          <span>
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">
+                            Member since <strong>{formatDate(selectedCustomer.createdAt)}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">
                             <strong>{selectedCustomer.totalOrders || 0}</strong> total orders
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>
-                            Customer since <strong>{formatDate(selectedCustomer.createdAt)}</strong>
-                          </span>
-                        </div>
                         <div>
-                          <span className="text-sm text-muted-foreground mr-2">Customer Tier:</span>
-                          {getCustomerTierBadge(selectedCustomer.tier, selectedCustomer.totalSpent || 0)}
+                          <span className="text-xs text-muted-foreground">Customer Tier</span>
+                          <div className="mt-1">
+                            {getCustomerTierBadge(selectedCustomer.tier, selectedCustomer.totalSpent || 0)}
+                          </div>
                         </div>
+                        {selectedCustomer.accountStatus && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Account Status</span>
+                            <p className="font-medium capitalize">{selectedCustomer.accountStatus}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Additional Details
+                      </h4>
+                      <div className="space-y-3 pl-6">
+                        {selectedCustomer.company && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Company</span>
+                            <p className="font-medium">{selectedCustomer.company}</p>
+                          </div>
+                        )}
+                        {selectedCustomer.jobTitle && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Job Title</span>
+                            <p className="font-medium">{selectedCustomer.jobTitle}</p>
+                          </div>
+                        )}
+                        {selectedCustomer.preferredLanguage && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Preferred Language</span>
+                            <p className="font-medium">{selectedCustomer.preferredLanguage}</p>
+                          </div>
+                        )}
+                        {selectedCustomer.timezone && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Timezone</span>
+                            <p className="font-medium">{selectedCustomer.timezone}</p>
+                          </div>
+                        )}
+                        {selectedCustomer.marketingOptIn !== undefined && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Marketing Emails</span>
+                            <p className="font-medium">{selectedCustomer.marketingOptIn ? 'Subscribed' : 'Unsubscribed'}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
