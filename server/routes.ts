@@ -4886,14 +4886,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid vendor ID' });
       }
 
-      // Calculate profit/loss from orders and products
+      // Calculate profit/loss from orderItems and products
       const [revenueResult] = await db
         .select({
-          revenue: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)::numeric`
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`
         })
-        .from(orders)
-        .innerJoin(products, eq(orders.productId, products.id))
-        .where(eq(products.vendorId, vendorId));
+        .from(orderItems)
+        .where(eq(orderItems.vendorId, vendorId));
 
       const [expensesResult] = await db
         .select({
@@ -4906,15 +4905,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expenses = expensesResult?.expenses || 0;
       const profit = revenue - expenses;
 
-      // Get revenue by category
+      // Get revenue by category through orderItems and products
       const categoryRevenue = await db
         .select({
           category: products.category,
-          value: sql<number>`SUM(${orders.totalAmount})::numeric`
+          value: sql<number>`SUM(${orderItems.totalPrice})::numeric`
         })
-        .from(orders)
-        .innerJoin(products, eq(orders.productId, products.id))
-        .where(eq(products.vendorId, vendorId))
+        .from(orderItems)
+        .innerJoin(products, eq(orderItems.productId, products.id))
+        .where(eq(orderItems.vendorId, vendorId))
         .groupBy(products.category);
 
       res.json({
@@ -4937,18 +4936,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid vendor ID' });
       }
 
-      // Get key business metrics
+      // Get key business metrics through orderItems
       const [orderStats] = await db
         .select({
-          totalOrders: sql<number>`COUNT(*)::numeric`,
-          averageOrderValue: sql<number>`AVG(${orders.totalAmount})::numeric`,
+          totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          averageOrderValue: sql<number>`AVG(${orderItems.totalPrice})::numeric`,
           fulfillmentRate: sql<number>`
-            (COUNT(CASE WHEN ${orders.status} = 'delivered' THEN 1 END)::float / COUNT(*)::float)::numeric
+            (COUNT(CASE WHEN ${orderItems.status} = 'delivered' THEN 1 END)::float / COUNT(*)::float)::numeric
           `
         })
-        .from(orders)
-        .innerJoin(products, eq(orders.productId, products.id))
-        .where(eq(products.vendorId, vendorId));
+        .from(orderItems)
+        .where(eq(orderItems.vendorId, vendorId));
 
       const [productCount] = await db
         .select({
@@ -4962,8 +4960,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`
         })
         .from(orders)
-        .innerJoin(products, eq(orders.productId, products.id))
-        .where(eq(products.vendorId, vendorId));
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(eq(orderItems.vendorId, vendorId));
 
       res.json({
         totalOrders: orderStats?.totalOrders || 0,
@@ -4973,13 +4971,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalCustomers: customerCount?.count || 0,
         ordersByStatus: await db
           .select({
-            status: orders.status,
+            status: orderItems.status,
             count: sql<number>`COUNT(*)::numeric`
           })
-          .from(orders)
-          .innerJoin(products, eq(orders.productId, products.id))
-          .where(eq(products.vendorId, vendorId))
-          .groupBy(orders.status)
+          .from(orderItems)
+          .where(eq(orderItems.vendorId, vendorId))
+          .groupBy(orderItems.status)
       });
     } catch (error) {
       console.error('Error fetching metrics analytics:', error);
@@ -5006,19 +5003,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Find competitors in same categories
+      // Find competitors in same categories through orderItems
       const competitors = await db
         .select({
           vendorId: vendors.id,
           storeName: vendors.storeName,
           category: products.category,
-          productCount: sql<number>`COUNT(${products.id})::numeric`,
+          productCount: sql<number>`COUNT(DISTINCT ${products.id})::numeric`,
           averagePrice: sql<number>`AVG(${products.price})::numeric`,
-          totalSales: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)::numeric`
+          totalSales: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`
         })
         .from(vendors)
         .innerJoin(products, eq(vendors.id, products.vendorId))
-        .leftJoin(orders, eq(products.id, orders.productId))
+        .leftJoin(orderItems, eq(products.vendorId, orderItems.vendorId))
         .where(
           and(
             ne(vendors.id, vendorId),
@@ -5026,7 +5023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         )
         .groupBy(vendors.id, vendors.storeName, products.category)
-        .orderBy(desc(sql`COALESCE(SUM(${orders.totalAmount}), 0)`))
+        .orderBy(desc(sql`COALESCE(SUM(${orderItems.totalPrice}), 0)`))
         .limit(10);
 
       res.json(competitors);
@@ -5044,25 +5041,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid vendor ID' });
       }
 
-      // Get potential leads from product views and cart additions
+      // Get potential leads from cart additions
       const leads = await db
         .select({
           userId: users.id,
           username: users.username,
           email: users.email,
           viewCount: sql<number>`COUNT(DISTINCT ${products.id})::numeric`,
-          lastActivity: sql<string>`MAX(${products.createdAt})::text`,
+          lastActivity: sql<string>`MAX(${carts.createdAt})::text`,
           hasOrdered: sql<boolean>`
             EXISTS(
-              SELECT 1 FROM ${orders} o 
-              INNER JOIN ${products} p ON o.productId = p.id 
-              WHERE p.vendorId = ${vendorId} AND o.userId = ${users.id}
+              SELECT 1 FROM ${orderItems} oi 
+              WHERE oi.vendorId = ${vendorId} AND oi.userId = ${users.id}
             )
           `
         })
         .from(users)
-        .innerJoin(cart, eq(users.id, cart.userId))
-        .innerJoin(products, eq(cart.productId, products.id))
+        .innerJoin(carts, eq(users.id, carts.userId))
+        .innerJoin(products, eq(carts.productId, products.id))
         .where(eq(products.vendorId, vendorId))
         .groupBy(users.id, users.username, users.email)
         .having(sql`COUNT(DISTINCT ${products.id}) > 0`)

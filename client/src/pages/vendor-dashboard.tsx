@@ -32,6 +32,7 @@ import OrdersList from "@/components/vendor/OrdersList";
 import CustomersList from "@/components/vendor/CustomersList";
 import ShippingManager from "@/components/vendor/ShippingManager";
 import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
+import VendorAnalytics from "@/components/vendor/VendorAnalytics";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
