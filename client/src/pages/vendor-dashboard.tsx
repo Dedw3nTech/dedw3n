@@ -392,7 +392,14 @@ export default function VendorDashboard() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="dashboard" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+                {vendor && (
+                  <p className="text-blue-600 text-xs font-normal mt-1">
+                    Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
+                  </p>
+                )}
+              </div>
               <div className="flex gap-3">
                 <Button 
                   onClick={handleCreateBusinessVendor} 
