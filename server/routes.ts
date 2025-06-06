@@ -5055,7 +5055,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasOrdered: sql<boolean>`
             EXISTS(
               SELECT 1 FROM ${orderItems} oi 
-              WHERE oi.vendor_id = ${vendorId} AND oi.user_id = ${users.id}
+              INNER JOIN ${orders} o ON oi.order_id = o.id
+              WHERE oi.vendor_id = ${vendorId} AND o.user_id = ${users.id}
             )
           `
         })

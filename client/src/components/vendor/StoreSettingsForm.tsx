@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +42,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   const { toast } = useToast();
   const [imageUploading, setImageUploading] = useState(false);
 
-  // Form initialization
+  // Form initialization with vendor data
   const form = useForm<VendorSettingsFormValues>({
     resolver: zodResolver(vendorSettingsSchema),
     defaultValues: {
