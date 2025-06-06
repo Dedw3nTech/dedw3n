@@ -11,7 +11,8 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, sql, and, ne, inArray, desc } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema } from "@shared/schema";
+import { z } from "zod";
 
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -5855,6 +5856,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating all vendor badges:', error);
       res.status(500).json({ error: 'Failed to update all vendor badges' });
+    }
+  });
+
+  // ===== Vendor Payment Information Routes =====
+
+  // Get vendor payment information
+  app.get("/api/vendors/:vendorId/payment-info", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify vendor ownership
+      const vendor = await db.select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor.length || vendor[0].userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const paymentInfo = await db.select()
+        .from(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .limit(1);
+
+      res.json(paymentInfo[0] || null);
+    } catch (error) {
+      console.error("Error fetching vendor payment info:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create or update vendor payment information
+  app.post("/api/vendors/:vendorId/payment-info", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify vendor ownership
+      const vendor = await db.select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor.length || vendor[0].userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Validate the request body
+      const validatedData = insertVendorPaymentInfoSchema.parse({
+        ...req.body,
+        vendorId
+      });
+
+      // Check if payment info already exists
+      const existingInfo = await db.select()
+        .from(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .limit(1);
+
+      let result;
+      if (existingInfo.length) {
+        // Update existing payment info
+        result = await db.update(vendorPaymentInfo)
+          .set({
+            ...validatedData,
+            updatedAt: new Date()
+          })
+          .where(eq(vendorPaymentInfo.vendorId, vendorId))
+          .returning();
+      } else {
+        // Create new payment info
+        result = await db.insert(vendorPaymentInfo)
+          .values(validatedData)
+          .returning();
+      }
+
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error saving vendor payment info:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete vendor payment information
+  app.delete("/api/vendors/:vendorId/payment-info", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      // Verify vendor ownership
+      const vendor = await db.select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor.length || vendor[0].userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await db.delete(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId));
+
+      res.json({ message: "Payment information deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting vendor payment info:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

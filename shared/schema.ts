@@ -1382,7 +1382,7 @@ export const vendorPaymentInfo = pgTable("vendor_payment_info", {
   // Payment Settings
   preferredPaymentMethod: paymentMethodEnum("preferred_payment_method").notNull(),
   paymentSchedule: paymentScheduleEnum("payment_schedule").notNull().default('weekly'),
-  minimumPayoutAmount: decimal("minimum_payout_amount", { precision: 10, scale: 2 }).notNull().default('10.00'),
+  minimumPayoutAmount: doublePrecision("minimum_payout_amount").notNull().default(10.00),
   
   // Status and Timestamps
   isVerified: boolean("is_verified").notNull().default(false),
