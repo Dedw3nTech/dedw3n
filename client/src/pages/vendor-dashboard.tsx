@@ -328,33 +328,40 @@ export default function VendorDashboard() {
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
-      {/* Vendor Badge Display - Top of Page */}
-      {vendor && (
-        <div className="mb-6 flex items-center justify-center bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-          <div className="flex items-center space-x-4">
-            <VendorBadge 
-              level={calculateBadgeLevel(
-                vendor.totalSalesAmount || 0, 
-                vendor.totalTransactions || 0
-              )}
-              size="lg"
-              showTooltip={true}
-            />
-            <div className="flex-1">
-              <BadgeProgress
-                currentLevel={calculateBadgeLevel(
-                  vendor.totalSalesAmount || 0, 
-                  vendor.totalTransactions || 0
-                )}
-                totalSales={vendor.totalSalesAmount || 0}
-                totalTransactions={vendor.totalTransactions || 0}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
+      {/* Navigation Tabs - Top of Page */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="dashboard" className="flex items-center">
+            <LayoutDashboard className="h-4 w-4 mr-2" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="products" className="flex items-center">
+            <Package className="h-4 w-4 mr-2" />
+            Products
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="flex items-center">
+            <BarChart className="h-4 w-4 mr-2" />
+            Orders
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            Customers
+          </TabsTrigger>
+          <TabsTrigger value="shipping" className="flex items-center">
+            <Truck className="h-4 w-4 mr-2" />
+            Shipping
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
         {/* Sidebar Navigation */}
         <div className="space-y-4">
@@ -368,64 +375,29 @@ export default function VendorDashboard() {
             </div>
           </div>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            orientation="vertical"
-            className="space-y-2"
-          >
-            <TabsList className="flex flex-col h-auto bg-transparent justify-start space-y-1">
-              <TabsTrigger
-                value="dashboard"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                Dashboard
-              </TabsTrigger>
-              <TabsTrigger
-                value="products"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <Package className="h-4 w-4 mr-2" />
-                Products
-              </TabsTrigger>
-              <TabsTrigger
-                value="orders"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <BarChart className="h-4 w-4 mr-2" />
-                Orders
-              </TabsTrigger>
-              <TabsTrigger
-                value="customers"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Customers
-              </TabsTrigger>
-              <TabsTrigger
-                value="shipping"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <Truck className="h-4 w-4 mr-2" />
-                Shipping
-              </TabsTrigger>
-              <TabsTrigger
-                value="analytics"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger
-                value="settings"
-                className="justify-start px-3 py-2 h-auto font-normal"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Vendor Badge Display */}
+          {vendor && (
+            <div className="mt-3 space-y-2">
+              <VendorBadge 
+                level={calculateBadgeLevel(
+                  vendor.totalSalesAmount || 0, 
+                  vendor.totalTransactions || 0
+                )}
+                size="md"
+                showTooltip={true}
+                className="mb-2"
+              />
+              <BadgeProgress
+                currentLevel={calculateBadgeLevel(
+                  vendor.totalSalesAmount || 0, 
+                  vendor.totalTransactions || 0
+                )}
+                totalSales={vendor.totalSalesAmount || 0}
+                totalTransactions={vendor.totalTransactions || 0}
+                className="text-xs"
+              />
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
