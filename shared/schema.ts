@@ -48,6 +48,18 @@ export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 // Define vendor badge level enum
 export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor']);
 
+// Define discount type enum
+export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed_amount', 'buy_x_get_y', 'free_shipping']);
+
+// Define discount status enum
+export const discountStatusEnum = pgEnum('discount_status', ['active', 'inactive', 'expired', 'scheduled']);
+
+// Define discount application enum
+export const discountApplicationEnum = pgEnum('discount_application', ['automatic', 'code_required']);
+
+// Define promotion target enum
+export const promotionTargetEnum = pgEnum('promotion_target', ['all_products', 'specific_products', 'category', 'minimum_order']);
+
 // Define event category enum
 export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
@@ -1576,5 +1588,137 @@ export const insertGiftPropositionSchema = createInsertSchema(giftPropositions).
 // Gift proposition types
 export type GiftProposition = typeof giftPropositions.$inferSelect;
 export type InsertGiftProposition = z.infer<typeof insertGiftPropositionSchema>;
+
+// Vendor Discounts and Promotions
+export const vendorDiscounts = pgTable("vendor_discounts", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+  
+  // Basic discount information
+  name: text("name").notNull(),
+  description: text("description"),
+  code: text("code"), // Optional discount code (null for automatic discounts)
+  
+  // Discount type and value
+  discountType: discountTypeEnum("discount_type").notNull(),
+  discountValue: doublePrecision("discount_value").notNull(), // Percentage (0-100) or fixed amount
+  maxDiscountAmount: doublePrecision("max_discount_amount"), // Maximum discount for percentage types
+  
+  // Application rules
+  application: discountApplicationEnum("application").notNull().default('code_required'),
+  minimumOrderValue: doublePrecision("minimum_order_value").default(0),
+  usageLimit: integer("usage_limit"), // null = unlimited
+  usageCount: integer("usage_count").default(0),
+  usageLimitPerCustomer: integer("usage_limit_per_customer"), // null = unlimited per customer
+  
+  // Target rules
+  target: promotionTargetEnum("target").notNull().default('all_products'),
+  targetProductIds: json("target_product_ids").$type<number[]>().default([]),
+  targetCategories: json("target_categories").$type<string[]>().default([]),
+  
+  // Buy X Get Y rules (for buy_x_get_y type)
+  buyQuantity: integer("buy_quantity"),
+  getQuantity: integer("get_quantity"),
+  getDiscountPercent: doublePrecision("get_discount_percent"),
+  
+  // Scheduling
+  status: discountStatusEnum("status").notNull().default('active'),
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  
+  // Metadata
+  isPublic: boolean("is_public").default(true), // Whether to show in public promotions
+  priority: integer("priority").default(0), // Higher priority discounts apply first
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorIdIdx: index("vendor_discounts_vendor_id_idx").on(table.vendorId),
+    codeIdx: index("vendor_discounts_code_idx").on(table.code),
+    statusIdx: index("vendor_discounts_status_idx").on(table.status),
+    uniqueVendorCode: unique("unique_vendor_discount_code").on(table.vendorId, table.code),
+  };
+});
+
+export const insertVendorDiscountSchema = createInsertSchema(vendorDiscounts).omit({
+  id: true,
+  usageCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type VendorDiscount = typeof vendorDiscounts.$inferSelect;
+export type InsertVendorDiscount = z.infer<typeof insertVendorDiscountSchema>;
+
+// Discount Usage Tracking
+export const discountUsages = pgTable("discount_usages", {
+  id: serial("id").primaryKey(),
+  discountId: integer("discount_id").notNull().references(() => vendorDiscounts.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  orderId: integer("order_id").references(() => orders.id, { onDelete: 'set null' }),
+  
+  discountAmount: doublePrecision("discount_amount").notNull(),
+  originalAmount: doublePrecision("original_amount").notNull(),
+  finalAmount: doublePrecision("final_amount").notNull(),
+  
+  usedAt: timestamp("used_at").defaultNow(),
+}, (table) => {
+  return {
+    discountIdIdx: index("discount_usages_discount_id_idx").on(table.discountId),
+    userIdIdx: index("discount_usages_user_id_idx").on(table.userId),
+    orderIdIdx: index("discount_usages_order_id_idx").on(table.orderId),
+  };
+});
+
+export const insertDiscountUsageSchema = createInsertSchema(discountUsages).omit({
+  id: true,
+  usedAt: true
+});
+
+export type DiscountUsage = typeof discountUsages.$inferSelect;
+export type InsertDiscountUsage = z.infer<typeof insertDiscountUsageSchema>;
+
+// Promotional Campaigns
+export const promotionalCampaigns = pgTable("promotional_campaigns", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+  
+  name: text("name").notNull(),
+  description: text("description"),
+  bannerImageUrl: text("banner_image_url"),
+  
+  // Campaign settings
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0),
+  
+  // Associated discounts
+  discountIds: json("discount_ids").$type<number[]>().default([]),
+  
+  // Display settings
+  showOnStorefront: boolean("show_on_storefront").default(true),
+  showInEmails: boolean("show_in_emails").default(false),
+  
+  // Scheduling
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorIdIdx: index("promotional_campaigns_vendor_id_idx").on(table.vendorId),
+    activeIdx: index("promotional_campaigns_active_idx").on(table.isActive),
+  };
+});
+
+export const insertPromotionalCampaignSchema = createInsertSchema(promotionalCampaigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type PromotionalCampaign = typeof promotionalCampaigns.$inferSelect;
+export type InsertPromotionalCampaign = z.infer<typeof insertPromotionalCampaignSchema>;
 
 

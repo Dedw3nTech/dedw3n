@@ -10,8 +10,8 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq, or, like, sql, and, ne, inArray, desc } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema } from "@shared/schema";
+import { eq, or, like, sql, and, ne, inArray, desc, count, sum, avg } from "drizzle-orm";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema } from "@shared/schema";
 
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -6126,6 +6126,388 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting vendor payment info:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Discount and Promotions Management API Routes
+  
+  // Get all discounts for a vendor
+  app.get('/api/vendors/:vendorId/discounts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const discounts = await db.select().from(vendorDiscounts)
+        .where(eq(vendorDiscounts.vendorId, vendorId))
+        .orderBy(desc(vendorDiscounts.createdAt));
+      
+      res.json(discounts);
+    } catch (error) {
+      console.error('Error fetching vendor discounts:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create a new discount
+  app.post('/api/vendors/:vendorId/discounts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate request body
+      const discountData = insertVendorDiscountSchema.parse({
+        ...req.body,
+        vendorId
+      });
+      
+      const [newDiscount] = await db.insert(vendorDiscounts)
+        .values(discountData)
+        .returning();
+      
+      res.status(201).json(newDiscount);
+    } catch (error) {
+      console.error('Error creating discount:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update a discount
+  app.put('/api/vendors/:vendorId/discounts/:discountId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const discountId = parseInt(req.params.discountId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Verify discount belongs to vendor
+      const existingDiscount = await db.select().from(vendorDiscounts)
+        .where(and(eq(vendorDiscounts.id, discountId), eq(vendorDiscounts.vendorId, vendorId)))
+        .limit(1);
+        
+      if (!existingDiscount.length) {
+        return res.status(404).json({ message: "Discount not found" });
+      }
+      
+      const updateData = insertVendorDiscountSchema.partial().parse(req.body);
+      updateData.updatedAt = new Date();
+      
+      const [updatedDiscount] = await db.update(vendorDiscounts)
+        .set(updateData)
+        .where(eq(vendorDiscounts.id, discountId))
+        .returning();
+      
+      res.json(updatedDiscount);
+    } catch (error) {
+      console.error('Error updating discount:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete a discount
+  app.delete('/api/vendors/:vendorId/discounts/:discountId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const discountId = parseInt(req.params.discountId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Verify discount belongs to vendor
+      const existingDiscount = await db.select().from(vendorDiscounts)
+        .where(and(eq(vendorDiscounts.id, discountId), eq(vendorDiscounts.vendorId, vendorId)))
+        .limit(1);
+        
+      if (!existingDiscount.length) {
+        return res.status(404).json({ message: "Discount not found" });
+      }
+      
+      await db.delete(vendorDiscounts).where(eq(vendorDiscounts.id, discountId));
+      
+      res.json({ message: "Discount deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting discount:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get discount usage statistics
+  app.get('/api/vendors/:vendorId/discounts/:discountId/usage', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const discountId = parseInt(req.params.discountId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const usageStats = await db.select({
+        totalUsages: count(),
+        totalDiscountAmount: sum(discountUsages.discountAmount),
+        totalOriginalAmount: sum(discountUsages.originalAmount),
+        averageDiscountAmount: avg(discountUsages.discountAmount)
+      }).from(discountUsages)
+        .where(eq(discountUsages.discountId, discountId));
+      
+      const recentUsages = await db.select({
+        id: discountUsages.id,
+        userId: discountUsages.userId,
+        orderId: discountUsages.orderId,
+        discountAmount: discountUsages.discountAmount,
+        originalAmount: discountUsages.originalAmount,
+        finalAmount: discountUsages.finalAmount,
+        usedAt: discountUsages.usedAt,
+        userName: users.name,
+        userEmail: users.email
+      }).from(discountUsages)
+        .leftJoin(users, eq(discountUsages.userId, users.id))
+        .where(eq(discountUsages.discountId, discountId))
+        .orderBy(desc(discountUsages.usedAt))
+        .limit(20);
+      
+      res.json({
+        statistics: usageStats[0],
+        recentUsages
+      });
+    } catch (error) {
+      console.error('Error fetching discount usage:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get promotional campaigns for a vendor
+  app.get('/api/vendors/:vendorId/campaigns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const campaigns = await db.select().from(promotionalCampaigns)
+        .where(eq(promotionalCampaigns.vendorId, vendorId))
+        .orderBy(desc(promotionalCampaigns.createdAt));
+      
+      res.json(campaigns);
+    } catch (error) {
+      console.error('Error fetching promotional campaigns:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create a new promotional campaign
+  app.post('/api/vendors/:vendorId/campaigns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const campaignData = insertPromotionalCampaignSchema.parse({
+        ...req.body,
+        vendorId
+      });
+      
+      const [newCampaign] = await db.insert(promotionalCampaigns)
+        .values(campaignData)
+        .returning();
+      
+      res.status(201).json(newCampaign);
+    } catch (error) {
+      console.error('Error creating promotional campaign:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update a promotional campaign
+  app.put('/api/vendors/:vendorId/campaigns/:campaignId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const campaignId = parseInt(req.params.campaignId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Verify campaign belongs to vendor
+      const existingCampaign = await db.select().from(promotionalCampaigns)
+        .where(and(eq(promotionalCampaigns.id, campaignId), eq(promotionalCampaigns.vendorId, vendorId)))
+        .limit(1);
+        
+      if (!existingCampaign.length) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      const updateData = insertPromotionalCampaignSchema.partial().parse(req.body);
+      updateData.updatedAt = new Date();
+      
+      const [updatedCampaign] = await db.update(promotionalCampaigns)
+        .set(updateData)
+        .where(eq(promotionalCampaigns.id, campaignId))
+        .returning();
+      
+      res.json(updatedCampaign);
+    } catch (error) {
+      console.error('Error updating promotional campaign:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Delete a promotional campaign
+  app.delete('/api/vendors/:vendorId/campaigns/:campaignId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const campaignId = parseInt(req.params.campaignId);
+      const userId = req.user!.id;
+      
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Verify campaign belongs to vendor
+      const existingCampaign = await db.select().from(promotionalCampaigns)
+        .where(and(eq(promotionalCampaigns.id, campaignId), eq(promotionalCampaigns.vendorId, vendorId)))
+        .limit(1);
+        
+      if (!existingCampaign.length) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      await db.delete(promotionalCampaigns).where(eq(promotionalCampaigns.id, campaignId));
+      
+      res.json({ message: "Campaign deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting promotional campaign:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Validate discount code (for checkout)
+  app.post('/api/discounts/validate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { code, vendorId, orderAmount, productIds } = req.body;
+      const userId = req.user!.id;
+      
+      if (!code || !vendorId || !orderAmount) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Find active discount by code
+      const discount = await db.select().from(vendorDiscounts)
+        .where(and(
+          eq(vendorDiscounts.code, code),
+          eq(vendorDiscounts.vendorId, vendorId),
+          eq(vendorDiscounts.status, 'active')
+        ))
+        .limit(1);
+      
+      if (!discount.length) {
+        return res.status(404).json({ message: "Invalid discount code" });
+      }
+      
+      const discountData = discount[0];
+      
+      // Check if discount has expired
+      if (discountData.endsAt && new Date() > discountData.endsAt) {
+        return res.status(400).json({ message: "Discount code has expired" });
+      }
+      
+      // Check if discount hasn't started yet
+      if (discountData.startsAt && new Date() < discountData.startsAt) {
+        return res.status(400).json({ message: "Discount code is not yet active" });
+      }
+      
+      // Check usage limits
+      if (discountData.usageLimit && discountData.usageCount >= discountData.usageLimit) {
+        return res.status(400).json({ message: "Discount code usage limit exceeded" });
+      }
+      
+      // Check per-customer usage limit
+      if (discountData.usageLimitPerCustomer) {
+        const userUsageCount = await db.select({ count: count() })
+          .from(discountUsages)
+          .where(and(
+            eq(discountUsages.discountId, discountData.id),
+            eq(discountUsages.userId, userId)
+          ));
+        
+        if (userUsageCount[0].count >= discountData.usageLimitPerCustomer) {
+          return res.status(400).json({ message: "You have reached the usage limit for this discount" });
+        }
+      }
+      
+      // Check minimum order value
+      if (discountData.minimumOrderValue && orderAmount < discountData.minimumOrderValue) {
+        return res.status(400).json({ 
+          message: `Minimum order value of £${discountData.minimumOrderValue} required` 
+        });
+      }
+      
+      // Calculate discount amount
+      let discountAmount = 0;
+      
+      if (discountData.discountType === 'percentage') {
+        discountAmount = (orderAmount * discountData.discountValue) / 100;
+        if (discountData.maxDiscountAmount && discountAmount > discountData.maxDiscountAmount) {
+          discountAmount = discountData.maxDiscountAmount;
+        }
+      } else if (discountData.discountType === 'fixed_amount') {
+        discountAmount = Math.min(discountData.discountValue, orderAmount);
+      }
+      
+      const finalAmount = Math.max(0, orderAmount - discountAmount);
+      
+      res.json({
+        valid: true,
+        discount: {
+          id: discountData.id,
+          name: discountData.name,
+          description: discountData.description,
+          discountType: discountData.discountType,
+          discountValue: discountData.discountValue
+        },
+        discountAmount,
+        originalAmount: orderAmount,
+        finalAmount
+      });
+    } catch (error) {
+      console.error('Error validating discount code:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
