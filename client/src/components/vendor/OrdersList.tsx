@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { 
   ChevronDown, 
   Search, 
@@ -75,6 +76,7 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string>("");
+  const { formatPriceFromGBP } = useCurrency();
 
   // Fetch orders
   const { data: orders, isLoading } = useQuery({
@@ -324,7 +326,7 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
                     </div>
                   </TableCell>
                   <TableCell>{formatOrderDate(order.createdAt || order.date)}</TableCell>
-                  <TableCell>${(order.total || 0).toFixed(2)}</TableCell>
+                  <TableCell>{formatPriceFromGBP(order.total || 0)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(order.status)}

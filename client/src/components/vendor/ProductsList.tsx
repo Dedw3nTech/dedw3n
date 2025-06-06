@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Edit, Eye, MoreHorizontal, Search } from "lucide-react";
 import { useLocation } from "wouter";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ interface ProductsListProps {
 export default function ProductsList({ vendorId }: ProductsListProps) {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const { formatPriceFromGBP } = useCurrency();
 
   // Fetch vendor products
   const { data: products, isLoading } = useQuery({
@@ -65,15 +67,15 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
       return (
         <div className="flex flex-col">
           <span className="text-sm line-through text-muted-foreground">
-            ${price.toFixed(2)}
+            {formatPriceFromGBP(price)}
           </span>
           <span className="text-green-600 font-medium">
-            ${discountPrice.toFixed(2)}
+            {formatPriceFromGBP(discountPrice)}
           </span>
         </div>
       );
     }
-    return <span>${price.toFixed(2)}</span>;
+    return <span>{formatPriceFromGBP(price)}</span>;
   };
 
   if (isLoading) {
