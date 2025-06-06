@@ -340,28 +340,28 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-muted">
-          <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm">
+        <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-black text-white">
+          <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
           </TabsTrigger>
-          <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm">
+          <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Package className="h-4 w-4 mr-2" />
             Products
           </TabsTrigger>
-          <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm">
+          <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Users className="h-4 w-4 mr-2" />
             Customers
           </TabsTrigger>
-          <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm">
+          <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Truck className="h-4 w-4 mr-2" />
             Shipping
           </TabsTrigger>
-          <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm">
+          <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center justify-center px-3 py-2 text-sm">
+          <TabsTrigger value="analytics" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
