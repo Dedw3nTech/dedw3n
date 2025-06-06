@@ -584,21 +584,7 @@ export default function VendorDashboard() {
                   </Button>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Automatic Discounts</CardTitle>
-                    <CardDescription>
-                      Discounts that apply automatically based on conditions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No automatic discounts created yet</p>
-                      <p className="text-sm">Create conditions-based discounts for your customers</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DiscountList vendorId={vendorId} type="automatic" />
               </TabsContent>
             </Tabs>
           </TabsContent>
