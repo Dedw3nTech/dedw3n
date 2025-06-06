@@ -66,6 +66,7 @@ const productSchema = z.object({
   trackQuantity: z.boolean().default(true),
   continueSellingWhenOutOfStock: z.boolean().default(false),
   requiresShipping: z.boolean().default(true),
+  shippingCarrier: z.string().optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -111,6 +112,7 @@ export default function AddProduct() {
       trackQuantity: true,
       continueSellingWhenOutOfStock: false,
       requiresShipping: true,
+      shippingCarrier: '',
       seoTitle: '',
       seoDescription: '',
       serviceDuration: '',
@@ -651,6 +653,37 @@ export default function AddProduct() {
                               <FormControl>
                                 <Input placeholder="10 × 5 × 2 cm" {...field} />
                               </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="shippingCarrier"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Shipping Carrier</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select shipping carrier" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="dhl">DHL</SelectItem>
+                                  <SelectItem value="fedex">FedEx</SelectItem>
+                                  <SelectItem value="ups">UPS</SelectItem>
+                                  <SelectItem value="royal-mail">Royal Mail</SelectItem>
+                                  <SelectItem value="usps">USPS</SelectItem>
+                                  <SelectItem value="dpd">DPD</SelectItem>
+                                  <SelectItem value="hermes">Hermes</SelectItem>
+                                  <SelectItem value="aramex">Aramex</SelectItem>
+                                  <SelectItem value="tnt">TNT</SelectItem>
+                                  <SelectItem value="gls">GLS</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}

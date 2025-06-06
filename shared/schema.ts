@@ -203,6 +203,7 @@ export const products = pgTable("products", {
   trackQuantity: boolean("track_quantity").default(true),
   continueSellingWhenOutOfStock: boolean("continue_selling_when_out_of_stock").default(false),
   requiresShipping: boolean("requires_shipping").default(true),
+  shippingCarrier: text("shipping_carrier"), // Shipping carrier selection
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   productCode: varchar("product_code", { length: 50 }).unique(),
