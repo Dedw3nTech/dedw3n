@@ -26,6 +26,32 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+// Role permissions mapping
+const ROLE_PERMISSIONS = {
+  marketer: [
+    "Create and manage marketing campaigns",
+    "Manage promotions and discounts",
+    "View sales analytics",
+    "Send marketing emails"
+  ],
+  merchandiser: [
+    "Manage product listings",
+    "Update inventory levels",
+    "Create product categories",
+    "Create and manage marketing campaigns",
+    "Manage promotions and discounts",
+    "View sales analytics"
+  ],
+  online_store_manager: [
+    "Full store management access",
+    "Manage all products and inventory", 
+    "Handle customer orders and returns",
+    "Manage store users and permissions",
+    "View all analytics and reports",
+    "Manage store settings and configuration"
+  ]
+};
+
 // Vendor settings form schema
 const vendorSettingsSchema = z.object({
   storeName: z.string().min(3, { message: "Store name must be at least 3 characters" }),
@@ -59,9 +85,144 @@ interface StoreSettingsFormProps {
   vendor?: any;
 }
 
+// Store user management interfaces
+interface User {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+interface StoreUser {
+  id: number;
+  userId: number;
+  role: 'marketer' | 'merchandiser' | 'online_store_manager';
+  isActive: boolean;
+  createdAt: string;
+  user: User;
+}
+
+
+
 export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   const { toast } = useToast();
   const [imageUploading, setImageUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedRole, setSelectedRole] = useState<'marketer' | 'merchandiser' | 'online_store_manager'>('marketer');
+
+  // Fetch store users
+  const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery({
+    queryKey: ['/api/vendors', vendor?.id, 'store-users'],
+    enabled: !!vendor?.id
+  });
+
+  // Search users mutation
+  const searchUsersMutation = useMutation({
+    mutationFn: async (query: string) => {
+      const response = await apiRequest('GET', `/api/store-users/search?q=${encodeURIComponent(query)}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSearchResults(data);
+    }
+  });
+
+  // Assign user mutation
+  const assignUserMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+      const response = await apiRequest('POST', `/api/vendors/${vendor?.id}/store-users`, {
+        userId,
+        role
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User assigned to store successfully",
+      });
+      refetchStoreUsers();
+      setSelectedUser(null);
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to assign user to store",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
+      const response = await apiRequest('PATCH', `/api/vendors/${vendor?.id}/store-users/${id}`, updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+      refetchStoreUsers();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update user",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Remove user mutation
+  const removeUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/vendors/${vendor?.id}/store-users/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User removed from store successfully",
+      });
+      refetchStoreUsers();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove user from store",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle user search
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length >= 3) {
+      searchUsersMutation.mutate(query);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  // Handle user assignment
+  const handleAssignUser = () => {
+    if (selectedUser) {
+      assignUserMutation.mutate({
+        userId: selectedUser.id,
+        role: selectedRole
+      });
+    }
+  };
 
   // Form initialization with vendor data
   const form = useForm<VendorSettingsFormValues>({
@@ -567,6 +728,220 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                       </FormItem>
                     )}
                   />
+                </div>
+              </div>
+
+              {/* User Management Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Store User Management</h3>
+                  <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add User
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add User to Store</DialogTitle>
+                        <DialogDescription>
+                          Search for users and assign them roles in your store
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search by username, name, or email..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        
+                        {searchUsersMutation.isPending && (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="ml-2 text-sm text-gray-500">Searching...</span>
+                          </div>
+                        )}
+
+                        {searchResults.length > 0 && (
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {searchResults.map((user) => (
+                              <div
+                                key={user.id}
+                                className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                                  selectedUser?.id === user.id ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                                onClick={() => setSelectedUser(user)}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user.avatar} />
+                                    <AvatarFallback>
+                                      <User className="h-4 w-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="text-sm font-medium">{user.name}</p>
+                                    <p className="text-xs text-gray-500">@{user.username}</p>
+                                  </div>
+                                </div>
+                                {selectedUser?.id === user.id && (
+                                  <UserCheck className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {selectedUser && (
+                          <div className="space-y-3 pt-3 border-t">
+                            <div>
+                              <label className="text-sm font-medium">Assign Role</label>
+                              <Select value={selectedRole} onValueChange={(value: 'marketer' | 'merchandiser' | 'online_store_manager') => setSelectedRole(value)}>
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="marketer">
+                                    <div>
+                                      <p className="font-medium">Marketer</p>
+                                      <p className="text-xs text-gray-500">Can manage campaigns and promotions</p>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="merchandiser">
+                                    <div>
+                                      <p className="font-medium">Merchandiser</p>
+                                      <p className="text-xs text-gray-500">Can manage products plus marketer permissions</p>
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="online_store_manager">
+                                    <div>
+                                      <p className="font-medium">Online Store Manager</p>
+                                      <p className="text-xs text-gray-500">Full access to all store functions</p>
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-sm font-medium mb-2">Role Permissions:</p>
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                {ROLE_PERMISSIONS[selectedRole].map((permission, index) => (
+                                  <li key={index} className="flex items-center">
+                                    <UserCheck className="h-3 w-3 mr-2 text-green-600" />
+                                    {permission}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <Button 
+                              onClick={handleAssignUser}
+                              disabled={assignUserMutation.isPending}
+                              className="w-full bg-black text-white hover:bg-gray-800"
+                            >
+                              {assignUserMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Assigning...
+                                </>
+                              ) : (
+                                "Assign User"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {/* Current Store Users */}
+                <div className="space-y-3">
+                  {storeUsers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <User className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">No store users assigned yet</p>
+                      <p className="text-xs text-gray-400">Add users to help manage your store</p>
+                    </div>
+                  ) : (
+                    storeUsers.map((storeUser: any) => (
+                      <Card key={storeUser.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={storeUser.user?.avatar} />
+                              <AvatarFallback>
+                                <User className="h-5 w-5" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium">{storeUser.user?.name}</p>
+                                <Badge variant={storeUser.isActive ? "default" : "secondary"}>
+                                  {storeUser.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-500">@{storeUser.user?.username}</p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Badge variant="outline">
+                                  {storeUser.role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                </Badge>
+                                <span className="text-xs text-gray-400">
+                                  Added {new Date(storeUser.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateUserMutation.mutate({
+                                id: storeUser.id,
+                                updates: { isActive: !storeUser.isActive }
+                              })}
+                              disabled={updateUserMutation.isPending}
+                            >
+                              {storeUser.isActive ? (
+                                <>
+                                  <UserX className="h-4 w-4 mr-1" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="h-4 w-4 mr-1" />
+                                  Activate
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeUserMutation.mutate(storeUser.id)}
+                              disabled={removeUserMutation.isPending}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-xs text-gray-500 mb-2">Permissions:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {rolePermissions[storeUser.role as keyof typeof rolePermissions]?.map((permission, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {permission}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
               
