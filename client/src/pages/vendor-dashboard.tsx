@@ -340,31 +340,28 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="dashboard" className="flex items-center">
+        <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-muted">
+          <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
           </TabsTrigger>
-          <TabsTrigger value="products" className="flex items-center">
+          <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm">
             <Package className="h-4 w-4 mr-2" />
             Products
           </TabsTrigger>
-
-          <TabsTrigger value="customers" className="flex items-center">
+          <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm">
             <Users className="h-4 w-4 mr-2" />
             Customers
           </TabsTrigger>
-          <TabsTrigger value="shipping" className="flex items-center">
+          <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm">
             <Truck className="h-4 w-4 mr-2" />
             Shipping
           </TabsTrigger>
-
-          <TabsTrigger value="marketing" className="flex items-center">
+          <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm">
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
           </TabsTrigger>
-
-          <TabsTrigger value="analytics" className="flex items-center">
+          <TabsTrigger value="analytics" className="flex items-center justify-center px-3 py-2 text-sm">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>

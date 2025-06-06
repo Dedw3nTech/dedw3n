@@ -14,7 +14,7 @@ import {
   Calendar
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
-import { formatPriceFromGBP } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface AnalyticsData {
   totalUsers: number;
@@ -50,6 +50,8 @@ interface AnalyticsData {
 }
 
 export default function Analytics() {
+  const { formatPriceFromGBP } = useCurrency();
+  
   const { data: analyticsData, isLoading } = useQuery<AnalyticsData>({
     queryKey: ["/api/analytics/platform"],
   });
