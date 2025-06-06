@@ -328,6 +328,33 @@ export default function VendorDashboard() {
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
+      {/* Vendor Badge Display - Top of Page */}
+      {vendor && (
+        <div className="mb-6 flex items-center justify-center bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+          <div className="flex items-center space-x-4">
+            <VendorBadge 
+              level={calculateBadgeLevel(
+                vendor.totalSalesAmount || 0, 
+                vendor.totalTransactions || 0
+              )}
+              size="lg"
+              showTooltip={true}
+            />
+            <div className="flex-1">
+              <BadgeProgress
+                currentLevel={calculateBadgeLevel(
+                  vendor.totalSalesAmount || 0, 
+                  vendor.totalTransactions || 0
+                )}
+                totalSales={vendor.totalSalesAmount || 0}
+                totalTransactions={vendor.totalTransactions || 0}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
         {/* Sidebar Navigation */}
         <div className="space-y-4">
@@ -339,30 +366,6 @@ export default function VendorDashboard() {
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
             </div>
-            
-            {/* Vendor Badge Display */}
-            {vendor && (
-              <div className="mt-3 space-y-2">
-                <VendorBadge 
-                  level={calculateBadgeLevel(
-                    vendor.totalSalesAmount || 0, 
-                    vendor.totalTransactions || 0
-                  )}
-                  size="md"
-                  showTooltip={true}
-                  className="mb-2"
-                />
-                <BadgeProgress
-                  currentLevel={calculateBadgeLevel(
-                    vendor.totalSalesAmount || 0, 
-                    vendor.totalTransactions || 0
-                  )}
-                  totalSales={vendor.totalSalesAmount || 0}
-                  totalTransactions={vendor.totalTransactions || 0}
-                  className="text-xs"
-                />
-              </div>
-            )}
           </div>
 
           <Tabs
