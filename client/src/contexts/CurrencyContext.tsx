@@ -15,7 +15,7 @@ export const currencies: Currency[] = [
   
   // African Mobile Money Currencies (High Priority)
   { code: 'RWF', name: 'Rwanda - Rwandan Franc', symbol: 'RWF', flag: '🇷🇼', rate: 0.00070 },
-  { code: 'XOF', name: 'Senegal - West African CFA Franc', symbol: 'CFA', flag: '🇸🇳', rate: 0.0016 },
+  { code: 'XOF', name: 'West African CFA Franc', symbol: 'CFA', flag: '🇸🇳', rate: 0.0016 },
   { code: 'SLL', name: 'Sierra Leone - Leone', symbol: 'Le', flag: '🇸🇱', rate: 0.000033 },
   { code: 'UGX', name: 'Uganda - Ugandan Shilling', symbol: 'UGX', flag: '🇺🇬', rate: 0.00027 },
   { code: 'ZMW', name: 'Zambia - Zambian Kwacha', symbol: 'ZK', flag: '🇿🇲', rate: 0.036 },
