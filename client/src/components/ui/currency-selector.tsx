@@ -34,7 +34,6 @@ export function CurrencySelector() {
             className="flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <span className="text-lg">{currency.flag}</span>
               <div>
                 <div className="font-medium">{currency.symbol} {currency.code}</div>
                 <div className="text-xs text-muted-foreground">{currency.name}</div>
