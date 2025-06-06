@@ -3772,7 +3772,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const status = req.query.status as string;
 
-      let query = db.select({
+      let whereConditions = [eq(returns.userId, userId)];
+      
+      if (status) {
+        whereConditions.push(eq(returns.status, status));
+      }
+
+      const userReturns = await db.select({
         id: returns.id,
         reason: returns.reason,
         description: returns.description,
@@ -3806,13 +3812,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(orderItems, eq(returns.orderItemId, orderItems.id))
         .leftJoin(products, eq(orderItems.productId, products.id))
         .leftJoin(vendors, eq(returns.vendorId, vendors.id))
-        .where(eq(returns.userId, userId));
-
-      if (status) {
-        query = query.where(eq(returns.status, status));
-      }
-
-      const userReturns = await query.orderBy(desc(returns.createdAt));
+        .where(and(...whereConditions))
+        .orderBy(desc(returns.createdAt));
       res.json(userReturns);
     } catch (error) {
       console.error('Error fetching user returns:', error);

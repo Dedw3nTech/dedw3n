@@ -121,8 +121,8 @@ const getStatusIcon = (status: string) => {
 export default function OrdersReturns() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedReturn, setSelectedReturn] = useState<Return | null>(null);
-  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
-  const [returnStatusFilter, setReturnStatusFilter] = useState<string>('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+  const [returnStatusFilter, setReturnStatusFilter] = useState<string>('all');
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const [returnFormData, setReturnFormData] = useState({
     orderItemId: 0,
@@ -275,7 +275,7 @@ export default function OrdersReturns() {
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Orders</SelectItem>
+                  <SelectItem value="all">All Orders</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="processing">Processing</SelectItem>
                   <SelectItem value="shipped">Shipped</SelectItem>
@@ -355,7 +355,7 @@ export default function OrdersReturns() {
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Returns</SelectItem>
+                  <SelectItem value="all">All Returns</SelectItem>
                   <SelectItem value="requested">Requested</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="processing">Processing</SelectItem>
