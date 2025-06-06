@@ -50,7 +50,7 @@ export default function VendorDashboard() {
   }, [user, setLocation]);
   
   // Fetch vendor profile only if user is authenticated
-  const { data: vendor, isLoading: isLoadingVendor, error: vendorError } = useQuery({
+  const { data: vendorData, isLoading: isLoadingVendor, error: vendorError } = useQuery({
     queryKey: ["/api/vendors/me"],
     queryFn: async () => {
       const response = await fetch("/api/vendors/me");
@@ -72,6 +72,8 @@ export default function VendorDashboard() {
     retry: false,
   });
 
+  const vendor = vendorData?.vendor;
+
   // Fetch summary data
   const { data: summary, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["/api/vendors/summary"],
@@ -87,7 +89,7 @@ export default function VendorDashboard() {
 
   // Set vendor ID when data is loaded
   useEffect(() => {
-    if (vendor && vendor.id) {
+    if (vendor?.id) {
       setVendorId(vendor.id);
     }
   }, [vendor]);
@@ -395,12 +397,9 @@ export default function VendorDashboard() {
               <div>
                 <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
                 {vendor && (
-                  <>
-                    {console.log('Vendor data in dashboard:', vendor)}
-                    <p className="text-blue-600 text-xs font-normal mt-1">
-                      Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
-                    </p>
-                  </>
+                  <p className="text-blue-600 text-xs font-normal mt-1">
+                    Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
+                  </p>
                 )}
               </div>
               <div className="flex gap-3">
