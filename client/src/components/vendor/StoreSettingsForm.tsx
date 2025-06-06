@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, User } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -30,6 +31,18 @@ const vendorSettingsSchema = z.object({
   contactPhone: z.string().optional().or(z.literal("")),
   website: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
+  hasSalesManager: z.boolean().default(false),
+  salesManagerName: z.string().optional(),
+  salesManagerId: z.string().optional(),
+}).refine((data) => {
+  if (data.hasSalesManager) {
+    return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
+           data.salesManagerId && data.salesManagerId.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Sales Manager name and ID are required when Sales Manager is selected",
+  path: ["salesManagerName"],
 });
 
 type VendorSettingsFormValues = z.infer<typeof vendorSettingsSchema>;
@@ -53,6 +66,9 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
       contactPhone: vendor?.contactPhone || "",
       website: vendor?.website || "",
       address: vendor?.address || "",
+      hasSalesManager: vendor?.hasSalesManager || false,
+      salesManagerName: vendor?.salesManagerName || "",
+      salesManagerId: vendor?.salesManagerId || "",
     },
   });
 
@@ -67,6 +83,9 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
         contactPhone: vendor.contactPhone || "",
         website: vendor.website || "",
         address: vendor.address || "",
+        hasSalesManager: vendor.hasSalesManager || false,
+        salesManagerName: vendor.salesManagerName || "",
+        salesManagerId: vendor.salesManagerId || "",
       });
     }
   }, [vendor, form]);
@@ -347,6 +366,73 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     </FormItem>
                   )}
                 />
+              </div>
+              
+              {/* Sales Manager Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Sales Manager
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="hasSalesManager"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Do you have a Sales Manager?
+                        </FormLabel>
+                        <FormDescription>
+                          Sales Managers earn an additional 2.5% commission on your sales
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch("hasSalesManager") && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-gray-200">
+                    <FormField
+                      control={form.control}
+                      name="salesManagerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sales Manager Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter full name" {...field} value={field.value || ''} />
+                          </FormControl>
+                          <FormDescription>
+                            Full name of your Sales Manager
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="salesManagerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sales Manager ID Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter ID number" {...field} value={field.value || ''} />
+                          </FormControl>
+                          <FormDescription>
+                            Official ID number of your Sales Manager
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-end">
