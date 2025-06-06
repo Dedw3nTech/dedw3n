@@ -99,6 +99,9 @@ export const demographicTypeEnum = pgEnum('demographic_type', ['age_group', 'gen
 // Define return status enum
 export const returnStatusEnum = pgEnum('return_status', ['requested', 'approved', 'rejected', 'processing', 'shipped', 'completed', 'cancelled']);
 
+// Define store user role enum
+export const storeUserRoleEnum = pgEnum('store_user_role', ['marketer', 'merchandiser', 'manager']);
+
 // Define return reason enum
 export const returnReasonEnum = pgEnum('return_reason', ['defective', 'wrong_item', 'not_as_described', 'damaged_in_transit', 'changed_mind', 'size_issue', 'quality_issue', 'other']);
 
