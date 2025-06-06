@@ -75,54 +75,7 @@ interface Customer {
   tier?: string;
 }
 
-interface CustomerSegmentation {
-  segments: Array<{
-    segment: string;
-    customerCount: number;
-    avgSpent: number;
-    avgOrders: number;
-    lastPurchaseAvg: number;
-  }>;
-}
 
-interface LifetimeValueData {
-  summary: {
-    avgLTV: number;
-    totalCustomers: number;
-    topTierCustomers: number;
-    churnRisk: number;
-  };
-  customers: Array<{
-    userId: number;
-    customerName: string;
-    avatar?: string;
-    totalSpent: number;
-    totalOrders: number;
-    avgOrderValue: number;
-    predictedLTV: number;
-    daysSinceLastPurchase: number;
-  }>;
-}
-
-interface ServiceInteractionData {
-  metrics: {
-    totalTickets: number;
-    activeTickets: number;
-    avgResolutionTime: number;
-    customerSatisfaction: number;
-    firstResponseTime: number;
-  };
-  interactions: Array<{
-    customerId: number;
-    customerName: string;
-    avatar?: string;
-    totalInteractions: number;
-    lastInteraction: string;
-    status: string;
-    satisfactionScore: number;
-    avgResponseTime: number;
-  }>;
-}
 
 export default function CustomersList({ vendorId }: CustomersListProps) {
   const { formatPriceFromGBP } = useCurrency();
@@ -139,23 +92,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
     enabled: !!vendorId,
   });
 
-  // Fetch customer segmentation data
-  const { data: segmentationData, isLoading: isLoadingSegmentation } = useQuery<CustomerSegmentation>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/customer-segmentation`],
-    enabled: !!vendorId && analyticsView === 'segmentation',
-  });
 
-  // Fetch lifetime value data
-  const { data: lifetimeValueData, isLoading: isLoadingLTV } = useQuery<LifetimeValueData>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/customer-lifetime-value`],
-    enabled: !!vendorId && analyticsView === 'lifetime-value',
-  });
-
-  // Fetch service interactions data
-  const { data: serviceInteractions, isLoading: isLoadingService } = useQuery<ServiceInteractionData>({
-    queryKey: [`/api/vendors/${vendorId}/analytics/service-interactions`],
-    enabled: !!vendorId && analyticsView === 'service-interactions',
-  });
 
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -465,121 +402,16 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
 
         {/* Service Interactions Tab */}
         <TabsContent value="service-interactions" className="space-y-4">
-          {isLoadingService ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {serviceInteractions?.metrics?.totalTickets || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Active</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {serviceInteractions?.metrics?.activeTickets || 0}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Avg Resolution</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {serviceInteractions?.metrics?.avgResolutionTime || 0}h
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Satisfaction</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {serviceInteractions?.metrics?.customerSatisfaction || 0}/5
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Response Time</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {serviceInteractions?.metrics?.firstResponseTime || 0}h
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Customer Service History</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Interactions</TableHead>
-                        <TableHead>Last Contact</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Satisfaction</TableHead>
-                        <TableHead>Response Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {serviceInteractions?.interactions?.map((interaction) => (
-                        <TableRow key={interaction.customerId}>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={interaction.avatar} />
-                                <AvatarFallback className="text-xs">
-                                  {getInitials(interaction.customerName)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">{interaction.customerName}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{interaction.totalInteractions}</TableCell>
-                          <TableCell>{formatDate(interaction.lastInteraction)}</TableCell>
-                          <TableCell>
-                            <Badge className={`${interaction.status === 'Active' ? 'bg-orange-100 text-orange-800' : 
-                              interaction.status === 'Recent' ? 'bg-blue-100 text-blue-800' :
-                              'bg-green-100 text-green-800'}`}>
-                              {interaction.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-1">
-                              <span>{interaction.satisfactionScore}/5</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{interaction.avgResponseTime}h</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center py-12">
+            <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">
+              Customer Service Analytics
+            </h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Service interaction metrics will be available once you implement a customer support system.
+              This feature tracks support tickets, response times, and customer satisfaction.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
