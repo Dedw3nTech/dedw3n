@@ -364,7 +364,7 @@ export default function VendorDashboard() {
             <TabsContent value="dashboard" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-              <Button onClick={() => setLocation('/add-product')}>
+              <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Product
               </Button>
@@ -449,7 +449,7 @@ export default function VendorDashboard() {
           <TabsContent value="products" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold tracking-tight">Products</h2>
-              <Button onClick={() => setLocation('/add-product')}>
+              <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Product
               </Button>
