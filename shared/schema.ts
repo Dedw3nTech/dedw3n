@@ -48,6 +48,9 @@ export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 // Define event category enum
 export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
+// Define vendor badge level enum
+export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor']);
+
 // Define gender enum
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other']);
 
@@ -124,6 +127,11 @@ export const vendors = pgTable("vendors", {
   logo: text("logo"),
   rating: doublePrecision("rating").default(0),
   ratingCount: integer("rating_count").default(0),
+  // Badge system fields
+  badgeLevel: vendorBadgeLevelEnum("badge_level").default("new_vendor"),
+  totalSalesAmount: doublePrecision("total_sales_amount").default(0), // Total sales in GBP
+  totalTransactions: integer("total_transactions").default(0), // Total number of transactions
+  lastBadgeUpdate: timestamp("last_badge_update").defaultNow(),
   isApproved: boolean("is_approved").default(false),
   isActive: boolean("is_active").default(true), // Allow users to activate/deactivate vendor accounts
   createdAt: timestamp("created_at").defaultNow(),
