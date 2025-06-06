@@ -146,6 +146,7 @@ export function VendorPaymentInfo({ vendorId }: VendorPaymentInfoProps) {
                 variant={isEditing ? "outline" : "default"}
                 size="sm"
                 onClick={() => setIsEditing(!isEditing)}
+                className={isEditing ? "" : "bg-black hover:bg-gray-800 text-white"}
               >
                 {isEditing ? "Cancel" : "Edit"}
               </Button>
@@ -521,7 +522,7 @@ export function VendorPaymentInfo({ vendorId }: VendorPaymentInfoProps) {
                     No payment information configured
                   </p>
                   <Button 
-                    className="mt-4" 
+                    className="mt-4 bg-black hover:bg-gray-800 text-white" 
                     onClick={() => setIsEditing(true)}
                   >
                     Add Payment Information
