@@ -382,9 +382,20 @@ export default function VendorDashboard() {
         {/* Sidebar Navigation */}
         <div className="space-y-4">
           <div className="mb-4">
-            <div className="font-medium text-xl flex items-center">
-              <Store className="mr-2 h-5 w-5" />
-              {vendor?.storeName || "Vendor Dashboard"}
+            <div className="font-medium text-xl flex items-center justify-between">
+              <div className="flex items-center">
+                <Store className="mr-2 h-5 w-5" />
+                {vendor?.storeName || "Vendor Dashboard"}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab("settings")}
+                className="flex items-center"
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Button>
             </div>
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
