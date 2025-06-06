@@ -299,7 +299,7 @@ export default function AddProduct() {
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="flex items-center gap-2 mb-6">
-        <h1 className="text-2xl font-bold">Add Product</h1>
+        <h1 className="text-2xl font-bold">Add Product / Service</h1>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
