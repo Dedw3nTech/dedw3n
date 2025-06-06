@@ -27,6 +27,20 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
+    // Special handling for vendor dashboard to show marketplace hierarchy
+    if (path === '/vendor-dashboard') {
+      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: 'Private Vendor Dashboard' });
+      return breadcrumbs;
+    }
+    
+    // Special handling for vendor registration to show marketplace hierarchy
+    if (path === '/vendor-register') {
+      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: 'Vendor Registration' });
+      return breadcrumbs;
+    }
+    
     // Define route mappings for better breadcrumb labels
     const routeLabels: Record<string, string> = {
       'products': 'Marketplace',
