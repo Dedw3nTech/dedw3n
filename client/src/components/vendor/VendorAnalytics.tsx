@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Star, MessageSquare, User } from "lucide-react";
 import { 
   LineChart, 
   Line, 
@@ -67,6 +68,13 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
     enabled: !!vendorId
   });
 
+  // Reviews analytics
+  const { data: reviewsData, isLoading: isLoadingReviews } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'analytics/reviews'],
+    queryFn: () => apiRequest('GET', `/api/vendors/${vendorId}/analytics/reviews`).then(res => res.json()),
+    enabled: !!vendorId
+  });
+
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -79,6 +87,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
           <TabsTrigger value="competitors">Competitors</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
 
         {/* Revenue Tab */}
@@ -390,6 +399,83 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                   No leads data available yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Reviews Tab */}
+        <TabsContent value="reviews" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Reviews</CardTitle>
+              <CardDescription>
+                Reviews and feedback from customers on your products
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-80">
+              {isLoadingReviews ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Skeleton className="w-full h-full" />
+                </div>
+              ) : reviewsData && reviewsData.length > 0 ? (
+                <div className="space-y-4 max-h-72 overflow-y-auto">
+                  {reviewsData.map((review: any, index: number) => (
+                    <div key={index} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{review.customerName}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                            <span className="text-sm text-muted-foreground ml-1">
+                              {review.rating}/5
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">{review.productName}</span>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                            "{review.comment}"
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Order #{review.orderId}</span>
+                        {review.isVerified && (
+                          <Badge variant="secondary" className="text-xs">
+                            Verified Purchase
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  No reviews available yet
                 </div>
               )}
             </CardContent>
