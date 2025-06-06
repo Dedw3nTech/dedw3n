@@ -12,7 +12,6 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, sql, and, ne, inArray, desc } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema } from "@shared/schema";
-import { z } from "zod";
 
 import { setupAuth, hashPassword } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -4171,6 +4170,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error converting price:', error);
       res.status(500).json({ message: 'Failed to convert price' });
+    }
+  });
+
+  // Vendor Payment Information Management
+  // GET vendor payment info
+  app.get('/api/vendors/:vendorId/payment-info', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const paymentInfo = await db.select()
+        .from(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .limit(1);
+
+      if (!paymentInfo.length) {
+        return res.status(404).json({ error: 'Payment information not found' });
+      }
+
+      res.json(paymentInfo[0]);
+    } catch (error) {
+      console.error('Error fetching vendor payment info:', error);
+      res.status(500).json({ error: 'Failed to fetch payment information' });
+    }
+  });
+
+  // POST create vendor payment info
+  app.post('/api/vendors/:vendorId/payment-info', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Validate request body
+      const validatedData = insertVendorPaymentInfoSchema.parse({
+        ...req.body,
+        vendorId
+      });
+
+      // Check if payment info already exists
+      const existing = await db.select()
+        .from(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .limit(1);
+
+      if (existing.length) {
+        return res.status(400).json({ error: 'Payment information already exists' });
+      }
+
+      const newPaymentInfo = await db.insert(vendorPaymentInfo)
+        .values(validatedData)
+        .returning();
+
+      res.status(201).json(newPaymentInfo[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      console.error('Error creating vendor payment info:', error);
+      res.status(500).json({ error: 'Failed to create payment information' });
+    }
+  });
+
+  // PUT update vendor payment info
+  app.put('/api/vendors/:vendorId/payment-info', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Validate request body
+      const validatedData = insertVendorPaymentInfoSchema.partial().parse(req.body);
+
+      const updatedPaymentInfo = await db.update(vendorPaymentInfo)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .returning();
+
+      if (!updatedPaymentInfo.length) {
+        return res.status(404).json({ error: 'Payment information not found' });
+      }
+
+      res.json(updatedPaymentInfo[0]);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      console.error('Error updating vendor payment info:', error);
+      res.status(500).json({ error: 'Failed to update payment information' });
+    }
+  });
+
+  // DELETE vendor payment info
+  app.delete('/api/vendors/:vendorId/payment-info', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Verify vendor ownership
+      const vendor = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (!vendor.length || vendor[0].userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const deletedPaymentInfo = await db.delete(vendorPaymentInfo)
+        .where(eq(vendorPaymentInfo.vendorId, vendorId))
+        .returning();
+
+      if (!deletedPaymentInfo.length) {
+        return res.status(404).json({ error: 'Payment information not found' });
+      }
+
+      res.json({ message: 'Payment information deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting vendor payment info:', error);
+      res.status(500).json({ error: 'Failed to delete payment information' });
     }
   });
 
