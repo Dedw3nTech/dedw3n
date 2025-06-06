@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Star } from "lucide-react";
 import { VendorBadge } from "./VendorBadge";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface BadgeProgressProps {
   currentLevel: BadgeLevel;
@@ -18,6 +19,7 @@ export function BadgeProgress({
   totalTransactions, 
   className 
 }: BadgeProgressProps) {
+  const { formatPrice } = useCurrency();
   const currentBadge = getBadgeInfo(currentLevel);
   const nextBadge = getNextBadgeInfo(currentLevel);
   
@@ -97,8 +99,8 @@ export function BadgeProgress({
           </div>
           <Progress value={progress.salesProgress} className="h-2" />
           <div className="flex justify-between text-xs text-gray-600">
-            <span>{formatCurrency(totalSales)} of {formatCurrency(nextBadge.minSales)}</span>
-            <span>{formatCurrency(progress.salesNeeded)} needed</span>
+            <span>{formatPrice(totalSales)} of {formatPrice(nextBadge.minSales)}</span>
+            <span>{formatPrice(progress.salesNeeded)} needed</span>
           </div>
         </div>
         
