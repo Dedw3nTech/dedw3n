@@ -36,11 +36,13 @@ export function VendorBadge({
     <Badge
       variant="outline"
       className={cn(
-        "inline-flex items-center gap-1.5 font-medium border-none",
+        "inline-flex items-center gap-1.5 font-medium border-none text-white",
         sizeClasses[size],
-        badgeInfo.color,
-        "text-white",
-        level === "infinity_vendor" && "bg-gradient-to-r from-yellow-400 to-orange-500",
+        level === "new_vendor" && "bg-gray-500",
+        level === "level_2_vendor" && "bg-blue-500", 
+        level === "top_vendor" && "bg-green-500",
+        level === "infinity_vendor" && "bg-purple-500",
+        level === "elite_vendor" && "bg-gradient-to-r from-yellow-400 to-orange-500",
         className
       )}
       title={showTooltip ? badgeInfo.description : undefined}

@@ -1,6 +1,6 @@
 import { Badge, Award, Star, Crown } from "lucide-react";
 
-export type BadgeLevel = "new_vendor" | "level_2_vendor" | "top_vendor" | "infinity_vendor";
+export type BadgeLevel = "new_vendor" | "level_2_vendor" | "top_vendor" | "infinity_vendor" | "elite_vendor";
 
 export interface BadgeCriteria {
   level: BadgeLevel;
@@ -50,6 +50,17 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
   },
   {
     level: "infinity_vendor",
+    name: "Level 3 Vendor",
+    description: "£10,000+ sales, 2,500+ transactions",
+    icon: Crown,
+    minSales: 10000,
+    minTransactions: 2500,
+    color: "bg-purple-500",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-700"
+  },
+  {
+    level: "elite_vendor",
     name: "Level 4 Vendor",
     description: "£100,000+ sales, 5,000+ transactions",
     icon: Crown,

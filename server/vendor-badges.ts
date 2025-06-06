@@ -2,7 +2,7 @@ import { db } from "./db";
 import { vendors, orders, orderItems } from "@shared/schema";
 import { eq, sum, count, and } from "drizzle-orm";
 
-export type BadgeLevel = "new_vendor" | "level_2_vendor" | "top_vendor" | "infinity_vendor";
+export type BadgeLevel = "new_vendor" | "level_2_vendor" | "top_vendor" | "infinity_vendor" | "elite_vendor";
 
 export interface BadgeCriteria {
   level: BadgeLevel;
@@ -35,6 +35,12 @@ export const BADGE_CRITERIA: BadgeCriteria[] = [
     name: "Level 3 Vendor",
     minSales: 10000,
     minTransactions: 2500
+  },
+  {
+    level: "elite_vendor",
+    name: "Level 4 Vendor",
+    minSales: 100000,
+    minTransactions: 5000
   }
 ];
 
