@@ -361,6 +361,10 @@ export default function VendorDashboard() {
             <Megaphone className="h-4 w-4 mr-2" />
             Marketing
           </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </TabsTrigger>
 
         </TabsList>
       </Tabs>
@@ -369,20 +373,9 @@ export default function VendorDashboard() {
         {/* Sidebar Navigation */}
         <div className="space-y-4">
           <div className="mb-4">
-            <div className="font-medium text-xl flex items-center justify-between">
-              <div className="flex items-center">
-                <Store className="mr-2 h-5 w-5" />
-                {vendor?.storeName || "Vendor Dashboard"}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab("settings")}
-                className="flex items-center"
-              >
-                <Settings className="h-4 w-4 mr-1" />
-                Settings
-              </Button>
+            <div className="font-medium text-xl flex items-center">
+              <Store className="mr-2 h-5 w-5" />
+              {vendor?.storeName || "Vendor Dashboard"}
             </div>
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
