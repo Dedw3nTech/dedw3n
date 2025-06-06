@@ -2538,8 +2538,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Business vendor creation endpoint
-  app.post('/api/vendors/create-business', async (req: Request, res: Response) => {
+  // Unified vendor management endpoint
+  app.post('/api/vendors/manage', async (req: Request, res: Response) => {
     try {
       // Use the same authentication pattern as working endpoints
       let userId = (req.user as any)?.id;
@@ -2555,7 +2555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const fallbackUser = await storage.getUser(9); // Serruti user
           if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for business vendor creation: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+            console.log(`[AUTH] Fallback authentication for vendor management: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
             userId = fallbackUser.id;
           }
         } catch (error) {
@@ -2567,28 +2567,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      // Check if user already has a business vendor account
-      const existingVendors = await storage.getUserVendorAccounts(userId);
-      const hasBusinessVendor = existingVendors.some(v => v.vendorType === 'business');
-      
-      if (hasBusinessVendor) {
-        return res.status(400).json({ 
-          message: "You already have a business vendor account",
-          redirectTo: "/vendor-dashboard"
-        });
-      }
+      const { action, vendorType } = req.body;
 
-      // Return redirect URL for business vendor registration
-      res.json({
-        success: true,
-        message: "Redirecting to business vendor registration",
-        redirectTo: "/vendor-register?type=business",
-        canCreateBusiness: true
-      });
+      // Get existing vendor accounts
+      const existingVendors = await storage.getUserVendorAccounts(userId);
+      const hasPrivateVendor = existingVendors.some(v => v.vendorType === 'private');
+      const hasBusinessVendor = existingVendors.some(v => v.vendorType === 'business');
+
+      switch (action) {
+        case 'create-business':
+          if (hasBusinessVendor) {
+            return res.status(400).json({ 
+              message: "You already have a business vendor account",
+              redirectTo: "/vendor-dashboard"
+            });
+          }
+          return res.json({
+            success: true,
+            message: "Redirecting to business vendor registration",
+            redirectTo: "/vendor-register?type=business",
+            canCreateBusiness: true
+          });
+
+        case 'create-private':
+          if (hasPrivateVendor) {
+            return res.status(400).json({ 
+              message: "You already have a private vendor account",
+              redirectTo: "/vendor-dashboard"
+            });
+          }
+          return res.json({
+            success: true,
+            message: "Redirecting to private vendor registration",
+            redirectTo: "/vendor-register?type=private",
+            canCreatePrivate: true
+          });
+
+        case 'check-status':
+          return res.json({
+            vendorAccounts: existingVendors,
+            hasPrivateVendor,
+            hasBusinessVendor,
+            canCreatePrivate: !hasPrivateVendor,
+            canCreateBusiness: !hasBusinessVendor
+          });
+
+        default:
+          return res.status(400).json({ message: "Invalid action specified" });
+      }
       
     } catch (error) {
-      console.error("Error handling business vendor creation:", error);
-      res.status(500).json({ message: "Failed to process business vendor creation" });
+      console.error("Error handling vendor management:", error);
+      res.status(500).json({ message: "Failed to process vendor management request" });
     }
   });
 

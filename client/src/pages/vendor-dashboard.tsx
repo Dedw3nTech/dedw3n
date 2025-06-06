@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -118,6 +120,33 @@ export default function VendorDashboard() {
   // Handle becoming a vendor
   const handleBecomeVendor = () => {
     setLocation('/become-vendor');
+  };
+
+  // Create unified vendor management mutation
+  const createBusinessVendorMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/vendors/manage", {
+        action: "create-business"
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.redirectTo) {
+        setLocation(data.redirectTo);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create business vendor account",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle business vendor creation
+  const handleCreateBusinessVendor = () => {
+    createBusinessVendorMutation.mutate();
   };
 
   // Show loading while vendor data is being fetched
