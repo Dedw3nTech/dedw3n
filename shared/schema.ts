@@ -69,6 +69,9 @@ export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processin
 // Define vendor account status enum
 export const vendorAccountStatusEnum = pgEnum('vendor_account_status', ['active', 'on_hold', 'suspended', 'permanently_suspended']);
 
+// Define commission tier enum
+export const commissionTierEnum = pgEnum('commission_tier', ['standard', 'premium', 'enterprise']);
+
 // Define event category enum
 export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
@@ -1571,6 +1574,7 @@ export const vendorCommissionPeriods = pgTable("vendor_commission_periods", {
   totalTransactions: integer("total_transactions").notNull().default(0),
   
   // Commission calculation
+  commissionTier: commissionTierEnum("commission_tier").notNull().default("standard"),
   commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull().default("0.10"), // 10%
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   

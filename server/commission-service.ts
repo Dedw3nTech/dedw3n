@@ -17,6 +17,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export class CommissionService {
+  // Calculate commission tier based on monthly sales volume
+  calculateCommissionTier(totalSales: number): { tier: 'standard' | 'premium' | 'enterprise', rate: number } {
+    // Commission tiers based on monthly sales volume
+    if (totalSales >= 50000) { // £50,000+ per month
+      return { tier: 'enterprise', rate: 0.125 }; // 12.5%
+    } else if (totalSales >= 10000) { // £10,000+ per month
+      return { tier: 'premium', rate: 0.10 }; // 10%
+    } else {
+      return { tier: 'standard', rate: 0.10 }; // 10%
+    }
+  }
+
   // Calculate commission for a specific vendor and month
   async calculateMonthlyCommission(vendorId: number, month: number, year: number) {
     console.log(`[Commission] Calculating commission for vendor ${vendorId}, ${month}/${year}`);
@@ -28,7 +40,6 @@ export class CommissionService {
     const vendorOrders = await db
       .select({
         orderId: orders.id,
-        orderTotal: orders.total,
         orderDate: orders.createdAt,
         productPrice: products.price,
         quantity: orderItems.quantity,
@@ -60,15 +71,17 @@ export class CommissionService {
       }
     });
 
-    const commissionRate = 0.10; // 10%
-    const commissionAmount = totalSales * commissionRate;
+    // Determine commission tier and rate based on sales volume
+    const { tier, rate } = this.calculateCommissionTier(totalSales);
+    const commissionAmount = totalSales * rate;
 
-    console.log(`[Commission] Vendor ${vendorId}: Sales=${totalSales}, Transactions=${totalTransactions}, Commission=${commissionAmount}`);
+    console.log(`[Commission] Vendor ${vendorId}: Sales=£${totalSales}, Transactions=${totalTransactions}, Tier=${tier}, Rate=${rate * 100}%, Commission=£${commissionAmount}`);
 
     return {
       totalSales,
       totalTransactions,
-      commissionRate,
+      commissionTier: tier,
+      commissionRate: rate,
       commissionAmount,
       dueDate: new Date(year, month, 7) // Due on the 7th of the following month
     };
@@ -98,6 +111,8 @@ export class CommissionService {
         .set({
           totalSales: commissionData.totalSales.toString(),
           totalTransactions: commissionData.totalTransactions,
+          commissionTier: commissionData.commissionTier,
+          commissionRate: commissionData.commissionRate.toString(),
           commissionAmount: commissionData.commissionAmount.toString(),
           dueDate: commissionData.dueDate,
           updatedAt: new Date()
@@ -115,6 +130,8 @@ export class CommissionService {
           year,
           totalSales: commissionData.totalSales.toString(),
           totalTransactions: commissionData.totalTransactions,
+          commissionTier: commissionData.commissionTier,
+          commissionRate: commissionData.commissionRate.toString(),
           commissionAmount: commissionData.commissionAmount.toString(),
           dueDate: commissionData.dueDate
         })
