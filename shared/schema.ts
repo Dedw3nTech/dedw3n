@@ -60,6 +60,15 @@ export const discountApplicationEnum = pgEnum('discount_application', ['automati
 // Define promotion target enum
 export const promotionTargetEnum = pgEnum('promotion_target', ['all_products', 'specific_products', 'category', 'minimum_order']);
 
+// Define commission status enum
+export const commissionStatusEnum = pgEnum('commission_status', ['pending', 'sent', 'paid', 'overdue', 'failed']);
+
+// Define payment status enum
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'cancelled']);
+
+// Define vendor account status enum
+export const vendorAccountStatusEnum = pgEnum('vendor_account_status', ['active', 'on_hold', 'suspended', 'permanently_suspended']);
+
 // Define event category enum
 export const eventCategoryEnum = pgEnum('event_category', ['networking', 'social', 'business', 'tech', 'sports', 'arts', 'education', 'health', 'food', 'community']);
 
@@ -146,6 +155,11 @@ export const vendors = pgTable("vendors", {
   lastBadgeUpdate: timestamp("last_badge_update").defaultNow(),
   isApproved: boolean("is_approved").default(false),
   isActive: boolean("is_active").default(true), // Allow users to activate/deactivate vendor accounts
+  accountStatus: vendorAccountStatusEnum("account_status").default("active"),
+  accountSuspendedAt: timestamp("account_suspended_at"),
+  accountSuspensionReason: text("account_suspension_reason"),
+  paymentIssueNotifiedAt: timestamp("payment_issue_notified_at"),
+  paymentFailureCount: integer("payment_failure_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -1540,6 +1554,184 @@ export type InsertSuspiciousDevice = z.infer<typeof insertSuspiciousDeviceSchema
 
 export type TrustedDevice = typeof trustedDevices.$inferSelect;
 export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
+
+// =====================================
+// Vendor Commission System Schema
+// =====================================
+
+// Vendor commission periods - tracks monthly commission calculations
+export const vendorCommissionPeriods = pgTable("vendor_commission_periods", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  month: integer("month").notNull(), // 1-12
+  year: integer("year").notNull(),
+  
+  // Sales data for the period
+  totalSales: decimal("total_sales", { precision: 10, scale: 2 }).notNull().default("0"),
+  totalTransactions: integer("total_transactions").notNull().default(0),
+  
+  // Commission calculation
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull().default("0.10"), // 10%
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  
+  // Payment tracking
+  status: commissionStatusEnum("status").notNull().default("pending"),
+  dueDate: timestamp("due_date").notNull(),
+  paidDate: timestamp("paid_date"),
+  paymentMethod: text("payment_method"), // "stripe", "bank_transfer", "mobile_money", etc.
+  paymentReference: text("payment_reference"),
+  
+  // Notifications and warnings
+  firstNotificationSent: timestamp("first_notification_sent"),
+  secondNotificationSent: timestamp("second_notification_sent"),
+  finalWarningNotificationSent: timestamp("final_warning_notification_sent"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorPeriodIdx: index('idx_commission_vendor_period').on(table.vendorId, table.year, table.month),
+    statusIdx: index('idx_commission_status').on(table.status),
+    dueDateIdx: index('idx_commission_due_date').on(table.dueDate),
+    uniqueVendorPeriod: unique().on(table.vendorId, table.year, table.month),
+  };
+});
+
+// Vendor commission payments - tracks individual payment attempts
+export const vendorCommissionPayments = pgTable("vendor_commission_payments", {
+  id: serial("id").primaryKey(),
+  commissionPeriodId: integer("commission_period_id").notNull().references(() => vendorCommissionPeriods.id, { onDelete: "cascade" }),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  
+  // Payment details
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("GBP"),
+  paymentMethod: text("payment_method").notNull(),
+  
+  // Payment provider details
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  bankTransferReference: text("bank_transfer_reference"),
+  mobileMoneyReference: text("mobile_money_reference"),
+  
+  // Status tracking
+  status: paymentStatusEnum("status").notNull().default("pending"),
+  failureReason: text("failure_reason"),
+  attemptCount: integer("attempt_count").notNull().default(1),
+  maxAttempts: integer("max_attempts").notNull().default(3),
+  
+  // Timestamps
+  initiatedAt: timestamp("initiated_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  failedAt: timestamp("failed_at"),
+  nextRetryAt: timestamp("next_retry_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    commissionPeriodIdx: index('idx_payment_commission_period').on(table.commissionPeriodId),
+    vendorIdx: index('idx_payment_vendor').on(table.vendorId),
+    statusIdx: index('idx_payment_status').on(table.status),
+    nextRetryIdx: index('idx_payment_next_retry').on(table.nextRetryAt),
+  };
+});
+
+// Vendor payment methods - stores vendor's preferred payment methods
+export const vendorPaymentMethods = pgTable("vendor_payment_methods", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  
+  // Payment method type
+  paymentType: varchar("payment_type", { length: 50 }).notNull(), // "bank_transfer", "mobile_money", "paypal", "stripe"
+  isPrimary: boolean("is_primary").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  
+  // Bank transfer details
+  bankName: text("bank_name"),
+  accountNumber: text("account_number"),
+  accountHolderName: text("account_holder_name"),
+  sortCode: text("sort_code"),
+  iban: text("iban"),
+  swiftCode: text("swift_code"),
+  
+  // Mobile money details
+  mobileMoneyProvider: text("mobile_money_provider"), // "MTN", "Airtel", "Vodafone", etc.
+  mobileMoneyNumber: text("mobile_money_number"),
+  mobileMoneyName: text("mobile_money_name"),
+  
+  // PayPal details
+  paypalEmail: text("paypal_email"),
+  
+  // Stripe details
+  stripeAccountId: text("stripe_account_id"),
+  
+  // Metadata
+  minimumPayoutAmount: decimal("minimum_payout_amount", { precision: 10, scale: 2 }).default("10.00"),
+  paymentSchedule: varchar("payment_schedule", { length: 20 }).default("monthly"), // "weekly", "monthly", "quarterly"
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorIdx: index('idx_payment_method_vendor').on(table.vendorId),
+    primaryIdx: index('idx_payment_method_primary').on(table.vendorId, table.isPrimary),
+    typeIdx: index('idx_payment_method_type').on(table.paymentType),
+  };
+});
+
+// Vendor account actions - tracks account suspension/reactivation history
+export const vendorAccountActions = pgTable("vendor_account_actions", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  
+  // Action details
+  actionType: varchar("action_type", { length: 50 }).notNull(), // "suspended", "reactivated", "warning_sent", "payment_reminder"
+  reason: text("reason").notNull(),
+  description: text("description"),
+  
+  // Related commission period if applicable
+  commissionPeriodId: integer("commission_period_id").references(() => vendorCommissionPeriods.id, { onDelete: "set null" }),
+  
+  // Action metadata
+  performedBy: varchar("performed_by", { length: 20 }).notNull().default("system"), // "system", "admin", "vendor"
+  reversible: boolean("reversible").notNull().default(true),
+  reversedAt: timestamp("reversed_at"),
+  reversedBy: varchar("reversed_by", { length: 20 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    vendorIdx: index('idx_account_action_vendor').on(table.vendorId),
+    actionTypeIdx: index('idx_account_action_type').on(table.actionType),
+    createdAtIdx: index('idx_account_action_created').on(table.createdAt),
+  };
+});
+
+// Commission tracking schemas
+export const insertVendorCommissionPeriodSchema = createInsertSchema(vendorCommissionPeriods)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertVendorCommissionPaymentSchema = createInsertSchema(vendorCommissionPayments)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertVendorPaymentMethodSchema = createInsertSchema(vendorPaymentMethods)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertVendorAccountActionSchema = createInsertSchema(vendorAccountActions)
+  .omit({ id: true, createdAt: true });
+
+// Commission tracking types
+export type VendorCommissionPeriod = typeof vendorCommissionPeriods.$inferSelect;
+export type InsertVendorCommissionPeriod = z.infer<typeof insertVendorCommissionPeriodSchema>;
+
+export type VendorCommissionPayment = typeof vendorCommissionPayments.$inferSelect;
+export type InsertVendorCommissionPayment = z.infer<typeof insertVendorCommissionPaymentSchema>;
+
+export type VendorPaymentMethod = typeof vendorPaymentMethods.$inferSelect;
+export type InsertVendorPaymentMethod = z.infer<typeof insertVendorPaymentMethodSchema>;
+
+export type VendorAccountAction = typeof vendorAccountActions.$inferSelect;
+export type InsertVendorAccountAction = z.infer<typeof insertVendorAccountActionSchema>;
 
 // Community meetups table for local events
 export const communityEvents = pgTable("community_events", {
