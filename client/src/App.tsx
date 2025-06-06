@@ -112,7 +112,8 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/upload-product',
     '/vendor-dashboard',
     '/become-vendor',
-    '/liked'
+    '/liked',
+    '/orders-returns'
   ];
   
   // Check if current path should show the marketplace nav
