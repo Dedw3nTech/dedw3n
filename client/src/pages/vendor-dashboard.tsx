@@ -40,6 +40,7 @@ import { VendorBadge } from "@/components/vendor/VendorBadge";
 import { BadgeProgress } from "@/components/vendor/BadgeProgress";
 import { calculateBadgeLevel } from "@/lib/vendor-badges";
 import DiscountForm from "@/components/vendor/DiscountForm";
+import DiscountList from "@/components/vendor/DiscountList";
 
 export default function VendorDashboard() {
   const { user } = useAuth();
@@ -48,6 +49,8 @@ export default function VendorDashboard() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [vendorId, setVendorId] = useState<number | null>(null);
+  const [discountFormOpen, setDiscountFormOpen] = useState(false);
+  const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
   
   // Authentication wall - redirect if not logged in
   useEffect(() => {
@@ -556,34 +559,26 @@ export default function VendorDashboard() {
               <TabsContent value="discount-codes" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Discount Codes</h3>
-                  <Button>
+                  <Button onClick={() => {
+                    setDiscountFormType("discount-code");
+                    setDiscountFormOpen(true);
+                  }}>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Create Code
                   </Button>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Discount Codes</CardTitle>
-                    <CardDescription>
-                      Codes customers can enter at checkout
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Tag className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No discount codes created yet</p>
-                      <p className="text-sm">Create your first discount code to get started</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DiscountList vendorId={vendorId} type="discount-code" />
               </TabsContent>
 
               {/* Automatic Discounts Tab */}
               <TabsContent value="auto-discounts" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Automatic Discounts</h3>
-                  <Button>
+                  <Button onClick={() => {
+                    setDiscountFormType("automatic");
+                    setDiscountFormOpen(true);
+                  }}>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Create Auto Discount
                   </Button>
@@ -628,6 +623,14 @@ export default function VendorDashboard() {
           </Tabs>
         </div>
       </div>
+      
+      {/* Discount Form Dialog */}
+      <DiscountForm
+        open={discountFormOpen}
+        onOpenChange={setDiscountFormOpen}
+        type={discountFormType}
+        vendorId={vendorId}
+      />
     </div>
   );
 }
