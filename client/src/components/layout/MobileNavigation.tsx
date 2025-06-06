@@ -33,18 +33,18 @@ export default function MobileNavigation() {
           <div className="flex w-full max-w-lg justify-between px-6">
             <Link href="/marketplace/b2c">
               <button
-                className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location.startsWith("/marketplace") ? "text-blue-500" : "text-gray-500"}`}
+                className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : "text-gray-500"}`}
               >
-                <i className={`ri-store-2-line text-lg mb-1 ${location === "/" || location.startsWith("/marketplace") ? "text-blue-500" : ""}`}></i>
+                <i className={`ri-store-2-line text-lg mb-1 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : ""}`}></i>
                 <span className="text-xs font-medium">Marketplace</span>
               </button>
             </Link>
             
             <Link href="/community">
               <button
-                className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-blue-500" : "text-gray-500"}`}
+                className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-gray-700" : "text-gray-500"}`}
               >
-                <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-blue-500" : ""}`}></i>
+                <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-gray-700" : ""}`}></i>
                 <span className="text-xs font-medium">Community</span>
               </button>
             </Link>
