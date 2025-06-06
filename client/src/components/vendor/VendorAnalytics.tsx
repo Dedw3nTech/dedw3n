@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Star, MessageSquare, User } from "lucide-react";
+import { Star, MessageSquare, User, Brain } from "lucide-react";
+import PredictiveAnalytics from "./PredictiveAnalytics";
 import { 
   LineChart, 
   Line, 
