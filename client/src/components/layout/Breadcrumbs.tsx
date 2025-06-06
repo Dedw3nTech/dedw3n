@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface BreadcrumbItem {
   label: string;
@@ -8,6 +9,13 @@ interface BreadcrumbItem {
 
 export function Breadcrumbs() {
   const [location] = useLocation();
+  
+  // Fetch vendor data to determine correct vendor type for breadcrumb
+  const { data: vendorData } = useQuery({
+    queryKey: ['/api/vendors/me'],
+    enabled: location === '/vendor-dashboard',
+    staleTime: 5 * 60 * 1000,
+  });
   
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
     const segments = path.split('/').filter(Boolean);
@@ -30,7 +38,9 @@ export function Breadcrumbs() {
     // Special handling for vendor dashboard to show marketplace hierarchy
     if (path === '/vendor-dashboard') {
       breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
-      breadcrumbs.push({ label: 'Private Vendor Dashboard' });
+      const vendorType = vendorData?.vendor?.vendorType;
+      const dashboardLabel = vendorType === 'business' ? 'Business Vendor Dashboard' : 'Private Vendor Dashboard';
+      breadcrumbs.push({ label: dashboardLabel });
       return breadcrumbs;
     }
     
