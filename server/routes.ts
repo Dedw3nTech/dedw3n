@@ -6864,6 +6864,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =====================================
+  // Commission Management API Routes
+  // =====================================
+  
+  // Import commission service
+  const { commissionService } = await import('./commission-service');
+
+  // Get vendor commission dashboard
+  app.get('/api/vendors/:vendorId/commission-dashboard', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      const dashboard = await commissionService.getVendorCommissionDashboard(vendorId);
+      res.json(dashboard);
+    } catch (error) {
+      console.error('Error fetching commission dashboard:', error);
+      res.status(500).json({ message: 'Failed to fetch commission dashboard' });
+    }
+  });
+
+  // Create payment link for commission
+  app.post('/api/commission-periods/:periodId/payment-link', async (req: Request, res: Response) => {
+    try {
+      const periodId = parseInt(req.params.periodId);
+      if (isNaN(periodId)) {
+        return res.status(400).json({ message: 'Invalid commission period ID' });
+      }
+
+      const paymentLink = await commissionService.createPaymentLink(periodId);
+      res.json(paymentLink);
+    } catch (error) {
+      console.error('Error creating payment link:', error);
+      res.status(500).json({ message: 'Failed to create payment link' });
+    }
+  });
+
+  // Process monthly commissions (admin only)
+  app.post('/api/admin/process-commissions', async (req: Request, res: Response) => {
+    try {
+      const { month, year } = req.body;
+      
+      if (!month || !year || month < 1 || month > 12) {
+        return res.status(400).json({ message: 'Invalid month or year' });
+      }
+
+      const results = await commissionService.processMonthlyCommissions(month, year);
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error('Error processing commissions:', error);
+      res.status(500).json({ message: 'Failed to process commissions' });
+    }
+  });
+
+  // Send payment reminders (admin only)
+  app.post('/api/admin/send-payment-reminders', async (req: Request, res: Response) => {
+    try {
+      const results = await commissionService.sendPaymentReminders();
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error('Error sending payment reminders:', error);
+      res.status(500).json({ message: 'Failed to send payment reminders' });
+    }
+  });
+
+  // Suspend non-paying vendors (admin only)
+  app.post('/api/admin/suspend-non-paying-vendors', async (req: Request, res: Response) => {
+    try {
+      const results = await commissionService.suspendNonPayingVendors();
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error('Error suspending vendors:', error);
+      res.status(500).json({ message: 'Failed to suspend vendors' });
+    }
+  });
+
+  // Handle Stripe webhook for commission payments
+  app.post('/api/webhooks/stripe/commission', async (req: Request, res: Response) => {
+    try {
+      const sig = req.headers['stripe-signature'] as string;
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+      if (!endpointSecret) {
+        return res.status(400).json({ message: 'Webhook secret not configured' });
+      }
+
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+      } catch (err) {
+        console.log('Webhook signature verification failed.', err);
+        return res.status(400).json({ message: 'Webhook signature verification failed' });
+      }
+
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        if (paymentIntent.metadata?.type === 'commission_payment') {
+          await commissionService.handlePaymentSuccess(paymentIntent.id);
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Error handling webhook:', error);
+      res.status(500).json({ message: 'Webhook processing failed' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
