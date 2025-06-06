@@ -42,7 +42,7 @@ const ROLE_PERMISSIONS = {
     "Manage promotions and discounts",
     "View sales analytics"
   ],
-  online_store_manager: [
+  manager: [
     "Full store management access",
     "Manage all products and inventory", 
     "Handle customer orders and returns",
@@ -112,7 +112,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedRole, setSelectedRole] = useState<'marketer' | 'merchandiser' | 'online_store_manager'>('marketer');
+  const [selectedRole, setSelectedRole] = useState<'marketer' | 'merchandiser' | 'manager'>('marketer');
 
   // Fetch store users
   const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery<StoreUser[]>({
@@ -185,7 +185,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   // Remove user mutation
   const removeUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/vendors/${vendor?.id}/store-users/${id}`);
+      const response = await apiRequest('DELETE', `/api/vendor/store-users/${id}`);
       return response.json();
     },
     onSuccess: () => {
@@ -801,7 +801,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                           <div className="space-y-3 pt-3 border-t">
                             <div>
                               <label className="text-sm font-medium">Assign Role</label>
-                              <Select value={selectedRole} onValueChange={(value: 'marketer' | 'merchandiser' | 'online_store_manager') => setSelectedRole(value)}>
+                              <Select value={selectedRole} onValueChange={(value: 'marketer' | 'merchandiser' | 'manager') => setSelectedRole(value)}>
                                 <SelectTrigger className="mt-1">
                                   <SelectValue />
                                 </SelectTrigger>
@@ -818,7 +818,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                                       <p className="text-xs text-gray-500">Can manage products plus marketer permissions</p>
                                     </div>
                                   </SelectItem>
-                                  <SelectItem value="online_store_manager">
+                                  <SelectItem value="manager">
                                     <div>
                                       <p className="font-medium">Online Store Manager</p>
                                       <p className="text-xs text-gray-500">Full access to all store functions</p>
