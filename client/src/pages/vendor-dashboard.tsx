@@ -340,7 +340,7 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl mx-auto py-8 px-4">
       {/* Navigation Tabs - Top of Page */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="dashboard" className="flex items-center">
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
@@ -349,10 +349,7 @@ export default function VendorDashboard() {
             <Package className="h-4 w-4 mr-2" />
             Products
           </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center">
-            <BarChart className="h-4 w-4 mr-2" />
-            Orders
-          </TabsTrigger>
+
           <TabsTrigger value="customers" className="flex items-center">
             <Users className="h-4 w-4 mr-2" />
             Customers
@@ -544,11 +541,7 @@ export default function VendorDashboard() {
             <ProductsList vendorId={vendorId || undefined} />
           </TabsContent>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Orders</h2>
-            <OrdersList vendorId={vendorId || undefined} />
-          </TabsContent>
+
 
           {/* Customers Tab */}
           <TabsContent value="customers" className="mt-0 space-y-6">
@@ -558,8 +551,19 @@ export default function VendorDashboard() {
 
           {/* Shipping Tab */}
           <TabsContent value="shipping" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Shipping</h2>
-            <ShippingManager vendorId={vendorId || undefined} />
+            <h2 className="text-2xl font-bold tracking-tight">Shipping & Orders</h2>
+            
+            {/* Orders Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Orders</h3>
+              <OrdersList vendorId={vendorId || undefined} />
+            </div>
+            
+            {/* Shipping Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Shipping Management</h3>
+              <ShippingManager vendorId={vendorId || undefined} />
+            </div>
           </TabsContent>
 
           {/* Promotions Tab */}
