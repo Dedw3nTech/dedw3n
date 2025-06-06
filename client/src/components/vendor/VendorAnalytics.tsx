@@ -336,10 +336,10 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                           {Number(competitor.productCount)} products
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Avg: ${Number(competitor.averagePrice || 0).toFixed(2)}
+                          Avg: {formatPriceFromGBP(Number(competitor.averagePrice || 0))}
                         </div>
                         <div className="text-sm font-medium text-green-600">
-                          ${Number(competitor.totalSales || 0).toFixed(2)} sales
+                          {formatPriceFromGBP(Number(competitor.totalSales || 0))} sales
                         </div>
                       </div>
                     </div>
