@@ -146,11 +146,29 @@ export default function Products() {
   
   // Use lazy translation for filter elements (loaded on demand)
   const { translatedText: searchForProductsText } = useLazyTranslation("Search for Products", { priority: 'normal' });
+  const { translatedText: searchWithinText } = useLazyTranslation("Search within", { priority: 'normal' });
   const { translatedText: categoriesText } = useLazyTranslation("Categories", { priority: 'normal' });
   const { translatedText: regionText } = useLazyTranslation("Region", { priority: 'normal' });
   const { translatedText: resetFiltersText } = useLazyTranslation("Reset Filters", { priority: 'normal' });
   const { translatedText: onSaleText } = useLazyTranslation("On Sale", { priority: 'normal' });
   const { translatedText: newArrivalsText } = useLazyTranslation("New Arrivals", { priority: 'normal' });
+  
+  // Additional filter variables
+  const { translatedText: productOrServiceText } = useLazyTranslation("Product or Service", { priority: 'normal' });
+  const { translatedText: productFilterText } = useLazyTranslation("Product", { priority: 'normal' });
+  const { translatedText: serviceFilterText } = useLazyTranslation("Service", { priority: 'normal' });
+  const { translatedText: productStatusText } = useLazyTranslation("Product Status", { priority: 'normal' });
+  const { translatedText: friendOptionsText } = useLazyTranslation("Friend Options", { priority: 'normal' });
+  const { translatedText: friendsOnlyText } = useLazyTranslation("Friends only", { priority: 'normal' });
+  const { translatedText: localPickupText } = useLazyTranslation("Local pickup only", { priority: 'normal' });
+  const { translatedText: storeOptionsText } = useLazyTranslation("Store Options", { priority: 'normal' });
+  const { translatedText: verifiedStoresText } = useLazyTranslation("Verified stores only", { priority: 'normal' });
+  const { translatedText: freeShippingText } = useLazyTranslation("Free shipping", { priority: 'normal' });
+  const { translatedText: nextDayDeliveryText } = useLazyTranslation("Next day delivery", { priority: 'normal' });
+  const { translatedText: businessOptionsText } = useLazyTranslation("Business Options", { priority: 'normal' });
+  const { translatedText: volumeDiscountsText } = useLazyTranslation("Volume discounts", { priority: 'normal' });
+  const { translatedText: wholesaleOnlyText } = useLazyTranslation("Wholesale only", { priority: 'normal' });
+  const { translatedText: taxExemptText } = useLazyTranslation("Tax exempt eligible", { priority: 'normal' });
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
