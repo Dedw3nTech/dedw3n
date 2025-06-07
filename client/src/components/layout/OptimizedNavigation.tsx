@@ -173,14 +173,14 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Currency Selector */}
                 <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
+                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Language Selector between currency selector and profile */}
                 <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Language</span>
+                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <UserMenu />
@@ -189,14 +189,14 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Currency Selector for non-logged in users */}
                 <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Currency</span>
+                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Language Selector for non-logged in users */}
                 <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>Language</span>
+                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <Button 
@@ -204,13 +204,13 @@ export default function OptimizedNavigation() {
                   size="sm"
                   onClick={() => showLoginPrompt("login")}
                 >
-                  <TranslatedText>Log in</TranslatedText>
+                  {translatedLabels.login}
                 </Button>
                 <Button 
                   size="sm"
                   onClick={() => showLoginPrompt("register")}
                 >
-                  <TranslatedText>Sign Up</TranslatedText>
+                  {translatedLabels.signup}
                 </Button>
               </div>
             )}
