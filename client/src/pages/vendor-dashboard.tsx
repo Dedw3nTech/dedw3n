@@ -147,8 +147,8 @@ export default function VendorDashboard() {
     "No"
   ];
 
-  // Use unified batch translation for optimal performance  
-  const { translations, isLoading: isTranslating } = useUnifiedBatchTranslation(vendorTexts, 'high');
+  // Use stable batch translation for optimal performance and persistence
+  const { translations, isLoading: isTranslating } = useStableBatchTranslation(vendorTexts, 'instant');
 
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;
