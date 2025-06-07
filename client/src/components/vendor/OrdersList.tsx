@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import { 
   ChevronDown, 
   Search, 
@@ -77,6 +78,57 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<string>("");
   const { formatPriceFromGBP } = useCurrency();
+
+  // Define all translatable texts for OrdersList
+  const orderTexts = useMemo(() => [
+    "Search orders...",
+    "All Status",
+    "Pending",
+    "Processing", 
+    "Shipped",
+    "Delivered",
+    "Cancelled",
+    "Refunded",
+    "No orders found",
+    "Your orders will appear here once customers start purchasing",
+    "Order ID",
+    "Customer",
+    "Date",
+    "Total",
+    "Status",
+    "Actions",
+    "View Details",
+    "Update Status", 
+    "Change Status",
+    "Select new status for this order",
+    "Cancel",
+    "Update",
+    "Updating...",
+    "Order Details",
+    "Customer Information",
+    "Shipping Address",
+    "Items Ordered",
+    "Order Summary",
+    "Subtotal",
+    "Shipping",
+    "Tax",
+    "Total Amount",
+    "Payment Method",
+    "Order Notes",
+    "Status History",
+    "Close",
+    "Order status updated successfully",
+    "Failed to update order status",
+    "Loading orders...",
+    "Quantity",
+    "Price",
+    "Item Total",
+    "No items in this order",
+    "Open menu"
+  ], []);
+
+  // Get translations
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(orderTexts, 'high');
 
   // Fetch orders
   const { data: orders, isLoading } = useQuery({
@@ -158,17 +210,17 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">Pending</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">{translatedTexts["Pending"] || "Pending"}</Badge>;
       case "processing":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">Processing</Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">{translatedTexts["Processing"] || "Processing"}</Badge>;
       case "shipped":
-        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">Shipped</Badge>;
+        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200">{translatedTexts["Shipped"] || "Shipped"}</Badge>;
       case "delivered":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200">Delivered</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200">{translatedTexts["Delivered"] || "Delivered"}</Badge>;
       case "cancelled":
-        return <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200">Cancelled</Badge>;
+        return <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200">{translatedTexts["Cancelled"] || "Cancelled"}</Badge>;
       case "refunded":
-        return <Badge variant="outline" className="bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200">Refunded</Badge>;
+        return <Badge variant="outline" className="bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200">{translatedTexts["Refunded"] || "Refunded"}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -208,6 +260,7 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-sm text-gray-500">{translatedTexts["Loading orders..."] || "Loading orders..."}</span>
       </div>
     );
   }
