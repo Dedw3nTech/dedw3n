@@ -10,7 +10,7 @@ import { CalendarDays, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { useUnifiedTranslation } from '@/hooks/use-unified-translation';
+import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
 
 interface CommissionPeriod {
   id: number;
@@ -65,16 +65,16 @@ const getTierColor = (tier: string) => {
   }
 };
 
-const getTierDescription = (tier: string) => {
+const getTierDescription = (tier: string, translations: Record<string, string>) => {
   switch (tier) {
     case 'enterprise':
-      return '£50,000+ monthly sales - 12.5% commission';
+      return translations?.["£50,000+ monthly sales - 12.5% commission"] || '£50,000+ monthly sales - 12.5% commission';
     case 'premium':
-      return '£10,000+ monthly sales - 10% commission';
+      return translations?.["£10,000+ monthly sales - 10% commission"] || '£10,000+ monthly sales - 10% commission';
     case 'standard':
-      return 'Under £10,000 monthly sales - 10% commission';
+      return translations?.["Under £10,000 monthly sales - 10% commission"] || 'Under £10,000 monthly sales - 10% commission';
     default:
-      return 'Commission rate varies based on sales volume';
+      return translations?.["Commission rate varies based on sales volume"] || 'Commission rate varies based on sales volume';
   }
 };
 
@@ -141,10 +141,21 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "Payment Link Created",
     "Redirecting to payment page...",
     "Error",
-    "Failed to create payment link"
+    "Failed to create payment link",
+    "£50,000+ monthly sales - 12.5% commission",
+    "£10,000+ monthly sales - 10% commission", 
+    "Under £10,000 monthly sales - 10% commission",
+    "Commission rate varies based on sales volume",
+    "Active",
+    "standard",
+    "premium", 
+    "enterprise",
+    "paid",
+    "pending",
+    "overdue"
   ];
   
-  const { translations } = useUnifiedTranslation(commissionTexts);
+  const { translations } = useUnifiedBatchTranslation(commissionTexts);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],
