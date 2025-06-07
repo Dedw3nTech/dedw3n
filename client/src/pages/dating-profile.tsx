@@ -224,18 +224,11 @@ const ETHNICITY_OPTIONS = [
 ];
 
 const LANGUAGE_OPTIONS = [
-  "Afrikaans", "Albanian", "Amharic", "Arabic", "Armenian", "Azerbaijani",
-  "Basque", "Belarusian", "Bengali", "Bosnian", "Bulgarian", "Burmese",
-  "Catalan", "Chinese (Mandarin)", "Chinese (Cantonese)", "Croatian", "Czech",
-  "Danish", "Dutch", "English", "Estonian", "Finnish", "French", "Fulani",
-  "Georgian", "German", "Greek", "Gujarati", "Hausa", "Hebrew", "Hindi", "Hungarian",
-  "Icelandic", "Igbo", "Indonesian", "Irish", "Italian", "Japanese",
-  "Kannada", "Kazakh", "Khmer", "Kikongo", "Korean", "Kurdish", "Kyrgyz",
-  "Lao", "Latvian", "Lingala", "Lithuanian", "Macedonian", "Malay", "Malayalam", "Maltese", "Manding", "Marathi", "Mongolian",
-  "Nepali", "Norwegian", "Oromo", "Pashto", "Persian (Farsi)", "Polish", "Portuguese", "Punjabi",
-  "Romanian", "Russian", "Serbian", "Sinhala", "Slovak", "Slovenian", "Somali", "Spanish", "Swahili", "Swedish",
-  "Tagalog", "Tamil", "Telugu", "Thai", "Turkish", "Twi", "Ukrainian", "Urdu", "Uzbek",
-  "Vietnamese", "Welsh", "Yoruba", "Zulu", "Other"
+  "Arabic", "Bulgarian", "Chinese", "Czech", "Danish", "Dutch", "English", 
+  "Estonian", "Finnish", "French", "German", "Greek", "Hungarian", 
+  "Indonesian", "Italian", "Japanese", "Korean", "Latvian", "Lithuanian", 
+  "Norwegian", "Polish", "Portuguese", "Romanian", "Russian", "Slovak", 
+  "Slovenian", "Spanish", "Swedish", "Turkish", "Ukrainian", "Other"
 ];
 
 const EDUCATION_LEVELS = [

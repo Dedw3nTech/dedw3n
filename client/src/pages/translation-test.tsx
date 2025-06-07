@@ -127,7 +127,7 @@ export default function TranslationTestPage() {
               <div className="text-sm text-gray-600">
                 English, Spanish, French, German, Italian, Portuguese, Russian, Japanese, Chinese, 
                 Korean, Dutch, Polish, Swedish, Danish, Finnish, Norwegian, Czech, Hungarian, 
-                Turkish, Arabic, Hindi
+                Turkish, Arabic
               </div>
             </div>
           </CardContent>
