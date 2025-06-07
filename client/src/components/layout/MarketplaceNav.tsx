@@ -26,8 +26,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
-    "Friends (C2C)",
-    "Buy & Sell Online Store (B2C)", 
+    "Buy & Sell from Friends (C2C)",
+    "Buy & Sell from Online Store (B2C)", 
     "Buy & Sell Wholesale (B2B)",
     "Search products...",
     "Liked",
@@ -41,15 +41,15 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
-    c2cText: translatedTexts["Buy & Sell from Friends (C2C)"] || "Buy & Sell from Friends (C2C)",
-    b2cText: translatedTexts["Buy & Sell from Online Store (B2C)"] || "Buy & Sell from Online Store (B2C)", 
-    b2bText: translatedTexts["Buy & Sell Wholesale (B2B)"] || "Buy & Sell Wholesale (B2B)",
-    searchPlaceholder: translatedTexts["Search products..."] || "Search products...",
-    likedText: translatedTexts["Liked"] || "Liked",
-    cartText: translatedTexts["Shopping Cart"] || "Shopping Cart",
-    ordersText: translatedTexts["Orders & Returns"] || "Orders & Returns",
-    vendorText: translatedTexts["Vendor Dashboard"] || "Vendor Dashboard"
-  }), [translatedTexts]);
+    c2cText: translatedTexts[navigationTexts[0]] || navigationTexts[0],
+    b2cText: translatedTexts[navigationTexts[1]] || navigationTexts[1], 
+    b2bText: translatedTexts[navigationTexts[2]] || navigationTexts[2],
+    searchPlaceholder: translatedTexts[navigationTexts[3]] || navigationTexts[3],
+    likedText: translatedTexts[navigationTexts[4]] || navigationTexts[4],
+    cartText: translatedTexts[navigationTexts[5]] || navigationTexts[5],
+    ordersText: translatedTexts[navigationTexts[6]] || navigationTexts[6],
+    vendorText: translatedTexts[navigationTexts[7]] || navigationTexts[7]
+  }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
   const handleMarketNavigation = useCallback((type: string) => {

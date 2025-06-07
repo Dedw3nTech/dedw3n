@@ -120,8 +120,8 @@ export function useOptimizedBatchTranslation(texts: string[]): Record<string, st
     });
     setTranslations(initialTranslations);
 
-    // Return early for English or if language hasn't changed
-    if (currentLanguage === 'EN' || lastLanguageRef.current === currentLanguage) {
+    // Return early for English
+    if (currentLanguage === 'EN') {
       return;
     }
 
