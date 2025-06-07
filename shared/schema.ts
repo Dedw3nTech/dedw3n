@@ -153,6 +153,7 @@ export const users = pgTable("users", {
   billingCountry: text("billing_country"),
   // Profile preferences
   useShippingAsBilling: boolean("use_shipping_as_billing").default(true),
+  preferredLanguage: text("preferred_language").default('EN'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
