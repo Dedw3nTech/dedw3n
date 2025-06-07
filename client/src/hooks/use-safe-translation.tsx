@@ -66,7 +66,7 @@ export function useSafeBatchTranslation(
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // Memoize texts to prevent unnecessary re-renders
-  const stableTexts = useMemo(() => texts, [JSON.stringify(texts)]);
+  const stableTexts = useMemo(() => texts, [texts.join('|')]);
 
   useEffect(() => {
     // Initialize with original texts

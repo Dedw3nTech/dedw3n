@@ -390,7 +390,7 @@ export function useStableDOMBatchTranslation(
   const textsRef = useRef(texts);
 
   // Memoize texts array to prevent unnecessary re-renders
-  const stableTexts = useMemo(() => texts, [texts.join(',')]);
+  const stableTexts = useMemo(() => texts, [texts.length > 0 ? texts.join('|') : '']);
 
   // Register component on mount
   useEffect(() => {
@@ -400,7 +400,7 @@ export function useStableDOMBatchTranslation(
     return () => {
       managerRef.current.unregisterComponent(componentId);
     };
-  }, []);
+  }, [stableTexts, priority]);
 
   useEffect(() => {
     // Skip translation if language is English or not set
@@ -414,8 +414,8 @@ export function useStableDOMBatchTranslation(
       return;
     }
 
-    // Reset if language changed, but provide immediate fallbacks for critical UI elements
-    if (lastLanguageRef.current !== currentLanguage) {
+    // Only process if language actually changed
+    if (lastLanguageRef.current !== currentLanguage || textsRef.current !== stableTexts) {
       // Initialize with cached translations or original texts as immediate fallbacks
       const fallbackTranslations: Record<string, string> = {};
       const componentId = componentIdRef.current;
@@ -429,6 +429,7 @@ export function useStableDOMBatchTranslation(
       setTranslations(fallbackTranslations);
       setIsLoading(true);
       lastLanguageRef.current = currentLanguage;
+      textsRef.current = stableTexts;
     }
 
     let completedCount = 0;
