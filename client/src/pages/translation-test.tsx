@@ -103,7 +103,7 @@ export default function TranslationTestPage() {
                 </p>
               </div>
               <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <h3 className="font-semibold text-orange-800 mb-2">Google Translate Fallback</h3>
+                <h3 className="font-semibold text-orange-800 mb-2">DeepL-Only Translation Policy</h3>
                 <p className="text-sm text-orange-700">
                   Automatic fallback for languages not supported by DeepL, ensuring comprehensive coverage.
                 </p>

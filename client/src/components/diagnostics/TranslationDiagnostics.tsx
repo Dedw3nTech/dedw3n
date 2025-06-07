@@ -241,9 +241,9 @@ export function TranslationDiagnostics() {
       t.result && t.result === t.text // Untranslated text indicates unsupported language
     );
 
-    if (potentialGoogleInterference) {
-      issues.push('Potential Google Translate interference detected');
-      recommendations.push('Check for browser extensions or page-level Google Translate');
+    if (unsupportedLanguagePattern) {
+      issues.push('Unsupported languages detected - DeepL only translation policy');
+      recommendations.push('Only DeepL-supported languages provide authentic translations');
     }
 
     setResults({

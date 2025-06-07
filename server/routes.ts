@@ -5929,9 +5929,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // If DeepL doesn't support the language (like Hindi), fallback to Google Translate
+        // If DeepL doesn't support the language, return original text for data integrity
         if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
-          console.log(`[Translation] DeepL doesn't support ${targetLanguage}, falling back to Google Translate`);
+          console.log(`[Translation] DeepL doesn't support ${targetLanguage} - returning original text`);
           return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
         }
         
@@ -6115,9 +6115,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const errorText = await response.text();
             console.error(`[Batch ${batchIndex + 1}] DeepL API error:`, response.status, errorText);
             
-            // If language not supported, try Google Translate fallback for this batch
+            // If language not supported, return original texts for data integrity
             if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
-              console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage}, using Google Translate fallback`);
+              console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage} - returning original texts`);
               return await handleUnsupportedLanguageBatch(batch, targetLanguage);
             }
           }
