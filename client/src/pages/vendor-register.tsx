@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
+import { useStableTranslation } from "@/hooks/use-stable-translation";
 
 // Private Vendor Schema
 const privateVendorSchema = z.object({
@@ -86,6 +87,95 @@ export default function VendorRegisterPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Comprehensive translation hooks for vendor registration page
+  const chooseVendorTypeText = useStableTranslation("Choose Your Vendor Type", "instant");
+  const selectVendorDescText = useStableTranslation("Select the type of vendor account that best describes your business", "instant");
+  const yourExistingAccountsText = useStableTranslation("Your Existing Vendor Accounts", "instant");
+  const privateVendorText = useStableTranslation("Private Vendor", "instant");
+  const businessVendorText = useStableTranslation("Business Vendor", "instant");
+  const accountAlreadyCreatedText = useStableTranslation("Account Already Created", "instant");
+  const activeText = useStableTranslation("Active", "instant");
+  const backToDashboardText = useStableTranslation("Back to Dashboard", "instant");
+  
+  // Private vendor section translations
+  const privateVendorRegText = useStableTranslation("Private Vendor Registration", "instant");
+  const changeToBusinessText = useStableTranslation("Change to Business Vendor", "instant");
+  const privateDescText = useStableTranslation("Perfect for individuals selling personal items, handmade products, or small-scale businesses", "instant");
+  const simplifiedRegText = useStableTranslation("Simplified registration process", "instant");
+  const individualSellerText = useStableTranslation("Individual seller profile", "instant");
+  const basicTaxText = useStableTranslation("Basic tax reporting", "instant");
+  const personalContactText = useStableTranslation("Personal contact information", "instant");
+  
+  // Business vendor section translations  
+  const businessVendorRegText = useStableTranslation("Business Vendor Registration", "instant");
+  const changeToPrivateText = useStableTranslation("Change to Private Vendor", "instant");
+  const businessDescText = useStableTranslation("Ideal for registered businesses, companies, and professional retailers", "instant");
+  const comprehensiveProfileText = useStableTranslation("Comprehensive business profile", "instant");
+  const businessVerificationText = useStableTranslation("Business verification required", "instant");
+  const advancedTaxText = useStableTranslation("Advanced tax documentation", "instant");
+  const professionalFeaturesText = useStableTranslation("Professional seller features", "instant");
+  
+  // Form field translations
+  const storeInfoText = useStableTranslation("Store Information", "instant");
+  const storeNameText = useStableTranslation("Store Name", "instant");
+  const businessNameText = useStableTranslation("Business Name", "instant");
+  const descriptionText = useStableTranslation("Description", "instant");
+  const businessTypeText = useStableTranslation("Business Type", "instant");
+  const contactInfoText = useStableTranslation("Contact Information", "instant");
+  const emailText = useStableTranslation("Email", "instant");
+  const phoneText = useStableTranslation("Phone", "instant");
+  const addressText = useStableTranslation("Address", "instant");
+  const cityText = useStableTranslation("City", "instant");
+  const stateText = useStableTranslation("State", "instant");
+  const zipCodeText = useStableTranslation("Zip Code", "instant");
+  const countryText = useStableTranslation("Country", "instant");
+  const websiteText = useStableTranslation("Website", "instant");
+  const taxIdText = useStableTranslation("Tax ID", "instant");
+  const businessRegNumText = useStableTranslation("Business Registration Number", "instant");
+  const businessLicenseText = useStableTranslation("Business License", "instant");
+  
+  // Sales manager translations
+  const salesManagerText = useStableTranslation("Sales Manager", "instant");
+  const hasSalesManagerText = useStableTranslation("Do you have a Sales Manager?", "instant");
+  const salesManagerNameText = useStableTranslation("Sales Manager Name", "instant");
+  const salesManagerIdText = useStableTranslation("Sales Manager ID", "instant");
+  
+  // Button and action translations
+  const backText = useStableTranslation("Back", "instant");
+  const submitApplicationText = useStableTranslation("Submit Application", "instant");
+  const submittingText = useStableTranslation("Submitting...", "instant");
+  const registrationSuccessText = useStableTranslation("Registration Successful", "instant");
+  const registrationFailedText = useStableTranslation("Registration Failed", "instant");
+  const registrationErrorText = useStableTranslation("Failed to register as vendor. Please try again.", "instant");
+  
+  // Business type options translations
+  const soleProprietorshipText = useStableTranslation("Sole Proprietorship", "instant");
+  const partnershipText = useStableTranslation("Partnership", "instant");
+  const corporationText = useStableTranslation("Corporation", "instant");
+  const llcText = useStableTranslation("LLC", "instant");
+  const otherText = useStableTranslation("Other", "instant");
+  
+  // Placeholder text translations
+  const yourStoreNameText = useStableTranslation("Your Store Name", "instant");
+  const yourBusinessNameText = useStableTranslation("Your Business Name", "instant");
+  const describeBusinessText = useStableTranslation("Describe your business", "instant");
+  const describeStoreText = useStableTranslation("Describe your store and the products you sell...", "instant");
+  const websitePlaceholderText = useStableTranslation("https://yourwebsite.com", "instant");
+  const yourEmailText = useStableTranslation("Your Email", "instant");
+  const yourPhoneText = useStableTranslation("Your Phone", "instant");
+  const yourAddressText = useStableTranslation("Your Address", "instant");
+  const yourCityText = useStableTranslation("Your City", "instant");
+  const yourStateText = useStableTranslation("Your State", "instant");
+  const yourZipCodeText = useStableTranslation("Your Zip Code", "instant");
+  const yourCountryText = useStableTranslation("Your Country", "instant");
+  const yourWebsiteText = useStableTranslation("Your Website", "instant");
+  const yourTaxIdText = useStableTranslation("Your Tax ID", "instant");
+  const yourRegNumberText = useStableTranslation("Your Registration Number", "instant");
+  const optionalText = useStableTranslation("Optional", "instant");
+  const salesManagerCommissionText = useStableTranslation("Sales Managers earn an additional 2.5% commission on your sales", "instant");
+  const enterFullNameText = useStableTranslation("Enter full name", "instant");
+  const enterIdNumberText = useStableTranslation("Enter ID number", "instant");
 
   // Check existing vendor accounts
   const { data: vendorStatus } = useQuery({
@@ -172,7 +262,7 @@ export default function VendorRegisterPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Registration Successful",
+        title: registrationSuccessText,
         description: data.message,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -181,8 +271,8 @@ export default function VendorRegisterPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to register as vendor. Please try again.",
+        title: registrationFailedText,
+        description: error.message || registrationErrorText,
         variant: "destructive",
       });
     },
@@ -210,20 +300,20 @@ export default function VendorRegisterPage() {
           {!vendorType && (
             <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-xl font-semibold mb-4">Choose Your Vendor Type</h3>
+                <h3 className="text-xl font-semibold mb-4">{chooseVendorTypeText}</h3>
                 <p className="text-gray-600 mb-8">
-                  Select the type of vendor account that best describes your business
+                  {selectVendorDescText}
                 </p>
                 
                 {/* Existing Vendor Accounts Status */}
                 {vendorStatus && vendorStatus.vendorAccounts && vendorStatus.vendorAccounts.length > 0 && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                    <h4 className="text-sm font-semibold text-blue-800 mb-2">Your Existing Vendor Accounts</h4>
+                    <h4 className="text-sm font-semibold text-blue-800 mb-2">{yourExistingAccountsText}</h4>
                     <div className="space-y-2">
                       {vendorStatus.vendorAccounts.map((vendor: any) => (
                         <div key={vendor.id} className="flex items-center justify-between text-sm">
-                          <span className="text-blue-700 capitalize">{vendor.vendorType} Vendor</span>
-                          <span className="text-green-600 font-medium">✓ Active</span>
+                          <span className="text-blue-700 capitalize">{vendor.vendorType === 'private' ? privateVendorText : businessVendorText}</span>
+                          <span className="text-green-600 font-medium">✓ {activeText}</span>
                         </div>
                       ))}
                     </div>
@@ -268,20 +358,20 @@ export default function VendorRegisterPage() {
                       />
                     )}
                     <User className={`h-12 w-12 mb-3 ${vendorStatus?.hasPrivateVendor ? "text-green-600" : "text-primary"}`} />
-                    <span className="text-lg font-semibold">Private Vendor</span>
+                    <span className="text-lg font-semibold">{privateVendorText}</span>
                     {vendorStatus?.hasPrivateVendor && (
                       <span className="text-sm text-green-600 font-medium mb-2">
-                        ✓ Account Already Created
+                        ✓ {accountAlreadyCreatedText}
                       </span>
                     )}
                     <span className="text-sm text-gray-600 text-center mt-2">
-                      Perfect for individuals selling personal items, handmade products, or small-scale businesses
+                      {privateDescText}
                     </span>
                     <ul className="text-xs text-gray-500 mt-3 space-y-1">
-                      <li>• Simplified registration process</li>
-                      <li>• Individual seller profile</li>
-                      <li>• Basic tax reporting</li>
-                      <li>• Personal contact information</li>
+                      <li>• {simplifiedRegText}</li>
+                      <li>• {individualSellerText}</li>
+                      <li>• {basicTaxText}</li>
+                      <li>• {personalContactText}</li>
                     </ul>
                   </Label>
                 </div>
@@ -309,20 +399,20 @@ export default function VendorRegisterPage() {
                       />
                     )}
                     <Building className={`h-12 w-12 mb-3 ${vendorStatus?.hasBusinessVendor ? "text-green-600" : "text-primary"}`} />
-                    <span className="text-lg font-semibold">Business Vendor</span>
+                    <span className="text-lg font-semibold">{businessVendorText}</span>
                     {vendorStatus?.hasBusinessVendor && (
                       <span className="text-sm text-green-600 font-medium mb-2">
-                        ✓ Account Already Created
+                        ✓ {accountAlreadyCreatedText}
                       </span>
                     )}
                     <span className="text-sm text-gray-600 text-center mt-2">
-                      Ideal for registered businesses, companies, and professional retailers
+                      {businessDescText}
                     </span>
                     <ul className="text-xs text-gray-500 mt-3 space-y-1">
-                      <li>• Comprehensive business profile</li>
-                      <li>• Business verification required</li>
-                      <li>• Advanced tax documentation</li>
-                      <li>• Professional seller features</li>
+                      <li>• {comprehensiveProfileText}</li>
+                      <li>• {businessVerificationText}</li>
+                      <li>• {advancedTaxText}</li>
+                      <li>• {professionalFeaturesText}</li>
                     </ul>
                   </Label>
                 </div>
@@ -333,7 +423,7 @@ export default function VendorRegisterPage() {
                   onClick={() => setLocation("/vendor-dashboard")}
                   variant="outline"
                 >
-                  Back to Dashboard
+                  {backToDashboardText}
                 </Button>
               </div>
             </div>
@@ -345,14 +435,14 @@ export default function VendorRegisterPage() {
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="flex items-center">
                   <User className="h-6 w-6 text-primary mr-2" />
-                  <h3 className="text-xl font-semibold">Private Vendor Registration</h3>
+                  <h3 className="text-xl font-semibold">{privateVendorRegText}</h3>
                 </div>
                 <Button 
                   className="bg-black text-white hover:bg-gray-800"
                   size="sm"
                   onClick={() => setVendorType(null)}
                 >
-                  Change to Business Vendor
+                  {changeToBusinessText}
                 </Button>
               </div>
 
@@ -362,7 +452,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <Store className="h-5 w-5 mr-2" />
-                      Store Information
+                      {storeInfoText}
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
                       <FormField
@@ -370,9 +460,9 @@ export default function VendorRegisterPage() {
                         name="storeName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Store Name *</FormLabel>
+                            <FormLabel>{storeNameText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your Store Name" {...field} />
+                              <Input placeholder={yourStoreNameText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -383,10 +473,10 @@ export default function VendorRegisterPage() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Store Description *</FormLabel>
+                            <FormLabel>{descriptionText} *</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Describe your store and the products you sell..."
+                                placeholder={describeStoreText}
                                 className="min-h-[100px]"
                                 {...field}
                               />
@@ -400,9 +490,9 @@ export default function VendorRegisterPage() {
                         name="website"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Website (Optional)</FormLabel>
+                            <FormLabel>{websiteText} ({optionalText})</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://yourwebsite.com" {...field} />
+                              <Input placeholder={websitePlaceholderText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -415,7 +505,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <Mail className="h-5 w-5 mr-2" />
-                      Contact Information
+                      {contactInfoText}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -423,9 +513,9 @@ export default function VendorRegisterPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email *</FormLabel>
+                            <FormLabel>{emailText} *</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="your@email.com" {...field} />
+                              <Input type="email" placeholder={yourEmailText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -436,9 +526,9 @@ export default function VendorRegisterPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number *</FormLabel>
+                            <FormLabel>{phoneText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+1 (555) 123-4567" {...field} />
+                              <Input placeholder={yourPhoneText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -451,16 +541,16 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <MapPin className="h-5 w-5 mr-2" />
-                      Address
+                      {addressText}
                     </h4>
                     <FormField
                       control={privateForm.control}
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Street Address *</FormLabel>
+                          <FormLabel>{addressText} *</FormLabel>
                           <FormControl>
-                            <Input placeholder="123 Your Street" {...field} />
+                            <Input placeholder={yourAddressText} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -472,9 +562,9 @@ export default function VendorRegisterPage() {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City *</FormLabel>
+                            <FormLabel>{cityText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="City" {...field} />
+                              <Input placeholder={yourCityText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -485,9 +575,9 @@ export default function VendorRegisterPage() {
                         name="state"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>State *</FormLabel>
+                            <FormLabel>{stateText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="State" {...field} />
+                              <Input placeholder={yourStateText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -498,9 +588,9 @@ export default function VendorRegisterPage() {
                         name="zipCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Zip Code *</FormLabel>
+                            <FormLabel>{zipCodeText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="12345" {...field} />
+                              <Input placeholder={yourZipCodeText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -511,9 +601,9 @@ export default function VendorRegisterPage() {
                         name="country"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country *</FormLabel>
+                            <FormLabel>{countryText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Country" {...field} />
+                              <Input placeholder={yourCountryText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -526,7 +616,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <User className="h-5 w-5 mr-2" />
-                      Sales Manager
+                      {salesManagerText}
                     </h4>
                     <FormField
                       control={privateForm.control}
@@ -535,10 +625,10 @@ export default function VendorRegisterPage() {
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">
-                              Do you have a Sales Manager?
+                              {hasSalesManagerText}
                             </FormLabel>
                             <div className="text-sm text-muted-foreground">
-                              Sales Managers earn an additional 2.5% commission on your sales
+                              {salesManagerCommissionText}
                             </div>
                           </div>
                           <FormControl>
@@ -558,9 +648,9 @@ export default function VendorRegisterPage() {
                           name="salesManagerName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sales Manager Name *</FormLabel>
+                              <FormLabel>{salesManagerNameText} *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter full name" {...field} />
+                                <Input placeholder={enterFullNameText} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -571,9 +661,9 @@ export default function VendorRegisterPage() {
                           name="salesManagerId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sales Manager ID Number *</FormLabel>
+                              <FormLabel>{salesManagerIdText} *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter ID number" {...field} />
+                                <Input placeholder={enterIdNumberText} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

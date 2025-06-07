@@ -77,7 +77,12 @@ class StableDOMTranslationManager {
     const age = Date.now() - cached.timestamp;
     const maxAge = this.CACHE_DURATIONS[cached.priority];
     
-    return age <= maxAge;
+    if (age > maxAge) {
+      delete this.cache[key];
+      return null;
+    }
+    
+    return cached.translatedText;
   }
 
   private setCachedTranslation(
