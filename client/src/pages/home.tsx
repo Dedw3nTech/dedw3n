@@ -7,6 +7,7 @@ import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
@@ -45,6 +46,88 @@ export default function Home() {
   useEffect(() => {
     setView("marketplace");
   }, [setView]);
+
+  // Comprehensive Home Page Translation Texts
+  const homeTexts = [
+    // Main Hero Section
+    "Welcome to Dedw3n Marketplace",
+    "Your Global Trading Platform",
+    "Connecting buyers and sellers worldwide with secure transactions",
+    "Start Shopping",
+    "Become a Vendor",
+    "Search products...",
+    
+    // Categories Section
+    "Shop by Category",
+    "Browse our curated categories",
+    "View All Categories",
+    "Electronics & Technology",
+    "Fashion & Apparel", 
+    "Home & Garden",
+    "Sports & Fitness",
+    "Books & Media",
+    "Automotive",
+    "Business & Industrial",
+    "Health & Beauty",
+    
+    // Featured Products Section
+    "Featured Products",
+    "Handpicked products just for you",
+    "View All Products",
+    "New",
+    "Sale",
+    "Add to Cart",
+    "Quick View",
+    "Share",
+    
+    // New Arrivals Section
+    "New Arrivals",
+    "Latest products from our vendors",
+    "See All New Products",
+    
+    // Market Types
+    "C2C Marketplace",
+    "Consumer to Consumer trading",
+    "B2C Marketplace", 
+    "Business to Consumer shopping",
+    "B2B Marketplace",
+    "Business to Business solutions",
+    
+    // Action Buttons & CTAs
+    "Shop Now",
+    "Learn More",
+    "Get Started",
+    "Browse Products",
+    "Join Community",
+    "Contact Support",
+    
+    // Loading & Status
+    "Loading...",
+    "No products available",
+    "Try again later",
+    "Search for products",
+    "Filter products",
+    
+    // Product Cards
+    "Price",
+    "Rating",
+    "Reviews",
+    "In Stock",
+    "Out of Stock",
+    "Free Shipping",
+    "Limited Time",
+    "Best Seller",
+    "Trending",
+    
+    // Footer/Additional
+    "Secure Payments",
+    "Fast Delivery", 
+    "24/7 Support",
+    "Money Back Guarantee"
+  ];
+
+  // Use unified batch translation for optimal performance
+  const { translations: t, isLoading: isTranslating } = useUnifiedBatchTranslation(homeTexts, 'high');
 
   // Fetch featured products (limit to 6)
   const { 
@@ -114,10 +197,10 @@ export default function Home() {
         
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isNew && (
-            <Badge className="bg-blue-500">New</Badge>
+            <Badge className="bg-blue-500">{t("New") || "New"}</Badge>
           )}
           {product.isOnSale && (
-            <Badge className="bg-red-500">Sale</Badge>
+            <Badge className="bg-red-500">{t("Sale") || "Sale"}</Badge>
           )}
         </div>
       </div>
@@ -158,12 +241,12 @@ export default function Home() {
                   const productUrl = `${window.location.origin}/product/${product.id}`;
                   navigator.clipboard.writeText(productUrl);
                   toast({
-                    title: "Link Copied",
-                    description: "Product link copied to clipboard",
+                    title: t("Link Copied") || "Link Copied",
+                    description: t("Product link copied to clipboard") || "Product link copied to clipboard",
                   });
                 }}>
                   <Share2 className="h-4 w-4 mr-2 text-gray-600" />
-                  Copy Link
+{t("Copy Link") || "Copy Link"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
@@ -171,7 +254,7 @@ export default function Home() {
                   window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${productUrl}`)}`, '_blank');
                 }}>
                   <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                  Share via Email
+{t("Share via Email") || "Share via Email"}
                 </DropdownMenuItem>
                 {user && (
                   <>
@@ -180,14 +263,14 @@ export default function Home() {
                       setLocation(`/messages?share=${product.id}`);
                     }}>
                       <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                      Share in Messages
+{t("Share in Messages") || "Share in Messages"}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setLocation(`/members?share=${product.id}`);
                     }}>
                       <Users className="h-4 w-4 mr-2 text-blue-600" />
-                      Share with Member
+{t("Share with Member") || "Share with Member"}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -197,7 +280,7 @@ export default function Home() {
               e.stopPropagation();
               setLocation(`/product/${product.id}`);
             }}>
-              View
+{t("View") || "View"}
             </Button>
           </div>
         </div>
