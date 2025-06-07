@@ -49,34 +49,46 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translationCache = new Map<string, string>();
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(supportedLanguages[0]); // Default to English
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load user's language preference from localStorage immediately, then try backend
-  useEffect(() => {
-    // Immediately load from localStorage (non-blocking)
-    const savedLanguage = localStorage.getItem('dedw3n-language');
-    if (savedLanguage) {
-      const language = supportedLanguages.find(lang => lang.code === savedLanguage);
-      if (language) {
-        setSelectedLanguage(language);
+  // Initialize with localStorage value immediately or default to English
+  const getInitialLanguage = (): Language => {
+    try {
+      const savedLanguage = localStorage.getItem('dedw3n-language');
+      if (savedLanguage) {
+        const language = supportedLanguages.find(lang => lang.code === savedLanguage);
+        if (language) {
+          return language;
+        }
       }
+    } catch (error) {
+      // localStorage not available - use default
     }
-    setIsLoading(false);
+    return supportedLanguages[0]; // Default to English
+  };
 
-    // Then try to sync with backend in background (non-blocking)
-    const syncWithBackend = async () => {
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(getInitialLanguage);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Start as false, no blocking
+
+  // Background sync with backend - completely non-blocking
+  useEffect(() => {
+    let isMounted = true;
+    
+    const backgroundSync = async () => {
       try {
+        // Use a simple fetch with timeout to avoid hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+        
         const response = await fetch('/api/user/language', {
           method: 'GET',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          }
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal
         });
-
-        if (response.ok) {
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok && isMounted) {
           const data = await response.json();
           const language = supportedLanguages.find(lang => lang.code === data.language);
           if (language && language.code !== selectedLanguage.code) {
@@ -85,12 +97,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        // Silently fail - we already have localStorage fallback
+        // Silent failure - using localStorage fallback is fine
       }
     };
 
-    // Run backend sync after a small delay to avoid blocking
-    setTimeout(syncWithBackend, 100);
+    // Delay background sync to ensure it doesn't block initial render
+    const timeoutId = setTimeout(backgroundSync, 500);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Update user language preference in backend

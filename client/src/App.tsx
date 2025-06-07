@@ -330,33 +330,27 @@ function Router() {
 }
 
 function App() {
-  // Force refresh state to update all components when language changes
-  const [forceRefresh, setForceRefresh] = useState(0);
+  console.log('App component rendering...');
   
-  // Initialize offline detection and language
+  // Simplified initialization without blocking operations
   useEffect(() => {
-    // Initialize offline detection
-    initializeOfflineDetection();
+    console.log('App useEffect running...');
     
-    // Initialize language based on user location
-    initializeLanguageFromLocation();
-    
-    // Listen for language changes and force refresh
-    const handleLanguageChange = () => {
-      console.log('App detected language change, refreshing entire application');
-      setForceRefresh((prev: number) => prev + 1);
-    };
-    
-    window.addEventListener('language-changed', handleLanguageChange);
-    
-    return () => {
-      window.removeEventListener('language-changed', handleLanguageChange);
-    };
+    // Non-blocking background operations
+    setTimeout(() => {
+      try {
+        initializeOfflineDetection();
+        initializeLanguageFromLocation();
+      } catch (error) {
+        console.error('Background initialization error:', error);
+      }
+    }, 100);
   }, []);
 
-  // Using forceRefresh in a key forces re-rendering when language changes
+  console.log('App returning JSX...');
+  
   return (
-    <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
           <AuthProvider>
