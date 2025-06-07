@@ -200,11 +200,14 @@ export function useUnifiedTranslation(
   const lastTextRef = useRef(text);
 
   useEffect(() => {
-    // Reset to original text if language or text changed
-    if (lastLanguageRef.current !== currentLanguage || lastTextRef.current !== text) {
-      setTranslatedText(text);
-      lastLanguageRef.current = currentLanguage;
+    // Only reset if text itself changed, not language
+    if (lastTextRef.current !== text) {
       lastTextRef.current = text;
+    }
+
+    // Only update language reference after processing
+    if (lastLanguageRef.current !== currentLanguage) {
+      lastLanguageRef.current = currentLanguage;
     }
 
     translationManager.translateText(

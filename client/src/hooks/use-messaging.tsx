@@ -891,29 +891,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
         break;
         
-      case "ping":
-        // Respond to server ping with pong containing timestamp
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          const pongData = {
-            type: "pong",
-            timestamp: Date.now(),
-            echo: data.timestamp
-          };
-          socket.send(JSON.stringify(pongData));
-        }
-        break;
-        
-      case "pong":
-        // Calculate latency from ping-pong
-        if (data.echo) {
-          const latency = Date.now() - data.echo;
-          setConnectionDetails(prev => ({
-            ...prev,
-            pingLatency: latency,
-            lastActivity: Date.now()
-          }));
-        }
-        break;
+
         
       case "error":
         console.error("Server error message:", data.message);
