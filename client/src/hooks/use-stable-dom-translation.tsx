@@ -54,14 +54,14 @@ class StableDOMTranslationManager {
     const exactKey = this.getCacheKey(text, targetLanguage, componentId);
     const exactMatch = this.cache[exactKey];
     
-    if (exactMatch && this.isCacheValid(exactMatch)) {
+    if (exactMatch && this.isCacheValid(exactMatch, exactKey)) {
       return exactMatch.translatedText;
     }
     
     // Fallback: search for any cached translation of this text in the target language
     const fallbackKey = Object.keys(this.cache).find(key => {
       const entry = this.cache[key];
-      return key.includes(`:${text}:${targetLanguage}`) && this.isCacheValid(entry);
+      return key.includes(`:${text}:${targetLanguage}`) && this.isCacheValid(entry, key);
     });
     
     if (fallbackKey) {
@@ -71,18 +71,20 @@ class StableDOMTranslationManager {
     return null;
   }
 
-  private isCacheValid(cached: any): boolean {
+  private isCacheValid(cached: any, cacheKey?: string): boolean {
     if (!cached) return false;
     
     const age = Date.now() - cached.timestamp;
-    const maxAge = this.CACHE_DURATIONS[cached.priority];
+    const maxAge = this.CACHE_DURATIONS[cached.priority as keyof typeof this.CACHE_DURATIONS] || this.CACHE_DURATIONS.normal;
     
     if (age > maxAge) {
-      delete this.cache[key];
-      return null;
+      if (cacheKey && this.cache[cacheKey]) {
+        delete this.cache[cacheKey];
+      }
+      return false;
     }
     
-    return cached.translatedText;
+    return true;
   }
 
   private setCachedTranslation(

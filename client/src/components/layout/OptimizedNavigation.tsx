@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TranslatedText } from "@/hooks/use-translated-text";
 import { Badge } from "@/components/ui/badge";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
-import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
+import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,8 +67,8 @@ export default function OptimizedNavigation() {
     "Sign Up"
   ], []);
 
-  // Use DOM-safe batch translation for optimal performance
-  const { translations: translatedHeaderTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(headerTexts, 'instant');
+  // Use safe batch translation for optimal performance
+  const translatedHeaderTexts = useSafeBatchTranslation(headerTexts);
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
