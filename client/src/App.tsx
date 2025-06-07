@@ -16,26 +16,36 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-// Lazy load promotional images for better mobile performance
+// Import promotional images directly for reliable loading
+import b2cHeaderPromo from "@assets/Dedw3n Business B2C Header (1).png";
+import b2cFooterPromo from "@assets/Dedw3n Business B2C Footer.png";
+import b2bHeaderPromo from "@assets/Dedw3n Business B2B Header.png";
+import b2bFooterPromo from "@assets/Dedw3n Business B2B Footer.png";
+import c2cHeaderPromo from "@assets/Dedw3n Business C2c header (1).png";
+import c2cFooterPromo from "@assets/Dedw3n Business C2C Footer.png";
+import datingHeaderPromo from "@assets/_Dedw3n Dating Header (1).png";
+import datingFooterPromo from "@assets/Copy of Dedw3n comm Footer (1).png";
+
+// Promotional images configuration
 const marketPromoImages = {
   b2c: {
-    top: () => import("@assets/Dedw3n Business B2C Header (1).png"),
-    bottom: () => import("@assets/Dedw3n Business B2C Footer.png"),
+    top: b2cHeaderPromo,
+    bottom: b2cFooterPromo,
   },
   b2b: {
-    top: () => import("@assets/Dedw3n Business B2B Header.png"),
-    bottom: () => import("@assets/Dedw3n Business B2B Footer.png"),
+    top: b2bHeaderPromo,
+    bottom: b2bFooterPromo,
   },
   c2c: {
-    top: () => import("@assets/Dedw3n Business C2c header (1).png"),
-    bottom: () => import("@assets/Dedw3n Business C2C Footer.png"),
+    top: c2cHeaderPromo,
+    bottom: c2cFooterPromo,
   },
 };
 
-// Dating-specific promotional images (lazy loaded)
+// Dating-specific promotional images
 const datingPromoImages = {
-  header: () => import("@assets/_Dedw3n Dating Header (1).png"),
-  footer: () => import("@assets/Copy of Dedw3n comm Footer (1).png"),
+  header: datingHeaderPromo,
+  footer: datingFooterPromo,
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -46,6 +56,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 import { CommunityNav } from "@/components/layout/CommunityNav";
@@ -426,10 +437,11 @@ function MarketplacePromoSection() {
   
   return (
     <div className="w-full" key={`marketplace-top-${marketType}`}>
-      <img 
+      <LazyImage 
         src={currentPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRlZHczbiAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
       />
     </div>
   );
@@ -449,10 +461,11 @@ function MarketplaceBottomPromoSection() {
   
   return (
     <div className="w-full" key={`marketplace-bottom-${marketType}`}>
-      <img 
+      <LazyImage 
         src={currentBottomPromoImage}
         alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRlZHczbiAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
       />
     </div>
   );
@@ -469,10 +482,11 @@ function DatingHeaderPromoSection() {
   
   return (
     <div className="w-full" key="dating-header-promo">
-      <img 
+      <LazyImage 
         src={datingPromoImages.header}
         alt="Dedwen Dating - Find Your Perfect Match"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRhdGluZyAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
       />
     </div>
   );
@@ -488,10 +502,11 @@ function DatingFooterPromoSection() {
   
   return (
     <div className="w-full" key="dating-footer-promo">
-      <img 
+      <LazyImage 
         src={datingPromoImages.footer}
         alt="Dedwen Dating - Premium Dating Experience"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRhdGluZyAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
       />
     </div>
   );
