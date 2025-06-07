@@ -9,7 +9,6 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
 import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-translation';
 import { useUltraFastTranslation, preloadCriticalTranslations } from '@/hooks/use-ultra-fast-translation';
-import { useInstantPerformance } from '@/hooks/use-instant-performance';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
@@ -89,13 +88,6 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
-  // Initialize ultra-fast performance system
-  const { batchTranslation, smartPrefetch } = useInstantPerformance({
-    preloadCritical: true,
-    batchTranslations: true,
-    cacheStrategy: 'aggressive'
-  });
-
   // Preload critical translations for instant UI
   useEffect(() => {
     preloadCriticalTranslations(currentLanguage);

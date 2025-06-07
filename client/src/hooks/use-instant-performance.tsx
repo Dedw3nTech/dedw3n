@@ -16,7 +16,6 @@ const CRITICAL_QUERIES = [
 
 // Translation batching for instant UI rendering
 const translationBatch = new Map<string, Promise<string>>();
-const batchTimeout = useRef<NodeJS.Timeout | null>(null);
 
 interface PerformanceOptions {
   preloadCritical?: boolean;
@@ -38,6 +37,7 @@ export function useInstantPerformance(options: PerformanceOptions = {}) {
   } = options;
 
   const batchRef = useRef<Map<string, string>>(new Map());
+  const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Intelligent cache with TTL
   const getCachedData = useCallback((key: string) => {
