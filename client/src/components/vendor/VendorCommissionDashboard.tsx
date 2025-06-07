@@ -214,10 +214,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Commission Tier System
+            {translations?.["Commission Tier System"] || "Commission Tier System"}
           </CardTitle>
           <CardDescription className="text-xs">
-            Your commission rate is determined by your monthly sales volume
+            {translations?.["Your commission rate is determined by your monthly sales volume"] || "Your commission rate is determined by your monthly sales volume"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -225,30 +225,30 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
             {!commissionData.vendor.hasSalesManager ? (
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">Standard Tier</h4>
+                  <h4 className="font-medium">{translations?.["Standard Tier"] || "Standard Tier"}</h4>
                   <Badge className="bg-gray-100 text-gray-800">10%</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Basic commission rate
+                  {translations?.["Basic commission rate"] || "Basic commission rate"}
                 </p>
               </div>
             ) : (
               <div className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">Sales Manager</h4>
+                  <h4 className="font-medium">{translations?.["Sales Manager"] || "Sales Manager"}</h4>
                   <Badge className="bg-blue-100 text-blue-800">10% + 2.5%</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  10% commission + 2.5% Sales Manager Fee
+                  {translations?.["10% commission + 2.5% Sales Manager Fee"] || "10% commission + 2.5% Sales Manager Fee"}
                 </p>
                 {commissionData.vendor.salesManagerName && (
                   <div className="mt-2 pt-2 border-t">
                     <p className="text-xs text-muted-foreground">
-                      <strong>Sales Manager:</strong> {commissionData.vendor.salesManagerName}
+                      <strong>{translations?.["Sales Manager"] || "Sales Manager"}:</strong> {commissionData.vendor.salesManagerName}
                     </p>
                     {commissionData.vendor.salesManagerId && (
                       <p className="text-xs text-muted-foreground">
-                        <strong>ID:</strong> {commissionData.vendor.salesManagerId}
+                        <strong>{translations?.["ID"] || "ID"}:</strong> {commissionData.vendor.salesManagerId}
                       </p>
                     )}
                   </div>
@@ -263,7 +263,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Owed</CardTitle>
+            <CardTitle className="text-sm font-medium">{translations?.["Total Owed"] || "Total Owed"}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -271,14 +271,14 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               £{commissionData.totals.totalCommissionOwed.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {commissionData.pendingPayments.length} pending payment(s)
+              {commissionData.pendingPayments.length} {translations?.["pending payment(s)"] || "pending payment(s)"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+            <CardTitle className="text-sm font-medium">{translations?.["Total Paid"] || "Total Paid"}</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -286,14 +286,14 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               £{commissionData.totals.totalCommissionPaid.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              All-time commission payments
+              {translations?.["All-time commission payments"] || "All-time commission payments"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Account Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{translations?.["Account Status"] || "Account Status"}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -301,7 +301,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               {commissionData.vendor.accountStatus}
             </div>
             <p className="text-xs text-muted-foreground">
-              {commissionData.vendor.paymentFailureCount} payment failure(s)
+              {commissionData.vendor.paymentFailureCount} {translations?.["payment failure(s)"] || "payment failure(s)"}
             </p>
           </CardContent>
         </Card>
@@ -313,10 +313,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Pending Payments
+              {translations?.["Pending Payments"] || "Pending Payments"}
             </CardTitle>
             <CardDescription>
-              Commission payments that require your attention
+              {translations?.["Commission payments that require your attention"] || "Commission payments that require your attention"}
             </CardDescription>
           </CardHeader>
           <CardContent>
