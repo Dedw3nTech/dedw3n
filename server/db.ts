@@ -1,5 +1,5 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { neon, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from "@shared/schema";
 import * as fraudSchema from "@shared/fraud-schema";
 
@@ -7,28 +7,21 @@ import * as fraudSchema from "@shared/fraud-schema";
 let dbConnected = false;
 let dbConnectionError: string | null = null;
 
-// Completely disable WebSocket to prevent the ErrorEvent modification crash
-console.log('Setting up database with HTTP-only mode to avoid WebSocket issues');
+// Force HTTP-only mode to completely avoid WebSocket issues
+console.log('Configuring database for HTTP-only mode');
 
+// Configure Neon for HTTP-only connections
+neonConfig.fetchConnectionCache = true;
+neonConfig.useSecureWebSocket = false;
+neonConfig.pipelineConnect = false;
+neonConfig.pipelineTLS = false;
+
+// Completely disable WebSocket constructor
 try {
-  // Patch neonConfig to force HTTP mode and disable all WebSocket features
-  Object.defineProperty(neonConfig, 'webSocketConstructor', {
-    value: undefined,
-    writable: false,
-    configurable: false
-  });
-  
-  neonConfig.useSecureWebSocket = false;
-  neonConfig.pipelineConnect = false;
-  neonConfig.pipelineTLS = false;
-  
-  // Force HTTP-only mode
-  neonConfig.fetchConnectionCache = true;
-  neonConfig.fetchFunction = fetch;
-  
-  console.log('Database configured for HTTP-only mode');
+  neonConfig.webSocketConstructor = undefined;
+  console.log('WebSocket constructor disabled for database connections');
 } catch (error) {
-  console.warn('Database configuration warning:', error.message);
+  console.warn('Database configuration warning:', error);
 }
 
 if (!process.env.DATABASE_URL) {
@@ -37,63 +30,46 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create pool with more conservative settings
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 60000,
-  max: 5,
-  maxUses: 1000,
-  allowExitOnIdle: false
-});
+// Create HTTP-only database connection
+const sql = neon(process.env.DATABASE_URL);
 
-export const db = drizzle({ 
-  client: pool, 
+export const db = drizzle(sql, { 
   schema: {
     ...schema,
     ...fraudSchema
   }
 });
 
-// Add comprehensive error handling
-pool.on('error', (err) => {
-  console.error('Database pool error:', err);
-  dbConnected = false;
-});
-
-pool.on('connect', () => {
-  console.log('Database client connected');
-  dbConnected = true;
-});
+// No pool events needed for HTTP-only connections
+console.log('Database configured for HTTP-only connections');
 
 // Export connection status checker
 export const isDatabaseConnected = () => dbConnected;
 
-// Graceful connection test that doesn't block startup
+// Test HTTP connection with simple query
 async function testConnection() {
   try {
-    const client = await pool.connect();
-    console.log('✓ Database connected successfully');
+    await sql`SELECT 1 as test`;
+    console.log('✓ Database HTTP connection successful');
     dbConnected = true;
-    client.release();
-  } catch (err) {
+  } catch (err: any) {
     console.warn('⚠ Database connection failed, continuing with limited functionality:', err.message);
     dbConnected = false;
+    dbConnectionError = err.message;
     // Don't throw - allow app to start
   }
 }
 
-// Safe connection test with graceful degradation
+// Initialize database connection safely
 async function initializeDatabase() {
-  console.log('Initializing database connection...');
+  console.log('Initializing HTTP database connection...');
   
   try {
-    // Simple connection test that won't crash the app
-    const client = await pool.connect();
-    console.log('✓ Database connection successful');
+    // Test with simple query
+    await sql`SELECT 1 as test`;
+    console.log('✓ Database HTTP connection established');
     dbConnected = true;
-    client.release();
-  } catch (err) {
+  } catch (err: any) {
     console.warn('⚠ Database connection failed, continuing with limited functionality');
     console.warn('Error details:', err.message);
     dbConnected = false;

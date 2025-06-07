@@ -25,7 +25,7 @@ export default function Footer() {
     "our sole official website is"
   ], []);
 
-  const { translations: translatedTexts } = useStableDOMBatchTranslation(footerTexts, 'background');
+  const { translations: translatedTexts } = useStableDOMBatchTranslation(footerTexts, 'normal');
 
   // Extract individual translations for direct access
   const allRightsReservedText = translatedTexts["All rights reserved"] || "All rights reserved";
