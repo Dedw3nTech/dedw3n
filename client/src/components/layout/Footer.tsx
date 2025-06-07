@@ -1,9 +1,10 @@
 import { Link } from "wouter";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMemo } from "react";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 
 export default function Footer() {
-  // Define all footer texts for unified batch translation
-  const footerTexts = [
+  // Define all footer texts with stable references to prevent infinite loops
+  const footerTexts = useMemo(() => [
     "All rights reserved.",
     "Privacy Policy",
     "Terms of Service", 
@@ -22,9 +23,9 @@ export default function Footer() {
     "whose registered office is situated",
     "Our bank is registered with HSBC UK IBAN",
     "our sole official website is"
-  ];
+  ], []);
 
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(footerTexts, 'instant');
+  const { translations: translatedTexts } = useStableDOMBatchTranslation(footerTexts, 'background');
 
   // Extract individual translations for direct access
   const allRightsReservedText = translatedTexts["All rights reserved"] || "All rights reserved";

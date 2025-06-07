@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import SearchOverlay from "../ui/search-overlay";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
@@ -14,6 +15,16 @@ export default function MobileNavigation() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
+  
+  // Define translatable texts with stable references
+  const mobileNavTexts = useMemo(() => [
+    "Marketplace",
+    "Community", 
+    "Dating"
+  ], []);
+
+  // Use DOM-safe batch translation for optimal performance
+  const { translations } = useStableDOMBatchTranslation(mobileNavTexts, 'instant');
   
   // Get unread message count from API
   const { data: messageData } = useQuery<{ count: number }>({
@@ -36,7 +47,7 @@ export default function MobileNavigation() {
                 className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : "text-gray-500"}`}
               >
                 <i className={`ri-store-2-line text-lg mb-1 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : ""}`}></i>
-                <span className="text-xs font-medium">Marketplace</span>
+                <span className="text-xs font-medium">{translations["Marketplace"] || "Marketplace"}</span>
               </button>
             </Link>
             
@@ -45,7 +56,7 @@ export default function MobileNavigation() {
                 className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-gray-700" : "text-gray-500"}`}
               >
                 <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-gray-700" : ""}`}></i>
-                <span className="text-xs font-medium">Community</span>
+                <span className="text-xs font-medium">{translations["Community"] || "Community"}</span>
               </button>
             </Link>
 
@@ -59,7 +70,7 @@ export default function MobileNavigation() {
                     </Badge>
                   )}
                 </div>
-                <span className="text-xs font-medium">Dating</span>
+                <span className="text-xs font-medium">{translations["Dating"] || "Dating"}</span>
               </button>
             </Link>
 
