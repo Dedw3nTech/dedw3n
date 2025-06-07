@@ -26,7 +26,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
     "Friends (C2C)",
-    "Buy & Sell from Online Store (B2C)", 
+    "Buy & Sell Online Store (B2C)", 
     "Buy & Sell Wholesale (B2B)",
     "Search products...",
     "Liked",
@@ -94,12 +94,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               onClick={() => handleMarketNavigation("b2c")}
             >
               <div className="mb-2 flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
+                <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'b2c' 
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
-                }`}>
+                }`} style={{ fontSize: '12px' }}>
                   {translatedLabels.b2cText}
                 </span>
               </div>
