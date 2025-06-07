@@ -220,16 +220,10 @@ export function TranslationDiagnostics() {
 
     // Analyze common failure patterns
     const failedLanguages = new Set(completedTests.filter(t => t.status === 'failed').map(t => t.targetLanguage));
-    const googleFallbacks = completedTests.filter(t => t.apiUsed === 'google').length;
     const deeplFailures = completedTests.filter(t => t.status === 'failed' && t.error?.includes('DeepL')).length;
 
     if (failedLanguages.size > 0) {
       issues.push(`Translation failures in: ${Array.from(failedLanguages).join(', ')}`);
-    }
-
-    if (googleFallbacks > 0) {
-      issues.push(`${googleFallbacks} translations fell back to Google Translate`);
-      recommendations.push('Check DeepL API key and quota limits');
     }
 
     if (deeplFailures > 0) {
@@ -242,13 +236,9 @@ export function TranslationDiagnostics() {
       recommendations.push('Consider optimizing batch sizes or caching strategies');
     }
 
-    // Check for Google Translate interference
-    const potentialGoogleInterference = completedTests.some(t => 
-      t.result && (
-        t.result.includes('Translated by Google') ||
-        t.result.includes('Google Translate') ||
-        t.result === t.text // Untranslated text might indicate blocking
-      )
+    // Check for unsupported language patterns
+    const unsupportedLanguagePattern = completedTests.some(t => 
+      t.result && t.result === t.text // Untranslated text indicates unsupported language
     );
 
     if (potentialGoogleInterference) {

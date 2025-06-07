@@ -5357,99 +5357,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }));
   }
 
-  // Google Translate batch processing for Hindi and Indian languages
-  async function processBatchWithGoogle(uncachedTexts: string[], uncachedIndices: number[], translations: any[], targetLanguage: string, res: Response, translationOptimizer: any, startTime: number, cacheHitCount: number) {
-    try {
-      const googleLang = googleLanguageMap[targetLanguage] || targetLanguage.toLowerCase();
-      const batchResults = [];
+  // DeepL-only batch processing - maintains data integrity  
+  async function processUnsupportedLanguageBatch(uncachedTexts: string[], uncachedIndices: number[], translations: any[], targetLanguage: string, res: Response, translationOptimizer: any, startTime: number, cacheHitCount: number) {
+    console.log(`[Translation] Language ${targetLanguage} not supported by DeepL - returning original texts`);
+    
+    // Return original texts for unsupported languages
+    for (let i = 0; i < uncachedTexts.length; i++) {
+      const originalText = uncachedTexts[i];
+      const originalIndex = uncachedIndices[i];
       
-      // Process in smaller batches to avoid URL length limits
-      const batchSize = 5;
-      for (let i = 0; i < uncachedTexts.length; i += batchSize) {
-        const batch = uncachedTexts.slice(i, i + batchSize);
-        const batchText = batch.join('\n|||SEPARATOR|||\n');
-        
-        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(batchText)}`;
-        
-        const response = await fetch(googleUrl);
-        
-        if (response.ok) {
-          const data = await response.json();
-          let translatedBatch = batchText; // fallback
-          
-          if (data && data[0] && Array.isArray(data[0])) {
-            translatedBatch = data[0].map((item: any) => item[0]).join('');
-          }
-          
-          const translatedTexts = translatedBatch.split('\n|||SEPARATOR|||\n');
-          
-          batch.forEach((originalText, index) => {
-            const translatedText = translatedTexts[index] || originalText;
-            batchResults.push({
-              originalText,
-              translatedText,
-              detectedSourceLanguage: 'EN'
-            });
-          });
-        } else {
-          // Fallback for failed batch
-          batch.forEach(originalText => {
-            batchResults.push({
-              originalText,
-              translatedText: originalText,
-              detectedSourceLanguage: 'EN'
-            });
-          });
-        }
-        
-        // Small delay between batches
-        if (i + batchSize < uncachedTexts.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
+      translations[originalIndex] = {
+        originalText,
+        translatedText: originalText,
+        detectedSourceLanguage: 'EN'
+      };
       
-      // Map results back to original positions and cache them
-      for (let i = 0; i < uncachedTexts.length; i++) {
-        const originalText = uncachedTexts[i];
-        const originalIndex = uncachedIndices[i];
-        const result = batchResults[i];
-        
-        translations[originalIndex] = {
-          originalText,
-          translatedText: result.translatedText,
-          detectedSourceLanguage: result.detectedSourceLanguage
-        };
-
-        // Cache the result with optimizer
-        translationOptimizer.setCachedTranslation(originalText, targetLanguage, {
-          translatedText: result.translatedText,
-          detectedSourceLanguage: result.detectedSourceLanguage,
-          targetLanguage
-        }, 'instant');
-      }
-      
-      // Record performance metrics
-      translationOptimizer.recordRequest(startTime, false);
-      const totalTime = Date.now() - startTime;
-      console.log(`[Performance] Google Translate batch completed - ${uncachedTexts.length + cacheHitCount} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
-
-      return res.json({ translations });
-    } catch (error) {
-      console.error('Google Translate batch error:', error);
-      // Fallback to original texts
-      for (let i = 0; i < uncachedTexts.length; i++) {
-        const originalText = uncachedTexts[i];
-        const originalIndex = uncachedIndices[i];
-        
-        translations[originalIndex] = {
-          originalText,
-          translatedText: originalText,
-          detectedSourceLanguage: 'EN'
-        };
-      }
-      
-      return res.json({ translations });
+      // Cache the result with optimizer
+      translationOptimizer.setCachedTranslation(originalText, targetLanguage, {
+        translatedText: originalText,
+        detectedSourceLanguage: 'EN',
+        targetLanguage
+      }, 'instant');
     }
+    
+    // Record performance metrics
+    translationOptimizer.recordRequest(startTime, false);
+    const totalTime = Date.now() - startTime;
+    console.log(`[Performance] Unsupported language batch completed - ${uncachedTexts.length + cacheHitCount} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
+
+    return res.json({ translations });
   }
 
   // DeepL-only translation function - maintains data integrity
@@ -5943,10 +5879,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check if language requires Google Translate fallback (like Hindi)
-      if (googleTranslateLanguages.has(targetLanguage)) {
-        console.log(`[Translation] Using Google Translate for ${targetLanguage}`);
-        return await translateWithGoogle(text, targetLanguage, res, cacheKey);
+      // Check if language is supported by DeepL
+      if (!deeplSupportedLanguages.has(targetLanguage)) {
+        console.log(`[Translation] Language ${targetLanguage} not supported by DeepL - returning original text`);
+        return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
       }
 
       if (!process.env.DEEPL_API_KEY) {
@@ -5996,7 +5932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // If DeepL doesn't support the language (like Hindi), fallback to Google Translate
         if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
           console.log(`[Translation] DeepL doesn't support ${targetLanguage}, falling back to Google Translate`);
-          return await translateWithGoogle(text, targetLanguage, res, cacheKey);
+          return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
         }
         
         return res.status(response.status).json({ 
@@ -6182,7 +6118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // If language not supported, try Google Translate fallback for this batch
             if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
               console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage}, using Google Translate fallback`);
-              return await processBatchWithGoogleFallback(batch, targetLanguage);
+              return await handleUnsupportedLanguageBatch(batch, targetLanguage);
             }
           }
           
