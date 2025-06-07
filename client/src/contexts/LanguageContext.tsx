@@ -53,11 +53,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user's language preference from backend or localStorage
+  // Load user's language preference from localStorage immediately, then try backend
   useEffect(() => {
-    const loadLanguagePreference = async () => {
+    // Immediately load from localStorage (non-blocking)
+    const savedLanguage = localStorage.getItem('dedw3n-language');
+    if (savedLanguage) {
+      const language = supportedLanguages.find(lang => lang.code === savedLanguage);
+      if (language) {
+        setSelectedLanguage(language);
+      }
+    }
+    setIsLoading(false);
+
+    // Then try to sync with backend in background (non-blocking)
+    const syncWithBackend = async () => {
       try {
-        // First try to get from backend if user is logged in
         const response = await fetch('/api/user/language', {
           method: 'GET',
           credentials: 'include',
@@ -69,29 +79,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           const data = await response.json();
           const language = supportedLanguages.find(lang => lang.code === data.language);
-          if (language) {
+          if (language && language.code !== selectedLanguage.code) {
             setSelectedLanguage(language);
             localStorage.setItem('dedw3n-language', language.code);
-            setIsLoading(false);
-            return;
           }
         }
       } catch (error) {
-        console.log('User not authenticated, using local storage');
+        // Silently fail - we already have localStorage fallback
       }
-
-      // Fallback to localStorage
-      const savedLanguage = localStorage.getItem('dedw3n-language');
-      if (savedLanguage) {
-        const language = supportedLanguages.find(lang => lang.code === savedLanguage);
-        if (language) {
-          setSelectedLanguage(language);
-        }
-      }
-      setIsLoading(false);
     };
 
-    loadLanguagePreference();
+    // Run backend sync after a small delay to avoid blocking
+    setTimeout(syncWithBackend, 100);
   }, []);
 
   // Update user language preference in backend
