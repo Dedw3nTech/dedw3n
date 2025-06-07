@@ -51,13 +51,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 // Component for translating category names
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  const translatedName = useTranslatedText(categoryName);
+  const translatedName = useInstantTranslation(categoryName);
   return <span className="text-[12px] font-normal">{translatedName}</span>;
 };
 
 // Component for translating region names
 const RegionName = ({ regionName }: { regionName: string }) => {
-  const translatedName = useTranslatedText(regionName);
+  const translatedName = useInstantTranslation(regionName);
   return translatedName;
 };
 import { useToast } from '@/hooks/use-toast';
