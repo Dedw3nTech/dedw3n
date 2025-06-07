@@ -409,11 +409,11 @@ export default function AddProduct() {
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card>
           <CardHeader>
-            <CardTitle>Add Product</CardTitle>
-            <CardDescription>Please log in to add a product</CardDescription>
+            <CardTitle>{t("Add Product")}</CardTitle>
+            <CardDescription>{t("Please log in to add a product")}</CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button onClick={() => setLocation('/auth')}>Login</Button>
+            <Button onClick={() => setLocation('/auth')}>{t("Login")}</Button>
           </CardFooter>
         </Card>
       </div>
@@ -426,24 +426,24 @@ export default function AddProduct() {
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card>
           <CardHeader>
-            <CardTitle>Become a Vendor</CardTitle>
+            <CardTitle>{t("Become a Vendor")}</CardTitle>
             <CardDescription>
-              You need to create a vendor account before you can add products.
+              {t("You need to create a vendor account before you can add products.")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="mb-4">
-              As a vendor, you'll be able to:
+              {t("As a vendor, you'll be able to:")}
             </p>
             <ul className="list-disc pl-5 mb-4 space-y-1">
-              <li>List and sell your products on our marketplace</li>
-              <li>Manage your inventory and orders</li>
-              <li>Receive payments directly to your account</li>
-              <li>Build your brand and customer base</li>
+              <li>{t("List and sell your products on our marketplace")}</li>
+              <li>{t("Manage your inventory and orders")}</li>
+              <li>{t("Receive payments directly to your account")}</li>
+              <li>{t("Build your brand and customer base")}</li>
             </ul>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleCreateVendor}>Create Vendor Account</Button>
+            <Button onClick={handleCreateVendor}>{t("Create Vendor Account")}</Button>
           </CardFooter>
         </Card>
       </div>
@@ -462,7 +462,7 @@ export default function AddProduct() {
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="flex items-center gap-2 mb-6">
-        <h1 className="text-2xl font-bold">Add Product / Service</h1>
+        <h1 className="text-2xl font-bold">{t("Add Product / Service")}</h1>
       </div>
       
       {/* Offering Type Selection */}
@@ -473,7 +473,7 @@ export default function AddProduct() {
             name="offeringType"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel>What are you offering?</FormLabel>
+                <FormLabel>{t("What are you offering?")}</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -483,13 +483,13 @@ export default function AddProduct() {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="product" id="product" />
                       <label htmlFor="product" className="text-sm font-medium cursor-pointer">
-                        Product
+                        {t("Product")}
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="service" id="service" />
                       <label htmlFor="service" className="text-sm font-medium cursor-pointer">
-                        Service
+                        {t("Service")}
                       </label>
                     </div>
                   </RadioGroup>
@@ -509,7 +509,7 @@ export default function AddProduct() {
               {/* Product Title Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Title</CardTitle>
+                  <CardTitle>{t("Title")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -517,9 +517,9 @@ export default function AddProduct() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t("Title")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Short sleeve t-shirt" {...field} />
+                          <Input placeholder={t("Short sleeve t-shirt")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -530,10 +530,10 @@ export default function AddProduct() {
                     name="description"
                     render={({ field }) => (
                       <FormItem className="mt-4">
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>{t("Description")}</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Product description..." 
+                            placeholder={t("Product description...")} 
                             className="min-h-[120px]"
                             {...field} 
                           />
@@ -548,7 +548,7 @@ export default function AddProduct() {
               {/* Media Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Media</CardTitle>
+                  <CardTitle>{t("Media")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -556,9 +556,9 @@ export default function AddProduct() {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Image</FormLabel>
+                        <FormLabel>{t("Product Image")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                          <Input placeholder={t("https://example.com/image.jpg")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -570,7 +570,7 @@ export default function AddProduct() {
               {/* Pricing Section */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Pricing</CardTitle>
+                  <CardTitle>{t("Pricing")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -579,7 +579,7 @@ export default function AddProduct() {
                       name="price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Price</FormLabel>
+                          <FormLabel>{t("Price")}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -598,7 +598,7 @@ export default function AddProduct() {
                       name="discountPrice"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Compare-at price</FormLabel>
+                          <FormLabel>{t("Compare-at price")}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -625,9 +625,9 @@ export default function AddProduct() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Include shipping costs in price</FormLabel>
+                          <FormLabel className="text-base">{t("Include shipping costs in price")}</FormLabel>
                           <p className="text-sm text-muted-foreground">
-                            Choose whether shipping costs are included in the product price or calculated separately at checkout
+                            {t("Choose whether shipping costs are included in the product price or calculated separately at checkout")}
                           </p>
                         </div>
                         <FormControl>
@@ -646,7 +646,7 @@ export default function AddProduct() {
               {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Inventory</CardTitle>
+                  <CardTitle>{t("Inventory")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -655,9 +655,9 @@ export default function AddProduct() {
                       name="sku"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>SKU (Stock Keeping Unit)</FormLabel>
+                          <FormLabel>{t("SKU (Stock Keeping Unit)")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="SKU-001" {...field} />
+                            <Input placeholder={t("SKU-001")} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -668,9 +668,9 @@ export default function AddProduct() {
                       name="barcode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Barcode (ISBN, UPC, GTIN, etc.)</FormLabel>
+                          <FormLabel>{t("Barcode (ISBN, UPC, GTIN, etc.)")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="1234567890123" {...field} />
+                            <Input placeholder={t("1234567890123")} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -684,9 +684,9 @@ export default function AddProduct() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Track quantity</FormLabel>
+                          <FormLabel className="text-base">{t("Track quantity")}</FormLabel>
                           <p className="text-sm text-muted-foreground">
-                            Deduct stock as items are sold
+                            {t("Deduct stock as items are sold")}
                           </p>
                         </div>
                         <FormControl>
@@ -706,7 +706,7 @@ export default function AddProduct() {
                         name="inventory"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Quantity</FormLabel>
+                            <FormLabel>{t("Quantity")}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
@@ -726,7 +726,7 @@ export default function AddProduct() {
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base">Continue selling when out of stock</FormLabel>
+                              <FormLabel className="text-base">{t("Continue selling when out of stock")}</FormLabel>
                             </div>
                             <FormControl>
                               <Switch
@@ -747,7 +747,7 @@ export default function AddProduct() {
               {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Shipping</CardTitle>
+                  <CardTitle>{t("Shipping")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -756,7 +756,7 @@ export default function AddProduct() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">This is a physical product</FormLabel>
+                          <FormLabel className="text-base">{t("This is a physical product")}</FormLabel>
                         </div>
                         <FormControl>
                           <Switch
@@ -777,7 +777,7 @@ export default function AddProduct() {
                             name="weight"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Weight</FormLabel>
+                                <FormLabel>{t("Weight")}</FormLabel>
                                 <FormControl>
                                   <Input 
                                     type="number" 
@@ -797,7 +797,7 @@ export default function AddProduct() {
                             name="weightUnit"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Unit</FormLabel>
+                                <FormLabel>{t("Unit")}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
@@ -821,9 +821,9 @@ export default function AddProduct() {
                           name="dimensions"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Dimensions (L × W × H)</FormLabel>
+                              <FormLabel>{t("Dimensions (L × W × H)")}</FormLabel>
                               <FormControl>
-                                <Input placeholder="10 × 5 × 2 cm" {...field} />
+                                <Input placeholder={t("10 × 5 × 2 cm")} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -835,11 +835,11 @@ export default function AddProduct() {
                           name="shippingCarrier"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Shipping Carrier</FormLabel>
+                              <FormLabel>{t("Shipping Carrier")}</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select shipping carrier" />
+                                    <SelectValue placeholder={t("Select shipping carrier")} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -853,7 +853,7 @@ export default function AddProduct() {
                                   <SelectItem value="aramex">Aramex</SelectItem>
                                   <SelectItem value="tnt">TNT</SelectItem>
                                   <SelectItem value="gls">GLS</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
+                                  <SelectItem value="other">{t("Other")}</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -863,7 +863,7 @@ export default function AddProduct() {
                       
                       <Button type="button" variant="outline" className="w-full">
                         <Plus className="mr-2 h-4 w-4" />
-                        Add customs information
+                        {t("Add customs information")}
                       </Button>
                       </div>
                     </div>
