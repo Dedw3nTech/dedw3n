@@ -131,68 +131,62 @@ export default function Products() {
   const { translatedText: buyText } = useDeepLTranslation("Buy");
   const { translatedText: listedByText } = useDeepLTranslation("Listed by");
   
-  // Additional dialog and UI translations
-  const { translatedText: servicesText } = useLazyTranslation("Services", { priority: 'normal' });
-  const { translatedText: yourRegionText } = useLazyTranslation("Your Region", { priority: 'normal' });
-  const { translatedText: yourCountryText } = useLazyTranslation("Your Country", { priority: 'normal' });
-  const { translatedText: repostToCommunityText } = useLazyTranslation("Repost to Community Feed", { priority: 'normal' });
-  const { translatedText: addMessageText } = useLazyTranslation("Would you like to add a message with this product share?", { priority: 'normal' });
-  const { translatedText: addYourMessageText } = useLazyTranslation("Add your message (optional)", { priority: 'normal' });
-  const { translatedText: whatDoYouThinkText } = useLazyTranslation("What do you think about this product?", { priority: 'normal' });
-  const { translatedText: postWithoutTextButton } = useLazyTranslation("Post Without Text", { priority: 'normal' });
-  const { translatedText: postToFeedButton } = useLazyTranslation("Post to Feed", { priority: 'normal' });
-  const { translatedText: sendOfferTitle } = useLazyTranslation("Send Offer", { priority: 'normal' });
-  const { translatedText: sendPriceOfferText } = useLazyTranslation("Send a price offer to the product owner", { priority: 'normal' });
-  const { translatedText: listedText } = useLazyTranslation("Listed", { priority: 'normal' });
-  const { translatedText: yourOfferAmountText } = useLazyTranslation("Your Offer Amount", { priority: 'normal' });
-  const { translatedText: enterOfferAmountText } = useLazyTranslation("Enter your offer amount", { priority: 'normal' });
-  const { translatedText: messageOptionalText } = useLazyTranslation("Message (optional)", { priority: 'normal' });
-  const { translatedText: addMessageWithOfferText } = useLazyTranslation("Add a message with your offer...", { priority: 'normal' });
-  const { translatedText: sendOfferText } = useLazyTranslation("Send Offer", { priority: 'normal' });
-  const { translatedText: sendGiftTitle } = useLazyTranslation("Send Gift", { priority: 'normal' });
-  const { translatedText: sendProductAsGiftText } = useLazyTranslation("Send this product as a gift to someone special", { priority: 'normal' });
-  const { translatedText: byText } = useLazyTranslation("By", { priority: 'normal' });
-  const { translatedText: shareWithMemberText } = useLazyTranslation("Share with Member", { priority: 'normal' });
-  const { translatedText: sendViaMessageText } = useLazyTranslation("Send via Message", { priority: 'normal' });
-  
-  // Use lazy translation for filter elements (loaded on demand)
-  const { translatedText: searchForProductsText } = useLazyTranslation("Search for Products", { priority: 'normal' });
-  const { translatedText: searchWithinText } = useLazyTranslation("Search within", { priority: 'normal' });
-  const { translatedText: categoriesText } = useLazyTranslation("Categories", { priority: 'normal' });
-  const { translatedText: regionText } = useLazyTranslation("Region", { priority: 'normal' });
-  const { translatedText: resetFiltersText } = useLazyTranslation("Reset Filters", { priority: 'normal' });
-  const { translatedText: onSaleText } = useLazyTranslation("On Sale", { priority: 'normal' });
-  const { translatedText: newArrivalsText } = useLazyTranslation("New Arrivals", { priority: 'normal' });
-  
-  // Additional filter variables
-  const { translatedText: productOrServiceText } = useLazyTranslation("Product or Service", { priority: 'normal' });
-  const { translatedText: productFilterText } = useLazyTranslation("Product", { priority: 'normal' });
-  const { translatedText: serviceFilterText } = useLazyTranslation("Service", { priority: 'normal' });
-  const { translatedText: productStatusText } = useLazyTranslation("Product Status", { priority: 'normal' });
-  const { translatedText: friendOptionsText } = useLazyTranslation("Friend Options", { priority: 'normal' });
-  const { translatedText: friendsOnlyText } = useLazyTranslation("Friends only", { priority: 'normal' });
-  const { translatedText: localPickupText } = useLazyTranslation("Local pickup only", { priority: 'normal' });
-  const { translatedText: storeOptionsText } = useLazyTranslation("Store Options", { priority: 'normal' });
-  const { translatedText: verifiedStoresText } = useLazyTranslation("Verified stores only", { priority: 'normal' });
-  const { translatedText: freeShippingText } = useLazyTranslation("Free shipping", { priority: 'normal' });
-  const { translatedText: nextDayDeliveryText } = useLazyTranslation("Next day delivery", { priority: 'normal' });
-  const { translatedText: businessOptionsText } = useLazyTranslation("Business Options", { priority: 'normal' });
-  const { translatedText: volumeDiscountsText } = useLazyTranslation("Volume discounts", { priority: 'normal' });
-  const { translatedText: wholesaleOnlyText } = useLazyTranslation("Wholesale only", { priority: 'normal' });
-  const { translatedText: taxExemptText } = useLazyTranslation("Tax exempt eligible", { priority: 'normal' });
-  
-  // Additional product card variables
-  const { translatedText: friendText } = useLazyTranslation("Friend", { priority: 'normal' });
-  const { translatedText: vatText } = useLazyTranslation("VAT", { priority: 'normal' });
-  const { translatedText: volumeDiscountText } = useLazyTranslation("Volume discount", { priority: 'normal' });
-  const { translatedText: repostButtonText } = useLazyTranslation("Repost", { priority: 'normal' });
-  const { translatedText: sendOfferBtnText } = useLazyTranslation("Send Offer", { priority: 'normal' });
-  const { translatedText: removeFromFavoritesText } = useLazyTranslation("Remove from favorites", { priority: 'normal' });
-  const { translatedText: addToFavoritesText } = useLazyTranslation("Add to favorites", { priority: 'normal' });
-  const { translatedText: shareProductText } = useLazyTranslation("Share Product", { priority: 'normal' });
-  const { translatedText: shareViaEmailText } = useLazyTranslation("Share via Email", { priority: 'normal' });
-  const { translatedText: copyLinkText } = useLazyTranslation("Copy Link", { priority: 'normal' });
-  const { translatedText: shareOnFeedText } = useLazyTranslation("Share on Feed", { priority: 'normal' });
+  // Additional consolidated DeepL-only translations
+  const { translatedText: servicesText } = useDeepLTranslation("Services");
+  const { translatedText: yourRegionText } = useDeepLTranslation("Your Region");
+  const { translatedText: yourCountryText } = useDeepLTranslation("Your Country");
+  const { translatedText: repostToCommunityText } = useDeepLTranslation("Repost to Community Feed");
+  const { translatedText: addMessageText } = useDeepLTranslation("Would you like to add a message with this product share?");
+  const { translatedText: addYourMessageText } = useDeepLTranslation("Add your message (optional)");
+  const { translatedText: whatDoYouThinkText } = useDeepLTranslation("What do you think about this product?");
+  const { translatedText: postWithoutTextButton } = useDeepLTranslation("Post Without Text");
+  const { translatedText: postToFeedButton } = useDeepLTranslation("Post to Feed");
+  const { translatedText: sendOfferTitle } = useDeepLTranslation("Send Offer");
+  const { translatedText: sendPriceOfferText } = useDeepLTranslation("Send a price offer to the product owner");
+  const { translatedText: listedText } = useDeepLTranslation("Listed");
+  const { translatedText: yourOfferAmountText } = useDeepLTranslation("Your Offer Amount");
+  const { translatedText: enterOfferAmountText } = useDeepLTranslation("Enter your offer amount");
+  const { translatedText: messageOptionalText } = useDeepLTranslation("Message (optional)");
+  const { translatedText: addMessageWithOfferText } = useDeepLTranslation("Add a message with your offer...");
+  const { translatedText: sendOfferText } = useDeepLTranslation("Send Offer");
+  const { translatedText: sendGiftTitle } = useDeepLTranslation("Send Gift");
+  const { translatedText: sendProductAsGiftText } = useDeepLTranslation("Send this product as a gift to someone special");
+  const { translatedText: byText } = useDeepLTranslation("By");
+  const { translatedText: shareWithMemberText } = useDeepLTranslation("Share with Member");
+  const { translatedText: sendViaMessageText } = useDeepLTranslation("Send via Message");
+  const { translatedText: searchForProductsText } = useDeepLTranslation("Search for Products");
+  const { translatedText: searchWithinText } = useDeepLTranslation("Search within");
+  const { translatedText: categoriesText } = useDeepLTranslation("Categories");
+  const { translatedText: regionText } = useDeepLTranslation("Region");
+  const { translatedText: resetFiltersText } = useDeepLTranslation("Reset Filters");
+  const { translatedText: onSaleText } = useDeepLTranslation("On Sale");
+  const { translatedText: newArrivalsText } = useDeepLTranslation("New Arrivals");
+  const { translatedText: productOrServiceText } = useDeepLTranslation("Product or Service");
+  const { translatedText: productFilterText } = useDeepLTranslation("Product");
+  const { translatedText: serviceFilterText } = useDeepLTranslation("Service");
+  const { translatedText: productStatusText } = useDeepLTranslation("Product Status");
+  const { translatedText: friendOptionsText } = useDeepLTranslation("Friend Options");
+  const { translatedText: friendsOnlyText } = useDeepLTranslation("Friends only");
+  const { translatedText: localPickupText } = useDeepLTranslation("Local pickup only");
+  const { translatedText: storeOptionsText } = useDeepLTranslation("Store Options");
+  const { translatedText: verifiedStoresText } = useDeepLTranslation("Verified stores only");
+  const { translatedText: freeShippingText } = useDeepLTranslation("Free shipping");
+  const { translatedText: nextDayDeliveryText } = useDeepLTranslation("Next day delivery");
+  const { translatedText: businessOptionsText } = useDeepLTranslation("Business Options");
+  const { translatedText: volumeDiscountsText } = useDeepLTranslation("Volume discounts");
+  const { translatedText: wholesaleOnlyText } = useDeepLTranslation("Wholesale only");
+  const { translatedText: taxExemptText } = useDeepLTranslation("Tax exempt eligible");
+  const { translatedText: friendText } = useDeepLTranslation("Friend");
+  const { translatedText: vatText } = useDeepLTranslation("VAT");
+  const { translatedText: volumeDiscountText } = useDeepLTranslation("Volume discount");
+  const { translatedText: repostButtonText } = useDeepLTranslation("Repost");
+  const { translatedText: sendOfferBtnText } = useDeepLTranslation("Send Offer");
+  const { translatedText: removeFromFavoritesText } = useDeepLTranslation("Remove from favorites");
+  const { translatedText: addToFavoritesText } = useDeepLTranslation("Add to favorites");
+  const { translatedText: shareProductText } = useDeepLTranslation("Share Product");
+  const { translatedText: shareViaEmailText } = useDeepLTranslation("Share via Email");
+  const { translatedText: copyLinkText } = useDeepLTranslation("Copy Link");
+  const { translatedText: shareOnFeedText } = useDeepLTranslation("Share on Feed");
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);

@@ -31,14 +31,14 @@ function FooterContent() {
   // Extract individual translations from array
   const allRightsReservedText = translatedTexts[0] || "All rights reserved.";
   const privacyPolicyText = translatedTexts[1] || "Privacy Policy";
-  const termsOfServiceText = translatedTexts["Terms of Service"] || "Terms of Service";
-  const cookiePolicyText = translatedTexts["Cookie Policy"] || "Cookie Policy";
-  const communityGuidelinesText = translatedTexts["Community Guidelines"] || "Community Guidelines";
-  const contactUsText = translatedTexts["Contact Us"] || "Contact Us";
-  const faqText = translatedTexts["FAQ"] || "FAQ";
-  const shippingText = translatedTexts["Shipping"] || "Shipping";
-  const partnershipsText = translatedTexts["Partnerships"] || "Partnerships";
-  const downloadMobileAppText = translatedTexts["Download our mobile app"] || "Download our mobile app";
+  const termsOfServiceText = translatedTexts[2] || "Terms of Service";
+  const cookiePolicyText = translatedTexts[3] || "Cookie Policy";
+  const communityGuidelinesText = translatedTexts[4] || "Community Guidelines";
+  const contactUsText = translatedTexts[5] || "Contact Us";
+  const faqText = translatedTexts[6] || "FAQ";
+  const shippingText = translatedTexts[7] || "Shipping";
+  const partnershipsText = translatedTexts[8] || "Partnerships";
+  const downloadMobileAppText = translatedTexts[9] || "Download our mobile app";
   const downloadOnTheText = translatedTexts["Download on the"] || "Download on the";
   const appStoreText = translatedTexts["App Store"] || "App Store";
   const getItOnText = translatedTexts["Get it on"] || "Get it on";
