@@ -354,14 +354,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     switch (data.type) {
       case "authenticated":
       case "auth_success":
-        console.log("WebSocket authenticated successfully");
+        console.log("WebSocket authenticated successfully (legacy message)");
         setConnectionStatus('authenticated');
         setConnectionDetails(prev => ({
           ...prev,
           authenticated: true,
-          serverConnectionId: data.connectionId || data.userId,
-          tokenAuth: true,
-          serverTime: data.timestamp
+          serverConnectionId: data.data?.userId || data.userId || data.connectionId,
+          tokenAuth: data.data?.status === 'authenticated',
+          serverTime: data.data?.timestamp || data.timestamp
         }));
         break;
         
