@@ -367,17 +367,17 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>{translations["Vendor Dashboard"] || "Vendor Dashboard"}</CardTitle>
+            <CardTitle>{translations?.["Vendor Dashboard"] || "Vendor Dashboard"}</CardTitle>
             <CardDescription>
-              {translations["Please log in to access your vendor dashboard"] || "Please log in to access your vendor dashboard"}
+              {translations?.["Please log in to access your vendor dashboard"] || "Please log in to access your vendor dashboard"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              {translations["You need to be authenticated to access vendor features and manage your store."] || "You need to be authenticated to access vendor features and manage your store."}
+              {translations?.["You need to be authenticated to access vendor features and manage your store."] || "You need to be authenticated to access vendor features and manage your store."}
             </p>
             <Button onClick={() => setLocation('/')}>
-              {translations["Go to Login"] || "Go to Login"}
+              {translations?.["Go to Login"] || "Go to Login"}
             </Button>
           </CardContent>
         </Card>
@@ -424,12 +424,12 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>{translations["Loading Vendor Dashboard"] || "Loading Vendor Dashboard"}</CardTitle>
+            <CardTitle>{translations?.["Loading..."] || "Loading..."}</CardTitle>
           </CardHeader>
           <CardContent>
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">
-              {translations["Verifying your vendor access..."] || "Verifying your vendor access..."}
+              {translations?.["Loading..."] || "Loading..."}
             </p>
           </CardContent>
         </Card>
@@ -594,27 +594,27 @@ export default function VendorDashboard() {
         <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-black text-white">
           <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            {translations["Dashboard"] || "Dashboard"}
+            {translations?.["Dashboard"] || "Dashboard"}
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Package className="h-4 w-4 mr-2" />
-            {translations["Products"] || "Products"}
+            {translations?.["Products"] || "Products"}
           </TabsTrigger>
           <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Users className="h-4 w-4 mr-2" />
-            {translations["Customers"] || "Customers"}
+            {translations?.["Customers"] || "Customers"}
           </TabsTrigger>
           <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Truck className="h-4 w-4 mr-2" />
-            {translations["Shipping"] || "Shipping"}
+            {translations?.["Shipping"] || "Shipping"}
           </TabsTrigger>
           <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Megaphone className="h-4 w-4 mr-2" />
-            {translations["Marketing"] || "Marketing"}
+            {translations?.["Marketing"] || "Marketing"}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Settings className="h-4 w-4 mr-2" />
-            {translations["Settings"] || "Settings"}
+            {translations?.["Settings"] || "Settings"}
           </TabsTrigger>
 
         </TabsList>
@@ -626,7 +626,7 @@ export default function VendorDashboard() {
           <div className="mb-4">
             <div className="font-medium text-xl flex items-center">
               <Store className="mr-2 h-5 w-5" />
-              {vendor?.storeName || translations["Vendor Dashboard"] || "Vendor Dashboard"}
+              {vendor?.storeName || translations?.["Vendor Dashboard"] || "Vendor Dashboard"}
             </div>
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
