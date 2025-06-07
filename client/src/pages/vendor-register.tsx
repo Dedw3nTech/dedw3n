@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { useStableTranslation } from "@/hooks/use-stable-translation";
+import { useDeepLTranslation } from "@/hooks/use-deepl-translation";
 
 // Private Vendor Schema
 const privateVendorSchema = z.object({

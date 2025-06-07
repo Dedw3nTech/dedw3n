@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Star } from "lucide-react";
 import { VendorBadge } from "./VendorBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useStableTranslation } from "@/hooks/use-stable-translation";
+import { useDeepLTranslation } from "@/hooks/use-deepl-translation";
 
 interface BadgeProgressProps {
   currentLevel: BadgeLevel;

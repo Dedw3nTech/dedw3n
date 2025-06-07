@@ -54,13 +54,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 // Component for translating category names
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  const { translatedText } = useLazyTranslation(categoryName, { priority: 'normal' });
+  const { translatedText } = useDeepLTranslation(categoryName);
   return <span className="text-[12px] font-normal">{translatedText}</span>;
 };
 
 // Component for translating region names
 const RegionName = ({ regionName }: { regionName: string }) => {
-  const { translatedText } = useLazyTranslation(regionName, { priority: 'normal' });
+  const { translatedText } = useDeepLTranslation(regionName);
   return <span>{translatedText}</span>;
 };
 import { useToast } from '@/hooks/use-toast';
@@ -88,27 +88,22 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
-  // Preload critical translations for instant UI
-  useEffect(() => {
-    preloadCriticalTranslations(currentLanguage);
-  }, [currentLanguage]);
-
-  // Ultra-fast translation system for instant UI responses
-  const { translatedText: filterText } = useUltraFastTranslation("Filter", 'instant');
-  const { translatedText: filterProductsText } = useUltraFastTranslation("Filter Products", 'instant');
-  const { translatedText: narrowDownText } = useUltraFastTranslation("Narrow down products based on your preferences", 'fast');
-  const { translatedText: productText } = useUltraFastTranslation("product", 'instant');
-  const { translatedText: productsText } = useUltraFastTranslation("products", 'instant');
-  const { translatedText: productFoundText } = useUltraFastTranslation("found", 'instant');
-  const { translatedText: clearAllText } = useUltraFastTranslation("Clear All", 'instant');
-  const { translatedText: showText } = useUltraFastTranslation("Show", 'instant');
-  const { translatedText: sortByText } = useUltraFastTranslation("Sort by", 'instant');
-  const { translatedText: sortOptionsText } = useUltraFastTranslation("Sort Options", 'fast');
-  const { translatedText: trendingText } = useUltraFastTranslation("Trending", 'fast');
-  const { translatedText: priceLowHighText } = useUltraFastTranslation("Price: Low to High", 'fast');
-  const { translatedText: priceHighLowText } = useUltraFastTranslation("Price: High to Low", 'fast');
-  const { translatedText: newestProductText } = useUltraFastTranslation("Newest Product", 'fast');
-  const { translatedText: addToCartText } = useUltraFastTranslation("Add to Cart", 'instant');
+  // DeepL-only translation system
+  const { translatedText: filterText } = useDeepLTranslation("Filter");
+  const { translatedText: filterProductsText } = useDeepLTranslation("Filter Products");
+  const { translatedText: narrowDownText } = useDeepLTranslation("Narrow down products based on your preferences");
+  const { translatedText: productText } = useDeepLTranslation("product");
+  const { translatedText: productsText } = useDeepLTranslation("products");
+  const { translatedText: productFoundText } = useDeepLTranslation("found");
+  const { translatedText: clearAllText } = useDeepLTranslation("Clear All");
+  const { translatedText: showText } = useDeepLTranslation("Show");
+  const { translatedText: sortByText } = useDeepLTranslation("Sort by");
+  const { translatedText: sortOptionsText } = useDeepLTranslation("Sort Options");
+  const { translatedText: trendingText } = useDeepLTranslation("Trending");
+  const { translatedText: priceLowHighText } = useDeepLTranslation("Price: Low to High");
+  const { translatedText: priceHighLowText } = useDeepLTranslation("Price: High to Low");
+  const { translatedText: newestProductText } = useDeepLTranslation("Newest Product");
+  const { translatedText: addToCartText } = useDeepLTranslation("Add to Cart");
   // Consolidated DeepL-only translations
   const { translatedText: addToCartTooltipText } = useDeepLTranslation("Add to shopping cart");
   const { translatedText: shareOnFeedTooltipText } = useDeepLTranslation("Share on community feed");

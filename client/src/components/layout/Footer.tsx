@@ -39,10 +39,10 @@ function FooterContent() {
   const shippingText = translatedTexts[7] || "Shipping";
   const partnershipsText = translatedTexts[8] || "Partnerships";
   const downloadMobileAppText = translatedTexts[9] || "Download our mobile app";
-  const downloadOnTheText = translatedTexts["Download on the"] || "Download on the";
-  const appStoreText = translatedTexts["App Store"] || "App Store";
-  const getItOnText = translatedTexts["Get it on"] || "Get it on";
-  const googlePlayText = translatedTexts["Google Play"] || "Google Play";
+  const downloadOnTheText = translatedTexts[10] || "Download on the";
+  const appStoreText = translatedTexts[11] || "App Store";
+  const getItOnText = translatedTexts[12] || "Get it on";
+  const googlePlayText = translatedTexts[13] || "Google Play";
   const britishCompanyText = translatedTexts["is a British Company registered in England, Wales and Scotland under registration number"] || "is a British Company registered in England, Wales and Scotland under registration number";
   const registeredOfficeText = translatedTexts["whose registered office is situated"] || "whose registered office is situated";
   const bankRegisteredText = translatedTexts["Our bank is registered with HSBC UK IBAN"] || "Our bank is registered with HSBC UK IBAN";
