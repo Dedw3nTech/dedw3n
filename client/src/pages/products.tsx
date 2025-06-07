@@ -1402,11 +1402,11 @@ export default function Products() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="offer-amount" className="text-sm font-medium">Your Offer Amount</Label>
+              <Label htmlFor="offer-amount" className="text-sm font-medium">{yourOfferAmountText}</Label>
               <Input
                 id="offer-amount"
                 type="number"
-                placeholder="Enter your offer amount"
+                placeholder={enterOfferAmountText}
                 value={offerAmount}
                 onChange={(e) => setOfferAmount(e.target.value)}
                 className="mt-2"
@@ -1415,10 +1415,10 @@ export default function Products() {
               />
             </div>
             <div>
-              <Label htmlFor="offer-message" className="text-sm font-medium">Message (optional)</Label>
+              <Label htmlFor="offer-message" className="text-sm font-medium">{messageOptionalText}</Label>
               <Textarea
                 id="offer-message"
-                placeholder="Add a message with your offer..."
+                placeholder={addMessageWithOfferText}
                 value={offerMessage}
                 onChange={(e) => setOfferMessage(e.target.value)}
                 className="mt-2"
@@ -1433,7 +1433,7 @@ export default function Products() {
               onClick={() => setOfferDialogOpen(false)}
               disabled={sendOfferMutation.isPending}
             >
-              Cancel
+              {cancelText}
             </Button>
             <Button
               onClick={() => {
@@ -1451,10 +1451,10 @@ export default function Products() {
               {sendOfferMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  {sendingText}
                 </>
               ) : (
-                'Send Offer'
+                sendOfferText
               )}
             </Button>
           </DialogFooter>
@@ -1465,9 +1465,9 @@ export default function Products() {
       <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Send Gift</DialogTitle>
+            <DialogTitle>{sendGiftTitle}</DialogTitle>
             <DialogDescription>
-              Send this product as a gift to someone special
+              {sendProductAsGiftText}
             </DialogDescription>
           </DialogHeader>
           
@@ -1481,7 +1481,7 @@ export default function Products() {
                     {formatPrice(selectedGiftProduct.price)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    By {selectedGiftProduct.vendorName || 'Vendor'}
+                    {byText} {selectedGiftProduct.vendorName || 'Vendor'}
                   </p>
                 </div>
               </div>
@@ -1491,12 +1491,12 @@ export default function Products() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="gift-search" className="text-sm font-medium mb-2 block">
-                Search for recipient
+                {searchForRecipientText}
               </Label>
               <Input
                 id="gift-search"
                 type="text"
-                placeholder="Type name or username..."
+                placeholder={typeNameUsernameText}
                 value={giftSearchQuery}
                 onChange={(e) => setGiftSearchQuery(e.target.value)}
                 className="w-full"
@@ -1539,7 +1539,7 @@ export default function Products() {
             {giftSearchQuery.length >= 2 && !userSearchLoading && Array.isArray(userSearchResults) && userSearchResults.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No users found matching "{giftSearchQuery}"</p>
+                <p>{noUsersFoundText} "{giftSearchQuery}"</p>
               </div>
             )}
             
