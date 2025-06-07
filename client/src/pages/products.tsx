@@ -8,6 +8,8 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
 import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-translation';
+import { useUltraFastTranslation, preloadCriticalTranslations } from '@/hooks/use-ultra-fast-translation';
+import { useInstantPerformance } from '@/hooks/use-instant-performance';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
@@ -86,31 +88,43 @@ export default function Products() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
+  
+  // Initialize ultra-fast performance system
+  const { batchTranslation, smartPrefetch } = useInstantPerformance({
+    preloadCritical: true,
+    batchTranslations: true,
+    cacheStrategy: 'aggressive'
+  });
 
-  // Use lightweight lazy translation for critical UI elements
-  const { translatedText: filterText } = useLazyTranslation("Filter", { priority: 'critical' });
-  const { translatedText: filterProductsText } = useLazyTranslation("Filter Products", { priority: 'critical' });
-  const { translatedText: narrowDownText } = useLazyTranslation("Narrow down products based on your preferences", { priority: 'normal' });
-  const { translatedText: productText } = useLazyTranslation("product", { priority: 'critical' });
-  const { translatedText: productsText } = useLazyTranslation("products", { priority: 'critical' });
-  const { translatedText: productFoundText } = useLazyTranslation("found", { priority: 'critical' });
-  const { translatedText: clearAllText } = useLazyTranslation("Clear All", { priority: 'critical' });
-  const { translatedText: showText } = useLazyTranslation("Show", { priority: 'critical' });
-  const { translatedText: sortByText } = useLazyTranslation("Sort by", { priority: 'critical' });
-  const { translatedText: sortOptionsText } = useLazyTranslation("Sort Options", { priority: 'normal' });
-  const { translatedText: trendingText } = useLazyTranslation("Trending", { priority: 'normal' });
-  const { translatedText: priceLowHighText } = useLazyTranslation("Price: Low to High", { priority: 'normal' });
-  const { translatedText: priceHighLowText } = useLazyTranslation("Price: High to Low", { priority: 'normal' });
-  const { translatedText: newestProductText } = useLazyTranslation("Newest Product", { priority: 'normal' });
-  const { translatedText: addToCartText } = useLazyTranslation("Add to Cart", { priority: 'critical' });
-  const { translatedText: addToCartTooltipText } = useLazyTranslation("Add to shopping cart", { priority: 'critical' });
-  const { translatedText: shareOnFeedTooltipText } = useLazyTranslation("Share on community feed", { priority: 'normal' });
-  const { translatedText: makeOfferTooltipText } = useLazyTranslation("Make an offer", { priority: 'normal' });
-  const { translatedText: sendGiftTooltipText } = useLazyTranslation("Send as gift", { priority: 'normal' });
-  const { translatedText: addToProfileTooltipText } = useLazyTranslation("Add to profile", { priority: 'normal' });
-  const { translatedText: shareProductTooltipText } = useLazyTranslation("Share product", { priority: 'normal' });
-  const { translatedText: viewProductDetailsText } = useLazyTranslation("View product details", { priority: 'normal' });
-  const { translatedText: buyNowText } = useLazyTranslation("Buy Now", { priority: 'critical' });
+  // Preload critical translations for instant UI
+  useEffect(() => {
+    preloadCriticalTranslations(currentLanguage);
+  }, [currentLanguage]);
+
+  // Ultra-fast translation system for instant UI responses
+  const { translatedText: filterText } = useUltraFastTranslation("Filter", 'instant');
+  const { translatedText: filterProductsText } = useUltraFastTranslation("Filter Products", 'instant');
+  const { translatedText: narrowDownText } = useUltraFastTranslation("Narrow down products based on your preferences", 'fast');
+  const { translatedText: productText } = useUltraFastTranslation("product", 'instant');
+  const { translatedText: productsText } = useUltraFastTranslation("products", 'instant');
+  const { translatedText: productFoundText } = useUltraFastTranslation("found", 'instant');
+  const { translatedText: clearAllText } = useUltraFastTranslation("Clear All", 'instant');
+  const { translatedText: showText } = useUltraFastTranslation("Show", 'instant');
+  const { translatedText: sortByText } = useUltraFastTranslation("Sort by", 'instant');
+  const { translatedText: sortOptionsText } = useUltraFastTranslation("Sort Options", 'fast');
+  const { translatedText: trendingText } = useUltraFastTranslation("Trending", 'fast');
+  const { translatedText: priceLowHighText } = useUltraFastTranslation("Price: Low to High", 'fast');
+  const { translatedText: priceHighLowText } = useUltraFastTranslation("Price: High to Low", 'fast');
+  const { translatedText: newestProductText } = useUltraFastTranslation("Newest Product", 'fast');
+  const { translatedText: addToCartText } = useUltraFastTranslation("Add to Cart", 'instant');
+  const { translatedText: addToCartTooltipText } = useUltraFastTranslation("Add to shopping cart", 'instant');
+  const { translatedText: shareOnFeedTooltipText } = useUltraFastTranslation("Share on community feed", 'fast');
+  const { translatedText: makeOfferTooltipText } = useUltraFastTranslation("Make an offer", 'fast');
+  const { translatedText: sendGiftTooltipText } = useUltraFastTranslation("Send as gift", 'fast');
+  const { translatedText: addToProfileTooltipText } = useUltraFastTranslation("Add to profile", 'fast');
+  const { translatedText: shareProductTooltipText } = useUltraFastTranslation("Share product", 'fast');
+  const { translatedText: viewProductDetailsText } = useUltraFastTranslation("View product details", 'fast');
+  const { translatedText: buyNowText } = useUltraFastTranslation("Buy Now", 'instant');
   const { translatedText: shareText } = useLazyTranslation("Share", { priority: 'normal' });
   const { translatedText: viewProductText } = useLazyTranslation("View Product", { priority: 'normal' });
   
