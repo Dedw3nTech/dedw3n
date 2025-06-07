@@ -144,7 +144,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "Failed to create payment link"
   ];
   
-  const { translations } = useUnifiedTranslation(commissionTexts);
+  const { translations } = useUnifiedTranslation(commissionTexts, 'instant');
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],
