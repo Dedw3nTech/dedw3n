@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { Suspense } from "react";
-import App from "./App";
+import App from "./App.minimal";
 import "./index.css";
 import { Loader2 } from "lucide-react";
 
