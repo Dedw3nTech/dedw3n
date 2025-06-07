@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-optimized-translation';
+import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
