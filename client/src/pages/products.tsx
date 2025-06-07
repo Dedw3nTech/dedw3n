@@ -794,7 +794,9 @@ export default function Products() {
 
           </div>
           
-          <div className="text-sm text-gray-500">{product.category}</div>
+          <div className="text-sm text-gray-500">
+            <CategoryName categoryName={product.category} />
+          </div>
           
           {/* Additional info based on market type */}
           {marketType === 'b2b' && (
