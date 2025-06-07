@@ -188,10 +188,7 @@ export function InstantImageAd({
 
         </div>
 
-        {/* Advertisement label */}
-        <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-          Ad
-        </div>
+
       </div>
     </Card>
   );
