@@ -130,16 +130,22 @@ class GlobalTranslationManager {
 
       console.log(`[Global Translation] Translating ${textsToTranslate.length} new texts`);
 
-      // Split into chunks of 50 for optimal API performance
-      const chunkSize = 50;
+      // Split into smaller chunks to avoid rate limits
+      const chunkSize = 20;
       const chunks = [];
       for (let i = 0; i < textsToTranslate.length; i += chunkSize) {
         chunks.push(textsToTranslate.slice(i, i + chunkSize));
       }
 
-      // Process all chunks in parallel for maximum speed
-      const chunkPromises = chunks.map(async (chunk, index) => {
+      // Process chunks sequentially to avoid rate limits
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
         try {
+          // Add delay between requests to avoid rate limiting
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+          
           const response = await fetch('/api/translate/batch', {
             method: 'POST',
             headers: {
@@ -149,12 +155,12 @@ class GlobalTranslationManager {
             body: JSON.stringify({
               texts: chunk,
               targetLanguage: targetLanguage,
-              priority: 'high'
+              priority: 'low' // Lower priority to avoid overwhelming the API
             }),
           });
 
           if (!response.ok) {
-            throw new Error(`Translation failed for chunk ${index + 1}`);
+            throw new Error(`Translation failed for chunk ${i + 1}`);
           }
 
           const data = await response.json();
@@ -165,13 +171,11 @@ class GlobalTranslationManager {
             globalTranslationCache.set(cacheKey, translation.translatedText);
           });
 
-          console.log(`[Global Translation] Completed chunk ${index + 1}/${chunks.length}`);
+          console.log(`[Global Translation] Completed chunk ${i + 1}/${chunks.length}`);
         } catch (error) {
-          console.error(`[Global Translation] Error in chunk ${index + 1}:`, error);
+          console.error(`[Global Translation] Error in chunk ${i + 1}:`, error);
         }
-      });
-
-      await Promise.all(chunkPromises);
+      }
       console.log(`[Global Translation] Website translation completed for ${targetLanguage}`);
 
     } catch (error) {

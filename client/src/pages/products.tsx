@@ -7,6 +7,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
+import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
@@ -52,16 +53,14 @@ import { Textarea } from '@/components/ui/textarea';
 
 // Component for translating category names
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  const { currentLanguage } = useLanguage();
-  const translatedName = useInstantTranslation(categoryName);
-  return <span className="text-[12px] font-normal" key={`category-${categoryName}-${currentLanguage}`}>{translatedName}</span>;
+  const { translatedText } = useLazyTranslation(categoryName, { priority: 'normal' });
+  return <span className="text-[12px] font-normal">{translatedText}</span>;
 };
 
 // Component for translating region names
 const RegionName = ({ regionName }: { regionName: string }) => {
-  const { currentLanguage } = useLanguage();
-  const translatedName = useInstantTranslation(regionName);
-  return <span key={`region-${regionName}-${currentLanguage}`}>{translatedName}</span>;
+  const { translatedText } = useLazyTranslation(regionName, { priority: 'normal' });
+  return <span>{translatedText}</span>;
 };
 import { useToast } from '@/hooks/use-toast';
 
