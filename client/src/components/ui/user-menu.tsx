@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
