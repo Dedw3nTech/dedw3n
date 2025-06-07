@@ -8,7 +8,7 @@ const wsClients = new Map<number, WebSocket>();
 let wss: WebSocketServer;
 
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'auth' | 'authenticate';
+  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'auth' | 'authenticate' | 'ping' | 'pong';
   data?: any;
   userId?: number;
   targetUserId?: number;
@@ -31,12 +31,7 @@ export function setupWebSocket(server: Server) {
     perMessageDeflate: false,
     clientTracking: true,
     maxPayload: 16 * 1024, // 16KB max payload
-    skipUTF8Validation: false,
-    // Add connection timeout to prevent hanging connections
-    handshakeTimeout: 10000, // 10 seconds
-    // Enable automatic pong response to ping frames
-    ping: true,
-    pong: true
+    skipUTF8Validation: false
   });
 
   wss.on('connection', async (ws, req) => {
@@ -44,6 +39,28 @@ export function setupWebSocket(server: Server) {
     
     let userId: number | null = null;
     let isAuthenticated = false;
+    let pingInterval: NodeJS.Timeout | null = null;
+
+    // Heartbeat mechanism to prevent connection drops
+    const startHeartbeat = () => {
+      if (pingInterval) clearInterval(pingInterval);
+      
+      pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.ping(); // Send native WebSocket ping
+          console.log(`[WebSocket] Sent ping to user ${userId}`);
+        } else {
+          clearInterval(pingInterval!);
+        }
+      }, 30000); // Ping every 30 seconds
+    };
+
+    const stopHeartbeat = () => {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+      }
+    };
 
     // Authentication handler
     const authenticate = async (token: string) => {
@@ -55,6 +72,9 @@ export function setupWebSocket(server: Server) {
           wsClients.set(userId, ws);
           
           console.log(`[WebSocket] User ${userId} authenticated and connected`);
+          
+          // Start ping/pong heartbeat to prevent connection drops
+          startHeartbeat();
           
           // Send connection success with persistent status
           ws.send(JSON.stringify({
@@ -102,6 +122,9 @@ export function setupWebSocket(server: Server) {
             wsClients.set(userId, ws);
             
             console.log(`[WebSocket] User ${userId} authenticated via session`);
+            
+            // Start ping/pong heartbeat to prevent connection drops
+            startHeartbeat();
             
             // Send connection success immediately
             ws.send(JSON.stringify({
@@ -195,9 +218,16 @@ export function setupWebSocket(server: Server) {
           case 'read_receipt':
             handleReadReceipt(message, userId);
             break;
-          case 'authenticate':
-          case 'auth':
-            // Authentication already handled above, just acknowledge
+          case 'ping':
+            // Respond to ping with pong to maintain connection
+            ws.send(JSON.stringify({
+              type: 'pong',
+              timestamp: new Date().toISOString()
+            }));
+            break;
+          case 'pong':
+            // Client responded to our ping, connection is alive
+            console.log(`[WebSocket] Received pong from user ${userId}`);
             break;
           default:
             console.log(`[WebSocket] Unknown message type: ${message.type}`);
@@ -218,9 +248,29 @@ export function setupWebSocket(server: Server) {
       }
     });
 
-    // Handle connection close
+    // Handle connection close with detailed logging
     ws.on('close', (code, reason) => {
-      console.log(`[WebSocket] Connection closed for user ${userId}:`, code, reason.toString());
+      const reasonText = reason.toString();
+      console.log(`[WebSocket] Connection closed for user ${userId}: code=${code}, reason=${reasonText || 'none'}`);
+      
+      // Log different close codes for debugging
+      switch (code) {
+        case 1000:
+          console.log(`[WebSocket] Normal closure for user ${userId}`);
+          break;
+        case 1001:
+          console.log(`[WebSocket] Client going away (tab closed/navigation) for user ${userId}`);
+          break;
+        case 1006:
+          console.log(`[WebSocket] Abnormal closure (connection lost) for user ${userId}`);
+          break;
+        case 1011:
+          console.log(`[WebSocket] Server error caused closure for user ${userId}`);
+          break;
+        default:
+          console.log(`[WebSocket] Unexpected close code ${code} for user ${userId}`);
+      }
+      
       if (userId) {
         wsClients.delete(userId);
       }
