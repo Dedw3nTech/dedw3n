@@ -6,7 +6,7 @@ import { useInstantImageLoading, preloadCriticalImages } from "@/hooks/use-insta
 import campaignVideo from "@assets/Cafe.mp4";
 import newCafeVideo from "@assets/Cafe_1749111451530.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
-import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
+import motivationalVideo from "@assets/Phone finger _1749111831409.mp4";
 import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
 import newPhoneFingerVideo from "@assets/Phone finger _1749112701077.mp4";
 

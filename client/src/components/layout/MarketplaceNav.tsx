@@ -114,7 +114,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               onClick={() => handleMarketNavigation("b2b")}
             >
               <div className="mb-2 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
                 <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'b2b' 
                     ? 'text-black' 
