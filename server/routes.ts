@@ -40,6 +40,7 @@ import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
+import TranslationOptimizer from "./translation-optimizer";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -5937,28 +5938,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Map language codes to DeepL format
       const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
       
-      // Optimize batch size based on priority and text count
+      // Advanced batch optimization based on text characteristics and priority
       let batchSize = 10; // DeepL standard limit
-      if (priority === 'high' && uncachedTexts.length > 50) {
-        batchSize = 20; // Larger batches for website-wide translation
+      let parallelBatches = 1; // Number of concurrent batch requests
+      
+      if (priority === 'high') {
+        // High-priority batches: Optimize for speed with parallel processing
+        if (uncachedTexts.length > 100) {
+          batchSize = 25; // Maximum safe batch size for DeepL Pro
+          parallelBatches = 3; // Process 3 batches simultaneously
+        } else if (uncachedTexts.length > 50) {
+          batchSize = 20;
+          parallelBatches = 2;
+        } else {
+          batchSize = 15;
+          parallelBatches = 2;
+        }
       }
+      
+      // Smart batching: Group similar-length texts together for optimal processing
+      const sortedTexts = uncachedTexts
+        .map((text, index) => ({ text, originalIndex: uncachedIndices[index], length: text.length }))
+        .sort((a, b) => a.length - b.length);
       
       const batches = [];
-      for (let i = 0; i < uncachedTexts.length; i += batchSize) {
-        batches.push(uncachedTexts.slice(i, i + batchSize));
+      for (let i = 0; i < sortedTexts.length; i += batchSize) {
+        batches.push(sortedTexts.slice(i, i + batchSize));
       }
 
-      console.log(`[Batch Translation] Processing ${batches.length} batches of size ${batchSize}`);
+      console.log(`[Batch Translation] Processing ${batches.length} batches (size: ${batchSize}, parallel: ${parallelBatches})`);
 
-      let batchResults = [];
-      
-      for (const batch of batches) {
+      // Parallel processing function for high-performance translation
+      const processBatchParallel = async (batch, batchIndex) => {
         try {
           const formData = new URLSearchParams();
-          batch.forEach(text => formData.append('text', text));
+          batch.forEach(item => formData.append('text', item.text));
           formData.append('target_lang', deeplTargetLang);
           formData.append('source_lang', 'EN');
 
+          const startTime = Date.now();
           const response = await fetch('https://api-free.deepl.com/v2/translate', {
             method: 'POST',
             headers: {
@@ -5968,52 +5986,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
             body: formData,
           });
 
+          const processingTime = Date.now() - startTime;
+          console.log(`[Batch ${batchIndex + 1}] Processed ${batch.length} texts in ${processingTime}ms`);
+
           if (response.ok) {
             const data = await response.json();
             if (data.translations && data.translations.length > 0) {
-              batchResults = batchResults.concat(data.translations);
-            } else {
-              // Fallback for this batch
-              batch.forEach(text => {
-                batchResults.push({
-                  text: text,
-                  detected_source_language: 'EN'
-                });
-              });
+              return data.translations.map((translation, index) => ({
+                ...translation,
+                originalIndex: batch[index].originalIndex
+              }));
             }
-          } else {
-            // Fallback for this batch on error
-            batch.forEach(text => {
-              batchResults.push({
-                text: text,
-                detected_source_language: 'EN'
-              });
-            });
+          }
+          
+          // Fallback for this batch
+          return batch.map(item => ({
+            text: item.text,
+            detected_source_language: 'EN',
+            originalIndex: item.originalIndex
+          }));
+        } catch (error) {
+          console.error(`[Batch ${batchIndex + 1}] Translation error:`, error);
+          return batch.map(item => ({
+            text: item.text,
+            detected_source_language: 'EN',
+            originalIndex: item.originalIndex
+          }));
+        }
+      };
+
+      // Process batches in parallel chunks for maximum speed
+      const batchResults = [];
+      const overallStartTime = Date.now();
+      
+      for (let i = 0; i < batches.length; i += parallelBatches) {
+        const parallelChunk = batches.slice(i, i + parallelBatches);
+        const chunkPromises = parallelChunk.map((batch, index) => 
+          processBatchParallel(batch, i + index)
+        );
+        
+        try {
+          const chunkResults = await Promise.all(chunkPromises);
+          chunkResults.forEach(result => {
+            batchResults.push(...result);
+          });
+          
+          // Micro-delay between parallel chunks to respect API limits
+          if (i + parallelBatches < batches.length) {
+            await new Promise(resolve => setTimeout(resolve, 50));
           }
         } catch (error) {
-          // Fallback for this batch on error
-          batch.forEach(text => {
-            batchResults.push({
-              text: text,
-              detected_source_language: 'EN'
-            });
-          });
-        }
-
-        // Small delay between batches to respect rate limits
-        if (batches.length > 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          console.error('Parallel processing error:', error);
+          // Process sequentially as fallback
+          for (const batch of parallelChunk) {
+            const result = await processBatchParallel(batch, 0);
+            batchResults.push(...result);
+          }
         }
       }
 
+      const totalProcessingTime = Date.now() - overallStartTime;
+      console.log(`[Batch Translation] Completed ${uncachedTexts.length} translations in ${totalProcessingTime}ms`);
+
       // Map results back to original positions and cache them
+      const resultMap = new Map();
+      batchResults.forEach(result => {
+        if (result.originalIndex !== undefined) {
+          resultMap.set(result.originalIndex, result);
+        }
+      });
+
       for (let i = 0; i < uncachedTexts.length; i++) {
         const originalText = uncachedTexts[i];
-        const translationResult = batchResults[i];
-        const translatedText = translationResult ? translationResult.text : originalText;
-        const detectedLang = translationResult ? translationResult.detected_source_language : 'EN';
-        
         const originalIndex = uncachedIndices[i];
+        const translationResult = resultMap.get(originalIndex) || 
+          batchResults.find(r => r.text === originalText || r.originalText === originalText);
+        
+        const translatedText = translationResult ? 
+          (translationResult.text || translationResult.translatedText || originalText) : originalText;
+        const detectedLang = translationResult ? 
+          (translationResult.detected_source_language || translationResult.detectedSourceLanguage || 'EN') : 'EN';
+        
         translations[originalIndex] = {
           originalText,
           translatedText,
