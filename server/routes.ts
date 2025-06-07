@@ -5888,8 +5888,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Smart API key management with automatic fallback
       const apiKeys = [
         process.env.DEEPL_API_KEY,
-        process.env.DEEPL_API_KEY_BACKUP
+        process.env.DEEPL_API_KEY_BACKUP,
+        process.env.DEEPL_API_KEY_PREMIUM
       ].filter(key => key); // Remove null/undefined keys
+
+      console.log(`[API Key Debug] Found ${apiKeys.length} API keys available`);
+      apiKeys.forEach((key, index) => {
+        const keyType = key?.includes(':fx') ? 'Free' : 'Pro';
+        const keyPreview = key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'undefined';
+        console.log(`[API Key Debug] Key ${index + 1}: ${keyType} (${keyPreview})`);
+      });
 
       if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
@@ -6069,7 +6077,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Smart API key management with automatic fallback
       const apiKeys = [
         process.env.DEEPL_API_KEY,
-        process.env.DEEPL_API_KEY_BACKUP
+        process.env.DEEPL_API_KEY_BACKUP,
+        process.env.DEEPL_API_KEY_PREMIUM
       ].filter(key => key); // Remove null/undefined keys
 
       if (apiKeys.length === 0) {
