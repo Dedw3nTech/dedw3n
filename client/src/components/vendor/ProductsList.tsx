@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Edit, Eye, MoreHorizontal, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import {
   Table,
   TableBody,
@@ -31,6 +32,30 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const { formatPriceFromGBP } = useCurrency();
+
+  // Define all translatable texts
+  const productTexts = useMemo(() => [
+    "Search products...",
+    "No products yet", 
+    "Start adding products to your store",
+    "Product",
+    "Category", 
+    "Price",
+    "Inventory",
+    "Status",
+    "Actions",
+    "New",
+    "Sale", 
+    "Out of Stock",
+    "Active",
+    "View",
+    "Edit",
+    "No image",
+    "Open menu"
+  ], []);
+
+  // Get translations
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(productTexts, 'high');
 
   // Fetch vendor products
   const { data: products, isLoading } = useQuery({
@@ -94,7 +119,7 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search products..."
+            placeholder={translatedTexts["Search products..."] || "Search products..."}
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -105,9 +130,9 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
 
       {!products || products.length === 0 ? (
         <div className="text-center py-10 border rounded-md">
-          <h3 className="text-lg font-medium">No products yet</h3>
+          <h3 className="text-lg font-medium">{translatedTexts["No products yet"] || "No products yet"}</h3>
           <p className="text-muted-foreground mt-2 mb-4">
-            Start adding products to your store
+            {translatedTexts["Start adding products to your store"] || "Start adding products to your store"}
           </p>
         </div>
       ) : (
@@ -115,12 +140,12 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Inventory</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{translatedTexts["Product"] || "Product"}</TableHead>
+                <TableHead>{translatedTexts["Category"] || "Category"}</TableHead>
+                <TableHead>{translatedTexts["Price"] || "Price"}</TableHead>
+                <TableHead>{translatedTexts["Inventory"] || "Inventory"}</TableHead>
+                <TableHead>{translatedTexts["Status"] || "Status"}</TableHead>
+                <TableHead className="text-right">{translatedTexts["Actions"] || "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -137,7 +162,7 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center bg-gray-100">
-                            <div className="text-muted-foreground text-xs">No image</div>
+                            <div className="text-muted-foreground text-xs">{translatedTexts["No image"] || "No image"}</div>
                           </div>
                         )}
                       </div>
@@ -161,16 +186,16 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {product.isNew && (
-                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">New</Badge>
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">{translatedTexts["New"] || "New"}</Badge>
                       )}
                       {product.isOnSale && (
-                        <Badge variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100">Sale</Badge>
+                        <Badge variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100">{translatedTexts["Sale"] || "Sale"}</Badge>
                       )}
                       {product.inventory <= 0 && (
-                        <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100">Out of Stock</Badge>
+                        <Badge variant="secondary" className="bg-red-50 text-red-700 hover:bg-red-100">{translatedTexts["Out of Stock"] || "Out of Stock"}</Badge>
                       )}
                       {!product.isNew && !product.isOnSale && product.inventory > 0 && (
-                        <Badge variant="secondary" className="bg-gray-50 text-gray-700 hover:bg-gray-100">Active</Badge>
+                        <Badge variant="secondary" className="bg-gray-50 text-gray-700 hover:bg-gray-100">{translatedTexts["Active"] || "Active"}</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -179,19 +204,19 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
                           <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
+                          <span className="sr-only">{translatedTexts["Open menu"] || "Open menu"}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>{translatedTexts["Actions"] || "Actions"}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleViewProduct(product.id)}>
                           <Eye className="mr-2 h-4 w-4" />
-                          View
+                          {translatedTexts["View"] || "View"}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditProduct(product.id)}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Edit
+                          {translatedTexts["Edit"] || "Edit"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
