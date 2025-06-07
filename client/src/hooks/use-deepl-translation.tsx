@@ -15,8 +15,11 @@ class DeepLTranslationManager {
   private static instance: DeepLTranslationManager;
   private batchQueue = new Map<string, BatchRequest[]>(); // language -> requests
   private processingLanguages = new Set<string>();
-  private readonly BATCH_SIZE = 10;
-  private readonly BATCH_DELAY = 100; // ms
+  private activeBatches = 0; // Track concurrent batches
+  private lastBatchTime = 0; // Rate limiting
+  private readonly BATCH_SIZE = 8; // Reduced for quota efficiency
+  private readonly BATCH_DELAY = 200; // Increased delay to prevent rate limiting
+  private readonly MAX_CONCURRENT_BATCHES = 2; // Limit concurrent requests
 
   static getInstance(): DeepLTranslationManager {
     if (!DeepLTranslationManager.instance) {
@@ -49,7 +52,7 @@ class DeepLTranslationManager {
         timestamp: Date.now()
       });
 
-      // Schedule batch processing
+      // Schedule batch processing with throttling
       this.scheduleBatchProcessing(targetLanguage);
     });
   }
