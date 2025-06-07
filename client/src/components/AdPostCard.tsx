@@ -23,20 +23,20 @@ export function AdPostCard() {
         {/* Advertisement Content */}
         <div className="cursor-pointer" onClick={() => window.open('https://www.dedw3n.com', '_blank')}>
           <div className="mb-3">
-            <LazyImage 
+            <InstantImage 
               src={campaignImage}
-              alt="Dedw3n - Buy, Sell, Socialize, Love"
+              alt="Special Campaign - Limited Time Offer"
               className="w-full h-48 object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-              placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkFkdmVydGlzZW1lbnQgLSBMb2FkaW5nLi4uPC90ZXh0Pjwvc3ZnPg=="
+              priority="instant"
             />
           </div>
           
           <div className="space-y-2">
             <h3 className="font-bold text-lg text-gray-900">
-              Join Dedw3n - Your Ultimate Social Marketplace
+              🎉 Special Launch Offer
             </h3>
             <p className="text-gray-600 text-sm">
-              Buy, sell, socialize, and find love all in one platform. Experience the future of social commerce with exclusive deals and community connections.
+              Get 50% OFF on all premium products. Limited time exclusive deal - don't miss out on this incredible offer!
             </p>
             
             <div className="flex items-center gap-2 pt-2">

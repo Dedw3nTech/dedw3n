@@ -15,38 +15,10 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
+import { preloadAllAdvertisements, ZeroLoadingAd } from "@/components/ads/ZeroLoadingAd";
 import { useEffect, useState } from "react";
-// Import promotional images directly for reliable loading
-import b2cHeaderPromo from "@assets/Dedw3n Business B2C Header (1).png";
-import b2cFooterPromo from "@assets/Dedw3n Business B2C Footer.png";
-import b2bHeaderPromo from "@assets/Dedw3n Business B2B Header.png";
-import b2bFooterPromo from "@assets/Dedw3n Business B2B Footer.png";
-import c2cHeaderPromo from "@assets/Dedw3n Business C2c header (1).png";
-import c2cFooterPromo from "@assets/Dedw3n Business C2C Footer.png";
-import datingHeaderPromo from "@assets/_Dedw3n Dating Header (1).png";
-import datingFooterPromo from "@assets/Copy of Dedw3n comm Footer (1).png";
 
-// Promotional images configuration
-const marketPromoImages = {
-  b2c: {
-    top: b2cHeaderPromo,
-    bottom: b2cFooterPromo,
-  },
-  b2b: {
-    top: b2bHeaderPromo,
-    bottom: b2bFooterPromo,
-  },
-  c2c: {
-    top: c2cHeaderPromo,
-    bottom: c2cFooterPromo,
-  },
-};
-
-// Dating-specific promotional images
-const datingPromoImages = {
-  header: datingHeaderPromo,
-  footer: datingFooterPromo,
-};
+// Initialize advertisement preloader on app startup
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -329,13 +301,16 @@ function App() {
   // Force refresh state to update all components when language changes
   const [forceRefresh, setForceRefresh] = useState(0);
   
-  // Initialize offline detection and language
+  // Initialize offline detection, language, and advertisement preloader
   useEffect(() => {
     // Initialize offline detection
     initializeOfflineDetection();
     
     // Initialize language based on user location
     initializeLanguageFromLocation();
+    
+    // Initialize advertisement preloader for instant loading
+    preloadAllAdvertisements();
     
     // Listen for language changes and force refresh
     const handleLanguageChange = () => {
