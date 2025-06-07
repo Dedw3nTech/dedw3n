@@ -5866,8 +5866,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize translation optimizer
+  const translationOptimizer = TranslationOptimizer.getInstance();
+
   // Enhanced batch translation API for website-wide high-performance translation
   app.post('/api/translate/batch', async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    
     try {
       const { texts, targetLanguage, priority = 'normal' } = req.body;
 
@@ -5875,27 +5880,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Texts array and target language are required' });
       }
 
-      console.log(`[Batch Translation] Processing ${texts.length} texts for ${targetLanguage} (priority: ${priority})`);
+      console.log(`[High-Performance Translation] Processing ${texts.length} texts for ${targetLanguage} (priority: ${priority})`);
 
       // Skip translation if target language is English
       if (targetLanguage === 'EN' || targetLanguage === 'EN-US' || targetLanguage === 'en') {
-        return res.json({ 
-          translations: texts.map(text => ({
-            originalText: text,
-            translatedText: text,
-            detectedSourceLanguage: 'EN'
-          }))
-        });
+        const result = texts.map(text => ({
+          originalText: text,
+          translatedText: text,
+          detectedSourceLanguage: 'EN'
+        }));
+        translationOptimizer.recordRequest(startTime, true);
+        return res.json({ translations: result });
       }
 
       const translations = [];
       const uncachedTexts = [];
       const uncachedIndices = [];
+      let cacheHitCount = 0;
 
-      // Check cache for each text
+      // Advanced cache checking with optimizer
       for (let i = 0; i < texts.length; i++) {
         const text = texts[i];
-        if (!text || !text.trim()) {
+        if (!text || !text.trim() || text.length < 2) {
           translations[i] = {
             originalText: text,
             translatedText: text,
@@ -5904,23 +5910,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
 
-        const cacheKey = `${text}:${targetLanguage}`;
-        const cached = translationCache.get(cacheKey);
+        const cached = translationOptimizer.getCachedTranslation(text, targetLanguage, priority);
         
-        if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        if (cached) {
           translations[i] = {
             originalText: text,
             translatedText: cached.translatedText,
             detectedSourceLanguage: cached.detectedSourceLanguage
           };
+          cacheHitCount++;
         } else {
           uncachedTexts.push(text);
           uncachedIndices.push(i);
         }
       }
 
-      // If all texts are cached, return immediately
+      // If all texts are cached, return immediately with performance tracking
       if (uncachedTexts.length === 0) {
+        translationOptimizer.recordRequest(startTime, true);
+        console.log(`[Performance] 100% cache hit - ${texts.length} texts translated in ${Date.now() - startTime}ms`);
         return res.json({ translations });
       }
 
@@ -6073,15 +6081,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           detectedSourceLanguage: detectedLang
         };
 
-        // Cache the result
-        const cacheKey = `${originalText}:${targetLanguage}`;
-        translationCache.set(cacheKey, {
+        // Cache the result with optimizer
+        translationOptimizer.setCachedTranslation(originalText, targetLanguage, {
           translatedText,
           detectedSourceLanguage: detectedLang,
-          targetLanguage,
-          timestamp: Date.now()
-        });
+          targetLanguage
+        }, priority);
       }
+
+      // Record performance metrics
+      translationOptimizer.recordRequest(startTime, false);
+      const totalTime = Date.now() - startTime;
+      console.log(`[Performance] Batch translation completed - ${texts.length} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
 
       res.json({ translations });
     } catch (error) {
@@ -6094,6 +6105,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           detectedSourceLanguage: 'EN'
         }))
       });
+    }
+  });
+
+  // Performance monitoring endpoint for translation optimization
+  app.get('/api/translate/performance', (req: Request, res: Response) => {
+    try {
+      const stats = translationOptimizer.getPerformanceStats();
+      res.json({
+        performance: stats,
+        message: `Translation system achieving ${stats.sub1SecondRate}% sub-1-second performance with ${stats.cacheHitRate}% cache hit rate`
+      });
+    } catch (error) {
+      console.error('Performance stats error:', error);
+      res.status(500).json({ message: 'Error retrieving performance statistics' });
     }
   });
 
