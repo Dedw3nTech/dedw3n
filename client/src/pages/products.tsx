@@ -48,6 +48,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+
+// Component for translating category names
+const CategoryName = ({ categoryName }: { categoryName: string }) => {
+  const translatedName = useTranslatedText(categoryName);
+  return <span className="text-[12px] font-normal">{translatedName}</span>;
+};
+
+// Component for translating region names
+const RegionName = ({ regionName }: { regionName: string }) => {
+  const translatedName = useTranslatedText(regionName);
+  return translatedName;
+};
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -1009,7 +1021,7 @@ export default function Products() {
                   htmlFor={`category-${category.id}`}
                   className="flex justify-between w-full text-sm"
                 >
-                  <span className="text-[12px] font-normal">{category.name}</span>
+                  <CategoryName categoryName={category.name} />
                   <span className="text-gray-500">({categoryCount[category.name] || 0})</span>
                 </Label>
               </div>
@@ -1032,7 +1044,7 @@ export default function Products() {
                 htmlFor={`region-${region}`}
                 className="text-[12px] font-normal"
               >
-                {region}
+                <RegionName regionName={region} />
               </Label>
             </div>
           ))}
@@ -1139,7 +1151,7 @@ export default function Products() {
         onClick={resetFilters}
         className="w-full"
       >
-        Reset Filters
+        {resetFiltersText}
       </Button>
     </div>
   );
@@ -1191,7 +1203,7 @@ export default function Products() {
               <div className="flex flex-wrap gap-2">
                 {selectedCategories.map(category => (
                 <Badge variant="outline" key={category} className="flex items-center gap-1">
-                  {category}
+                  <CategoryName categoryName={category} />
                   <button
                     onClick={() => toggleCategory(category)}
                     className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
@@ -1203,7 +1215,7 @@ export default function Products() {
               
               {selectedRegions.map(region => (
                 <Badge variant="outline" key={region} className="flex items-center gap-1">
-                  {region}
+                  <RegionName regionName={region} />
                   <button
                     onClick={() => toggleRegion(region)}
                     className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
