@@ -9,6 +9,7 @@ import {
 import { useLanguage, supportedLanguages, type Language } from '@/contexts/LanguageContext';
 import { ChevronDown, Globe, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useGlobalTranslation } from '@/hooks/use-global-translation';
 
 interface LanguageSwitcherProps {
   variant?: 'default' | 'compact' | 'icon-only';
@@ -23,6 +24,7 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { selectedLanguage, setSelectedLanguage, isLoading } = useLanguage();
   const [isChanging, setIsChanging] = useState(false);
+  const { isTranslating, translateWebsite } = useGlobalTranslation();
   const { toast } = useToast();
 
   const handleLanguageChange = async (language: Language) => {
@@ -30,18 +32,21 @@ export function LanguageSwitcher({
     
     setIsChanging(true);
     try {
+      console.log(`[Language Switcher] Initiating global translation to ${language.code}`);
+      
+      // Set the language first
       await setSelectedLanguage(language);
+      
+      // Trigger global website translation if not English
+      if (language.code !== 'EN' && language.code !== 'en') {
+        await translateWebsite(language.code);
+      }
       
       toast({
         title: "Language Changed",
         description: `Site language changed to ${language.nativeName}`,
         duration: 2000,
       });
-
-      // Force a page refresh to ensure all components update
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
       
     } catch (error) {
       console.error('Failed to change language:', error);

@@ -5865,17 +5865,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Batch translation API for improved performance
+  // Enhanced batch translation API for website-wide high-performance translation
   app.post('/api/translate/batch', async (req: Request, res: Response) => {
     try {
-      const { texts, targetLanguage } = req.body;
+      const { texts, targetLanguage, priority = 'normal' } = req.body;
 
       if (!texts || !Array.isArray(texts) || !targetLanguage) {
         return res.status(400).json({ message: 'Texts array and target language are required' });
       }
 
+      console.log(`[Batch Translation] Processing ${texts.length} texts for ${targetLanguage} (priority: ${priority})`);
+
       // Skip translation if target language is English
-      if (targetLanguage === 'EN' || targetLanguage === 'EN-US') {
+      if (targetLanguage === 'EN' || targetLanguage === 'EN-US' || targetLanguage === 'en') {
         return res.json({ 
           translations: texts.map(text => ({
             originalText: text,
@@ -5935,12 +5937,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Map language codes to DeepL format
       const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
       
-      // Process uncached texts in batches of 10 (DeepL limit)
-      const batchSize = 10;
+      // Optimize batch size based on priority and text count
+      let batchSize = 10; // DeepL standard limit
+      if (priority === 'high' && uncachedTexts.length > 50) {
+        batchSize = 20; // Larger batches for website-wide translation
+      }
+      
       const batches = [];
       for (let i = 0; i < uncachedTexts.length; i += batchSize) {
         batches.push(uncachedTexts.slice(i, i + batchSize));
       }
+
+      console.log(`[Batch Translation] Processing ${batches.length} batches of size ${batchSize}`);
 
       let batchResults = [];
       
