@@ -3,7 +3,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { useOptimizedTranslationBatch } from '@/hooks/use-optimized-translation';
+import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Vendor Dashboard"
   ];
   
-  const translatedTexts = useOptimizedTranslationBatch(navTexts);
+  const translatedTexts = useUnifiedBatchTranslation(navTexts, 'instant');
   const [c2cText, b2cText, b2bText, searchPlaceholder, likedText, cartText, ordersText, vendorText] = translatedTexts;
 
   // Fetch liked products count

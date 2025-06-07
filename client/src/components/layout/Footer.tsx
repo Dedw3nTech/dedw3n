@@ -1,30 +1,52 @@
 import { Link } from "wouter";
-import { useFooterOptimization } from "@/hooks/use-footer-optimization";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 
 export default function Footer() {
-  const { translations, isLoading } = useFooterOptimization();
+  // Define all footer texts for unified batch translation
+  const footerTexts = [
+    "All rights reserved.",
+    "Privacy Policy",
+    "Terms of Service", 
+    "Cookie Policy",
+    "Community Guidelines",
+    "Contact Us",
+    "FAQ",
+    "Shipping",
+    "Partnerships",
+    "Download our mobile app",
+    "Download on the",
+    "App Store",
+    "Get it on",
+    "Google Play",
+    "is a British Company registered in England, Wales and Scotland under registration number",
+    "whose registered office is situated",
+    "Our bank is registered with HSBC UK IBAN",
+    "our sole official website is"
+  ];
 
-  // Extract individual translations from the optimized hook
-  const {
-    allRightsReserved: allRightsReservedText,
-    privacyPolicy: privacyPolicyText,
-    termsOfService: termsOfServiceText,
-    cookiePolicy: cookiePolicyText,
-    communityGuidelines: communityGuidelinesText,
-    contactUs: contactUsText,
-    faq: faqText,
-    shipping: shippingText,
-    partnerships: partnershipsText,
-    downloadMobileApp: downloadMobileAppText,
-    downloadOnThe: downloadOnTheText,
-    appStore: appStoreText,
-    getItOn: getItOnText,
-    googlePlay: googlePlayText,
-    britishCompany: britishCompanyText,
-    registeredOffice: registeredOfficeText,
-    bankRegistered: bankRegisteredText,
-    officialWebsite: officialWebsiteText
-  } = translations;
+  const translatedTexts = useUnifiedBatchTranslation(footerTexts, 'instant');
+
+  // Extract individual translations for direct access
+  const [
+    allRightsReservedText,
+    privacyPolicyText,
+    termsOfServiceText,
+    cookiePolicyText,
+    communityGuidelinesText,
+    contactUsText,
+    faqText,
+    shippingText,
+    partnershipsText,
+    downloadMobileAppText,
+    downloadOnTheText,
+    appStoreText,
+    getItOnText,
+    googlePlayText,
+    britishCompanyText,
+    registeredOfficeText,
+    bankRegisteredText,
+    officialWebsiteText
+  ] = translatedTexts;
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
