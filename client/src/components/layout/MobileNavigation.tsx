@@ -1,13 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import SearchOverlay from "../ui/search-overlay";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
@@ -15,25 +14,6 @@ export default function MobileNavigation() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
-  
-  // Define translatable texts with stable references for DOM-safe translation
-  const mobileNavTexts = useMemo(() => [
-    "Marketplace",
-    "Community", 
-    "Dating",
-    "Profile"
-  ], []);
-
-  // Use DOM-safe batch translation for optimal performance
-  const { translations: translatedMobileTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(mobileNavTexts, 'instant');
-
-  // Memoize translated values to prevent re-render loops
-  const translatedLabels = useMemo(() => ({
-    marketplace: translatedMobileTexts["Marketplace"] || "Marketplace",
-    community: translatedMobileTexts["Community"] || "Community",
-    dating: translatedMobileTexts["Dating"] || "Dating",
-    profile: translatedMobileTexts["Profile"] || "Profile"
-  }), [translatedMobileTexts]);
   
   // Get unread message count from API
   const { data: messageData } = useQuery<{ count: number }>({
@@ -56,7 +36,7 @@ export default function MobileNavigation() {
                 className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : "text-gray-500"}`}
               >
                 <i className={`ri-store-2-line text-lg mb-1 ${location === "/" || location.startsWith("/marketplace") ? "text-gray-700" : ""}`}></i>
-                <span className="text-xs font-medium">{translatedLabels.marketplace}</span>
+                <span className="text-xs font-medium">Marketplace</span>
               </button>
             </Link>
             
@@ -65,7 +45,7 @@ export default function MobileNavigation() {
                 className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/community" ? "text-gray-700" : "text-gray-500"}`}
               >
                 <i className={`ri-group-line text-lg mb-1 ${location === "/community" ? "text-gray-700" : ""}`}></i>
-                <span className="text-xs font-medium">{translatedLabels.community}</span>
+                <span className="text-xs font-medium">Community</span>
               </button>
             </Link>
 
@@ -79,7 +59,7 @@ export default function MobileNavigation() {
                     </Badge>
                   )}
                 </div>
-                <span className="text-xs font-medium">{translatedLabels.dating}</span>
+                <span className="text-xs font-medium">Dating</span>
               </button>
             </Link>
 

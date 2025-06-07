@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
-import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,35 +20,6 @@ export default function UserMenu() {
   const { user, logoutMutation } = useAuth();
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
-
-  // Define translatable texts with stable references for DOM-safe translation
-  const userMenuTexts = useMemo(() => [
-    "Your Profile",
-    "Settings", 
-    "Messages",
-    "Notifications",
-    "Dating Dashboard",
-    "Vendor Dashboard",
-    "Log out",
-    "Logging out...",
-    "Login"
-  ], []);
-
-  // Use DOM-safe batch translation for optimal performance
-  const { translations: translatedUserMenuTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(userMenuTexts, 'instant');
-
-  // Memoize translated values to prevent re-render loops
-  const translatedLabels = useMemo(() => ({
-    profile: translatedUserMenuTexts["Your Profile"] || "Your Profile",
-    settings: translatedUserMenuTexts["Settings"] || "Settings",
-    messages: translatedUserMenuTexts["Messages"] || "Messages",
-    notifications: translatedUserMenuTexts["Notifications"] || "Notifications",
-    datingDashboard: translatedUserMenuTexts["Dating Dashboard"] || "Dating Dashboard",
-    vendorDashboard: translatedUserMenuTexts["Vendor Dashboard"] || "Vendor Dashboard",
-    logout: translatedUserMenuTexts["Log out"] || "Log out",
-    loggingOut: translatedUserMenuTexts["Logging out..."] || "Logging out...",
-    login: translatedUserMenuTexts["Login"] || "Login"
-  }), [translatedUserMenuTexts]);
 
   // Fetch unread message count
   const { data: unreadMessages } = useQuery<{ count: number }>({
@@ -86,7 +56,7 @@ export default function UserMenu() {
         className="ml-2"
         onClick={() => showLoginPrompt('login')}
       >
-        {translatedLabels.login}
+        {t('auth.login')}
       </Button>
     );
   }
@@ -141,14 +111,14 @@ export default function UserMenu() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
           <Link href="/profile-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-user-settings-line mr-2"></i> {translatedLabels.profile}
+            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Your Profile'}
           </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-settings-4-line mr-2"></i> {translatedLabels.settings}
+            <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
           </Link>
           <Link href="/messages" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-message-3-line mr-2"></i> {translatedLabels.messages}
+              <i className="ri-message-3-line mr-2"></i> Messages
             </div>
             {(unreadMessages?.count || 0) > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
@@ -158,7 +128,7 @@ export default function UserMenu() {
           </Link>
           <Link href="/notifications" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-notification-3-line mr-2"></i> {translatedLabels.notifications}
+              <i className="ri-notification-3-line mr-2"></i> Notifications
             </div>
             {(unreadNotifications?.count || 0) > 0 && (
               <Badge className="bg-red-600 text-white text-xs ml-2">
@@ -167,13 +137,13 @@ export default function UserMenu() {
             )}
           </Link>
           <Link href="/dating-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-heart-3-line mr-2"></i> {translatedLabels.datingDashboard}
+            <i className="ri-heart-3-line mr-2"></i> Dating Dashboard
           </Link>
           <button 
             className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={handleSwitchToDashboard}
           >
-            <i className="ri-store-2-line mr-2"></i> {translatedLabels.vendorDashboard}
+            <i className="ri-store-2-line mr-2"></i> {t('vendor.dashboard')}
           </button>
           <div className="border-t border-gray-100"></div>
           <button
@@ -184,11 +154,11 @@ export default function UserMenu() {
             {logoutMutation.isPending ? (
               <>
                 <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin text-blue-600" /> 
-                {translatedLabels.loggingOut}
+                {t('auth.logging_out') || 'Logging out...'}
               </>
             ) : (
               <>
-                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {translatedLabels.logout}
+                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {t('auth.logout')}
               </>
             )}
           </button>
