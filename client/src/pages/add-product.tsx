@@ -876,12 +876,12 @@ export default function AddProduct() {
               {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Variants</CardTitle>
+                  <CardTitle>{t("Variants")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Button type="button" variant="outline" className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add options like size or color
+                    {t("Add options like size or color")}
                   </Button>
                 </CardContent>
               </Card>
@@ -891,7 +891,7 @@ export default function AddProduct() {
               {form.watch('offeringType') === 'service' && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Service Details</CardTitle>
+                    <CardTitle>{t("Service Details")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -900,9 +900,9 @@ export default function AddProduct() {
                         name="serviceDuration"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Service Duration</FormLabel>
+                            <FormLabel>{t("Service Duration")}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 1 hour, 30 minutes" {...field} />
+                              <Input placeholder={t("e.g., 1 hour, 30 minutes")} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -913,18 +913,18 @@ export default function AddProduct() {
                         name="serviceType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Service Type</FormLabel>
+                            <FormLabel>{t("Service Type")}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
+                                  <SelectValue placeholder={t("Select type")} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="onetime">One-time Service</SelectItem>
-                                <SelectItem value="recurring">Recurring Service</SelectItem>
-                                <SelectItem value="subscription">Subscription</SelectItem>
-                                <SelectItem value="consultation">Consultation</SelectItem>
+                                <SelectItem value="onetime">{t("One-time Service")}</SelectItem>
+                                <SelectItem value="recurring">{t("Recurring Service")}</SelectItem>
+                                <SelectItem value="subscription">{t("Subscription")}</SelectItem>
+                                <SelectItem value="consultation">{t("Consultation")}</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -938,18 +938,18 @@ export default function AddProduct() {
                       name="serviceLocation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Service Location</FormLabel>
+                          <FormLabel>{t("Service Location")}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select location type" />
+                                <SelectValue placeholder={t("Select location type")} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="online">Online/Remote</SelectItem>
-                              <SelectItem value="onsite">On-site/Client Location</SelectItem>
-                              <SelectItem value="office">My Office/Studio</SelectItem>
-                              <SelectItem value="flexible">Flexible</SelectItem>
+                              <SelectItem value="online">{t("Online/Remote")}</SelectItem>
+                              <SelectItem value="onsite">{t("On-site/Client Location")}</SelectItem>
+                              <SelectItem value="office">{t("My Office/Studio")}</SelectItem>
+                              <SelectItem value="flexible">{t("Flexible")}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -963,7 +963,7 @@ export default function AddProduct() {
               {/* Product Organization */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Product organization</CardTitle>
+                  <CardTitle>{t("Product organization")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -971,11 +971,11 @@ export default function AddProduct() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product category</FormLabel>
+                        <FormLabel>{t("Product category")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder={t("Select category")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -996,9 +996,9 @@ export default function AddProduct() {
                     name="vendor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Vendor</FormLabel>
+                        <FormLabel>{t("Vendor")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Vendor name" {...field} />
+                          <Input placeholder={t("Vendor name")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1009,7 +1009,7 @@ export default function AddProduct() {
 
               <Button type="submit" disabled={createProductMutation.isPending} className="w-full">
                 {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save product
+                {t("Save product")}
               </Button>
             </form>
           </Form>
@@ -1020,7 +1020,7 @@ export default function AddProduct() {
           <Form {...form}>
             <Card>
               <CardHeader>
-                <CardTitle>Product status</CardTitle>
+                <CardTitle>{t("Product status")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <FormField
@@ -1028,7 +1028,7 @@ export default function AddProduct() {
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>{t("Status")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -1036,9 +1036,9 @@ export default function AddProduct() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
+                          <SelectItem value="active">{t("Active")}</SelectItem>
+                          <SelectItem value="draft">{t("Draft")}</SelectItem>
+                          <SelectItem value="archived">{t("Archived")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
