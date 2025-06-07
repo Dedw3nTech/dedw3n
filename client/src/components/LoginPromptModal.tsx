@@ -371,7 +371,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
-              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
+              disabled={Boolean(loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError))}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
                 (translations["Please wait..."] || "Please wait...") : 

@@ -32,14 +32,17 @@ export function LanguageSwitcher({
     
     setIsChanging(true);
     try {
-      console.log(`[Language Switcher] Initiating global translation to ${language.code}`);
+      console.log(`[Language Switcher] Changing language to ${language.code}`);
       
-      // Set the language first
-      await setSelectedLanguage(language);
+      // Set the language immediately
+      setSelectedLanguage(language);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('dedw3n-language', language.code);
       
       // Trigger global website translation if not English
       if (language.code !== 'EN' && language.code !== 'en') {
-        await translateWebsite(language.code);
+        translateWebsite(language.code);
       }
       
       toast({
