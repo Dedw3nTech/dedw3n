@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
@@ -60,6 +60,123 @@ export function VideoAdCampaignCard({
 
   const entityContent = getEntityContent();
 
+  // Effect to handle autoplay initialization and browser policies
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    console.log('Video component mounted, autoPlay:', autoPlay, 'Video src:', entityContent.video);
+
+    const handleCanPlay = async () => {
+      console.log('Video canplay event fired, attempting autoplay...');
+      if (autoPlay) {
+        try {
+          // Ensure video is muted for autoplay compliance
+          video.muted = true;
+          setIsMuted(true);
+          
+          // Small delay to ensure video is ready
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Attempt to play the video
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            await playPromise;
+            console.log('Video autoplay successful');
+            setIsPlaying(true);
+          }
+        } catch (error) {
+          console.log('Autoplay prevented by browser policy:', error);
+          setIsPlaying(false);
+        }
+      }
+    };
+
+    const handleLoadedData = () => {
+      console.log('Video loadeddata event fired');
+      if (autoPlay && video.paused) {
+        handleCanPlay();
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      console.log('Video metadata loaded');
+    };
+
+    const handlePlay = () => {
+      console.log('Video started playing');
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      console.log('Video paused');
+      setIsPlaying(false);
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Video error:', e);
+      const target = e.target as HTMLVideoElement;
+      if (target && target.error) {
+        console.error('Video error details:', target.error.code, target.error.message);
+      }
+      setIsPlaying(false);
+    };
+
+    const handleStalled = () => {
+      console.log('Video stalled');
+    };
+
+    const handleWaiting = () => {
+      console.log('Video waiting for data');
+    };
+
+    // Add event listeners
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('error', handleError);
+    video.addEventListener('stalled', handleStalled);
+    video.addEventListener('waiting', handleWaiting);
+
+    // Force load if needed
+    if (video.readyState >= 3) {
+      console.log('Video already ready, attempting autoplay');
+      handleCanPlay();
+    } else {
+      console.log('Loading video...');
+      video.load();
+    }
+
+    // Intersection Observer for better autoplay handling
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && autoPlay && video.paused) {
+            console.log('Video entered viewport, attempting autoplay');
+            handleCanPlay();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('stalled', handleStalled);
+      video.removeEventListener('waiting', handleWaiting);
+      observer.disconnect();
+    };
+  }, [autoPlay, entityContent.video]);
+
   const toggleMute = () => {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
@@ -67,14 +184,20 @@ export function VideoAdCampaignCard({
     }
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+      try {
+        if (isPlaying) {
+          videoRef.current.pause();
+          setIsPlaying(false);
+        } else {
+          await videoRef.current.play();
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        console.error('Error toggling video playback:', error);
+        setIsPlaying(false);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -86,12 +209,22 @@ export function VideoAdCampaignCard({
           className="w-full h-48 object-cover"
           autoPlay={autoPlay}
           loop
-          muted={isMuted}
+          muted={true}
           playsInline
+          webkit-playsinline="true"
+          preload="metadata"
+          crossOrigin="anonymous"
+          controls={false}
+          disablePictureInPicture
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
+          onLoadStart={() => console.log('Video loading started')}
+          onLoadedMetadata={() => console.log('Video metadata loaded')}
+          onCanPlay={() => console.log('Video can play')}
+          onError={(e) => console.error('Video element error:', e)}
         >
           <source src={entityContent.video} type="video/mp4" />
+          <source src={entityContent.video} type="video/webm" />
           Your browser does not support the video tag.
         </video>
         
