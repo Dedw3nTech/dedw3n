@@ -32,8 +32,8 @@ export function Breadcrumbs() {
     'Community Guidelines', 'Site Map'
   ], []);
 
-  // Use DOM-safe batch translation for optimal performance and stability
-  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(breadcrumbTexts, 'instant');
+  // Use DOM-safe batch translation with error boundary protection
+  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(breadcrumbTexts, 'high');
   
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
