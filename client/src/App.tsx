@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { ViewProvider } from "@/hooks/use-view";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth-nonblocking";
 import { MessagingProvider } from "@/hooks/use-messaging";
 import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
 import { useLocation } from 'wouter';
@@ -16,6 +16,8 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
+import { ErrorBoundary } from "@/components/utils/ErrorBoundary";
+import { ApiErrorBoundary } from "@/components/utils/ApiErrorBoundary";
 // Import promotional images
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import businessMeetingImage from "@assets/Dedw3n Business.png";
@@ -330,19 +332,73 @@ function Router() {
 }
 
 function App() {
+  // Non-blocking initialization
+  useEffect(() => {
+    // Initialize background services without blocking React mounting
+    setTimeout(() => {
+      try {
+        initializeOfflineDetection();
+        initializeLanguageFromLocation();
+      } catch (error) {
+        console.error('Background initialization error:', error);
+      }
+    }, 100);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
-          <div className="flex flex-col min-h-screen">
-            <main className="flex-grow">
-              <div className="p-8 text-center">
-                <h1 className="text-2xl font-bold mb-4">Dedw3n Platform</h1>
-                <p className="text-gray-600">Application is being restored to working state...</p>
-              </div>
-            </main>
-            <Toaster />
-          </div>
+          <AuthProvider>
+            <ViewProvider>
+              <MarketTypeProvider>
+                <SubscriptionProvider>
+                  <CurrencyProvider>
+                    <LanguageProvider>
+                      <ErrorBoundary>
+                        <div className="flex flex-col min-h-screen">
+                          <OptimizedNavigation />
+                          <MarketplaceNavWrapper />
+                          <Breadcrumbs />
+                          
+                          {/* Community Navigation - Only show on community page */}
+                          <CommunityNavWrapper />
+                          
+                          {/* Dating Navigation - Only show on dating page */}
+                          <DatingNavWrapper />
+                          
+                          {/* New Section Above Main - Only show on marketplace pages */}
+                          <MarketplacePromoSection />
+                          
+                          {/* Dating Header Advertisement - Only show on dating page */}
+                          <DatingHeaderPromoSection />
+                          
+                          <main className="flex-grow">
+                            <ApiErrorBoundary showHomeButton={false}>
+                              <Router />
+                            </ApiErrorBoundary>
+                          </main>
+                          
+                          {/* Dating Footer Advertisement - Only show on dating page */}
+                          <DatingFooterPromoSection />
+                          
+                          {/* New Section Below Main - Only show on marketplace pages */}
+                          <MarketplaceBottomPromoSection />
+                          
+                          <Footer />
+                          <MobileNavigation />
+                          <OfflineIndicator />
+
+                          <GlobalLoginHandler />
+                        </div>
+                      </ErrorBoundary>
+                      <Toaster />
+                    </LanguageProvider>
+                  </CurrencyProvider>
+                </SubscriptionProvider>
+              </MarketTypeProvider>
+            </ViewProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
