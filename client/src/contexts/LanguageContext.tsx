@@ -49,65 +49,49 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translationCache = new Map<string, string>();
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialize with localStorage value immediately or default to English
-  const getInitialLanguage = (): Language => {
-    try {
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(supportedLanguages[0]); // Default to English
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user's language preference from backend or localStorage
+  useEffect(() => {
+    const loadLanguagePreference = async () => {
+      try {
+        // First try to get from backend if user is logged in
+        const response = await fetch('/api/user/language', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const language = supportedLanguages.find(lang => lang.code === data.language);
+          if (language) {
+            setSelectedLanguage(language);
+            localStorage.setItem('dedw3n-language', language.code);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('User not authenticated, using local storage');
+      }
+
+      // Fallback to localStorage
       const savedLanguage = localStorage.getItem('dedw3n-language');
       if (savedLanguage) {
         const language = supportedLanguages.find(lang => lang.code === savedLanguage);
         if (language) {
-          return language;
+          setSelectedLanguage(language);
         }
       }
-    } catch (error) {
-      // localStorage not available - use default
-    }
-    return supportedLanguages[0]; // Default to English
-  };
-
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(getInitialLanguage);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Start as false, no blocking
-
-  // Background sync with backend - completely non-blocking
-  useEffect(() => {
-    let isMounted = true;
-    
-    const backgroundSync = async () => {
-      try {
-        // Use a simple fetch with timeout to avoid hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
-        
-        const response = await fetch('/api/user/language', {
-          method: 'GET',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          const language = supportedLanguages.find(lang => lang.code === data.language);
-          if (language && language.code !== selectedLanguage.code) {
-            setSelectedLanguage(language);
-            localStorage.setItem('dedw3n-language', language.code);
-          }
-        }
-      } catch (error) {
-        // Silent failure - using localStorage fallback is fine
-      }
+      setIsLoading(false);
     };
 
-    // Delay background sync to ensure it doesn't block initial render
-    const timeoutId = setTimeout(backgroundSync, 500);
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
+    loadLanguagePreference();
   }, []);
 
   // Update user language preference in backend

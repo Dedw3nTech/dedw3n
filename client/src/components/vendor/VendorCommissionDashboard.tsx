@@ -10,7 +10,7 @@ import { CalendarDays, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
+import { useUnifiedTranslation } from '@/hooks/use-unified-translation';
 
 interface CommissionPeriod {
   id: number;
@@ -144,7 +144,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "Failed to create payment link"
   ];
   
-  const { translations } = useUnifiedBatchTranslation(commissionTexts, 'instant');
+  const { translations } = useUnifiedTranslation(commissionTexts);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],

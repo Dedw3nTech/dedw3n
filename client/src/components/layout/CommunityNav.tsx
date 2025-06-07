@@ -1,41 +1,57 @@
-import React from 'react';
-import { useLocation, Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Users, MessageCircle, Calendar, Hash } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  Search, 
+  Users, 
+  Calendar, 
+  MessageSquare, 
+  Heart,
+  UserPlus,
+  Settings,
+  Compass
+} from "lucide-react";
 
-export function CommunityNav() {
-  const [location] = useLocation();
-  const { t } = useLanguage();
+interface CommunityNavProps {
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+}
 
-  const navItems = [
-    { href: '/community', label: t('nav.community.home'), icon: Users },
-    { href: '/community/forums', label: t('nav.community.forums'), icon: MessageCircle },
-    { href: '/community/events', label: t('nav.community.events'), icon: Calendar },
-    { href: '/community/groups', label: t('nav.community.groups'), icon: Hash },
-  ];
+export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavProps) {
+  const [, setLocation] = useLocation();
+  const [activeSection, setActiveSection] = useState<string>("general");
+
+  const handleSectionChange = (section: string, path: string) => {
+    setActiveSection(section);
+    setLocation(path);
+  };
 
   return (
-    <div className="bg-white border-b shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-8 h-16">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
+    <div className="bg-white border-b border-gray-200 py-6">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-wrap justify-between items-center">
+          <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12 items-center">
+            {/* Search bar */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search community..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm?.(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
             
-            return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant={isActive ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Button>
-              </Link>
-            );
-          })}
+            {/* Explore text with icon */}
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => setLocation("/explore")}
+            >
+              <Compass className="h-4 w-4" />
+              <span className="text-sm font-medium">Explore</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

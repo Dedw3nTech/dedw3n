@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { ViewProvider } from "@/hooks/use-view";
-import { AuthProvider } from "@/hooks/use-auth-nonblocking";
+import { AuthProvider } from "@/hooks/use-auth";
 import { MessagingProvider } from "@/hooks/use-messaging";
 import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
 import { useLocation } from 'wouter';
@@ -16,15 +16,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import { ErrorBoundary } from "@/components/utils/ErrorBoundary";
-import { ApiErrorBoundary } from "@/components/utils/ApiErrorBoundary";
-import { OptimizedNavigation } from "@/components/OptimizedNavigation";
-import { Footer } from "@/components/Footer";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { MobileNavigation } from "@/components/MobileNavigation";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
-import { useQuery } from "@tanstack/react-query";
 // Import promotional images
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import businessMeetingImage from "@assets/Dedw3n Business.png";
@@ -64,9 +55,18 @@ const datingPromoImages = {
   header: datingHeaderImage, // Top header advertisement for dating page
   footer: datingFooterImage, // Bottom footer advertisement for dating page
 };
+import { OfflineIndicator } from "@/components/ui/offline-indicator";
+import { ProtectedRoute } from "@/lib/protected-route";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
+
+import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
+import { CommunityNav } from "@/components/layout/CommunityNav";
+import { DatingNav } from "@/components/layout/DatingNav";
 
 // Community Navigation wrapper
 function CommunityNavWrapper() {
@@ -153,9 +153,10 @@ import Analytics from "@/pages/analytics";
 
 
 
+import OptimizedNavigation from "@/components/layout/OptimizedNavigation";
+import Footer from "@/components/layout/Footer";
+import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
-import { CommunityNav } from "@/components/layout/CommunityNav";
-import { DatingNav } from "@/components/layout/DatingNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
 
@@ -195,6 +196,7 @@ import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
 import { SiteMap } from "@/components/layout/SiteMap";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 
 
@@ -328,30 +330,43 @@ function Router() {
 }
 
 function App() {
-  // Non-blocking initialization
+  // Force refresh state to update all components when language changes
+  const [forceRefresh, setForceRefresh] = useState(0);
+  
+  // Initialize offline detection and language
   useEffect(() => {
-    // Initialize background services without blocking React mounting
-    setTimeout(() => {
-      try {
-        initializeOfflineDetection();
-        initializeLanguageFromLocation();
-      } catch (error) {
-        console.error('Background initialization error:', error);
-      }
-    }, 100);
+    // Initialize offline detection
+    initializeOfflineDetection();
+    
+    // Initialize language based on user location
+    initializeLanguageFromLocation();
+    
+    // Listen for language changes and force refresh
+    const handleLanguageChange = () => {
+      console.log('App detected language change, refreshing entire application');
+      setForceRefresh((prev: number) => prev + 1);
+    };
+    
+    window.addEventListener('language-changed', handleLanguageChange);
+    
+    return () => {
+      window.removeEventListener('language-changed', handleLanguageChange);
+    };
   }, []);
 
+  // Using forceRefresh in a key forces re-rendering when language changes
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
           <AuthProvider>
             <ViewProvider>
               <MarketTypeProvider>
                 <SubscriptionProvider>
-                  <CurrencyProvider>
-                    <LanguageProvider>
-                      <ErrorBoundary>
+                  <MessagingProvider>
+                    <CurrencyProvider>
+                      <LanguageProvider>
+                        <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <OptimizedNavigation />
                           <MarketplaceNavWrapper />
@@ -386,11 +401,15 @@ function App() {
                           <OfflineIndicator />
 
                           <GlobalLoginHandler />
+                          {/* Offline simulator hidden as requested */}
+                          {/* Chatbot will be implemented later when API key is available */}
+                          {/* <ChatbotWindow /> */}
                         </div>
-                      </ErrorBoundary>
-                      <Toaster />
-                    </LanguageProvider>
-                  </CurrencyProvider>
+                        </ErrorBoundary>
+                        <Toaster />
+                      </LanguageProvider>
+                    </CurrencyProvider>
+                  </MessagingProvider>
                 </SubscriptionProvider>
               </MarketTypeProvider>
             </ViewProvider>
