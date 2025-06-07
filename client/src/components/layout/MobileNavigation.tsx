@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
+import { useSafeBatchTranslation } from '@/hooks/use-safe-translation';
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
@@ -23,8 +23,8 @@ export default function MobileNavigation() {
     "Dating"
   ], []);
 
-  // Use DOM-safe batch translation for optimal performance
-  const { translations } = useStableDOMBatchTranslation(mobileNavTexts, 'instant');
+  // Use safe batch translation for optimal performance
+  const translations = useSafeBatchTranslation(mobileNavTexts);
   
   // Get unread message count from API
   const { data: messageData } = useQuery<{ count: number }>({
