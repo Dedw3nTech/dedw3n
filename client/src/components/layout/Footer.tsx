@@ -43,10 +43,10 @@ function FooterContent() {
   const appStoreText = translatedTexts[11] || "App Store";
   const getItOnText = translatedTexts[12] || "Get it on";
   const googlePlayText = translatedTexts[13] || "Google Play";
-  const britishCompanyText = translatedTexts["is a British Company registered in England, Wales and Scotland under registration number"] || "is a British Company registered in England, Wales and Scotland under registration number";
-  const registeredOfficeText = translatedTexts["whose registered office is situated"] || "whose registered office is situated";
-  const bankRegisteredText = translatedTexts["Our bank is registered with HSBC UK IBAN"] || "Our bank is registered with HSBC UK IBAN";
-  const officialWebsiteText = translatedTexts["our sole official website is"] || "our sole official website is";
+  const britishCompanyText = translatedTexts[14] || "is a British Company registered in England, Wales and Scotland under registration number";
+  const registeredOfficeText = translatedTexts[15] || "whose registered office is situated";
+  const bankRegisteredText = translatedTexts[16] || "Our bank is registered with HSBC UK IBAN";
+  const officialWebsiteText = translatedTexts[17] || "our sole official website is";
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
