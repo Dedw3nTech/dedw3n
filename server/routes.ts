@@ -5928,6 +5928,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
+        // If DeepL doesn't support the language (like Hindi), fallback to Google Translate
+        if (response.status === 400 && errorText.includes('not supported')) {
+          console.log(`[Translation] DeepL doesn't support ${targetLanguage}, falling back to Google Translate`);
+          return await translateWithGoogle(text, targetLanguage, res, cacheKey);
+        }
+        
         return res.status(response.status).json({ 
           message: 'Translation service error',
           details: errorText 
