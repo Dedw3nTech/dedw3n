@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { 
@@ -10,6 +10,7 @@ import {
   Map,
   Barcode
 } from "lucide-react";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import {
   Card,
   CardContent,
@@ -59,6 +60,47 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Define all translatable texts
+  const shippingTexts = useMemo(() => [
+    "Pending Shipments",
+    "Orders that need to be shipped",
+    "Shipped Today", 
+    "Orders shipped in the last 24 hours",
+    "Total Shipped",
+    "All-time shipped orders",
+    "Pending",
+    "Shipped",
+    "Search orders...",
+    "No orders to ship",
+    "All orders have been shipped",
+    "Order ID",
+    "Customer",
+    "Amount",
+    "Date",
+    "Status", 
+    "Actions",
+    "Ship Order",
+    "View Details",
+    "Tracking Number",
+    "Shipping Provider",
+    "Update Shipping",
+    "Cancel",
+    "Shipping Updated",
+    "Order has been marked as shipped with tracking information",
+    "Error",
+    "Failed to update shipping",
+    "Select provider",
+    "DHL",
+    "FedEx", 
+    "UPS",
+    "USPS",
+    "Royal Mail",
+    "Other"
+  ], []);
+
+  // Get translations
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(shippingTexts, 'high');
+
   // Fetch pending shipments (orders that are paid but not shipped)
   const { data: pendingShipments, isLoading: isLoadingPending } = useQuery({
     queryKey: ["/api/vendors/orders", "processing"],
@@ -96,8 +138,8 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Shipping Updated",
-        description: "Order has been marked as shipped with tracking information.",
+        title: translatedTexts["Shipping Updated"] || "Shipping Updated",
+        description: translatedTexts["Order has been marked as shipped with tracking information"] || "Order has been marked as shipped with tracking information.",
       });
       
       // Clear form
@@ -110,8 +152,8 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: `Failed to update shipping: ${error.message}`,
+        title: translatedTexts["Error"] || "Error",
+        description: `${translatedTexts["Failed to update shipping"] || "Failed to update shipping"}: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -182,9 +224,9 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Pending Shipments</CardTitle>
+            <CardTitle className="text-lg font-medium">{translatedTexts["Pending Shipments"] || "Pending Shipments"}</CardTitle>
             <CardDescription>
-              Orders that need to be shipped
+              {translatedTexts["Orders that need to be shipped"] || "Orders that need to be shipped"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -195,9 +237,9 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Shipped Today</CardTitle>
+            <CardTitle className="text-lg font-medium">{translatedTexts["Shipped Today"] || "Shipped Today"}</CardTitle>
             <CardDescription>
-              Orders shipped in the last 24 hours
+              {translatedTexts["Orders shipped in the last 24 hours"] || "Orders shipped in the last 24 hours"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -213,9 +255,9 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Total Shipped</CardTitle>
+            <CardTitle className="text-lg font-medium">{translatedTexts["Total Shipped"] || "Total Shipped"}</CardTitle>
             <CardDescription>
-              All-time shipped orders
+              {translatedTexts["All-time shipped orders"] || "All-time shipped orders"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -229,7 +271,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
       <div className="relative mb-4">
         <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search orders..."
+          placeholder={translatedTexts["Search orders..."] || "Search orders..."}
           className="pl-8"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -239,10 +281,10 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">
-            Pending Shipments ({pendingShipments?.length || 0})
+            {translatedTexts["Pending"] || "Pending"} ({pendingShipments?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="shipped">
-            Shipped Orders ({shippedOrders?.length || 0})
+            {translatedTexts["Shipped"] || "Shipped"} ({shippedOrders?.length || 0})
           </TabsTrigger>
         </TabsList>
 
@@ -251,9 +293,9 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
           {filteredPendingShipments?.length === 0 ? (
             <div className="text-center py-10">
               <Package className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-              <h3 className="mt-4 text-lg font-medium">No pending shipments</h3>
+              <h3 className="mt-4 text-lg font-medium">{translatedTexts["No orders to ship"] || "No orders to ship"}</h3>
               <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-                All orders have been shipped or there are no processed orders yet.
+                {translatedTexts["All orders have been shipped"] || "All orders have been shipped"}
               </p>
             </div>
           ) : (
