@@ -97,36 +97,36 @@ export function VendorBadgeCard({
   
   return (
     <div className={cn(
-      "p-4 rounded-lg border",
+      "p-3 sm:p-4 rounded-lg border w-full min-w-0 max-w-full",
       badgeInfo.bgColor,
       className
     )}>
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
         <div className={cn(
-          "p-2 rounded-full",
+          "p-1.5 sm:p-2 rounded-full flex-shrink-0",
           badgeInfo.color,
           level === "infinity_vendor" && "bg-gradient-to-r from-yellow-400 to-orange-500"
         )}>
-          <IconComponent className="w-5 h-5 text-white" />
+          <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
-        <div>
-          <h3 className={cn("font-semibold", badgeInfo.textColor)}>
+        <div className="min-w-0 flex-1">
+          <h3 className={cn("font-semibold text-sm sm:text-base truncate", badgeInfo.textColor)}>
             {translatedName}
           </h3>
-          <p className="text-sm text-gray-600">{translatedDescription}</p>
+          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 break-words">{translatedDescription}</p>
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-gray-600">{translatedSalesLabel}</p>
-          <p className={cn("font-semibold", badgeInfo.textColor)}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+        <div className="min-w-0">
+          <p className="text-gray-600 truncate">{translatedSalesLabel}</p>
+          <p className={cn("font-semibold truncate", badgeInfo.textColor)}>
             £{totalSales.toLocaleString()}
           </p>
         </div>
-        <div>
-          <p className="text-gray-600">{translatedTransactionsLabel}</p>
-          <p className={cn("font-semibold", badgeInfo.textColor)}>
+        <div className="min-w-0">
+          <p className="text-gray-600 truncate">{translatedTransactionsLabel}</p>
+          <p className={cn("font-semibold truncate", badgeInfo.textColor)}>
             {totalTransactions.toLocaleString()}
           </p>
         </div>

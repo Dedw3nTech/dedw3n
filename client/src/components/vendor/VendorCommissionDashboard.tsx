@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,7 +109,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
   const queryClient = useQueryClient();
   
   // Commission Tier System texts - comprehensive coverage
-  const commissionTexts = [
+  const commissionTexts = useMemo(() => [
     "Commission Tier System",
     "Your commission rate is determined by your monthly sales volume",
     "Standard Tier",
@@ -153,7 +153,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "paid",
     "pending",
     "overdue"
-  ];
+  ], []);
   
   const { translations } = useUnifiedBatchTranslation(commissionTexts);
 
