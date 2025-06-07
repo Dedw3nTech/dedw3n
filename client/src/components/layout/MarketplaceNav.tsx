@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package } from 'lucide-react';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -25,9 +25,9 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
-    "C2C",
-    "B2C", 
-    "B2B",
+    "Buy & Sell from Friends (C2C)",
+    "Buy & Sell from Online Store (B2C)", 
+    "Buy & Sell Wholesale (B2B)",
     "Search products...",
     "Liked",
     "Shopping Cart",
@@ -40,9 +40,9 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
-    c2cText: translatedTexts["C2C"] || "C2C",
-    b2cText: translatedTexts["B2C"] || "B2C", 
-    b2bText: translatedTexts["B2B"] || "B2B",
+    c2cText: translatedTexts["Buy & Sell from Friends (C2C)"] || "Buy & Sell from Friends (C2C)",
+    b2cText: translatedTexts["Buy & Sell from Online Store (B2C)"] || "Buy & Sell from Online Store (B2C)", 
+    b2bText: translatedTexts["Buy & Sell Wholesale (B2B)"] || "Buy & Sell Wholesale (B2B)",
     searchPlaceholder: translatedTexts["Search products..."] || "Search products...",
     likedText: translatedTexts["Liked"] || "Liked",
     cartText: translatedTexts["Shopping Cart"] || "Shopping Cart",
@@ -73,7 +73,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => handleMarketNavigation("c2c")}
             >
-              <div className="mb-2">
+              <div className="mb-2 flex items-center gap-2">
+                <Users className="h-4 w-4" />
                 <span className={`text-sm font-medium transition-colors duration-300 ${
                   marketType === 'c2c' 
                     ? 'text-black' 
@@ -93,7 +94,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => handleMarketNavigation("b2c")}
             >
-              <div className="mb-2">
+              <div className="mb-2 flex items-center gap-2">
+                <Store className="h-4 w-4" />
                 <span className={`text-sm font-medium transition-colors duration-300 ${
                   marketType === 'b2c' 
                     ? 'text-black' 
@@ -113,7 +115,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               className="cursor-pointer group transition-all duration-300"
               onClick={() => handleMarketNavigation("b2b")}
             >
-              <div className="mb-2">
+              <div className="mb-2 flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
                 <span className={`text-sm font-medium transition-colors duration-300 ${
                   marketType === 'b2b' 
                     ? 'text-black' 
