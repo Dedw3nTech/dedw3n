@@ -558,7 +558,7 @@ export default function VendorDashboard() {
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {translations?.["Total Orders"] || "Total Orders"}
+                    {t("Total Orders")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -574,7 +574,7 @@ export default function VendorDashboard() {
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {translations?.["Total Revenue"] || "Total Revenue"}
+                    {t("Total Revenue")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -590,7 +590,7 @@ export default function VendorDashboard() {
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {translations?.["Pending Orders"] || "Pending Orders"}
+                    {t("Pending Orders")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -617,10 +617,10 @@ export default function VendorDashboard() {
           {/* Products Tab */}
           <TabsContent value="products" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold tracking-tight">{translations?.["Products"] || "Products"}</h2>
+              <h2 className="text-2xl font-bold tracking-tight">{t("Products")}</h2>
               <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                {translations?.["Add Product"] || "Add Product"}
+                {t("Add Product")}
               </Button>
             </div>
             <ProductsList vendorId={vendorId || undefined} />
@@ -630,17 +630,17 @@ export default function VendorDashboard() {
 
           {/* Customers Tab */}
           <TabsContent value="customers" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">{translations?.["Customers"] || "Customers"}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("Customers")}</h2>
             <CustomersList vendorId={vendorId || undefined} />
           </TabsContent>
 
           {/* Shipping Tab */}
           <TabsContent value="shipping" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">{translations?.["Shipping & Orders"] || "Shipping & Orders"}</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("Shipping & Orders")}</h2>
             
             {/* Orders Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{translations?.["Orders"] || "Orders"}</h3>
+              <h3 className="text-lg font-semibold">{t("Orders")}</h3>
               <OrdersList vendorId={vendorId || undefined} />
             </div>
             
