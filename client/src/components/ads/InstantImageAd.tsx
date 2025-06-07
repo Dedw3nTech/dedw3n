@@ -185,12 +185,7 @@ export function InstantImageAd({
             />
           )}
 
-          {/* Click overlay for better UX */}
-          {clickable && (
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
-              <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          )}
+
         </div>
 
         {/* Advertisement label */}
