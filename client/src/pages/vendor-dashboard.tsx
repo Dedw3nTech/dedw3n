@@ -646,7 +646,7 @@ export default function VendorDashboard() {
             
             {/* Shipping Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{translations?.["Shipping Manager"] || "Shipping Management"}</h3>
+              <h3 className="text-lg font-semibold">{t("Shipping Management")}</h3>
               <ShippingManager vendorId={vendorId || undefined} />
             </div>
           </TabsContent>
@@ -665,27 +665,27 @@ export default function VendorDashboard() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-2xl font-bold">Promotions & Discounts</h3>
-                  <p className="text-muted-foreground">Manage discount codes and automatic promotions</p>
+                  <h3 className="text-2xl font-bold">{t("Promotions & Discounts")}</h3>
+                  <p className="text-muted-foreground">{t("Manage discount codes and automatic promotions")}</p>
                 </div>
               </div>
 
               <Tabs defaultValue="discount-codes" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
-                  <TabsTrigger value="auto-discounts">Automatic Discounts</TabsTrigger>
+                  <TabsTrigger value="discount-codes">{t("Discount Codes")}</TabsTrigger>
+                  <TabsTrigger value="auto-discounts">{t("Automatic Discounts")}</TabsTrigger>
                 </TabsList>
 
                 {/* Discount Codes Tab */}
                 <TabsContent value="discount-codes" className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-md font-semibold">Discount Codes</h4>
+                    <h4 className="text-md font-semibold">{t("Discount Codes")}</h4>
                     <Button className="bg-black hover:bg-gray-800" onClick={() => {
                       setDiscountFormType("discount-code");
                       setDiscountFormOpen(true);
                     }}>
                       <PlusCircle className="h-4 w-4 mr-2" />
-                      Create Code
+{t("Create Code")}
                     </Button>
                   </div>
 
@@ -695,13 +695,13 @@ export default function VendorDashboard() {
                 {/* Automatic Discounts Tab */}
                 <TabsContent value="auto-discounts" className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-md font-semibold">Automatic Discounts</h4>
+                    <h4 className="text-md font-semibold">{t("Automatic Discounts")}</h4>
                     <Button className="bg-black hover:bg-gray-800" onClick={() => {
                       setDiscountFormType("automatic");
                       setDiscountFormOpen(true);
                     }}>
                       <PlusCircle className="h-4 w-4 mr-2" />
-                      Create Auto Discount
+{t("Create Auto Discount")}
                     </Button>
                   </div>
 
@@ -717,7 +717,7 @@ export default function VendorDashboard() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">Store Settings</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{t("Store Settings")}</h2>
             <StoreSettingsForm vendor={vendor} />
             
             {vendorId && (
