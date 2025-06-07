@@ -126,10 +126,38 @@ export default function Products() {
   const typeAtLeastText = useTranslatedText("Type at least 2 characters to search");
   const byText = useTranslatedText("By");
   
+  // Product card translations
+  const friendText = useTranslatedText("Friend");
+  const vatText = useTranslatedText("+VAT");
+  const volumeDiscountText = useTranslatedText("Volume discount available");
+  const listedByText = useTranslatedText("Listed by");
+  const buyText = useTranslatedText("Buy");
+  const repostButtonText = useTranslatedText("Repost");
+  const sendOfferBtnText = useTranslatedText("Send Offer");
+  
+  // Hover text translations
+  const viewProductDetailsText = useTranslatedText("View product details and seller information");
+  const addToCartTooltipText = useTranslatedText("Add this product to your shopping cart");
+  const shareOnFeedTooltipText = useTranslatedText("Share this product on your community feed for others to see");
+  const makeOfferTooltipText = useTranslatedText("Make a custom offer to the seller with your preferred price");
+  const sendGiftTooltipText = useTranslatedText("Send this product as a gift to someone special");
+  const addToProfileTooltipText = useTranslatedText("Add this product to your dating profile as a potential gift");
+  const addToFavoritesText = useTranslatedText("Add to your favorites");
+  const removeFromFavoritesText = useTranslatedText("Remove from your favorites");
+  const shareProductTooltipText = useTranslatedText("Share this product via email, message, or social media");
+  
+  // Share dropdown translations
+  const shareProductText = useTranslatedText("Share Product");
+  const shareViaEmailText = useTranslatedText("Share via Email");
+  const copyLinkText = useTranslatedText("Copy Link");
+  const shareOnFeedText = useTranslatedText("Share on Feed");
+  const sendViaMessageText = useTranslatedText("Send via Message");
+  const shareWithMemberText = useTranslatedText("Share with Member");
+  
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [repostText, setRepostText] = useState('');
+  const [repostMessage, setRepostMessage] = useState('');
 
   // Send Offer dialog state
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
@@ -278,7 +306,7 @@ export default function Products() {
         description: "Product has been shared to your community feed.",
       });
       setRepostDialogOpen(false);
-      setRepostText('');
+      setRepostMessage('');
       setSelectedProduct(null);
     },
     onError: () => {
@@ -586,7 +614,7 @@ export default function Products() {
     if (selectedProduct) {
       repostMutation.mutate({ 
         productId: selectedProduct.id, 
-        text: repostText.trim() 
+        text: repostMessage.trim() 
       });
     }
   };
@@ -701,7 +729,7 @@ export default function Products() {
 
             {/* Friend indicator for C2C */}
             {marketType === 'c2c' && product.vendorId % 3 === 0 && (
-              <Badge className="bg-blue-600">Friend</Badge>
+              <Badge className="bg-blue-600">{friendText}</Badge>
             )}
           </div>
         </div>
@@ -718,7 +746,7 @@ export default function Products() {
                 <div className="flex items-center">
                   <div className="font-bold text-blue-600 text-sm">
                     {formatPrice(product.discountPrice)}
-                    {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
+                    {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                   </div>
                   <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
                 </div>
@@ -1342,8 +1370,8 @@ export default function Products() {
               <label className="text-sm font-medium">{addYourMessageText}</label>
               <Textarea
                 placeholder={whatDoYouThinkText}
-                value={repostText}
-                onChange={(e) => setRepostText(e.target.value)}
+                value={repostMessage}
+                onChange={(e) => setRepostMessage(e.target.value)}
                 className="mt-2"
                 rows={3}
               />
