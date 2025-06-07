@@ -15,7 +15,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
-import { preloadAllAdvertisements, ZeroLoadingAd } from "@/components/ads/ZeroLoadingAd";
+
 import { useEffect, useState } from "react";
 
 // Initialize advertisement preloader on app startup
