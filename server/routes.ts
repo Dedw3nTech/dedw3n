@@ -5885,7 +5885,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
       }
 
-      if (!process.env.DEEPL_API_KEY) {
+      // Smart API key management with automatic fallback
+      const apiKeys = [
+        process.env.DEEPL_API_KEY,
+        process.env.DEEPL_API_KEY_BACKUP
+      ].filter(key => key); // Remove null/undefined keys
+
+      if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
       }
 
@@ -6063,8 +6069,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Smart API key management with automatic fallback
       const apiKeys = [
         process.env.DEEPL_API_KEY,
-        process.env.DEEPL_API_KEY_BACKUP,
-        process.env.DEEPL_API_KEY_PREMIUM
+        process.env.DEEPL_API_KEY_BACKUP
       ].filter(key => key); // Remove null/undefined keys
 
       if (apiKeys.length === 0) {
@@ -6138,43 +6143,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
               body: formData,
             });
 
-          const processingTime = Date.now() - startTime;
-          console.log(`[Batch ${batchIndex + 1}] Processed ${batch.length} texts in ${processingTime}ms`);
+            const processingTime = Date.now() - startTime;
+            console.log(`[Batch ${batchIndex + 1}] Processed ${batch.length} texts in ${processingTime}ms`);
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.translations && data.translations.length > 0) {
-              return data.translations.map((translation, index) => ({
-                ...translation,
-                originalIndex: batch[index].originalIndex
-              }));
+            if (response.ok) {
+              const data = await response.json();
+              if (data.translations && data.translations.length > 0) {
+                return data.translations.map((translation, index) => ({
+                  ...translation,
+                  originalIndex: batch[index].originalIndex
+                }));
+              }
+            } else {
+              // Handle DeepL API errors with intelligent fallback
+              const errorText = await response.text();
+              console.error(`[Batch ${batchIndex + 1}] DeepL API error:`, response.status, errorText);
+              
+              // If quota exceeded or rate limited, try next key
+              if (response.status === 456 || response.status === 429) {
+                console.log(`[Batch ${batchIndex + 1}] Key quota/rate limit exceeded, trying next key...`);
+                continue;
+              }
+
+              // If forbidden (403) or auth error, try next key
+              if (response.status === 403) {
+                console.log(`[Batch ${batchIndex + 1}] Key authentication failed, trying next key...`);
+                continue;
+              }
+              
+              // If language not supported, return original texts for data integrity
+              if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
+                console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage} - returning original texts`);
+                return await handleUnsupportedLanguageBatch(batch, targetLanguage);
+              }
             }
-          } else {
-            // Handle DeepL API errors (including unsupported languages like Hindi)
-            const errorText = await response.text();
-            console.error(`[Batch ${batchIndex + 1}] DeepL API error:`, response.status, errorText);
             
-            // If language not supported, return original texts for data integrity
-            if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
-              console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage} - returning original texts`);
-              return await handleUnsupportedLanguageBatch(batch, targetLanguage);
-            }
+            // For other errors, break and use fallback
+            break;
+
+          } catch (error) {
+            console.error(`[Batch ${batchIndex + 1}] Translation error with key:`, error);
+            continue; // Try next key
           }
-          
-          // Fallback for this batch
-          return batch.map(item => ({
-            text: item.text,
-            detected_source_language: 'EN',
-            originalIndex: item.originalIndex
-          }));
-        } catch (error) {
-          console.error(`[Batch ${batchIndex + 1}] Translation error:`, error);
-          return batch.map(item => ({
-            text: item.text,
-            detected_source_language: 'EN',
-            originalIndex: item.originalIndex
-          }));
         }
+        
+        // Fallback for this batch when all keys fail
+        return batch.map(item => ({
+          text: item.text,
+          detected_source_language: 'EN',
+          originalIndex: item.originalIndex
+        }));
       };
 
       // Process batches in parallel chunks for maximum speed
