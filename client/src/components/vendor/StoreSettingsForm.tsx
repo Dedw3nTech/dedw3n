@@ -523,12 +523,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     name="storeName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Store Name</FormLabel>
+                        <FormLabel>{translatedTexts["Store Name"] || "Store Name"}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your store name" {...field} />
+                          <Input placeholder={translatedTexts["Enter your store name"] || "Enter your store name"} {...field} />
                         </FormControl>
                         <FormDescription>
-                          This is the name that will be displayed to customers
+                          {translatedTexts["This is the name that will be displayed to customers"] || "This is the name that will be displayed to customers"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -540,16 +540,16 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Store Description</FormLabel>
+                        <FormLabel>{translatedTexts["Description"] || "Description"}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Describe your store and what you sell"
+                            placeholder={translatedTexts["Describe your store and products"] || "Describe your store and what you sell"}
                             className="min-h-24"
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          Tell customers about your store, products, and brand
+                          {translatedTexts["Tell customers about your store, products, and brand"] || "Tell customers about your store, products, and brand"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -564,12 +564,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                   name="contactEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Email</FormLabel>
+                      <FormLabel>{translatedTexts["Contact Email"] || "Contact Email"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="store@example.com" {...field} value={field.value || ''} />
+                        <Input placeholder={translatedTexts["Your store contact email"] || "store@example.com"} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormDescription>
-                        Email address for customer inquiries
+                        {translatedTexts["Email address for customer inquiries"] || "Email address for customer inquiries"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -581,12 +581,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                   name="contactPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
+                      <FormLabel>{translatedTexts["Contact Phone"] || "Contact Phone"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1 (555) 123-4567" {...field} value={field.value || ''} />
+                        <Input placeholder={translatedTexts["Your store contact phone"] || "+1 (555) 123-4567"} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormDescription>
-                        Phone number for customer support
+                        {translatedTexts["Phone number for customer support"] || "Phone number for customer support"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -598,12 +598,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                   name="website"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Website (Optional)</FormLabel>
+                      <FormLabel>{translatedTexts["Website"] || "Website"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://yourstorewebsite.com" {...field} value={field.value || ''} />
+                        <Input placeholder={translatedTexts["Your store website URL"] || "https://yourstorewebsite.com"} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormDescription>
-                        Your external website if you have one
+                        {translatedTexts["Your external website if you have one"] || "Your external website if you have one"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -615,12 +615,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Address (Optional)</FormLabel>
+                      <FormLabel>{translatedTexts["Address"] || "Address"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="123 Main St, City, Country" {...field} value={field.value || ''} />
+                        <Input placeholder={translatedTexts["Your store physical address"] || "123 Main St, City, Country"} {...field} value={field.value || ''} />
                       </FormControl>
                       <FormDescription>
-                        Your business location
+                        {translatedTexts["Your business location"] || "Your business location"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -632,7 +632,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center">
                   <User className="h-5 w-5 mr-2" />
-                  Sales Manager
+                  {translatedTexts["Sales Manager"] || "Sales Manager"}
                 </h3>
                 <FormField
                   control={form.control}
@@ -641,10 +641,10 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                          Do you have a Sales Manager?
+                          {translatedTexts["Do you have a Sales Manager?"] || "Do you have a Sales Manager?"}
                         </FormLabel>
                         <FormDescription>
-                          Sales Managers earn an additional 2.5% commission on your sales
+                          {translatedTexts["Enable sales manager for your store"] || "Sales Managers earn an additional 2.5% commission on your sales"}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -793,26 +793,26 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
               {/* User Management Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Store User Management</h3>
+                  <h3 className="text-lg font-semibold">{translatedTexts["Store Users"] || "Store User Management"}</h3>
                   <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add User
+                        {translatedTexts["Add User"] || "Add User"}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Add User to Store</DialogTitle>
+                        <DialogTitle>{translatedTexts["Add User to Store"] || "Add User to Store"}</DialogTitle>
                         <DialogDescription>
-                          Search for users and assign them roles in your store
+                          {translatedTexts["Manage users who can access your store"] || "Search for users and assign them roles in your store"}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div className="relative">
                           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                           <Input
-                            placeholder="Search by username, name, or email..."
+                            placeholder={translatedTexts["Search users..."] || "Search by username, name, or email..."}
                             value={searchQuery}
                             onChange={(e) => handleSearch(e.target.value)}
                             className="pl-10"
@@ -822,7 +822,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                         {searchUsersMutation.isPending && (
                           <div className="flex items-center justify-center py-4">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="ml-2 text-sm text-gray-500">Searching...</span>
+                            <span className="ml-2 text-sm text-gray-500">{translatedTexts["Searching..."] || "Searching..."}</span>
                           </div>
                         )}
 
@@ -968,12 +968,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                               {storeUser.isActive ? (
                                 <>
                                   <UserX className="h-4 w-4 mr-1" />
-                                  Deactivate
+                                  {translatedTexts["Inactive"] || "Deactivate"}
                                 </>
                               ) : (
                                 <>
                                   <UserCheck className="h-4 w-4 mr-1" />
-                                  Activate
+                                  {translatedTexts["Active"] || "Activate"}
                                 </>
                               )}
                             </Button>
@@ -989,11 +989,11 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t">
-                          <p className="text-xs text-gray-500 mb-2">Permissions:</p>
+                          <p className="text-xs text-gray-500 mb-2">{translatedTexts["Permissions"] || "Permissions"}:</p>
                           <div className="flex flex-wrap gap-1">
                             {ROLE_PERMISSIONS[storeUser.role as keyof typeof ROLE_PERMISSIONS]?.map((permission: string, index: number) => (
                               <Badge key={index} variant="secondary" className="text-xs">
-                                {permission}
+                                {translatedTexts[permission] || permission}
                               </Badge>
                             ))}
                           </div>
@@ -1013,10 +1013,10 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                   {updateSettingsMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving Changes...
+                      {translatedTexts["Saving Changes..."] || "Saving Changes..."}
                     </>
                   ) : (
-                    "Save Changes"
+                    translatedTexts["Save Changes"] || "Save Changes"
                   )}
                 </Button>
               </div>
