@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
+import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,30 +18,50 @@ interface MarketplaceNavProps {
 }
 
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
-  // Temporarily disable hooks causing infinite re-render
-  // const [, setLocation] = useLocation();
-  // const { marketType, setMarketType } = useMarketType();
-  // const { selectedCurrency, setSelectedCurrency } = useCurrency();
-  // const { cartItemCount } = useCart();
+  const [, setLocation] = useLocation();
+  const { marketType, setMarketType } = useMarketType();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  const { cartItemCount } = useCart();
 
-  // Static values for testing
-  const marketType = "c2c";
-  const cartItemCount = 0;
-  const selectedCurrency = currencies[0];
+  // Define translatable texts with stable references
+  const navigationTexts = useMemo(() => [
+    "C2C",
+    "B2C", 
+    "B2B",
+    "Search products...",
+    "Liked",
+    "Shopping Cart",
+    "Orders & Returns",
+    "Vendor Dashboard"
+  ], []);
 
-  // Temporarily use static text to prevent infinite re-render
-  const c2cText = "C2C";
-  const b2cText = "B2C";
-  const b2bText = "B2B";
-  const searchPlaceholder = "Search products...";
-  const likedText = "Liked";
-  const cartText = "Shopping Cart";
-  const ordersText = "Orders & Returns";
-  const vendorText = "Vendor Dashboard";
+  // Use unified batch translation for optimal performance
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(navigationTexts, 'high');
+
+  // Memoize translated values to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    c2cText: translatedTexts["C2C"] || "C2C",
+    b2cText: translatedTexts["B2C"] || "B2C", 
+    b2bText: translatedTexts["B2B"] || "B2B",
+    searchPlaceholder: translatedTexts["Search products..."] || "Search products...",
+    likedText: translatedTexts["Liked"] || "Liked",
+    cartText: translatedTexts["Shopping Cart"] || "Shopping Cart",
+    ordersText: translatedTexts["Orders & Returns"] || "Orders & Returns",
+    vendorText: translatedTexts["Vendor Dashboard"] || "Vendor Dashboard"
+  }), [translatedTexts]);
+
+  // Memoize navigation handlers to prevent infinite re-renders
+  const handleMarketNavigation = useCallback((type: string) => {
+    setMarketType(type);
+    setLocation("/marketplace");
+  }, [setMarketType, setLocation]);
+
+  const handlePageNavigation = useCallback((path: string) => {
+    setLocation(path);
+  }, [setLocation]);
 
   // Static counts for testing
   const likedProductsCount = 0;
-  const notificationsCount = 0;
   const ordersNotificationsCount = 0;
 
   return (
@@ -50,10 +71,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
             <div 
               className="cursor-pointer group transition-all duration-300"
-              onClick={() => {
-                setMarketType("c2c");
-                setLocation("/marketplace");
-              }}
+              onClick={() => handleMarketNavigation("c2c")}
             >
               <div className="mb-2">
                 <span className={`text-sm font-medium transition-colors duration-300 ${
@@ -61,7 +79,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  {c2cText}
+                  {translatedLabels.c2cText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -73,10 +91,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             
             <div 
               className="cursor-pointer group transition-all duration-300"
-              onClick={() => {
-                setMarketType("b2c");
-                setLocation("/marketplace");
-              }}
+              onClick={() => handleMarketNavigation("b2c")}
             >
               <div className="mb-2">
                 <span className={`text-sm font-medium transition-colors duration-300 ${
@@ -84,7 +99,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  {b2cText}
+                  {translatedLabels.b2cText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -96,10 +111,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             
             <div 
               className="cursor-pointer group transition-all duration-300"
-              onClick={() => {
-                setMarketType("b2b");
-                setLocation("/marketplace");
-              }}
+              onClick={() => handleMarketNavigation("b2b")}
             >
               <div className="mb-2">
                 <span className={`text-sm font-medium transition-colors duration-300 ${
@@ -107,7 +119,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
                 }`}>
-                  {b2bText}
+                  {translatedLabels.b2bText}
                 </span>
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
@@ -122,7 +134,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder={searchPlaceholder}
+                  placeholder={translatedLabels.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-10"
@@ -136,7 +148,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => setLocation("/liked")}
+              onClick={() => handlePageNavigation("/liked")}
             >
               <div className="relative">
                 <Heart className="h-4 w-4" />
@@ -146,14 +158,14 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{likedText}</span>
+              <span className="text-sm font-medium">{translatedLabels.likedText}</span>
             </Button>
 
 
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => setLocation("/cart")}
+              onClick={() => handlePageNavigation("/cart")}
             >
               <div className="relative">
                 <ShoppingBag className="h-4 w-4" />
@@ -163,13 +175,13 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{cartText}</span>
+              <span className="text-sm font-medium">{translatedLabels.cartText}</span>
             </Button>
             
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => setLocation("/orders-returns")}
+              onClick={() => handlePageNavigation("/orders-returns")}
             >
               <div className="relative">
                 <Package className="h-4 w-4" />
@@ -179,16 +191,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{ordersText}</span>
+              <span className="text-sm font-medium">{translatedLabels.ordersText}</span>
             </Button>
             
             <Button
               variant="ghost"
               className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/vendor-dashboard")}
+              onClick={() => handlePageNavigation("/vendor-dashboard")}
             >
               <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">{vendorText}</span>
+              <span className="text-sm font-medium">{translatedLabels.vendorText}</span>
             </Button>
             
 
