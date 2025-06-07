@@ -114,7 +114,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/become-vendor',
     '/liked',
     '/orders-returns',
-    '/translation-test'
+
   ];
   
   // Check if current path should show the marketplace nav
@@ -222,7 +222,7 @@ import PawapayRefundCallback from "@/pages/pawapay-refund-callback";
 
 import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
-import TranslationTest from "@/pages/translation-test";
+
 
 function Router() {
   return (
@@ -233,9 +233,7 @@ function Router() {
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>
-      <Route path="/translation-test">
-        <TranslationTest />
-      </Route>
+
       <Route path="/" component={Products} />
 
       <Route path="/logout-success" component={LogoutSuccess} />

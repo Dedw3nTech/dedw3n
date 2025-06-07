@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { TranslatedText } from "@/hooks/use-translated-text";
 import { Badge } from "@/components/ui/badge";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +54,33 @@ export default function OptimizedNavigation() {
   });
   
   const isLoggedIn = !!userData;
+
+  // Define translatable texts with stable references for DOM-safe translation
+  const headerTexts = useMemo(() => [
+    "Marketplace",
+    "Community", 
+    "Dating",
+    "Contact",
+    "Currency",
+    "Language",
+    "Log in",
+    "Sign Up"
+  ], []);
+
+  // Use DOM-safe batch translation for optimal performance
+  const { translations: translatedHeaderTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(headerTexts, 'instant');
+
+  // Memoize translated values to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    marketplace: translatedHeaderTexts["Marketplace"] || "Marketplace",
+    community: translatedHeaderTexts["Community"] || "Community",
+    dating: translatedHeaderTexts["Dating"] || "Dating",
+    contact: translatedHeaderTexts["Contact"] || "Contact",
+    currency: translatedHeaderTexts["Currency"] || "Currency",
+    language: translatedHeaderTexts["Language"] || "Language",
+    login: translatedHeaderTexts["Log in"] || "Log in",
+    signup: translatedHeaderTexts["Sign Up"] || "Sign Up"
+  }), [translatedHeaderTexts]);
   
   // Unread counts
   const { data: unreadMessages } = useQuery<{ count: number }>({
@@ -65,33 +93,33 @@ export default function OptimizedNavigation() {
     enabled: isLoggedIn,
   });
 
-  // Main navigation items - simplified to 4 core pages
-  const mainNavItems = [
+  // Main navigation items using translated labels
+  const mainNavItems = useMemo(() => [
     {
-      title: "Marketplace",
+      title: translatedLabels.marketplace,
       href: "/marketplace/b2c",
       icon: Store,
       isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
     },
     {
-      title: "Community",
+      title: translatedLabels.community,
       href: "/community",
       icon: Users,
       isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
     },
     {
-      title: "Dating",
+      title: translatedLabels.dating,
       href: "/dating",
       icon: Heart,
       isActive: location.startsWith("/dating"),
     },
     {
-      title: "Contact",
+      title: translatedLabels.contact,
       href: "/contact",
       icon: MessageSquare,
       isActive: location.startsWith("/contact"),
     },
-  ];
+  ], [translatedLabels, location]);
 
   // Quick access items for authenticated users
   const quickAccessItems = isLoggedIn ? [
