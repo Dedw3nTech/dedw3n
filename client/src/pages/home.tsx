@@ -7,7 +7,7 @@ import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useStableBatchTranslation } from "@/hooks/use-stable-translation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
@@ -126,8 +126,8 @@ export default function Home() {
     "Money Back Guarantee"
   ];
 
-  // Use unified batch translation for optimal performance
-  const { translations: t, isLoading: isTranslating } = useUnifiedBatchTranslation(homeTexts, 'high');
+  // Use stable batch translation for optimal performance and persistence
+  const { translations: t, isLoading: isTranslating } = useStableBatchTranslation(homeTexts, 'instant');
 
   // Fetch featured products (limit to 6)
   const { 
