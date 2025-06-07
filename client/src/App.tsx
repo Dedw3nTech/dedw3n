@@ -58,6 +58,7 @@ const datingPromoImages = {
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import SafeComponentWrapper from "@/components/ui/safe-component-wrapper";
 import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -128,7 +129,9 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
   
   return (
     <div className="sticky top-0 z-30 bg-white shadow-sm">
-      <MarketplaceNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <SafeComponentWrapper componentName="MarketplaceNav">
+        <MarketplaceNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      </SafeComponentWrapper>
     </div>
   );
 }
@@ -368,9 +371,13 @@ function App() {
                       <LanguageProvider>
                         <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
-                          <OptimizedNavigation />
+                          <SafeComponentWrapper componentName="OptimizedNavigation">
+                            <OptimizedNavigation />
+                          </SafeComponentWrapper>
                           <MarketplaceNavWrapper />
-                          <Breadcrumbs />
+                          <SafeComponentWrapper componentName="Breadcrumbs">
+                            <Breadcrumbs />
+                          </SafeComponentWrapper>
                           
                           {/* Community Navigation - Only show on community page */}
                           <CommunityNavWrapper />
@@ -397,7 +404,9 @@ function App() {
                           <MarketplaceBottomPromoSection />
                           
                           <Footer />
-                          <MobileNavigation />
+                          <SafeComponentWrapper componentName="MobileNavigation">
+                            <MobileNavigation />
+                          </SafeComponentWrapper>
                           <OfflineIndicator />
 
                           <GlobalLoginHandler />
