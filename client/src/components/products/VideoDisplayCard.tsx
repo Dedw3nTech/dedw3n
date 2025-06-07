@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import campaignVideo from "@assets/Cafe.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
-import motivationalVideo from "@assets/Summer Motivational Instagram Reels Video.mp4";
+import motivationalVideo from "@assets/Phone finger _1749112701077.mp4";
 
 interface VideoDisplayCardProps {
   videoSource?: string;
