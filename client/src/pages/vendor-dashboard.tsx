@@ -264,7 +264,7 @@ export default function VendorDashboard() {
   };
 
   // Show loading while vendor data is being fetched
-  if (isLoadingVendor || isTranslating) {
+  if (isLoadingVendor) {
     return (
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
         <Card>

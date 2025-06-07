@@ -49,11 +49,30 @@ class StableDOMTranslationManager {
     return `${componentId}:${text}:${targetLanguage}`;
   }
 
-  private getCachedTranslation(text: string, targetLanguage: string, componentId: string): string | null {
-    const key = this.getCacheKey(text, targetLanguage, componentId);
-    const cached = this.cache[key];
+  public getCachedTranslation(text: string, targetLanguage: string, componentId: string): string | null {
+    // First try exact component match
+    const exactKey = this.getCacheKey(text, targetLanguage, componentId);
+    const exactMatch = this.cache[exactKey];
     
-    if (!cached) return null;
+    if (exactMatch && this.isCacheValid(exactMatch)) {
+      return exactMatch.translatedText;
+    }
+    
+    // Fallback: search for any cached translation of this text in the target language
+    const fallbackKey = Object.keys(this.cache).find(key => {
+      const entry = this.cache[key];
+      return key.includes(`:${text}:${targetLanguage}`) && this.isCacheValid(entry);
+    });
+    
+    if (fallbackKey) {
+      return this.cache[fallbackKey].translatedText;
+    }
+    
+    return null;
+  }
+
+  private isCacheValid(cached: any): boolean {
+    if (!cached) return false;
     
     const age = Date.now() - cached.timestamp;
     const maxAge = this.CACHE_DURATIONS[cached.priority];
@@ -393,9 +412,19 @@ export function useStableDOMBatchTranslation(
       return;
     }
 
-    // Reset if language changed
+    // Reset if language changed, but provide immediate fallbacks for critical UI elements
     if (lastLanguageRef.current !== currentLanguage) {
-      setTranslations({});
+      // Initialize with cached translations or original texts as immediate fallbacks
+      const fallbackTranslations: Record<string, string> = {};
+      const componentId = componentIdRef.current;
+      
+      stableTexts.forEach(text => {
+        // Check for cached translation first
+        const cached = managerRef.current.getCachedTranslation(text, currentLanguage, componentId);
+        fallbackTranslations[text] = cached || text;
+      });
+      
+      setTranslations(fallbackTranslations);
       setIsLoading(true);
       lastLanguageRef.current = currentLanguage;
     }
