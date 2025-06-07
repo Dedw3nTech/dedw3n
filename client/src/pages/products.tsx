@@ -10,7 +10,7 @@ import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use
 import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-translation';
 import { useUltraFastTranslation, preloadCriticalTranslations } from '@/hooks/use-ultra-fast-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
+
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
@@ -946,35 +946,7 @@ export default function Products() {
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video Ad Campaign - show in both B2C and B2B marketplace */}
-      {marketType === 'b2c' && (
-        <div className="mb-6">
-          <VideoAdCampaignCard 
-            marketType="b2c"
-            entity="default"
-          />
-        </div>
-      )}
 
-      {/* B2B Video Ad Campaign */}
-      {marketType === 'b2b' && (
-        <div className="mb-6">
-          <VideoAdCampaignCard 
-            marketType="b2b"
-            entity="technology"
-          />
-        </div>
-      )}
-
-      {/* C2C Video Ad Campaign */}
-      {marketType === 'c2c' && (
-        <div className="mb-6">
-          <VideoAdCampaignCard 
-            marketType="c2c"
-            entity="default"
-          />
-        </div>
-      )}
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">{searchForProductsText}</h3>

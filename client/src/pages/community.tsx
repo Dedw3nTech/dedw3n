@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
-import { VideoAdCampaignCard } from "@/components/products/VideoAdCampaignCard";
+
 import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
@@ -462,7 +462,7 @@ export default function CommunityPage() {
                 showControls={true}
               />
               <TrendingCategoriesCard />
-              <VideoAdCampaignCard />
+
               <LatestProductsCard />
               <PopularProductsCard />
               <SidebarAdCard />
