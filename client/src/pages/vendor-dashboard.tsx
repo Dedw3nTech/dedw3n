@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useStableBatchTranslation } from "@/hooks/use-stable-translation";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -147,8 +147,8 @@ export default function VendorDashboard() {
     "No"
   ];
 
-  // Use stable batch translation for optimal performance and persistence
-  const { translations, isLoading: isTranslating } = useStableBatchTranslation(vendorTexts, 'instant');
+  // Use DOM-safe batch translation for optimal performance and persistence
+  const { translations, isLoading: isTranslating } = useStableDOMBatchTranslation(vendorTexts, 'instant');
 
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;

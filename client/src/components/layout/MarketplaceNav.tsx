@@ -4,7 +4,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
+import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -35,8 +35,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Vendor Dashboard"
   ], []);
 
-  // Use unified batch translation for optimal performance
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(navigationTexts, 'high');
+  // Use DOM-safe batch translation for optimal performance
+  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(navigationTexts, 'instant');
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
