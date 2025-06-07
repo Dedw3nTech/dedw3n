@@ -8,7 +8,7 @@ const wsClients = new Map<number, WebSocket>();
 let wss: WebSocketServer;
 
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'auth';
+  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'auth' | 'authenticate';
   data?: any;
   userId?: number;
   targetUserId?: number;
@@ -123,9 +123,10 @@ export function setupWebSocket(server: Server) {
     ws.on('message', async (data) => {
       try {
         const message: WebSocketMessage = JSON.parse(data.toString());
+        console.log(`[WebSocket] Received message type: ${message.type} from user ${userId || 'unknown'}`);
         
-        // Handle authentication
-        if (message.type === 'auth' && message.data?.token) {
+        // Handle authentication - support both 'auth' and 'authenticate' message types
+        if ((message.type === 'auth' || message.type === 'authenticate') && message.data?.token) {
           const success = await authenticate(message.data.token);
           if (!success) {
             // Send persistent authentication error
@@ -138,6 +139,25 @@ export function setupWebSocket(server: Server) {
               },
               timestamp: new Date().toISOString()
             }));
+          }
+          return;
+        }
+        
+        // Handle legacy authenticate message format without token (session-based auth already done)
+        if (message.type === 'authenticate' || message.type === 'auth') {
+          if (isAuthenticated && userId) {
+            // Already authenticated via session, acknowledge the message
+            console.log(`[WebSocket] Acknowledging authentication for user ${userId}`);
+            ws.send(JSON.stringify({
+              type: 'auth_success',
+              data: { 
+                status: 'authenticated',
+                userId,
+                timestamp: new Date().toISOString()
+              }
+            }));
+          } else {
+            console.log(`[WebSocket] Authentication message received but user not authenticated yet`);
           }
           return;
         }
@@ -166,6 +186,10 @@ export function setupWebSocket(server: Server) {
             break;
           case 'read_receipt':
             handleReadReceipt(message, userId);
+            break;
+          case 'authenticate':
+          case 'auth':
+            // Authentication already handled above, just acknowledge
             break;
           default:
             console.log(`[WebSocket] Unknown message type: ${message.type}`);

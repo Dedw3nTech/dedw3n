@@ -365,6 +365,20 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }));
         break;
         
+      case "connection_status":
+        if (data.data && data.data.status === "connected" && data.data.userId) {
+          console.log("WebSocket connection authenticated via session");
+          setConnectionStatus('authenticated');
+          setConnectionDetails(prev => ({
+            ...prev,
+            authenticated: true,
+            serverConnectionId: data.data.userId,
+            tokenAuth: false, // Session-based auth
+            serverTime: data.data.serverTime
+          }));
+        }
+        break;
+        
       case "auth_error":
         console.error("WebSocket authentication failed:", data.message);
         setConnectionStatus('connected'); // Still connected but not authenticated
@@ -756,58 +770,16 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
         reconnectAttempts = 0;
         
-        // Authenticate the connection
-        if (user) {
-          // Log token presence for debugging (but not the actual token)
-          console.log(`Authenticating WebSocket with userId ${user.id}, token present: ${!!token}, connectionId: ${connectionId}`);
-          
-          try {
-            socket.send(JSON.stringify({
-              type: "auth",
-              data: {
-                token: token,  // Include the JWT token for authentication
-                userId: user.id
-              }
-            }));
-            
-            console.log("Sent authentication request to WebSocket server with token");
-          } catch (error) {
-            console.error("Error sending authentication request:", error);
-            setConnectionStatus('disconnected');
-            return;
+        // Session-based authentication is handled automatically by the server
+        // No need to send additional auth messages since userId is in URL
+        console.log(`WebSocket connected for userId ${user.id}, waiting for authentication confirmation`);
+        
+        // Set a shorter timeout to check for authentication success
+        setTimeout(() => {
+          if (socket && socket.readyState === WebSocket.OPEN && connectionStatus !== 'authenticated') {
+            console.log("WebSocket still not authenticated after connection, this may be normal for session-based auth");
           }
-          
-          // Set a timeout to verify authentication success
-          setTimeout(() => {
-            if (socket && socket.readyState === WebSocket.OPEN && connectionStatus !== 'authenticated') {
-              console.warn("WebSocket health check: Connection open but not authenticated after 5 seconds");
-              // Try to re-authenticate with a fresh token
-              const freshToken = getStoredAuthToken();
-              try {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                  socket.send(JSON.stringify({
-                    type: "auth",
-                    data: {
-                      token: freshToken,
-                      userId: user.id
-                    }
-                  }));
-                  console.log("WebSocket health check: Authentication retry failed, resetting connection");
-                  
-                  // If still not authenticated after retry, close and reconnect
-                  setTimeout(() => {
-                    if (socket && socket.readyState === WebSocket.OPEN && connectionStatus !== 'authenticated') {
-                      console.log("WebSocket closed with code 1005 - will try to reconnect");
-                      socket.close(1005, "Authentication timeout");
-                    }
-                  }, 2000);
-                }
-              } catch (error) {
-                console.error("Error in authentication retry:", error);
-              }
-            }
-          }, 5000); // Check after 5 seconds
-        }
+        }, 2000);
       };
     }
     
