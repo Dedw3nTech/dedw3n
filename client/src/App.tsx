@@ -16,44 +16,26 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-// Import promotional images
-import defaultPromoImage from "@assets/Dedw3n Business II.png";
-import businessMeetingImage from "@assets/Dedw3n Business.png";
-import c2cMarketplaceImage from "@assets/Copy of Dedw3n Marketplace II.png";
-import luxuryB2CImage from "@assets/Dedw3n Marketplace (1).png";
-import sellCampaignImage from "@assets/Copy of Pre Launch Campaign  SELL.png";
-import bottomPromoImage from "@assets/Copy of Dedw3n Marketplace.png";
-import c2cFooterImage from "@assets/Dedw3n Business C2C Footer.png";
-import c2cHeaderImage from "@assets/Dedw3n Business C2c header (1).png";
-import b2bHeaderImage from "@assets/Dedw3n Business B2B Header.png";
-import b2bFooterImage from "@assets/Dedw3n Business B2B Footer.png";
-import b2cHeaderImage from "@assets/Dedw3n Business B2C Header (1).png";
-import b2cFooterImage from "@assets/Dedw3n Business B2C Footer.png";
-
-// Dating-specific promotional images (separate from marketplace images)
-import datingHeaderImage from "@assets/_Dedw3n Dating Header (1).png"; // Dating-specific header image
-import datingFooterImage from "@assets/Copy of Dedw3n comm Footer (1).png"; // Dating-specific footer image
-
-// Market-specific promotional images - each market type has its own separate images
+// Lazy load promotional images for better mobile performance
 const marketPromoImages = {
   b2c: {
-    top: b2cHeaderImage, // Currently: Dedw3n Business B2C Header (1).png (professional business people with enhanced styling)
-    bottom: b2cFooterImage, // Currently: Dedw3n Business B2C Footer.png (artistic portrait with mobile app interface)
+    top: () => import("@assets/Dedw3n Business B2C Header (1).png"),
+    bottom: () => import("@assets/Dedw3n Business B2C Footer.png"),
   },
   b2b: {
-    top: b2bHeaderImage, // Currently: Dedw3n Business B2B Header.png (professional businessman on phone with enhanced styling)
-    bottom: b2bFooterImage, // Currently: Dedw3n Business B2B Footer.png (professional businessman in suit)
+    top: () => import("@assets/Dedw3n Business B2B Header.png"),
+    bottom: () => import("@assets/Dedw3n Business B2B Footer.png"),
   },
   c2c: {
-    top: c2cHeaderImage, // Currently: Dedw3n Business C2c header.png (diverse marketplace community with Dedw3n branding)
-    bottom: c2cFooterImage, // Currently: Dedw3n Business C2C Footer.png (professional C2C marketplace scene with Dedw3n branding)
+    top: () => import("@assets/Dedw3n Business C2c header (1).png"),
+    bottom: () => import("@assets/Dedw3n Business C2C Footer.png"),
   },
 };
 
-// Dating-specific promotional images (completely separate from marketplace images)
+// Dating-specific promotional images (lazy loaded)
 const datingPromoImages = {
-  header: datingHeaderImage, // Top header advertisement for dating page
-  footer: datingFooterImage, // Bottom footer advertisement for dating page
+  header: () => import("@assets/_Dedw3n Dating Header (1).png"),
+  footer: () => import("@assets/Copy of Dedw3n comm Footer (1).png"),
 };
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";

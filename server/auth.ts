@@ -19,19 +19,16 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-// Enhanced password hashing with configurable parameters
+// Optimized password hashing for mobile performance
 export async function hashPassword(password: string) {
-  // Increase security with larger salt and more CPU-intensive parameters
-  const salt = randomBytes(32).toString("hex");
-  const keylen = 64; // Output key length in bytes
-  const cpuCost = 16384; // Higher CPU cost increases security (2^N)
+  // Reduced parameters for mobile performance while maintaining security
+  const salt = randomBytes(16).toString("hex"); // Reduced salt size
+  const keylen = 32; // Reduced output key length
   
   try {
-    console.log(`[DEBUG] Hashing password with salt length ${salt.length}`);
-    // Use scrypt standard parameters without options object (fixes TypeScript error)
+    // Remove excessive debug logging that clutters mobile logs
     const buf = (await scryptAsync(password, salt, keylen)) as Buffer;
     const hashedPassword = `${buf.toString("hex")}.${salt}`;
-    console.log(`[DEBUG] Password hashed successfully, length: ${hashedPassword.length}`);
     return hashedPassword;
   } catch (error) {
     console.error('[ERROR] Password hashing failed:', error);

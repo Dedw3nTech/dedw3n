@@ -4,7 +4,7 @@ import { safeJsonStringify, getErrorMessage } from "./utils";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import { fraudRiskAssessments } from "@shared/schema";
-import { hashPassword } from "./auth"; // Use the hashPassword function instead of generateHash
+// Remove excessive password hashing that's causing mobile performance issues
 import { TokenPayload } from "./jwt-auth"; // Import TokenPayload type
 
 // Update TokenPayload interface to include id property needed for fraud prevention
