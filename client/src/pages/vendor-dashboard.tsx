@@ -460,27 +460,27 @@ export default function VendorDashboard() {
         <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-black text-white">
           <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            Dashboard
+            {translations["Dashboard"] || "Dashboard"}
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Package className="h-4 w-4 mr-2" />
-            Products
+            {translations["Products"] || "Products"}
           </TabsTrigger>
           <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Users className="h-4 w-4 mr-2" />
-            Customers
+            {translations["Customers"] || "Customers"}
           </TabsTrigger>
           <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Truck className="h-4 w-4 mr-2" />
-            Shipping
+            {translations["Shipping"] || "Shipping"}
           </TabsTrigger>
           <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Megaphone className="h-4 w-4 mr-2" />
-            Marketing
+            {translations["Marketing"] || "Marketing"}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Settings className="h-4 w-4 mr-2" />
-            Settings
+            {translations["Settings"] || "Settings"}
           </TabsTrigger>
 
         </TabsList>
@@ -492,7 +492,7 @@ export default function VendorDashboard() {
           <div className="mb-4">
             <div className="font-medium text-xl flex items-center">
               <Store className="mr-2 h-5 w-5" />
-              {vendor?.storeName || "Vendor Dashboard"}
+              {vendor?.storeName || translations["Vendor Dashboard"] || "Vendor Dashboard"}
             </div>
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}

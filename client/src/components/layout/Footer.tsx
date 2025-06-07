@@ -24,29 +24,27 @@ export default function Footer() {
     "our sole official website is"
   ];
 
-  const translatedTexts = useUnifiedBatchTranslation(footerTexts, 'instant');
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(footerTexts, 'instant');
 
   // Extract individual translations for direct access
-  const [
-    allRightsReservedText,
-    privacyPolicyText,
-    termsOfServiceText,
-    cookiePolicyText,
-    communityGuidelinesText,
-    contactUsText,
-    faqText,
-    shippingText,
-    partnershipsText,
-    downloadMobileAppText,
-    downloadOnTheText,
-    appStoreText,
-    getItOnText,
-    googlePlayText,
-    britishCompanyText,
-    registeredOfficeText,
-    bankRegisteredText,
-    officialWebsiteText
-  ] = translatedTexts;
+  const allRightsReservedText = translatedTexts["All rights reserved"] || "All rights reserved";
+  const privacyPolicyText = translatedTexts["Privacy Policy"] || "Privacy Policy";
+  const termsOfServiceText = translatedTexts["Terms of Service"] || "Terms of Service";
+  const cookiePolicyText = translatedTexts["Cookie Policy"] || "Cookie Policy";
+  const communityGuidelinesText = translatedTexts["Community Guidelines"] || "Community Guidelines";
+  const contactUsText = translatedTexts["Contact Us"] || "Contact Us";
+  const faqText = translatedTexts["FAQ"] || "FAQ";
+  const shippingText = translatedTexts["Shipping"] || "Shipping";
+  const partnershipsText = translatedTexts["Partnerships"] || "Partnerships";
+  const downloadMobileAppText = translatedTexts["Download Mobile App"] || "Download Mobile App";
+  const downloadOnTheText = translatedTexts["Download on the"] || "Download on the";
+  const appStoreText = translatedTexts["App Store"] || "App Store";
+  const getItOnText = translatedTexts["Get it on"] || "Get it on";
+  const googlePlayText = translatedTexts["Google Play"] || "Google Play";
+  const britishCompanyText = translatedTexts["British Company"] || "British Company";
+  const registeredOfficeText = translatedTexts["Registered Office"] || "Registered Office";
+  const bankRegisteredText = translatedTexts["Bank Registered"] || "Bank Registered";
+  const officialWebsiteText = translatedTexts["Official Website"] || "Official Website";
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">

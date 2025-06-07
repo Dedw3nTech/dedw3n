@@ -33,8 +33,15 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Vendor Dashboard"
   ];
   
-  const translatedTexts = useUnifiedBatchTranslation(navTexts, 'instant');
-  const [c2cText, b2cText, b2bText, searchPlaceholder, likedText, cartText, ordersText, vendorText] = translatedTexts;
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(navTexts, 'instant');
+  const c2cText = translatedTexts["C2C"] || "C2C";
+  const b2cText = translatedTexts["B2C"] || "B2C";
+  const b2bText = translatedTexts["B2B"] || "B2B";
+  const searchPlaceholder = translatedTexts["Search products..."] || "Search products...";
+  const likedText = translatedTexts["Liked"] || "Liked";
+  const cartText = translatedTexts["Shopping Cart"] || "Shopping Cart";
+  const ordersText = translatedTexts["Orders & Returns"] || "Orders & Returns";
+  const vendorText = translatedTexts["Vendor Dashboard"] || "Vendor Dashboard";
 
   // Fetch liked products count
   const { data: likedProductsData } = useQuery<{ count: number }>({
