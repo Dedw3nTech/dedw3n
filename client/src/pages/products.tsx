@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useTranslatedText } from '@/hooks/use-translated-text';
+import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-optimized-translation';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
@@ -84,109 +84,86 @@ export default function Products() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Translated text for marketplace elements
-  const filterText = useTranslatedText("Filter");
-  const filterProductsText = useTranslatedText("Filter Products");
-  const narrowDownText = useTranslatedText("Narrow down products based on your preferences");
-  const productText = useTranslatedText("product");
-  const productsText = useTranslatedText("products");
-  const productFoundText = useTranslatedText("found");
-  const productsFoundText = useTranslatedText("found");
-  const clearAllText = useTranslatedText("Clear All");
-  const showText = useTranslatedText("Show");
-  const sortByText = useTranslatedText("Sort by");
-  const sortOptionsText = useTranslatedText("Sort Options");
-  const trendingText = useTranslatedText("Trending");
-  const priceLowHighText = useTranslatedText("Price: Low to High");
-  const priceHighLowText = useTranslatedText("Price: High to Low");
-  const newestProductText = useTranslatedText("Newest Product");
-  const yourRegionText = useTranslatedText("Your Region");
-  const yourCountryText = useTranslatedText("Your Country");
-  const servicesText = useTranslatedText("Services");
-  const addToCartText = useTranslatedText("Add to Cart");
-  const buyNowText = useTranslatedText("Buy Now");
-  const sendOfferText = useTranslatedText("Send Offer");
-  const sendGiftText = useTranslatedText("Send Gift");
-  const shareText = useTranslatedText("Share");
-  const repostLabel = useTranslatedText("Repost");
-  const viewProductText = useTranslatedText("View Product");
+  // Batch translation for optimal performance - Core UI elements
+  const coreUITexts = [
+    "Filter", "Filter Products", "Narrow down products based on your preferences",
+    "product", "products", "found", "Clear All", "Show", "Sort by", "Sort Options",
+    "Trending", "Price: Low to High", "Price: High to Low", "Newest Product",
+    "Your Region", "Your Country", "Services", "Add to Cart", "Buy Now",
+    "Send Offer", "Send Gift", "Share", "Repost", "View Product"
+  ];
   
-  // Dialog translations
-  const repostToCommunityText = useTranslatedText("Repost to Community Feed");
-  const addMessageText = useTranslatedText("Would you like to add a message with this product share?");
-  const addYourMessageText = useTranslatedText("Add your message (optional)");
-  const whatDoYouThinkText = useTranslatedText("What do you think about this product?");
-  const postWithoutTextButton = useTranslatedText("Post Without Text");
-  const postToFeedButton = useTranslatedText("Post to Feed");
-  const postingText = useTranslatedText("Posting...");
-  const sendOfferTitle = useTranslatedText("Send Offer");
-  const sendPriceOfferText = useTranslatedText("Send a price offer to the product owner");
-  const listedText = useTranslatedText("Listed");
-  const yourOfferAmountText = useTranslatedText("Your Offer Amount");
-  const enterOfferAmountText = useTranslatedText("Enter your offer amount");
-  const messageOptionalText = useTranslatedText("Message (optional)");
-  const addMessageWithOfferText = useTranslatedText("Add a message with your offer...");
-  const cancelText = useTranslatedText("Cancel");
-  const sendingText = useTranslatedText("Sending...");
-  const sendGiftTitle = useTranslatedText("Send Gift");
-  const sendProductAsGiftText = useTranslatedText("Send this product as a gift to someone special");
-  const searchForRecipientText = useTranslatedText("Search for recipient");
-  const typeNameUsernameText = useTranslatedText("Type name or username...");
-  const noUsersFoundText = useTranslatedText("No users found matching");
-  const typeAtLeastText = useTranslatedText("Type at least 2 characters to search");
-  const byText = useTranslatedText("By");
+  const translatedCoreTexts = useOptimizedTranslationBatch(coreUITexts);
   
-  // Product card translations
-  const friendText = useTranslatedText("Friend");
-  const vatText = useTranslatedText("+VAT");
-  const volumeDiscountText = useTranslatedText("Volume discount available");
-  const listedByText = useTranslatedText("Listed by");
-  const buyText = useTranslatedText("Buy");
-  const repostButtonText = useTranslatedText("Repost");
-  const sendOfferBtnText = useTranslatedText("Send Offer");
+  const [
+    filterText, filterProductsText, narrowDownText, productText, productsText,
+    productFoundText, clearAllText, showText, sortByText, sortOptionsText,
+    trendingText, priceLowHighText, priceHighLowText, newestProductText,
+    yourRegionText, yourCountryText, servicesText, addToCartText, buyNowText,
+    sendOfferText, sendGiftText, shareText, repostLabel, viewProductText
+  ] = translatedCoreTexts;
   
-  // Hover text translations
-  const viewProductDetailsText = useTranslatedText("View product details and seller information");
-  const addToCartTooltipText = useTranslatedText("Add this product to your shopping cart");
-  const shareOnFeedTooltipText = useTranslatedText("Share this product on your community feed for others to see");
-  const makeOfferTooltipText = useTranslatedText("Make a custom offer to the seller with your preferred price");
-  const sendGiftTooltipText = useTranslatedText("Send this product as a gift to someone special");
-  const addToProfileTooltipText = useTranslatedText("Add this product to your dating profile as a potential gift");
-  const addToFavoritesText = useTranslatedText("Add to your favorites");
-  const removeFromFavoritesText = useTranslatedText("Remove from your favorites");
-  const shareProductTooltipText = useTranslatedText("Share this product via email, message, or social media");
+  // Dialog translations batch
+  const dialogTexts = [
+    "Repost to Community Feed", "Would you like to add a message with this product share?",
+    "Add your message (optional)", "What do you think about this product?", "Post Without Text",
+    "Post to Feed", "Posting...", "Send Offer", "Send a price offer to the product owner",
+    "Listed", "Your Offer Amount", "Enter your offer amount", "Message (optional)",
+    "Add a message with your offer...", "Cancel", "Sending...", "Send Gift",
+    "Send this product as a gift to someone special", "Search for recipient",
+    "Type name or username...", "No users found matching", "Type at least 2 characters to search", "By"
+  ];
   
-  // Share dropdown translations
-  const shareProductText = useTranslatedText("Share Product");
-  const shareViaEmailText = useTranslatedText("Share via Email");
-  const copyLinkText = useTranslatedText("Copy Link");
-  const shareOnFeedText = useTranslatedText("Share on Feed");
-  const sendViaMessageText = useTranslatedText("Send via Message");
-  const shareWithMemberText = useTranslatedText("Share with Member");
+  const translatedDialogTexts = useOptimizedTranslationBatch(dialogTexts);
   
-  // Filter sidebar translations
-  const searchForProductsText = useTranslatedText("Search for Products");
-  const searchWithinText = useTranslatedText("Search within");
-  const productOrServiceText = useTranslatedText("Product or Service");
-  const productFilterText = useTranslatedText("Product");
-  const serviceFilterText = useTranslatedText("Service");
-  const categoriesText = useTranslatedText("Categories");
-  const regionText = useTranslatedText("Region");
-  const productStatusText = useTranslatedText("Product Status");
-  const friendOptionsText = useTranslatedText("Friend Options");
-  const friendsOnlyText = useTranslatedText("Friends only");
-  const localPickupText = useTranslatedText("Local pickup only");
-  const storeOptionsText = useTranslatedText("Store Options");
-  const verifiedStoresText = useTranslatedText("Verified stores only");
-  const freeShippingText = useTranslatedText("Free shipping");
-  const nextDayDeliveryText = useTranslatedText("Next day delivery");
-  const businessOptionsText = useTranslatedText("Business Options");
-  const volumeDiscountsText = useTranslatedText("Volume discounts");
-  const wholesaleOnlyText = useTranslatedText("Wholesale only");
-  const taxExemptText = useTranslatedText("Tax exempt eligible");
-  const resetFiltersText = useTranslatedText("Reset Filters");
-  const onSaleText = useTranslatedText("On Sale");
-  const newArrivalsText = useTranslatedText("New Arrivals");
+  const [
+    repostToCommunityText, addMessageText, addYourMessageText, whatDoYouThinkText,
+    postWithoutTextButton, postToFeedButton, postingText, sendOfferTitle, sendPriceOfferText,
+    listedText, yourOfferAmountText, enterOfferAmountText, messageOptionalText,
+    addMessageWithOfferText, cancelText, sendingText, sendGiftTitle, sendProductAsGiftText,
+    searchForRecipientText, typeNameUsernameText, noUsersFoundText, typeAtLeastText, byText
+  ] = translatedDialogTexts;
+  
+  // Product card and tooltip translations batch
+  const productCardTexts = [
+    "Friend", "+VAT", "Volume discount available", "Listed by", "Buy", "Repost", "Send Offer",
+    "View product details and seller information", "Add this product to your shopping cart",
+    "Share this product on your community feed for others to see",
+    "Make a custom offer to the seller with your preferred price",
+    "Send this product as a gift to someone special",
+    "Add this product to your dating profile as a potential gift", "Add to your favorites",
+    "Remove from your favorites", "Share this product via email, message, or social media",
+    "Share Product", "Share via Email", "Copy Link", "Share on Feed", "Send via Message", "Share with Member"
+  ];
+  
+  const translatedProductCardTexts = useOptimizedTranslationBatch(productCardTexts);
+  
+  const [
+    friendText, vatText, volumeDiscountText, listedByText, buyText, repostButtonText, sendOfferBtnText,
+    viewProductDetailsText, addToCartTooltipText, shareOnFeedTooltipText, makeOfferTooltipText,
+    sendGiftTooltipText, addToProfileTooltipText, addToFavoritesText, removeFromFavoritesText,
+    shareProductTooltipText, shareProductText, shareViaEmailText, copyLinkText, shareOnFeedText,
+    sendViaMessageText, shareWithMemberText
+  ] = translatedProductCardTexts;
+  
+  // Filter sidebar translations batch
+  const filterSidebarTexts = [
+    "Search for Products", "Search within", "Product or Service", "Product", "Service",
+    "Categories", "Region", "Product Status", "Friend Options", "Friends only",
+    "Local pickup only", "Store Options", "Verified stores only", "Free shipping",
+    "Next day delivery", "Business Options", "Volume discounts", "Wholesale only",
+    "Tax exempt eligible", "Reset Filters", "On Sale", "New Arrivals"
+  ];
+  
+  const translatedFilterTexts = useOptimizedTranslationBatch(filterSidebarTexts);
+  
+  const [
+    searchForProductsText, searchWithinText, productOrServiceText, productFilterText, serviceFilterText,
+    categoriesText, regionText, productStatusText, friendOptionsText, friendsOnlyText,
+    localPickupText, storeOptionsText, verifiedStoresText, freeShippingText,
+    nextDayDeliveryText, businessOptionsText, volumeDiscountsText, wholesaleOnlyText,
+    taxExemptText, resetFiltersText, onSaleText, newArrivalsText
+  ] = translatedFilterTexts;
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
