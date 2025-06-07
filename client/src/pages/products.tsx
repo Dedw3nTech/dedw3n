@@ -104,6 +104,12 @@ export default function Products() {
   const { translatedText: newestProductText } = useLazyTranslation("Newest Product", { priority: 'normal' });
   const { translatedText: addToCartText } = useLazyTranslation("Add to Cart", { priority: 'critical' });
   const { translatedText: addToCartTooltipText } = useLazyTranslation("Add to shopping cart", { priority: 'critical' });
+  const { translatedText: shareOnFeedTooltipText } = useLazyTranslation("Share on community feed", { priority: 'normal' });
+  const { translatedText: makeOfferTooltipText } = useLazyTranslation("Make an offer", { priority: 'normal' });
+  const { translatedText: sendGiftTooltipText } = useLazyTranslation("Send as gift", { priority: 'normal' });
+  const { translatedText: addToProfileTooltipText } = useLazyTranslation("Add to profile", { priority: 'normal' });
+  const { translatedText: shareProductTooltipText } = useLazyTranslation("Share product", { priority: 'normal' });
+  const { translatedText: viewProductDetailsText } = useLazyTranslation("View product details", { priority: 'normal' });
   const { translatedText: buyNowText } = useLazyTranslation("Buy Now", { priority: 'critical' });
   const { translatedText: shareText } = useLazyTranslation("Share", { priority: 'normal' });
   const { translatedText: viewProductText } = useLazyTranslation("View Product", { priority: 'normal' });
@@ -171,6 +177,19 @@ export default function Products() {
   const { translatedText: volumeDiscountsText } = useLazyTranslation("Volume discounts", { priority: 'normal' });
   const { translatedText: wholesaleOnlyText } = useLazyTranslation("Wholesale only", { priority: 'normal' });
   const { translatedText: taxExemptText } = useLazyTranslation("Tax exempt eligible", { priority: 'normal' });
+  
+  // Additional product card variables
+  const { translatedText: friendText } = useLazyTranslation("Friend", { priority: 'normal' });
+  const { translatedText: vatText } = useLazyTranslation("VAT", { priority: 'normal' });
+  const { translatedText: volumeDiscountText } = useLazyTranslation("Volume discount", { priority: 'normal' });
+  const { translatedText: repostButtonText } = useLazyTranslation("Repost", { priority: 'normal' });
+  const { translatedText: sendOfferBtnText } = useLazyTranslation("Send Offer", { priority: 'normal' });
+  const { translatedText: removeFromFavoritesText } = useLazyTranslation("Remove from favorites", { priority: 'normal' });
+  const { translatedText: addToFavoritesText } = useLazyTranslation("Add to favorites", { priority: 'normal' });
+  const { translatedText: shareProductText } = useLazyTranslation("Share Product", { priority: 'normal' });
+  const { translatedText: shareViaEmailText } = useLazyTranslation("Share via Email", { priority: 'normal' });
+  const { translatedText: copyLinkText } = useLazyTranslation("Copy Link", { priority: 'normal' });
+  const { translatedText: shareOnFeedText } = useLazyTranslation("Share on Feed", { priority: 'normal' });
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
