@@ -407,16 +407,14 @@ function MarketplacePromoSection() {
   
   if (!isMarketplacePage) return null;
   
-  // Get the appropriate promotional image for this market type
-  const currentPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.top || marketPromoImages.b2c.top;
-  
   return (
     <div className="w-full" key={`marketplace-top-${marketType}`}>
-      <LazyImage 
-        src={currentPromoImage}
-        alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Premium Business Platform`}
+      <ZeroLoadingAd 
+        adType="marketplace"
+        marketType={marketType as 'b2c' | 'b2b' | 'c2c'}
+        position="banner"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRlZHczbiAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
+        clickable={true}
       />
     </div>
   );
@@ -431,16 +429,14 @@ function MarketplaceBottomPromoSection() {
   
   if (!isMarketplacePage) return null;
   
-  // Get the appropriate bottom promotional image for this market type
-  const currentBottomPromoImage = marketPromoImages[marketType as keyof typeof marketPromoImages]?.bottom || marketPromoImages.b2c.bottom;
-  
   return (
     <div className="w-full" key={`marketplace-bottom-${marketType}`}>
-      <LazyImage 
-        src={currentBottomPromoImage}
-        alt={`Dedwen ${marketType.toUpperCase()} Marketplace - Professional Collection`}
+      <ZeroLoadingAd 
+        adType="footer"
+        marketType={marketType as 'b2c' | 'b2b' | 'c2c'}
+        position="banner"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRlZHczbiAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
+        clickable={true}
       />
     </div>
   );
@@ -457,11 +453,11 @@ function DatingHeaderPromoSection() {
   
   return (
     <div className="w-full" key="dating-header-promo">
-      <LazyImage 
-        src={datingPromoImages.header}
-        alt="Dedwen Dating - Find Your Perfect Match"
+      <ZeroLoadingAd 
+        adType="header"
+        position="banner"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRhdGluZyAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
+        clickable={true}
       />
     </div>
   );
@@ -477,11 +473,11 @@ function DatingFooterPromoSection() {
   
   return (
     <div className="w-full" key="dating-footer-promo">
-      <LazyImage 
-        src={datingPromoImages.footer}
-        alt="Dedwen Dating - Premium Dating Experience"
+      <ZeroLoadingAd 
+        adType="footer"
+        position="banner"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        placeholder="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRhdGluZyAtIExvYWRpbmcuLi48L3RleHQ+PC9zdmc+"
+        clickable={true}
       />
     </div>
   );
