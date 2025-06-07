@@ -108,35 +108,40 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Commission Tier System texts
+  // Commission Tier System texts - comprehensive coverage
   const commissionTexts = [
     "Commission Tier System",
     "Your commission rate is determined by your monthly sales volume",
     "Standard Tier",
     "Basic commission rate", 
     "Sales Manager",
-    "Sales Manager Fee",
-    "Account",
+    "10% commission + 2.5% Sales Manager Fee",
+    "ID",
+    "Total Owed",
+    "pending payment(s)",
+    "Total Paid",
+    "All-time commission payments",
+    "Account Status",
+    "payment failure(s)",
+    "Pending Payments",
+    "Commission payments that require your attention",
+    "Pay Now",
+    "Commission History",
+    "Your last 12 months of commission calculations",
+    "Sales",
+    "Commission",
+    "Due",
+    "Transactions",
+    "Rate",
+    "Paid",
+    "No commission history available yet",
+    "Commission calculations will appear here after your first sales",
+    "rate",
     "Failed to load commission dashboard. Please try again later.",
     "Payment Link Created",
     "Redirecting to payment page...",
     "Error",
-    "Failed to create payment link",
-    "Total Owed",
-    "Total Paid",
-    "Total Commission",
-    "Commission Overview",
-    "Recent Periods",
-    "Pending Payments",
-    "Payment History",
-    "Account Status",
-    "Payment Methods",
-    "Due Date",
-    "Amount",
-    "Status",
-    "Actions",
-    "Pay Now",
-    "View Details"
+    "Failed to create payment link"
   ];
   
   const { translations } = useUnifiedTranslation(commissionTexts);
@@ -403,7 +408,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                     £{parseFloat(period.commissionAmount).toFixed(2)}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {(parseFloat(period.commissionRate) * 100).toFixed(1)}% rate
+                    {(parseFloat(period.commissionRate) * 100).toFixed(1)}% {translations?.["rate"] || "rate"}
                   </div>
                 </div>
               </div>
