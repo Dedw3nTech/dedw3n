@@ -15,7 +15,7 @@ const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_BASE_URL = 'https://newsapi.org/v2';
 
 if (!NEWS_API_KEY) {
-  console.error('NEWS_API_KEY is not defined in the environment variables');
+  console.warn('NEWS_API_KEY is not defined in environment variables. News features will be limited.');
 }
 
 // Helper function to make a GET request to the News API

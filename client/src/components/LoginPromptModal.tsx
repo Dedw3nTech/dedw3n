@@ -120,8 +120,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           password: formData.password,
           name: formData.name,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender,
-          region: formData.region,
+          gender: formData.gender as "male" | "female" | "other" | null,
+          region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
         });
@@ -332,7 +332,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
-              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
+              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && Boolean(ageError))}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
