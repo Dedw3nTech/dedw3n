@@ -117,7 +117,16 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
     "No customers found",
     "Try adjusting your search or filters",
     "Sort by",
-    "View Customer"
+    "View Customer",
+    "Customer Segmentation Analytics",
+    "Analytics data will be available once you have sufficient customer transaction history",
+    "This feature provides insights into customer segments based on purchase patterns",
+    "Customer Lifetime Value Analytics",
+    "Lifetime value predictions will be calculated once you have sufficient transaction data",
+    "This feature helps identify your most valuable customers and predict future revenue",
+    "Customer Service Analytics",
+    "Service interaction metrics will be available once you implement a customer support system",
+    "This feature tracks support tickets, response times, and customer satisfaction"
   ], []);
 
   // Get translations
@@ -143,7 +152,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return translatedTexts["Never"] || 'Never';
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
@@ -299,13 +308,13 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Segment</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Total Spent</TableHead>
-                  <TableHead>Last Order</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{translatedTexts["Customer"] || "Customer"}</TableHead>
+                  <TableHead>{translatedTexts["Contact"] || "Contact"}</TableHead>
+                  <TableHead>{translatedTexts["Segment"] || "Segment"}</TableHead>
+                  <TableHead>{translatedTexts["Orders"] || "Orders"}</TableHead>
+                  <TableHead>{translatedTexts["Total Spent"] || "Total Spent"}</TableHead>
+                  <TableHead>{translatedTexts["Last Order"] || "Last Order"}</TableHead>
+                  <TableHead>{translatedTexts["Actions"] || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -323,8 +332,8 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                     <TableCell colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <User className="h-12 w-12 text-muted-foreground" />
-                        <p className="text-muted-foreground">No customers found</p>
-                        <p className="text-xs text-muted-foreground">Customers will appear here once they make purchases</p>
+                        <p className="text-muted-foreground">{translatedTexts["No customers found"] || "No customers found"}</p>
+                        <p className="text-xs text-muted-foreground">{translatedTexts["Try adjusting your search or filters"] || "Try adjusting your search or filters"}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -398,7 +407,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
-                          View
+                          {translatedTexts["View Details"] || "View"}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -414,11 +423,12 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
           <div className="flex flex-col items-center justify-center py-12">
             <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">
-              Customer Segmentation Analytics
+              {translatedTexts["Customer Segmentation Analytics"] || "Customer Segmentation Analytics"}
             </h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              Analytics data will be available once you have sufficient customer transaction history.
-              This feature provides insights into customer segments based on purchase patterns.
+              {translatedTexts["Analytics data will be available once you have sufficient customer transaction history"] || "Analytics data will be available once you have sufficient customer transaction history."}
+              {" "}
+              {translatedTexts["This feature provides insights into customer segments based on purchase patterns"] || "This feature provides insights into customer segments based on purchase patterns."}
             </p>
           </div>
         </TabsContent>
@@ -428,11 +438,12 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
           <div className="flex flex-col items-center justify-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">
-              Customer Lifetime Value Analytics
+              {translatedTexts["Customer Lifetime Value Analytics"] || "Customer Lifetime Value Analytics"}
             </h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              Lifetime value predictions will be calculated once you have sufficient transaction data.
-              This feature helps identify your most valuable customers and predict future revenue.
+              {translatedTexts["Lifetime value predictions will be calculated once you have sufficient transaction data"] || "Lifetime value predictions will be calculated once you have sufficient transaction data."}
+              {" "}
+              {translatedTexts["This feature helps identify your most valuable customers and predict future revenue"] || "This feature helps identify your most valuable customers and predict future revenue."}
             </p>
           </div>
         </TabsContent>
@@ -442,11 +453,12 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
           <div className="flex flex-col items-center justify-center py-12">
             <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">
-              Customer Service Analytics
+              {translatedTexts["Customer Service Analytics"] || "Customer Service Analytics"}
             </h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              Service interaction metrics will be available once you implement a customer support system.
-              This feature tracks support tickets, response times, and customer satisfaction.
+              {translatedTexts["Service interaction metrics will be available once you implement a customer support system"] || "Service interaction metrics will be available once you implement a customer support system."}
+              {" "}
+              {translatedTexts["This feature tracks support tickets, response times, and customer satisfaction"] || "This feature tracks support tickets, response times, and customer satisfaction."}
             </p>
           </div>
         </TabsContent>
