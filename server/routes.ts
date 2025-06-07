@@ -5865,6 +5865,177 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch translation API for improved performance
+  app.post('/api/translate/batch', async (req: Request, res: Response) => {
+    try {
+      const { texts, targetLanguage } = req.body;
+
+      if (!texts || !Array.isArray(texts) || !targetLanguage) {
+        return res.status(400).json({ message: 'Texts array and target language are required' });
+      }
+
+      // Skip translation if target language is English
+      if (targetLanguage === 'EN' || targetLanguage === 'EN-US') {
+        return res.json({ 
+          translations: texts.map(text => ({
+            originalText: text,
+            translatedText: text,
+            detectedSourceLanguage: 'EN'
+          }))
+        });
+      }
+
+      const translations = [];
+      const uncachedTexts = [];
+      const uncachedIndices = [];
+
+      // Check cache for each text
+      for (let i = 0; i < texts.length; i++) {
+        const text = texts[i];
+        if (!text || !text.trim()) {
+          translations[i] = {
+            originalText: text,
+            translatedText: text,
+            detectedSourceLanguage: 'EN'
+          };
+          continue;
+        }
+
+        const cacheKey = `${text}:${targetLanguage}`;
+        const cached = translationCache.get(cacheKey);
+        
+        if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+          translations[i] = {
+            originalText: text,
+            translatedText: cached.translatedText,
+            detectedSourceLanguage: cached.detectedSourceLanguage
+          };
+        } else {
+          uncachedTexts.push(text);
+          uncachedIndices.push(i);
+        }
+      }
+
+      // If all texts are cached, return immediately
+      if (uncachedTexts.length === 0) {
+        return res.json({ translations });
+      }
+
+      if (!process.env.DEEPL_API_KEY) {
+        // Fallback to original texts
+        return res.json({
+          translations: texts.map(text => ({
+            originalText: text,
+            translatedText: text,
+            detectedSourceLanguage: 'EN'
+          }))
+        });
+      }
+
+      // Map language codes to DeepL format
+      const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
+      
+      // Process uncached texts in batches of 10 (DeepL limit)
+      const batchSize = 10;
+      const batches = [];
+      for (let i = 0; i < uncachedTexts.length; i += batchSize) {
+        batches.push(uncachedTexts.slice(i, i + batchSize));
+      }
+
+      let batchResults = [];
+      
+      for (const batch of batches) {
+        try {
+          const formData = new URLSearchParams();
+          batch.forEach(text => formData.append('text', text));
+          formData.append('target_lang', deeplTargetLang);
+          formData.append('source_lang', 'EN');
+
+          const response = await fetch('https://api-free.deepl.com/v2/translate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData,
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.translations && data.translations.length > 0) {
+              batchResults = batchResults.concat(data.translations);
+            } else {
+              // Fallback for this batch
+              batch.forEach(text => {
+                batchResults.push({
+                  text: text,
+                  detected_source_language: 'EN'
+                });
+              });
+            }
+          } else {
+            // Fallback for this batch on error
+            batch.forEach(text => {
+              batchResults.push({
+                text: text,
+                detected_source_language: 'EN'
+              });
+            });
+          }
+        } catch (error) {
+          // Fallback for this batch on error
+          batch.forEach(text => {
+            batchResults.push({
+              text: text,
+              detected_source_language: 'EN'
+            });
+          });
+        }
+
+        // Small delay between batches to respect rate limits
+        if (batches.length > 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      // Map results back to original positions and cache them
+      for (let i = 0; i < uncachedTexts.length; i++) {
+        const originalText = uncachedTexts[i];
+        const translationResult = batchResults[i];
+        const translatedText = translationResult ? translationResult.text : originalText;
+        const detectedLang = translationResult ? translationResult.detected_source_language : 'EN';
+        
+        const originalIndex = uncachedIndices[i];
+        translations[originalIndex] = {
+          originalText,
+          translatedText,
+          detectedSourceLanguage: detectedLang
+        };
+
+        // Cache the result
+        const cacheKey = `${originalText}:${targetLanguage}`;
+        translationCache.set(cacheKey, {
+          translatedText,
+          detectedSourceLanguage: detectedLang,
+          targetLanguage,
+          timestamp: Date.now()
+        });
+      }
+
+      res.json({ translations });
+    } catch (error) {
+      console.error('Batch translation error:', error);
+      // Fallback to original texts
+      res.json({
+        translations: req.body.texts.map((text: string) => ({
+          originalText: text,
+          translatedText: text,
+          detectedSourceLanguage: 'EN'
+        }))
+      });
+    }
+  });
+
   // Dating room payment processing
   app.post('/api/dating-room/payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

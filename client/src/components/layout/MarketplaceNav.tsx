@@ -3,7 +3,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslatedText } from '@/hooks/use-translated-text';
+import { useOptimizedTranslationBatch } from '@/hooks/use-optimized-translation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,15 +21,20 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { cartItemCount } = useCart();
 
-  // Translated text for marketplace headers
-  const c2cText = useTranslatedText("Buy from a friend (C2C)");
-  const b2cText = useTranslatedText("Buy from a store (B2C)");
-  const b2bText = useTranslatedText("Business (B2B)");
-  const searchPlaceholder = useTranslatedText("Search products...");
-  const likedText = useTranslatedText("Liked");
-  const cartText = useTranslatedText("Shopping Cart");
-  const ordersText = useTranslatedText("Orders & Returns");
-  const vendorText = useTranslatedText("Vendor Dashboard");
+  // Batch translate all navigation texts for optimal performance
+  const navTexts = [
+    "Buy from a friend (C2C)",
+    "Buy from a store (B2C)", 
+    "Business (B2B)",
+    "Search products...",
+    "Liked",
+    "Shopping Cart",
+    "Orders & Returns",
+    "Vendor Dashboard"
+  ];
+  
+  const translatedTexts = useOptimizedTranslationBatch(navTexts);
+  const [c2cText, b2cText, b2bText, searchPlaceholder, likedText, cartText, ordersText, vendorText] = translatedTexts;
 
   // Fetch liked products count
   const { data: likedProductsData } = useQuery<{ count: number }>({
