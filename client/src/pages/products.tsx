@@ -90,8 +90,6 @@ export default function Products() {
   const newestProductText = useTranslatedText("Newest Product");
   const yourRegionText = useTranslatedText("Your Region");
   const yourCountryText = useTranslatedText("Your Country");
-  const onSaleText = useTranslatedText("On Sale");
-  const newArrivalsText = useTranslatedText("New Arrivals");
   const servicesText = useTranslatedText("Services");
   const addToCartText = useTranslatedText("Add to Cart");
   const buyNowText = useTranslatedText("Buy Now");
@@ -175,6 +173,8 @@ export default function Products() {
   const wholesaleOnlyText = useTranslatedText("Wholesale only");
   const taxExemptText = useTranslatedText("Tax exempt eligible");
   const resetFiltersText = useTranslatedText("Reset Filters");
+  const onSaleText = useTranslatedText("On Sale");
+  const newArrivalsText = useTranslatedText("New Arrivals");
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
@@ -1040,7 +1040,7 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Product Status</h3>
+        <h3 className="font-medium mb-2 text-[14px]">{productStatusText}</h3>
         <div className="space-y-2 font-normal text-[12px]">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -1048,7 +1048,7 @@ export default function Products() {
               checked={showSale}
               onCheckedChange={(checked) => setShowSale(checked === true)}
             />
-            <Label htmlFor="show-sale" className="text-[12px] font-normal">On Sale</Label>
+            <Label htmlFor="show-sale" className="text-[12px] font-normal">{onSaleText}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -1056,7 +1056,7 @@ export default function Products() {
               checked={showNew}
               onCheckedChange={(checked) => setShowNew(checked === true)}
             />
-            <Label htmlFor="show-new" className="text-[12px] font-normal">New Arrivals</Label>
+            <Label htmlFor="show-new" className="text-[12px] font-normal">{newArrivalsText}</Label>
           </div>
         </div>
       </div>
@@ -1064,7 +1064,7 @@ export default function Products() {
       {/* Market-specific filters */}
       {marketType === 'c2c' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">Friend Options</h3>
+          <h3 className="font-medium mb-2 text-[14px]">{friendOptionsText}</h3>
           <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
