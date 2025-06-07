@@ -1079,14 +1079,14 @@ export default function Products() {
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="md:hidden">
               <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Filter
+              {filterText}
             </Button>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Filter Products</SheetTitle>
+              <SheetTitle>{filterProductsText}</SheetTitle>
               <SheetDescription>
-                Narrow down products based on your preferences
+                {narrowDownText}
               </SheetDescription>
             </SheetHeader>
             <div className="py-4">
@@ -1110,7 +1110,7 @@ export default function Products() {
           <div className="flex flex-wrap justify-between items-center mb-6">
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-500">
-                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'} found
+                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? productText : productsText} {productFoundText}
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -1140,7 +1140,7 @@ export default function Products() {
               
               {selectedProductTypes.length < 2 && selectedProductTypes.map(productType => (
                 <Badge key={productType} variant="outline" className="flex items-center gap-1">
-                  {productType === 'product' ? 'Products' : 'Services'}
+                  {productType === 'product' ? productsText : servicesText}
                   <button
                     onClick={() => toggleProductType(productType)}
                     className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
@@ -1152,7 +1152,7 @@ export default function Products() {
               
               {showSale && (
                 <Badge variant="outline" className="flex items-center gap-1">
-                  On Sale
+                  {onSaleText}
                   <button
                     onClick={() => setShowSale(false)}
                     className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
@@ -1164,7 +1164,7 @@ export default function Products() {
               
               {showNew && (
                 <Badge variant="outline" className="flex items-center gap-1">
-                  New Arrivals
+                  {newArrivalsText}
                   <button
                     onClick={() => setShowNew(false)}
                     className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
@@ -1176,7 +1176,7 @@ export default function Products() {
               
                 {(selectedCategories.length > 0 || selectedRegions.length > 0 || selectedProductTypes.length < 2 || showSale || showNew) && (
                   <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
-                    Clear All
+                    {clearAllText}
                   </Button>
                 )}
               </div>
@@ -1185,7 +1185,7 @@ export default function Products() {
             <div className="flex items-center gap-6">
               {/* Products per page selector */}
               <div className="flex items-center gap-1 text-sm text-gray-600">
-                <span>Show</span>
+                <span>{showText}</span>
                 <button
                   onClick={() => setProductsPerPage(30)}
                   className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 30 ? 'text-black font-medium' : ''}`}
