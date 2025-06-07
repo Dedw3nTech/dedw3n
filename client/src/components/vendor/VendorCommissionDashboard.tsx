@@ -345,11 +345,11 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                         {format(new Date(payment.year, payment.month - 1), 'MMMM yyyy')}
                       </h4>
                       <Badge className={getTierColor(payment.commissionTier)}>
-                        {payment.commissionTier} ({(parseFloat(payment.commissionRate) * 100).toFixed(1)}%)
+                        {translations?.[payment.commissionTier] || payment.commissionTier} ({(parseFloat(payment.commissionRate) * 100).toFixed(1)}%)
                       </Badge>
                       <Badge className={getStatusColor(payment.status)}>
                         {getStatusIcon(payment.status)}
-                        {payment.status}
+                        {translations?.[payment.status] || payment.status}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -394,11 +394,11 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                       {format(new Date(period.year, period.month - 1), 'MMMM yyyy')}
                     </h4>
                     <Badge className={getTierColor(period.commissionTier)}>
-                      {period.commissionTier}
+                      {translations?.[period.commissionTier] || period.commissionTier}
                     </Badge>
                     <Badge className={getStatusColor(period.status)}>
                       {getStatusIcon(period.status)}
-                      {period.status}
+                      {translations?.[period.status] || period.status}
                     </Badge>
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
@@ -428,8 +428,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
             {commissionData.commissionPeriods.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No commission history available yet</p>
-                <p className="text-sm">Commission calculations will appear here after your first sales</p>
+                <p>{translations?.["No commission history available yet"] || "No commission history available yet"}</p>
+                <p className="text-sm">{translations?.["Commission calculations will appear here after your first sales"] || "Commission calculations will appear here after your first sales"}</p>
               </div>
             )}
           </div>
