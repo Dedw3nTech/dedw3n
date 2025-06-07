@@ -7,6 +7,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
@@ -51,14 +52,16 @@ import { Textarea } from '@/components/ui/textarea';
 
 // Component for translating category names
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
+  const { currentLanguage } = useLanguage();
   const translatedName = useInstantTranslation(categoryName);
-  return <span className="text-[12px] font-normal">{translatedName}</span>;
+  return <span className="text-[12px] font-normal" key={`category-${categoryName}-${currentLanguage}`}>{translatedName}</span>;
 };
 
 // Component for translating region names
 const RegionName = ({ regionName }: { regionName: string }) => {
+  const { currentLanguage } = useLanguage();
   const translatedName = useInstantTranslation(regionName);
-  return translatedName;
+  return <span key={`region-${regionName}-${currentLanguage}`}>{translatedName}</span>;
 };
 import { useToast } from '@/hooks/use-toast';
 
@@ -83,6 +86,7 @@ export default function Products() {
   const [columnsPerRow, setColumnsPerRow] = useState<number>(4);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentLanguage } = useLanguage();
 
   // Batch translation for optimal performance - Core UI elements
   const coreUITexts = [
