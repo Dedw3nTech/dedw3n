@@ -303,12 +303,12 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>{translatedTexts["Order ID"] || "Order ID"}</TableHead>
+                    <TableHead>{translatedTexts["Customer"] || "Customer"}</TableHead>
+                    <TableHead>{translatedTexts["Date"] || "Date"}</TableHead>
                     <TableHead>Items</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{translatedTexts["Amount"] || "Amount"}</TableHead>
+                    <TableHead className="text-right">{translatedTexts["Actions"] || "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -330,7 +330,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
                           onClick={() => handleShipNow(order)}
                         >
                           <Truck className="mr-2 h-4 w-4" />
-                          Ship Now
+                          {translatedTexts["Ship Order"] || "Ship Order"}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -346,9 +346,9 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
           {filteredShippedOrders?.length === 0 ? (
             <div className="text-center py-10">
               <Truck className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-              <h3 className="mt-4 text-lg font-medium">No shipped orders</h3>
+              <h3 className="mt-4 text-lg font-medium">{translatedTexts["No orders to ship"] || "No orders to ship"}</h3>
               <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-                You haven't shipped any orders yet.
+                {translatedTexts["All orders have been shipped"] || "All orders have been shipped"}
               </p>
             </div>
           ) : (
@@ -356,12 +356,12 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Shipped Date</TableHead>
-                    <TableHead>Tracking #</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{translatedTexts["Order ID"] || "Order ID"}</TableHead>
+                    <TableHead>{translatedTexts["Customer"] || "Customer"}</TableHead>
+                    <TableHead>{translatedTexts["Date"] || "Date"}</TableHead>
+                    <TableHead>{translatedTexts["Tracking Number"] || "Tracking Number"}</TableHead>
+                    <TableHead>{translatedTexts["Shipping Provider"] || "Shipping Provider"}</TableHead>
+                    <TableHead className="text-right">{translatedTexts["Actions"] || "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -404,7 +404,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
                           onClick={() => handleShipNow(order)}
                         >
                           <PackageCheck className="mr-2 h-4 w-4" />
-                          Update
+                          {translatedTexts["View Details"] || "View Details"}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -420,7 +420,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Shipping Details</DialogTitle>
+            <DialogTitle>{translatedTexts["Update Shipping"] || "Update Shipping"}</DialogTitle>
             <DialogDescription>
               Enter shipping information for order #{selectedOrder?.id}
             </DialogDescription>
@@ -429,7 +429,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="provider" className="text-right text-sm font-medium">
-                Shipping Provider
+                {translatedTexts["Shipping Provider"] || "Shipping Provider"}
               </label>
               <div className="col-span-3">
                 <Select 
@@ -437,15 +437,15 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
                   onValueChange={setShippingProvider}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select shipping provider" />
+                    <SelectValue placeholder={translatedTexts["Select provider"] || "Select provider"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FedEx">FedEx</SelectItem>
-                    <SelectItem value="UPS">UPS</SelectItem>
-                    <SelectItem value="USPS">USPS</SelectItem>
-                    <SelectItem value="DHL">DHL</SelectItem>
-                    <SelectItem value="Royal Mail">Royal Mail</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="FedEx">{translatedTexts["FedEx"] || "FedEx"}</SelectItem>
+                    <SelectItem value="UPS">{translatedTexts["UPS"] || "UPS"}</SelectItem>
+                    <SelectItem value="USPS">{translatedTexts["USPS"] || "USPS"}</SelectItem>
+                    <SelectItem value="DHL">{translatedTexts["DHL"] || "DHL"}</SelectItem>
+                    <SelectItem value="Royal Mail">{translatedTexts["Royal Mail"] || "Royal Mail"}</SelectItem>
+                    <SelectItem value="Other">{translatedTexts["Other"] || "Other"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -453,14 +453,14 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
             
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="tracking" className="text-right text-sm font-medium">
-                Tracking Number
+                {translatedTexts["Tracking Number"] || "Tracking Number"}
               </label>
               <div className="col-span-3">
                 <Input
                   id="tracking"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="Enter tracking number"
+                  placeholder={translatedTexts["Tracking Number"] || "Tracking Number"}
                 />
               </div>
             </div>
