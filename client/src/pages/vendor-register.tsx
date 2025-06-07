@@ -160,6 +160,8 @@ export default function VendorRegisterPage() {
   const yourStoreNameText = useStableTranslation("Your Store Name", "instant");
   const yourBusinessNameText = useStableTranslation("Your Business Name", "instant");
   const describeBusinessText = useStableTranslation("Describe your business", "instant");
+  const describeStoreText = useStableTranslation("Describe your store and the products you sell...", "instant");
+  const websitePlaceholderText = useStableTranslation("https://yourwebsite.com", "instant");
   const yourEmailText = useStableTranslation("Your Email", "instant");
   const yourPhoneText = useStableTranslation("Your Phone", "instant");
   const yourAddressText = useStableTranslation("Your Address", "instant");
@@ -430,14 +432,14 @@ export default function VendorRegisterPage() {
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="flex items-center">
                   <User className="h-6 w-6 text-primary mr-2" />
-                  <h3 className="text-xl font-semibold">Private Vendor Registration</h3>
+                  <h3 className="text-xl font-semibold">{privateVendorRegText}</h3>
                 </div>
                 <Button 
                   className="bg-black text-white hover:bg-gray-800"
                   size="sm"
                   onClick={() => setVendorType(null)}
                 >
-                  Change to Business Vendor
+                  {changeToBusinessText}
                 </Button>
               </div>
 
@@ -447,7 +449,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <Store className="h-5 w-5 mr-2" />
-                      Store Information
+                      {storeInfoText}
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
                       <FormField
@@ -455,9 +457,9 @@ export default function VendorRegisterPage() {
                         name="storeName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Store Name *</FormLabel>
+                            <FormLabel>{storeNameText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your Store Name" {...field} />
+                              <Input placeholder={yourStoreNameText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -468,10 +470,10 @@ export default function VendorRegisterPage() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Store Description *</FormLabel>
+                            <FormLabel>{descriptionText} *</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Describe your store and the products you sell..."
+                                placeholder={describeStoreText}
                                 className="min-h-[100px]"
                                 {...field}
                               />
@@ -485,9 +487,9 @@ export default function VendorRegisterPage() {
                         name="website"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Website (Optional)</FormLabel>
+                            <FormLabel>{websiteText} ({optionalText})</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://yourwebsite.com" {...field} />
+                              <Input placeholder={websitePlaceholderText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -500,7 +502,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <Mail className="h-5 w-5 mr-2" />
-                      Contact Information
+                      {contactInfoText}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -508,9 +510,9 @@ export default function VendorRegisterPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email *</FormLabel>
+                            <FormLabel>{emailText} *</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="your@email.com" {...field} />
+                              <Input type="email" placeholder={yourEmailText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -521,9 +523,9 @@ export default function VendorRegisterPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number *</FormLabel>
+                            <FormLabel>{phoneText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+1 (555) 123-4567" {...field} />
+                              <Input placeholder={yourPhoneText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -536,16 +538,16 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <MapPin className="h-5 w-5 mr-2" />
-                      Address
+                      {addressText}
                     </h4>
                     <FormField
                       control={privateForm.control}
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Street Address *</FormLabel>
+                          <FormLabel>{addressText} *</FormLabel>
                           <FormControl>
-                            <Input placeholder="123 Your Street" {...field} />
+                            <Input placeholder={yourAddressText} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -557,9 +559,9 @@ export default function VendorRegisterPage() {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City *</FormLabel>
+                            <FormLabel>{cityText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="City" {...field} />
+                              <Input placeholder={yourCityText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -570,9 +572,9 @@ export default function VendorRegisterPage() {
                         name="state"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>State *</FormLabel>
+                            <FormLabel>{stateText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="State" {...field} />
+                              <Input placeholder={yourStateText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -583,9 +585,9 @@ export default function VendorRegisterPage() {
                         name="zipCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Zip Code *</FormLabel>
+                            <FormLabel>{zipCodeText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="12345" {...field} />
+                              <Input placeholder={yourZipCodeText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -596,9 +598,9 @@ export default function VendorRegisterPage() {
                         name="country"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country *</FormLabel>
+                            <FormLabel>{countryText} *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Country" {...field} />
+                              <Input placeholder={yourCountryText} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -611,7 +613,7 @@ export default function VendorRegisterPage() {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold flex items-center">
                       <User className="h-5 w-5 mr-2" />
-                      Sales Manager
+                      {salesManagerText}
                     </h4>
                     <FormField
                       control={privateForm.control}
@@ -620,10 +622,10 @@ export default function VendorRegisterPage() {
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">
-                              Do you have a Sales Manager?
+                              {hasSalesManagerText}
                             </FormLabel>
                             <div className="text-sm text-muted-foreground">
-                              Sales Managers earn an additional 2.5% commission on your sales
+                              {salesManagerCommissionText}
                             </div>
                           </div>
                           <FormControl>
@@ -643,9 +645,9 @@ export default function VendorRegisterPage() {
                           name="salesManagerName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sales Manager Name *</FormLabel>
+                              <FormLabel>{salesManagerNameText} *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter full name" {...field} />
+                                <Input placeholder={enterFullNameText} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -656,9 +658,9 @@ export default function VendorRegisterPage() {
                           name="salesManagerId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sales Manager ID Number *</FormLabel>
+                              <FormLabel>{salesManagerIdText} *</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter ID number" {...field} />
+                                <Input placeholder={enterIdNumberText} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
