@@ -1077,7 +1077,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.warn("Failed to connect with echo-protocol, trying without protocol:", protocolError);
         
         try {
-          socket = new WebSocket(wsUrl);
+          socket = new WebSocket(wsUrl.toString());
           console.log("WebSocket initialized without protocol specification");
         } catch (fallbackError) {
           console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
