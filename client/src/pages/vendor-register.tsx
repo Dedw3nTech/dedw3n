@@ -173,6 +173,9 @@ export default function VendorRegisterPage() {
   const yourTaxIdText = useStableTranslation("Your Tax ID", "instant");
   const yourRegNumberText = useStableTranslation("Your Registration Number", "instant");
   const optionalText = useStableTranslation("Optional", "instant");
+  const salesManagerCommissionText = useStableTranslation("Sales Managers earn an additional 2.5% commission on your sales", "instant");
+  const enterFullNameText = useStableTranslation("Enter full name", "instant");
+  const enterIdNumberText = useStableTranslation("Enter ID number", "instant");
 
   // Check existing vendor accounts
   const { data: vendorStatus } = useQuery({
