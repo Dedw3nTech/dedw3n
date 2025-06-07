@@ -8,7 +8,7 @@ export interface Language {
   flag: string;
 }
 
-// DeepL supported languages
+// DeepL supported languages - only authentic translations
 export const supportedLanguages: Language[] = [
   { code: 'EN', name: 'English', nativeName: 'English', flag: '🇺🇸' },
   { code: 'ES', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
@@ -30,7 +30,6 @@ export const supportedLanguages: Language[] = [
   { code: 'HU', name: 'Hungarian', nativeName: 'Magyar', flag: '🇭🇺' },
   { code: 'TR', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
   { code: 'AR', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
-  { code: 'HI', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
 ];
 
 interface LanguageContextType {

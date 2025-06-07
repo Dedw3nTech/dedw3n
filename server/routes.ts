@@ -5819,8 +5819,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Valid language code required' });
       }
 
-      // Validate language code against supported languages
-      const supportedLanguages = ['EN', 'ES', 'FR', 'DE', 'IT', 'PT', 'RU', 'JA', 'ZH', 'KO', 'NL', 'PL', 'SV', 'DA', 'FI', 'NO', 'CS', 'HU', 'TR', 'AR', 'HI'];
+      // Validate language code against supported languages (DeepL only)
+      const supportedLanguages = ['EN', 'ES', 'FR', 'DE', 'IT', 'PT', 'RU', 'JA', 'ZH', 'KO', 'NL', 'PL', 'SV', 'DA', 'FI', 'NO', 'CS', 'HU', 'TR', 'AR'];
       if (!supportedLanguages.includes(language)) {
         return res.status(400).json({ message: 'Unsupported language code' });
       }
