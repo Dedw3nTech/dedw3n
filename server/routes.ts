@@ -5337,6 +5337,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
+  // Google Translate fallback for individual batches when DeepL fails
+  async function processBatchWithGoogleFallback(batch: any[], targetLanguage: string) {
+    try {
+      const googleLang = googleLanguageMap[targetLanguage] || targetLanguage.toLowerCase();
+      const results = [];
+      
+      for (const item of batch) {
+        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(item.text)}`;
+        
+        try {
+          const response = await fetch(googleUrl);
+          
+          if (response.ok) {
+            const data = await response.json();
+            let translatedText = item.text; // fallback
+            
+            if (data && data[0] && Array.isArray(data[0])) {
+              translatedText = data[0].map((segment: any) => segment[0]).join('');
+            }
+            
+            results.push({
+              text: translatedText,
+              detected_source_language: 'EN',
+              originalIndex: item.originalIndex
+            });
+          } else {
+            // Fallback to original text
+            results.push({
+              text: item.text,
+              detected_source_language: 'EN',
+              originalIndex: item.originalIndex
+            });
+          }
+        } catch (error) {
+          console.error('Google Translate error for item:', error);
+          results.push({
+            text: item.text,
+            detected_source_language: 'EN',
+            originalIndex: item.originalIndex
+          });
+        }
+        
+        // Small delay between requests to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Google Translate batch fallback error:', error);
+      return batch.map(item => ({
+        text: item.text,
+        detected_source_language: 'EN',
+        originalIndex: item.originalIndex
+      }));
+    }
+  }
+
+  // Google Translate batch processing for Hindi and Indian languages
+  async function processBatchWithGoogle(uncachedTexts: string[], uncachedIndices: number[], translations: any[], targetLanguage: string, res: Response, translationOptimizer: any, startTime: number, cacheHitCount: number) {
+    try {
+      const googleLang = googleLanguageMap[targetLanguage] || targetLanguage.toLowerCase();
+      const batchResults = [];
+      
+      // Process in smaller batches to avoid URL length limits
+      const batchSize = 5;
+      for (let i = 0; i < uncachedTexts.length; i += batchSize) {
+        const batch = uncachedTexts.slice(i, i + batchSize);
+        const batchText = batch.join('\n|||SEPARATOR|||\n');
+        
+        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(batchText)}`;
+        
+        const response = await fetch(googleUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          let translatedBatch = batchText; // fallback
+          
+          if (data && data[0] && Array.isArray(data[0])) {
+            translatedBatch = data[0].map((item: any) => item[0]).join('');
+          }
+          
+          const translatedTexts = translatedBatch.split('\n|||SEPARATOR|||\n');
+          
+          batch.forEach((originalText, index) => {
+            const translatedText = translatedTexts[index] || originalText;
+            batchResults.push({
+              originalText,
+              translatedText,
+              detectedSourceLanguage: 'EN'
+            });
+          });
+        } else {
+          // Fallback for failed batch
+          batch.forEach(originalText => {
+            batchResults.push({
+              originalText,
+              translatedText: originalText,
+              detectedSourceLanguage: 'EN'
+            });
+          });
+        }
+        
+        // Small delay between batches
+        if (i + batchSize < uncachedTexts.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      // Map results back to original positions and cache them
+      for (let i = 0; i < uncachedTexts.length; i++) {
+        const originalText = uncachedTexts[i];
+        const originalIndex = uncachedIndices[i];
+        const result = batchResults[i];
+        
+        translations[originalIndex] = {
+          originalText,
+          translatedText: result.translatedText,
+          detectedSourceLanguage: result.detectedSourceLanguage
+        };
+
+        // Cache the result with optimizer
+        translationOptimizer.setCachedTranslation(originalText, targetLanguage, {
+          translatedText: result.translatedText,
+          detectedSourceLanguage: result.detectedSourceLanguage,
+          targetLanguage
+        }, 'instant');
+      }
+      
+      // Record performance metrics
+      translationOptimizer.recordRequest(startTime, false);
+      const totalTime = Date.now() - startTime;
+      console.log(`[Performance] Google Translate batch completed - ${uncachedTexts.length + cacheHitCount} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
+
+      return res.json({ translations });
+    } catch (error) {
+      console.error('Google Translate batch error:', error);
+      // Fallback to original texts
+      for (let i = 0; i < uncachedTexts.length; i++) {
+        const originalText = uncachedTexts[i];
+        const originalIndex = uncachedIndices[i];
+        
+        translations[originalIndex] = {
+          originalText,
+          translatedText: originalText,
+          detectedSourceLanguage: 'EN'
+        };
+      }
+      
+      return res.json({ translations });
+    }
+  }
+
   // Google Translate API function for unsupported languages (like Hindi)
   async function translateWithGoogle(text: string, targetLanguage: string, res: Response, cacheKey: string) {
     try {
@@ -6045,6 +6197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // For Hindi and Indian languages, we'll try DeepL first and handle errors gracefully
+
       // Map language codes to DeepL format
       const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
       
@@ -6106,6 +6260,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...translation,
                 originalIndex: batch[index].originalIndex
               }));
+            }
+          } else {
+            // Handle DeepL API errors (including unsupported languages like Hindi)
+            const errorText = await response.text();
+            console.error(`[Batch ${batchIndex + 1}] DeepL API error:`, response.status, errorText);
+            
+            // If language not supported, try Google Translate fallback for this batch
+            if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
+              console.log(`[Batch ${batchIndex + 1}] DeepL doesn't support ${targetLanguage}, using Google Translate fallback`);
+              return await processBatchWithGoogleFallback(batch, targetLanguage);
             }
           }
           
