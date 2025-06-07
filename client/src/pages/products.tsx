@@ -103,6 +103,7 @@ export default function Products() {
   const { translatedText: priceHighLowText } = useLazyTranslation("Price: High to Low", { priority: 'normal' });
   const { translatedText: newestProductText } = useLazyTranslation("Newest Product", { priority: 'normal' });
   const { translatedText: addToCartText } = useLazyTranslation("Add to Cart", { priority: 'critical' });
+  const { translatedText: addToCartTooltipText } = useLazyTranslation("Add to shopping cart", { priority: 'critical' });
   const { translatedText: buyNowText } = useLazyTranslation("Buy Now", { priority: 'critical' });
   const { translatedText: shareText } = useLazyTranslation("Share", { priority: 'normal' });
   const { translatedText: viewProductText } = useLazyTranslation("View Product", { priority: 'normal' });
@@ -143,6 +144,7 @@ export default function Products() {
   const { translatedText: sendProductAsGiftText } = useLazyTranslation("Send this product as a gift to someone special", { priority: 'normal' });
   const { translatedText: byText } = useLazyTranslation("By", { priority: 'normal' });
   const { translatedText: shareWithMemberText } = useLazyTranslation("Share with Member", { priority: 'normal' });
+  const { translatedText: sendViaMessageText } = useLazyTranslation("Send via Message", { priority: 'normal' });
   
   // Use lazy translation for filter elements (loaded on demand)
   const { translatedText: searchForProductsText } = useLazyTranslation("Search for Products", { priority: 'normal' });
