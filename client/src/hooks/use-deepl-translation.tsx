@@ -62,11 +62,22 @@ class DeepLTranslationManager {
       return; // Already scheduled
     }
 
+    // Prevent concurrent batches exceeding limit
+    if (this.activeBatches >= this.MAX_CONCURRENT_BATCHES) {
+      setTimeout(() => this.scheduleBatchProcessing(language), this.BATCH_DELAY * 2);
+      return;
+    }
+
     this.processingLanguages.add(language);
+
+    // Intelligent rate limiting based on recent activity
+    const now = Date.now();
+    const timeSinceLastBatch = now - this.lastBatchTime;
+    const delay = timeSinceLastBatch < this.BATCH_DELAY ? this.BATCH_DELAY - timeSinceLastBatch : 0;
 
     setTimeout(() => {
       this.processBatch(language);
-    }, this.BATCH_DELAY);
+    }, delay + this.BATCH_DELAY);
   }
 
   private async processBatch(language: string) {
@@ -75,6 +86,10 @@ class DeepLTranslationManager {
       this.processingLanguages.delete(language);
       return;
     }
+
+    // Track concurrent batches
+    this.activeBatches++;
+    this.lastBatchTime = Date.now();
 
     // Take up to BATCH_SIZE requests
     const batch = requests.splice(0, this.BATCH_SIZE);
@@ -104,6 +119,10 @@ class DeepLTranslationManager {
           request.resolve(translatedText);
         });
       } else {
+        // Enhanced error handling for quota exceeded
+        if (response.status === 456) {
+          console.log(`[Translation] Quota exceeded - using cached/original text fallback`);
+        }
         // Fallback to original text
         batch.forEach(request => request.resolve(request.text));
       }
@@ -111,11 +130,14 @@ class DeepLTranslationManager {
       console.error('Translation batch failed:', error);
       // Fallback to original text
       batch.forEach(request => request.resolve(request.text));
+    } finally {
+      // Always decrement active batches
+      this.activeBatches--;
     }
 
     // Continue processing remaining requests
     this.processingLanguages.delete(language);
-    if (this.batchQueue.get(language)?.length > 0) {
+    if (this.batchQueue.get(language)?.length && this.batchQueue.get(language)!.length > 0) {
       this.scheduleBatchProcessing(language);
     }
   }
