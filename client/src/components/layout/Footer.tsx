@@ -1,11 +1,9 @@
 import { Link } from "wouter";
-import { useMemo } from "react";
-import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
-import ErrorBoundary from "@/components/ui/error-boundary";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 
-function FooterContent() {
-  // Define all footer texts with stable references
-  const footerTexts = useMemo(() => [
+export default function Footer() {
+  // Define all footer texts for unified batch translation
+  const footerTexts = [
     "All rights reserved.",
     "Privacy Policy",
     "Terms of Service", 
@@ -24,12 +22,12 @@ function FooterContent() {
     "whose registered office is situated",
     "Our bank is registered with HSBC UK IBAN",
     "our sole official website is"
-  ], []);
+  ];
 
-  const translatedTexts = useSafeBatchTranslation(footerTexts);
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(footerTexts, 'instant');
 
-  // Extract individual translations using exact keys from footerTexts array
-  const allRightsReservedText = translatedTexts["All rights reserved."] || "All rights reserved.";
+  // Extract individual translations for direct access
+  const allRightsReservedText = translatedTexts["All rights reserved"] || "All rights reserved";
   const privacyPolicyText = translatedTexts["Privacy Policy"] || "Privacy Policy";
   const termsOfServiceText = translatedTexts["Terms of Service"] || "Terms of Service";
   const cookiePolicyText = translatedTexts["Cookie Policy"] || "Cookie Policy";
@@ -38,15 +36,15 @@ function FooterContent() {
   const faqText = translatedTexts["FAQ"] || "FAQ";
   const shippingText = translatedTexts["Shipping"] || "Shipping";
   const partnershipsText = translatedTexts["Partnerships"] || "Partnerships";
-  const downloadMobileAppText = translatedTexts["Download our mobile app"] || "Download our mobile app";
+  const downloadMobileAppText = translatedTexts["Download Mobile App"] || "Download Mobile App";
   const downloadOnTheText = translatedTexts["Download on the"] || "Download on the";
   const appStoreText = translatedTexts["App Store"] || "App Store";
   const getItOnText = translatedTexts["Get it on"] || "Get it on";
   const googlePlayText = translatedTexts["Google Play"] || "Google Play";
-  const britishCompanyText = translatedTexts["is a British Company registered in England, Wales and Scotland under registration number"] || "is a British Company registered in England, Wales and Scotland under registration number";
-  const registeredOfficeText = translatedTexts["whose registered office is situated"] || "whose registered office is situated";
-  const bankRegisteredText = translatedTexts["Our bank is registered with HSBC UK IBAN"] || "Our bank is registered with HSBC UK IBAN";
-  const officialWebsiteText = translatedTexts["our sole official website is"] || "our sole official website is";
+  const britishCompanyText = translatedTexts["British Company"] || "British Company";
+  const registeredOfficeText = translatedTexts["Registered Office"] || "Registered Office";
+  const bankRegisteredText = translatedTexts["Bank Registered"] || "Bank Registered";
+  const officialWebsiteText = translatedTexts["Official Website"] || "Official Website";
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
@@ -114,13 +112,5 @@ function FooterContent() {
         </div>
       </div>
     </footer>
-  );
-}
-
-export default function Footer() {
-  return (
-    <ErrorBoundary fallback={<div className="bg-white border-t border-gray-200 mt-10 p-4 text-center text-gray-500">Footer loading...</div>}>
-      <FooterContent />
-    </ErrorBoundary>
   );
 }

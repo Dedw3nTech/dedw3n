@@ -306,15 +306,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="gender">{translations["Gender"] || "Gender"}</Label>
+              <Label htmlFor="gender">Gender</Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder={translations["Select your gender"] || "Select your gender"} />
+                  <SelectValue placeholder="Select your gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">{translations["Male"] || "Male"}</SelectItem>
-                  <SelectItem value="female">{translations["Female"] || "Female"}</SelectItem>
-                  <SelectItem value="other">{translations["Other"] || "Other"}</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -324,7 +324,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <div className="space-y-2">
               <Label className="flex items-center">
                 <Globe className="mr-2 h-4 w-4" />
-                {translations["Location"] || "Location"}
+                Location
               </Label>
               <RegionSelector 
                 currentRegion={formData.region}
@@ -344,12 +344,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="password">{translations["Password"] || "Password"}</Label>
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder={translations["Enter your password"] || "Enter your password"}
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -375,52 +375,41 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               className="w-full bg-black hover:bg-gray-900 text-white" 
               disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError)}
             >
-              {(loginMutation.isPending || registerMutation.isPending) ? 
-                (translations["Please wait..."] || "Please wait...") : 
-                isLogin ? 
-                  (translations["Sign In"] || "Sign In") : 
-                  (translations["Create Account"] || "Create Account")
-              }
+              {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
 
           <div className="text-center">
             <Separator className="my-4" />
             <p className="text-sm text-gray-600">
-              {isLogin ? 
-                (translations["Don't have an account?"] || "Don't have an account?") : 
-                (translations["Already have an account?"] || "Already have an account?")
-              }{" "}
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto font-semibold text-blue-600"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? 
-                  (translations["Sign up"] || "Sign up") : 
-                  (translations["Sign in"] || "Sign in")
-                }
+                {isLogin ? "Sign up" : "Sign in"}
               </Button>
             </p>
           </div>
 
           <div className="text-center pt-2">
             <p className="text-xs text-gray-500">
-              {translations["By continuing, you agree to our"] || "By continuing, you agree to our"}{" "}
+              By continuing, you agree to our{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto text-xs text-blue-600 underline"
                 onClick={() => setLocation("/terms")}
               >
-                {translations["Terms of Service"] || "Terms of Service"}
+                Terms of Service
               </Button>{" "}
-              {translations["and"] || "and"}{" "}
+              and{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto text-xs text-blue-600 underline"
                 onClick={() => setLocation("/privacy")}
               >
-                {translations["Privacy Policy"] || "Privacy Policy"}
+                Privacy Policy
               </Button>
             </p>
           </div>
