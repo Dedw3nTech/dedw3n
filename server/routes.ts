@@ -5892,14 +5892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         process.env.DEEPL_API_KEY_PREMIUM
       ].filter(key => key); // Remove null/undefined keys
 
-      console.log(`[API Key Debug] Found ${apiKeys.length} API keys available`);
-      apiKeys.forEach((key, index) => {
-        const keyType = key?.includes(':fx') ? 'Free' : 'Pro';
-        const keyPreview = key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'undefined';
-        console.log(`[API Key Debug] Key ${index + 1}: ${keyType} (${keyPreview})`);
-      });
-      
-      console.log(`[Translation Debug] Starting translation for "${text}" to ${targetLanguage}`);
+      console.log(`[Translation] Processing "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}" → ${targetLanguage}`);
 
       if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
@@ -5912,7 +5905,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let response = null;
       let lastError = null;
 
-      for (const apiKey of apiKeys) {
+      for (let i = 0; i < apiKeys.length; i++) {
+        const apiKey = apiKeys[i];
+        
         try {
           // Determine API endpoint based on key type
           const apiUrl = apiKey?.includes(':fx') ? 
@@ -5935,7 +5930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // If successful, break and use this response
           if (response.ok) {
-            console.log(`[Translation] Successfully authenticated with key ${apiKeys.indexOf(apiKey) + 1}`);
+            console.log(`[Translation] Successfully authenticated with key ${i + 1}`);
             break;
           }
 
