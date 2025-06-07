@@ -753,7 +753,7 @@ export default function Products() {
               ) : (
                 <div className="font-bold text-blue-600 text-sm">
                   {formatPrice(product.price)}
-                  {marketType === 'b2b' && <span className="text-xs ml-1">+VAT</span>}
+                  {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                 </div>
               )}
             </div>
@@ -765,12 +765,12 @@ export default function Products() {
           {/* Additional info based on market type */}
           {marketType === 'b2b' && (
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Volume discount available</span>
+              <span className="font-medium">{volumeDiscountText}</span>
             </div>
           )}
           {marketType === 'c2c' && (
             <div className="text-xs text-gray-500">
-              <span>Listed by User{product.vendorId}</span>
+              <span>{listedByText} User{product.vendorId}</span>
             </div>
           )}
         </CardContent>
@@ -790,12 +790,12 @@ export default function Products() {
                 }}
                 disabled={addToCartMutation.isPending}
                 className="bg-black text-white hover:bg-gray-800 font-bold"
-                title={marketType === 'c2c' ? 'View product details and seller information' : 'Add this product to your shopping cart'}
+                title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
               >
                 {addToCartMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  'Buy'
+                  buyText
                 )}
               </Button>
               <Button
@@ -803,9 +803,9 @@ export default function Products() {
                 size="sm"
                 onClick={() => shareOnFeed(product)}
                 className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
-                title="Share this product on your community feed for others to see"
+                title={shareOnFeedTooltipText}
               >
-                Repost
+                {repostButtonText}
               </Button>
             </div>
             <Button 
@@ -817,9 +817,9 @@ export default function Products() {
                 setOfferDialogOpen(true);
               }}
               className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
-              title="Make a custom offer to the seller with your preferred price"
+              title={makeOfferTooltipText}
             >
-              Send Offer
+              {sendOfferBtnText}
             </Button>
           </div>
           <div className="flex items-center justify-end gap-2">
@@ -827,7 +827,7 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
-              title="Send this product as a gift to someone special"
+              title={sendGiftTooltipText}
               onClick={() => {
                 setSelectedGiftProduct(product);
                 setGiftDialogOpen(true);
@@ -839,7 +839,7 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
-              title="Add this product to your dating profile as a potential gift"
+              title={addToProfileTooltipText}
             >
               <Plus className="h-5 w-5 font-bold stroke-2" />
             </Button>
@@ -849,7 +849,7 @@ export default function Products() {
               className="h-9 w-9"
               onClick={() => handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
-              title={isProductLiked(product.id) ? 'Remove from your favorites' : 'Add to your favorites'}
+              title={isProductLiked(product.id) ? removeFromFavoritesText : addToFavoritesText}
             >
               <Heart 
                 className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
