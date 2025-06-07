@@ -581,16 +581,8 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
  * Lightweight middleware to reduce mobile performance impact
  */
 export function fraudRiskMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Skip fraud assessment for mobile optimization - reduces server load significantly
-  if (req.path.startsWith('/assets/') || 
-      req.path.startsWith('/public/') || 
-      req.path.includes('.') ||
-      req.path.startsWith('/_next/') ||
-      req.path === '/favicon.ico' ||
-      req.path.startsWith('/api/') || // Skip API calls for mobile performance
-      req.headers['user-agent']?.toLowerCase().includes('mobile')) { // Skip mobile requests
-    return next();
-  }
+  // Skip fraud assessment completely to prevent server overload and recursion
+  return next();
   
   // Simplified risk assessment for desktop only
   const riskScore = 25; // Default low risk

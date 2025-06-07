@@ -5337,6 +5337,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
+  // Google Translate API function for unsupported languages (like Hindi)
+  async function translateWithGoogle(text: string, targetLanguage: string, res: Response, cacheKey: string) {
+    try {
+      const googleLang = googleLanguageMap[targetLanguage] || targetLanguage.toLowerCase();
+      
+      // Use Google Translate API free endpoint
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(text)}`;
+      
+      const response = await fetch(googleUrl);
+      
+      if (!response.ok) {
+        console.error('Google Translate API error:', response.status);
+        // Fallback to original text
+        const fallbackResult = {
+          translatedText: text,
+          detectedSourceLanguage: 'EN',
+          targetLanguage,
+          timestamp: Date.now()
+        };
+        translationCache.set(cacheKey, fallbackResult);
+        return res.json({
+          translatedText: fallbackResult.translatedText,
+          detectedSourceLanguage: fallbackResult.detectedSourceLanguage,
+          targetLanguage: fallbackResult.targetLanguage
+        });
+      }
+
+      const data = await response.json();
+      
+      // Google Translate returns complex nested array structure
+      let translatedText = text; // fallback
+      if (data && data[0] && Array.isArray(data[0])) {
+        translatedText = data[0].map((item: any) => item[0]).join('');
+      }
+
+      const result = {
+        translatedText,
+        detectedSourceLanguage: 'EN',
+        targetLanguage,
+        timestamp: Date.now()
+      };
+
+      // Cache the result
+      translationCache.set(cacheKey, result);
+
+      console.log(`[Translation] Google Translate success: "${text}" -> "${translatedText}" (${targetLanguage})`);
+
+      return res.json({
+        translatedText: result.translatedText,
+        detectedSourceLanguage: result.detectedSourceLanguage,
+        targetLanguage: result.targetLanguage
+      });
+
+    } catch (error) {
+      console.error('Google Translate error:', error);
+      // Return original text as fallback
+      const fallbackResult = {
+        translatedText: text,
+        detectedSourceLanguage: 'EN',
+        targetLanguage,
+        timestamp: Date.now()
+      };
+      translationCache.set(cacheKey, fallbackResult);
+      return res.json({
+        translatedText: fallbackResult.translatedText,
+        detectedSourceLanguage: fallbackResult.detectedSourceLanguage,
+        targetLanguage: fallbackResult.targetLanguage
+      });
+    }
+  }
+
   // Events & Meetups API endpoints
   app.get('/api/events', async (req: Request, res: Response) => {
     try {
