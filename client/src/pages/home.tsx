@@ -295,25 +295,25 @@ export default function Home() {
       {/* Hero Section */}
       <div className="bg-black text-white rounded-xl p-8 shadow-lg mb-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6 text-center">Welcome to Dedw3n</h1>
+          <h1 className="text-4xl font-bold mb-6 text-center">{t("Welcome to Dedw3n") || "Welcome to Dedw3n"}</h1>
           <p className="text-xl mb-10 text-center">
-            The all-in-one platform for buying, selling, and connecting with others.
+            {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">Multi-Vendor Marketplace</h2>
-              <p className="text-gray-200">Buy from and sell to users across the platform.</p>
+              <h2 className="text-2xl font-bold mb-3">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h2>
+              <p className="text-gray-200">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
             </div>
             
             <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">Social</h2>
-              <p className="text-gray-200">Connect with friends, share posts, and build your network.</p>
+              <h2 className="text-2xl font-bold mb-3">{t("Social") || "Social"}</h2>
+              <p className="text-gray-200">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
             </div>
             
             <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">Dating</h2>
-              <p className="text-gray-200">Find love or your new friend.</p>
+              <h2 className="text-2xl font-bold mb-3">{t("Dating") || "Dating"}</h2>
+              <p className="text-gray-200">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
             </div>
           </div>
         </div>
@@ -322,7 +322,7 @@ export default function Home() {
       {/* Featured Products Section */}
       {featuredProducts.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Featured Products</h2>
+          <h2 className="text-2xl font-bold mb-4">{t("Featured Products") || "Featured Products"}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map(renderProductCard)}
           </div>
@@ -332,7 +332,7 @@ export default function Home() {
       {/* New Products Section */}
       {newProducts.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">New Products</h2>
+          <h2 className="text-2xl font-bold mb-4">{t("New Products") || "New Products"}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {newProducts.map(renderProductCard)}
           </div>
