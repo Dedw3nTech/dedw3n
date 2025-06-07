@@ -244,6 +244,7 @@ function Router() {
       <Route path="/remove-ads" component={RemoveAdsPage} />
       <Route path="/sitemap" component={SiteMap} />
       <Route path="/api-test" component={ApiTestPage} />
+      <Route path="/translation-test" component={TranslationTestPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={WallPage} />
