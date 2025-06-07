@@ -5885,33 +5885,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
       }
 
-      if (!process.env.DEEPL_API_KEY) {
+      // Smart API key management with automatic fallback
+      const apiKeys = [
+        process.env.DEEPL_API_KEY,
+        process.env.DEEPL_API_KEY_BACKUP,
+        process.env.DEEPL_API_KEY_PREMIUM
+      ].filter(key => key); // Remove null/undefined keys
+
+      if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
       }
 
       // Map our language codes to DeepL format
       const deeplTargetLang = deeplLanguageMap[targetLanguage] || targetLanguage;
 
-      // Always use the free DeepL API endpoint
-      const apiUrl = 'https://api-free.deepl.com/v2/translate';
+      // Try each API key until success
+      let response = null;
+      let lastError = null;
 
-      const formData = new URLSearchParams();
-      formData.append('text', text);
-      formData.append('target_lang', deeplTargetLang);
-      formData.append('source_lang', 'EN'); // Assuming source is always English
+      for (const apiKey of apiKeys) {
+        try {
+          // Determine API endpoint based on key type
+          const apiUrl = apiKey?.includes(':fx') ? 
+            'https://api-free.deepl.com/v2/translate' : 
+            'https://api.deepl.com/v2/translate';
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      });
+          const formData = new URLSearchParams();
+          formData.append('text', text);
+          formData.append('target_lang', deeplTargetLang);
+          formData.append('source_lang', 'EN');
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('DeepL API error:', response.status, errorText);
+          response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `DeepL-Auth-Key ${apiKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData,
+          });
+
+          // If successful or non-quota error, break
+          if (response.ok || (response.status !== 456 && response.status !== 429)) {
+            break;
+          }
+
+          // If quota exceeded, try next key
+          if (response.status === 456 || response.status === 429) {
+            console.log(`[Translation] Key quota exceeded, trying next key...`);
+            continue;
+          }
+
+        } catch (error) {
+          lastError = error;
+          continue;
+        }
+      }
+
+      if (!response || !response.ok) {
+        const errorText = response ? await response.text() : 'No valid API response';
+        console.error('DeepL API error:', response?.status || 'No response', errorText);
         
         // For rate limiting, return original text as fallback
         if (response.status === 429) {
@@ -6035,7 +6067,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ translations });
       }
 
-      if (!process.env.DEEPL_API_KEY) {
+      // Smart API key management with automatic fallback
+      const apiKeys = [
+        process.env.DEEPL_API_KEY,
+        process.env.DEEPL_API_KEY_BACKUP,
+        process.env.DEEPL_API_KEY_PREMIUM
+      ].filter(key => key); // Remove null/undefined keys
+
+      if (apiKeys.length === 0) {
         // Fallback to original texts
         return res.json({
           translations: texts.map(text => ({
@@ -6083,21 +6122,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Parallel processing function for high-performance translation
       const processBatchParallel = async (batch, batchIndex) => {
-        try {
-          const formData = new URLSearchParams();
-          batch.forEach(item => formData.append('text', item.text));
-          formData.append('target_lang', deeplTargetLang);
-          formData.append('source_lang', 'EN');
+        // Try each API key until success
+        for (const apiKey of apiKeys) {
+          try {
+            // Determine API endpoint based on key type
+            const apiUrl = apiKey?.includes(':fx') ? 
+              'https://api-free.deepl.com/v2/translate' : 
+              'https://api.deepl.com/v2/translate';
 
-          const startTime = Date.now();
-          const response = await fetch('https://api-free.deepl.com/v2/translate', {
-            method: 'POST',
-            headers: {
-              'Authorization': `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData,
-          });
+            const formData = new URLSearchParams();
+            batch.forEach(item => formData.append('text', item.text));
+            formData.append('target_lang', deeplTargetLang);
+            formData.append('source_lang', 'EN');
+
+            const startTime = Date.now();
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `DeepL-Auth-Key ${apiKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: formData,
+            });
 
           const processingTime = Date.now() - startTime;
           console.log(`[Batch ${batchIndex + 1}] Processed ${batch.length} texts in ${processingTime}ms`);
