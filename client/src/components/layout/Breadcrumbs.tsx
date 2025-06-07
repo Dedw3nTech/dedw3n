@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
+import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
 import { useMemo } from "react";
 
 interface BreadcrumbItem {
@@ -32,8 +32,8 @@ export function Breadcrumbs() {
     'Community Guidelines', 'Site Map'
   ], []);
 
-  // Use DOM-safe batch translation with error boundary protection
-  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(breadcrumbTexts, 'high');
+  // Use safe batch translation with error boundary protection
+  const translatedTexts = useSafeBatchTranslation(breadcrumbTexts);
   
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({

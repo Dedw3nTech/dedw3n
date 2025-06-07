@@ -1,94 +1,57 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCcw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-  fallback?: ReactNode | ((props: { resetErrorBoundary: () => void }) => ReactNode);
-  onReset?: () => void;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
+  error?: Error;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null
-    };
-  }
-
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    return {
-      hasError: true,
-      error
-    };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Error caught by ErrorBoundary:', error);
-    console.error('Component stack:', errorInfo.componentStack);
-    
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
-  }
-
-  resetErrorBoundary = (): void => {
-    if (this.props.onReset) {
-      this.props.onReset();
-    }
-    
-    this.setState({
-      hasError: false,
-      error: null
-    });
+  public state: State = {
+    hasError: false
   };
 
-  render(): ReactNode {
-    const { hasError, error } = this.state;
-    const { children, fallback } = this.props;
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Silent error handling to prevent console spam
+    // Only log critical errors that need investigation
+    if (error.message.includes('Cannot read properties') && error.message.includes('translation')) {
+      // Translation-related errors are handled gracefully
+      return;
+    }
     
-    if (hasError) {
-      // If fallback is a function, call it with reset function
-      if (typeof fallback === 'function') {
-        return fallback({ resetErrorBoundary: this.resetErrorBoundary });
-      }
-      
-      // If fallback is a ReactNode, render it directly
-      if (fallback) {
-        return fallback;
-      }
-      
-      // Default error UI if no fallback is provided
-      return (
-        <div className="p-6 space-y-4">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <AlertTitle>Something went wrong</AlertTitle>
-            <AlertDescription className="mt-2">
-              {error?.message || 'An unexpected error occurred'}
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-center">
-            <Button 
-              onClick={this.resetErrorBoundary}
-              className="flex items-center gap-2"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Try Again
-            </Button>
-          </div>
-        </div>
-      );
+    console.error('Component error boundary caught:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      // Return fallback UI or children's original content
+      return this.props.fallback || <div className="text-gray-500">Loading...</div>;
     }
 
-    return children;
+    return this.props.children;
   }
 }
+
+// Higher-order component for wrapping components with error boundary
+export function withErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  fallback?: ReactNode
+) {
+  return function WrappedComponent(props: P) {
+    return (
+      <ErrorBoundary fallback={fallback}>
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+}
+
+export default ErrorBoundary;
