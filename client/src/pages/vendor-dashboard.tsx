@@ -159,6 +159,8 @@ export default function VendorDashboard() {
     "Total Orders", 
     "Total Revenue",
     "Pending Orders",
+    "account",
+    "Business Vendor",
     
     // Product Management
     "Product Management",
@@ -668,10 +670,10 @@ export default function VendorDashboard() {
             <TabsContent value="dashboard" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+                <h2 className="text-2xl font-bold tracking-tight">{translations?.["Dashboard"] || "Dashboard"}</h2>
                 {vendor && (
                   <p className="text-blue-600 text-xs font-normal mt-1">
-                    Using {vendor.vendorType === 'private' ? 'Private Vendor' : 'Business Vendor'} account
+                    {translations?.["Using Private Vendor account"] || "Using"} {vendor.vendorType === 'private' ? (translations?.["Private Vendor"] || "Private Vendor") : (translations?.["Business Vendor"] || "Business Vendor")} {translations?.["account"] || "account"}
                   </p>
                 )}
               </div>
@@ -682,15 +684,15 @@ export default function VendorDashboard() {
                   disabled={createBusinessVendorMutation.isPending}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {createBusinessVendorMutation.isPending ? "Creating..." : "Create Business Vendor"}
+                  {createBusinessVendorMutation.isPending ? (translations?.["Creating..."] || "Creating...") : (translations?.["Create Business Vendor"] || "Create Business Vendor")}
                 </Button>
                 <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Product
+                  {translations?.["Add Product"] || "Add Product"}
                 </Button>
                 <Button onClick={() => setLocation('/vendor-analytics')} className="bg-black text-white hover:bg-gray-800">
                   <BarChart className="mr-2 h-4 w-4" />
-                  Deep Analytics
+                  {translations?.["Deep Analytics"] || "Deep Analytics"}
                 </Button>
               </div>
             </div>

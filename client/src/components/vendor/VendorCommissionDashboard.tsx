@@ -10,6 +10,7 @@ import { CalendarDays, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useUnifiedTranslation } from '@/hooks/use-unified-translation';
 
 interface CommissionPeriod {
   id: number;
@@ -106,6 +107,39 @@ const getStatusIcon = (status: string) => {
 export default function VendorCommissionDashboard({ vendorId }: VendorCommissionDashboardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Commission Tier System texts
+  const commissionTexts = [
+    "Commission Tier System",
+    "Your commission rate is determined by your monthly sales volume",
+    "Standard Tier",
+    "Basic commission rate", 
+    "Sales Manager",
+    "Sales Manager Fee",
+    "Account",
+    "Failed to load commission dashboard. Please try again later.",
+    "Payment Link Created",
+    "Redirecting to payment page...",
+    "Error",
+    "Failed to create payment link",
+    "Total Owed",
+    "Total Paid",
+    "Total Commission",
+    "Commission Overview",
+    "Recent Periods",
+    "Pending Payments",
+    "Payment History",
+    "Account Status",
+    "Payment Methods",
+    "Due Date",
+    "Amount",
+    "Status",
+    "Actions",
+    "Pay Now",
+    "View Details"
+  ];
+  
+  const { translations } = useUnifiedTranslation(commissionTexts);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],
@@ -121,8 +155,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       // Redirect to Stripe payment page
       if (data.clientSecret) {
         toast({
-          title: "Payment Link Created",
-          description: "Redirecting to payment page...",
+          title: translations?.["Payment Link Created"] || "Payment Link Created",
+          description: translations?.["Redirecting to payment page..."] || "Redirecting to payment page...",
         });
         // In a real implementation, you would redirect to Stripe Checkout
         console.log('Payment Intent created:', data);
@@ -130,8 +164,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to create payment link",
+        title: translations?.["Error"] || "Error",
+        description: translations?.["Failed to create payment link"] || "Failed to create payment link",
         variant: "destructive",
       });
     },
@@ -155,7 +189,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load commission dashboard. Please try again later.
+          {translations?.["Failed to load commission dashboard. Please try again later."] || "Failed to load commission dashboard. Please try again later."}
         </AlertDescription>
       </Alert>
     );
