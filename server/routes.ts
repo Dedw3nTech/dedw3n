@@ -5898,6 +5898,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const keyPreview = key ? `${key.substring(0, 8)}...${key.substring(key.length - 4)}` : 'undefined';
         console.log(`[API Key Debug] Key ${index + 1}: ${keyType} (${keyPreview})`);
       });
+      
+      console.log(`[Translation Debug] Starting translation for "${text}" to ${targetLanguage}`);
 
       if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
@@ -5931,16 +5933,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             body: formData,
           });
 
-          // If successful or non-quota error, break
-          if (response.ok || (response.status !== 456 && response.status !== 429)) {
+          // If successful, break and use this response
+          if (response.ok) {
+            console.log(`[Translation] Successfully authenticated with key ${apiKeys.indexOf(apiKey) + 1}`);
             break;
           }
 
-          // If quota exceeded, try next key
+          // If quota exceeded or rate limited, try next key
           if (response.status === 456 || response.status === 429) {
             console.log(`[Translation] Key quota exceeded, trying next key...`);
             continue;
           }
+
+          // If authentication failed (403), try next key
+          if (response.status === 403) {
+            console.log(`[Translation] Key authentication failed, trying next key...`);
+            continue;
+          }
+
+          // For other errors, still try next key before giving up
+          console.log(`[Translation] Key failed with status ${response.status}, trying next key...`);
+          continue;
 
         } catch (error) {
           lastError = error;
@@ -5948,35 +5961,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('DeepL API error:', response.status, errorText);
+      if (!response || !response.ok) {
+        const errorText = response ? await response.text() : 'No response received';
+        console.error('DeepL API error:', response?.status || 'No status', errorText);
         
-        // For rate limiting, return original text as fallback
-        if (response.status === 429) {
-          const fallbackResult = {
-            translatedText: text, // Return original text
-            detectedSourceLanguage: 'EN',
-            targetLanguage,
-            timestamp: Date.now()
-          };
-          translationCache.set(cacheKey, fallbackResult);
-          return res.json({
-            translatedText: fallbackResult.translatedText,
-            detectedSourceLanguage: fallbackResult.detectedSourceLanguage,
-            targetLanguage: fallbackResult.targetLanguage
-          });
-        }
-        
-        // If DeepL doesn't support the language, return original text for data integrity
-        if (response.status === 400 && (errorText.includes('not supported') || errorText.includes('target_lang'))) {
-          console.log(`[Translation] DeepL doesn't support ${targetLanguage} - returning original text`);
-          return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
-        }
-        
-        return res.status(response.status).json({ 
-          message: 'Translation service error',
-          details: errorText 
+        // If all API keys failed, return original text to maintain data integrity
+        console.log(`[Translation] All API keys failed - returning original text for data integrity`);
+        const fallbackResult = {
+          translatedText: text, // Return original text
+          detectedSourceLanguage: 'EN',
+          targetLanguage,
+          timestamp: Date.now()
+        };
+        translationCache.set(cacheKey, fallbackResult);
+        return res.json({
+          translatedText: fallbackResult.translatedText,
+          detectedSourceLanguage: fallbackResult.detectedSourceLanguage,
+          targetLanguage: fallbackResult.targetLanguage
         });
       }
 
@@ -6158,6 +6159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (response.ok) {
               const data = await response.json();
               if (data.translations && data.translations.length > 0) {
+                console.log(`[Batch ${batchIndex + 1}] Successfully authenticated with key ${apiKeys.indexOf(apiKey) + 1}`);
                 return data.translations.map((translation, index) => ({
                   ...translation,
                   originalIndex: batch[index].originalIndex
