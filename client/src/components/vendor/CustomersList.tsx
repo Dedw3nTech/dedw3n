@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
 import {
   Card,
   CardContent,
@@ -86,6 +87,42 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
 
+  // Define all translatable texts
+  const customerTexts = useMemo(() => [
+    "Search customers...",
+    "Total Customers",
+    "Premium Customers", 
+    "Average Order Value",
+    "Overview",
+    "Segmentation",
+    "Lifetime Value",
+    "Service History",
+    "All Segments",
+    "VIP",
+    "Premium", 
+    "Regular",
+    "New",
+    "Recent Activity",
+    "Customer",
+    "Contact",
+    "Segment",
+    "Orders",
+    "Total Spent",
+    "Last Order",
+    "Actions",
+    "View Details",
+    "Never",
+    "No vendor selected",
+    "Please select a vendor to view customer analytics",
+    "No customers found",
+    "Try adjusting your search or filters",
+    "Sort by",
+    "View Customer"
+  ], []);
+
+  // Get translations
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(customerTexts, 'high');
+
   // Fetch real customer data
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
     queryKey: [`/api/vendors/${vendorId}/customers`],
@@ -153,10 +190,10 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
       <div className="flex flex-col items-center justify-center py-12">
         <User className="h-12 w-12 text-muted-foreground mb-4" />
         <h3 className="text-lg font-medium text-muted-foreground">
-          No vendor selected
+          {translatedTexts["No vendor selected"] || "No vendor selected"}
         </h3>
         <p className="text-sm text-muted-foreground">
-          Please select a vendor to view customer analytics
+          {translatedTexts["Please select a vendor to view customer analytics"] || "Please select a vendor to view customer analytics"}
         </p>
       </div>
     );
@@ -167,10 +204,10 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
       {/* Analytics Tabs */}
       <Tabs value={analyticsView} onValueChange={setAnalyticsView}>
         <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="segmentation">Segmentation</TabsTrigger>
-          <TabsTrigger value="lifetime-value">Lifetime Value</TabsTrigger>
-          <TabsTrigger value="service-interactions">Service History</TabsTrigger>
+          <TabsTrigger value="overview">{translatedTexts["Overview"] || "Overview"}</TabsTrigger>
+          <TabsTrigger value="segmentation">{translatedTexts["Segmentation"] || "Segmentation"}</TabsTrigger>
+          <TabsTrigger value="lifetime-value">{translatedTexts["Lifetime Value"] || "Lifetime Value"}</TabsTrigger>
+          <TabsTrigger value="service-interactions">{translatedTexts["Service History"] || "Service History"}</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab - Traditional Customer List */}
@@ -180,7 +217,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search customers..."
+                  placeholder={translatedTexts["Search customers..."] || "Search customers..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8"
@@ -188,22 +225,22 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
               </div>
               <Select value={segmentFilter} onValueChange={setSegmentFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Segments" />
+                  <SelectValue placeholder={translatedTexts["All Segments"] || "All Segments"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Segments</SelectItem>
-                  <SelectItem value="vip">VIP</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="all">{translatedTexts["All Segments"] || "All Segments"}</SelectItem>
+                  <SelectItem value="vip">{translatedTexts["VIP"] || "VIP"}</SelectItem>
+                  <SelectItem value="premium">{translatedTexts["Premium"] || "Premium"}</SelectItem>
+                  <SelectItem value="regular">{translatedTexts["Regular"] || "Regular"}</SelectItem>
+                  <SelectItem value="new">{translatedTexts["New"] || "New"}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
+                  <SelectValue placeholder={translatedTexts["Sort by"] || "Sort by"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recent">Recent Activity</SelectItem>
+                  <SelectItem value="recent">{translatedTexts["Recent Activity"] || "Recent Activity"}</SelectItem>
                   <SelectItem value="name_asc">Name (A-Z)</SelectItem>
                   <SelectItem value="name_desc">Name (Z-A)</SelectItem>
                   <SelectItem value="orders_high">Most Orders</SelectItem>
@@ -218,7 +255,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Customers
+                  {translatedTexts["Total Customers"] || "Total Customers"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -230,7 +267,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Premium Customers
+                  {translatedTexts["Premium Customers"] || "Premium Customers"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -244,7 +281,7 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Average Order Value
+                  {translatedTexts["Average Order Value"] || "Average Order Value"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
