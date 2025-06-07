@@ -25,7 +25,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
-    "Buy & Sell from Friends (C2C)",
+    "Friends (C2C)",
     "Buy & Sell from Online Store (B2C)", 
     "Buy & Sell Wholesale (B2B)",
     "Search products...",
@@ -74,7 +74,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               onClick={() => handleMarketNavigation("c2c")}
             >
               <div className="mb-2 flex items-center gap-2">
-                <Users className="h-4 w-4" />
                 <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'c2c' 
                     ? 'text-black' 
