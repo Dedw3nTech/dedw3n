@@ -24,11 +24,19 @@ export interface WebSocketMessage {
 export function setupWebSocket(server: Server) {
   console.log('[WebSocket] Setting up WebSocket server on /ws path');
   
-  // Create WebSocket server on specific path to avoid conflicts
+  // Create WebSocket server with improved connection stability
   wss = new WebSocketServer({ 
     server, 
     path: '/ws',
-    perMessageDeflate: false
+    perMessageDeflate: false,
+    clientTracking: true,
+    maxPayload: 16 * 1024, // 16KB max payload
+    skipUTF8Validation: false,
+    // Add connection timeout to prevent hanging connections
+    handshakeTimeout: 10000, // 10 seconds
+    // Enable automatic pong response to ping frames
+    ping: true,
+    pong: true
   });
 
   wss.on('connection', async (ws, req) => {
