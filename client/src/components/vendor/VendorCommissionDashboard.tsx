@@ -337,9 +337,9 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Sales: £{parseFloat(payment.totalSales).toFixed(2)} • 
-                      Commission: £{parseFloat(payment.commissionAmount).toFixed(2)} • 
-                      Due: {format(new Date(payment.dueDate), 'MMM dd, yyyy')}
+                      {translations?.["Sales"] || "Sales"}: £{parseFloat(payment.totalSales).toFixed(2)} • 
+                      {translations?.["Commission"] || "Commission"}: £{parseFloat(payment.commissionAmount).toFixed(2)} • 
+                      {translations?.["Due"] || "Due"}: {format(new Date(payment.dueDate), 'MMM dd, yyyy')}
                     </p>
                   </div>
                   <Button
@@ -348,7 +348,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                     size="sm"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
-                    Pay Now
+                    {translations?.["Pay Now"] || "Pay Now"}
                   </Button>
                 </div>
               ))}
@@ -362,10 +362,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
-            Commission History
+            {translations?.["Commission History"] || "Commission History"}
           </CardTitle>
           <CardDescription>
-            Your last 12 months of commission calculations
+            {translations?.["Your last 12 months of commission calculations"] || "Your last 12 months of commission calculations"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -387,14 +387,14 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>
-                      Sales: £{parseFloat(period.totalSales).toFixed(2)} • 
-                      Transactions: {period.totalTransactions} • 
-                      Rate: {(parseFloat(period.commissionRate) * 100).toFixed(1)}%
+                      {translations?.["Sales"] || "Sales"}: £{parseFloat(period.totalSales).toFixed(2)} • 
+                      {translations?.["Transactions"] || "Transactions"}: {period.totalTransactions} • 
+                      {translations?.["Rate"] || "Rate"}: {(parseFloat(period.commissionRate) * 100).toFixed(1)}%
                     </p>
                     <p>
-                      Commission: £{parseFloat(period.commissionAmount).toFixed(2)} • 
-                      Due: {format(new Date(period.dueDate), 'MMM dd, yyyy')}
-                      {period.paidDate && ` • Paid: ${format(new Date(period.paidDate), 'MMM dd, yyyy')}`}
+                      {translations?.["Commission"] || "Commission"}: £{parseFloat(period.commissionAmount).toFixed(2)} • 
+                      {translations?.["Due"] || "Due"}: {format(new Date(period.dueDate), 'MMM dd, yyyy')}
+                      {period.paidDate && ` • ${translations?.["Paid"] || "Paid"}: ${format(new Date(period.paidDate), 'MMM dd, yyyy')}`}
                     </p>
                   </div>
                 </div>
