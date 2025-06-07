@@ -330,84 +330,19 @@ function Router() {
 }
 
 function App() {
-  console.log('App component rendering...');
-  
-  // Simplified initialization without blocking operations
-  useEffect(() => {
-    console.log('App useEffect running...');
-    
-    // Non-blocking background operations
-    setTimeout(() => {
-      try {
-        initializeOfflineDetection();
-        initializeLanguageFromLocation();
-      } catch (error) {
-        console.error('Background initialization error:', error);
-      }
-    }, 100);
-  }, []);
-
-  console.log('App returning JSX...');
-  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
-          <AuthProvider>
-            <ViewProvider>
-              <MarketTypeProvider>
-                <SubscriptionProvider>
-                  <MessagingProvider>
-                    <CurrencyProvider>
-                      <LanguageProvider>
-                        <ErrorBoundary>
-                        <div className="flex flex-col min-h-screen">
-                          <OptimizedNavigation />
-                          <MarketplaceNavWrapper />
-                          <Breadcrumbs />
-                          
-                          {/* Community Navigation - Only show on community page */}
-                          <CommunityNavWrapper />
-                          
-                          {/* Dating Navigation - Only show on dating page */}
-                          <DatingNavWrapper />
-                          
-                          {/* New Section Above Main - Only show on marketplace pages */}
-                          <MarketplacePromoSection />
-                          
-                          {/* Dating Header Advertisement - Only show on dating page */}
-                          <DatingHeaderPromoSection />
-                          
-                          <main className="flex-grow">
-                            <ApiErrorBoundary showHomeButton={false}>
-                              <Router />
-                            </ApiErrorBoundary>
-                          </main>
-                          
-                          {/* Dating Footer Advertisement - Only show on dating page */}
-                          <DatingFooterPromoSection />
-                          
-                          {/* New Section Below Main - Only show on marketplace pages */}
-                          <MarketplaceBottomPromoSection />
-                          
-                          <Footer />
-                          <MobileNavigation />
-                          <OfflineIndicator />
-
-                          <GlobalLoginHandler />
-                          {/* Offline simulator hidden as requested */}
-                          {/* Chatbot will be implemented later when API key is available */}
-                          {/* <ChatbotWindow /> */}
-                        </div>
-                        </ErrorBoundary>
-                        <Toaster />
-                      </LanguageProvider>
-                    </CurrencyProvider>
-                  </MessagingProvider>
-                </SubscriptionProvider>
-              </MarketTypeProvider>
-            </ViewProvider>
-          </AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-grow">
+              <div className="p-8 text-center">
+                <h1 className="text-2xl font-bold mb-4">Dedw3n Platform</h1>
+                <p className="text-gray-600">Application is being restored to working state...</p>
+              </div>
+            </main>
+            <Toaster />
+          </div>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
