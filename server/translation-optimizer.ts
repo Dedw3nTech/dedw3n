@@ -196,13 +196,15 @@ class TranslationOptimizer {
     const now = Date.now();
     
     // Clean expired entries
-    for (const [key, value] of this.cache.entries()) {
+    const cacheEntries = Array.from(this.cache.entries());
+    for (const [key, value] of cacheEntries) {
       if (!this.isValid(value, this.CACHE_TTL)) {
         this.cache.delete(key);
       }
     }
     
-    for (const [key, value] of this.priorityCache.entries()) {
+    const priorityEntries = Array.from(this.priorityCache.entries());
+    for (const [key, value] of priorityEntries) {
       if (!this.isValid(value, this.PRIORITY_CACHE_TTL)) {
         this.priorityCache.delete(key);
       }

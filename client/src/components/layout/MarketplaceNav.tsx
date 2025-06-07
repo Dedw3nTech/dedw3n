@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { useMarketType } from '@/hooks/use-market-type';
+import { useMarketType, type MarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
@@ -52,7 +52,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Memoize navigation handlers to prevent infinite re-renders
   const handleMarketNavigation = useCallback((type: string) => {
-    setMarketType(type);
+    setMarketType(type as MarketType);
     setLocation("/marketplace");
   }, [setMarketType, setLocation]);
 

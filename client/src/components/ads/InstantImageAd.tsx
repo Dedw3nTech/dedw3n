@@ -76,7 +76,7 @@ export function InstantImageAd({
   // Setup lazy loading for normal priority ads
   useEffect(() => {
     if (priority === 'normal' && adRef.current) {
-      setupLazyLoading(adRef.current);
+      setupLazyLoading();
     }
   }, [priority, setupLazyLoading]);
 
