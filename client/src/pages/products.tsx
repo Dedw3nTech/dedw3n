@@ -1070,13 +1070,13 @@ export default function Products() {
               <Checkbox
                 id="friends-only"
               />
-              <Label htmlFor="friends-only" className="text-[12px] font-normal">Friends only</Label>
+              <Label htmlFor="friends-only" className="text-[12px] font-normal">{friendsOnlyText}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="local-only"
               />
-              <Label htmlFor="local-only" className="text-[12px] font-normal">Local pickup only</Label>
+              <Label htmlFor="local-only" className="text-[12px] font-normal">{localPickupText}</Label>
             </div>
           </div>
         </div>
@@ -1084,25 +1084,25 @@ export default function Products() {
 
       {marketType === 'b2c' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">Store Options</h3>
+          <h3 className="font-medium mb-2 text-[14px]">{storeOptionsText}</h3>
           <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="verified-only"
               />
-              <Label htmlFor="verified-only" className="text-[12px] font-normal">Verified stores only</Label>
+              <Label htmlFor="verified-only" className="text-[12px] font-normal">{verifiedStoresText}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="free-shipping"
               />
-              <Label htmlFor="free-shipping" className="text-[12px] font-normal">Free shipping</Label>
+              <Label htmlFor="free-shipping" className="text-[12px] font-normal">{freeShippingText}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="next-day-delivery"
               />
-              <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">Next day delivery</Label>
+              <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">{nextDayDeliveryText}</Label>
             </div>
           </div>
         </div>
@@ -1110,25 +1110,25 @@ export default function Products() {
 
       {marketType === 'b2b' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">Business Options</h3>
+          <h3 className="font-medium mb-2 text-[14px]">{businessOptionsText}</h3>
           <div className="space-y-2 text-[12px] font-normal">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="bulk-discount"
               />
-              <Label htmlFor="bulk-discount" className="text-[12px] font-normal">Volume discounts</Label>
+              <Label htmlFor="bulk-discount" className="text-[12px] font-normal">{volumeDiscountsText}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="wholesale-only"
               />
-              <Label htmlFor="wholesale-only" className="text-[12px] font-normal">Wholesale only</Label>
+              <Label htmlFor="wholesale-only" className="text-[12px] font-normal">{wholesaleOnlyText}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="tax-exempt"
               />
-              <Label htmlFor="tax-exempt" className="text-[12px] font-normal">Tax exempt eligible</Label>
+              <Label htmlFor="tax-exempt" className="text-[12px] font-normal">{taxExemptText}</Label>
             </div>
           </div>
         </div>
