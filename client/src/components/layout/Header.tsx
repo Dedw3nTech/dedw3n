@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
@@ -8,6 +8,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
 import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 import { useMessaging } from "@/hooks/use-messaging";
 import SocialNav from "@/components/social/SocialNav";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,26 @@ export default function Header() {
   const { view, setView } = useView();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const [location, setLocation] = useLocation();
+  
+  // Define translatable texts with stable references for DOM-safe translation
+  const headerSocialTexts = useMemo(() => [
+    "Wall",
+    "Community",
+    "Search User",
+    "BETA VERSION"
+  ], []);
+
+  // Use DOM-safe batch translation for optimal performance
+  const { translations: translatedHeaderSocialTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(headerSocialTexts, 'instant');
+
+  // Memoize translated values to prevent re-render loops
+  const translatedSocialLabels = useMemo(() => ({
+    wall: translatedHeaderSocialTexts["Wall"] || "Wall",
+    community: translatedHeaderSocialTexts["Community"] || "Community",
+    searchUser: translatedHeaderSocialTexts["Search User"] || "Search User",
+    betaVersion: translatedHeaderSocialTexts["BETA VERSION"] || "BETA VERSION"
+  }), [translatedHeaderSocialTexts]);
+  
   // Determine active tab based on current location
   const getCurrentTab = () => {
     if (location === '/wall') return "wall";
@@ -187,7 +208,7 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-3">
             <Logo size="md" />
-            <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
+            <span className="text-xs font-bold text-red-600 ml-1">{translatedSocialLabels.betaVersion}</span>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -219,7 +240,7 @@ export default function Header() {
             >
               <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "wall" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <Home className="h-4 w-4" />
-                <span>Wall</span>
+                <span>{translatedSocialLabels.wall}</span>
               </div>
             </div>
             
@@ -233,7 +254,7 @@ export default function Header() {
             >
               <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "community" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <i className="ri-group-line text-base"></i>
-                <span>Community</span>
+                <span>{translatedSocialLabels.community}</span>
               </div>
             </div>
             
@@ -247,7 +268,7 @@ export default function Header() {
             >
               <div className={`flex items-center justify-center gap-1 border-b-2 ${activeTab === "search" ? "border-black text-black font-bold" : "border-transparent text-gray-600 hover:text-primary"}`}>
                 <Search className="h-4 w-4" />
-                <span>Search User</span>
+                <span>{translatedSocialLabels.searchUser}</span>
               </div>
             </div>
 

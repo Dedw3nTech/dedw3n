@@ -22,6 +22,35 @@ export default function UserMenu() {
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
 
+  // Define translatable texts with stable references for DOM-safe translation
+  const userMenuTexts = useMemo(() => [
+    "Your Profile",
+    "Settings", 
+    "Messages",
+    "Notifications",
+    "Dating Dashboard",
+    "Vendor Dashboard",
+    "Log out",
+    "Logging out...",
+    "Login"
+  ], []);
+
+  // Use DOM-safe batch translation for optimal performance
+  const { translations: translatedUserMenuTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(userMenuTexts, 'instant');
+
+  // Memoize translated values to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    profile: translatedUserMenuTexts["Your Profile"] || "Your Profile",
+    settings: translatedUserMenuTexts["Settings"] || "Settings",
+    messages: translatedUserMenuTexts["Messages"] || "Messages",
+    notifications: translatedUserMenuTexts["Notifications"] || "Notifications",
+    datingDashboard: translatedUserMenuTexts["Dating Dashboard"] || "Dating Dashboard",
+    vendorDashboard: translatedUserMenuTexts["Vendor Dashboard"] || "Vendor Dashboard",
+    logout: translatedUserMenuTexts["Log out"] || "Log out",
+    loggingOut: translatedUserMenuTexts["Logging out..."] || "Logging out...",
+    login: translatedUserMenuTexts["Login"] || "Login"
+  }), [translatedUserMenuTexts]);
+
   // Fetch unread message count
   const { data: unreadMessages } = useQuery<{ count: number }>({
     queryKey: ['/api/messages/unread/count'],
@@ -57,7 +86,7 @@ export default function UserMenu() {
         className="ml-2"
         onClick={() => showLoginPrompt('login')}
       >
-        {t('auth.login')}
+        {translatedLabels.login}
       </Button>
     );
   }
@@ -112,14 +141,14 @@ export default function UserMenu() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
           <Link href="/profile-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Your Profile'}
+            <i className="ri-user-settings-line mr-2"></i> {translatedLabels.profile}
           </Link>
           <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
+            <i className="ri-settings-4-line mr-2"></i> {translatedLabels.settings}
           </Link>
           <Link href="/messages" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-message-3-line mr-2"></i> Messages
+              <i className="ri-message-3-line mr-2"></i> {translatedLabels.messages}
             </div>
             {(unreadMessages?.count || 0) > 0 && (
               <Badge className="bg-blue-600 text-white text-xs ml-2">
@@ -129,7 +158,7 @@ export default function UserMenu() {
           </Link>
           <Link href="/notifications" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <div className="flex items-center">
-              <i className="ri-notification-3-line mr-2"></i> Notifications
+              <i className="ri-notification-3-line mr-2"></i> {translatedLabels.notifications}
             </div>
             {(unreadNotifications?.count || 0) > 0 && (
               <Badge className="bg-red-600 text-white text-xs ml-2">
@@ -138,13 +167,13 @@ export default function UserMenu() {
             )}
           </Link>
           <Link href="/dating-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-heart-3-line mr-2"></i> Dating Dashboard
+            <i className="ri-heart-3-line mr-2"></i> {translatedLabels.datingDashboard}
           </Link>
           <button 
             className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={handleSwitchToDashboard}
           >
-            <i className="ri-store-2-line mr-2"></i> {t('vendor.dashboard')}
+            <i className="ri-store-2-line mr-2"></i> {translatedLabels.vendorDashboard}
           </button>
           <div className="border-t border-gray-100"></div>
           <button
@@ -155,11 +184,11 @@ export default function UserMenu() {
             {logoutMutation.isPending ? (
               <>
                 <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin text-blue-600" /> 
-                {t('auth.logging_out') || 'Logging out...'}
+                {translatedLabels.loggingOut}
               </>
             ) : (
               <>
-                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {t('auth.logout')}
+                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {translatedLabels.logout}
               </>
             )}
           </button>
