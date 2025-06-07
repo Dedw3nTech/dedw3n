@@ -21,7 +21,7 @@ interface VideoAdCampaignCardProps {
 
 export function VideoAdCampaignCard({ 
   videoSource = newPhoneFingerVideo,
-  title = "Dedw3n | Community",
+  title = "Video Advertisement",
   autoPlay = true,
   showControls = true,
   entity = "default",
@@ -51,21 +51,21 @@ export function VideoAdCampaignCard({
     if (marketType === 'b2b') {
       return {
         video: carSellingVideo,
-        title: 'Dedw3n | Community'
+        title: 'Business Marketplace'
       };
     }
     
     if (marketType === 'c2c') {
       return {
         video: motivationalVideo,
-        title: 'Dedw3n | Community'
+        title: 'Consumer Marketplace'
       };
     }
     
     // Default B2C uses the new finger video
     return {
       video: newPhoneFingerVideo,
-      title: "Dedw3n | Community"
+      title: "Online Marketplace"
     };
   };
 
