@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Upload, User, Search, Plus, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import {
   Form,
   FormControl,
@@ -114,6 +115,88 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<'marketer' | 'merchandiser' | 'manager'>('marketer');
 
+  // Define all translatable texts for store settings
+  const settingsTexts = useMemo(() => [
+    "Store Settings",
+    "Store Name",
+    "Enter your store name",
+    "Store name must be at least 3 characters",
+    "Description",
+    "Describe your store and products",
+    "Description must be at least 10 characters",
+    "Store Logo",
+    "Upload your store logo",
+    "Please enter a valid image URL",
+    "Contact Email",
+    "Your store contact email",
+    "Please enter a valid email",
+    "Contact Phone",
+    "Your store contact phone",
+    "Website",
+    "Your store website URL",
+    "Please enter a valid URL",
+    "Address",
+    "Your store physical address",
+    "Sales Manager",
+    "Enable sales manager for your store",
+    "Sales Manager Name",
+    "Enter sales manager name",
+    "Sales Manager ID",
+    "Enter sales manager ID",
+    "Sales Manager name and ID are required when Sales Manager is selected",
+    "Unit System",
+    "Choose your preferred unit system",
+    "Metric",
+    "Imperial",
+    "Weight System",
+    "Choose your preferred weight system",
+    "Timezone",
+    "Choose your store timezone",
+    "Store Users",
+    "Manage users who can access your store",
+    "Add User",
+    "Search users...",
+    "No users found",
+    "Role",
+    "Marketer",
+    "Merchandiser", 
+    "Manager",
+    "Active",
+    "Inactive",
+    "Assign",
+    "Remove",
+    "Success",
+    "User assigned to store successfully",
+    "User removed from store successfully",
+    "Error",
+    "Failed to assign user",
+    "Failed to remove user",
+    "Settings updated successfully",
+    "Failed to update settings",
+    "Save Settings",
+    "Update Settings",
+    "Cancel",
+    "Create and manage marketing campaigns",
+    "Manage promotions and discounts", 
+    "View sales analytics",
+    "Send marketing emails",
+    "Manage product listings",
+    "Update inventory levels",
+    "Create product categories",
+    "Full store management access",
+    "Manage all products and inventory",
+    "Handle customer orders and returns",
+    "Manage store users and permissions",
+    "View all analytics and reports",
+    "Manage store settings and configuration",
+    "Uploading...",
+    "Image uploaded successfully",
+    "Failed to upload image"
+  ], []);
+
+  // Get translations
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(settingsTexts, 'high');
+
   // Fetch store users
   const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery<StoreUser[]>({
     queryKey: ['/api/vendor/store-users'],
@@ -142,8 +225,8 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "User assigned to store successfully",
+        title: translatedTexts["Success"] || "Success",
+        description: translatedTexts["User assigned to store successfully"] || "User assigned to store successfully",
       });
       refetchStoreUsers();
       setSelectedUser(null);
@@ -153,8 +236,8 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to assign user to store",
+        title: translatedTexts["Error"] || "Error",
+        description: translatedTexts["Failed to assign user"] || "Failed to assign user",
         variant: "destructive",
       });
     }
@@ -168,15 +251,15 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "User updated successfully",
+        title: translatedTexts["Success"] || "Success",
+        description: translatedTexts["User updated successfully"] || "User updated successfully",
       });
       refetchStoreUsers();
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update user",
+        title: translatedTexts["Error"] || "Error",
+        description: translatedTexts["Failed to update user"] || "Failed to update user",
         variant: "destructive",
       });
     }
@@ -190,15 +273,15 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "User removed from store successfully",
+        title: translatedTexts["Success"] || "Success",
+        description: translatedTexts["User removed from store successfully"] || "User removed from store successfully",
       });
       refetchStoreUsers();
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to remove user from store",
+        title: translatedTexts["Error"] || "Error",
+        description: translatedTexts["Failed to remove user"] || "Failed to remove user",
         variant: "destructive",
       });
     }
@@ -275,8 +358,8 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Settings Updated",
-        description: "Your store settings have been updated successfully.",
+        title: translatedTexts["Success"] || "Success",
+        description: translatedTexts["Settings updated successfully"] || "Settings updated successfully",
       });
       
       // Invalidate queries to refetch vendor data
@@ -284,8 +367,8 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: `Failed to update settings: ${error.message}`,
+        title: translatedTexts["Error"] || "Error",
+        description: translatedTexts["Failed to update settings"] || "Failed to update settings",
         variant: "destructive",
       });
     },
@@ -382,7 +465,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                     name="logo"
                     render={({ field }) => (
                       <FormItem className="flex flex-col items-center">
-                        <FormLabel className="mb-2">Store Logo</FormLabel>
+                        <FormLabel className="mb-2">{translatedTexts["Store Logo"] || "Store Logo"}</FormLabel>
                         <FormControl>
                           <div className="space-y-4 flex flex-col items-center">
                             <Avatar className="h-24 w-24">
@@ -409,19 +492,19 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                                 {imageUploading ? (
                                   <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Uploading...
+                                    {translatedTexts["Uploading..."] || "Uploading..."}
                                   </>
                                 ) : (
                                   <>
                                     <Upload className="mr-2 h-4 w-4" />
-                                    Upload Logo
+                                    {translatedTexts["Upload your store logo"] || "Upload Logo"}
                                   </>
                                 )}
                               </Button>
                             </div>
                             
                             <Input
-                              placeholder="Or enter logo URL"
+                              placeholder={translatedTexts["Please enter a valid image URL"] || "Or enter logo URL"}
                               className="w-full max-w-xs"
                               {...field}
                               value={field.value || ''}
