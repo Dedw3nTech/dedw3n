@@ -134,9 +134,15 @@ export default function AddProduct() {
     "Shipping",
     "This is a physical product",
     "Weight",
+    "Unit",
     "Dimensions",
+    "Dimensions (L × W × H)",
+    "10 × 5 × 2 cm",
     "Length x Width x Height",
+    "Shipping Carrier",
+    "Select shipping carrier",
     "Customs information",
+    "Add customs information",
     "Country/Region of origin",
     "HS code",
     "Search by product keyword or HS code",
@@ -226,7 +232,14 @@ export default function AddProduct() {
     "Submit",
     "Reset",
     "Clear",
-    "Apply"
+    "Apply",
+    "Other",
+    
+    // Weight Units
+    "kg",
+    "lb", 
+    "oz",
+    "g"
   ];
 
   // Use DOM-safe batch translation for optimal performance and persistence
