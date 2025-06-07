@@ -5885,14 +5885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return await handleUnsupportedSingleTranslation(text, targetLanguage, res, cacheKey);
       }
 
-      // Smart API key management with automatic fallback
-      const apiKeys = [
-        process.env.DEEPL_API_KEY,
-        process.env.DEEPL_API_KEY_BACKUP,
-        process.env.DEEPL_API_KEY_PREMIUM
-      ].filter(key => key); // Remove null/undefined keys
-
-      if (apiKeys.length === 0) {
+      if (!process.env.DEEPL_API_KEY) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
       }
 
@@ -5941,9 +5934,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      if (!response || !response.ok) {
-        const errorText = response ? await response.text() : 'No valid API response';
-        console.error('DeepL API error:', response?.status || 'No response', errorText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepL API error:', response.status, errorText);
         
         // For rate limiting, return original text as fallback
         if (response.status === 429) {
