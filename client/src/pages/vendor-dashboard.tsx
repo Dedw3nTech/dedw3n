@@ -73,6 +73,7 @@ export default function VendorDashboard() {
     "Commission",
     "Overview",
     "Orders",
+    "Deep Analytics",
     
     // Authentication & Access
     "Loading Vendor Dashboard",
@@ -81,231 +82,76 @@ export default function VendorDashboard() {
     "You need to be authenticated to access vendor features and manage your store.",
     "Go to Login",
     
-    // Vendor Onboarding
-    "Become a Vendor",
-    "Start Selling on Our Platform", 
-    "Join thousands of successful vendors and grow your business with us.",
-    "Reach New Customers",
-    "Connect with buyers from around the world and expand your market reach.",
-    "Easy Management",
-    "Manage your products, orders, and customers with our intuitive dashboard.",
-    "Secure Payments",
-    "Get paid securely and on time with our integrated payment system.",
-    "Grow Your Business",
-    "Access analytics and tools to help your business grow.",
-    
-    // Status Messages
-    "Your vendor account is active. Here are some options to get started.",
-    "Your vendor profile is being set up. Here are some things you can do now:",
+    // Vendor Types & Status
     "Using Private Vendor account",
-    "Using Business Vendor account",
-    
-    // Action Buttons
-    "Add Your First Product",
-    "Start selling by adding your first product to your store.",
-    "Add Product",
-    "View Dashboard", 
-    "View your dashboard to track sales and performance.",
-    "Create Business Vendor",
-    "Creating...",
-    "Create Discount",
-    "Automatic Discount", 
-    "Discount Code",
-    
-    // Settings Tab Content
-    "Store Settings",
-    "Manage your store information and preferences",
-    "Store Name",
-    "Enter your store name",
-    "Store Description", 
-    "Describe your store",
-    "Store Address",
-    "Enter your store address",
-    "City",
-    "Enter city",
-    "Country",
-    "Select country",
-    "Contact Email",
-    "Enter contact email",
-    "Contact Phone",
-    "Enter contact phone",
-    "Business Registration Number",
-    "Enter registration number",
-    "Tax ID",
-    "Enter tax ID",
-    "Store Type",
-    "Select store type",
+    "Using Business Vendor account", 
     "Private Vendor",
     "Business Vendor",
-    "Save Settings",
-    "Saving...",
-    "Settings saved successfully",
-    "Failed to save settings",
-    
-    // Analytics & Performance
-    "Sales Analytics",
-    "Performance Metrics",
-    "Revenue",
-    "Total Sales",
-    "Orders Count",
-    "Customer Growth",
-    "Monthly Revenue",
-    "Weekly Sales",
-    "Top Products",
-    "Recent Orders",
-    "Customer Reviews",
-    "Inventory Status",
-    "Total Products",
-    "Total Orders", 
-    "Total Revenue",
-    "Pending Orders",
     "account",
-    "Business Vendor",
+    "Using",
     
-    // Product Management
-    "Product Management",
-    "Add New Product",
-    "Edit Product",
-    "Delete Product",
-    "Product Details",
-    "Product Images",
-    "Product Categories",
-    "Inventory Management",
-    "Stock Level",
-    "Price Management",
-    "Product Status",
-    "Active",
-    "Inactive",
-    "Out of Stock",
+    // Action Buttons
+    "Add Product",
+    "Create Business Vendor",
+    "Creating...",
+    "Deep Analytics",
     
-    // Order Management
-    "Order Management",
-    "New Orders",
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Cancelled",
-    "Refunded",
-    "Order Details",
-    "Order History",
-    "Track Shipment",
+    // Dashboard Summary Cards
+    "Total Products",
+    "Total Orders",
+    "Total Revenue", 
+    "Pending Orders",
     
-    // Customer Management
-    "Customer Management",
-    "Customer List",
-    "Customer Details",
-    "Customer Orders",
-    "Customer Reviews",
-    "Customer Support",
-    "Contact Customer",
+    // Tab Content Headers
+    "Shipping & Orders",
+    "Shipping Manager",
+    "Store Settings",
     
-    // Shipping & Logistics
-    "Shipping Management",
-    "Shipping Methods",
-    "Shipping Rates",
-    "Delivery Options",
-    "Tracking Information",
-    "Shipping Labels",
-    "Delivery Status",
+    // Marketing Section
+    "Promotions & Discounts",
+    "Manage discount codes and automatic promotions",
+    "Discount Codes",
+    "Automatic Discounts",
+    "Create Code",
+    "Create Auto Discount",
     
-    // Marketing & Promotions
-    "Marketing Campaigns",
-    "Promotional Offers",
-    "Discount Management",
-    "Coupon Codes",
-    "Marketing Analytics",
-    "Campaign Performance",
-    "Social Media Integration",
-    "Email Marketing",
-    
-    // Financial Management
-    "Payment Management",
-    "Revenue Reports",
-    "Transaction History",
-    "Payout Information",
-    "Commission Structure",
-    "Tax Reports",
-    "Financial Analytics",
-    
-    // Store Configuration
-    "Store Configuration",
-    "Business Hours",
-    "Return Policy",
-    "Shipping Policy",
-    "Terms of Service",
-    "Privacy Policy",
-    "Store Policies",
-    
-    // Notifications & Alerts
-    "Notifications",
-    "Order Alerts",
-    "Inventory Alerts",
-    "Customer Messages",
-    "System Notifications",
-    "Email Preferences",
-    
-    // Help & Support
-    "Help & Support",
-    "Documentation",
-    "Video Tutorials",
-    "Contact Support",
-    "FAQ",
-    "Community Forum",
-    
-    // Status Indicators
-    "Online",
-    "Offline",
-    "Pending",
-    "Approved",
-    "Rejected",
-    "Under Review",
-    "Published",
-    "Draft",
-    
-    // Common Actions
+    // Common UI Elements
+    "Loading...",
     "Save",
     "Cancel",
-    "Delete",
     "Edit",
+    "Delete",
     "View",
-    "Export",
-    "Import",
-    "Download",
-    "Upload",
+    "Manage",
+    "Create",
+    "Update",
+    "Remove",
+    "Add",
     "Search",
     "Filter",
     "Sort",
+    "Export",
+    "Import",
     "Refresh",
-    "Print",
-    "Share",
-    
-    // Time & Date
-    "Today",
-    "Yesterday", 
-    "This Week",
-    "This Month",
-    "Last Month",
-    "This Year",
-    "Custom Range",
-    
-    // Error Messages
-    "Error loading data",
-    "Failed to save",
-    "Access denied",
-    "Invalid input",
-    "Network error",
-    "Please try again",
-    
-    // Success Messages
-    "Successfully saved",
-    "Operation completed",
-    "Data updated",
-    "Changes applied",
-    "Your Store Performance",
-    "Monthly Revenue",
-    "Total Orders",
-    "Products Sold",
-    "Store Performance",
+    "Close",
+    "Open",
+    "Back",
+    "Next",
+    "Previous",
+    "Submit",
+    "Reset",
+    "Clear",
+    "Apply",
+    "Confirm",
+    "Yes",
+    "No"
+  ];
+
+  // Use unified batch translation for optimal performance  
+  const { translations, isLoading: isTranslating } = useUnifiedBatchTranslation(vendorTexts, 'high');
+
+  // Helper function to get translated text
+  const t = (text: string) => translations?.[text] || text;
     "Sales Overview",
     "Vendor Type"
   ];
