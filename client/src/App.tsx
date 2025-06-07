@@ -406,13 +406,30 @@ function MarketplacePromoSection() {
   
   if (!isMarketplacePage) return null;
   
+  // Select appropriate advertisement based on market type
+  const getMarketplaceAd = () => {
+    switch (marketType) {
+      case 'b2b':
+        return '/attached_assets/Dedw3n Business B2B Header.png';
+      case 'b2c':
+        return '/attached_assets/Copy of Dedw3n Business B2C Header.png';
+      case 'c2c':
+        return '/attached_assets/Dedw3n Marketplace (1).png';
+      default:
+        return '/attached_assets/Copy of Dedw3n Marketplace II.png';
+    }
+  };
+
   return (
     <div className="w-full" key={`marketplace-top-${marketType}`}>
       <img 
-        src="/api/placeholder/1200/400"
+        src={getMarketplaceAd()}
         alt={`${marketType.toUpperCase()} Marketplace`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
         loading="lazy"
+        onError={(e) => {
+          e.currentTarget.src = '/attached_assets/Copy of Dedw3n Marketplace.png';
+        }}
       />
     </div>
   );
@@ -427,13 +444,30 @@ function MarketplaceBottomPromoSection() {
   
   if (!isMarketplacePage) return null;
   
+  // Select appropriate footer advertisement based on market type
+  const getMarketplaceFooterAd = () => {
+    switch (marketType) {
+      case 'b2b':
+        return '/attached_assets/Dedw3n Business B2B Footer.png';
+      case 'b2c':
+        return '/attached_assets/Dedw3n Business B2C Footer.png';
+      case 'c2c':
+        return '/attached_assets/Dedw3n Business C2C Footer.png';
+      default:
+        return '/attached_assets/Copy of Dedw3n Marketplace III.png';
+    }
+  };
+
   return (
     <div className="w-full" key={`marketplace-bottom-${marketType}`}>
       <img 
-        src="/api/placeholder/1200/400"
+        src={getMarketplaceFooterAd()}
         alt={`${marketType.toUpperCase()} Marketplace Footer`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
         loading="lazy"
+        onError={(e) => {
+          e.currentTarget.src = '/attached_assets/Dedw3n comm Footer.png';
+        }}
       />
     </div>
   );
@@ -451,10 +485,13 @@ function DatingHeaderPromoSection() {
   return (
     <div className="w-full" key="dating-header-promo">
       <img 
-        src="/api/placeholder/1200/400"
+        src="/attached_assets/_Dedw3n Dating Header (1).png"
         alt="Dating Platform Header"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
         loading="lazy"
+        onError={(e) => {
+          e.currentTarget.src = '/attached_assets/_Dedw3n Dating Header.png';
+        }}
       />
     </div>
   );
@@ -471,10 +508,13 @@ function DatingFooterPromoSection() {
   return (
     <div className="w-full" key="dating-footer-promo">
       <img 
-        src="/api/placeholder/1200/400"
+        src="/attached_assets/Dedw3n comm Footer.png"
         alt="Dating Platform Footer"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
         loading="lazy"
+        onError={(e) => {
+          e.currentTarget.src = '/attached_assets/Copy of Dedw3n comm Footer (1).png';
+        }}
       />
     </div>
   );
