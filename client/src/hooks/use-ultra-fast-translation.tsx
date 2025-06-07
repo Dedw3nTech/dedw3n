@@ -7,7 +7,7 @@ const pendingRequests = new Map<string, Promise<string>>();
 const batchQueue = new Map<string, string>();
 let batchTimer: NodeJS.Timeout | null = null;
 
-// Critical UI text that loads instantly
+// Critical UI text that loads instantly - expanded for better performance
 const INSTANT_TRANSLATIONS = new Map([
   ['Filter', { JA: 'フィルター', ES: 'Filtrar', FR: 'Filtrer', DE: 'Filter', ZH: '筛选' }],
   ['Search', { JA: '検索', ES: 'Buscar', FR: 'Chercher', DE: 'Suchen', ZH: '搜索' }],
@@ -18,12 +18,22 @@ const INSTANT_TRANSLATIONS = new Map([
   ['Buy Now', { JA: '今すぐ購入', ES: 'Comprar ahora', FR: 'Acheter maintenant', DE: 'Jetzt kaufen', ZH: '立即购买' }],
   ['Loading', { JA: '読み込み中', ES: 'Cargando', FR: 'Chargement', DE: 'Wird geladen', ZH: '加载中' }],
   ['Price', { JA: '価格', ES: 'Precio', FR: 'Prix', DE: 'Preis', ZH: '价格' }],
-  ['Share', { JA: 'シェア', ES: 'Compartir', FR: 'Partager', DE: 'Teilen', ZH: '分享' }]
+  ['Share', { JA: 'シェア', ES: 'Compartir', FR: 'Partager', DE: 'Teilen', ZH: '分享' }],
+  ['Electronics', { JA: 'エレクトロニクス', ES: 'Electrónica', FR: 'Électronique', DE: 'Elektronik', ZH: '电子产品' }],
+  ['Fashion & Apparel', { JA: 'ファッション・アパレル', ES: 'Moda y prendas de vestir', FR: 'Mode et vêtements', DE: 'Mode und Bekleidung', ZH: '时尚服装' }],
+  ['Books & Media', { JA: '本・メディア', ES: 'Libros y medios de comunicación', FR: 'Livres et médias', DE: 'Bücher und Medien', ZH: '书籍媒体' }],
+  ['Sports & Outdoors', { JA: 'スポーツ・アウトドア', ES: 'Deportes y aire libre', FR: 'Sports et plein air', DE: 'Sport und Outdoor', ZH: '运动户外' }],
+  ['Beauty & Personal Care', { JA: '美容・パーソナルケア', ES: 'Belleza y cuidado personal', FR: 'Beauté et soins personnels', DE: 'Schönheit und Körperpflege', ZH: '美容个护' }],
+  ['Home & Garden', { JA: 'ホーム・ガーデン', ES: 'Hogar y jardinería', FR: 'Maison et jardin', DE: 'Haus und Garten', ZH: '家居园艺' }],
+  ['Send Offer', { JA: 'オファーを送る', ES: 'Enviar oferta', FR: 'Envoyer une offre', DE: 'Angebot senden', ZH: '发送报价' }],
+  ['Send Gift', { JA: 'ギフトを贈る', ES: 'Enviar regalo', FR: 'Envoyer un cadeau', DE: 'Geschenk senden', ZH: '发送礼物' }],
+  ['Add to favorites', { JA: 'お気に入りに追加', ES: 'Añadir a favoritos', FR: 'Ajouter aux favoris', DE: 'Zu Favoriten hinzufügen', ZH: '添加到收藏' }],
+  ['Remove from favorites', { JA: 'お気に入りから削除する', ES: 'Eliminar de favoritos', FR: 'Retirer des favoris', DE: 'Aus Favoriten entfernen', ZH: '从收藏中删除' }]
 ]);
 
 // Batch size for optimal performance
-const BATCH_SIZE = 20;
-const BATCH_DELAY = 50; // 50ms delay for batching
+const BATCH_SIZE = 50;
+const BATCH_DELAY = 10; // 10ms delay for batching - much faster
 
 /**
  * Ultra-fast translation hook with instant responses for critical UI

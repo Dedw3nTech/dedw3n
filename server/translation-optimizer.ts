@@ -33,11 +33,11 @@ class TranslationOptimizer {
     lastOptimization: Date.now()
   };
 
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-  private readonly PRIORITY_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
-  private readonly MAX_CACHE_SIZE = 15000;
-  private readonly MAX_CONCURRENT = 5;
-  private readonly TARGET_RESPONSE_TIME = 1000; // 1 second
+  private readonly CACHE_TTL = 30 * 60 * 1000; // 30 minutes - much longer
+  private readonly PRIORITY_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
+  private readonly MAX_CACHE_SIZE = 50000; // Increased cache size
+  private readonly MAX_CONCURRENT = 10; // More concurrent requests
+  private readonly TARGET_RESPONSE_TIME = 100; // 100ms target
 
   static getInstance(): TranslationOptimizer {
     if (!TranslationOptimizer.instance) {

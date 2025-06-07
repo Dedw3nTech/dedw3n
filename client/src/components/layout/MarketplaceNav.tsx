@@ -96,11 +96,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             >
               <div className="mb-2 flex items-center gap-2">
                 <Store className="h-4 w-4" />
-                <span className={`text-xs font-medium transition-colors duration-300 ${
+                <span className={`text-sm font-medium transition-colors duration-300 ${
                   marketType === 'b2c' 
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
+                }`}>
                   {translatedLabels.b2cText}
                 </span>
               </div>
