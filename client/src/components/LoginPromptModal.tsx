@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import dedw3nLogo from "@assets/Dedw3n Logo.png";
 import {
@@ -57,8 +57,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   const [ageError, setAgeError] = useState("");
 
-  // Define all text elements for batch translation
-  const modalTexts = [
+  // Use stable modal texts to prevent infinite re-renders
+  const stableModalTexts = useMemo(() => [
     "Join Dedw3n",
     "Welcome back! Sign in to your account.",
     "Create your account to get started with Dedw3n.",
@@ -89,10 +89,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     "and",
     "Privacy Policy",
     "You must be at least 13 years old to register"
-  ];
-
-  // Use batch translation for instant performance
-  const { translations, isLoading } = useUnifiedBatchTranslation(modalTexts, 'instant');
+  ], []);
+  const { translations, isLoading } = useUnifiedBatchTranslation(stableModalTexts, 'instant');
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth: string) => {
@@ -158,8 +156,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           password: formData.password,
           name: formData.name,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender,
-          region: formData.region,
+          gender: formData.gender as "male" | "female" | "other" | null,
+          region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
         });
