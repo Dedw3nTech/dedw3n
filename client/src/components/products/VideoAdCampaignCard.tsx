@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { useInstantImageLoading, preloadCriticalImages } from "@/hooks/use-instant-image-loading";
 import campaignVideo from "@assets/Cafe.mp4";
 import newCafeVideo from "@assets/Cafe_1749111451530.mp4";
 import carSellingVideo from "@assets/car selling online  .mp4";
@@ -30,6 +31,16 @@ export function VideoAdCampaignCard({
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Preload critical advertisement images for instant display
+  useEffect(() => {
+    const criticalImages = [
+      { src: videoSource, priority: 'instant' as const },
+      { src: newPhoneFingerVideo, priority: 'high' as const },
+      { src: carSellingVideo, priority: 'high' as const }
+    ];
+    preloadCriticalImages(criticalImages);
+  }, [videoSource]);
 
   if (!isVisible) {
     return null;
