@@ -1313,6 +1313,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
           // Going away - typically browser navigation
           case 1001:
             console.log("WebSocket going away (likely page navigation)");
+            // Clean up the socket properly before returning
+            if (socket) {
+              socket = null;
+            }
             // Don't auto-reconnect as user is likely changing pages
             return;
             
@@ -2026,15 +2030,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     // Set up the health check immediately
     setupHealthCheck();
     
-    // Clean up on unmount or when user changes
+    // Clean up on unmount only - prevent premature disconnection on user state changes
     return () => {
-      disconnect();
       if (healthCheckTimer) {
         clearInterval(healthCheckTimer);
         healthCheckTimer = null;
       }
+      // Only disconnect on actual component unmount, not user state changes
+      disconnect();
     };
-  }, [user]);
+  }, []); // Remove user dependency to prevent reconnection loops
+
+  // Separate effect to handle user state changes without disconnecting
+  useEffect(() => {
+    if (user && !isConnected) {
+      // Only connect if user is available and not already connected
+      connect();
+    } else if (!user && isConnected) {
+      // Only disconnect if user is no longer available and we're connected
+      disconnect();
+    }
+  }, [user, isConnected]);
   
   // Expose methods and state through context
   const value: MessagingContextType = {

@@ -274,6 +274,9 @@ export function setupWebSocket(server: Server) {
       if (userId) {
         wsClients.delete(userId);
       }
+      
+      // Clean up heartbeat interval on connection close
+      stopHeartbeat();
     });
 
     // Handle connection errors with persistent messaging
@@ -297,6 +300,14 @@ export function setupWebSocket(server: Server) {
       if (userId) {
         wsClients.delete(userId);
       }
+      
+      // Clean up heartbeat interval on error
+      stopHeartbeat();
+    });
+
+    // Handle native WebSocket pong events
+    ws.on('pong', () => {
+      console.log(`[WebSocket] Received native pong from user ${userId}`);
     });
 
     // Try session-based authentication first
