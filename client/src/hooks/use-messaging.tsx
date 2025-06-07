@@ -990,23 +990,22 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       disconnectReason: undefined
     }));
     
-    // Construct WebSocket URL with included authentication token
+    // Construct WebSocket URL with proper encoding
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const token = getStoredAuthToken();
     
-    // Add timestamp, connection ID, user ID, and token to prevent caching and for authentication
-    const timestamp = Date.now();
-    let wsUrl = `${protocol}//${window.location.host}/ws?t=${timestamp}&cid=${connectionId}`;
+    // Create URL with proper parameter encoding
+    const wsUrl = new URL('/ws', `${protocol}//${window.location.host}`);
+    wsUrl.searchParams.set('t', Date.now().toString());
+    wsUrl.searchParams.set('cid', connectionId);
     
     // Add authentication parameters if user is available
     if (user?.id) {
-      wsUrl += `&userId=${user.id}`;
+      wsUrl.searchParams.set('userId', user.id.toString());
       
       // Add token if available (for token-based authentication)
       if (token) {
-        // URL encode the token to prevent special characters from breaking the URL
-        const encodedToken = encodeURIComponent(token);
-        wsUrl += `&token=${encodedToken}`;
+        wsUrl.searchParams.set('token', token);
         console.log("Added authentication token to WebSocket URL");
       } else {
         // We're using session-based authentication as fallback
@@ -1033,7 +1032,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       // Try with echo-protocol first and implement proper error handling
       try {
         // Create a new connection with the specified protocol
-        socket = new WebSocket(wsUrl, "echo-protocol");
+        socket = new WebSocket(wsUrl.toString(), "echo-protocol");
         console.log("WebSocket initialized with echo-protocol");
         
         // Add a local error handler for the connection attempt
@@ -1055,7 +1054,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
               
               // Try without a protocol as fallback
               console.warn("Failed to connect with echo-protocol, trying without protocol specification");
-              socket = new WebSocket(wsUrl);
+              socket = new WebSocket(wsUrl.toString());
               console.log("WebSocket initialized without protocol specification");
             } catch (fallbackError) {
               console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
@@ -1144,7 +1143,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         lastError: {
           time: Date.now(),
           type: errorType,
-          url: wsUrl
+          url: wsUrl.toString()
         }
       }));
       
