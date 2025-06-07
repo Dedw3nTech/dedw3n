@@ -1545,14 +1545,14 @@ export default function Products() {
             
             {giftSearchQuery.length < 2 && giftSearchQuery.length > 0 && (
               <div className="text-center py-4 text-gray-500 text-sm">
-                Type at least 2 characters to search
+                {typeAtLeastText}
               </div>
             )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setGiftDialogOpen(false)}>
-              Cancel
+              {cancelText}
             </Button>
             <Button
               onClick={() => {
@@ -1569,10 +1569,10 @@ export default function Products() {
               {sendGiftMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  {sendingText}
                 </>
               ) : (
-                'Send Gift'
+                sendGiftText
               )}
             </Button>
           </DialogFooter>
