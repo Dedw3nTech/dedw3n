@@ -35,6 +35,7 @@ export const supportedLanguages: Language[] = [
 
 interface LanguageContextType {
   selectedLanguage: Language;
+  currentLanguage: string;
   setSelectedLanguage: (language: Language) => void;
   translateText: (text: string, targetLanguage?: string) => Promise<string>;
   isTranslating: boolean;
@@ -173,6 +174,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   return (
     <LanguageContext.Provider value={{
       selectedLanguage,
+      currentLanguage: selectedLanguage.code,
       setSelectedLanguage: handleSetLanguage,
       translateText,
       isTranslating,
@@ -190,6 +192,7 @@ export function useLanguage() {
     // Provide fallback values instead of throwing error
     return {
       selectedLanguage: supportedLanguages[0],
+      currentLanguage: 'EN',
       setSelectedLanguage: () => {},
       translateText: (text: string) => Promise.resolve(text),
       isTranslating: false,

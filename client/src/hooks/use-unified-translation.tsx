@@ -220,46 +220,58 @@ export function useUnifiedTranslation(
   return translatedText;
 }
 
-// Batch translation hook for multiple texts at once
+// Simplified batch translation hook that returns translations and loading state
 export function useUnifiedBatchTranslation(
   texts: string[], 
-  priority: 'instant' | 'high' | 'normal' = 'normal'
-): string[] {
+  priority: 'instant' | 'high' | 'normal' = 'instant'
+): { translations: Record<string, string>; isLoading: boolean } {
   const { currentLanguage } = useLanguage();
-  const [translations, setTranslations] = useState<string[]>(texts);
-  const completedCount = useRef(0);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const lastLanguageRef = useRef(currentLanguage);
 
   useEffect(() => {
+    // Skip translation if language is English or not set
+    if (!currentLanguage || currentLanguage === 'EN') {
+      const englishTranslations: Record<string, string> = {};
+      texts.forEach(text => {
+        englishTranslations[text] = text;
+      });
+      setTranslations(englishTranslations);
+      setIsLoading(false);
+      return;
+    }
+
     // Reset if language changed
     if (lastLanguageRef.current !== currentLanguage) {
-      setTranslations(texts);
-      completedCount.current = 0;
+      setTranslations({});
+      setIsLoading(true);
       lastLanguageRef.current = currentLanguage;
     }
 
-    const newTranslations = [...texts];
-    completedCount.current = 0;
+    let completedCount = 0;
+    const newTranslations: Record<string, string> = {};
 
-    texts.forEach((text, index) => {
+    texts.forEach((text) => {
       translationManager.translateText(
         text,
         currentLanguage,
         priority,
         (translated) => {
-          newTranslations[index] = translated;
-          completedCount.current++;
+          newTranslations[text] = translated;
+          completedCount++;
           
           // Update state when all translations are complete
-          if (completedCount.current === texts.length) {
-            setTranslations([...newTranslations]);
+          if (completedCount === texts.length) {
+            setTranslations({ ...newTranslations });
+            setIsLoading(false);
           }
         }
       );
     });
   }, [texts, currentLanguage, priority]);
 
-  return translations;
+  return { translations, isLoading };
 }
 
 // Hook for clearing cache when needed

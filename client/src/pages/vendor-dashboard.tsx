@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -55,6 +56,122 @@ export default function VendorDashboard() {
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
+
+  // Vendor Dashboard Text Collection for Translation
+  const vendorTexts = [
+    "Vendor Dashboard",
+    "Loading Vendor Dashboard",
+    "Verifying your vendor access...",
+    "Please log in to access your vendor dashboard",
+    "You need to be authenticated to access vendor features and manage your store.",
+    "Go to Login",
+    "Become a Vendor",
+    "Start Selling on Our Platform",
+    "Join thousands of successful vendors and grow your business with us.",
+    "Reach New Customers",
+    "Connect with buyers from around the world and expand your market reach.",
+    "Easy Management",
+    "Manage your products, orders, and customers with our intuitive dashboard.",
+    "Secure Payments",
+    "Get paid securely and on time with our integrated payment system.",
+    "Grow Your Business",
+    "Access analytics and tools to help your business grow.",
+    "Your vendor account is active. Here are some options to get started.",
+    "Your vendor profile is being set up. Here are some things you can do now:",
+    "Add Your First Product",
+    "Start selling by adding your first product to your store.",
+    "Add Product",
+    "View Dashboard",
+    "View your dashboard to track sales and performance.",
+    "Dashboard",
+    "Overview",
+    "Products",
+    "Orders",
+    "Customers",
+    "Shipping",
+    "Settings",
+    "Analytics",
+    "Payment Info",
+    "Promotions",
+    "Marketing",
+    "Commission",
+    "Create Discount",
+    "Automatic Discount",
+    "Discount Code",
+    "Your Store Performance",
+    "Monthly Revenue",
+    "Total Orders",
+    "Products Sold",
+    "Customer Rating",
+    "Recent Activity",
+    "Quick Actions",
+    "Manage Products",
+    "View Orders",
+    "Customer Support",
+    "Store Settings",
+    "Badge Level",
+    "Next Badge",
+    "Commission Rate",
+    "Payment Status",
+    "Marketing Campaigns",
+    "Active Promotions",
+    "Sales Analytics",
+    "Revenue Trends",
+    "Top Products",
+    "Customer Insights",
+    "Performance Metrics",
+    "Growth Statistics",
+    "Order Management",
+    "Inventory Tracking",
+    "Shipping Options",
+    "Store Configuration",
+    "Profile Settings",
+    "Business Information",
+    "Contact Details",
+    "Tax Settings",
+    "Billing Information",
+    "Subscription Status",
+    "Account Settings",
+    "Security Settings",
+    "Notification Preferences",
+    "Language Settings",
+    "Currency Settings",
+    "Error",
+    "Success",
+    "Failed to fetch vendor profile",
+    "Failed to create business vendor account",
+    "Loading...",
+    "No data available",
+    "Coming Soon",
+    "Feature under development",
+    "Save Changes",
+    "Cancel",
+    "Edit",
+    "Delete",
+    "View Details",
+    "Export Data",
+    "Import Data",
+    "Refresh",
+    "Filter",
+    "Sort",
+    "Search",
+    "Add New",
+    "Update",
+    "Remove",
+    "Activate",
+    "Deactivate",
+    "Enable",
+    "Disable",
+    "Configure",
+    "Manage",
+    "Create",
+    "Duplicate",
+    "Archive",
+    "Restore"
+  ];
+
+  // Get translations using the unified batch translation system
+  const { translations, isLoading: isTranslating } = useUnifiedBatchTranslation(vendorTexts);
   
   // Authentication wall - redirect if not logged in
   useEffect(() => {
@@ -116,17 +233,17 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>Vendor Dashboard</CardTitle>
+            <CardTitle>{translations["Vendor Dashboard"] || "Vendor Dashboard"}</CardTitle>
             <CardDescription>
-              Please log in to access your vendor dashboard
+              {translations["Please log in to access your vendor dashboard"] || "Please log in to access your vendor dashboard"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              You need to be authenticated to access vendor features and manage your store.
+              {translations["You need to be authenticated to access vendor features and manage your store."] || "You need to be authenticated to access vendor features and manage your store."}
             </p>
             <Button onClick={() => setLocation('/')}>
-              Go to Login
+              {translations["Go to Login"] || "Go to Login"}
             </Button>
           </CardContent>
         </Card>
@@ -167,18 +284,18 @@ export default function VendorDashboard() {
   };
 
   // Show loading while vendor data is being fetched
-  if (isLoadingVendor) {
+  if (isLoadingVendor || isTranslating) {
     return (
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>Loading Vendor Dashboard</CardTitle>
+            <CardTitle>{translations["Loading Vendor Dashboard"] || "Loading Vendor Dashboard"}</CardTitle>
           </CardHeader>
           <CardContent>
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">
-              Verifying your vendor access...
+              {translations["Verifying your vendor access..."] || "Verifying your vendor access..."}
             </p>
           </CardContent>
         </Card>
