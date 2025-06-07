@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
 
 interface BreadcrumbItem {
   label: string;
@@ -16,91 +17,106 @@ export function Breadcrumbs() {
     enabled: location === '/vendor-dashboard',
     staleTime: 5 * 60 * 1000,
   });
+
+  // Initialize unified translation system for breadcrumbs
+  const { translations } = useUnifiedBatchTranslation([
+    'Home', 'Marketplace', 'Private Vendor Dashboard', 'Business Vendor Dashboard',
+    'Dating', 'Dating Profile', 'Community', 'Events & Meetups', 'Add Product/Service',
+    'Vendor Registration', 'Orders & Returns', 'B2C Marketplace', 'B2B Marketplace',
+    'C2C Marketplace', 'Product Details', 'Contact', 'Sign In', 'Sign Up', 'Profile',
+    'Messages', 'Notifications', 'Settings', 'Shopping Cart', 'Checkout',
+    'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
+    'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
+    'Privacy Policy', 'Terms of Service', 'Shipping Info', 'Cookie Policy',
+    'Community Guidelines', 'Site Map'
+  ]);
   
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
     const segments = path.split('/').filter(Boolean);
-    const breadcrumbs: BreadcrumbItem[] = [{ label: 'Home', path: '/' }];
+    const breadcrumbs: BreadcrumbItem[] = [{ label: translations?.['Home'] || 'Home', path: '/' }];
     
     // Special handling for dating-profile to show proper hierarchy
     if (path === '/dating-profile') {
-      breadcrumbs.push({ label: 'Dating', path: '/dating' });
-      breadcrumbs.push({ label: 'Dating Profile' });
+      breadcrumbs.push({ label: translations?.['Dating'] || 'Dating', path: '/dating' });
+      breadcrumbs.push({ label: translations?.['Dating Profile'] || 'Dating Profile' });
       return breadcrumbs;
     }
     
     // Special handling for events to show proper community hierarchy
     if (path === '/events') {
-      breadcrumbs.push({ label: 'Community', path: '/wall' });
-      breadcrumbs.push({ label: 'Events & Meetups' });
+      breadcrumbs.push({ label: translations?.['Community'] || 'Community', path: '/wall' });
+      breadcrumbs.push({ label: translations?.['Events & Meetups'] || 'Events & Meetups' });
       return breadcrumbs;
     }
     
     // Special handling for vendor dashboard to show marketplace hierarchy
     if (path === '/vendor-dashboard') {
-      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: translations?.['Marketplace'] || 'Marketplace', path: '/marketplace' });
       const vendorType = vendorData?.vendor?.vendorType;
-      const dashboardLabel = vendorType === 'business' ? 'Business Vendor Dashboard' : 'Private Vendor Dashboard';
+      const dashboardLabel = vendorType === 'business' ? 
+        (translations?.['Business Vendor Dashboard'] || 'Business Vendor Dashboard') : 
+        (translations?.['Private Vendor Dashboard'] || 'Private Vendor Dashboard');
       breadcrumbs.push({ label: dashboardLabel });
       return breadcrumbs;
     }
     
     // Special handling for add-product to show proper vendor hierarchy
     if (path === '/add-product') {
-      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
-      breadcrumbs.push({ label: 'Private Vendor Dashboard', path: '/vendor-dashboard' });
-      breadcrumbs.push({ label: 'Add Product/Service' });
+      breadcrumbs.push({ label: translations?.['Marketplace'] || 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: translations?.['Private Vendor Dashboard'] || 'Private Vendor Dashboard', path: '/vendor-dashboard' });
+      breadcrumbs.push({ label: translations?.['Add Product/Service'] || 'Add Product/Service' });
       return breadcrumbs;
     }
     
     // Special handling for vendor registration to show marketplace hierarchy
     if (path === '/vendor-register') {
-      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
-      breadcrumbs.push({ label: 'Vendor Registration' });
+      breadcrumbs.push({ label: translations?.['Marketplace'] || 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: translations?.['Vendor Registration'] || 'Vendor Registration' });
       return breadcrumbs;
     }
     
     // Special handling for orders-returns to show marketplace hierarchy
     if (path === '/orders-returns') {
-      breadcrumbs.push({ label: 'Marketplace', path: '/marketplace' });
-      breadcrumbs.push({ label: 'Orders & Returns' });
+      breadcrumbs.push({ label: translations?.['Marketplace'] || 'Marketplace', path: '/marketplace' });
+      breadcrumbs.push({ label: translations?.['Orders & Returns'] || 'Orders & Returns' });
       return breadcrumbs;
     }
     
-    // Define route mappings for better breadcrumb labels
+    // Define route mappings for better breadcrumb labels with translation support
     const routeLabels: Record<string, string> = {
-      'products': 'Marketplace',
-      'product': 'Product Details',
-      'marketplace': 'Marketplace',
-      'b2c': 'B2C Marketplace',
-      'b2b': 'B2B Marketplace', 
-      'c2c': 'C2C Marketplace',
-      'wall': 'Community',
-      'dating': 'Dating',
-      'dating-profile': 'Dating Profile',
-      'contact': 'Contact',
-      'login': 'Sign In',
-      'register': 'Sign Up',
-      'profile': 'Profile',
-      'messages': 'Messages',
-      'notifications': 'Notifications',
-      'settings': 'Settings',
-      'cart': 'Shopping Cart',
-      'checkout': 'Checkout',
-      'liked': 'Liked Products',
-      'add-product': 'Add Product',
-      'upload-product': 'Upload Product',
-      'vendor-dashboard': 'Vendor Dashboard',
-      'become-vendor': 'Become a Vendor',
-      'members': 'Members',
-      'wallet': 'Wallet',
-      'admin': 'Admin Dashboard',
-      'faq': 'FAQ',
-      'privacy': 'Privacy Policy',
-      'terms': 'Terms of Service',
-      'shipping': 'Shipping Info',
-      'cookies': 'Cookie Policy',
-      'community-guidelines': 'Community Guidelines',
-      'sitemap': 'Site Map'
+      'products': translations?.['Marketplace'] || 'Marketplace',
+      'product': translations?.['Product Details'] || 'Product Details',
+      'marketplace': translations?.['Marketplace'] || 'Marketplace',
+      'b2c': translations?.['B2C Marketplace'] || 'B2C Marketplace',
+      'b2b': translations?.['B2B Marketplace'] || 'B2B Marketplace', 
+      'c2c': translations?.['C2C Marketplace'] || 'C2C Marketplace',
+      'wall': translations?.['Community'] || 'Community',
+      'dating': translations?.['Dating'] || 'Dating',
+      'dating-profile': translations?.['Dating Profile'] || 'Dating Profile',
+      'contact': translations?.['Contact'] || 'Contact',
+      'login': translations?.['Sign In'] || 'Sign In',
+      'register': translations?.['Sign Up'] || 'Sign Up',
+      'profile': translations?.['Profile'] || 'Profile',
+      'messages': translations?.['Messages'] || 'Messages',
+      'notifications': translations?.['Notifications'] || 'Notifications',
+      'settings': translations?.['Settings'] || 'Settings',
+      'cart': translations?.['Shopping Cart'] || 'Shopping Cart',
+      'checkout': translations?.['Checkout'] || 'Checkout',
+      'liked': translations?.['Liked Products'] || 'Liked Products',
+      'add-product': translations?.['Add Product'] || 'Add Product',
+      'upload-product': translations?.['Upload Product'] || 'Upload Product',
+      'vendor-dashboard': translations?.['Vendor Dashboard'] || 'Vendor Dashboard',
+      'become-vendor': translations?.['Become a Vendor'] || 'Become a Vendor',
+      'members': translations?.['Members'] || 'Members',
+      'wallet': translations?.['Wallet'] || 'Wallet',
+      'admin': translations?.['Admin Dashboard'] || 'Admin Dashboard',
+      'faq': translations?.['FAQ'] || 'FAQ',
+      'privacy': translations?.['Privacy Policy'] || 'Privacy Policy',
+      'terms': translations?.['Terms of Service'] || 'Terms of Service',
+      'shipping': translations?.['Shipping Info'] || 'Shipping Info',
+      'cookies': translations?.['Cookie Policy'] || 'Cookie Policy',
+      'community-guidelines': translations?.['Community Guidelines'] || 'Community Guidelines',
+      'sitemap': translations?.['Site Map'] || 'Site Map'
     };
     
     let currentPath = '';

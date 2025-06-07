@@ -155,6 +155,10 @@ export default function VendorDashboard() {
     "Recent Orders",
     "Customer Reviews",
     "Inventory Status",
+    "Total Products",
+    "Total Orders", 
+    "Total Revenue",
+    "Pending Orders",
     
     // Product Management
     "Product Management",
