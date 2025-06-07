@@ -6,7 +6,7 @@ interface DOMSafeTranslationProps {
   children: ReactNode;
   className?: string;
   preserveStructure?: boolean;
-  translateAttributes?: string[];
+  attributesToTranslate?: string[];
 }
 
 interface TextNode {
@@ -19,9 +19,9 @@ export function DOMSafeTranslation({
   children, 
   className = '', 
   preserveStructure = true,
-  translateAttributes = ['title', 'placeholder', 'aria-label']
+  attributesToTranslate = ['title', 'placeholder', 'aria-label']
 }: DOMSafeTranslationProps) {
-  const { translate, currentLanguage } = useLanguage();
+  const { translateText, currentLanguage } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const originalContentRef = useRef<string>('');
@@ -74,14 +74,12 @@ export function DOMSafeTranslation({
   };
 
   // Translate attributes that should be translated
-  const translateAttributes = async (element: HTMLElement) => {
-    const attributesToTranslate = ['title', 'placeholder', 'aria-label', 'alt'];
-    
+  const translateElementAttributes = async (element: HTMLElement) => {
     for (const attr of attributesToTranslate) {
       const value = element.getAttribute(attr);
       if (value && value.trim() && currentLanguage !== 'EN') {
         try {
-          const translatedValue = await translate(value);
+          const translatedValue = await translateText(value);
           element.setAttribute(attr, translatedValue);
         } catch (error) {
           console.error(`Failed to translate attribute ${attr}:`, error);
@@ -91,7 +89,7 @@ export function DOMSafeTranslation({
 
     // Recursively translate attributes in child elements
     for (const child of Array.from(element.children)) {
-      await translateAttributes(child as HTMLElement);
+      await translateElementAttributes(child as HTMLElement);
     }
   };
 
@@ -113,7 +111,7 @@ export function DOMSafeTranslation({
       // Batch translate all text nodes
       const textsToTranslate = textNodes.map(node => node.text);
       const translations = await Promise.all(
-        textsToTranslate.map(text => translate(text))
+        textsToTranslate.map(text => translateText(text))
       );
 
       // Apply translations back to DOM
@@ -152,7 +150,7 @@ export function DOMSafeTranslation({
       }
 
       // Translate attributes
-      await translateAttributes(containerRef.current);
+      await translateElementAttributes(containerRef.current);
 
     } catch (error) {
       console.error('DOM-safe translation error:', error);
@@ -213,7 +211,7 @@ export function withDOMSafeTranslation<P extends object>(
 
 // Hook for manual DOM-safe translation
 export function useDOMSafeTranslation() {
-  const { translate, currentLanguage } = useLanguage();
+  const { translateText, currentLanguage } = useLanguage();
 
   const translateElement = async (element: HTMLElement) => {
     if (currentLanguage === 'EN') return;
@@ -254,7 +252,7 @@ export function useDOMSafeTranslation() {
     // Translate all text nodes
     for (const { node, originalText } of textNodes) {
       try {
-        const translated = await translate(originalText.trim());
+        const translated = await translateText(originalText.trim());
         const leadingWhitespace = originalText.match(/^\s*/)?.[0] || '';
         const trailingWhitespace = originalText.match(/\s*$/)?.[0] || '';
         node.textContent = leadingWhitespace + translated + trailingWhitespace;

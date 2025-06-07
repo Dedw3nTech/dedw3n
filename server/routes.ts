@@ -5341,29 +5341,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function processBatchWithGoogleFallback(batch: any[], targetLanguage: string) {
     try {
       const googleLang = googleLanguageMap[targetLanguage] || targetLanguage.toLowerCase();
+      console.log(`[Google Fallback] Processing ${batch.length} texts for ${targetLanguage} -> ${googleLang}`);
+      
       const results = [];
       
       for (const item of batch) {
-        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(item.text)}`;
-        
         try {
-          const response = await fetch(googleUrl);
+          // Use the working Google Translate URL format from individual translations
+          const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${googleLang}&dt=t&q=${encodeURIComponent(item.text)}`;
+          
+          const response = await fetch(googleUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
           
           if (response.ok) {
             const data = await response.json();
             let translatedText = item.text; // fallback
             
             if (data && data[0] && Array.isArray(data[0])) {
-              translatedText = data[0].map((segment: any) => segment[0]).join('');
+              // Extract translations from Google's response format
+              translatedText = data[0]
+                .filter((segment: any) => segment && segment[0])
+                .map((segment: any) => segment[0])
+                .join('');
             }
             
+            console.log(`[Google Fallback] "${item.text}" -> "${translatedText}"`);
+            
             results.push({
-              text: translatedText,
+              text: translatedText || item.text,
               detected_source_language: 'EN',
               originalIndex: item.originalIndex
             });
           } else {
-            // Fallback to original text
+            console.error(`[Google Fallback] HTTP ${response.status} for "${item.text}"`);
             results.push({
               text: item.text,
               detected_source_language: 'EN',
@@ -5371,7 +5384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         } catch (error) {
-          console.error('Google Translate error for item:', error);
+          console.error(`[Google Fallback] Error translating "${item.text}":`, error);
           results.push({
             text: item.text,
             detected_source_language: 'EN',
@@ -5380,9 +5393,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Small delay between requests to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
+      console.log(`[Google Fallback] Completed ${results.length} translations`);
       return results;
     } catch (error) {
       console.error('Google Translate batch fallback error:', error);
