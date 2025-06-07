@@ -7,8 +7,7 @@ import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
-import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-translation';
-import { useUltraFastTranslation, preloadCriticalTranslations } from '@/hooks/use-ultra-fast-translation';
+import { useDeepLTranslation } from '@/hooks/use-deepl-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
@@ -110,30 +109,27 @@ export default function Products() {
   const { translatedText: priceHighLowText } = useUltraFastTranslation("Price: High to Low", 'fast');
   const { translatedText: newestProductText } = useUltraFastTranslation("Newest Product", 'fast');
   const { translatedText: addToCartText } = useUltraFastTranslation("Add to Cart", 'instant');
-  const { translatedText: addToCartTooltipText } = useUltraFastTranslation("Add to shopping cart", 'instant');
-  const { translatedText: shareOnFeedTooltipText } = useUltraFastTranslation("Share on community feed", 'fast');
-  const { translatedText: makeOfferTooltipText } = useUltraFastTranslation("Make an offer", 'fast');
-  const { translatedText: sendGiftTooltipText } = useUltraFastTranslation("Send as gift", 'fast');
-  const { translatedText: addToProfileTooltipText } = useUltraFastTranslation("Add to profile", 'fast');
-  const { translatedText: shareProductTooltipText } = useUltraFastTranslation("Share product", 'fast');
-  const { translatedText: viewProductDetailsText } = useUltraFastTranslation("View product details", 'fast');
-  const { translatedText: buyNowText } = useUltraFastTranslation("Buy Now", 'instant');
-  const { translatedText: shareText } = useLazyTranslation("Share", { priority: 'normal' });
-  const { translatedText: viewProductText } = useLazyTranslation("View Product", { priority: 'normal' });
-  
-  // Use lazy translation for dialog elements that appear on demand
-  const { translatedText: cancelText } = useLazyTranslation("Cancel", { priority: 'critical' });
-  const { translatedText: sendingText } = useLazyTranslation("Sending...", { priority: 'normal' });
-  const { translatedText: postingText } = useLazyTranslation("Posting...", { priority: 'normal' });
-  const { translatedText: searchForRecipientText } = useLazyTranslation("Search for recipient", { priority: 'normal' });
-  const { translatedText: typeNameUsernameText } = useLazyTranslation("Type name or username...", { priority: 'normal' });
-  const { translatedText: noUsersFoundText } = useLazyTranslation("No users found matching", { priority: 'normal' });
-  const { translatedText: typeAtLeastText } = useLazyTranslation("Type at least 2 characters to search", { priority: 'normal' });
-  const { translatedText: sendGiftText } = useLazyTranslation("Send Gift", { priority: 'normal' });
-  
-  // Use lazy translation for product card elements
-  const { translatedText: buyText } = useLazyTranslation("Buy", { priority: 'critical' });
-  const { translatedText: listedByText } = useLazyTranslation("Listed by", { priority: 'normal' });
+  // Consolidated DeepL-only translations
+  const { translatedText: addToCartTooltipText } = useDeepLTranslation("Add to shopping cart");
+  const { translatedText: shareOnFeedTooltipText } = useDeepLTranslation("Share on community feed");
+  const { translatedText: makeOfferTooltipText } = useDeepLTranslation("Make an offer");
+  const { translatedText: sendGiftTooltipText } = useDeepLTranslation("Send as gift");
+  const { translatedText: addToProfileTooltipText } = useDeepLTranslation("Add to profile");
+  const { translatedText: shareProductTooltipText } = useDeepLTranslation("Share product");
+  const { translatedText: viewProductDetailsText } = useDeepLTranslation("View product details");
+  const { translatedText: buyNowText } = useDeepLTranslation("Buy Now");
+  const { translatedText: shareText } = useDeepLTranslation("Share");
+  const { translatedText: viewProductText } = useDeepLTranslation("View Product");
+  const { translatedText: cancelText } = useDeepLTranslation("Cancel");
+  const { translatedText: sendingText } = useDeepLTranslation("Sending...");
+  const { translatedText: postingText } = useDeepLTranslation("Posting...");
+  const { translatedText: searchForRecipientText } = useDeepLTranslation("Search for recipient");
+  const { translatedText: typeNameUsernameText } = useDeepLTranslation("Type name or username...");
+  const { translatedText: noUsersFoundText } = useDeepLTranslation("No users found matching");
+  const { translatedText: typeAtLeastText } = useDeepLTranslation("Type at least 2 characters to search");
+  const { translatedText: sendGiftText } = useDeepLTranslation("Send Gift");
+  const { translatedText: buyText } = useDeepLTranslation("Buy");
+  const { translatedText: listedByText } = useDeepLTranslation("Listed by");
   
   // Additional dialog and UI translations
   const { translatedText: servicesText } = useLazyTranslation("Services", { priority: 'normal' });

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useMemo } from "react";
-import { useOptimizedBatchTranslation } from "@/hooks/use-optimized-translation";
+import { useDeepLBatchTranslation } from "@/hooks/use-deepl-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
 function FooterContent() {
@@ -26,11 +26,11 @@ function FooterContent() {
     "our sole official website is"
   ], []);
 
-  const translatedTexts = useOptimizedBatchTranslation(footerTexts);
+  const { translatedTexts } = useDeepLBatchTranslation(footerTexts);
 
-  // Extract individual translations using exact keys from footerTexts array
-  const allRightsReservedText = translatedTexts["All rights reserved."] || "All rights reserved.";
-  const privacyPolicyText = translatedTexts["Privacy Policy"] || "Privacy Policy";
+  // Extract individual translations from array
+  const allRightsReservedText = translatedTexts[0] || "All rights reserved.";
+  const privacyPolicyText = translatedTexts[1] || "Privacy Policy";
   const termsOfServiceText = translatedTexts["Terms of Service"] || "Terms of Service";
   const cookiePolicyText = translatedTexts["Cookie Policy"] || "Cookie Policy";
   const communityGuidelinesText = translatedTexts["Community Guidelines"] || "Community Guidelines";
