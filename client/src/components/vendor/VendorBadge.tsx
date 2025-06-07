@@ -1,6 +1,8 @@
 import { getBadgeInfo, type BadgeLevel } from "@/lib/vendor-badges";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMemo } from "react";
 
 interface VendorBadgeProps {
   level: BadgeLevel;
@@ -19,6 +21,16 @@ export function VendorBadge({
 }: VendorBadgeProps) {
   const badgeInfo = getBadgeInfo(level);
   const IconComponent = badgeInfo.icon;
+
+  // Batch translate vendor badge texts for optimal performance
+  const badgeTexts = useMemo(() => [
+    badgeInfo.name,
+    badgeInfo.description
+  ], [badgeInfo.name, badgeInfo.description]);
+
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(badgeTexts, 'high');
+  const translatedName = translatedTexts[badgeInfo.name] || badgeInfo.name;
+  const translatedDescription = translatedTexts[badgeInfo.description] || badgeInfo.description;
   
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5",
@@ -45,10 +57,10 @@ export function VendorBadge({
         level === "elite_vendor" && "bg-gradient-to-r from-yellow-400 to-orange-500",
         className
       )}
-      title={showTooltip ? badgeInfo.description : undefined}
+      title={showTooltip ? translatedDescription : undefined}
     >
       {showIcon && <IconComponent className={iconSizes[size]} />}
-      {badgeInfo.name}
+      {translatedName}
     </Badge>
   );
 }
@@ -68,6 +80,20 @@ export function VendorBadgeCard({
 }: VendorBadgeCardProps) {
   const badgeInfo = getBadgeInfo(level);
   const IconComponent = badgeInfo.icon;
+
+  // Batch translate badge card texts for optimal performance
+  const cardTexts = useMemo(() => [
+    badgeInfo.name,
+    badgeInfo.description,
+    "Total Sales",
+    "Transactions"
+  ], [badgeInfo.name, badgeInfo.description]);
+
+  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(cardTexts, 'high');
+  const translatedName = translatedTexts[badgeInfo.name] || badgeInfo.name;
+  const translatedDescription = translatedTexts[badgeInfo.description] || badgeInfo.description;
+  const translatedSalesLabel = translatedTexts["Total Sales"] || "Total Sales";
+  const translatedTransactionsLabel = translatedTexts["Transactions"] || "Transactions";
   
   return (
     <div className={cn(
@@ -85,21 +111,21 @@ export function VendorBadgeCard({
         </div>
         <div>
           <h3 className={cn("font-semibold", badgeInfo.textColor)}>
-            {badgeInfo.name}
+            {translatedName}
           </h3>
-          <p className="text-sm text-gray-600">{badgeInfo.description}</p>
+          <p className="text-sm text-gray-600">{translatedDescription}</p>
         </div>
       </div>
       
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="text-gray-600">Total Sales</p>
+          <p className="text-gray-600">{translatedSalesLabel}</p>
           <p className={cn("font-semibold", badgeInfo.textColor)}>
             £{totalSales.toLocaleString()}
           </p>
         </div>
         <div>
-          <p className="text-gray-600">Transactions</p>
+          <p className="text-gray-600">{translatedTransactionsLabel}</p>
           <p className={cn("font-semibold", badgeInfo.textColor)}>
             {totalTransactions.toLocaleString()}
           </p>
