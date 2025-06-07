@@ -11,6 +11,7 @@ import { useLazyTranslation, useLazyBatchTranslation } from '@/hooks/use-lazy-tr
 import { useUltraFastTranslation, preloadCriticalTranslations } from '@/hooks/use-ultra-fast-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
+import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
