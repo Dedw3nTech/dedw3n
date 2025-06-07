@@ -1652,6 +1652,40 @@ export default function Products() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Footer Advertisement Section with Instant Loading */}
+      <div className="mt-8 border-t pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Marketplace Advertisement */}
+          <InstantImageAd
+            adType="marketplace"
+            marketType="b2c"
+            position="inline"
+            priority="high"
+            clickable={true}
+            targetUrl="https://dedw3n.com/marketplace"
+          />
+          
+          {/* Business Advertisement */}
+          <InstantImageAd
+            adType="business"
+            marketType="b2b"
+            position="inline"
+            priority="high"
+            clickable={true}
+            targetUrl="https://dedw3n.com/business"
+          />
+          
+          {/* Community Advertisement */}
+          <InstantImageAd
+            adType="community"
+            position="inline"
+            priority="normal"
+            clickable={true}
+            targetUrl="https://dedw3n.com/community"
+          />
+        </div>
+      </div>
       
       </div>
     </div>
