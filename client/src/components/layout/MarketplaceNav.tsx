@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,51 +17,31 @@ interface MarketplaceNavProps {
 }
 
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
-  const [, setLocation] = useLocation();
-  const { marketType, setMarketType } = useMarketType();
-  const { selectedCurrency, setSelectedCurrency } = useCurrency();
-  const { cartItemCount } = useCart();
+  // Temporarily disable hooks causing infinite re-render
+  // const [, setLocation] = useLocation();
+  // const { marketType, setMarketType } = useMarketType();
+  // const { selectedCurrency, setSelectedCurrency } = useCurrency();
+  // const { cartItemCount } = useCart();
 
-  // Batch translate all navigation texts for optimal performance
-  const navTexts = [
-    "Buy from a friend (C2C)",
-    "Buy from a store (B2C)", 
-    "Business (B2B)",
-    "Search products...",
-    "Liked",
-    "Shopping Cart",
-    "Orders & Returns",
-    "Vendor Dashboard"
-  ];
-  
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(navTexts, 'instant');
-  const c2cText = translatedTexts["C2C"] || "C2C";
-  const b2cText = translatedTexts["B2C"] || "B2C";
-  const b2bText = translatedTexts["B2B"] || "B2B";
-  const searchPlaceholder = translatedTexts["Search products..."] || "Search products...";
-  const likedText = translatedTexts["Liked"] || "Liked";
-  const cartText = translatedTexts["Shopping Cart"] || "Shopping Cart";
-  const ordersText = translatedTexts["Orders & Returns"] || "Orders & Returns";
-  const vendorText = translatedTexts["Vendor Dashboard"] || "Vendor Dashboard";
+  // Static values for testing
+  const marketType = "c2c";
+  const cartItemCount = 0;
+  const selectedCurrency = currencies[0];
 
-  // Fetch liked products count
-  const { data: likedProductsData } = useQuery<{ count: number }>({
-    queryKey: ['/api/liked-products/count'],
-  });
-  
-  // Fetch notifications count
-  const { data: notificationsData } = useQuery<{ count: number }>({
-    queryKey: ['/api/notifications/unread/count'],
-  });
-  
-  // Fetch orders notification count
-  const { data: ordersNotificationsData } = useQuery<{ count: number }>({
-    queryKey: ['/api/orders/notifications/count'],
-  });
-  
-  const likedProductsCount = likedProductsData?.count || 0;
-  const notificationsCount = notificationsData?.count || 0;
-  const ordersNotificationsCount = ordersNotificationsData?.count || 0;
+  // Temporarily use static text to prevent infinite re-render
+  const c2cText = "C2C";
+  const b2cText = "B2C";
+  const b2bText = "B2B";
+  const searchPlaceholder = "Search products...";
+  const likedText = "Liked";
+  const cartText = "Shopping Cart";
+  const ordersText = "Orders & Returns";
+  const vendorText = "Vendor Dashboard";
+
+  // Static counts for testing
+  const likedProductsCount = 0;
+  const notificationsCount = 0;
+  const ordersNotificationsCount = 0;
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
