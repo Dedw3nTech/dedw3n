@@ -33,22 +33,22 @@ export function VendorBadge({
   const translatedDescription = translatedTexts[badgeInfo.description] || badgeInfo.description;
   
   const sizeClasses = {
-    sm: "text-xs px-2 py-0.5",
-    md: "text-sm px-2.5 py-1",
-    lg: "text-base px-3 py-1.5"
+    sm: "text-xs px-1.5 py-0.5 min-w-0 max-w-full",
+    md: "text-sm px-2 py-0.5 min-w-0 max-w-full",
+    lg: "text-sm px-2.5 py-1 min-w-0 max-w-full"
   };
   
   const iconSizes = {
-    sm: "w-3 h-3",
-    md: "w-4 h-4", 
-    lg: "w-5 h-5"
+    sm: "w-3 h-3 flex-shrink-0",
+    md: "w-3.5 h-3.5 flex-shrink-0", 
+    lg: "w-4 h-4 flex-shrink-0"
   };
 
   return (
     <Badge
       variant="outline"
       className={cn(
-        "inline-flex items-center gap-1.5 font-medium border-none text-white",
+        "inline-flex items-center gap-1 font-medium border-none text-white overflow-hidden",
         sizeClasses[size],
         level === "new_vendor" && "bg-blue-500",
         level === "level_2_vendor" && "bg-indigo-500", 
@@ -60,7 +60,7 @@ export function VendorBadge({
       title={showTooltip ? translatedDescription : undefined}
     >
       {showIcon && <IconComponent className={iconSizes[size]} />}
-      {translatedName}
+      <span className="truncate flex-1 min-w-0">{translatedName}</span>
     </Badge>
   );
 }
