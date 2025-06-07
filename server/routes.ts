@@ -5901,7 +5901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Advanced cache checking with optimizer
       for (let i = 0; i < texts.length; i++) {
         const text = texts[i];
-        if (!text || !text.trim() || text.length < 2) {
+        if (!text || typeof text !== 'string' || !text.trim() || text.length < 2) {
           translations[i] = {
             originalText: text,
             translatedText: text,

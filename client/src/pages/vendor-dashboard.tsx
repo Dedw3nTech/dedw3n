@@ -440,27 +440,27 @@ export default function VendorDashboard() {
         <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-black text-white">
           <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            {translations?.["Dashboard"] || "Dashboard"}
+            {t("Dashboard")}
           </TabsTrigger>
           <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Package className="h-4 w-4 mr-2" />
-            {translations?.["Products"] || "Products"}
+            {t("Products")}
           </TabsTrigger>
           <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Users className="h-4 w-4 mr-2" />
-            {translations?.["Customers"] || "Customers"}
+            {t("Customers")}
           </TabsTrigger>
           <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Truck className="h-4 w-4 mr-2" />
-            {translations?.["Shipping"] || "Shipping"}
+            {t("Shipping")}
           </TabsTrigger>
           <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Megaphone className="h-4 w-4 mr-2" />
-            {translations?.["Marketing"] || "Marketing"}
+            {t("Marketing")}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
             <Settings className="h-4 w-4 mr-2" />
-            {translations?.["Settings"] || "Settings"}
+            {t("Settings")}
           </TabsTrigger>
 
         </TabsList>
@@ -472,7 +472,7 @@ export default function VendorDashboard() {
           <div className="mb-4">
             <div className="font-medium text-xl flex items-center">
               <Store className="mr-2 h-5 w-5" />
-              {vendor?.storeName || translations?.["Vendor Dashboard"] || "Vendor Dashboard"}
+              {vendor?.storeName || t("Vendor Dashboard")}
             </div>
             <div className="text-sm text-muted-foreground">
               {user?.username || ""}
@@ -510,10 +510,10 @@ export default function VendorDashboard() {
             <TabsContent value="dashboard" className="mt-0 space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">{translations?.["Dashboard"] || "Dashboard"}</h2>
+                <h2 className="text-2xl font-bold tracking-tight">{t("Dashboard")}</h2>
                 {vendor && (
                   <p className="text-blue-600 text-xs font-normal mt-1">
-                    {translations?.["Using Private Vendor account"] || "Using"} {vendor.vendorType === 'private' ? (translations?.["Private Vendor"] || "Private Vendor") : (translations?.["Business Vendor"] || "Business Vendor")} {translations?.["account"] || "account"}
+                    {t("Using")} {vendor.vendorType === 'private' ? t("Private Vendor") : t("Business Vendor")} {t("account")}
                   </p>
                 )}
               </div>
@@ -524,15 +524,15 @@ export default function VendorDashboard() {
                   disabled={createBusinessVendorMutation.isPending}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {createBusinessVendorMutation.isPending ? (translations?.["Creating..."] || "Creating...") : (translations?.["Create Business Vendor"] || "Create Business Vendor")}
+                  {createBusinessVendorMutation.isPending ? t("Creating...") : t("Create Business Vendor")}
                 </Button>
                 <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {translations?.["Add Product"] || "Add Product"}
+                  {t("Add Product")}
                 </Button>
                 <Button onClick={() => setLocation('/vendor-analytics')} className="bg-black text-white hover:bg-gray-800">
                   <BarChart className="mr-2 h-4 w-4" />
-                  {translations?.["Deep Analytics"] || "Deep Analytics"}
+                  {t("Deep Analytics")}
                 </Button>
               </div>
             </div>
@@ -542,7 +542,7 @@ export default function VendorDashboard() {
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {translations?.["Total Products"] || "Total Products"}
+                    {t("Total Products")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
