@@ -152,12 +152,6 @@ export default function VendorDashboard() {
 
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;
-    "Sales Overview",
-    "Vendor Type"
-  ];
-
-  // Initialize unified translation system for all vendor dashboard texts
-  const { translations, isLoading: isTranslating } = useUnifiedBatchTranslation(vendorTexts, 'instant');
   
   // Authentication wall - redirect if not logged in
   useEffect(() => {
@@ -219,17 +213,17 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>{translations?.["Vendor Dashboard"] || "Vendor Dashboard"}</CardTitle>
+            <CardTitle>{t("Vendor Dashboard")}</CardTitle>
             <CardDescription>
-              {translations?.["Please log in to access your vendor dashboard"] || "Please log in to access your vendor dashboard"}
+              {t("Please log in to access your vendor dashboard")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              {translations?.["You need to be authenticated to access vendor features and manage your store."] || "You need to be authenticated to access vendor features and manage your store."}
+              {t("You need to be authenticated to access vendor features and manage your store.")}
             </p>
             <Button onClick={() => setLocation('/')}>
-              {translations?.["Go to Login"] || "Go to Login"}
+              {t("Go to Login")}
             </Button>
           </CardContent>
         </Card>
@@ -276,12 +270,12 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>{translations?.["Loading..."] || "Loading..."}</CardTitle>
+            <CardTitle>{t("Loading...")}</CardTitle>
           </CardHeader>
           <CardContent>
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">
-              {translations?.["Loading..."] || "Loading..."}
+              {t("Loading...")}
             </p>
           </CardContent>
         </Card>
@@ -296,31 +290,31 @@ export default function VendorDashboard() {
         <Card className="border-none">
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <CardTitle>Vendor Account Not Found</CardTitle>
+            <CardTitle>{t("Vendor Account Not Found")}</CardTitle>
             <CardDescription>
-              Unable to verify vendor access
+              {t("Unable to verify vendor access")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              To create your vendor profile, please{' '}
+              {t("To create your vendor profile, please")}{' '}
               <span 
                 className="text-blue-600 cursor-pointer hover:underline"
                 onClick={() => setLocation('/vendor-register')}
               >
-                click here
+                {t("click here")}
               </span>
-              . If you encounter an error while having a vendor account, please attempt to log in again. Should the issue persist, do not hesitate to contact support for assistance.{' '}
+              . {t("If you encounter an error while having a vendor account, please attempt to log in again. Should the issue persist, do not hesitate to contact support for assistance.")}{' '}
               <span 
                 className="text-blue-600 cursor-pointer hover:underline"
                 onClick={() => setLocation('/contact')}
               >
-                Contact Us
+                {t("Contact Us")}
               </span>
             </p>
             <div className="space-y-2">
               <Button onClick={() => setLocation('/vendor-register')} className="bg-black text-white hover:bg-gray-800">
-                Register as Vendor
+                {t("Register as Vendor")}
               </Button>
             </div>
           </CardContent>
@@ -338,9 +332,9 @@ export default function VendorDashboard() {
       <div className="container max-w-6xl mx-auto py-12 px-4">
         <Card className="border-none">
           <CardHeader>
-            <CardTitle className="text-2xl">Become a Vendor</CardTitle>
+            <CardTitle className="text-2xl">{t("Become a Vendor")}</CardTitle>
             <CardDescription>
-              Start selling your products on our marketplace
+              {t("Start selling your products on our marketplace")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -348,28 +342,28 @@ export default function VendorDashboard() {
               <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <Store className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Create Your Store</CardTitle>
+                  <CardTitle>{t("Create Your Store")}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  Set up your own branded storefront with custom logo and description.
+                  {t("Set up your own branded storefront with custom logo and description.")}
                 </CardContent>
               </Card>
               <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <Package className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Sell Your Products</CardTitle>
+                  <CardTitle>{t("Sell Your Products")}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  List and sell your products to customers around the world.
+                  {t("List and sell your products to customers around the world.")}
                 </CardContent>
               </Card>
               <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <BarChart className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>Grow Your Business</CardTitle>
+                  <CardTitle>{t("Grow Your Business")}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  Access analytics and tools to help your business grow.
+                  {t("Access analytics and tools to help your business grow.")}
                 </CardContent>
               </Card>
             </div>
@@ -377,7 +371,7 @@ export default function VendorDashboard() {
             <div className="flex justify-center mt-6">
               <Button size="lg" onClick={handleBecomeVendor}>
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Become a Vendor
+                {t("Become a Vendor")}
               </Button>
             </div>
           </CardContent>
@@ -392,42 +386,42 @@ export default function VendorDashboard() {
       <div className="container max-w-7xl mx-auto py-8 px-4">
         <Card className="border-none">
           <CardHeader>
-            <CardTitle className="text-2xl">Vendor Dashboard</CardTitle>
+            <CardTitle className="text-2xl">{t("Vendor Dashboard")}</CardTitle>
             <CardDescription>
-              Your vendor account is active. Here are some options to get started.
+              {t("Your vendor account is active. Here are some options to get started.")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <p>Your vendor profile is being set up. Here are some things you can do now:</p>
+              <p>{t("Your vendor profile is being set up. Here are some things you can do now:")}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Add Your First Product</CardTitle>
+                    <CardTitle className="text-lg">{t("Add Your First Product")}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <p className="text-sm text-muted-foreground mb-4">
-                      Start selling by adding your first product to your store.
+                      {t("Start selling by adding your first product to your store.")}
                     </p>
                     <Button onClick={() => setLocation('/add-product')}>
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Product
+                      {t("Add Product")}
                     </Button>
                   </CardContent>
                 </Card>
                 
                 <Card className="shadow-sm">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">View Dashboard</CardTitle>
+                    <CardTitle className="text-lg">{t("View Dashboard")}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <p className="text-sm text-muted-foreground mb-4">
-                      View your dashboard to track sales and performance.
+                      {t("View your dashboard to track sales and performance.")}
                     </p>
                     <Button variant="outline" onClick={() => setLocation('/vendor-dashboard')}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Dashboard
+                      {t("Dashboard")}
                     </Button>
                   </CardContent>
                 </Card>
