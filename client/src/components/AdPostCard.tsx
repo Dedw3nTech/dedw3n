@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LazyImage } from "@/components/ui/lazy-image";
+import { InstantImage } from "@/hooks/use-ultra-instant-image";
 import campaignImage from "@assets/Copy of Pre Launch Campaingn Notification_1749109720371.png";
 
 export function AdPostCard() {
