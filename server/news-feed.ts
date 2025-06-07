@@ -10,6 +10,21 @@ import { posts, users } from "@shared/schema";
 import { and, eq, like, desc, sql } from "drizzle-orm";
 import https from 'https';
 
+// Type definitions for NewsAPI responses
+interface NewsArticle {
+  source: {
+    id: string | null;
+    name: string;
+  };
+  author: string | null;
+  title: string;
+  description: string | null;
+  url: string;
+  urlToImage: string | null;
+  publishedAt: string;
+  content: string | null;
+}
+
 // News API configuration
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_BASE_URL = 'https://newsapi.org/v2';
@@ -196,7 +211,7 @@ export async function getTrendingNews(req: Request, res: Response) {
     }
     
     // Convert API response to our format
-    const newsItems: NewsItem[] = response.articles.map(article => {
+    const newsItems: NewsItem[] = response.articles.map((article: any) => {
       // For top headlines, we need to infer the category
       const inferredCategory = inferCategoryFromArticle(article);
       return convertToNewsItem(article, inferredCategory);
@@ -287,7 +302,7 @@ export async function getNewsByCategory(req: Request, res: Response) {
     }
     
     // Convert API response to our format
-    const newsItems: NewsItem[] = response.articles.map(article => {
+    const newsItems: NewsItem[] = response.articles.map((article: any) => {
       return convertToNewsItem(article, category);
     });
     

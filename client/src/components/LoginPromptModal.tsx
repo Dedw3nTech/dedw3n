@@ -332,7 +332,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
-              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && Boolean(ageError))}
+              disabled={loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError !== "")}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
