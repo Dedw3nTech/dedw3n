@@ -63,6 +63,12 @@ const RegionName = ({ regionName }: { regionName: string }) => {
   const { translatedText } = useDeepLTranslation(regionName);
   return <span>{translatedText}</span>;
 };
+
+// Component for translating product names
+const ProductName = ({ productName }: { productName: string }) => {
+  const { translatedText } = useDeepLTranslation(productName);
+  return <span className="line-clamp-2">{translatedText}</span>;
+};
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -112,6 +118,11 @@ export default function Products() {
   const { translatedText: addToProfileTooltipText } = useDeepLTranslation("Add to profile");
   const { translatedText: shareProductTooltipText } = useDeepLTranslation("Share product");
   const { translatedText: viewProductDetailsText } = useDeepLTranslation("View product details");
+  const { translatedText: addToShoppingBagText } = useDeepLTranslation("Add to Shopping Bag");
+  const { translatedText: newBadgeText } = useDeepLTranslation("New");
+  const { translatedText: saleBadgeText } = useDeepLTranslation("Sale");
+  const { translatedText: verifiedBadgeText } = useDeepLTranslation("Verified");
+  const { translatedText: minQtyText } = useDeepLTranslation("Min qty");
   const { translatedText: buyNowText } = useDeepLTranslation("Buy Now");
   const { translatedText: shareText } = useDeepLTranslation("Share");
   const { translatedText: viewProductText } = useDeepLTranslation("View Product");
@@ -731,7 +742,7 @@ export default function Products() {
                 ) : (
                   <ShoppingCart className="h-4 w-4 mr-2" />
                 )}
-                Add to Shopping Bag
+                {addToShoppingBagText}
               </Button>
             </div>
           )}
@@ -739,21 +750,21 @@ export default function Products() {
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isNew && (
               <Badge className={marketType === 'c2c' ? 'bg-blue-500' : marketType === 'b2c' ? 'bg-green-500' : 'bg-purple-500'}>
-                New
+                {newBadgeText}
               </Badge>
             )}
             {product.isOnSale && (
-              <Badge className="bg-red-500">Sale</Badge>
+              <Badge className="bg-red-500">{saleBadgeText}</Badge>
             )}
             
             {/* B2B badge for minimum quantities */}
             {marketType === 'b2b' && (
-              <Badge className="bg-gray-700">Min qty: 10</Badge>
+              <Badge className="bg-gray-700">{minQtyText}: 10</Badge>
             )}
 
             {/* Verified seller badge for B2C */}
             {marketType === 'b2c' && product.vendorId % 2 === 0 && (
-              <Badge className="bg-green-600">Verified</Badge>
+              <Badge className="bg-green-600">{verifiedBadgeText}</Badge>
             )}
 
             {/* Friend indicator for C2C */}
