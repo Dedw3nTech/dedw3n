@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Star } from "lucide-react";
 import { VendorBadge } from "./VendorBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useStableTranslation } from "@/hooks/use-stable-translation";
 
 interface BadgeProgressProps {
   currentLevel: BadgeLevel;
@@ -22,6 +23,24 @@ export function BadgeProgress({
   const { formatPrice, formatPriceFromGBP } = useCurrency();
   const currentBadge = getBadgeInfo(currentLevel);
   const nextBadge = getNextBadgeInfo(currentLevel);
+  
+  // Translation hooks for all text content
+  const badgeStatusText = useStableTranslation("Badge Status", "instant");
+  const highestLevelText = useStableTranslation("You've reached the highest level!", "instant");
+  const totalSalesText = useStableTranslation("Total Sales", "instant");
+  const transactionsText = useStableTranslation("Transactions", "instant");
+  const badgeProgressText = useStableTranslation("Badge Progress", "instant");
+  const progressDescText = useStableTranslation("Your progress to the next badge level", "instant");
+  const salesProgressText = useStableTranslation("Sales Progress", "instant");
+  const transactionProgressText = useStableTranslation("Transaction Progress", "instant");
+  const overallProgressText = useStableTranslation("Overall Progress", "instant");
+  const neededText = useStableTranslation("needed", "instant");
+  const ofText = useStableTranslation("of", "instant");
+  const completeToUnlockText = useStableTranslation("Complete to unlock", "instant");
+  
+  // Translate dynamic badge content
+  const translatedNextBadgeName = useStableTranslation(nextBadge?.name || "", "instant");
+  const translatedNextBadgeDescription = useStableTranslation(nextBadge?.description || "", "instant");
   
   // Function to convert badge description prices to current currency
   const convertBadgeDescription = (description: string, minSales: number) => {
@@ -41,9 +60,9 @@ export function BadgeProgress({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500" />
-                Badge Status
+                {badgeStatusText}
               </CardTitle>
-              <CardDescription>You've reached the highest level!</CardDescription>
+              <CardDescription>{highestLevelText}</CardDescription>
             </div>
             <VendorBadge level={currentLevel} size="lg" />
           </div>
@@ -51,13 +70,13 @@ export function BadgeProgress({
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-gray-600">Total Sales</p>
+              <p className="text-sm text-gray-600">{totalSalesText}</p>
               <p className="text-xl font-bold text-green-600">
                 {formatCurrency(totalSales)}
               </p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600">Transactions</p>
+              <p className="text-sm text-gray-600">{transactionsText}</p>
               <p className="text-xl font-bold text-blue-600">
                 {totalTransactions.toLocaleString()}
               </p>
@@ -78,9 +97,9 @@ export function BadgeProgress({
           <div>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-500" />
-              Badge Progress
+              {badgeProgressText}
             </CardTitle>
-            <CardDescription>Your progress to the next badge level</CardDescription>
+            <CardDescription>{progressDescText}</CardDescription>
           </div>
           <VendorBadge level={currentLevel} size="md" />
         </div>
@@ -92,8 +111,8 @@ export function BadgeProgress({
             <NextBadgeIcon className="w-5 h-5 text-gray-600" />
           </div>
           <div className="flex-1">
-            <h4 className="font-medium">{nextBadge.name}</h4>
-            <p className="text-sm text-gray-600">{convertBadgeDescription(nextBadge.description, nextBadge.minSales)}</p>
+            <h4 className="font-medium">{translatedNextBadgeName}</h4>
+            <p className="text-sm text-gray-600">{convertBadgeDescription(translatedNextBadgeDescription, nextBadge.minSales)}</p>
           </div>
           <Target className="w-5 h-5 text-gray-400" />
         </div>
@@ -101,42 +120,42 @@ export function BadgeProgress({
         {/* Sales Progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Sales Progress</span>
+            <span className="text-sm font-medium">{salesProgressText}</span>
             <Badge variant="outline" className="text-xs">
               {Math.round(progress.salesProgress)}%
             </Badge>
           </div>
           <Progress value={progress.salesProgress} className="h-2" />
           <div className="flex justify-between text-xs text-gray-600">
-            <span>{formatPrice(totalSales)} of {formatPrice(nextBadge.minSales)}</span>
-            <span>{formatPrice(progress.salesNeeded)} needed</span>
+            <span>{formatPrice(totalSales)} {ofText} {formatPrice(nextBadge.minSales)}</span>
+            <span>{formatPrice(progress.salesNeeded)} {neededText}</span>
           </div>
         </div>
         
         {/* Transaction Progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Transaction Progress</span>
+            <span className="text-sm font-medium">{transactionProgressText}</span>
             <Badge variant="outline" className="text-xs">
               {Math.round(progress.transactionProgress)}%
             </Badge>
           </div>
           <Progress value={progress.transactionProgress} className="h-2" />
           <div className="flex justify-between text-xs text-gray-600">
-            <span>{totalTransactions.toLocaleString()} of {nextBadge.minTransactions.toLocaleString()}</span>
-            <span>{progress.transactionsNeeded.toLocaleString()} needed</span>
+            <span>{totalTransactions.toLocaleString()} {ofText} {nextBadge.minTransactions.toLocaleString()}</span>
+            <span>{progress.transactionsNeeded.toLocaleString()} {neededText}</span>
           </div>
         </div>
         
         {/* Overall Progress */}
         <div className="pt-4 border-t">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Overall Progress</p>
+            <p className="text-sm text-gray-600 mb-2">{overallProgressText}</p>
             <div className="text-2xl font-bold">
               {Math.round(Math.min(progress.salesProgress, progress.transactionProgress))}%
             </div>
             <p className="text-xs text-gray-500">
-              Complete to unlock {nextBadge.name}
+              {completeToUnlockText} {translatedNextBadgeName}
             </p>
           </div>
         </div>
