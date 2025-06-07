@@ -83,8 +83,11 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
     "View Details",
     "Tracking Number",
     "Shipping Provider",
+    "Shipping Address",
     "Update Shipping",
     "Cancel",
+    "Updating",
+    "Mark as Shipped",
     "Shipping Updated",
     "Order has been marked as shipped with tracking information",
     "Error",
@@ -469,7 +472,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
               <div className="mt-6">
                 <h4 className="text-sm font-medium mb-2 flex items-center">
                   <Map className="mr-2 h-4 w-4" /> 
-                  Shipping Address
+                  {translatedTexts["Shipping Address"] || "Shipping Address"}
                 </h4>
                 <div className="rounded-lg border p-3 text-sm">
                   <div>{selectedOrder.shippingAddress.line1}</div>
@@ -488,7 +491,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
               variant="outline" 
               onClick={() => setIsDialogOpen(false)}
             >
-              Cancel
+              {translatedTexts["Cancel"] || "Cancel"}
             </Button>
             <Button 
               onClick={handleSubmitShipping}
@@ -497,12 +500,15 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
               {updateShippingMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
+                  {translatedTexts["Updating"] || "Updating"}...
                 </>
               ) : (
                 <>
                   <Truck className="mr-2 h-4 w-4" />
-                  {selectedOrder?.status === "shipped" ? "Update Shipping" : "Mark as Shipped"}
+                  {selectedOrder?.status === "shipped" ? 
+                    (translatedTexts["Update Shipping"] || "Update Shipping") : 
+                    (translatedTexts["Mark as Shipped"] || "Mark as Shipped")
+                  }
                 </>
               )}
             </Button>
