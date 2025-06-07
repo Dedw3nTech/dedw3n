@@ -154,6 +154,28 @@ export default function Products() {
   const sendViaMessageText = useTranslatedText("Send via Message");
   const shareWithMemberText = useTranslatedText("Share with Member");
   
+  // Filter sidebar translations
+  const searchForProductsText = useTranslatedText("Search for Products");
+  const searchWithinText = useTranslatedText("Search within");
+  const productOrServiceText = useTranslatedText("Product or Service");
+  const productFilterText = useTranslatedText("Product");
+  const serviceFilterText = useTranslatedText("Service");
+  const categoriesText = useTranslatedText("Categories");
+  const regionText = useTranslatedText("Region");
+  const productStatusText = useTranslatedText("Product Status");
+  const friendOptionsText = useTranslatedText("Friend Options");
+  const friendsOnlyText = useTranslatedText("Friends only");
+  const localPickupText = useTranslatedText("Local pickup only");
+  const storeOptionsText = useTranslatedText("Store Options");
+  const verifiedStoresText = useTranslatedText("Verified stores only");
+  const freeShippingText = useTranslatedText("Free shipping");
+  const nextDayDeliveryText = useTranslatedText("Next day delivery");
+  const businessOptionsText = useTranslatedText("Business Options");
+  const volumeDiscountsText = useTranslatedText("Volume discounts");
+  const wholesaleOnlyText = useTranslatedText("Wholesale only");
+  const taxExemptText = useTranslatedText("Tax exempt eligible");
+  const resetFiltersText = useTranslatedText("Reset Filters");
+  
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -861,33 +883,33 @@ export default function Products() {
                   variant="ghost" 
                   size="icon" 
                   className="h-9 w-9"
-                  title="Share this product via email, message, or social media"
+                  title={shareProductTooltipText}
                 >
                   <Share2 className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Share Product</DropdownMenuLabel>
+              <DropdownMenuLabel>{shareProductText}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => shareByEmail(product)}>
                 <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                Share via Email
+                {shareViaEmailText}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
                 <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-                Copy Link
+                {copyLinkText}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => shareOnFeed(product)}>
                 <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                Share on Feed
+                {shareOnFeedText}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => shareViaMessage(product)}>
                 <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                Send via Message
+                {sendViaMessageText}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
                 <Users className="h-4 w-4 mr-2 text-blue-600" />
-                Share with Member
+                {shareWithMemberText}
               </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
@@ -931,13 +953,13 @@ export default function Products() {
       )}
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
+        <h3 className="font-medium mb-2 text-[14px]">{searchForProductsText}</h3>
         <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder={`Search within ${marketType.toUpperCase()}`}
+              placeholder={`${searchWithinText} ${marketType.toUpperCase()}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 text-[12px]"
@@ -947,7 +969,7 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Product or Service</h3>
+        <h3 className="font-medium mb-2 text-[14px]">{productOrServiceText}</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -955,7 +977,7 @@ export default function Products() {
               checked={selectedProductTypes.includes('product')}
               onCheckedChange={() => toggleProductType('product')}
             />
-            <Label htmlFor="show-products" className="text-[12px] font-normal">Product</Label>
+            <Label htmlFor="show-products" className="text-[12px] font-normal">{productFilterText}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -963,13 +985,13 @@ export default function Products() {
               checked={selectedProductTypes.includes('service')}
               onCheckedChange={() => toggleProductType('service')}
             />
-            <Label htmlFor="show-services" className="text-[12px] font-normal">Service</Label>
+            <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Categories</h3>
+        <h3 className="font-medium mb-2 text-[14px]">{categoriesText}</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
             <div className="flex justify-center py-2">
@@ -997,7 +1019,7 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">Region</h3>
+        <h3 className="font-medium mb-2 text-[14px]">{regionText}</h3>
         <div className="space-y-2">
           {['Africa', 'South Asia', 'East Asia', 'Oceania', 'North America', 'Central America', 'South America', 'Middle East', 'Europe', 'Central Asia'].map((region) => (
             <div key={region} className="flex items-center space-x-2">
