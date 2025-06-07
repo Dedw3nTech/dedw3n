@@ -163,7 +163,6 @@ import CommunityGuidelines from "@/pages/community-guidelines";
 import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
-import TranslationTestPage from "@/pages/translation-test";
 import { SiteMap } from "@/components/layout/SiteMap";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
@@ -244,7 +243,6 @@ function Router() {
       <Route path="/remove-ads" component={RemoveAdsPage} />
       <Route path="/sitemap" component={SiteMap} />
       <Route path="/api-test" component={ApiTestPage} />
-      <Route path="/translation-test" component={TranslationTestPage} />
       
       {/* Protected routes - require authentication */}
       <ProtectedRoute path="/social" component={WallPage} />
@@ -311,8 +309,7 @@ function App() {
     // Initialize language based on user location
     initializeLanguageFromLocation();
     
-    // Initialize advertisement preloader for instant loading
-    preloadAllAdvertisements();
+
     
     // Listen for language changes and force refresh
     const handleLanguageChange = () => {
@@ -411,12 +408,11 @@ function MarketplacePromoSection() {
   
   return (
     <div className="w-full" key={`marketplace-top-${marketType}`}>
-      <ZeroLoadingAd 
-        adType="marketplace"
-        marketType={marketType as 'b2c' | 'b2b' | 'c2c'}
-        position="banner"
+      <img 
+        src="/api/placeholder/1200/400"
+        alt={`${marketType.toUpperCase()} Marketplace`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        clickable={true}
+        loading="lazy"
       />
     </div>
   );
@@ -433,12 +429,11 @@ function MarketplaceBottomPromoSection() {
   
   return (
     <div className="w-full" key={`marketplace-bottom-${marketType}`}>
-      <ZeroLoadingAd 
-        adType="footer"
-        marketType={marketType as 'b2c' | 'b2b' | 'c2c'}
-        position="banner"
+      <img 
+        src="/api/placeholder/1200/400"
+        alt={`${marketType.toUpperCase()} Marketplace Footer`}
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        clickable={true}
+        loading="lazy"
       />
     </div>
   );
@@ -455,11 +450,11 @@ function DatingHeaderPromoSection() {
   
   return (
     <div className="w-full" key="dating-header-promo">
-      <ZeroLoadingAd 
-        adType="header"
-        position="banner"
+      <img 
+        src="/api/placeholder/1200/400"
+        alt="Dating Platform Header"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        clickable={true}
+        loading="lazy"
       />
     </div>
   );
@@ -475,11 +470,11 @@ function DatingFooterPromoSection() {
   
   return (
     <div className="w-full" key="dating-footer-promo">
-      <ZeroLoadingAd 
-        adType="footer"
-        position="banner"
+      <img 
+        src="/api/placeholder/1200/400"
+        alt="Dating Platform Footer"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        clickable={true}
+        loading="lazy"
       />
     </div>
   );
