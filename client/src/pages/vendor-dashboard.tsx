@@ -270,12 +270,12 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>{t("Loading...")}</CardTitle>
+            <CardTitle>{t("Loading Vendor Dashboard")}</CardTitle>
           </CardHeader>
           <CardContent>
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">
-              {t("Loading...")}
+              {t("Verifying your vendor access...")}
             </p>
           </CardContent>
         </Card>

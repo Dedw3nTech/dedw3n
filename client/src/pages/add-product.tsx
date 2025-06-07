@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
 
 import {
   Card,
@@ -85,6 +86,154 @@ export default function AddProduct() {
   const { toast } = useToast();
   const [isVendor, setIsVendor] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
+
+  // Comprehensive Add Product Page Text Collection for Translation
+  const addProductTexts = [
+    // Page Headers & Navigation
+    "Add Product / Service",
+    "Add Product",
+    "Add Service", 
+    "What are you offering?",
+    "Product",
+    "Service",
+    
+    // Authentication & Access
+    "Please log in to add a product",
+    "Login",
+    "Become a Vendor",
+    "You need to create a vendor account before you can add products.",
+    "Create Vendor Account",
+    "As a vendor, you'll be able to:",
+    "List and sell your products on our marketplace",
+    "Manage your inventory and orders", 
+    "Receive payments directly to your account",
+    "Build your brand and customer base",
+    
+    // Form Sections
+    "Title",
+    "Short sleeve t-shirt",
+    "Product description...",
+    "Description",
+    "Media",
+    "Product Image",
+    "https://example.com/image.jpg",
+    "Pricing",
+    "Price",
+    "Compare-at price",
+    "Include shipping costs in price",
+    "Choose whether shipping costs are included in the product price or calculated separately at checkout",
+    
+    // Inventory Section
+    "Inventory",
+    "Track quantity",
+    "Continue selling when out of stock",
+    "This won't affect Shopify POS. Staff will see a warning, but can complete sales when available inventory reaches zero and below.",
+    "Quantity",
+    
+    // Shipping Section
+    "Shipping",
+    "This is a physical product",
+    "Weight",
+    "Dimensions",
+    "Length x Width x Height",
+    "Customs information",
+    "Country/Region of origin",
+    "HS code",
+    "Search by product keyword or HS code",
+    
+    // SEO Section
+    "Search engine listing preview",
+    "Add a title and description to see how this product might appear in a search engine listing",
+    "Page title",
+    "Meta description",
+    
+    // Organization Section
+    "Organization",
+    "Product type",
+    "Vendor",
+    "Collections",
+    "Tags",
+    
+    // Product Status
+    "Product status",
+    "Active",
+    "Draft",
+    "Archived",
+    
+    // Product Availability  
+    "Product availability",
+    "Available on all channels",
+    "Unavailable on all channels",
+    "Available on selected channels",
+    
+    // Publishing
+    "Publishing",
+    "Online Store",
+    "Point of Sale",
+    "Shop",
+    "Facebook & Instagram",
+    "Google",
+    "Available",
+    "Unavailable",
+    "Set availability date",
+    
+    // Service-specific fields
+    "Service Duration",
+    "Service Type",
+    "Service Location",
+    "In-person",
+    "Online", 
+    "Both",
+    "Consultation",
+    "Installation",
+    "Repair",
+    "Maintenance", 
+    "Training",
+    "Other",
+    
+    // Action Buttons
+    "Save product",
+    "Save as draft",
+    "Preview",
+    "Delete product",
+    "Duplicate",
+    "View product",
+    
+    // Status Messages
+    "Product Added",
+    "Your product has been added successfully.",
+    "Product created successfully with code:",
+    "Error",
+    "Failed to add product:",
+    "Vendor Account Created", 
+    "Your vendor account has been created successfully. You can now add products.",
+    "Failed to create vendor account:",
+    
+    // Form Validation
+    "Product name must be at least 3 characters",
+    "Description must be at least 10 characters", 
+    "Price must be positive",
+    "Please select a category",
+    
+    // Common UI Elements
+    "Loading...",
+    "Save",
+    "Cancel",
+    "Edit", 
+    "Delete",
+    "Back",
+    "Next",
+    "Submit",
+    "Reset",
+    "Clear",
+    "Apply"
+  ];
+
+  // Use DOM-safe batch translation for optimal performance and persistence
+  const { translations, isLoading: isTranslating } = useStableDOMBatchTranslation(addProductTexts, 'instant');
+
+  // Helper function to get translated text
+  const t = (text: string) => translations?.[text] || text;
 
   // Form initialization
   const form = useForm<ProductFormValues>({
@@ -170,14 +319,14 @@ export default function AddProduct() {
       setIsVendor(true);
       setVendorId(data.id);
       toast({
-        title: 'Vendor Account Created',
-        description: 'Your vendor account has been created successfully. You can now add products.',
+        title: t('Vendor Account Created'),
+        description: t('Your vendor account has been created successfully. You can now add products.'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: `Failed to create vendor account: ${error.message}`,
+        title: t('Error'),
+        description: `${t('Failed to create vendor account:')} ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -191,10 +340,10 @@ export default function AddProduct() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Product Added',
+        title: t('Product Added'),
         description: data.productCode 
-          ? `Product created successfully with code: ${data.productCode}`
-          : 'Your product has been added successfully.',
+          ? `${t('Product created successfully with code:')} ${data.productCode}`
+          : t('Your product has been added successfully.'),
       });
       
       // Update form with the generated product code if available
@@ -213,8 +362,8 @@ export default function AddProduct() {
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: `Failed to add product: ${error.message}`,
+        title: t('Error'),
+        description: `${t('Failed to add product:')} ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -225,8 +374,8 @@ export default function AddProduct() {
     // Check if user has isVendor flag set to true (system-level vendor status)
     if (!isVendor && !(user && user.isVendor === true)) {
       toast({
-        title: 'Error',
-        description: 'You need to create a vendor account first.',
+        title: t('Error'),
+        description: t('You need to create a vendor account first.'),
         variant: 'destructive',
       });
       return;
