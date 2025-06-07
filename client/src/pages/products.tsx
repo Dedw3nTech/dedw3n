@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useTranslatedText } from '@/hooks/use-translated-text';
 import { VideoAdCampaignCard } from '@/components/products/VideoAdCampaignCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
@@ -70,6 +71,35 @@ export default function Products() {
   const [columnsPerRow, setColumnsPerRow] = useState<number>(4);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Translated text for marketplace elements
+  const filterText = useTranslatedText("Filter");
+  const filterProductsText = useTranslatedText("Filter Products");
+  const narrowDownText = useTranslatedText("Narrow down products based on your preferences");
+  const productText = useTranslatedText("product");
+  const productsText = useTranslatedText("products");
+  const productFoundText = useTranslatedText("found");
+  const productsFoundText = useTranslatedText("found");
+  const clearAllText = useTranslatedText("Clear All");
+  const showText = useTranslatedText("Show");
+  const sortByText = useTranslatedText("Sort by");
+  const sortOptionsText = useTranslatedText("Sort Options");
+  const trendingText = useTranslatedText("Trending");
+  const priceLowHighText = useTranslatedText("Price: Low to High");
+  const priceHighLowText = useTranslatedText("Price: High to Low");
+  const newestProductText = useTranslatedText("Newest Product");
+  const yourRegionText = useTranslatedText("Your Region");
+  const yourCountryText = useTranslatedText("Your Country");
+  const onSaleText = useTranslatedText("On Sale");
+  const newArrivalsText = useTranslatedText("New Arrivals");
+  const servicesText = useTranslatedText("Services");
+  const addToCartText = useTranslatedText("Add to Cart");
+  const buyNowText = useTranslatedText("Buy Now");
+  const sendOfferText = useTranslatedText("Send Offer");
+  const sendGiftText = useTranslatedText("Send Gift");
+  const shareText = useTranslatedText("Share");
+  const repostLabel = useTranslatedText("Repost");
+  const viewProductText = useTranslatedText("View Product");
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
@@ -246,7 +276,7 @@ export default function Products() {
         credentials: 'include',
         body: JSON.stringify({
           receiverId: selectedOfferProduct?.vendorId,
-          content: `🎯 OFFER: ${formatPriceWithCurrency(parseFloat(amount), currency)} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
+          content: `🎯 OFFER: ${formatPrice(parseFloat(amount))} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
           category: 'marketplace'
         })
       }).then(res => {
@@ -1423,7 +1453,7 @@ export default function Products() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedGiftProduct.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {formatPriceWithCurrency(selectedGiftProduct.price, currency)}
+                    {formatPrice(selectedGiftProduct.price)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     By {selectedGiftProduct.vendorName || 'Vendor'}
