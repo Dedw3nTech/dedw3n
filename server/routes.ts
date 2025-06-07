@@ -41,6 +41,7 @@ import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 import TranslationOptimizer from "./translation-optimizer";
+import { queryCache } from "./query-cache";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -3654,7 +3655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Products API endpoints
+  // Products API endpoints with aggressive caching
   app.get('/api/products', async (req: Request, res: Response) => {
     try {
       const {
@@ -3669,6 +3670,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.query;
 
       console.log('[DEBUG] Products API called with filters:', req.query);
+
+      // Check cache first for performance optimization
+      const cacheKey = `products:${JSON.stringify(req.query)}`;
+      const cachedResult = queryCache.get(cacheKey);
+      if (cachedResult) {
+        console.log('[DEBUG] Returning cached products result');
+        return res.json(cachedResult);
+      }
 
       let query = db.select().from(products);
       const conditions = [];
@@ -3738,6 +3747,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filteredProducts = await query;
       
       console.log(`[DEBUG] Found ${filteredProducts.length} products after filtering`);
+      
+      // Cache the result for 30 seconds to speed up subsequent requests
+      queryCache.set(cacheKey, filteredProducts, 30 * 1000);
+      
       res.json(filteredProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -3747,7 +3760,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/products/popular', async (req: Request, res: Response) => {
     try {
+      // Check cache first
+      const cached = queryCache.get('products:popular');
+      if (cached) {
+        console.log('[DEBUG] Returning cached popular products');
+        return res.json(cached);
+      }
+
       const popularProducts = await storage.getPopularProducts();
+      
+      // Cache for 60 seconds
+      queryCache.set('products:popular', popularProducts, 60 * 1000);
+      
       res.json(popularProducts);
     } catch (error) {
       console.error('Error fetching popular products:', error);
