@@ -1,218 +1,83 @@
-import { useMemo, useCallback } from 'react';
-import { useLocation } from 'wouter';
-import { useMarketType } from '@/hooks/use-market-type';
-import { useCurrency, currencies } from '@/contexts/CurrencyContext';
-import { useCart } from '@/hooks/use-cart';
-import { useQuery } from '@tanstack/react-query';
-import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
-
-import { Input } from '@/components/ui/input';
+import React from 'react';
+import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Search, ShoppingCart, Heart, User } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
 }
 
-export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
-  const [, setLocation] = useLocation();
-  const { marketType, setMarketType } = useMarketType();
-  const { selectedCurrency, setSelectedCurrency } = useCurrency();
-  const { cartItemCount } = useCart();
+export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps) {
+  const [location] = useLocation();
+  const { t } = useLanguage();
 
-  // Define translatable texts with stable references
-  const navigationTexts = useMemo(() => [
-    "Buy & Sell from Friends (C2C)",
-    "Buy & Sell from Online Store (B2C)", 
-    "Buy & Sell Wholesale (B2B)",
-    "Search products...",
-    "Liked",
-    "Shopping Cart",
-    "Orders & Returns",
-    "Vendor Dashboard"
-  ], []);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (setSearchTerm) {
+      setSearchTerm(e.target.value);
+    }
+  };
 
-  // Use DOM-safe batch translation for optimal performance
-  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(navigationTexts, 'instant');
-
-  // Memoize translated values to prevent re-render loops
-  const translatedLabels = useMemo(() => ({
-    c2cText: translatedTexts["Buy & Sell from Friends (C2C)"] || "Buy & Sell from Friends (C2C)",
-    b2cText: translatedTexts["Buy & Sell from Online Store (B2C)"] || "Buy & Sell from Online Store (B2C)", 
-    b2bText: translatedTexts["Buy & Sell Wholesale (B2B)"] || "Buy & Sell Wholesale (B2B)",
-    searchPlaceholder: translatedTexts["Search products..."] || "Search products...",
-    likedText: translatedTexts["Liked"] || "Liked",
-    cartText: translatedTexts["Shopping Cart"] || "Shopping Cart",
-    ordersText: translatedTexts["Orders & Returns"] || "Orders & Returns",
-    vendorText: translatedTexts["Vendor Dashboard"] || "Vendor Dashboard"
-  }), [translatedTexts]);
-
-  // Memoize navigation handlers to prevent infinite re-renders
-  const handleMarketNavigation = useCallback((type: string) => {
-    setMarketType(type);
-    setLocation("/marketplace");
-  }, [setMarketType, setLocation]);
-
-  const handlePageNavigation = useCallback((path: string) => {
-    setLocation(path);
-  }, [setLocation]);
-
-  // Static counts for testing
-  const likedProductsCount = 0;
-  const ordersNotificationsCount = 0;
+  const navItems = [
+    { href: '/marketplace', label: t('nav.marketplace') },
+    { href: '/vendors', label: t('nav.vendors') },
+    { href: '/categories', label: t('nav.categories') },
+  ];
 
   return (
-    <div className="bg-white border-b border-gray-200 py-6">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-between items-center">
-          <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("c2c")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  marketType === 'c2c' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  {translatedLabels.c2cText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'c2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("b2c")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  marketType === 'b2c' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  {translatedLabels.b2cText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'b2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("b2b")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
-                  marketType === 'b2b' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  {translatedLabels.b2bText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'b2b' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            {/* Search bar */}
-            {setSearchTerm && (
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={translatedLabels.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-            )}
+    <div className="bg-white border-b shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Navigation Links */}
+          <div className="flex items-center space-x-8">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={location === item.href ? 'default' : 'ghost'}
+                  size="sm"
+                >
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
           </div>
-          
-          {/* Right corner buttons */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/liked")}
-            >
-              <div className="relative">
+
+          {/* Search Bar */}
+          <div className="flex-1 max-w-lg mx-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder={t('search.placeholder')}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-4">
+            <Link href="/liked">
+              <Button variant="ghost" size="sm">
                 <Heart className="h-4 w-4" />
-                {likedProductsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {likedProductsCount > 99 ? '99+' : likedProductsCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium">{translatedLabels.likedText}</span>
-            </Button>
-
-
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/cart")}
-            >
-              <div className="relative">
-                <ShoppingBag className="h-4 w-4" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium">{translatedLabels.cartText}</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/orders-returns")}
-            >
-              <div className="relative">
-                <Package className="h-4 w-4" />
-                {ordersNotificationsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium">{translatedLabels.ordersText}</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => handlePageNavigation("/vendor-dashboard")}
-            >
-              <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">{translatedLabels.vendorText}</span>
-            </Button>
-            
-
+              </Button>
+            </Link>
+            <Link href="/cart">
+              <Button variant="ghost" size="sm">
+                <ShoppingCart className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="ghost" size="sm">
+                <User className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 }

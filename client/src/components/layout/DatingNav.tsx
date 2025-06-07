@@ -1,95 +1,41 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { 
-  User, 
-  Star,
-  Settings,
-  Compass
-} from "lucide-react";
+import React from 'react';
+import { useLocation, Link } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Heart, MessageCircle, Users, Star } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-interface DatingProfile {
-  id?: number;
-  userId: number;
-  displayName: string;
-  age: number;
-  bio: string;
-  location: string;
-  interests: string[];
-  lookingFor: string;
-  relationshipType: string;
-  profileImages: string[];
-  isActive: boolean;
-  isPremium: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export function DatingNav() {
+  const [location] = useLocation();
+  const { t } = useLanguage();
 
-interface DatingNavProps {
-  searchTerm?: string;
-  setSearchTerm?: (term: string) => void;
-}
-
-export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
-  const [, setLocation] = useLocation();
-  const [activeSection, setActiveSection] = useState<string>("discover");
-
-  // Fetch current user's dating profile to check if active
-  const { data: datingProfile } = useQuery<DatingProfile>({
-    queryKey: ["/api/dating-profile"],
-    retry: false,
-    // Suppress errors since not all users have dating profiles
-    meta: { suppressErrors: true }
-  });
-
-  const handleSectionChange = (section: string, path: string) => {
-    setActiveSection(section);
-    setLocation(path);
-  };
+  const navItems = [
+    { href: '/dating', label: t('nav.dating.discover'), icon: Heart },
+    { href: '/dating/matches', label: t('nav.dating.matches'), icon: Users },
+    { href: '/dating/messages', label: t('nav.dating.messages'), icon: MessageCircle },
+    { href: '/dating/premium', label: t('nav.dating.premium'), icon: Star },
+  ];
 
   return (
-    <div className="bg-white border-b border-gray-200 py-6">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-between items-center">
-          <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
-          </div>
-          
-          {/* Right corner buttons */}
-          <div className="flex items-center gap-2">
-            {/* Browse Dating Profiles button - only visible if dating account is active */}
-            {datingProfile && datingProfile.isActive && (
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-                onClick={() => setLocation("/dating")}
-              >
-                <Compass className="h-4 w-4" />
-                <span className="text-sm font-medium">Browse Profiles</span>
-              </Button>
-            )}
+    <div className="bg-white border-b shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center space-x-8 h-16">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
             
-            {/* My Dating Profile button - only visible if dating account is active */}
-            {datingProfile && datingProfile.isActive && (
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-                onClick={() => setLocation(`/profile/${datingProfile.userId}`)}
-              >
-                <User className="h-4 w-4" />
-                <span className="text-sm font-medium">My Dating Profile</span>
-              </Button>
-            )}
-            
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-              onClick={() => setLocation("/dating-profile")}
-            >
-              <Settings className="h-4 w-4" />
-              <span className="text-sm font-medium">Dating Dashboard</span>
-            </Button>
-          </div>
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Button>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

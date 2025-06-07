@@ -18,6 +18,13 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { ErrorBoundary } from "@/components/utils/ErrorBoundary";
 import { ApiErrorBoundary } from "@/components/utils/ApiErrorBoundary";
+import { OptimizedNavigation } from "@/components/OptimizedNavigation";
+import { Footer } from "@/components/Footer";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { MobileNavigation } from "@/components/MobileNavigation";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
+import { useQuery } from "@tanstack/react-query";
 // Import promotional images
 import defaultPromoImage from "@assets/Dedw3n Business II.png";
 import businessMeetingImage from "@assets/Dedw3n Business.png";
@@ -57,18 +64,9 @@ const datingPromoImages = {
   header: datingHeaderImage, // Top header advertisement for dating page
   footer: datingFooterImage, // Bottom footer advertisement for dating page
 };
-import { OfflineIndicator } from "@/components/ui/offline-indicator";
-import { ProtectedRoute } from "@/lib/protected-route";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
-
-import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
-import { CommunityNav } from "@/components/layout/CommunityNav";
-import { DatingNav } from "@/components/layout/DatingNav";
 
 // Community Navigation wrapper
 function CommunityNavWrapper() {
@@ -155,10 +153,9 @@ import Analytics from "@/pages/analytics";
 
 
 
-import OptimizedNavigation from "@/components/layout/OptimizedNavigation";
-import Footer from "@/components/layout/Footer";
-import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
+import { CommunityNav } from "@/components/layout/CommunityNav";
+import { DatingNav } from "@/components/layout/DatingNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
 import ChatbotWindow from "@/components/ai/ChatbotWindow";
 
