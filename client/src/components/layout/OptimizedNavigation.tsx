@@ -67,8 +67,8 @@ export default function OptimizedNavigation() {
     "Sign Up"
   ], []);
 
-  // Use safe batch translation for optimal performance
-  const translatedHeaderTexts = useSafeBatchTranslation(headerTexts);
+  // Use optimized batch translation for optimal performance
+  const translatedHeaderTexts = useOptimizedBatchTranslation(headerTexts);
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({

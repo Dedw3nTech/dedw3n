@@ -32,8 +32,8 @@ export function Breadcrumbs() {
     'Community Guidelines', 'Site Map'
   ], []);
 
-  // Use safe batch translation with error boundary protection
-  const translatedTexts = useSafeBatchTranslation(breadcrumbTexts);
+  // Use optimized batch translation with error boundary protection
+  const translatedTexts = useOptimizedBatchTranslation(breadcrumbTexts);
   
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
