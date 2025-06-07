@@ -1,6 +1,5 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
 import * as schema from "@shared/schema";
 import * as fraudSchema from "@shared/fraud-schema";
 
@@ -8,45 +7,28 @@ import * as fraudSchema from "@shared/fraud-schema";
 let dbConnected = false;
 let dbConnectionError: string | null = null;
 
-// Safer WebSocket implementation that prevents the ErrorEvent modification issue
-const createSafeWebSocket = () => {
-  // Patch the WebSocket constructor to handle errors more gracefully
-  const OriginalWebSocket = ws;
-  
-  return class extends OriginalWebSocket {
-    constructor(url: string, protocols?: string | string[]) {
-      super(url, protocols);
-      
-      // Intercept and handle errors without modifying the ErrorEvent
-      const originalEmit = this.emit.bind(this);
-      this.emit = function(event: string, ...args: any[]) {
-        if (event === 'error') {
-          const error = args[0];
-          // Log the error but don't modify the original event
-          console.warn('Database WebSocket error:', error?.message || 'Unknown error');
-          return true; // Indicate the event was handled
-        }
-        return originalEmit(event, ...args);
-      };
-    }
-  };
-};
+// Completely disable WebSocket to prevent the ErrorEvent modification crash
+console.log('Setting up database with HTTP-only mode to avoid WebSocket issues');
 
-// Configure Neon with error-safe settings
-let configurationSuccessful = false;
 try {
-  // Only configure if we haven't already done so
-  if (!configurationSuccessful) {
-    neonConfig.webSocketConstructor = createSafeWebSocket() as any;
-    neonConfig.useSecureWebSocket = false;
-    neonConfig.pipelineConnect = false;
-    neonConfig.pipelineTLS = false;
-    configurationSuccessful = true;
-    console.log('Neon database configuration applied successfully');
-  }
+  // Patch neonConfig to force HTTP mode and disable all WebSocket features
+  Object.defineProperty(neonConfig, 'webSocketConstructor', {
+    value: undefined,
+    writable: false,
+    configurable: false
+  });
+  
+  neonConfig.useSecureWebSocket = false;
+  neonConfig.pipelineConnect = false;
+  neonConfig.pipelineTLS = false;
+  
+  // Force HTTP-only mode
+  neonConfig.fetchConnectionCache = true;
+  neonConfig.fetchFunction = fetch;
+  
+  console.log('Database configured for HTTP-only mode');
 } catch (error) {
-  console.warn('Failed to configure neonConfig, using fallback:', error.message);
-  dbConnectionError = `Configuration failed: ${error.message}`;
+  console.warn('Database configuration warning:', error.message);
 }
 
 if (!process.env.DATABASE_URL) {
@@ -101,22 +83,30 @@ async function testConnection() {
   }
 }
 
-// Test connection with retry logic
+// Safe connection test with graceful degradation
 async function initializeDatabase() {
-  let retries = 3;
-  while (retries > 0 && !dbConnected) {
-    await testConnection();
-    if (!dbConnected) {
-      retries--;
-      if (retries > 0) {
-        console.log(`Retrying database connection in 2 seconds... (${retries} attempts left)`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-    }
+  console.log('Initializing database connection...');
+  
+  try {
+    // Simple connection test that won't crash the app
+    const client = await pool.connect();
+    console.log('✓ Database connection successful');
+    dbConnected = true;
+    client.release();
+  } catch (err) {
+    console.warn('⚠ Database connection failed, continuing with limited functionality');
+    console.warn('Error details:', err.message);
+    dbConnected = false;
+    dbConnectionError = err.message;
+    // Don't throw - let the app continue
   }
 }
 
-// Initialize database connection
-initializeDatabase().catch(err => {
-  console.warn('Database initialization failed, but app will continue:', err.message);
-});
+// Initialize database connection without blocking startup
+setTimeout(async () => {
+  try {
+    await initializeDatabase();
+  } catch (error) {
+    console.warn('Database initialization deferred:', error.message);
+  }
+}, 100);
