@@ -101,6 +101,31 @@ export default function Products() {
   const repostLabel = useTranslatedText("Repost");
   const viewProductText = useTranslatedText("View Product");
   
+  // Dialog translations
+  const repostToCommunityText = useTranslatedText("Repost to Community Feed");
+  const addMessageText = useTranslatedText("Would you like to add a message with this product share?");
+  const addYourMessageText = useTranslatedText("Add your message (optional)");
+  const whatDoYouThinkText = useTranslatedText("What do you think about this product?");
+  const postWithoutTextButton = useTranslatedText("Post Without Text");
+  const postToFeedButton = useTranslatedText("Post to Feed");
+  const postingText = useTranslatedText("Posting...");
+  const sendOfferTitle = useTranslatedText("Send Offer");
+  const sendPriceOfferText = useTranslatedText("Send a price offer to the product owner");
+  const listedText = useTranslatedText("Listed");
+  const yourOfferAmountText = useTranslatedText("Your Offer Amount");
+  const enterOfferAmountText = useTranslatedText("Enter your offer amount");
+  const messageOptionalText = useTranslatedText("Message (optional)");
+  const addMessageWithOfferText = useTranslatedText("Add a message with your offer...");
+  const cancelText = useTranslatedText("Cancel");
+  const sendingText = useTranslatedText("Sending...");
+  const sendGiftTitle = useTranslatedText("Send Gift");
+  const sendProductAsGiftText = useTranslatedText("Send this product as a gift to someone special");
+  const searchForRecipientText = useTranslatedText("Search for recipient");
+  const typeNameUsernameText = useTranslatedText("Type name or username...");
+  const noUsersFoundText = useTranslatedText("No users found matching");
+  const typeAtLeastText = useTranslatedText("Type at least 2 characters to search");
+  const byText = useTranslatedText("By");
+  
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -1246,30 +1271,30 @@ export default function Products() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                    Sort by
+                    {sortByText}
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
-                  <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                  <DropdownMenuLabel>{sortOptionsText}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setSortBy('trending')}>
-                    Trending
+                    {trendingText}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
-                    Price: Low to High
+                    {priceLowHighText}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
-                    Price: High to Low
+                    {priceHighLowText}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                    Newest Product
+                    {newestProductText}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('region')}>
-                    Your Region
+                    {yourRegionText}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('country')}>
-                    Your Country
+                    {yourCountryText}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1292,9 +1317,9 @@ export default function Products() {
       <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Repost to Community Feed</DialogTitle>
+            <DialogTitle>{repostToCommunityText}</DialogTitle>
             <DialogDescription>
-              Would you like to add a message with this product share?
+              {addMessageText}
             </DialogDescription>
           </DialogHeader>
           
@@ -1314,9 +1339,9 @@ export default function Products() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Add your message (optional)</label>
+              <label className="text-sm font-medium">{addYourMessageText}</label>
               <Textarea
-                placeholder="What do you think about this product?"
+                placeholder={whatDoYouThinkText}
                 value={repostText}
                 onChange={(e) => setRepostText(e.target.value)}
                 className="mt-2"
@@ -1331,7 +1356,7 @@ export default function Products() {
               onClick={() => handleRepost(false)}
               disabled={repostMutation.isPending}
             >
-              Post Without Text
+              {postWithoutTextButton}
             </Button>
             <Button
               onClick={handleRepostWithText}
@@ -1341,10 +1366,10 @@ export default function Products() {
               {repostMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Posting...
+                  {postingText}
                 </>
               ) : (
-                'Post to Feed'
+                postToFeedButton
               )}
             </Button>
           </DialogFooter>
@@ -1355,9 +1380,9 @@ export default function Products() {
       <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Send Offer</DialogTitle>
+            <DialogTitle>{sendOfferTitle}</DialogTitle>
             <DialogDescription>
-              Send a price offer to the product owner
+              {sendPriceOfferText}
             </DialogDescription>
           </DialogHeader>
           
@@ -1368,7 +1393,7 @@ export default function Products() {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedOfferProduct.name}</h4>
                   <p className="text-sm text-gray-600">
-                    Listed: {formatPrice(selectedOfferProduct.price)}
+                    {listedText}: {formatPrice(selectedOfferProduct.price)}
                   </p>
                 </div>
               </div>
