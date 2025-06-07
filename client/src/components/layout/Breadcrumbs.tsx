@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
+import { useOptimizedBatchTranslation } from "@/hooks/use-optimized-translation";
 import { useMemo } from "react";
 
 interface BreadcrumbItem {

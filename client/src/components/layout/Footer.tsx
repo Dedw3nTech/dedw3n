@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useMemo } from "react";
-import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
+import { useOptimizedBatchTranslation } from "@/hooks/use-optimized-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
 function FooterContent() {
@@ -26,7 +26,7 @@ function FooterContent() {
     "our sole official website is"
   ], []);
 
-  const translatedTexts = useSafeBatchTranslation(footerTexts);
+  const translatedTexts = useOptimizedBatchTranslation(footerTexts);
 
   // Extract individual translations using exact keys from footerTexts array
   const allRightsReservedText = translatedTexts["All rights reserved."] || "All rights reserved.";

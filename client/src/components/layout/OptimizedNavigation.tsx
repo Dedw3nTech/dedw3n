@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TranslatedText } from "@/hooks/use-translated-text";
 import { Badge } from "@/components/ui/badge";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
-import { useSafeBatchTranslation } from "@/hooks/use-safe-translation";
+import { useOptimizedBatchTranslation } from "@/hooks/use-optimized-translation";
 import {
   DropdownMenu,
   DropdownMenuContent,
