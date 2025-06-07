@@ -141,14 +141,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setIsTranslating(true);
     
     try {
-      const response = await fetch('/api/translate', {
+      const response = await fetch('/api/translate/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
+          texts: [text],
           targetLanguage: target,
+          priority: 'normal'
         }),
       });
 
@@ -157,7 +158,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
-      const translatedText = data.translatedText;
+      const translatedText = data.translations?.[0]?.translatedText || text;
       
       // Cache the translation
       translationCache.set(cacheKey, translatedText);

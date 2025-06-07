@@ -23,17 +23,21 @@ export function useSafeTranslation(text: string): string {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
-    // Translate with error boundary
-    fetch('/api/translate', {
+    // Use batch translation for better performance
+    fetch('/api/translate/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, targetLanguage: currentLanguage }),
+      body: JSON.stringify({ 
+        texts: [text], 
+        targetLanguage: currentLanguage,
+        priority: 'normal'
+      }),
       signal
     })
     .then(response => response.ok ? response.json() : Promise.reject())
     .then(data => {
-      if (!signal.aborted && data.translatedText) {
-        setTranslatedText(data.translatedText);
+      if (!signal.aborted && data.translations && data.translations.length > 0) {
+        setTranslatedText(data.translations[0].translatedText);
       }
     })
     .catch(() => {
