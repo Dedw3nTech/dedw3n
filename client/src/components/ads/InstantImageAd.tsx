@@ -153,11 +153,9 @@ export function InstantImageAd({
           }`}
           onClick={clickable ? handleAdClick : undefined}
         >
-          {/* Loading placeholder */}
+          {/* Loading placeholder - minimal visual indication */}
           {isLoading && (
-            <div className="w-full h-32 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg flex items-center justify-center">
-              <div className="text-gray-500 text-sm">Loading...</div>
-            </div>
+            <div className="w-full h-32 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg"></div>
           )}
 
           {/* Error state */}
