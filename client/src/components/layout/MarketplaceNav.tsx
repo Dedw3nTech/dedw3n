@@ -75,11 +75,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             >
               <div className="mb-2 flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
+                <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'c2c' 
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
-                }`}>
+                }`} style={{ fontSize: '12px' }}>
                   {translatedLabels.c2cText}
                 </span>
               </div>
@@ -96,11 +96,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             >
               <div className="mb-2 flex items-center gap-2">
                 <Store className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
+                <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'b2c' 
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
-                }`}>
+                }`} style={{ fontSize: '12px' }}>
                   {translatedLabels.b2cText}
                 </span>
               </div>
@@ -117,11 +117,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             >
               <div className="mb-2 flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
-                <span className={`text-sm font-medium transition-colors duration-300 ${
+                <span className={`text-xs font-medium transition-colors duration-300 ${
                   marketType === 'b2b' 
                     ? 'text-black' 
                     : 'text-black group-hover:text-black'
-                }`}>
+                }`} style={{ fontSize: '12px' }}>
                   {translatedLabels.b2bText}
                 </span>
               </div>
@@ -161,7 +161,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{translatedLabels.likedText}</span>
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
             </Button>
 
 
@@ -178,7 +178,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{translatedLabels.cartText}</span>
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
             </Button>
             
             <Button
@@ -194,7 +194,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   </span>
                 )}
               </div>
-              <span className="text-sm font-medium">{translatedLabels.ordersText}</span>
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
             </Button>
             
             <Button
@@ -203,7 +203,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               onClick={() => handlePageNavigation("/vendor-dashboard")}
             >
               <Store className="h-4 w-4" />
-              <span className="text-sm font-medium">{translatedLabels.vendorText}</span>
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorText}</span>
             </Button>
             
 
