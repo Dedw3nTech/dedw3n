@@ -1,26 +1,30 @@
 import { Link } from "wouter";
-import { useTranslatedText } from "@/hooks/use-translated-text";
+import { useFooterOptimization } from "@/hooks/use-footer-optimization";
 
 export default function Footer() {
-  // Footer translation hooks
-  const allRightsReservedText = useTranslatedText("All rights reserved.");
-  const privacyPolicyText = useTranslatedText("Privacy Policy");
-  const termsOfServiceText = useTranslatedText("Terms of Service");
-  const cookiePolicyText = useTranslatedText("Cookie Policy");
-  const communityGuidelinesText = useTranslatedText("Community Guidelines");
-  const contactUsText = useTranslatedText("Contact Us");
-  const faqText = useTranslatedText("FAQ");
-  const shippingText = useTranslatedText("Shipping");
-  const partnershipsText = useTranslatedText("Partnerships");
-  const downloadMobileAppText = useTranslatedText("Download our mobile app");
-  const downloadOnTheText = useTranslatedText("Download on the");
-  const appStoreText = useTranslatedText("App Store");
-  const getItOnText = useTranslatedText("Get it on");
-  const googlePlayText = useTranslatedText("Google Play");
-  const britishCompanyText = useTranslatedText("is a British Company registered in England, Wales and Scotland under registration number");
-  const registeredOfficeText = useTranslatedText("whose registered office is situated");
-  const bankRegisteredText = useTranslatedText("Our bank is registered with HSBC UK IBAN");
-  const officialWebsiteText = useTranslatedText("our sole official website is");
+  const { translations, isLoading } = useFooterOptimization();
+
+  // Extract individual translations from the optimized hook
+  const {
+    allRightsReserved: allRightsReservedText,
+    privacyPolicy: privacyPolicyText,
+    termsOfService: termsOfServiceText,
+    cookiePolicy: cookiePolicyText,
+    communityGuidelines: communityGuidelinesText,
+    contactUs: contactUsText,
+    faq: faqText,
+    shipping: shippingText,
+    partnerships: partnershipsText,
+    downloadMobileApp: downloadMobileAppText,
+    downloadOnThe: downloadOnTheText,
+    appStore: appStoreText,
+    getItOn: getItOnText,
+    googlePlay: googlePlayText,
+    britishCompany: britishCompanyText,
+    registeredOffice: registeredOfficeText,
+    bankRegistered: bankRegisteredText,
+    officialWebsite: officialWebsiteText
+  } = translations;
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
