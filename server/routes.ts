@@ -5280,7 +5280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Language code mapping for DeepL API
+  // Language code mapping for DeepL API (only supported languages)
   const deeplLanguageMap: Record<string, string> = {
     'EN': 'EN-US',
     'ES': 'ES',
@@ -5301,8 +5301,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     'CS': 'CS',
     'HU': 'HU',
     'TR': 'TR',
-    'AR': 'AR',
-    'HI': 'HI'
+    'AR': 'AR'
+    // Note: Hindi (HI) is NOT supported by DeepL API
+  };
+
+  // Languages that require Google Translate fallback
+  const googleTranslateLanguages = new Set(['HI', 'BN', 'TA', 'TE', 'ML', 'MR', 'GU', 'KN', 'OR', 'PA', 'AS', 'UR']);
+
+  // Google Translate language mapping
+  const googleLanguageMap: Record<string, string> = {
+    'HI': 'hi',    // Hindi
+    'BN': 'bn',    // Bengali
+    'TA': 'ta',    // Tamil
+    'TE': 'te',    // Telugu
+    'ML': 'ml',    // Malayalam
+    'MR': 'mr',    // Marathi
+    'GU': 'gu',    // Gujarati
+    'KN': 'kn',    // Kannada
+    'OR': 'or',    // Odia
+    'PA': 'pa',    // Punjabi
+    'AS': 'as',    // Assamese
+    'UR': 'ur'     // Urdu
   };
 
   // Translation cache to prevent rate limiting
@@ -5786,6 +5805,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           detectedSourceLanguage: cached.detectedSourceLanguage,
           targetLanguage: cached.targetLanguage
         });
+      }
+
+      // Check if language requires Google Translate fallback (like Hindi)
+      if (googleTranslateLanguages.has(targetLanguage)) {
+        console.log(`[Translation] Using Google Translate for ${targetLanguage}`);
+        return await translateWithGoogle(text, targetLanguage, res, cacheKey);
       }
 
       if (!process.env.DEEPL_API_KEY) {
