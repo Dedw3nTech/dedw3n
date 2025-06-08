@@ -177,6 +177,12 @@ export default function Header() {
               >
                 {datingText}
               </button>
+              <button
+                onClick={() => setLocation("/contact")}
+                className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+              >
+                {contactText}
+              </button>
             </div>
             {/* Smart Search Bar with Suggestions */}
             <div className="relative" ref={searchRef}>
