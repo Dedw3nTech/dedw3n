@@ -815,38 +815,41 @@ export default function Products() {
         </CardContent>
         
         <CardFooter className="flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (marketType === 'c2c') {
-                    setLocation(`/product/${product.id}`);
-                  } else {
-                    addToCartMutation.mutate(product.id);
-                  }
-                }}
-                disabled={addToCartMutation.isPending}
-                className="bg-black text-white hover:bg-gray-800 font-bold"
-                title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
-              >
-                {addToCartMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  buyText
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => shareOnFeed(product)}
-                className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
-                title={shareOnFeedTooltipText}
-              >
-                {repostButtonText}
-              </Button>
-            </div>
+          {/* Buy button on its own line */}
+          <div className="w-full">
+            <Button 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (marketType === 'c2c') {
+                  setLocation(`/product/${product.id}`);
+                } else {
+                  addToCartMutation.mutate(product.id);
+                }
+              }}
+              disabled={addToCartMutation.isPending}
+              className="bg-black text-white hover:bg-gray-800 font-bold w-full"
+              title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
+            >
+              {addToCartMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                buyText
+              )}
+            </Button>
+          </div>
+          
+          {/* Repost and Send Offer buttons on second line */}
+          <div className="flex justify-between items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => shareOnFeed(product)}
+              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
+              title={shareOnFeedTooltipText}
+            >
+              {repostButtonText}
+            </Button>
             <Button 
               variant="ghost"
               size="sm" 
@@ -855,7 +858,7 @@ export default function Products() {
                 setSelectedOfferProduct(product);
                 setOfferDialogOpen(true);
               }}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal"
+              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
               title={makeOfferTooltipText}
             >
               {sendOfferBtnText}
