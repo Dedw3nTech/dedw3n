@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { Package, RefreshCw, ArrowLeft, Eye, FileText, Calendar, DollarSign, Truck, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -135,6 +136,7 @@ export default function OrdersReturns() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { translateText } = useMasterTranslation();
 
   // Fetch orders
   const { data: orders = [], isLoading: ordersLoading } = useQuery<Order[]>({
@@ -250,8 +252,8 @@ export default function OrdersReturns() {
         <div className="flex items-center gap-4 mb-8">
           <Package className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Orders & Returns</h1>
-            <p className="text-gray-600">Track your purchases and manage returns</p>
+            <h1 className="text-3xl font-bold text-gray-900">{translateText('Orders & Returns')}</h1>
+            <p className="text-gray-600">{translateText('Track your purchases and manage returns')}</p>
           </div>
         </div>
 
@@ -259,28 +261,28 @@ export default function OrdersReturns() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
-              My Orders
+              {translateText('My Orders')}
             </TabsTrigger>
             <TabsTrigger value="returns" className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
-              Returns
+              {translateText('Returns')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Order History</h2>
+              <h2 className="text-2xl font-semibold">{translateText('Order History')}</h2>
               <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={translateText('Filter by status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Orders</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">{translateText('All Orders')}</SelectItem>
+                  <SelectItem value="pending">{translateText('Pending')}</SelectItem>
+                  <SelectItem value="processing">{translateText('Processing')}</SelectItem>
+                  <SelectItem value="shipped">{translateText('Shipped')}</SelectItem>
+                  <SelectItem value="delivered">{translateText('Delivered')}</SelectItem>
+                  <SelectItem value="cancelled">{translateText('Cancelled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
