@@ -94,7 +94,13 @@ class MasterTranslationManager {
     componentId: string,
     callback: (translated: string) => void
   ): Promise<void> {
-    if (!text?.trim() || targetLanguage === 'EN') {
+    if (!text?.trim()) {
+      callback(text);
+      return;
+    }
+
+    // Return original text for English, but don't block processing for other languages
+    if (targetLanguage === 'EN') {
       callback(text);
       return;
     }

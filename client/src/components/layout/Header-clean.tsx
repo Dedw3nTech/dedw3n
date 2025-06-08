@@ -36,14 +36,16 @@ export default function Header() {
 
   const { currentLanguage } = useLanguage();
   
-  // Get translations using the master batch translation system
-  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(headerTexts);
+  // Get translations using the master batch translation system with high priority for navigation
+  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(headerTexts, 'high');
   
-  // Debug logging to see what's happening with translations
-  console.log('[Header Debug] Current language:', currentLanguage);
-  console.log('[Header Debug] Original texts:', headerTexts);
-  console.log('[Header Debug] Translated texts:', translatedTexts);
-  console.log('[Header Debug] Is loading:', isLoading);
+  // Enhanced debug logging to track language changes and translation updates
+  useEffect(() => {
+    console.log('[Header] Language changed to:', currentLanguage);
+    console.log('[Header] Translation texts:', headerTexts);
+    console.log('[Header] Translated results:', translatedTexts);
+    console.log('[Header] Is loading:', isLoading);
+  }, [currentLanguage, translatedTexts, isLoading]);
 
   // Extract translated values with fallbacks (translations returns an array)
   const betaVersionText = translatedTexts[0] || "BETA VERSION";
