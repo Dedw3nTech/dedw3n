@@ -2727,35 +2727,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vendor = vendorAccounts[0];
       const { status } = req.query;
 
-      // Get orders for this vendor's products with simplified query
-      let vendorOrdersQuery = db
-        .selectDistinct({
-          id: orders.id,
-          orderNumber: orders.orderNumber,
-          userId: orders.userId,
-          total: orders.total,
-          status: orders.status,
-          createdAt: orders.createdAt,
-          updatedAt: orders.updatedAt,
-          shippingAddress: orders.shippingAddress,
-          customerName: users.name,
-          customerEmail: users.email
-        })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .innerJoin(products, eq(orderItems.productId, products.id))
-        .leftJoin(users, eq(orders.userId, users.id))
-        .where(eq(products.vendorId, vendor.id));
-
-      // Apply status filter if provided
-      if (status && typeof status === 'string') {
-        vendorOrdersQuery = vendorOrdersQuery.where(and(
-          eq(products.vendorId, vendor.id),
-          eq(orders.status, status)
-        ));
-      }
-
-      const vendorOrders = await vendorOrdersQuery.orderBy(desc(orders.createdAt));
+      // Create a simple query to get vendor orders using storage interface
+      const vendorOrders = await storage.getVendorOrders(vendor.id, status as string);
 
       res.json(vendorOrders);
     } catch (error) {
@@ -8640,82 +8613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import commission service
   const { commissionService } = await import('./commission-service');
 
-  // Get vendor orders (critical missing endpoint)
-  app.get('/api/vendors/orders', async (req: Request, res: Response) => {
-    try {
-      // Use the same authentication pattern as working vendor endpoints
-      let userId = (req.user as any)?.id;
-      
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // Fallback authentication pattern
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9); // Serruti user
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for /api/vendors/orders: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
 
-      // Get vendor accounts for the user
-      const vendorAccounts = await storage.getUserVendorAccounts(userId);
-      
-      if (!vendorAccounts || vendorAccounts.length === 0) {
-        return res.status(404).json({ message: "No vendor accounts found" });
-      }
-
-      // Use the first vendor account (primary vendor)
-      const vendor = vendorAccounts[0];
-      const { status } = req.query;
-
-      // Get orders for this vendor's products with simplified query
-      let vendorOrdersQuery = db
-        .selectDistinct({
-          id: orders.id,
-          orderNumber: orders.orderNumber,
-          userId: orders.userId,
-          total: orders.total,
-          status: orders.status,
-          createdAt: orders.createdAt,
-          updatedAt: orders.updatedAt,
-          shippingAddress: orders.shippingAddress,
-          customerName: users.name,
-          customerEmail: users.email
-        })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .innerJoin(products, eq(orderItems.productId, products.id))
-        .leftJoin(users, eq(orders.userId, users.id))
-        .where(eq(products.vendorId, vendor.id));
-
-      // Apply status filter if provided
-      if (status && typeof status === 'string') {
-        vendorOrdersQuery = vendorOrdersQuery.where(and(
-          eq(products.vendorId, vendor.id),
-          eq(orders.status, status)
-        ));
-      }
-
-      const vendorOrders = await vendorOrdersQuery.orderBy(desc(orders.createdAt));
-
-      res.json(vendorOrders);
-    } catch (error) {
-      console.error('Error fetching vendor orders:', error);
-      res.status(500).json({ message: 'Failed to fetch vendor orders' });
-    }
-  });
 
   // Get vendor commission dashboard
   app.get('/api/vendors/:vendorId/commission-dashboard', async (req: Request, res: Response) => {
