@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
-import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -262,6 +262,7 @@ export default function Checkout() {
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { formatPrice } = useCurrency();
+  const { translateText } = useMasterTranslation();
 
   // Get URL parameters and initialize payment
   useEffect(() => {
@@ -432,15 +433,15 @@ export default function Checkout() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Payment Gateway
+            {translateText('Back to Payment Gateway')}
           </Button>
           
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Complete Your Purchase
+              {translateText('Complete Your Purchase')}
             </h1>
             <p className="text-gray-600">
-              Upgrade to {tierDetails.name} using {paymentDetails.name}
+              {translateText('Upgrade to')} {translateText(tierDetails.name)} {translateText('using')} {translateText(paymentDetails.name)}
             </p>
           </div>
         </div>
