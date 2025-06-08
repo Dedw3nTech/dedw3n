@@ -2531,6 +2531,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         billingCycle
       } = req.body;
 
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       // Find vendor by user ID
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
@@ -2571,7 +2575,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search users for store assignment
   app.get("/api/vendor/search-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: 'No vendor accounts found' });
@@ -2593,7 +2601,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get store users
   app.get("/api/vendor/store-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: 'No vendor accounts found' });
@@ -2611,7 +2623,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assign user to store
   app.post("/api/vendor/store-users", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: 'No vendor accounts found' });
