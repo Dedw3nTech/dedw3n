@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Edit, Eye, MoreHorizontal, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import {
   Table,
   TableBody,

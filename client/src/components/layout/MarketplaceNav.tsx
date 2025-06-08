@@ -5,7 +5,7 @@ import type { MarketType } from '@/lib/types';
 import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { useOptimizedBatchTranslation } from '@/hooks/use-optimized-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   ], []);
 
   // Use optimized batch translation for optimal performance
-  const translatedTexts = useOptimizedBatchTranslation(navigationTexts);
+  const translatedTexts = useMasterBatchTranslation(navigationTexts);
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({

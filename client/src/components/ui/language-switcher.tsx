@@ -9,7 +9,7 @@ import {
 import { useLanguage, supportedLanguages, type Language } from '@/contexts/LanguageContext';
 import { ChevronDown, Globe, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useGlobalTranslation } from '@/hooks/use-global-translation';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 interface LanguageSwitcherProps {
   variant?: 'default' | 'compact' | 'icon-only';
@@ -24,7 +24,7 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { selectedLanguage, setSelectedLanguage, isLoading } = useLanguage();
   const [isChanging, setIsChanging] = useState(false);
-  const { isTranslating, translateWebsite } = useGlobalTranslation();
+  const { isTranslating } = useMasterTranslation();
   const { toast } = useToast();
 
   const handleLanguageChange = async (language: Language) => {

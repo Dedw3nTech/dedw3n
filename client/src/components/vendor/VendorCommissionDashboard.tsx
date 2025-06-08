@@ -10,7 +10,7 @@ import { CalendarDays, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 interface CommissionPeriod {
   id: number;
@@ -155,7 +155,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "overdue"
   ], []);
   
-  const { translations } = useUnifiedBatchTranslation(commissionTexts);
+  const translations = useMasterBatchTranslation(commissionTexts);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],

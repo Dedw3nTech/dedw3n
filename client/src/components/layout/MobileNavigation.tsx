@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import Logo from "../ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useOptimizedBatchTranslation } from '@/hooks/use-optimized-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 export default function MobileNavigation() {
   const { view, setView } = useView();
@@ -24,7 +24,7 @@ export default function MobileNavigation() {
   ], []);
 
   // Use optimized batch translation for optimal performance
-  const translations = useOptimizedBatchTranslation(mobileNavTexts);
+  const translations = useMasterBatchTranslation(mobileNavTexts);
   
   // Get unread message count from API
   const { data: messageData } = useQuery<{ count: number }>({
