@@ -42,11 +42,6 @@ import {
   ArrowUpCircle
 } from "lucide-react";
 
-import VendorProductsPage from "@/components/vendor/VendorProductsPage";
-import VendorShippingTab from "@/components/vendor/VendorShippingTab";
-import VendorSettingsTab from "@/components/vendor/VendorSettingsTab";
-import VendorAnalyticsTab from "@/components/vendor/VendorAnalyticsTab";
-import VendorPromotionsTab from "@/components/vendor/VendorPromotionsTab";
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 
 export default function VendorDashboard() {
@@ -510,25 +505,68 @@ export default function VendorDashboard() {
         </TabsContent>
 
         <TabsContent value="products">
-          <VendorProductsPage vendorId={vendorId!} />
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Product Management")}</CardTitle>
+              <CardDescription>
+                Manage your product listings and inventory
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setLocation('/products/new')}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {t("Add New Product")}
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="orders">
-          <VendorShippingTab vendorId={vendorId!} />
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Order Management")}</CardTitle>
+              <CardDescription>
+                View and manage your orders and shipping
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Order management functionality will be available here.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="analytics">
-          <VendorAnalyticsTab vendorId={vendorId!} />
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Sales Analytics")}</CardTitle>
+              <CardDescription>
+                View detailed analytics and performance metrics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Analytics dashboard will be available here.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="marketing">
-          <VendorPromotionsTab 
-            vendorId={vendorId!}
-            discountFormOpen={discountFormOpen}
-            setDiscountFormOpen={setDiscountFormOpen}
-            discountFormType={discountFormType}
-            setDiscountFormType={setDiscountFormType}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>{marketingText}</CardTitle>
+              <CardDescription>
+                Create promotions and marketing campaigns
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Marketing tools will be available here.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="commission">
@@ -536,7 +574,19 @@ export default function VendorDashboard() {
         </TabsContent>
 
         <TabsContent value="settings">
-          <VendorSettingsTab vendorId={vendorId!} />
+          <Card>
+            <CardHeader>
+              <CardTitle>{settingsText}</CardTitle>
+              <CardDescription>
+                Configure your store settings and preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Store settings will be available here.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
