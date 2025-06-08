@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { useCurrency } from '@/hooks/use-currency';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { 
   Loader2, 
   Star, 
@@ -27,13 +27,7 @@ import {
   Search,
   X
 } from 'lucide-react';
-import { 
-  supportedCurrencies, 
-  formatCurrency, 
-  convertCurrency,
-  CurrencyCode,
-  formatPriceWithCurrency
-} from '@/lib/currencyConverter';
+
 import { 
   Select,
   SelectContent,
@@ -66,10 +60,10 @@ export default function ProductDetail() {
   const [, params] = useRoute('/product/:id');
   const productId = params?.id ? parseInt(params.id) : null;
   const { user } = useAuth();
-  const { currency } = useCurrency();
+  const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   
   // Review form state
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -110,10 +104,7 @@ export default function ProductDetail() {
     };
   }, []);
   
-  // Update selected currency when the global currency changes
-  useEffect(() => {
-    setSelectedCurrency(currency);
-  }, [currency]);
+
 
   // Fetch product details
   const {
@@ -446,16 +437,10 @@ export default function ProductDetail() {
                   {product.discountPrice && product.discountPrice < product.price ? (
                     <>
                       <span className="text-2xl font-bold text-primary">
-                        {selectedCurrency === 'GBP' 
-                          ? formatPrice(product.discountPrice)
-                          : formatCurrency(convertCurrency(product.discountPrice, 'GBP', selectedCurrency), selectedCurrency)
-                        }
+                        {formatPriceFromGBP(product.discountPrice)}
                       </span>
                       <span className="text-lg text-gray-500 line-through">
-                        {selectedCurrency === 'GBP' 
-                          ? formatPrice(product.price)
-                          : formatCurrency(convertCurrency(product.price, 'GBP', selectedCurrency), selectedCurrency)
-                        }
+                        {formatPriceFromGBP(product.price)}
                       </span>
                       <Badge className="bg-red-500">
                         Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
@@ -463,10 +448,7 @@ export default function ProductDetail() {
                     </>
                   ) : (
                     <span className="text-2xl font-bold text-gray-900">
-                      {selectedCurrency === 'GBP' 
-                        ? formatPrice(product.price)
-                        : formatCurrency(convertCurrency(product.price, 'GBP', selectedCurrency), selectedCurrency)
-                      }
+                      {formatPriceFromGBP(product.price)}
                     </span>
                   )}
                   
