@@ -16,13 +16,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
-import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 export default function Cart() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { formatPriceFromGBP } = useCurrency();
+  const { translateText } = useMasterTranslation();
   
   // Show authentication message if not logged in
   if (!user) {
@@ -31,17 +32,17 @@ export default function Cart() {
         <Card>
           <CardHeader>
             <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle>Shopping Cart</CardTitle>
+            <CardTitle>{translateText('Shopping Cart')}</CardTitle>
             <CardDescription>
-              Please log in to view your shopping cart
+              {translateText('Please log in to view your shopping cart')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              You need to be signed in to manage your cart and make purchases.
+              {translateText('You need to be signed in to manage your cart and make purchases.')}
             </p>
             <Button onClick={() => setLocation('/')}>
-              Go to Home
+              {translateText('Go to Home')}
             </Button>
           </CardContent>
         </Card>
@@ -73,8 +74,8 @@ export default function Cart() {
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: `Failed to update quantity: ${error.message}`,
+        title: translateText('Error'),
+        description: `${translateText('Failed to update quantity')}: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -88,8 +89,8 @@ export default function Cart() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
       toast({
-        title: 'Item Removed',
-        description: 'The item was removed from your cart.',
+        title: translateText('Item Removed'),
+        description: translateText('The item was removed from your cart.'),
       });
     },
     onError: (error: any) => {
