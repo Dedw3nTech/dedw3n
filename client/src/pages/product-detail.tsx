@@ -879,10 +879,10 @@ export default function ProductDetail() {
                                 {submitReviewMutation.isPending ? (
                                   <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Submitting...
+                                    {translateText('Submitting...')}
                                   </>
                                 ) : (
-                                  'Submit Review'
+                                  translateText('Submit Review')
                                 )}
                               </Button>
                             </div>
