@@ -140,7 +140,10 @@ export default function Products() {
     "Verified stores only", "Free shipping", "Next day delivery", "Business Options",
     
     // Favorites Actions (2 texts)
-    "Add to Favorites", "Remove from Favorites"
+    "Add to Favorites", "Remove from Favorites",
+    
+    // Vendor Information (1 text)
+    "Sold by"
   ];
 
   const { translations: t } = useMasterBatchTranslation(productTexts);
@@ -177,7 +180,7 @@ export default function Products() {
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
     freeShippingText, nextDayDeliveryText, businessOptionsText,
     
-    addToFavoritesText, removeFromFavoritesText
+    addToFavoritesText, removeFromFavoritesText, soldByText
   ] = t || [];
   
   // Fix for missing variables
@@ -804,7 +807,7 @@ export default function Products() {
           
           {/* Vendor/Store information */}
           <div className="text-[12px] text-blue-600 mt-1">
-            Sold by {product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
+            {soldByText || "Sold by"} {product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
           </div>
           
           {/* Additional info based on market type */}
