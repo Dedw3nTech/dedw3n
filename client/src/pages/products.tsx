@@ -178,6 +178,7 @@ export default function Products() {
   // Fix for missing variables
   const shareProductText = shareProductTooltipText;
   const shareViaEmailText = "Share via Email";
+  const copyLinkText = "Copy Link";
   
   // All individual translation calls now consolidated in mega-batch above
   

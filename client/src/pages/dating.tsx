@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield } from
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 
 
@@ -40,6 +41,69 @@ export default function DatingPage() {
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
   const { formatPrice, formatPriceFromGBP } = useCurrency();
+
+  // Dating Page Master Translation Mega-Batch (78 texts)
+  const datingTexts = useMemo(() => [
+    // Page Headers & Navigation (12 texts)
+    "Dating Rooms", "Find Your Perfect Match", "Connect with like-minded people", "Welcome to Premium Dating",
+    "Normal Room", "VIP Room", "VVIP Room", "Exclusive Dating Experience", "Premium Members Only", 
+    "Dating Profile", "Browse Profiles", "My Matches",
+    
+    // Profile Card Elements (18 texts)
+    "Message", "View", "Profile", "Age", "Location", "Interests", "Looking for", "Relationship Type",
+    "Bio", "more", "Online", "Active", "Premium", "Verified", "New Member", "Popular", "Featured", "Available",
+    
+    // Tier Information (15 texts)
+    "NORMAL", "VIP", "VVIP", "Room Access Required", "Upgrade to", "membership", "exclusive dating room",
+    "per month", "For users earning over", "per year", "Upgrade Now", "Join Premium", "Unlock Features",
+    "Premium Benefits", "Access Denied",
+    
+    // Action Buttons & CTAs (12 texts)
+    "Get Started", "Create Profile", "Browse Members", "Send Message", "View Profile", "Like", "Pass",
+    "Super Like", "Chat Now", "Video Call", "Send Gift", "Report User",
+    
+    // Status & Notifications (9 texts)
+    "Loading profiles...", "No profiles found", "Connection lost", "Profile updated", "Message sent",
+    "Match found", "New message", "Profile viewed", "Like received",
+    
+    // Room Descriptions (12 texts)
+    "Open to everyone", "Basic features included", "Enhanced matching", "Priority support", "Advanced filters",
+    "Exclusive events", "Personal concierge", "Verified high earners", "Ultra-premium experience", 
+    "White-glove service", "Private events", "Elite community"
+  ], []);
+
+  // Use Master Translation System for optimal performance
+  const { translations: t, isLoading: isTranslating } = useMasterBatchTranslation(datingTexts);
+
+  // Destructure translations in order
+  const [
+    // Page Headers & Navigation (12 texts)
+    datingRoomsText, findMatchText, connectText, welcomePremiumText,
+    normalRoomText, vipRoomText, vvipRoomText, exclusiveExpText, premiumOnlyText,
+    datingProfileText, browseProfilesText, myMatchesText,
+    
+    // Profile Card Elements (18 texts)
+    messageText, viewText, profileText, ageText, locationText, interestsText, lookingForText, relationshipTypeText,
+    bioText, moreText, onlineText, activeText, premiumText, verifiedText, newMemberText, popularText, featuredText, availableText,
+    
+    // Tier Information (15 texts)
+    normalText, vipText, vvipText, roomAccessText, upgradeToText, membershipText, exclusiveRoomText,
+    perMonthText, earnersOverText, perYearText, upgradeNowText, joinPremiumText, unlockFeaturesText,
+    premiumBenefitsText, accessDeniedText,
+    
+    // Action Buttons & CTAs (12 texts)
+    getStartedText, createProfileText, browseMembersText, sendMessageText, viewProfileText, likeText, passText,
+    superLikeText, chatNowText, videoCallText, sendGiftText, reportUserText,
+    
+    // Status & Notifications (9 texts)
+    loadingProfilesText, noProfilesText, connectionLostText, profileUpdatedText, messageSentText,
+    matchFoundText, newMessageText, profileViewedText, likeReceivedText,
+    
+    // Room Descriptions (12 texts)
+    openEveryoneText, basicFeaturesText, enhancedMatchingText, prioritySupportText, advancedFiltersText,
+    exclusiveEventsText, personalConciergeText, verifiedEarnersText, ultraPremiumText,
+    whiteGloveText, privateEventsText, eliteCommunityText
+  ] = t || datingTexts;
 
   // Fetch current user
   const { data: user } = useQuery<User>({
@@ -95,7 +159,7 @@ export default function DatingPage() {
               <span className="text-sm font-normal text-gray-500">({profile.age})</span>
             </CardTitle>
             <Badge variant="secondary" className={tierInfo.bgColor}>
-              {profile.datingRoomTier?.toUpperCase() || "NORMAL"}
+              {profile.datingRoomTier?.toUpperCase() || normalText}
             </Badge>
           </div>
         </CardHeader>
@@ -119,11 +183,11 @@ export default function DatingPage() {
           <div className="flex gap-2 pt-2">
             <Button size="sm" className="flex-1">
               <MessageCircle className="h-4 w-4 mr-1" />
-              Message
+              {messageText}
             </Button>
             <Button size="sm" variant="outline">
               <Eye className="h-4 w-4 mr-1" />
-              View
+              {viewText}
             </Button>
           </div>
         </CardContent>
