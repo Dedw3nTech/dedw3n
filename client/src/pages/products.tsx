@@ -120,10 +120,10 @@ export default function Products() {
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
     "(incl. VAT)", // Added VAT text
     
-    // Community & Sharing (9 texts)
+    // Community & Sharing (10 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Post Without Text", "Repost",
+    "What do you think about this product?", "Post Without Text", "Repost", "Share on Feed",
     
     // Offers & Actions (10 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
@@ -165,7 +165,7 @@ export default function Products() {
     sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
     
     servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
-    addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText,
+    addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText, shareOnFeedText,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
     enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText, sendOfferBtnText,
@@ -183,7 +183,6 @@ export default function Products() {
   const shareProductText = shareProductTooltipText;
   const shareViaEmailText = "Share via Email";
   const copyLinkText = "Copy Link";
-  const shareOnFeedText = "Share on Feed";
   
   // All individual translation calls now consolidated in mega-batch above
   
