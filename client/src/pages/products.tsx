@@ -123,7 +123,7 @@ export default function Products() {
     // Community & Sharing (10 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Post Without Text", "Repost", "Share on Feed",
+    "What do you think about this product?", "Post Without Text", "Post", "Share on Feed",
     
     // Offers & Actions (10 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
