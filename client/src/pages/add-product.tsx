@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { useStableDOMBatchTranslation } from '@/hooks/use-stable-dom-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 import {
   Card,
@@ -242,8 +242,8 @@ export default function AddProduct() {
     "g"
   ];
 
-  // Use DOM-safe batch translation for optimal performance and persistence
-  const { translations, isLoading: isTranslating } = useStableDOMBatchTranslation(addProductTexts, 'instant');
+  // Use Master Translation System for optimal performance and persistence
+  const { translations, isLoading: isTranslating } = useMasterBatchTranslation(addProductTexts);
 
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;

@@ -155,7 +155,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "overdue"
   ], []);
   
-  const translations = useMasterBatchTranslation(commissionTexts);
+  const { translations } = useMasterBatchTranslation(commissionTexts);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],
