@@ -95,8 +95,8 @@ export default function Cart() {
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: `Failed to remove item: ${error.message}`,
+        title: translateText('Error'),
+        description: `${translateText('Failed to remove item')}: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -159,8 +159,8 @@ export default function Cart() {
       <div className="container max-w-4xl mx-auto py-12 px-4">
         <Card className="border-none">
           <CardHeader>
-            <CardTitle>Shopping Cart</CardTitle>
-            <CardDescription>There was an error loading your cart</CardDescription>
+            <CardTitle>{translateText('Shopping Cart')}</CardTitle>
+            <CardDescription>{translateText('There was an error loading your cart')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="bg-red-50 text-red-800 p-4 rounded-md">
@@ -168,7 +168,7 @@ export default function Cart() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleContinueShopping}>Continue Shopping</Button>
+            <Button onClick={handleContinueShopping}>{translateText('Continue Shopping')}</Button>
           </CardFooter>
         </Card>
       </div>
@@ -185,11 +185,11 @@ export default function Cart() {
             <div className="flex justify-center mb-4">
               <ShoppingBag className="h-16 w-16 text-muted-foreground" />
             </div>
-            <CardTitle className="text-xl">Your Cart is Empty</CardTitle>
-            <CardDescription>Looks like you haven't added any items to your cart yet.</CardDescription>
+            <CardTitle className="text-xl">{translateText('Your Cart is Empty')}</CardTitle>
+            <CardDescription>{translateText("Looks like you haven't added any items to your cart yet.")}</CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-center">
-            <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">Browse Products</Button>
+            <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">{translateText('Browse Products')}</Button>
           </CardFooter>
         </Card>
       </div>
@@ -200,8 +200,8 @@ export default function Cart() {
     <div className="container max-w-4xl mx-auto py-12 px-4">
       <Card className="border-none">
         <CardHeader>
-          <CardTitle className="text-xl">Shopping Cart</CardTitle>
-          <CardDescription>{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart</CardDescription>
+          <CardTitle className="text-xl">{translateText('Shopping Cart')}</CardTitle>
+          <CardDescription>{cartItems.length} {cartItems.length === 1 ? translateText('item') : translateText('items')} {translateText('in your cart')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-md overflow-hidden">
@@ -209,19 +209,19 @@ export default function Cart() {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
+                    {translateText('Product')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantity
+                    {translateText('Quantity')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
+                    {translateText('Price')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subtotal
+                    {translateText('Subtotal')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {translateText('Actions')}
                   </th>
                 </tr>
               </thead>
@@ -249,7 +249,7 @@ export default function Cart() {
                           </div>
                           {item.product?.vendorId && (
                             <div className="text-xs text-gray-500">
-                              Sold by: Vendor #{item.product.vendorId}
+                              {translateText('Sold by')}: {translateText('Vendor')} #{item.product.vendorId}
                             </div>
                           )}
                         </div>
