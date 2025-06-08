@@ -412,7 +412,7 @@ function MarketplacePromoSection() {
       case 'b2b':
         return '/attached_assets/Dedw3n Business B2B Header.png';
       case 'b2c':
-        return '/attached_assets/Copy of Dedw3n Business B2C Header.png';
+        return '/attached_assets/Dedw3n Business B2C Header_1749416079089.png';
       case 'c2c':
         return '/attached_assets/Dedw3n Marketplace (1).png';
       default:
