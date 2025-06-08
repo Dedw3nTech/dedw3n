@@ -4092,7 +4092,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription status endpoint
   app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser(req.user!.id);
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -4167,11 +4172,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's orders with optional status filter
   app.get('/api/orders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const status = req.query.status as string;
       
-      let query = db.select({
+      const conditions = [eq(orders.userId, userId)];
+      if (status) {
+        conditions.push(eq(orders.status, status));
+      }
+
+      const userOrders = await db.select({
         id: orders.id,
+        vendorId: orders.vendorId,
+        userId: orders.userId,
         totalAmount: orders.totalAmount,
         status: orders.status,
         shippingAddress: orders.shippingAddress,
@@ -4181,13 +4197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: orders.notes,
         createdAt: orders.createdAt,
         updatedAt: orders.updatedAt,
-      }).from(orders).where(eq(orders.userId, userId));
+      }).from(orders).where(and(...conditions)).orderBy(desc(orders.createdAt));
 
-      if (status) {
-        query = query.where(eq(orders.status, status));
-      }
-
-      const userOrders = await query.orderBy(desc(orders.createdAt));
       res.json(userOrders);
     } catch (error) {
       console.error('Error fetching user orders:', error);
@@ -4228,7 +4239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: products.id,
           name: products.name,
           description: products.description,
-          images: products.images,
+          imageUrl: products.imageUrl,
         },
         vendor: {
           id: vendors.id,
@@ -4316,7 +4327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         product: {
           id: products.id,
           name: products.name,
-          images: products.images,
+          imageUrl: products.imageUrl,
         },
         vendor: {
           id: vendors.id,
