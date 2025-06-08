@@ -31,36 +31,22 @@ export function LanguageSwitcher({
     if (language.code === selectedLanguage.code) return;
     
     setIsChanging(true);
-    try {
-      console.log(`[Language Switcher] Changing language to ${language.code}`);
-      
-      // Set the language immediately
-      setSelectedLanguage(language);
-      
-      // Save to localStorage for persistence
-      localStorage.setItem('dedw3n-language', language.code);
-      
-      // Trigger global website translation if not English
-      if (language.code !== 'EN' && language.code !== 'en') {
-        translateWebsite(language.code);
-      }
-      
-      toast({
-        title: "Language Changed",
-        description: `Site language changed to ${language.nativeName}`,
-        duration: 2000,
-      });
-      
-    } catch (error) {
-      console.error('Failed to change language:', error);
-      toast({
-        title: "Language Change Failed",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    } finally {
-      setIsChanging(false);
-    }
+    console.log(`[Language Switcher] Changing language to ${language.code}`);
+    
+    // Set the language immediately
+    setSelectedLanguage(language);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('dedw3n-language', language.code);
+    
+    // Show success message
+    toast({
+      title: "Language Changed",
+      description: `Site language changed to ${language.nativeName}`,
+      duration: 2000,
+    });
+    
+    setIsChanging(false);
   };
 
   if (isLoading) {
