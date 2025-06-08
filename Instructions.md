@@ -566,3 +566,259 @@ The phased approach ensures minimal disruption while delivering measurable impro
 5. **Monitoring**: Real-time performance analytics with Core Web Vitals
 
 The performance optimization execution is complete with all critical systems enhanced for maximum efficiency and user experience.
+
+## DATING PROFILE AUTO-GIFT SYSTEM IMPLEMENTATION
+
+### Feature Overview
+When users click the Plus (+) button on product cards in the marketplace, products will be automatically added to their dating profile's gift showcase section. This creates seamless integration between the marketplace and dating platform.
+
+### Current System Analysis
+
+#### Database Schema (Already Exists)
+The dating profiles table supports gift storage via `selectedGifts` field:
+```sql
+selectedGifts: integer("selected_gifts").array().default([])
+```
+
+#### Current Requirements
+- Dating profiles require minimum 3 gifts for activation
+- Gifts stored as product IDs in integer array
+- User authentication already implemented
+- Dating profile association exists through userId
+
+### Implementation Plan
+
+#### Phase 1: Backend API Development
+
+**New Endpoint**: `POST /api/dating-profile/gifts`
+```typescript
+// Add to server/routes.ts
+app.post('/api/dating-profile/gifts', async (req: Request, res: Response) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.user?.id || req.session?.passport?.user;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Get existing dating profile
+    let profile = await storage.getDatingProfile(userId);
+    
+    if (!profile) {
+      // Auto-create draft profile with first gift
+      profile = await storage.createDatingProfile({
+        userId,
+        selectedGifts: [productId],
+        displayName: '',
+        age: 0,
+        bio: '',
+        location: '',
+        interests: [],
+        lookingFor: '',
+        relationshipType: '',
+        profileImages: [],
+        isActive: false
+      });
+    } else {
+      const currentGifts = profile.selectedGifts || [];
+      
+      if (currentGifts.includes(productId)) {
+        return res.status(400).json({ message: 'Product already in your gifts' });
+      }
+      
+      if (currentGifts.length >= 20) {
+        return res.status(400).json({ message: 'Maximum 20 gifts allowed' });
+      }
+      
+      const updatedGifts = [...currentGifts, productId];
+      await storage.updateDatingProfile(userId, { selectedGifts: updatedGifts });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Product added to dating profile gifts',
+      giftCount: profile.selectedGifts?.length || 1
+    });
+    
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add gift' });
+  }
+});
+```
+
+#### Phase 2: Storage Layer Enhancement
+
+**Add to server/storage.ts**:
+```typescript
+// Get dating profile by userId
+async getDatingProfile(userId: number): Promise<DatingProfile | null> {
+  const result = await this.db
+    .select()
+    .from(datingProfiles)
+    .where(eq(datingProfiles.userId, userId))
+    .limit(1);
+  return result[0] || null;
+}
+
+// Create dating profile
+async createDatingProfile(profileData: InsertDatingProfile): Promise<DatingProfile> {
+  const result = await this.db
+    .insert(datingProfiles)
+    .values(profileData)
+    .returning();
+  return result[0];
+}
+
+// Update dating profile
+async updateDatingProfile(userId: number, updates: Partial<DatingProfile>): Promise<void> {
+  await this.db
+    .update(datingProfiles)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(datingProfiles.userId, userId));
+}
+```
+
+#### Phase 3: Frontend Integration
+
+**Update Plus Button in products.tsx**:
+```typescript
+// Add mutation for gift addition
+const addToGiftsMutation = useMutation({
+  mutationFn: async (productId: number) => {
+    const response = await apiRequest('POST', '/api/dating-profile/gifts', {
+      productId
+    });
+    return response.json();
+  },
+  onSuccess: (data) => {
+    toast({
+      title: "Success",
+      description: `Product added to your dating profile gifts! (${data.giftCount}/20)`,
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/dating-profile"] });
+  },
+  onError: (error: Error) => {
+    toast({
+      title: "Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  },
+});
+
+// Update Plus button click handler
+<Button 
+  variant="ghost" 
+  size="icon" 
+  className="h-9 w-9"
+  title="Add to Dating Profile"
+  onClick={(e) => {
+    e.stopPropagation();
+    addToGiftsMutation.mutate(product.id);
+  }}
+  disabled={addToGiftsMutation.isPending}
+>
+  {addToGiftsMutation.isPending ? (
+    <Loader2 className="h-4 w-4 animate-spin" />
+  ) : (
+    <Plus className="h-5 w-5 font-bold stroke-2" />
+  )}
+</Button>
+```
+
+#### Phase 4: Business Logic Rules
+
+**Gift Management**:
+- Maximum 20 gifts per dating profile
+- Minimum 3 gifts required for profile activation
+- Duplicate prevention (same product cannot be added twice)
+- Auto-create draft profile if none exists
+- All marketplace types supported (B2B/B2C/C2C)
+
+**User Experience Flow**:
+1. User clicks Plus (+) button on any product card
+2. System checks if user has dating profile
+3. If no profile: Auto-create draft profile with first gift
+4. If profile exists: Add gift to existing collection
+5. Show success feedback with current gift count
+6. Prevent duplicates and enforce 20-gift limit
+
+#### Phase 5: Dating Profile Enhancement
+
+**Gift Display in dating-profile.tsx**:
+```typescript
+// Add gift display section
+<div className="space-y-4">
+  <h3 className="text-lg font-semibold">Your Gift Showcase ({selectedGifts.length}/20)</h3>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {giftProducts.map((product, index) => (
+      <div key={product.id} className="relative">
+        <img 
+          src={product.imageUrl} 
+          alt={product.name}
+          className="w-full h-32 object-cover rounded-lg"
+        />
+        <p className="text-sm mt-2 truncate">{product.name}</p>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => removeGift(product.id)}
+          className="absolute top-2 right-2 h-6 w-6 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    ))}
+  </div>
+  {selectedGifts.length < 20 && (
+    <Button
+      variant="outline"
+      onClick={() => setLocation('/products')}
+      className="w-full"
+    >
+      Add More Gifts from Marketplace
+    </Button>
+  )}
+</div>
+```
+
+#### Phase 6: Cross-Platform Integration
+
+**Features**:
+- Gift status indicator on product cards
+- Quick profile completion prompts for new users
+- Gift recommendations based on user interests
+- Seamless navigation between marketplace and dating profile
+
+**Security & Performance**:
+- Input validation and sanitization
+- Rate limiting for gift additions
+- Efficient database queries with proper indexing
+- Client-side duplicate checking for better UX
+
+### Implementation Timeline
+
+**Week 1**: Backend API and database methods
+**Week 2**: Frontend integration and Plus button functionality  
+**Week 3**: Dating profile gift display and management
+**Week 4**: Testing, optimization, and user experience polish
+
+### Success Metrics
+
+**Technical**:
+- API response time < 200ms
+- Zero data loss incidents
+- 99.9% feature availability
+
+**Business**:
+- 40% increase in dating profile completions
+- 25% increase in marketplace engagement
+- 80% feature adoption rate among active users
+
+**User Experience**:
+- < 3 clicks to add gift
+- 95% user satisfaction
+- < 5% error rate
+
+This implementation creates a powerful bridge between the marketplace and dating platform, enhancing user engagement across both systems while maintaining data integrity and performance standards.
