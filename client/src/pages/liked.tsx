@@ -223,24 +223,15 @@ export default function LikedPage() {
                     {product.discountPrice ? (
                       <>
                         <span className="text-lg font-bold text-gray-900">
-                          {currency === 'GBP' 
-                            ? `£${product.discountPrice.toFixed(2)}`
-                            : formatCurrency(convertCurrency(product.discountPrice, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
-                          }
+                          {formatCurrency(convertCurrency(product.discountPrice, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
                         </span>
                         <span className="text-sm text-gray-500 line-through">
-                          {currency === 'GBP' 
-                            ? `£${product.price.toFixed(2)}`
-                            : formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
-                          }
+                          {formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
                         </span>
                       </>
                     ) : (
                       <span className="text-lg font-bold text-gray-900">
-                        {currency === 'GBP' 
-                          ? `£${product.price.toFixed(2)}`
-                          : formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
-                        }
+                        {formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
                       </span>
                     )}
                   </div>
