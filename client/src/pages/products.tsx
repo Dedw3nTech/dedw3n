@@ -803,7 +803,7 @@ export default function Products() {
           </div>
           
           {/* Vendor/Store information */}
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-[12px] text-blue-600 mt-1">
             Sold by {product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
           </div>
           
