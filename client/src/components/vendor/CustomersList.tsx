@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useUnifiedBatchTranslation } from '@/hooks/use-unified-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import {
   Card,
   CardContent,
@@ -129,8 +129,8 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
     "This feature tracks support tickets, response times, and customer satisfaction"
   ], []);
 
-  // Get translations
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(customerTexts, 'high');
+  // Get translations using unified master system
+  const { translations: translatedTexts, isLoading: isTranslating } = useMasterBatchTranslation(customerTexts, 'high');
 
   // Fetch real customer data
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
