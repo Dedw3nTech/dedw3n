@@ -438,7 +438,7 @@ const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
             Processing Payment...
           </>
         ) : (
-          `Complete Order - ${formatPriceFromGBP(total)}`
+          `${translateText('Complete Order')} - ${formatPriceFromGBP(total)}`
         )}
       </Button>
     </form>
@@ -565,15 +565,15 @@ export default function CheckoutNew() {
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'stripe',
-      name: 'Credit/Debit Card',
+      name: translateText('Credit/Debit Card'),
       icon: <CreditCard className="h-5 w-5" />,
-      description: 'Secure payment with Visa, Mastercard, Amex, PayPal'
+      description: translateText('Secure payment with Visa, Mastercard, Amex, PayPal')
     },
     {
       id: 'pawapay',
-      name: 'Mobile Money',
+      name: translateText('Mobile Money'),
       icon: <Phone className="h-5 w-5" />,
-      description: 'Pay with MTN, Airtel, Vodafone, Orange mobile money'
+      description: translateText('Pay with MTN, Airtel, Vodafone, Orange mobile money')
     }
   ];
 
@@ -1172,7 +1172,7 @@ export default function CheckoutNew() {
                     <div className="flex items-center">
                       <Lock className="h-4 w-4 text-blue-600 mr-2" />
                       <span className="text-sm text-blue-800 font-medium">
-                        Your payment information is secure and encrypted
+                        {translateText('Your payment information is secure and encrypted')}
                       </span>
                     </div>
                   </div>
@@ -1182,7 +1182,7 @@ export default function CheckoutNew() {
                       variant="outline"
                       onClick={() => setCurrentStep('shipping')}
                     >
-                      Back to Shipping
+                      {translateText('Back to Shipping')}
                     </Button>
                   </div>
                 </CardContent>
