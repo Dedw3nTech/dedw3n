@@ -70,8 +70,6 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('GBP');
-  const [convertedPrice, setConvertedPrice] = useState<number | null>(null);
-  const [convertedDiscountPrice, setConvertedDiscountPrice] = useState<number | null>(null);
   
   // Review form state
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -83,7 +81,6 @@ export default function ProductDetail() {
   const [isGiftSearchOpen, setIsGiftSearchOpen] = useState(false);
   const [giftSearchQuery, setGiftSearchQuery] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
-  const [isConverting, setIsConverting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
   // User search query for gift functionality
@@ -353,44 +350,7 @@ export default function ProductDetail() {
     });
   };
   
-  // Effect to handle currency conversion - simplified for better reliability
-  useEffect(() => {
-    if (!product) return;
-    
-    if (selectedCurrency === 'GBP') {
-      setConvertedPrice(null);
-      setConvertedDiscountPrice(null);
-      setIsConverting(false);
-      return;
-    }
-    
-    try {
-      // Convert main price (synchronous function)
-      const newPrice = convertCurrency(product.price, 'GBP', selectedCurrency);
-      setConvertedPrice(newPrice);
-      
-      // Convert discount price if it exists
-      if (product.discountPrice && product.discountPrice < product.price) {
-        const newDiscountPrice = convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
-        setConvertedDiscountPrice(newDiscountPrice);
-      } else {
-        setConvertedDiscountPrice(null);
-      }
-      
-      setIsConverting(false);
-      
-    } catch (error) {
-      console.error('Error converting currency:', error);
-      setConvertedPrice(null);
-      setConvertedDiscountPrice(null);
-      setIsConverting(false);
-      toast({
-        title: 'Currency Conversion Error',
-        description: 'Unable to convert currency at this time.',
-        variant: 'destructive',
-      });
-    }
-  }, [product, selectedCurrency, toast]);
+
 
   // Loading state
   if (isLoading) {
@@ -486,10 +446,16 @@ export default function ProductDetail() {
                   {product.discountPrice && product.discountPrice < product.price ? (
                     <>
                       <span className="text-2xl font-bold text-primary">
-                        {formatPrice(product.discountPrice)}
+                        {selectedCurrency === 'GBP' 
+                          ? formatPrice(product.discountPrice)
+                          : formatCurrency(convertCurrency(product.discountPrice, 'GBP', selectedCurrency), selectedCurrency)
+                        }
                       </span>
                       <span className="text-lg text-gray-500 line-through">
-                        {formatPrice(product.price)}
+                        {selectedCurrency === 'GBP' 
+                          ? formatPrice(product.price)
+                          : formatCurrency(convertCurrency(product.price, 'GBP', selectedCurrency), selectedCurrency)
+                        }
                       </span>
                       <Badge className="bg-red-500">
                         Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
@@ -497,7 +463,10 @@ export default function ProductDetail() {
                     </>
                   ) : (
                     <span className="text-2xl font-bold text-gray-900">
-                      {formatPrice(product.price)}
+                      {selectedCurrency === 'GBP' 
+                        ? formatPrice(product.price)
+                        : formatCurrency(convertCurrency(product.price, 'GBP', selectedCurrency), selectedCurrency)
+                      }
                     </span>
                   )}
                   
@@ -547,45 +516,8 @@ export default function ProductDetail() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  {selectedCurrency !== 'GBP' && (
-                    <>
-                      {isConverting ? (
-                        <Loader2 className="ml-2 h-4 w-4 animate-spin text-primary" />
-                      ) : (
-                        <RefreshCw 
-                          className="ml-2 h-4 w-4 text-gray-500 cursor-pointer hover:text-primary" 
-                          onClick={() => {
-                            setConvertedPrice(null);
-                            setConvertedDiscountPrice(null);
-                            setSelectedCurrency(selectedCurrency); // Retrigger conversion
-                          }}
-                        />
-                      )}
-                    </>
-                  )}
                 </div>
               </div>
-              
-              {/* Converted price display */}
-              {selectedCurrency !== 'GBP' && convertedPrice !== null && (
-                <div className="mt-1 text-sm text-gray-600">
-                  {convertedDiscountPrice !== null ? (
-                    <>
-                      <span className="font-medium">
-                        {formatCurrency(convertedDiscountPrice, selectedCurrency)}
-                      </span>
-                      <span className="ml-2 text-gray-400 line-through">
-                        {formatCurrency(convertedPrice, selectedCurrency)}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-medium">
-                      {formatCurrency(convertedPrice, selectedCurrency)}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
