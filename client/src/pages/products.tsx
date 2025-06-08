@@ -135,7 +135,10 @@ export default function Products() {
     
     // Friend & Store Options (10 texts)
     "Friend Options", "Friends only", "Local pickup only", "Store Options",
-    "Verified stores only", "Free shipping", "Next day delivery", "Business Options"
+    "Verified stores only", "Free shipping", "Next day delivery", "Business Options",
+    
+    // Favorites Actions (2 texts)
+    "Add to Favorites", "Remove from Favorites"
   ];
 
   const { translations: t } = useMasterBatchTranslation(productTexts);
@@ -167,7 +170,9 @@ export default function Products() {
     onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
     
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
-    freeShippingText, nextDayDeliveryText, businessOptionsText
+    freeShippingText, nextDayDeliveryText, businessOptionsText,
+    
+    addToFavoritesText, removeFromFavoritesText
   ] = t || textsToTranslate;
   
   // All individual translation calls now consolidated in mega-batch above

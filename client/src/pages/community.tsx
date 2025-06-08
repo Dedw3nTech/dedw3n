@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Users, Loader2, RefreshCw, Star, Zap, TrendingUp, MessageCircle, Video, Heart } from "lucide-react";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LatestProductsCard } from "@/components/products/LatestProductsCard";
 import { PopularProductsCard } from "@/components/products/PopularProductsCard";
 import { TrendingCategoriesCard } from "@/components/products/TrendingCategoriesCard";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 
@@ -67,7 +68,7 @@ function CommunityTopPromoSection() {
     <div className="w-full mb-6">
       <img 
         src={communityTopPromo}
-        alt="Dedwen Community - Connect and Share"
+        alt={communityAltText}
         className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
       />
     </div>
@@ -83,7 +84,7 @@ function CommunityBottomPromoSection() {
     <div className="w-full mt-8">
       <img 
         src={communityBottomPromo}
-        alt="Join the Dedwen Community"
+        alt={joinCommunityAltText}
         className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
       />
     </div>
@@ -97,6 +98,83 @@ export default function CommunityPage() {
   const [isAdVisible, setIsAdVisible] = useState(true);
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country' | 'city'>('new');
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Master Translation System - Community Page Mega-Batch (62 texts)
+  const communityTexts = useMemo(() => [
+    // Page Headers & Meta (4 texts)
+    "Dedwen Community - Connect and Share", "Join the Dedwen Community",
+    "Failed to fetch community feed", "Community Feed",
+    
+    // Navigation & Sorting (8 texts)
+    "New", "Trending", "Popular", "Following", "My Region", "My Country", "My City", "Try Again",
+    
+    // Loading States (6 texts)
+    "Loading community posts...", "Loading more posts...", "Refresh Feed",
+    "You've reached the end!", "Check back later for new content or try refreshing to see if there are any updates.",
+    "You've seen all available posts in the community feed.",
+    
+    // Empty States & CTAs (6 texts)
+    "No posts yet", "Be the first to share something with the community!",
+    "Create First Post", "Refresh", "Create Post", "Share your thoughts",
+    
+    // Post Actions & Interactions (12 texts)
+    "Like", "Comment", "Share", "Save", "Report", "Edit Post", "Delete Post",
+    "Copy Link", "Hide Post", "Follow", "Unfollow", "Block User",
+    
+    // Community Features (8 texts)
+    "Community Guidelines", "Events", "Groups", "Members", "Discussions",
+    "Announcements", "Local Posts", "Global Posts",
+    
+    // Status Messages (6 texts)
+    "Post created successfully", "Failed to create post", "Post deleted",
+    "Content reported", "User blocked", "Following user",
+    
+    // Advertisement Sections (4 texts)
+    "Sponsored Content", "Advertisement", "Promoted Post", "Featured Content",
+    
+    // Content Moderation (4 texts)
+    "Inappropriate Content", "Spam", "Harassment", "Submit Report",
+    
+    // Time & Date (4 texts)
+    "Just now", "minutes ago", "hours ago", "days ago"
+  ], []);
+
+  const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(communityTexts);
+  
+  // Extract translations with descriptive variable names
+  const [
+    // Page Headers & Meta
+    communityAltText, joinCommunityAltText, fetchErrorText, communityFeedText,
+    
+    // Navigation & Sorting
+    newText, trendingText, popularText, followingText, myRegionText, myCountryText, myCityText, tryAgainText,
+    
+    // Loading States
+    loadingPostsText, loadingMoreText, refreshFeedText, reachedEndText, checkBackLaterText, seenAllPostsText,
+    
+    // Empty States & CTAs
+    noPostsText, firstPostPromptText, createFirstPostText, refreshText, createPostText, shareThoughtsText,
+    
+    // Post Actions & Interactions
+    likeText, commentText, shareText, saveText, reportText, editPostText, deletePostText,
+    copyLinkText, hidePostText, followText, unfollowText, blockUserText,
+    
+    // Community Features
+    guidelinesText, eventsText, groupsText, membersText, discussionsText,
+    announcementsText, localPostsText, globalPostsText,
+    
+    // Status Messages
+    postCreatedText, postFailedText, postDeletedText, contentReportedText, userBlockedText, followingUserText,
+    
+    // Advertisement Sections
+    sponsoredText, advertisementText, promotedPostText, featuredContentText,
+    
+    // Content Moderation
+    inappropriateText, spamText, harassmentText, submitReportText,
+    
+    // Time & Date
+    justNowText, minutesAgoText, hoursAgoText, daysAgoText
+  ] = translations || communityTexts;
 
   // Track if we've reached the end of feed to prevent unnecessary calls
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
