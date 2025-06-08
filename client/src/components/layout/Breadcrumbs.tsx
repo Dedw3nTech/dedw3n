@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useOptimizedBatchTranslation } from "@/hooks/use-optimized-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useMemo } from "react";
 
 interface BreadcrumbItem {
@@ -32,8 +32,8 @@ export function Breadcrumbs() {
     'Community Guidelines', 'Site Map'
   ], []);
 
-  // Use optimized batch translation with error boundary protection
-  const translatedTexts = useOptimizedBatchTranslation(breadcrumbTexts);
+  // Use master translation system for unified performance
+  const { translations: translatedTexts } = useMasterBatchTranslation(breadcrumbTexts, 'high');
   
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
