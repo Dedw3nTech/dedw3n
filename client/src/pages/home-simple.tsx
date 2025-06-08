@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -11,6 +11,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@shared/schema";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 
 import {
@@ -43,6 +44,43 @@ export default function Home() {
   
   // Set page title
   usePageTitle({ title: 'Home' });
+
+  // Master Translation mega-batch for Home page (30+ texts)
+  const homeTexts = useMemo(() => [
+    // Main Navigation (6 texts)
+    "Browse Marketplace", "Join Community", "Find Matches", 
+    "Explore B2C", "Explore B2B", "Explore C2C",
+    
+    // Welcome Section (8 texts)
+    "Welcome to Dedw3n", "Your All-in-One Platform", "Discover amazing products",
+    "Connect with like-minded people", "Find meaningful relationships", "Start exploring",
+    "Get Started", "Learn More",
+    
+    // Featured Categories (6 texts)
+    "Popular Categories", "Trending Now", "New Arrivals", 
+    "Best Sellers", "Featured Products", "Recently Added",
+    
+    // Action Buttons (8 texts)
+    "Add to Cart", "View Details", "Share Product", "Add to Favorites",
+    "Quick Buy", "Compare", "Save for Later", "Contact Seller",
+    
+    // Market Types (3 texts)
+    "Consumer to Consumer", "Business to Consumer", "Business to Business"
+  ], []);
+
+  const [t] = useMasterBatchTranslation(homeTexts);
+  const [
+    browseMarketplaceText, joinCommunityText, findMatchesText,
+    exploreB2CText, exploreB2BText, exploreC2CText,
+    welcomeText, platformSubtitleText, discoverProductsText,
+    connectPeopleText, findRelationshipsText, startExploringText,
+    getStartedText, learnMoreText,
+    popularCategoriesText, trendingNowText, newArrivalsText,
+    bestSellersText, featuredProductsText, recentlyAddedText,
+    addToCartText, viewDetailsText, shareProductText, addToFavoritesText,
+    quickBuyText, compareText, saveForLaterText, contactSellerText,
+    c2cText, b2cText, b2bText
+  ] = t || homeTexts;
 
   useEffect(() => {
     setView("marketplace");
