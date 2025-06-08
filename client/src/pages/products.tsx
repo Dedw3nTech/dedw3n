@@ -945,18 +945,18 @@ export default function Products() {
     switch (marketType) {
       case 'b2b':
         return {
-          video: '/attached_assets/car selling online  .mp4',
-          title: 'B2B Professional Solutions'
+          video: '/attached_assets/Cafe_1749419425062.mp4',
+          title: 'Business Networking & Solutions'
         };
       case 'b2c':
         return {
-          video: '/attached_assets/Cafe.mp4',
-          title: 'Discover Amazing Products'
+          video: '/attached_assets/Be yourself_1749419131578.mp4',
+          title: 'Be Yourself - Shop Your Style'
         };
       case 'c2c':
         return {
-          video: '/attached_assets/Phone finger _1749111831409.mp4',
-          title: 'Connect & Trade with Others'
+          video: '/attached_assets/car selling online  _1749419270298.mp4',
+          title: 'Sell Your Vehicle Online'
         };
       default:
         return {
@@ -972,10 +972,12 @@ export default function Products() {
       {/* Video Display Component */}
       <div className="mb-6">
         <VideoDisplayCard
-          entityContent={getMarketplaceVideo()}
-          onClose={() => {}}
+          videoSource={getMarketplaceVideo().video}
+          title={getMarketplaceVideo().title}
+          marketType={marketType as 'b2b' | 'b2c' | 'c2c'}
           autoPlay={true}
           showControls={true}
+          onClose={() => {}}
         />
       </div>
 
