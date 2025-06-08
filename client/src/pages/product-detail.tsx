@@ -422,7 +422,7 @@ export default function ProductDetail() {
           {!vendorLoading && vendor && (
             <div className="mb-4">
               <p className="text-sm text-gray-500">
-                Sold by{' '}
+                {translateText('Sold by')}{' '}
                 <Link href={`/vendor/${vendor.id}`} className="text-primary hover:underline">
                   {vendor.storeName}
                 </Link>
