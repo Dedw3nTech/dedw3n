@@ -29,10 +29,6 @@ export default function TermsPage() {
     }
     return text;
   };
-  const [
-    termsOfServiceText, termsDescriptionText,
-    serviceUsageText, userResponsibilitiesText, platformGuidelinesText, legalInformationText
-  ] = t || termsTexts;
 
   return (
     <>

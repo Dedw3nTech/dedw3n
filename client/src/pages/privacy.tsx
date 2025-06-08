@@ -29,10 +29,6 @@ export default function PrivacyPage() {
     }
     return text;
   };
-  const [
-    privacyPolicyText, privacyDescriptionText,
-    dataCollectionText, informationSecurityText, userRightsText, contactUsText
-  ] = t || privacyTexts;
 
   return (
     <>

@@ -47,12 +47,6 @@ export default function SearchPage() {
     }
     return text;
   };
-  const [
-    searchText, searchResultsText, noResultsFoundText, searchForText, allText, productsText, usersText, servicesText, vendorsText, eventsText,
-    filterResultsText, sortByText, relevanceText, priceLowToHighText, priceHighToLowText, newestText, oldestText, mostPopularText,
-    productText, userText, serviceText, vendorText, eventText, categoryText, brandText, locationText,
-    viewDetailsText, addToCartText, contactText, followText
-  ] = t || searchTexts;
 
   const [location] = useLocation();
   const [searchParams, setSearchParams] = useState<URLSearchParams>();

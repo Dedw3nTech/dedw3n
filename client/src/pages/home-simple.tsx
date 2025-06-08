@@ -81,18 +81,6 @@ export default function Home() {
     }
     return text;
   };
-  const [
-    browseMarketplaceText, joinCommunityText, findMatchesText,
-    exploreB2CText, exploreB2BText, exploreC2CText,
-    welcomeText, platformSubtitleText, discoverProductsText,
-    connectPeopleText, findRelationshipsText, startExploringText,
-    getStartedText, learnMoreText,
-    popularCategoriesText, trendingNowText, newArrivalsText,
-    bestSellersText, featuredProductsText, recentlyAddedText,
-    addToCartText, viewDetailsText, shareProductText, addToFavoritesText,
-    quickBuyText, compareText, saveForLaterText, contactSellerText,
-    c2cText, b2cText, b2bText
-  ] = t || homeTexts;
 
   useEffect(() => {
     setView("marketplace");
