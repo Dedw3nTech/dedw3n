@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq, or, like, sql, and, ne, inArray, desc, count, sum, avg } from "drizzle-orm";
+import { eq, or, like, sql, and, ne, inArray, desc, count, sum, avg, isNull } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema } from "@shared/schema";
 
 import { setupAuth, hashPassword } from "./auth";
@@ -7810,7 +7810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select({
           userId: orders.userId,
           totalOrders: sql<number>`count(${orders.id})`,
-          totalSpent: sql<number>`sum(${orders.total})`,
+          totalSpent: sql<number>`sum(${orders.totalAmount})`,
           lastPurchaseDate: sql<string>`max(${orders.createdAt})`
         })
         .from(orders)
