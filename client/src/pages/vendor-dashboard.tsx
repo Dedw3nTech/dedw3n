@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,20 +73,83 @@ export default function VendorDashboard() {
     "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports"
   ], []);
 
-  const { translations: t, isLoading } = useMasterBatchTranslation(vendorTexts);
+  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(vendorTexts);
   
-  const [
-    dashboardText, productsText, ordersText, customersText, shippingText, analyticsText, settingsText, marketingText,
-    overviewText, totalSalesText, activeProductsText, pendingOrdersText, totalCustomersText, revenueMonthText,
-    salesAnalyticsText, performanceMetricsText, growthRateText, conversionRateText, avgOrderValueText, customerSatisfactionText,
-    productManagementText, addNewProductText, editProductText, deleteProductText, viewDetailsText, productStatusText,
-    inStockText, outOfStockText, lowStockText, draftText, publishedText, featuredText, onSaleText, productCategoriesText, inventoryText, pricingText,
-    orderManagementText, recentOrdersText, orderStatusText, pendingText, processingText, shippedText, deliveredText, cancelledText,
-    viewOrderText, updateStatusText, printInvoiceText, trackShipmentText,
-    customerManagementText, customerListText, customerDetailsText, orderHistoryText, customerReviewsText, contactCustomerText, customerSupportText, vipCustomersText,
-    salesReportsText, performanceAnalyticsText, revenueChartsText, productPerformanceText, customerInsightsText, trafficAnalysisText,
-    exportDataText, monthlyReportText, yearlyReportText, realTimeDataText, dashboardWidgetsText, customReportsText
-  ] = t || vendorTexts;
+  const finalTexts = translatedTexts || vendorTexts;
+  
+  // Extract translations with proper indexing
+  const dashboardText = finalTexts[0] || "Dashboard";
+  const productsText = finalTexts[1] || "Products";
+  const ordersText = finalTexts[2] || "Orders";
+  const customersText = finalTexts[3] || "Customers";
+  const shippingText = finalTexts[4] || "Shipping";
+  const analyticsText = finalTexts[5] || "Analytics";
+  const settingsText = finalTexts[6] || "Settings";
+  const marketingText = finalTexts[7] || "Marketing";
+  const overviewText = finalTexts[8] || "Overview";
+  const totalSalesText = finalTexts[9] || "Total Sales";
+  const activeProductsText = finalTexts[10] || "Active Products";
+  const pendingOrdersText = finalTexts[11] || "Pending Orders";
+  const totalCustomersText = finalTexts[12] || "Total Customers";
+  const revenueMonthText = finalTexts[13] || "Revenue This Month";
+  const salesAnalyticsText = finalTexts[14] || "Sales Analytics";
+  const performanceMetricsText = finalTexts[15] || "Performance Metrics";
+  const growthRateText = finalTexts[16] || "Growth Rate";
+  const conversionRateText = finalTexts[17] || "Conversion Rate";
+  const avgOrderValueText = finalTexts[18] || "Average Order Value";
+  const customerSatisfactionText = finalTexts[19] || "Customer Satisfaction";
+  const productManagementText = finalTexts[20] || "Product Management";
+  const addNewProductText = finalTexts[21] || "Add New Product";
+  const editProductText = finalTexts[22] || "Edit Product";
+  const deleteProductText = finalTexts[23] || "Delete Product";
+  const viewDetailsText = finalTexts[24] || "View Details";
+  const productStatusText = finalTexts[25] || "Product Status";
+  const inStockText = finalTexts[26] || "In Stock";
+  const outOfStockText = finalTexts[27] || "Out of Stock";
+  const lowStockText = finalTexts[28] || "Low Stock";
+  const draftText = finalTexts[29] || "Draft";
+  const publishedText = finalTexts[30] || "Published";
+  const featuredText = finalTexts[31] || "Featured";
+  const onSaleText = finalTexts[32] || "On Sale";
+  const productCategoriesText = finalTexts[33] || "Product Categories";
+  const inventoryText = finalTexts[34] || "Inventory";
+  const pricingText = finalTexts[35] || "Pricing";
+  const orderManagementText = finalTexts[36] || "Order Management";
+  const recentOrdersText = finalTexts[37] || "Recent Orders";
+  const orderStatusText = finalTexts[38] || "Order Status";
+  const pendingText = finalTexts[39] || "Pending";
+  const processingText = finalTexts[40] || "Processing";
+  const shippedText = finalTexts[41] || "Shipped";
+  const deliveredText = finalTexts[42] || "Delivered";
+  const cancelledText = finalTexts[43] || "Cancelled";
+  const viewOrderText = finalTexts[44] || "View Order";
+  const updateStatusText = finalTexts[45] || "Update Status";
+  const printInvoiceText = finalTexts[46] || "Print Invoice";
+  const trackShipmentText = finalTexts[47] || "Track Shipment";
+  const customerManagementText = finalTexts[48] || "Customer Management";
+  const customerListText = finalTexts[49] || "Customer List";
+  const customerDetailsText = finalTexts[50] || "Customer Details";
+  const orderHistoryText = finalTexts[51] || "Order History";
+  const customerReviewsText = finalTexts[52] || "Customer Reviews";
+  const contactCustomerText = finalTexts[53] || "Contact Customer";
+  const customerSupportText = finalTexts[54] || "Customer Support";
+  const vipCustomersText = finalTexts[55] || "VIP Customers";
+  const salesReportsText = finalTexts[56] || "Sales Reports";
+  const performanceAnalyticsText = finalTexts[57] || "Performance Analytics";
+  const revenueChartsText = finalTexts[58] || "Revenue Charts";
+  const productPerformanceText = finalTexts[59] || "Product Performance";
+  const customerInsightsText = finalTexts[60] || "Customer Insights";
+  const trafficAnalysisText = finalTexts[61] || "Traffic Analysis";
+  const exportDataText = finalTexts[62] || "Export Data";
+  const monthlyReportText = finalTexts[63] || "Monthly Report";
+  const yearlyReportText = finalTexts[64] || "Yearly Report";
+  const realTimeDataText = finalTexts[65] || "Real-time Data";
+  const dashboardWidgetsText = finalTexts[66] || "Dashboard Widgets";
+  const customReportsText = finalTexts[67] || "Custom Reports";
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
   const { user } = useAuth();
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
@@ -96,9 +159,10 @@ export default function VendorDashboard() {
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
 
-
+  // Extended text arrays for vendor dashboard components
+  const extendedTexts = [
     "Settings",
-    "Analytics",
+    "Analytics", 
     "Payment Info",
     "Promotions",
     "Commission",
@@ -109,7 +173,7 @@ export default function VendorDashboard() {
     // Authentication & Access
     "Loading Vendor Dashboard",
     "Verifying your vendor access...",
-    "Please log in to access your vendor dashboard",
+    "Please log in to access your vendor dashboard", 
     "You need to be authenticated to access vendor features and manage your store.",
     "Go to Login",
     
@@ -224,7 +288,11 @@ export default function VendorDashboard() {
     "Quantity",
     "Price",
     "Item Total",
-    "No items in this order",
+    "No items in this order"
+  ];
+
+  // Additional extended texts for advanced features
+  const additionalTexts = [
     "Open menu",
     
     // Marketing Section

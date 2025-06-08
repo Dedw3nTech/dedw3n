@@ -14,6 +14,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { 
   Loader2, 
   Users, 
@@ -79,24 +91,6 @@ export default function AdminDashboard() {
     platformAnalyticsText, revenueReportsText, userActivityText, productPerformanceText, salesTrendsText,
     exportDataText, generateReportText, viewDetailsText, filterText, dateRangeText, downloadText, printText
   ] = t || adminTexts;
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import UserModeration from "@/components/admin/UserModeration";
-import PostModeration from "@/components/admin/PostModeration";
-import EnhancedModeration from "@/components/admin/EnhancedModeration";
-import AIInsights from "@/components/social/AIInsights";
-import OrderManagement from "@/components/admin/OrderManagement";
-import CommunityModeration from "@/components/admin/CommunityModeration";
 
 // Import placeholder component for development
 const PlaceholderComponent = ({ title }: { title: string }) => (
