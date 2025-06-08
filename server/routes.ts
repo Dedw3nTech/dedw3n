@@ -3813,7 +3813,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const currentUserId = req.user!.id;
+      const currentUserId = req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const otherUserId = parseInt(req.params.userId);
       
       if (isNaN(otherUserId)) {
@@ -3836,7 +3840,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const senderId = req.user!.id;
+      const senderId = req.user?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const receiverId = parseInt(req.params.userId);
       const { content, attachmentUrl, attachmentType, messageType = 'text' } = req.body;
 
@@ -3863,7 +3871,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const senderId = req.user!.id;
+      const senderId = req.user?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const { recipientUsername, firstMessage } = req.body;
 
       // Find recipient by username
@@ -3897,7 +3908,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/messages/mark-read/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const currentUserId = req.user!.id;
+      const currentUserId = req.user?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const otherUserId = parseInt(req.params.userId);
 
       if (isNaN(otherUserId)) {
@@ -3915,7 +3930,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/messages/:messageId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const messageId = parseInt(req.params.messageId);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
 
       if (isNaN(messageId)) {
         return res.status(400).json({ message: 'Invalid message ID' });
@@ -4010,7 +4028,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Apply conditions if any
       if (conditions.length > 0) {
-        query = query.where(sql`${conditions.reduce((acc, condition) => acc ? sql`${acc} AND ${condition}` : condition, null)}`);
+        const combinedCondition = conditions.reduce((acc, condition) => 
+          acc ? sql`${acc} AND ${condition}` : condition
+        );
+        query = query.where(combinedCondition);
       }
 
       // Apply sorting
