@@ -414,7 +414,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  Following
+                  {followingText}
                 </button>
                 <button
                   onClick={() => setSortBy('region')}
@@ -424,7 +424,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  My Region
+                  {myRegionText}
                 </button>
                 <button
                   onClick={() => setSortBy('country')}
@@ -434,7 +434,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  My Country
+                  {myCountryText}
                 </button>
                 <button
                   onClick={() => setSortBy('city')}
@@ -444,7 +444,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  My City
+                  {myCityText}
                 </button>
               </div>
             </div>

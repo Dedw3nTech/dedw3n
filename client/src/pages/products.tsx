@@ -175,6 +175,9 @@ export default function Products() {
     addToFavoritesText, removeFromFavoritesText
   ] = t || textsToTranslate;
   
+  // Fix for missing shareProductText variable
+  const shareProductText = shareProductTooltipText;
+  
   // All individual translation calls now consolidated in mega-batch above
   
   // Repost dialog state
