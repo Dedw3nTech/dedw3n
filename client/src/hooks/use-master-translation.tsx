@@ -301,7 +301,7 @@ class MasterTranslationManager {
     if (!batch || batch.texts.length === 0) return;
 
     try {
-      const uniqueTexts = [...new Set(batch.texts)];
+      const uniqueTexts = Array.from(new Set(batch.texts));
       const translations = await this.performBatchTranslation(uniqueTexts, batch.language, batch.priority);
       
       // Update cache
