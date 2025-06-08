@@ -849,19 +849,19 @@ export default function CheckoutNew() {
                         id="zipCode"
                         value={shippingInfo.zipCode}
                         onChange={(e) => handleShippingChange('zipCode', e.target.value)}
-                        placeholder="Enter postal code"
+                        placeholder={translateText('Enter postal code')}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="country">Country *</Label>
+                    <Label htmlFor="country">{translateText('Country')} *</Label>
                     <Select 
                       value={shippingInfo.country} 
                       onValueChange={(value) => handleShippingChange('country', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
+                        <SelectValue placeholder={translateText('Select country')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Afghanistan">Afghanistan</SelectItem>
@@ -1065,12 +1065,12 @@ export default function CheckoutNew() {
                   </div>
 
                   <div>
-                    <Label htmlFor="specialInstructions">Special Instructions (Optional)</Label>
+                    <Label htmlFor="specialInstructions">{translateText('Special Instructions (Optional)')}</Label>
                     <Textarea
                       id="specialInstructions"
                       value={shippingInfo.specialInstructions}
                       onChange={(e) => handleShippingChange('specialInstructions', e.target.value)}
-                      placeholder="Any special delivery instructions..."
+                      placeholder={translateText('Any special delivery instructions...')}
                       rows={3}
                     />
                   </div>
@@ -1080,7 +1080,7 @@ export default function CheckoutNew() {
                       onClick={() => setCurrentStep('payment')}
                       disabled={!isShippingValid()}
                     >
-                      Continue to Payment
+                      {translateText('Continue to Payment')}
                     </Button>
                   </div>
                 </CardContent>
@@ -1093,13 +1093,13 @@ export default function CheckoutNew() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <CreditCard className="h-5 w-5 mr-2" />
-                    Payment Information
+                    {translateText('Payment Information')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Payment Method Selection */}
                   <div>
-                    <Label className="text-base font-medium">Select Payment Method</Label>
+                    <Label className="text-base font-medium">{translateText('Select Payment Method')}</Label>
                     <div className="mt-3 space-y-3">
                       {paymentMethods.map((method) => (
                         <div
@@ -1136,7 +1136,7 @@ export default function CheckoutNew() {
                       {!clientSecret ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                          Setting up payment...
+                          {translateText('Setting up payment...')}
                         </div>
                       ) : (
                         <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -1198,7 +1198,7 @@ export default function CheckoutNew() {
                 <CardContent className="space-y-6">
                   {/* Shipping Details */}
                   <div>
-                    <h4 className="font-semibold mb-2">Shipping Address</h4>
+                    <h4 className="font-semibold mb-2">{translateText('Shipping Address')}</h4>
                     <div className="text-sm text-gray-600 space-y-1">
                       <p>{shippingInfo.firstName} {shippingInfo.lastName}</p>
                       <p>{shippingInfo.address}</p>
@@ -1212,7 +1212,7 @@ export default function CheckoutNew() {
 
                   {/* Payment Method */}
                   <div>
-                    <h4 className="font-semibold mb-2">Payment Method</h4>
+                    <h4 className="font-semibold mb-2">{translateText('Payment Method')}</h4>
                     <p className="text-sm text-gray-600">
                       {paymentMethods.find(m => m.id === selectedPaymentMethod)?.name}
                     </p>
@@ -1222,7 +1222,7 @@ export default function CheckoutNew() {
 
                   {/* Order Items */}
                   <div>
-                    <h4 className="font-semibold mb-4">Order Items</h4>
+                    <h4 className="font-semibold mb-4">{translateText('Order Items')}</h4>
                     <div className="space-y-3">
                       {cartItems.map((item: CartItem) => (
                         <div key={item.id} className="flex items-center space-x-3">
@@ -1236,8 +1236,8 @@ export default function CheckoutNew() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{item.product.name}</p>
-                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            <p className="text-sm font-medium truncate">{translateText(item.product.name)}</p>
+                            <p className="text-sm text-gray-500">{translateText('Qty')}: {item.quantity}</p>
                           </div>
                           <p className="text-sm font-medium">
                             {formatPriceFromGBP(item.product.price * item.quantity)}
