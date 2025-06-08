@@ -30,20 +30,6 @@ interface Product {
   };
 }
 
-// Component for translating product titles using Master Translation
-const ProductTitle = ({ productName, onClick }: { productName: string; onClick: () => void }) => {
-  const { translations } = useMasterBatchTranslation([productName]);
-  const [translatedText] = translations || [productName];
-  return (
-    <h3 
-      className="font-medium text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-gray-700"
-      onClick={onClick}
-    >
-      {translatedText}
-    </h3>
-  );
-};
-
 export default function LikedPage() {
   const [, setLocation] = useLocation();
   const { marketType } = useMarketType();
@@ -54,7 +40,7 @@ export default function LikedPage() {
     queryKey: ['/api/liked-products'],
   });
 
-  // Define texts for translation
+  // Define texts for translation including product names for batch processing
   const pageTexts = useMemo(() => [
     "Liked Products",
     "No liked products yet",
@@ -64,11 +50,19 @@ export default function LikedPage() {
     "Add to Cart",
     "NEW",
     "SALE",
-    "No Image"
-  ], []);
+    "No Image",
+    // Add all product names to the batch for efficient translation
+    ...(likedProducts?.map(product => product.name) || [])
+  ], [likedProducts]);
 
   // Use master translation system for unified performance
   const { translations: translatedTexts, isLoading: translationsLoading } = useMasterBatchTranslation(pageTexts, 'normal');
+
+  // Helper function to get translated product name
+  const getTranslatedProductName = (productName: string) => {
+    const productIndex = pageTexts.indexOf(productName);
+    return productIndex >= 0 ? (translatedTexts[productIndex] || productName) : productName;
+  };
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
@@ -201,10 +195,12 @@ export default function LikedPage() {
 
                 <div className="p-4 flex-1 flex flex-col">
                   {/* Product title */}
-                  <ProductTitleComponent 
-                    productName={product.name}
+                  <h3 
+                    className="font-medium text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-gray-700"
                     onClick={() => setLocation(`/product/${product.id}`)}
-                  />
+                  >
+                    {getTranslatedProductName(product.name)}
+                  </h3>
 
                   {/* Price */}
                   <div className="flex items-center gap-2 mb-3">
