@@ -549,7 +549,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Bottom Community Advertisement */}
-        <CommunityBottomPromoSection />
+        <CommunityBottomPromoSection altText={joinCommunityAltText} />
       </div>
       </Container>
     </>

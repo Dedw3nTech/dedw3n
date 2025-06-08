@@ -175,8 +175,9 @@ export default function Products() {
     addToFavoritesText, removeFromFavoritesText
   ] = t || textsToTranslate;
   
-  // Fix for missing shareProductText variable
+  // Fix for missing variables
   const shareProductText = shareProductTooltipText;
+  const shareViaEmailText = "Share via Email";
   
   // All individual translation calls now consolidated in mega-batch above
   
