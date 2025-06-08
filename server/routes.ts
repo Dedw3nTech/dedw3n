@@ -5106,30 +5106,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[DEBUG] /api/dating-profile called');
       
       const authenticatedUser = req.user!;
+      const userId = authenticatedUser.id;
 
-        // Create comprehensive dating profile response
-        const datingProfile = {
-          id: authenticatedUser.id,
-          userId: authenticatedUser.id,
-          displayName: authenticatedUser.name || authenticatedUser.username,
-          age: 28,
-          bio: authenticatedUser.bio || "Adventure seeker and coffee enthusiast. Love exploring new places, trying different cuisines, and having deep conversations about life.",
-          location: "New York, NY",
-          interests: ["Travel", "Photography", "Cooking", "Reading", "Hiking", "Coffee", "Art", "Music"],
-          lookingFor: "Someone who shares my passion for adventure and meaningful conversations",
-          relationshipType: "Serious Relationship",
-          profileImages: [
-            "https://images.unsplash.com/photo-1494790108755-2616b612b0e7?w=400&h=400&fit=crop&crop=face",
-            "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=400&fit=crop&crop=face"
-          ],
-          isActive: true,
-          isPremium: false,
-          showOnWall: true, // Default to true for the "Open to Date" badge
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+      // Fetch actual dating profile from database
+      const datingProfile = await storage.getDatingProfile(userId);
+      
+      if (!datingProfile) {
+        // Return 404 if no dating profile exists
+        return res.status(404).json({ message: 'Dating profile not found' });
+      }
 
-      console.log('[DEBUG] Dating profile - Returning profile for user:', authenticatedUser.id);
+      console.log('[DEBUG] Dating profile - Returning profile for user:', userId, 'with gifts:', datingProfile.selectedGifts);
       return res.json(datingProfile);
         
     } catch (error) {
