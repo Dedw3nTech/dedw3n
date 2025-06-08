@@ -123,7 +123,7 @@ export default function Products() {
     // Community & Sharing (10 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Post Without Text", "Repost", "Share on Feed",
+    "What do you think about this product?", "Repost", "Repost", "Share on Feed",
     
     // Offers & Actions (10 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
@@ -145,7 +145,7 @@ export default function Products() {
   const { translations: t } = useMasterBatchTranslation(productTexts);
   
   // Define VAT text for B2B market type
-  const vatText = t["(incl. VAT)"] || "(incl. VAT)";
+  const vatText = t?.[121] || "(incl. VAT)";
   
   // Extract translations with descriptive variable names
   const [
@@ -177,12 +177,17 @@ export default function Products() {
     freeShippingText, nextDayDeliveryText, businessOptionsText,
     
     addToFavoritesText, removeFromFavoritesText
-  ] = t || textsToTranslate;
+  ] = t || [];
   
   // Fix for missing variables
   const shareProductText = shareProductTooltipText;
   const shareViaEmailText = "Share via Email";
   const copyLinkText = "Copy Link";
+  const friendText = friendsOnlyText;
+  const volumeDiscountText = "Volume Discounts";
+  const volumeDiscountsText = "Volume Discounts";
+  const wholesaleOnlyText = "Wholesale Only";
+  const taxExemptText = "Tax Exempt";
   
   // All individual translation calls now consolidated in mega-batch above
   
