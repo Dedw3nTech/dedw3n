@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import TranslationCacheManager from '@/utils/TranslationCacheManager';
 
 // Master Translation System - Single Source of Truth
 // Consolidates all translation systems into one unified architecture
