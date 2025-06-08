@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Upload, User, Search, Plus, Edit, Trash2, UserCheck, UserX } from "lucide-react";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import {
   Form,
   FormControl,
@@ -195,7 +195,7 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
   ], []);
 
   // Get translations
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(settingsTexts, 'high');
+  const { translations: translatedTexts } = useMasterBatchTranslation(settingsTexts);
 
   // Fetch store users
   const { data: storeUsers = [], refetch: refetchStoreUsers } = useQuery<StoreUser[]>({

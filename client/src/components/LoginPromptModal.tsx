@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
-import { useUnifiedTranslation, useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { 
   User, 
   Eye, 
@@ -90,7 +90,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     "Privacy Policy",
     "You must be at least 13 years old to register"
   ], []);
-  const { translations, isLoading } = useUnifiedBatchTranslation(stableModalTexts, 'instant');
+  const { translations } = useMasterBatchTranslation(stableModalTexts);
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth: string) => {

@@ -55,7 +55,7 @@ export default function ProductsList({ vendorId }: ProductsListProps) {
   ], []);
 
   // Get translations
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(productTexts, 'high');
+  const { translations: translatedTexts } = useMasterBatchTranslation(productTexts);
 
   // Fetch vendor products
   const { data: products, isLoading } = useQuery({
