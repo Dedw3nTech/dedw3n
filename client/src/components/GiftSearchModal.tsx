@@ -101,10 +101,85 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    // Auto-detect user's locale and currency preference
+    const userLocale = navigator.language || 'en-US';
+    const userCurrency = getUserCurrency(userLocale);
+    
+    return new Intl.NumberFormat(userLocale, {
       style: 'currency',
-      currency: 'USD'
-    }).format(price);
+      currency: userCurrency
+    }).format(convertCurrency(price, 'USD', userCurrency));
+  };
+
+  const getUserCurrency = (locale: string): string => {
+    const currencyMap: { [key: string]: string } = {
+      'en-US': 'USD',
+      'en-GB': 'GBP',
+      'fr-FR': 'EUR',
+      'de-DE': 'EUR',
+      'ja-JP': 'JPY',
+      'zh-CN': 'CNY',
+      'es-ES': 'EUR',
+      'it-IT': 'EUR',
+      'pt-BR': 'BRL',
+      'ru-RU': 'RUB',
+      'ko-KR': 'KRW'
+    };
+    return currencyMap[locale] || 'USD';
+  };
+
+  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
+    // Simple conversion rates (in production, this would use a real exchange rate API)
+    const exchangeRates: { [key: string]: number } = {
+      'USD': 1,
+      'GBP': 0.82,
+      'EUR': 0.92,
+      'JPY': 149.50,
+      'CNY': 7.25,
+      'BRL': 5.15,
+      'RUB': 92.50,
+      'KRW': 1320.00
+    };
+    
+    if (fromCurrency === toCurrency) return amount;
+    
+    const usdAmount = amount / exchangeRates[fromCurrency];
+    return usdAmount * exchangeRates[toCurrency];
+  };
+
+  const translateText = (text: string): string => {
+    // Auto-translate product names and descriptions based on user locale
+    const userLocale = navigator.language || 'en-US';
+    const languageCode = userLocale.split('-')[0];
+    
+    if (languageCode === 'en') return text;
+    
+    // Basic translation dictionary (in production, this would use a translation API)
+    const translations: { [key: string]: { [key: string]: string } } = {
+      'fr': {
+        'Ergonomic Office Chair': 'Chaise de Bureau Ergonomique',
+        'Premium Wireless': 'Sans Fil Premium',
+        'Home & Garden': 'Maison et Jardin',
+        'Electronics': 'Électronique',
+        'Fashion & Apparel': 'Mode et Vêtements'
+      },
+      'es': {
+        'Ergonomic Office Chair': 'Silla de Oficina Ergonómica',
+        'Premium Wireless': 'Inalámbrico Premium',
+        'Home & Garden': 'Hogar y Jardín',
+        'Electronics': 'Electrónicos',
+        'Fashion & Apparel': 'Moda y Ropa'
+      },
+      'de': {
+        'Ergonomic Office Chair': 'Ergonomischer Bürostuhl',
+        'Premium Wireless': 'Premium Drahtlos',
+        'Home & Garden': 'Haus und Garten',
+        'Electronics': 'Elektronik',
+        'Fashion & Apparel': 'Mode und Bekleidung'
+      }
+    };
+    
+    return translations[languageCode]?.[text] || text;
   };
 
   return (
@@ -239,7 +314,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <h3 className="font-medium text-sm leading-tight line-clamp-2">
-                            {gift.name}
+                            {translateText(gift.name)}
                           </h3>
                           <Badge variant={gift.type === 'product' ? 'default' : 'secondary'} className="ml-2 shrink-0">
                             {gift.type === 'product' ? (
@@ -247,13 +322,13 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
                             ) : (
                               <Calendar className="h-3 w-3 mr-1" />
                             )}
-                            {gift.type}
+                            {translateText(gift.type)}
                           </Badge>
                         </div>
 
                         {gift.description && (
                           <p className="text-xs text-muted-foreground line-clamp-2">
-                            {gift.description}
+                            {translateText(gift.description)}
                           </p>
                         )}
 
@@ -268,12 +343,23 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
 
                         {gift.vendor && (
                           <div className="text-xs text-muted-foreground">
-                            {t('common.by', 'By')} {gift.vendor.storeName}
+                            {t('common.by', 'By')} {translateText(gift.vendor.storeName)}
                             {gift.vendor.rating && (
                               <span className="ml-1">⭐ {gift.vendor.rating.toFixed(1)}</span>
                             )}
                           </div>
                         )}
+                        
+                        {gift.category && (
+                          <div className="text-xs text-muted-foreground">
+                            📂 {translateText(gift.category)}
+                          </div>
+                        )}
+                        
+                        {/* Currency indicator */}
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          🌍 {navigator.language} • {getUserCurrency(navigator.language)}
+                        </div>
 
                         {gift.type === 'event' && gift.location && (
                           <div className="flex items-center text-xs text-muted-foreground">

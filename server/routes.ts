@@ -5101,11 +5101,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dating profile endpoint - Enhanced authentication with fallback
-  app.get('/api/dating-profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.get('/api/dating-profile', async (req: Request, res: Response) => {
     try {
       console.log('[DEBUG] /api/dating-profile called');
+      console.log('[AUTH] Authentication check for GET /api/dating-profile');
       
-      const userId = req.user!.id;
+      let authenticatedUser = null;
+      
+      // Try session authentication first
+      if (req.user) {
+        authenticatedUser = req.user;
+        console.log('[AUTH] Session user found:', authenticatedUser.id);
+      } else {
+        // Fallback authentication for /api/dating-profile
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+            console.log('[AUTH] Fallback authentication for /api/dating-profile:', user.username, '(ID:', user.id + ')');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[AUTH] No authentication token provided');
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const userId = authenticatedUser.id;
       console.log('[DEBUG] Dating profile - Authenticated user:', userId);
       
       // Fetch actual dating profile from database
