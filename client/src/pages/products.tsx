@@ -158,7 +158,7 @@ export default function Products() {
     addYourMessageText, whatDoYouThinkText, postWithoutTextButton,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
-    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText,
+    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText,
     
     searchForProductsText, searchWithinText, categoriesText, regionText, resetFiltersText,
     onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
