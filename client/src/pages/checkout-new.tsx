@@ -450,6 +450,7 @@ export default function CheckoutNew() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { selectedCurrency, formatPriceFromGBP } = useCurrency();
+  const { translateText } = useMasterTranslation();
   
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'review'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
@@ -693,10 +694,10 @@ export default function CheckoutNew() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-          <p className="text-gray-600 mb-6">Add some items to your cart before checking out.</p>
+          <h1 className="text-2xl font-bold mb-2">{translateText('Your cart is empty')}</h1>
+          <p className="text-gray-600 mb-6">{translateText('Add some items to your cart before checking out.')}</p>
           <Button onClick={() => setLocation('/')}>
-            Continue Shopping
+            {translateText('Continue Shopping')}
           </Button>
         </div>
       </div>
@@ -714,10 +715,10 @@ export default function CheckoutNew() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Cart
+            {translateText('Back to Cart')}
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600 mt-2">Complete your order</p>
+          <h1 className="text-3xl font-bold text-gray-900">{translateText('Checkout')}</h1>
+          <p className="text-gray-600 mt-2">{translateText('Complete your order')}</p>
         </div>
 
         {/* Progress Steps */}
@@ -737,7 +738,7 @@ export default function CheckoutNew() {
                   )}
                 </div>
                 <span className="ml-2 text-sm font-medium capitalize text-gray-700">
-                  {step}
+                  {translateText(step)}
                 </span>
                 {index < 2 && (
                   <div className="w-8 h-px bg-gray-300 mx-4" />
@@ -758,12 +759,12 @@ export default function CheckoutNew() {
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Truck className="h-5 w-5 mr-2" />
-                      Shipping Information
+                      {translateText('Shipping Information')}
                     </div>
                     {isAutoFilled && (
                       <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
                         <Check className="h-3 w-3 mr-1" />
-                        Auto-filled from Profile
+                        {translateText('Auto-filled from Profile')}
                       </Badge>
                     )}
                   </CardTitle>
@@ -771,79 +772,79 @@ export default function CheckoutNew() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name *</Label>
+                      <Label htmlFor="firstName">{translateText('First Name')} *</Label>
                       <Input
                         id="firstName"
                         value={shippingInfo.firstName}
                         onChange={(e) => handleShippingChange('firstName', e.target.value)}
-                        placeholder="Enter first name"
+                        placeholder={translateText('Enter first name')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Label htmlFor="lastName">{translateText('Last Name')} *</Label>
                       <Input
                         id="lastName"
                         value={shippingInfo.lastName}
                         onChange={(e) => handleShippingChange('lastName', e.target.value)}
-                        placeholder="Enter last name"
+                        placeholder={translateText('Enter last name')}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">{translateText('Email Address')} *</Label>
                       <Input
                         id="email"
                         type="email"
                         value={shippingInfo.email}
                         onChange={(e) => handleShippingChange('email', e.target.value)}
-                        placeholder="Enter email address"
+                        placeholder={translateText('Enter email address')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phone">{translateText('Phone Number')} *</Label>
                       <Input
                         id="phone"
                         type="tel"
                         value={shippingInfo.phone}
                         onChange={(e) => handleShippingChange('phone', e.target.value)}
-                        placeholder="Enter phone number"
+                        placeholder={translateText('Enter phone number')}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="address">Address *</Label>
+                    <Label htmlFor="address">{translateText('Address')} *</Label>
                     <Input
                       id="address"
                       value={shippingInfo.address}
                       onChange={(e) => handleShippingChange('address', e.target.value)}
-                      placeholder="Enter street address"
+                      placeholder={translateText('Enter street address')}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="city">City *</Label>
+                      <Label htmlFor="city">{translateText('City')} *</Label>
                       <Input
                         id="city"
                         value={shippingInfo.city}
                         onChange={(e) => handleShippingChange('city', e.target.value)}
-                        placeholder="Enter city"
+                        placeholder={translateText('Enter city')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="state">State/County *</Label>
+                      <Label htmlFor="state">{translateText('State/County')} *</Label>
                       <Input
                         id="state"
                         value={shippingInfo.state}
                         onChange={(e) => handleShippingChange('state', e.target.value)}
-                        placeholder="Enter state/county"
+                        placeholder={translateText('Enter state/county')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="zipCode">Postal Code *</Label>
+                      <Label htmlFor="zipCode">{translateText('Postal Code')} *</Label>
                       <Input
                         id="zipCode"
                         value={shippingInfo.zipCode}
