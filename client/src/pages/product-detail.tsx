@@ -67,11 +67,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   
   // Translation system
-  const translateText = (text: string) => {
-    // For now, return the text as-is since we need to integrate with the master translation system
-    // This will be enhanced to use the actual translation service
-    return text;
-  };
+  const { translateText } = useMasterTranslation();
 
 
   
