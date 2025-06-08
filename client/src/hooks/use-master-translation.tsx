@@ -552,8 +552,8 @@ class MasterTranslationManager {
 // Singleton instance
 const masterTranslationManager = MasterTranslationManager.getInstance();
 
-// Main hook for single text translation
-export function useMasterTranslation(
+// Hook for single text translation with state
+export function useSingleTranslation(
   text: string,
   priority: TranslationPriority = 'normal'
 ): { translatedText: string; isLoading: boolean } {
@@ -686,6 +686,53 @@ export function useTranslationStats() {
 // Debug utilities
 export function clearTranslationCache() {
   masterTranslationManager.clearCache();
+}
+
+// Function-based translation hook for component usage
+export function useMasterTranslation() {
+  const { currentLanguage } = useLanguage();
+  const componentIdRef = useRef(`func_${Math.random().toString(36).substr(2, 9)}`);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const componentId = componentIdRef.current;
+    masterTranslationManager.registerComponent(componentId);
+
+    return () => {
+      masterTranslationManager.unregisterComponent(componentId);
+    };
+  }, []);
+
+  const translateText = useCallback((text: string, priority: TranslationPriority = 'normal'): string => {
+    if (!currentLanguage || currentLanguage === 'EN') {
+      return text;
+    }
+
+    // Check if we already have this translation
+    const cacheKey = `${text}_${currentLanguage}`;
+    if (translations[cacheKey]) {
+      return translations[cacheKey];
+    }
+
+    // Request translation
+    masterTranslationManager.translateText(
+      text,
+      currentLanguage,
+      priority,
+      componentIdRef.current,
+      (translated) => {
+        setTranslations(prev => ({
+          ...prev,
+          [cacheKey]: translated
+        }));
+      }
+    );
+
+    // Return original text while translation loads
+    return text;
+  }, [currentLanguage, translations]);
+
+  return { translateText };
 }
 
 export { type TranslationPriority };
