@@ -78,13 +78,13 @@ type DiscountCodeFormData = z.infer<typeof discountCodeSchema>;
 type AutomaticDiscountFormData = z.infer<typeof automaticDiscountSchema>;
 
 interface DiscountFormProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   type: "discount-code" | "automatic";
   vendorId: number;
 }
 
-export default function DiscountForm({ isOpen, onClose, type, vendorId }: DiscountFormProps) {
+export default function DiscountForm({ open, onOpenChange, type, vendorId }: DiscountFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,7 +117,7 @@ export default function DiscountForm({ isOpen, onClose, type, vendorId }: Discou
         description: "Discount code created successfully",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/vendors/${vendorId}/discounts`] });
-      onClose();
+      onOpenChange(false);
       discountCodeForm.reset();
     },
     onError: (error: any) => {
@@ -140,7 +140,7 @@ export default function DiscountForm({ isOpen, onClose, type, vendorId }: Discou
         description: "Automatic discount created successfully",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/vendors/${vendorId}/automatic-discounts`] });
-      onClose();
+      onOpenChange(false);
       automaticDiscountForm.reset();
     },
     onError: (error: any) => {
