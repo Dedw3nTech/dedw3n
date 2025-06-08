@@ -9,8 +9,7 @@ import { useMarketType } from "@/hooks/use-market-type";
 import { apiRequest } from "@/lib/queryClient";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/hooks/use-currency";
-import { formatCurrency, convertCurrency, CurrencyCode } from "@/lib/currencyConverter";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Product {
   id: number;
@@ -34,7 +33,7 @@ export default function LikedPage() {
   const [, setLocation] = useLocation();
   const { marketType } = useMarketType();
   const { currentLanguage } = useLanguage();
-  const { currency } = useCurrency();
+  const { formatPriceFromGBP } = useCurrency();
 
   const { data: likedProducts = [], isLoading } = useQuery<Product[]>({
     queryKey: ['/api/liked-products'],
@@ -223,15 +222,15 @@ export default function LikedPage() {
                     {product.discountPrice ? (
                       <>
                         <span className="text-lg font-bold text-gray-900">
-                          {formatCurrency(convertCurrency(product.discountPrice, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
+                          {formatPriceFromGBP(product.discountPrice)}
                         </span>
                         <span className="text-sm text-gray-500 line-through">
-                          {formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
+                          {formatPriceFromGBP(product.price)}
                         </span>
                       </>
                     ) : (
                       <span className="text-lg font-bold text-gray-900">
-                        {formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)}
+                        {formatPriceFromGBP(product.price)}
                       </span>
                     )}
                   </div>
