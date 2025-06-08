@@ -97,6 +97,15 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
+  // User authentication
+  const { data: user } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/user');
+      return response.json();
+    }
+  });
+  
   // Master Translation System - Single mega-batch call (34 → 1 API call)
   const productTexts = [
     // Filter & Search (7 texts)
@@ -926,6 +935,8 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
+              onClick={() => handleAddToDatingProfile(product.id)}
+              disabled={addToDatingProfileMutation.isPending}
               title="Add to Dating Profile"
             >
               <Plus className="h-5 w-5 font-bold stroke-2" />
