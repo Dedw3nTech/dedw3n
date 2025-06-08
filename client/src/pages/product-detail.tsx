@@ -682,45 +682,45 @@ export default function ProductDetail() {
                     setLocation(`/social?share=${productId}`);
                   } else {
                     toast({
-                      title: "Login Required",
-                      description: "Please log in to share on feed",
+                      title: translateText("Login Required"),
+                      description: translateText("Please log in to share on feed"),
                       variant: "destructive"
                     });
                     setLocation('/auth');
                   }
                 }}>
                   <Share2 className="h-4 w-4 mr-2 text-blue-600" />
-                  Share on Feed
+{translateText('Share on Feed')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   if (user) {
                     setLocation(`/messages?share=${productId}`);
                   } else {
                     toast({
-                      title: "Login Required",
-                      description: "Please log in to share via messages",
+                      title: translateText("Login Required"),
+                      description: translateText("Please log in to share via messages"),
                       variant: "destructive"
                     });
                     setLocation('/auth');
                   }
                 }}>
                   <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                  Send via Message
+{translateText('Send via Message')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   if (user) {
                     setLocation(`/members?share=${productId}`);
                   } else {
                     toast({
-                      title: "Login Required",
-                      description: "Please log in to share with members",
+                      title: translateText("Login Required"),
+                      description: translateText("Please log in to share with members"),
                       variant: "destructive"
                     });
                     setLocation('/auth');
                   }
                 }}>
                   <Users className="h-4 w-4 mr-2 text-blue-600" />
-                  Share with Member
+{translateText('Share with Member')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -735,7 +735,7 @@ export default function ProductDetail() {
           <div className="space-y-6">
             {reviews.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">This product has no reviews yet.</p>
+                <p className="text-gray-500">{translateText('This product has no reviews yet.')}</p>
                 {user && (
                   <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
                     <DialogTrigger asChild>
