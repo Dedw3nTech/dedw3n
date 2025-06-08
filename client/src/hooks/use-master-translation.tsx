@@ -575,9 +575,9 @@ export function useMasterTranslation(
 export function useMasterBatchTranslation(
   texts: string[],
   priority: TranslationPriority = 'normal'
-): { translations: Record<string, string>; isLoading: boolean } {
+): { translations: string[]; isLoading: boolean } {
   const { currentLanguage } = useLanguage();
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translations, setTranslations] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const componentIdRef = useRef(`batch_${Math.random().toString(36).substr(2, 9)}`);
   const stableTexts = useMemo(() => texts, [texts.join('|')]);
@@ -593,11 +593,7 @@ export function useMasterBatchTranslation(
 
   useEffect(() => {
     if (!currentLanguage || currentLanguage === 'EN') {
-      const englishTranslations: Record<string, string> = {};
-      stableTexts.forEach(text => {
-        englishTranslations[text] = text;
-      });
-      setTranslations(englishTranslations);
+      setTranslations(stableTexts);
       setIsLoading(false);
       return;
     }
@@ -610,7 +606,11 @@ export function useMasterBatchTranslation(
       priority,
       componentIdRef.current,
       (batchTranslations) => {
-        setTranslations(batchTranslations);
+        // Convert object to ordered array matching input texts
+        const orderedTranslations = stableTexts.map(text => 
+          batchTranslations[text] || text
+        );
+        setTranslations(orderedTranslations);
         setIsLoading(false);
       }
     );
