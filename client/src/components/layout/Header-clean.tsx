@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import UserMenu from "../ui/user-menu";
 import Logo from "../ui/logo";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchSuggestion {
   id: number;
@@ -33,11 +34,13 @@ export default function Header() {
     "Contact"
   ], []);
 
+  const { currentLanguage } = useLanguage();
+  
   // Get translations using the master batch translation system
   const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(headerTexts);
   
   // Debug logging to see what's happening with translations
-  console.log('[Header Debug] Current language:', useLanguage().currentLanguage);
+  console.log('[Header Debug] Current language:', currentLanguage);
   console.log('[Header Debug] Original texts:', headerTexts);
   console.log('[Header Debug] Translated texts:', translatedTexts);
   console.log('[Header Debug] Is loading:', isLoading);
