@@ -483,7 +483,7 @@ export default function ProductDetail() {
                     }}
                     className="p-2 hover:bg-gray-100 ml-1"
                   >
-                    <span className="text-black font-normal">Send Offer</span>
+                    <span className="text-black font-normal">{translateText('Send Offer')}</span>
                   </Button>
                 </div>
               </div>
@@ -505,7 +505,7 @@ export default function ProductDetail() {
               </Badge>
             )}
             <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100 text-gray-800 border-gray-200">
-              {product.category}
+              {translateText(product.category)}
             </Badge>
           </div>
 
