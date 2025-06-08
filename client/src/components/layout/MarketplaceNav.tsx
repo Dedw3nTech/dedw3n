@@ -37,18 +37,18 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   ], []);
 
   // Use optimized batch translation for optimal performance
-  const translatedTexts = useMasterBatchTranslation(navigationTexts);
+  const { translations: translatedTexts } = useMasterBatchTranslation(navigationTexts);
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
-    c2cText: translatedTexts[navigationTexts[0]] || navigationTexts[0],
-    b2cText: translatedTexts[navigationTexts[1]] || navigationTexts[1], 
-    b2bText: translatedTexts[navigationTexts[2]] || navigationTexts[2],
-    searchPlaceholder: translatedTexts[navigationTexts[3]] || navigationTexts[3],
-    likedText: translatedTexts[navigationTexts[4]] || navigationTexts[4],
-    cartText: translatedTexts[navigationTexts[5]] || navigationTexts[5],
-    ordersText: translatedTexts[navigationTexts[6]] || navigationTexts[6],
-    vendorText: translatedTexts[navigationTexts[7]] || navigationTexts[7]
+    c2cText: translatedTexts[0] || navigationTexts[0],
+    b2cText: translatedTexts[1] || navigationTexts[1], 
+    b2bText: translatedTexts[2] || navigationTexts[2],
+    searchPlaceholder: translatedTexts[3] || navigationTexts[3],
+    likedText: translatedTexts[4] || navigationTexts[4],
+    cartText: translatedTexts[5] || navigationTexts[5],
+    ordersText: translatedTexts[6] || navigationTexts[6],
+    vendorText: translatedTexts[7] || navigationTexts[7]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
