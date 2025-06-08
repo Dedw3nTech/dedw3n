@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Star } from "lucide-react";
 import { VendorBadge } from "./VendorBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useDeepLTranslation } from "@/hooks/use-deepl-translation";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 interface BadgeProgressProps {
   currentLevel: BadgeLevel;
@@ -24,23 +24,40 @@ export function BadgeProgress({
   const currentBadge = getBadgeInfo(currentLevel);
   const nextBadge = getNextBadgeInfo(currentLevel);
   
-  // DeepL-only translation hooks
-  const { translatedText: badgeStatusText } = useDeepLTranslation("Badge Status");
-  const { translatedText: highestLevelText } = useDeepLTranslation("You've reached the highest level!");
-  const { translatedText: totalSalesText } = useDeepLTranslation("Total Sales");
-  const { translatedText: transactionsText } = useDeepLTranslation("Transactions");
-  const { translatedText: badgeProgressText } = useDeepLTranslation("Badge Progress");
-  const { translatedText: progressDescText } = useDeepLTranslation("Your progress to the next badge level");
-  const { translatedText: salesProgressText } = useDeepLTranslation("Sales Progress");
-  const { translatedText: transactionProgressText } = useDeepLTranslation("Transaction Progress");
-  const { translatedText: overallProgressText } = useDeepLTranslation("Overall Progress");
-  const { translatedText: neededText } = useDeepLTranslation("needed");
-  const { translatedText: ofText } = useDeepLTranslation("of");
-  const { translatedText: completeToUnlockText } = useDeepLTranslation("Complete to unlock");
+  // Master translation system for all badge texts
+  const badgeTexts = [
+    "Badge Status",
+    "You've reached the highest level!",
+    "Total Sales", 
+    "Transactions",
+    "Badge Progress",
+    "Your progress to the next badge level",
+    "Sales Progress",
+    "Transaction Progress", 
+    "Overall Progress",
+    "needed",
+    "of",
+    "Complete to unlock",
+    nextBadge?.name || "",
+    nextBadge?.description || ""
+  ];
   
-  // Translate dynamic badge content
-  const { translatedText: translatedNextBadgeName } = useDeepLTranslation(nextBadge?.name || "");
-  const { translatedText: translatedNextBadgeDescription } = useDeepLTranslation(nextBadge?.description || "");
+  const { translations } = useMasterTranslation(badgeTexts, 'high');
+  
+  const badgeStatusText = translations["Badge Status"] || "Badge Status";
+  const highestLevelText = translations["You've reached the highest level!"] || "You've reached the highest level!";
+  const totalSalesText = translations["Total Sales"] || "Total Sales";
+  const transactionsText = translations["Transactions"] || "Transactions";
+  const badgeProgressText = translations["Badge Progress"] || "Badge Progress";
+  const progressDescText = translations["Your progress to the next badge level"] || "Your progress to the next badge level";
+  const salesProgressText = translations["Sales Progress"] || "Sales Progress";
+  const transactionProgressText = translations["Transaction Progress"] || "Transaction Progress";
+  const overallProgressText = translations["Overall Progress"] || "Overall Progress";
+  const neededText = translations["needed"] || "needed";
+  const ofText = translations["of"] || "of";
+  const completeToUnlockText = translations["Complete to unlock"] || "Complete to unlock";
+  const translatedNextBadgeName = translations[nextBadge?.name || ""] || nextBadge?.name || "";
+  const translatedNextBadgeDescription = translations[nextBadge?.description || ""] || nextBadge?.description || "";
   
   // Function to convert badge description prices to current currency
   const convertBadgeDescription = (description: string, minSales: number) => {

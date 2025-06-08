@@ -10,7 +10,7 @@ import {
   Map,
   Barcode
 } from "lucide-react";
-import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import {
   Card,
   CardContent,
