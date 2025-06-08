@@ -3126,7 +3126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(inArray(products.vendorId, vendorIds))
         .orderBy(desc(products.createdAt));
 
-      res.json(products);
+      res.json(vendorProducts);
     } catch (error) {
       console.error('Error getting vendor products:', error);
       res.status(500).json({ message: 'Failed to get vendor products' });
@@ -8422,7 +8422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Product IDs array is required' });
       }
 
-      const campaignProducts = productIds.map(productId => ({
+      const campaignProductsData = productIds.map(productId => ({
         campaignId,
         productId: parseInt(productId),
         featured,
@@ -8432,7 +8432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newCampaignProducts = await db
         .insert(campaignProducts)
-        .values(campaignProducts)
+        .values(campaignProductsData)
         .returning();
 
       res.status(201).json(newCampaignProducts);
@@ -8450,7 +8450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid campaign ID' });
       }
 
-      const campaignProducts = await db
+      const campaignProductsResult = await db
         .select({
           id: campaignProducts.id,
           campaignId: campaignProducts.campaignId,
@@ -8474,7 +8474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(products, eq(campaignProducts.productId, products.id))
         .where(eq(campaignProducts.campaignId, campaignId));
 
-      res.json(campaignProducts);
+      res.json(campaignProductsResult);
     } catch (error) {
       console.error('Error fetching campaign products:', error);
       res.status(500).json({ message: 'Failed to fetch campaign products' });
