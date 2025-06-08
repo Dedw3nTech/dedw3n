@@ -73,7 +73,8 @@ export default function VendorDashboard() {
     "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports"
   ], []);
 
-  const [t] = useMasterBatchTranslation(vendorTexts);
+  const { translations: t, isLoading } = useMasterBatchTranslation(vendorTexts);
+  
   const [
     dashboardText, productsText, ordersText, customersText, shippingText, analyticsText, settingsText, marketingText,
     overviewText, totalSalesText, activeProductsText, pendingOrdersText, totalCustomersText, revenueMonthText,
