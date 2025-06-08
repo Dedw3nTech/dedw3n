@@ -3858,8 +3858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content,
         attachmentUrl,
         attachmentType,
-        messageType,
-        isRead: false
+        messageType
       });
 
       res.json(message);
@@ -3888,8 +3887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId,
         receiverId: recipient.id,
         content: firstMessage,
-        messageType: 'text',
-        isRead: false
+        messageType: 'text'
       });
 
       res.json({
@@ -4135,23 +4133,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get orders notification count - counts orders that need user attention
   app.get('/api/orders/notifications/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       // Count orders that need attention: processing, shipped (ready for delivery confirmation), and recent delivered orders
       const notificationOrders = await db.select({
         count: sql<number>`count(*)`
       }).from(orders)
-        .where(and(
-          eq(orders.userId, userId),
-          or(
-            eq(orders.status, 'processing'),
-            eq(orders.status, 'shipped'),
-            and(
-              eq(orders.status, 'delivered'),
-              sql`${orders.updatedAt} >= NOW() - INTERVAL '7 days'` // Delivered in last 7 days
+        .where(
+          and(
+            eq(orders.userId, userId),
+            or(
+              eq(orders.status, 'processing'),
+              eq(orders.status, 'shipped'),
+              and(
+                eq(orders.status, 'delivered'),
+                sql`${orders.updatedAt} >= NOW() - INTERVAL '7 days'`
+              )
             )
           )
-        ));
+        );
 
       const count = notificationOrders[0]?.count || 0;
       res.json({ count });
@@ -4685,7 +4688,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/products/:id/liked', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: 'Invalid product ID' });
