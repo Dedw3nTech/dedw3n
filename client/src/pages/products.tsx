@@ -144,6 +144,9 @@ export default function Products() {
 
   const { translations: t } = useMasterBatchTranslation(productTexts);
   
+  // Define VAT text for B2B market type
+  const vatText = t["(incl. VAT)"] || "(incl. VAT)";
+  
   // Extract translations with descriptive variable names
   const [
     filterText, filterProductsText, narrowDownText, productText, productsText, 

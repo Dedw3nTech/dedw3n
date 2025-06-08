@@ -2061,6 +2061,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dating activation route
   app.post("/api/user/activate-dating", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -2541,8 +2545,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           storeName: storeName || vendor.storeName,
           description: description || vendor.description,
           logo: logo || vendor.logo,
-          contactEmail: contactEmail || vendor.contactEmail,
-          contactPhone: contactPhone || vendor.contactPhone,
+          email: contactEmail || vendor.email,
+          phone: contactPhone || vendor.phone,
           website: website || vendor.website,
           address: address || vendor.address,
           hasSalesManager: hasSalesManager !== undefined ? hasSalesManager : vendor.hasSalesManager,
@@ -3116,7 +3120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get products for all vendor accounts
       const vendorIds = vendorAccounts.map(v => v.id);
-      const products = await db
+      const vendorProducts = await db
         .select()
         .from(products)
         .where(inArray(products.vendorId, vendorIds))
