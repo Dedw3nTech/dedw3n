@@ -4823,6 +4823,17 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  async searchEvents(searchTerm: string, limit: number = 10): Promise<any[]> {
+    try {
+      // Return empty array for now since events table may not exist
+      console.log(`Event search requested for: ${searchTerm} (limit: ${limit})`);
+      return [];
+    } catch (error) {
+      console.error('Error searching events:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
