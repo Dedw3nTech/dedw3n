@@ -412,9 +412,9 @@ function MarketplacePromoSection() {
       case 'b2b':
         return '/attached_assets/Dedw3n Business B2B Header.png';
       case 'b2c':
-        return '/attached_assets/Dedw3n Business B2C Header new_1749416893159.png';
+        return '/attached_assets/Dedw3n Business B2C Header (1)_1749417523213.png';
       case 'c2c':
-        return '/attached_assets/Dedw3n Business C2c header (1).png';
+        return '/attached_assets/Dedw3n Business C2c header_1749418133958.png';
       default:
         return '/attached_assets/Copy of Dedw3n Marketplace II.png';
     }
@@ -452,7 +452,7 @@ function MarketplaceBottomPromoSection() {
       case 'b2c':
         return '/attached_assets/Dedw3n Business B2C Footer new 2_1749417170052.png';
       case 'c2c':
-        return '/attached_assets/Dedw3n Business C2C Footer.png';
+        return '/attached_assets/Dedw3n Business C2C Footer_1749418728427.png';
       default:
         return '/attached_assets/Copy of Dedw3n Marketplace III.png';
     }
