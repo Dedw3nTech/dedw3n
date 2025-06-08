@@ -51,21 +51,24 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-// Component for translating category names
+// Component for translating category names using Master Translation
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  const { translatedText } = useDeepLTranslation(categoryName);
+  const { translations } = useMasterBatchTranslation([categoryName]);
+  const [translatedText] = translations || [categoryName];
   return <span className="text-[12px] font-normal">{translatedText}</span>;
 };
 
-// Component for translating region names
+// Component for translating region names using Master Translation
 const RegionName = ({ regionName }: { regionName: string }) => {
-  const { translatedText } = useDeepLTranslation(regionName);
+  const { translations } = useMasterBatchTranslation([regionName]);
+  const [translatedText] = translations || [regionName];
   return <span>{translatedText}</span>;
 };
 
-// Component for translating product names
+// Component for translating product names using Master Translation
 const ProductName = ({ productName }: { productName: string }) => {
-  const { translatedText } = useDeepLTranslation(productName);
+  const { translations } = useMasterBatchTranslation([productName]);
+  const [translatedText] = translations || [productName];
   return <span className="line-clamp-2">{translatedText}</span>;
 };
 import { useToast } from '@/hooks/use-toast';
@@ -116,10 +119,10 @@ export default function Products() {
     "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
     
-    // Community & Sharing (8 texts)
+    // Community & Sharing (9 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Post Without Text",
+    "What do you think about this product?", "Post Without Text", "Repost",
     
     // Offers & Actions (9 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
@@ -155,7 +158,7 @@ export default function Products() {
     sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
     
     servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
-    addYourMessageText, whatDoYouThinkText, postWithoutTextButton,
+    addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
     enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText,
