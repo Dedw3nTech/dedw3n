@@ -16,7 +16,19 @@ export default function PrivacyPage() {
     "Data Collection", "Information Security", "User Rights", "Contact Us"
   ], []);
 
-  const [t] = useMasterBatchTranslation(privacyTexts);
+  const { translations, isLoading } = useMasterBatchTranslation(privacyTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = privacyTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
   const [
     privacyPolicyText, privacyDescriptionText,
     dataCollectionText, informationSecurityText, userRightsText, contactUsText

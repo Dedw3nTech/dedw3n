@@ -16,7 +16,19 @@ export default function TermsPage() {
     "Service Usage", "User Responsibilities", "Platform Guidelines", "Legal Information"
   ], []);
 
-  const [t] = useMasterBatchTranslation(termsTexts);
+  const { translations, isLoading } = useMasterBatchTranslation(termsTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = termsTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
   const [
     termsOfServiceText, termsDescriptionText,
     serviceUsageText, userResponsibilitiesText, platformGuidelinesText, legalInformationText

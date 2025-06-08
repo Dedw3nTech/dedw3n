@@ -34,7 +34,19 @@ export default function SearchPage() {
     "View Details", "Add to Cart", "Contact", "Follow"
   ], []);
 
-  const [t] = useMasterBatchTranslation(searchTexts);
+  const { translations, isLoading } = useMasterBatchTranslation(searchTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = searchTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
   const [
     searchText, searchResultsText, noResultsFoundText, searchForText, allText, productsText, usersText, servicesText, vendorsText, eventsText,
     filterResultsText, sortByText, relevanceText, priceLowToHighText, priceHighToLowText, newestText, oldestText, mostPopularText,

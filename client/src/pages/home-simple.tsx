@@ -68,7 +68,19 @@ export default function Home() {
     "Consumer to Consumer", "Business to Consumer", "Business to Business"
   ], []);
 
-  const [t] = useMasterBatchTranslation(homeTexts);
+  const { translations, isLoading } = useMasterBatchTranslation(homeTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = homeTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
   const [
     browseMarketplaceText, joinCommunityText, findMatchesText,
     exploreB2CText, exploreB2BText, exploreC2CText,
