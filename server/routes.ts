@@ -2661,7 +2661,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update store user role
   app.put("/api/vendor/store-users/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: 'No vendor accounts found' });
@@ -4103,8 +4106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({
-        hasSubscription: user.datingSubscription !== 'none',
-        subscriptionLevel: user.datingSubscription || 'none',
+        hasSubscription: user.datingSubscription !== null && user.datingSubscription !== 'normal',
+        subscriptionLevel: user.datingSubscription || 'normal',
         datingEnabled: user.datingEnabled || false
       });
     } catch (error) {
@@ -4186,7 +4189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userOrders = await db.select({
         id: orders.id,
-        vendorId: orders.vendorId,
+
         userId: orders.userId,
         totalAmount: orders.totalAmount,
         status: orders.status,
