@@ -58,6 +58,27 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
   // Search query
   const { data: searchData, isLoading, error } = useQuery<SearchResponse>({
     queryKey: ['/api/search/gifts', debouncedSearch, selectedType],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        q: debouncedSearch,
+        type: selectedType,
+        limit: '20',
+        offset: '0'
+      });
+      
+      const response = await fetch(`/api/search/gifts?${params}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`);
+      }
+      
+      return response.json();
+    },
     enabled: debouncedSearch.length >= 2,
     staleTime: 1000 * 30, // 30 seconds
   });

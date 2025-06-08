@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq, or, like, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
+import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema } from "@shared/schema";
 
 import { setupAuth, hashPassword } from "./auth";
@@ -5452,36 +5452,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchTerm = q.trim().toLowerCase();
       let results = [];
       
+      console.log(`[DEBUG] Gift search - Query: "${searchTerm}", Type: ${type}, Limit: ${limit}`);
+      
       // Search products if type is 'all' or 'products'
       if (type === 'all' || type === 'products') {
-        const productResults = await db
-          .select({
-            id: products.id,
-            name: products.name,
-            description: products.description,
-            price: products.price,
-            imageUrl: products.imageUrl,
-            category: products.category,
-            type: sql<string>`'product'`,
-            vendor: {
-              id: vendors.id,
-              storeName: vendors.storeName,
-              rating: vendors.rating
-            }
-          })
-          .from(products)
-          .innerJoin(vendors, eq(products.vendorId, vendors.id))
-          .where(
-            or(
-              like(products.name, `%${searchTerm}%`),
-              like(products.description, `%${searchTerm}%`),
-              like(products.category, `%${searchTerm}%`)
+        try {
+          const productResults = await db
+            .select({
+              id: products.id,
+              name: products.name,
+              description: products.description,
+              price: products.price,
+              imageUrl: products.imageUrl,
+              category: products.category,
+              type: sql<string>`'product'`,
+              vendor: {
+                id: vendors.id,
+                storeName: vendors.storeName,
+                rating: vendors.rating
+              }
+            })
+            .from(products)
+            .innerJoin(vendors, eq(products.vendorId, vendors.id))
+            .where(
+              or(
+                ilike(products.name, `%${searchTerm}%`),
+                ilike(products.description, `%${searchTerm}%`),
+                ilike(products.category, `%${searchTerm}%`)
+              )
             )
-          )
-          .limit(parseInt(limit as string))
-          .offset(parseInt(offset as string));
-        
-        results.push(...productResults);
+            .limit(parseInt(limit as string))
+            .offset(parseInt(offset as string));
+          
+          console.log(`[DEBUG] Gift search - Found ${productResults.length} products`);
+          results.push(...productResults);
+        } catch (productError) {
+          console.error('[DEBUG] Gift search - Product search error:', productError);
+        }
       }
       
       // Search events if type is 'all' or 'events'
