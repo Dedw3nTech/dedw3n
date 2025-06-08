@@ -4,29 +4,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Globe } from 'lucide-react';
 
 const languages = [
-  { code: 'EN', name: 'English', flag: '🇺🇸' },
-  { code: 'ES', name: 'Español', flag: '🇪🇸' },
-  { code: 'FR', name: 'Français', flag: '🇫🇷' },
-  { code: 'DE', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'IT', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'PT', name: 'Português', flag: '🇵🇹' },
-  { code: 'RU', name: 'Русский', flag: '🇷🇺' },
-  { code: 'ZH', name: '中文', flag: '🇨🇳' },
-  { code: 'JA', name: '日本語', flag: '🇯🇵' },
-  { code: 'KO', name: '한국어', flag: '🇰🇷' },
-  { code: 'AR', name: 'العربية', flag: '🇸🇦' },
-  { code: 'HI', name: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'EN', name: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'ES', name: 'Español', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'FR', name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'DE', name: 'Deutsch', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'IT', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹' },
+  { code: 'PT', name: 'Português', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'RU', name: 'Русский', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'ZH', name: '中文', nativeName: '中文', flag: '🇨🇳' },
+  { code: 'JA', name: '日本語', nativeName: '日本語', flag: '🇯🇵' },
+  { code: 'KO', name: '한국어', nativeName: '한국어', flag: '🇰🇷' },
+  { code: 'AR', name: 'العربية', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'HI', name: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
 ];
 
 export function LanguageSelector() {
-  const { currentLanguage, setLanguage } = useLanguage();
+  const { currentLanguage, setSelectedLanguage } = useLanguage();
 
   const currentLang = languages.find(lang => lang.code === currentLanguage) || languages[0];
+
+  const handleLanguageChange = (languageCode: string) => {
+    const language = languages.find(lang => lang.code === languageCode);
+    if (language) {
+      setSelectedLanguage(language);
+    }
+  };
 
   return (
     <Select
       value={currentLanguage}
-      onValueChange={(value) => setLanguage(value)}
+      onValueChange={handleLanguageChange}
     >
       <SelectTrigger className="w-auto min-w-[120px] border-none bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800">
         <div className="flex items-center gap-2">

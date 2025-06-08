@@ -36,6 +36,7 @@ interface LanguageContextType {
   selectedLanguage: Language;
   currentLanguage: string;
   setSelectedLanguage: (language: Language) => void;
+  setLanguage: (code: string) => void; // Backward compatibility alias
   translateText: (text: string, targetLanguage?: string) => Promise<string>;
   isTranslating: boolean;
   isLoading: boolean;
@@ -171,11 +172,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Backward compatibility alias for setLanguage
+  const setLanguage = (code: string) => {
+    const language = supportedLanguages.find(lang => lang.code === code);
+    if (language) {
+      handleSetLanguage(language);
+    }
+  };
+
   return (
     <LanguageContext.Provider value={{
       selectedLanguage,
       currentLanguage: selectedLanguage.code,
       setSelectedLanguage: handleSetLanguage,
+      setLanguage,
       translateText,
       isTranslating,
       isLoading,
@@ -194,6 +204,7 @@ export function useLanguage() {
       selectedLanguage: supportedLanguages[0],
       currentLanguage: 'EN',
       setSelectedLanguage: () => {},
+      setLanguage: () => {},
       translateText: (text: string) => Promise.resolve(text),
       isTranslating: false,
       isLoading: false,
