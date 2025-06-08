@@ -3,9 +3,11 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingBag } from "lucide-react";
+import { useMemo } from "react";
 
 import { useMarketType } from "@/hooks/use-market-type";
 import { apiRequest } from "@/lib/queryClient";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 interface Product {
   id: number;
@@ -33,14 +35,43 @@ export default function LikedPage() {
     queryKey: ['/api/liked-products'],
   });
 
+  // Define texts for translation
+  const pageTexts = useMemo(() => [
+    "Liked Products",
+    "No liked products yet",
+    "Browse our marketplace and click the heart icon on products you love",
+    "Explore Products",
+    "View",
+    "Add to Cart",
+    "NEW",
+    "SALE",
+    "No Image"
+  ], []);
+
+  // Use master translation system for unified performance
+  const { translations: translatedTexts } = useMasterBatchTranslation(pageTexts, 'normal');
+
+  // Memoize translated values to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    likedProducts: translatedTexts[0] || "Liked Products",
+    noLikedProducts: translatedTexts[1] || "No liked products yet",
+    browseMessage: translatedTexts[2] || "Browse our marketplace and click the heart icon on products you love",
+    exploreProducts: translatedTexts[3] || "Explore Products",
+    view: translatedTexts[4] || "View",
+    addToCart: translatedTexts[5] || "Add to Cart",
+    new: translatedTexts[6] || "NEW",
+    sale: translatedTexts[7] || "SALE",
+    noImage: translatedTexts[8] || "No Image"
+  }), [translatedTexts]);
+
   const getButtonText = () => {
     switch (marketType) {
       case 'c2c':
-        return 'View';
+        return translatedLabels.view;
       case 'b2c':
       case 'b2b':
       default:
-        return 'Add to Cart';
+        return translatedLabels.addToCart;
     }
   };
 
@@ -78,18 +109,18 @@ export default function LikedPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-base font-bold text-gray-900 mb-2">Liked Products</h1>
+          <h1 className="text-base font-bold text-gray-900 mb-2">{translatedLabels.likedProducts}</h1>
         </div>
 
         {likedProducts.length === 0 ? (
           <div className="text-center py-16">
             <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No liked products yet</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{translatedLabels.noLikedProducts}</h3>
             <p className="text-gray-600 mb-6 text-[14px]">
-              Browse our marketplace and click the heart icon on products you love
+              {translatedLabels.browseMessage}
             </p>
             <Button onClick={() => setLocation('/products')} className="bg-black text-white hover:bg-gray-800">
-              Explore Products
+              {translatedLabels.exploreProducts}
             </Button>
           </div>
         ) : (
@@ -111,7 +142,7 @@ export default function LikedPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No Image
+                      {translatedLabels.noImage}
                     </div>
                   )}
                   
@@ -133,12 +164,12 @@ export default function LikedPage() {
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {product.isNew && (
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">
-                        NEW
+                        {translatedLabels.new}
                       </span>
                     )}
                     {product.isOnSale && (
                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        SALE
+                        {translatedLabels.sale}
                       </span>
                     )}
                   </div>
