@@ -295,7 +295,7 @@ export default function Cart() {
               <tfoot className="bg-gray-50">
                 <tr className="border-t">
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
-                    Subtotal
+                    {translateText('Subtotal')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {formatPriceFromGBP(subtotal)}
@@ -304,11 +304,11 @@ export default function Cart() {
                 </tr>
                 <tr>
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
-                    Shipping
+                    {translateText('Shipping')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {shippingCost === 0 ? (
-                      <span className="text-green-600">Free</span>
+                      <span className="text-green-600">{translateText('Free')}</span>
                     ) : (
                       formatPriceFromGBP(shippingCost)
                     )}
@@ -317,7 +317,7 @@ export default function Cart() {
                 </tr>
                 <tr>
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
-                    Tax (VAT)
+                    {translateText('Tax (VAT)')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {formatPriceFromGBP(tax)}
@@ -326,7 +326,7 @@ export default function Cart() {
                 </tr>
                 <tr>
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
-                    Dedw3n 1.5% Transaction Commission
+                    {translateText('Dedw3n 1.5% Transaction Commission')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {formatPriceFromGBP(transactionCommission)}
@@ -335,7 +335,7 @@ export default function Cart() {
                 </tr>
                 <tr className="border-t">
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                    Total
+                    {translateText('Total')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                     {formatPriceFromGBP(total)}
@@ -350,7 +350,7 @@ export default function Cart() {
           {amountNeededForFreeShipping(subtotal, pricingConfig) > 0 && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                Add {formatPriceFromGBP(amountNeededForFreeShipping(subtotal, pricingConfig))} more to qualify for free shipping!
+                {translateText('Add')} {formatPriceFromGBP(amountNeededForFreeShipping(subtotal, pricingConfig))} {translateText('more to qualify for free shipping!')}
               </p>
             </div>
           )}
@@ -361,7 +361,7 @@ export default function Cart() {
             onClick={handleContinueShopping}
             className="w-full sm:w-auto"
           >
-            Continue Shopping
+            {translateText('Continue Shopping')}
           </Button>
           <Button
             onClick={handleCheckout}
@@ -371,10 +371,10 @@ export default function Cart() {
             {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                {translateText('Processing...')}
               </>
             ) : (
-              'Proceed to Checkout'
+              translateText('Proceed to Checkout')
             )}
           </Button>
         </CardFooter>
