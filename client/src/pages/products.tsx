@@ -124,10 +124,10 @@ export default function Products() {
     "Would you like to add a message with this product share?", "Add your message (optional)",
     "What do you think about this product?", "Post Without Text", "Repost",
     
-    // Offers & Actions (9 texts)
+    // Offers & Actions (10 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
     "Your Offer Amount", "Enter your offer amount", "Message (optional)",
-    "Add a message with your offer...", "Send via Message",
+    "Add a message with your offer...", "Send via Message", "Send Offer",
     
     // Search & Filters (11 texts)
     "Search for Products", "Search within", "Categories", "Region", "Reset Filters",
@@ -161,7 +161,7 @@ export default function Products() {
     addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
-    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText,
+    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText, sendOfferBtnText,
     
     searchForProductsText, searchWithinText, categoriesText, regionText, resetFiltersText,
     onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
