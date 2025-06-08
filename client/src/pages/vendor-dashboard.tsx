@@ -28,23 +28,25 @@ import {
   TrendingUp,
   Tag,
   Megaphone,
-  DollarSign
+  DollarSign,
+  ShoppingCart,
+  Star,
+  Eye,
+  FileText,
+  Calendar,
+  MapPin,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  ArrowUpCircle
 } from "lucide-react";
 
-// Import vendor components
-import ProductsList from "@/components/vendor/ProductsList";
-import OrdersList from "@/components/vendor/OrdersList";
-import CustomersList from "@/components/vendor/CustomersList";
-import ShippingManager from "@/components/vendor/ShippingManager";
-import StoreSettingsForm from "@/components/vendor/StoreSettingsForm";
-import VendorAnalytics from "@/components/vendor/VendorAnalytics";
-import { VendorPaymentInfo } from "@/components/vendor/VendorPaymentInfo";
-import { VendorBadge } from "@/components/vendor/VendorBadge";
-import { BadgeProgress } from "@/components/vendor/BadgeProgress";
-import { calculateBadgeLevel } from "@/lib/vendor-badges";
-import DiscountForm from "@/components/vendor/DiscountForm";
-import DiscountList from "@/components/vendor/DiscountList";
-import MarketingCampaigns from "@/components/vendor/MarketingCampaigns";
+import VendorProductsPage from "@/components/vendor/VendorProductsPage";
+import VendorShippingTab from "@/components/vendor/VendorShippingTab";
+import VendorSettingsTab from "@/components/vendor/VendorSettingsTab";
+import VendorAnalyticsTab from "@/components/vendor/VendorAnalyticsTab";
+import VendorPromotionsTab from "@/components/vendor/VendorPromotionsTab";
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 
 export default function VendorDashboard() {
@@ -73,83 +75,7 @@ export default function VendorDashboard() {
     "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports"
   ], []);
 
-  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(vendorTexts);
-  
-  const finalTexts = translatedTexts || vendorTexts;
-  
-  // Extract translations with proper indexing
-  const dashboardText = finalTexts[0] || "Dashboard";
-  const productsText = finalTexts[1] || "Products";
-  const ordersText = finalTexts[2] || "Orders";
-  const customersText = finalTexts[3] || "Customers";
-  const shippingText = finalTexts[4] || "Shipping";
-  const analyticsText = finalTexts[5] || "Analytics";
-  const settingsText = finalTexts[6] || "Settings";
-  const marketingText = finalTexts[7] || "Marketing";
-  const overviewText = finalTexts[8] || "Overview";
-  const totalSalesText = finalTexts[9] || "Total Sales";
-  const activeProductsText = finalTexts[10] || "Active Products";
-  const pendingOrdersText = finalTexts[11] || "Pending Orders";
-  const totalCustomersText = finalTexts[12] || "Total Customers";
-  const revenueMonthText = finalTexts[13] || "Revenue This Month";
-  const salesAnalyticsText = finalTexts[14] || "Sales Analytics";
-  const performanceMetricsText = finalTexts[15] || "Performance Metrics";
-  const growthRateText = finalTexts[16] || "Growth Rate";
-  const conversionRateText = finalTexts[17] || "Conversion Rate";
-  const avgOrderValueText = finalTexts[18] || "Average Order Value";
-  const customerSatisfactionText = finalTexts[19] || "Customer Satisfaction";
-  const productManagementText = finalTexts[20] || "Product Management";
-  const addNewProductText = finalTexts[21] || "Add New Product";
-  const editProductText = finalTexts[22] || "Edit Product";
-  const deleteProductText = finalTexts[23] || "Delete Product";
-  const viewDetailsText = finalTexts[24] || "View Details";
-  const productStatusText = finalTexts[25] || "Product Status";
-  const inStockText = finalTexts[26] || "In Stock";
-  const outOfStockText = finalTexts[27] || "Out of Stock";
-  const lowStockText = finalTexts[28] || "Low Stock";
-  const draftText = finalTexts[29] || "Draft";
-  const publishedText = finalTexts[30] || "Published";
-  const featuredText = finalTexts[31] || "Featured";
-  const onSaleText = finalTexts[32] || "On Sale";
-  const productCategoriesText = finalTexts[33] || "Product Categories";
-  const inventoryText = finalTexts[34] || "Inventory";
-  const pricingText = finalTexts[35] || "Pricing";
-  const orderManagementText = finalTexts[36] || "Order Management";
-  const recentOrdersText = finalTexts[37] || "Recent Orders";
-  const orderStatusText = finalTexts[38] || "Order Status";
-  const pendingText = finalTexts[39] || "Pending";
-  const processingText = finalTexts[40] || "Processing";
-  const shippedText = finalTexts[41] || "Shipped";
-  const deliveredText = finalTexts[42] || "Delivered";
-  const cancelledText = finalTexts[43] || "Cancelled";
-  const viewOrderText = finalTexts[44] || "View Order";
-  const updateStatusText = finalTexts[45] || "Update Status";
-  const printInvoiceText = finalTexts[46] || "Print Invoice";
-  const trackShipmentText = finalTexts[47] || "Track Shipment";
-  const customerManagementText = finalTexts[48] || "Customer Management";
-  const customerListText = finalTexts[49] || "Customer List";
-  const customerDetailsText = finalTexts[50] || "Customer Details";
-  const orderHistoryText = finalTexts[51] || "Order History";
-  const customerReviewsText = finalTexts[52] || "Customer Reviews";
-  const contactCustomerText = finalTexts[53] || "Contact Customer";
-  const customerSupportText = finalTexts[54] || "Customer Support";
-  const vipCustomersText = finalTexts[55] || "VIP Customers";
-  const salesReportsText = finalTexts[56] || "Sales Reports";
-  const performanceAnalyticsText = finalTexts[57] || "Performance Analytics";
-  const revenueChartsText = finalTexts[58] || "Revenue Charts";
-  const productPerformanceText = finalTexts[59] || "Product Performance";
-  const customerInsightsText = finalTexts[60] || "Customer Insights";
-  const trafficAnalysisText = finalTexts[61] || "Traffic Analysis";
-  const exportDataText = finalTexts[62] || "Export Data";
-  const monthlyReportText = finalTexts[63] || "Monthly Report";
-  const yearlyReportText = finalTexts[64] || "Yearly Report";
-  const realTimeDataText = finalTexts[65] || "Real-time Data";
-  const dashboardWidgetsText = finalTexts[66] || "Dashboard Widgets";
-  const customReportsText = finalTexts[67] || "Custom Reports";
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
-  }
+  // All hooks must be called at the top level, before any conditional logic
   const { user } = useAuth();
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
@@ -159,201 +85,7 @@ export default function VendorDashboard() {
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
 
-  // Extended text arrays for vendor dashboard components
-  const extendedTexts = [
-    "Settings",
-    "Analytics", 
-    "Payment Info",
-    "Promotions",
-    "Commission",
-    "Overview",
-    "Orders",
-    "Deep Analytics",
-    
-    // Authentication & Access
-    "Loading Vendor Dashboard",
-    "Verifying your vendor access...",
-    "Please log in to access your vendor dashboard", 
-    "You need to be authenticated to access vendor features and manage your store.",
-    "Go to Login",
-    
-    // Vendor Types & Status
-    "Using Private Vendor account",
-    "Using Business Vendor account", 
-    "Private Vendor",
-    "Business Vendor",
-    "account",
-    "Using",
-    
-    // Action Buttons
-    "Add Product",
-    "Create Business Vendor",
-    "Creating...",
-    "Deep Analytics",
-    
-    // Dashboard Summary Cards
-    "Total Products",
-    "Total Orders",
-    "Total Revenue", 
-    "Pending Orders",
-    
-    // Tab Content Headers
-    "Shipping & Orders",
-    "Shipping Management",
-    "Store Settings",
-    
-    // Shipping Tab Specific Text
-    "Shipping",
-    "Orders",
-    "Total Orders",
-    "Pending Orders", 
-    "Shipped Orders",
-    "Completed Orders",
-    "No orders found",
-    "You don't have any orders yet.",
-    "All Orders",
-    
-    // Shipping Manager Component Texts
-    "Pending Shipments",
-    "Orders that need to be shipped",
-    "Shipped Today", 
-    "Orders shipped in the last 24 hours",
-    "Total Shipped",
-    "All-time shipped orders",
-    "Pending",
-    "Shipped",
-    "Search orders...",
-    "No orders to ship",
-    "All orders have been shipped",
-    "Order ID",
-    "Customer",
-    "Amount",
-    "Date",
-    "Status", 
-    "Actions",
-    "Ship Order",
-    "View Details",
-    "Tracking Number",
-    "Shipping Provider",
-    "Shipping Address",
-    "Update Shipping",
-    "Cancel",
-    "Updating",
-    "Mark as Shipped",
-    "Shipping Updated",
-    "Order has been marked as shipped with tracking information",
-    "Error",
-    "Failed to update shipping",
-    "Select provider",
-    "DHL",
-    "FedEx", 
-    "UPS",
-    "USPS",
-    "Royal Mail",
-    "Other",
-    
-    // OrdersList Component Texts
-    "All",
-    "Pending", 
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Cancelled",
-    "Filter by status",
-    "No orders found for the current filter",
-    "Try changing the status filter to see more orders",
-    "View Details",
-    "Update Status", 
-    "Change Status",
-    "Select new status for this order",
-    "Cancel",
-    "Update",
-    "Updating...",
-    "Order Details",
-    "Customer Information",
-    "Shipping Address",
-    "Items Ordered",
-    "Order Summary",
-    "Subtotal",
-    "Shipping",
-    "Tax",
-    "Total Amount",
-    "Payment Method",
-    "Order Notes",
-    "Status History",
-    "Close",
-    "Order status updated successfully",
-    "Failed to update order status",
-    "Loading orders...",
-    "Quantity",
-    "Price",
-    "Item Total",
-    "No items in this order"
-  ];
-
-  // Additional extended texts for advanced features
-  const additionalTexts = [
-    "Open menu",
-    
-    // Marketing Section
-    "Promotions & Discounts",
-    "Manage discount codes and automatic promotions",
-    "Discount Codes",
-    "Automatic Discounts",
-    "Create Code",
-    "Create Auto Discount",
-    
-    // Common UI Elements
-    "Loading...",
-    "Save",
-    "Cancel",
-    "Edit",
-    "Delete",
-    "View",
-    "Manage",
-    "Create",
-    "Update",
-    "Remove",
-    "Add",
-    "Search",
-    "Filter",
-    "Sort",
-    "Export",
-    "Import",
-    "Refresh",
-    "Close",
-    "Open",
-    "Back",
-    "Next",
-    "Previous",
-    "Submit",
-    "Reset",
-    "Clear",
-    "Apply",
-    "Confirm",
-    "Yes",
-    "No"
-  ];
-
-  // Use unified master translation system for optimal performance and consistency
-  const { translations, isLoading: isTranslating } = useMasterBatchTranslation(vendorTexts, 'instant');
-
-  // Helper function to get translated text with proper typing
-  const t = (text: string): string => {
-    if (Array.isArray(translations)) {
-      const index = vendorTexts.indexOf(text);
-      return index !== -1 ? translations[index] || text : text;
-    }
-    return text;
-  };
-  
-  // Authentication wall - redirect if not logged in
-  useEffect(() => {
-    if (!user) {
-      setLocation('/');
-      return;
-    }
-  }, [user, setLocation]);
+  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(vendorTexts);
   
   // Fetch vendor profile only if user is authenticated
   const { data: vendorData, isLoading: isLoadingVendor, error: vendorError } = useQuery({
@@ -362,11 +94,9 @@ export default function VendorDashboard() {
       const response = await fetch("/api/vendors/me");
       if (!response.ok) {
         if (response.status === 404) {
-          // Not a vendor yet
           return null;
         }
         if (response.status === 401) {
-          // Unauthorized - redirect to login
           setLocation('/');
           return null;
         }
@@ -393,12 +123,67 @@ export default function VendorDashboard() {
     enabled: !!vendorId,
   });
 
+  // Create unified vendor management mutation
+  const createBusinessVendorMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/vendors/manage", {
+        action: "create-business"
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.redirectTo) {
+        setLocation(data.redirectTo);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create business vendor account",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Set vendor ID when data is loaded
   useEffect(() => {
     if (vendor?.id) {
       setVendorId(vendor.id);
     }
   }, [vendor]);
+  
+  // Authentication wall - redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      setLocation('/');
+      return;
+    }
+  }, [user, setLocation]);
+  
+  const finalTexts = translatedTexts || vendorTexts;
+  
+  // Extract translations with proper indexing
+  const dashboardText = finalTexts[0] || "Dashboard";
+  const productsText = finalTexts[1] || "Products";
+  const ordersText = finalTexts[2] || "Orders";
+  const customersText = finalTexts[3] || "Customers";
+  const shippingText = finalTexts[4] || "Shipping";
+  const analyticsText = finalTexts[5] || "Analytics";
+  const settingsText = finalTexts[6] || "Settings";
+  const marketingText = finalTexts[7] || "Marketing";
+
+  // Helper function to get translated text with proper typing
+  const t = (text: string): string => {
+    if (Array.isArray(translatedTexts)) {
+      const index = vendorTexts.indexOf(text);
+      return index !== -1 ? translatedTexts[index] || text : text;
+    }
+    return text;
+  };
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
 
   // Show loading screen while checking authentication
   if (!user) {
@@ -430,28 +215,6 @@ export default function VendorDashboard() {
     setLocation('/become-vendor');
   };
 
-  // Create unified vendor management mutation
-  const createBusinessVendorMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/vendors/manage", {
-        action: "create-business"
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.redirectTo) {
-        setLocation(data.redirectTo);
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create business vendor account",
-        variant: "destructive"
-      });
-    }
-  });
-
   // Handle business vendor creation
   const handleCreateBusinessVendor = () => {
     createBusinessVendorMutation.mutate();
@@ -481,456 +244,301 @@ export default function VendorDashboard() {
   if (vendorError) {
     return (
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
-        <Card className="border-none">
+        <Card>
           <CardHeader>
             <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <CardTitle>{t("Vendor Account Not Found")}</CardTitle>
+            <CardTitle>Vendor Access Error</CardTitle>
             <CardDescription>
-              {t("Unable to verify vendor access")}
+              Failed to verify your vendor status
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-6">
-              {t("To create your vendor profile, please")}{' '}
-              <span 
-                className="text-blue-600 cursor-pointer hover:underline"
-                onClick={() => setLocation('/vendor-register')}
-              >
-                {t("click here")}
-              </span>
-              . {t("If you encounter an error while having a vendor account, please attempt to log in again. Should the issue persist, do not hesitate to contact support for assistance.")}{' '}
-              <span 
-                className="text-blue-600 cursor-pointer hover:underline"
-                onClick={() => setLocation('/contact')}
-              >
-                {t("Contact Us")}
-              </span>
+              There was an error checking your vendor account. Please try again.
             </p>
-            <div className="space-y-2">
-              <Button onClick={() => setLocation('/vendor-register')} className="bg-black text-white hover:bg-gray-800">
-                {t("Register as Vendor")}
-              </Button>
-            </div>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Check if user is a vendor based on the user object's isVendor flag
-  const isUserVendor = user && user.isVendor === true;
+  // Not a vendor yet - show registration options
+  if (!vendor) {
+    return (
+      <div className="container max-w-2xl mx-auto py-16 px-4">
+        <div className="text-center mb-8">
+          <Store className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Become a Vendor</h1>
+          <p className="text-lg text-muted-foreground">
+            Start selling your products on our marketplace
+          </p>
+        </div>
 
-  // Not a vendor yet - but allow direct product listing if user.isVendor is true even if vendor profile is missing
-  if (!isLoadingVendor && !vendor && !isUserVendor) {
-    return (
-      <div className="container max-w-6xl mx-auto py-12 px-4">
-        <Card className="border-none">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t("Become a Vendor")}</CardTitle>
-            <CardDescription>
-              {t("Start selling your products on our marketplace")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <Store className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>{t("Create Your Store")}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {t("Set up your own branded storefront with custom logo and description.")}
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <Package className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>{t("Sell Your Products")}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {t("List and sell your products to customers around the world.")}
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <BarChart className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>{t("Grow Your Business")}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {t("Access analytics and tools to help your business grow.")}
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="flex justify-center mt-6">
-              <Button size="lg" onClick={handleBecomeVendor}>
-                <PlusCircle className="mr-2 h-5 w-5" />
-                {t("Become a Vendor")}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Private Vendor
+              </CardTitle>
+              <CardDescription>
+                Perfect for individuals selling personal items
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                <li>• Sell personal items</li>
+                <li>• Simple setup process</li>
+                <li>• Basic analytics</li>
+                <li>• 10% commission</li>
+              </ul>
+              <Button onClick={handleBecomeVendor} className="w-full">
+                Become Private Vendor
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  // If user is a vendor but doesn't have a vendor profile yet, show simplified dashboard with multiple options
-  if (!isLoadingVendor && !vendor && isUserVendor) {
-    return (
-      <div className="container max-w-7xl mx-auto py-8 px-4">
-        <Card className="border-none">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t("Vendor Dashboard")}</CardTitle>
-            <CardDescription>
-              {t("Your vendor account is active. Here are some options to get started.")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <p>{t("Your vendor profile is being set up. Here are some things you can do now:")}</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{t("Add Your First Product")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {t("Start selling by adding your first product to your store.")}
-                    </p>
-                    <Button onClick={() => setLocation('/add-product')}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {t("Add Product")}
-                    </Button>
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{t("View Dashboard")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {t("View your dashboard to track sales and performance.")}
-                    </p>
-                    <Button variant="outline" onClick={() => setLocation('/vendor-dashboard')}>
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      {t("Dashboard")}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Store className="h-5 w-5" />
+                Business Vendor
+              </CardTitle>
+              <CardDescription>
+                For businesses and professional sellers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                <li>• Advanced store management</li>
+                <li>• Bulk product uploads</li>
+                <li>• Detailed analytics</li>
+                <li>• Promotional tools</li>
+              </ul>
+              <Button 
+                onClick={handleCreateBusinessVendor}
+                disabled={createBusinessVendorMutation.isPending}
+                className="w-full"
+              >
+                {createBusinessVendorMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Business Vendor"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-7xl mx-auto py-8 px-4">
-      {/* Navigation Tabs - Top of Page */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-6 gap-1 p-1 bg-black text-white">
-          <TabsTrigger value="dashboard" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <LayoutDashboard className="h-4 w-4 mr-2" />
-            {t("Dashboard")}
-          </TabsTrigger>
-          <TabsTrigger value="products" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <Package className="h-4 w-4 mr-2" />
-            {t("Products")}
-          </TabsTrigger>
-          <TabsTrigger value="customers" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <Users className="h-4 w-4 mr-2" />
-            {t("Customers")}
-          </TabsTrigger>
-          <TabsTrigger value="shipping" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <Truck className="h-4 w-4 mr-2" />
-            {t("Shipping")}
-          </TabsTrigger>
-          <TabsTrigger value="marketing" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <Megaphone className="h-4 w-4 mr-2" />
-            {t("Marketing")}
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center justify-center px-3 py-2 text-sm text-white data-[state=active]:text-black data-[state=active]:bg-white">
-            <Settings className="h-4 w-4 mr-2" />
-            {t("Settings")}
-          </TabsTrigger>
-
-        </TabsList>
-      </Tabs>
-
-      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-        {/* Sidebar Navigation */}
-        <div className="space-y-4">
-          <div className="mb-4">
-            <div className="font-medium text-xl flex items-center">
-              <Store className="mr-2 h-5 w-5" />
-              {vendor?.storeName || t("Vendor Dashboard")}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {user?.username || ""}
-            </div>
-          </div>
-
-          {/* Vendor Badge Display */}
-          {vendor && (
-            <div className="mt-3 space-y-2">
-              <VendorBadge 
-                level={calculateBadgeLevel(
-                  vendor.totalSalesAmount || 0, 
-                  vendor.totalTransactions || 0
-                )}
-                size="md"
-                showTooltip={true}
-                className="mb-2"
-              />
-              <BadgeProgress
-                currentLevel={calculateBadgeLevel(
-                  vendor.totalSalesAmount || 0, 
-                  vendor.totalTransactions || 0
-                )}
-                totalSales={vendor.totalSalesAmount || 0}
-                totalTransactions={vendor.totalTransactions || 0}
-                className="text-xs"
-              />
-            </div>
-          )}
+    <div className="container max-w-7xl py-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">{dashboardText}</h1>
+          <p className="text-muted-foreground">
+            {vendor.vendorType === 'private' ? t("Using Private Vendor account") : t("Using Business Vendor account")}
+          </p>
         </div>
+        <Button onClick={() => setLocation('/products/new')}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          {t("Add Product")}
+        </Button>
+      </div>
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsContent value="dashboard" className="mt-0 space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">{t("Dashboard")}</h2>
-                {vendor && (
-                  <p className="text-blue-600 text-xs font-normal mt-1">
-                    {t("Using")} {vendor.vendorType === 'private' ? t("Private Vendor") : t("Business Vendor")} {t("account")}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-3">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Total Products")}
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingSummary ? "..." : summary?.totalProducts || 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Total Orders")}
+            </CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingSummary ? "..." : summary?.totalOrders || 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Total Revenue")}
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingSummary ? "..." : formatPriceFromGBP(summary?.totalRevenue || 0)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Pending Orders")}
+            </CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {isLoadingSummary ? "..." : summary?.pendingOrders || 0}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Dashboard Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="dashboard">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            {t("Overview")}
+          </TabsTrigger>
+          <TabsTrigger value="products">
+            <Package className="mr-2 h-4 w-4" />
+            {productsText}
+          </TabsTrigger>
+          <TabsTrigger value="orders">
+            <Truck className="mr-2 h-4 w-4" />
+            {t("Shipping & Orders")}
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart className="mr-2 h-4 w-4" />
+            {analyticsText}
+          </TabsTrigger>
+          <TabsTrigger value="marketing">
+            <Megaphone className="mr-2 h-4 w-4" />
+            {marketingText}
+          </TabsTrigger>
+          <TabsTrigger value="commission">
+            <DollarSign className="mr-2 h-4 w-4" />
+            {t("Commission")}
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings className="mr-2 h-4 w-4" />
+            {settingsText}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
                 <Button 
-                  onClick={handleCreateBusinessVendor} 
-                  className="bg-black text-white hover:bg-gray-800"
-                  disabled={createBusinessVendorMutation.isPending}
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setLocation('/products/new')}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  {createBusinessVendorMutation.isPending ? t("Creating...") : t("Create Business Vendor")}
+                  {t("Add New Product")}
                 </Button>
-                <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  {t("Add Product")}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('orders')}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t("View Orders")}
                 </Button>
-                <Button onClick={() => setLocation('/vendor-analytics')} className="bg-black text-white hover:bg-gray-800">
-                  <BarChart className="mr-2 h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('analytics')}
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" />
                   {t("Deep Analytics")}
                 </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Dashboard Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {t("Total Products")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingSummary ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      summary?.productCount || 0
-                    )}
+            {/* Recent Activity */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">New order received</span>
+                    <span className="text-xs text-muted-foreground ml-auto">2 hours ago</span>
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {t("Total Orders")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingSummary ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      summary?.orderCount || 0
-                    )}
+                  <div className="flex items-center gap-3">
+                    <ArrowUpCircle className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm">Product published</span>
+                    <span className="text-xs text-muted-foreground ml-auto">1 day ago</span>
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {t("Total Revenue")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingSummary ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      formatPriceFromGBP(summary?.totalRevenue || 0)
-                    )}
+                  <div className="flex items-center gap-3">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm">New review received</span>
+                    <span className="text-xs text-muted-foreground ml-auto">2 days ago</span>
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {t("Pending Orders")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingSummary ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      summary?.pendingOrderCount || 0
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Commission Dashboard Section */}
-            {vendorId && (
-              <div className="mt-8">
-                <VendorCommissionDashboard vendorId={vendorId} />
-              </div>
-            )}
-
-          </TabsContent>
-
-          {/* Products Tab */}
-          <TabsContent value="products" className="mt-0 space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold tracking-tight">{t("Products")}</h2>
-              <Button onClick={() => setLocation('/add-product')} className="bg-black text-white hover:bg-gray-800">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {t("Add Product")}
-              </Button>
-            </div>
-            <ProductsList vendorId={vendorId || undefined} />
-          </TabsContent>
-
-
-
-          {/* Customers Tab */}
-          <TabsContent value="customers" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">{t("Customers")}</h2>
-            <CustomersList vendorId={vendorId || undefined} />
-          </TabsContent>
-
-          {/* Shipping Tab */}
-          <TabsContent value="shipping" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">{t("Shipping & Orders")}</h2>
-            
-            {/* Orders Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t("Orders")}</h3>
-              <OrdersList vendorId={vendorId || undefined} />
-            </div>
-            
-            {/* Shipping Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t("Shipping Management")}</h3>
-              <ShippingManager vendorId={vendorId || undefined} />
-            </div>
-          </TabsContent>
-
-
-
-          {/* Marketing Tab */}
-          <TabsContent value="marketing" className="mt-0 space-y-6">
-            
-            {/* Marketing Campaigns Section */}
-            <div className="space-y-4">
-              <MarketingCampaigns />
-            </div>
-            
-            {/* Promotions & Discounts Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-2xl font-bold">{t("Promotions & Discounts")}</h3>
-                  <p className="text-muted-foreground">{t("Manage discount codes and automatic promotions")}</p>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-              <Tabs defaultValue="discount-codes" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="discount-codes">{t("Discount Codes")}</TabsTrigger>
-                  <TabsTrigger value="auto-discounts">{t("Automatic Discounts")}</TabsTrigger>
-                </TabsList>
+        <TabsContent value="products">
+          <VendorProductsPage vendorId={vendorId!} />
+        </TabsContent>
 
-                {/* Discount Codes Tab */}
-                <TabsContent value="discount-codes" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-md font-semibold">{t("Discount Codes")}</h4>
-                    <Button className="bg-black hover:bg-gray-800" onClick={() => {
-                      setDiscountFormType("discount-code");
-                      setDiscountFormOpen(true);
-                    }}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-{t("Create Code")}
-                    </Button>
-                  </div>
+        <TabsContent value="orders">
+          <VendorShippingTab vendorId={vendorId!} />
+        </TabsContent>
 
-                  <DiscountList vendorId={vendorId} type="discount-code" />
-                </TabsContent>
+        <TabsContent value="analytics">
+          <VendorAnalyticsTab vendorId={vendorId!} />
+        </TabsContent>
 
-                {/* Automatic Discounts Tab */}
-                <TabsContent value="auto-discounts" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-md font-semibold">{t("Automatic Discounts")}</h4>
-                    <Button className="bg-black hover:bg-gray-800" onClick={() => {
-                      setDiscountFormType("automatic");
-                      setDiscountFormOpen(true);
-                    }}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-{t("Create Auto Discount")}
-                    </Button>
-                  </div>
+        <TabsContent value="marketing">
+          <VendorPromotionsTab 
+            vendorId={vendorId!}
+            discountFormOpen={discountFormOpen}
+            setDiscountFormOpen={setDiscountFormOpen}
+            discountFormType={discountFormType}
+            setDiscountFormType={setDiscountFormType}
+          />
+        </TabsContent>
 
-                  <DiscountList vendorId={vendorId} type="automatic" />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </TabsContent>
+        <TabsContent value="commission">
+          <VendorCommissionDashboard vendorId={vendorId!} />
+        </TabsContent>
 
-
-
-
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="mt-0 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">{t("Store Settings")}</h2>
-            <StoreSettingsForm vendor={vendor} />
-            
-            {vendorId && (
-              <div className="mt-8">
-                <VendorPaymentInfo vendorId={vendorId} />
-              </div>
-            )}
-          </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-      
-      {/* Discount Form Dialog */}
-      <DiscountForm
-        open={discountFormOpen}
-        onOpenChange={setDiscountFormOpen}
-        type={discountFormType}
-        vendorId={vendorId || 0}
-      />
+        <TabsContent value="settings">
+          <VendorSettingsTab vendorId={vendorId!} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
