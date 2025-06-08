@@ -2693,7 +2693,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Remove user from store
   app.delete("/api/vendor/store-users/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: 'No vendor accounts found' });
@@ -4212,7 +4215,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get specific order details with items
   app.get('/api/orders/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const orderId = parseInt(req.params.id);
 
       if (isNaN(orderId)) {
@@ -4266,7 +4272,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a return request
   app.post('/api/returns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const returnData = insertReturnSchema.parse(req.body);
 
       // Verify the order item belongs to the user
@@ -4297,7 +4306,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's returns
   app.get('/api/returns', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const status = req.query.status as string;
 
       let whereConditions = [eq(returns.userId, userId)];
@@ -4352,7 +4364,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get specific return details
   app.get('/api/returns/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const returnId = parseInt(req.params.id);
 
       if (isNaN(returnId)) {
