@@ -40,7 +40,7 @@ interface GiftSearchModalProps {
 }
 
 export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }: GiftSearchModalProps) {
-  const { t } = useMasterTranslation();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
