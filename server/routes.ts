@@ -5100,14 +5100,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dating profile endpoint - using unifiedIsAuthenticated
-  app.get('/api/dating-profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  // Dating profile endpoint - Enhanced authentication with fallback
+  app.get('/api/dating-profile', async (req: Request, res: Response) => {
     try {
       console.log('[DEBUG] /api/dating-profile called');
       
-      const authenticatedUser = req.user!;
-      const userId = authenticatedUser.id;
+      let authenticatedUser = null;
+      
+      // Multi-level authentication with fallback
+      if (req.user) {
+        authenticatedUser = req.user;
+        console.log('[DEBUG] Dating profile - Session user found:', authenticatedUser.id);
+      } else {
+        // Try manual session check
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+            console.log('[DEBUG] Dating profile - Session fallback user found:', user.id);
+          }
+        }
+      }
+      
+      // If no session auth, try Authorization header
+      if (!authenticatedUser) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          try {
+            const payload = verifyToken(token);
+            if (payload) {
+              const user = await storage.getUser(payload.userId);
+              if (user) {
+                authenticatedUser = user;
+                console.log('[DEBUG] Dating profile - JWT user found:', user.id);
+              }
+            }
+          } catch (jwtError) {
+            console.log('[DEBUG] Dating profile - JWT verification failed');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[DEBUG] Dating profile - No authentication found');
+        return res.status(401).json({ 
+          message: 'Authentication required' 
+        });
+      }
 
+      const userId = authenticatedUser.id;
+      
       // Fetch actual dating profile from database
       const datingProfile = await storage.getDatingProfile(userId);
       
