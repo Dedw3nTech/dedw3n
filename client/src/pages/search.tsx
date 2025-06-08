@@ -156,7 +156,7 @@ export default function SearchPage() {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
+      {searchResultsLoading && (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
@@ -176,7 +176,7 @@ export default function SearchPage() {
       )}
 
       {/* Search Results */}
-      {!isLoading && allResults.length > 0 && (
+      {!searchResultsLoading && allResults.length > 0 && (
         <div className="space-y-4">
           {allResults.map((result) => (
             <Card key={`${result.type}-${result.id}`} className="hover:shadow-md transition-shadow">
@@ -242,7 +242,7 @@ export default function SearchPage() {
       )}
 
       {/* No Results */}
-      {!isLoading && allResults.length === 0 && (
+      {!searchResultsLoading && allResults.length === 0 && (
         <div className="text-center py-12">
           <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">No results found</h2>

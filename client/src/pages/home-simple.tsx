@@ -229,7 +229,7 @@ export default function Home() {
     </Card>
   );
 
-  const isLoading = featuredLoading || newLoading || categoriesLoading;
+  const dataLoading = featuredLoading || newLoading || categoriesLoading;
 
   return (
     <div key={`home-${selectedLanguage.code}`} className="min-h-screen bg-gray-50">
@@ -316,7 +316,7 @@ export default function Home() {
         </div>
 
         {/* Loading State */}
-        {isLoading && (
+        {dataLoading && (
           <div className="text-center py-12">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
             <p className="text-gray-500">Loading products...</p>
@@ -324,7 +324,7 @@ export default function Home() {
         )}
 
         {/* Featured Products */}
-        {!isLoading && featuredProducts.length > 0 && (
+        {!dataLoading && featuredProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Featured Products</h2>
@@ -342,7 +342,7 @@ export default function Home() {
         )}
 
         {/* New Products */}
-        {!isLoading && newProducts.length > 0 && (
+        {!dataLoading && newProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">New Arrivals</h2>
@@ -360,7 +360,7 @@ export default function Home() {
         )}
 
         {/* Categories */}
-        {!isLoading && categories.length > 0 && (
+        {!dataLoading && categories.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
