@@ -236,8 +236,8 @@ export default function OrdersReturns() {
   const handleSubmitReturn = () => {
     if (!returnFormData.reason || !returnFormData.description) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: translateText("Missing Information"),
+        description: translateText("Please fill in all required fields."),
         variant: "destructive",
       });
       return;
@@ -295,8 +295,8 @@ export default function OrdersReturns() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders Found</h3>
-                  <p className="text-gray-600">You haven't placed any orders yet.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{translateText('No Orders Found')}</h3>
+                  <p className="text-gray-600">{translateText("You haven't placed any orders yet.")}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -307,7 +307,7 @@ export default function OrdersReturns() {
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="flex items-center gap-2">
-                            Order #{order.id}
+{translateText('Order')} #{order.id}
                             <Badge variant={getStatusBadgeVariant(order.status)} className="flex items-center gap-1">
                               {getStatusIcon(order.status)}
                               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -351,19 +351,19 @@ export default function OrdersReturns() {
 
           <TabsContent value="returns" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Return Requests</h2>
+              <h2 className="text-2xl font-semibold">{translateText('Return Requests')}</h2>
               <Select value={returnStatusFilter} onValueChange={setReturnStatusFilter}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={translateText('Filter by status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Returns</SelectItem>
-                  <SelectItem value="requested">Requested</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">{translateText('All Returns')}</SelectItem>
+                  <SelectItem value="requested">{translateText('Requested')}</SelectItem>
+                  <SelectItem value="approved">{translateText('Approved')}</SelectItem>
+                  <SelectItem value="processing">{translateText('Processing')}</SelectItem>
+                  <SelectItem value="completed">{translateText('Completed')}</SelectItem>
+                  <SelectItem value="rejected">{translateText('Rejected')}</SelectItem>
+                  <SelectItem value="cancelled">{translateText('Cancelled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -376,8 +376,8 @@ export default function OrdersReturns() {
               <Card>
                 <CardContent className="text-center py-12">
                   <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Returns Found</h3>
-                  <p className="text-gray-600">You haven't submitted any return requests.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{translateText('No Returns Found')}</h3>
+                  <p className="text-gray-600">{translateText("You haven't submitted any return requests.")}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -396,9 +396,9 @@ export default function OrdersReturns() {
                           </CardTitle>
                           <CardDescription className="mt-2">
                             <div className="flex flex-wrap items-center gap-4 text-sm">
-                              <span>Return #{returnItem.id}</span>
-                              <span>Vendor: {returnItem.vendor.storeName}</span>
-                              <span>Reason: {returnItem.reason}</span>
+                              <span>{translateText('Return')} #{returnItem.id}</span>
+                              <span>{translateText('Vendor')}: {returnItem.vendor.storeName}</span>
+                              <span>{translateText('Reason')}: {returnItem.reason}</span>
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
                                 {format(new Date(returnItem.createdAt), 'MMM dd, yyyy')}
