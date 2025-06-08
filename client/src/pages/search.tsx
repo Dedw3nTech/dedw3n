@@ -34,9 +34,9 @@ export default function SearchPage() {
     "View Details", "Add to Cart", "Contact", "Follow"
   ], []);
 
-  const { translations, isLoading } = useMasterBatchTranslation(searchTexts, 'instant');
+  const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(searchTexts, 'instant');
   
-  if (isLoading) {
+  if (translationsLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
   }
   
@@ -100,7 +100,7 @@ export default function SearchPage() {
     ...(products || [])
   ];
 
-  const isLoading = usersLoading || productsLoading;
+  const searchResultsLoading = usersLoading || productsLoading;
 
   const getIcon = (type: string) => {
     switch (type) {

@@ -68,9 +68,9 @@ export default function Home() {
     "Consumer to Consumer", "Business to Consumer", "Business to Business"
   ], []);
 
-  const { translations, isLoading } = useMasterBatchTranslation(homeTexts, 'instant');
+  const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(homeTexts, 'instant');
   
-  if (isLoading) {
+  if (translationsLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
   }
   
