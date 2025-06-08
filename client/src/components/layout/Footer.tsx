@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useMemo } from "react";
-import { useDeepLBatchTranslation } from "@/hooks/use-deepl-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
 function FooterContent() {

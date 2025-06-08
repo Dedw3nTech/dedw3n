@@ -89,7 +89,7 @@ export function VendorBadgeCard({
     "Transactions"
   ], [badgeInfo.name, badgeInfo.description]);
 
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(cardTexts, 'high');
+  const { translations: translatedTexts, isLoading: isTranslating } = useMasterBatchTranslation(cardTexts, 'high');
   const translatedName = translatedTexts[badgeInfo.name] || badgeInfo.name;
   const translatedDescription = translatedTexts[badgeInfo.description] || badgeInfo.description;
   const translatedSalesLabel = translatedTexts["Total Sales"] || "Total Sales";

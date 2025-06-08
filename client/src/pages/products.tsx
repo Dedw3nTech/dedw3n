@@ -6,8 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useOptimizedTranslationBatch, useInstantTranslation } from '@/hooks/use-global-translation';
-import { useDeepLTranslation } from '@/hooks/use-deepl-translation';
+import { useMasterBatchTranslation, useMasterTranslation } from '@/hooks/use-master-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
