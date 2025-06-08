@@ -412,7 +412,7 @@ export default function ProductDetail() {
 
         {/* Product info */}
         <div className="md:w-1/2">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">{product.name}</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-2">{translateText(product.name)}</h1>
           
           {/* Vendor info */}
           {!vendorLoading && vendor && (
@@ -724,7 +724,7 @@ export default function ProductDetail() {
         </TabsList>
         <TabsContent value="description">
           <div className="prose max-w-none">
-            <p className="whitespace-pre-line">{product.description}</p>
+            <p className="whitespace-pre-line">{translateText(product.description)}</p>
           </div>
         </TabsContent>
         <TabsContent value="reviews">
