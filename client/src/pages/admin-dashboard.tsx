@@ -55,10 +55,11 @@ import {
 import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-export default function AdminDashboard() {
-  // Master Translation mega-batch for Admin Dashboard (50+ texts)
-  const adminTexts = useMemo(() => [
+// Master Translation mega-batch for Admin Dashboard (50+ texts)
+const adminTexts = [
     // Main Navigation (8 texts)
     "Admin Dashboard", "Users", "Products", "Orders", "Reports", "Settings", "Security", "System",
     
@@ -77,20 +78,31 @@ export default function AdminDashboard() {
     // Reports & Analytics (12 texts)
     "Platform Analytics", "Revenue Reports", "User Activity", "Product Performance", "Sales Trends",
     "Export Data", "Generate Report", "View Details", "Filter", "Date Range", "Download", "Print"
-  ], []);
+];
 
-  const [t] = useMasterBatchTranslation(adminTexts);
-  const [
-    adminDashboardText, usersText, productsText, ordersText, reportsText, settingsText, securityText, systemText,
-    userManagementText, activeUsersText, bannedUsersText, moderatorsText, userDetailsText, userRolesText,
-    banUserText, unbanUserText, editUserText, deleteUserText, viewProfileText, sendMessageText,
-    productApprovalText, pendingProductsText, approvedProductsText, rejectedProductsText, reviewProductText,
-    approveText, rejectText, editText, deleteText, featureProductText,
-    orderOverviewText, pendingOrdersText, processingOrdersText, completedOrdersText, cancelledOrdersText,
-    viewOrderText, updateStatusText, refundOrderText,
-    platformAnalyticsText, revenueReportsText, userActivityText, productPerformanceText, salesTrendsText,
-    exportDataText, generateReportText, viewDetailsText, filterText, dateRangeText, downloadText, printText
-  ] = t || adminTexts;
+export default function AdminDashboard() {
+  const { translations, isLoading } = useMasterBatchTranslation(adminTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = adminTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
+
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [activeSetting, setActiveSetting] = useState("general");
+  const [isSettingsSaved, setIsSettingsSaved] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isFixingBlobAvatars, setIsFixingBlobAvatars] = useState(false);
 
 // Placeholder components for admin dashboard features
 const UserModeration = () => (
