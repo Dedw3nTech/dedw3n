@@ -114,10 +114,11 @@ export default function Products() {
     "Add to Shopping Bag", "New", "Sale", "Verified", "Min qty", "Buy Now",
     "Share", "View Product", "Cancel", "Sending...", "Posting...",
     
-    // Gift & Messaging (11 texts)
+    // Gift & Messaging (12 texts) - Fixed count
     "Search for recipient", "Type name or username...", "No users found matching",
     "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
+    "(incl. VAT)", // Added VAT text
     
     // Community & Sharing (9 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",

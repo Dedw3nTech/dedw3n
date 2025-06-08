@@ -169,6 +169,8 @@ export const vendors = pgTable("vendors", {
   businessType: text("business_type").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
+  contactEmail: text("contact_email"), // Backward compatibility field
+  contactPhone: text("contact_phone"), // Backward compatibility field
   address: text("address").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
