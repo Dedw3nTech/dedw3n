@@ -114,8 +114,8 @@
 1. **Products.tsx** ✅ COMPLETED (88 calls → 1 mega-batch)
 2. **vendor-register.tsx** ✅ COMPLETED (73 calls → 1 mega-batch)
 3. **Footer.tsx** ✅ COMPLETED (18 calls → 1 mega-batch)
-4. **ContactPage.tsx** ⏳ NEXT
-5. **FAQPage.tsx** ⏳ NEXT  
+4. **ContactPage.tsx** ✅ COMPLETED (56 calls → 1 mega-batch)
+5. **FAQPage.tsx** ✅ COMPLETED (45 calls → 1 mega-batch)
 6. **CommunityPage.tsx** ⏳ NEXT
 7. **DatingPage.tsx** ⏳ NEXT
 8. **VendorDashboardPage.tsx** ⏳ NEXT
