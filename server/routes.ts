@@ -4559,7 +4559,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/cart/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const count = await storage.countCartItems(userId);
       res.json({ count });
     } catch (error) {
@@ -4613,7 +4616,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/favorites/:productId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: 'Invalid product ID' });
@@ -4668,7 +4674,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: 'Invalid product ID' });
@@ -4706,7 +4715,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: 'Invalid product ID' });
