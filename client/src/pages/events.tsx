@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,37 @@ interface Event {
 }
 
 export default function EventsPage() {
+  // Master Translation mega-batch for Events (45+ texts)
+  const eventsTexts = useMemo(() => [
+    // Main Navigation (8 texts)
+    "Events", "Create Event", "My Events", "Attending", "Categories", "Calendar", "Search Events", "Popular Events",
+    
+    // Event Details (12 texts)
+    "Event Title", "Description", "Date & Time", "Location", "Category", "Price", "Free Event", "Paid Event",
+    "Organizer", "Attendees", "Max Attendees", "Registration Required",
+    
+    // Event Actions (10 texts)
+    "Join Event", "Leave Event", "Share Event", "Add to Calendar", "Contact Organizer", "Report Event",
+    "Edit Event", "Delete Event", "Duplicate Event", "Promote Event",
+    
+    // Event Status (8 texts)
+    "Upcoming", "Live", "Ended", "Cancelled", "Full", "Available", "Registration Open", "Registration Closed",
+    
+    // Event Categories (7 texts)
+    "Business", "Social", "Educational", "Entertainment", "Sports", "Technology", "Arts & Culture"
+  ], []);
+
+  const [t] = useMasterBatchTranslation(eventsTexts);
+  const [
+    eventsText, createEventText, myEventsText, attendingText, categoriesText, calendarText, searchEventsText, popularEventsText,
+    eventTitleText, descriptionText, dateTimeText, locationText, categoryText, priceText, freeEventText, paidEventText,
+    organizerText, attendeesText, maxAttendeesText, registrationRequiredText,
+    joinEventText, leaveEventText, shareEventText, addToCalendarText, contactOrganizerText, reportEventText,
+    editEventText, deleteEventText, duplicateEventText, promoteEventText,
+    upcomingText, liveText, endedText, cancelledText, fullText, availableText, registrationOpenText, registrationClosedText,
+    businessText, socialText, educationalText, entertainmentText, sportsText, technologyText, artsCultureText
+  ] = t || eventsTexts;
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { selectedCurrency, formatPrice } = useCurrency();

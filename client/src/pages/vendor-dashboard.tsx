@@ -48,6 +48,44 @@ import MarketingCampaigns from "@/components/vendor/MarketingCampaigns";
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 
 export default function VendorDashboard() {
+  // Master Translation mega-batch for Vendor Dashboard (60+ texts)
+  const vendorTexts = useMemo(() => [
+    // Dashboard Navigation (8 texts)
+    "Dashboard", "Products", "Orders", "Customers", "Shipping", "Analytics", "Settings", "Marketing",
+    
+    // Overview Section (12 texts)
+    "Overview", "Total Sales", "Active Products", "Pending Orders", "Total Customers", "Revenue This Month",
+    "Sales Analytics", "Performance Metrics", "Growth Rate", "Conversion Rate", "Average Order Value", "Customer Satisfaction",
+    
+    // Product Management (16 texts)
+    "Product Management", "Add New Product", "Edit Product", "Delete Product", "View Details", "Product Status",
+    "In Stock", "Out of Stock", "Low Stock", "Draft", "Published", "Featured", "On Sale", "Product Categories", "Inventory", "Pricing",
+    
+    // Order Management (12 texts)
+    "Order Management", "Recent Orders", "Order Status", "Pending", "Processing", "Shipped", "Delivered", "Cancelled",
+    "View Order", "Update Status", "Print Invoice", "Track Shipment",
+    
+    // Customer Management (8 texts)
+    "Customer Management", "Customer List", "Customer Details", "Order History", "Customer Reviews", "Contact Customer", "Customer Support", "VIP Customers",
+    
+    // Analytics & Reports (12 texts)
+    "Sales Reports", "Performance Analytics", "Revenue Charts", "Product Performance", "Customer Insights", "Traffic Analysis",
+    "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports"
+  ], []);
+
+  const [t] = useMasterBatchTranslation(vendorTexts);
+  const [
+    dashboardText, productsText, ordersText, customersText, shippingText, analyticsText, settingsText, marketingText,
+    overviewText, totalSalesText, activeProductsText, pendingOrdersText, totalCustomersText, revenueMonthText,
+    salesAnalyticsText, performanceMetricsText, growthRateText, conversionRateText, avgOrderValueText, customerSatisfactionText,
+    productManagementText, addNewProductText, editProductText, deleteProductText, viewDetailsText, productStatusText,
+    inStockText, outOfStockText, lowStockText, draftText, publishedText, featuredText, onSaleText, productCategoriesText, inventoryText, pricingText,
+    orderManagementText, recentOrdersText, orderStatusText, pendingText, processingText, shippedText, deliveredText, cancelledText,
+    viewOrderText, updateStatusText, printInvoiceText, trackShipmentText,
+    customerManagementText, customerListText, customerDetailsText, orderHistoryText, customerReviewsText, contactCustomerText, customerSupportText, vipCustomersText,
+    salesReportsText, performanceAnalyticsText, revenueChartsText, productPerformanceText, customerInsightsText, trafficAnalysisText,
+    exportDataText, monthlyReportText, yearlyReportText, realTimeDataText, dashboardWidgetsText, customReportsText
+  ] = t || vendorTexts;
   const { user } = useAuth();
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
@@ -57,15 +95,7 @@ export default function VendorDashboard() {
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
 
-  // Comprehensive Vendor Dashboard Text Collection for Translation
-  const vendorTexts = [
-    // Main Navigation & Headers
-    "Vendor Dashboard",
-    "Dashboard",
-    "Products",
-    "Customers", 
-    "Shipping",
-    "Marketing",
+
     "Settings",
     "Analytics",
     "Payment Info",

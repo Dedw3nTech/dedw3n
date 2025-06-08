@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Tabs,
@@ -6,6 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import {
   Card,
   CardContent,
@@ -42,6 +43,42 @@ import {
 import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+
+export default function AdminDashboard() {
+  // Master Translation mega-batch for Admin Dashboard (50+ texts)
+  const adminTexts = useMemo(() => [
+    // Main Navigation (8 texts)
+    "Admin Dashboard", "Users", "Products", "Orders", "Reports", "Settings", "Security", "System",
+    
+    // User Management (12 texts)
+    "User Management", "Active Users", "Banned Users", "Moderators", "User Details", "User Roles",
+    "Ban User", "Unban User", "Edit User", "Delete User", "View Profile", "Send Message",
+    
+    // Product Management (10 texts)
+    "Product Approval", "Pending Products", "Approved Products", "Rejected Products", "Review Product",
+    "Approve", "Reject", "Edit", "Delete", "Feature Product",
+    
+    // Order Management (8 texts)
+    "Order Overview", "Pending Orders", "Processing Orders", "Completed Orders", "Cancelled Orders",
+    "View Order", "Update Status", "Refund Order",
+    
+    // Reports & Analytics (12 texts)
+    "Platform Analytics", "Revenue Reports", "User Activity", "Product Performance", "Sales Trends",
+    "Export Data", "Generate Report", "View Details", "Filter", "Date Range", "Download", "Print"
+  ], []);
+
+  const [t] = useMasterBatchTranslation(adminTexts);
+  const [
+    adminDashboardText, usersText, productsText, ordersText, reportsText, settingsText, securityText, systemText,
+    userManagementText, activeUsersText, bannedUsersText, moderatorsText, userDetailsText, userRolesText,
+    banUserText, unbanUserText, editUserText, deleteUserText, viewProfileText, sendMessageText,
+    productApprovalText, pendingProductsText, approvedProductsText, rejectedProductsText, reviewProductText,
+    approveText, rejectText, editText, deleteText, featureProductText,
+    orderOverviewText, pendingOrdersText, processingOrdersText, completedOrdersText, cancelledOrdersText,
+    viewOrderText, updateStatusText, refundOrderText,
+    platformAnalyticsText, revenueReportsText, userActivityText, productPerformanceText, salesTrendsText,
+    exportDataText, generateReportText, viewDetailsText, filterText, dateRangeText, downloadText, printText
+  ] = t || adminTexts;
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Search, User, Package, Briefcase, Store } from "lucide-react";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -18,6 +19,29 @@ interface SearchResult {
 }
 
 export default function SearchPage() {
+  // Master Translation mega-batch for Search (30+ texts)
+  const searchTexts = useMemo(() => [
+    // Search Interface (10 texts)
+    "Search", "Search Results", "No Results Found", "Search for...", "All", "Products", "Users", "Services", "Vendors", "Events",
+    
+    // Filters & Options (8 texts)
+    "Filter Results", "Sort By", "Relevance", "Price Low to High", "Price High to Low", "Newest", "Oldest", "Most Popular",
+    
+    // Result Types (8 texts)
+    "Product", "User", "Service", "Vendor", "Event", "Category", "Brand", "Location",
+    
+    // Actions (4 texts)
+    "View Details", "Add to Cart", "Contact", "Follow"
+  ], []);
+
+  const [t] = useMasterBatchTranslation(searchTexts);
+  const [
+    searchText, searchResultsText, noResultsFoundText, searchForText, allText, productsText, usersText, servicesText, vendorsText, eventsText,
+    filterResultsText, sortByText, relevanceText, priceLowToHighText, priceHighToLowText, newestText, oldestText, mostPopularText,
+    productText, userText, serviceText, vendorText, eventText, categoryText, brandText, locationText,
+    viewDetailsText, addToCartText, contactText, followText
+  ] = t || searchTexts;
+
   const [location] = useLocation();
   const [searchParams, setSearchParams] = useState<URLSearchParams>();
   const [query, setQuery] = useState("");
