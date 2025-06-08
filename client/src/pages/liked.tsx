@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { useMarketType } from "@/hooks/use-market-type";
 import { apiRequest } from "@/lib/queryClient";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Product {
   id: number;
@@ -30,6 +31,7 @@ interface Product {
 export default function LikedPage() {
   const [, setLocation] = useLocation();
   const { marketType } = useMarketType();
+  const { currentLanguage } = useLanguage();
 
   const { data: likedProducts = [], isLoading } = useQuery<Product[]>({
     queryKey: ['/api/liked-products'],
@@ -49,20 +51,20 @@ export default function LikedPage() {
   ], []);
 
   // Use master translation system for unified performance
-  const { translations: translatedTexts } = useMasterBatchTranslation(pageTexts, 'normal');
+  const { translations: translatedTexts, isLoading: translationsLoading } = useMasterBatchTranslation(pageTexts, 'normal');
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
-    likedProducts: translatedTexts[0] || "Liked Products",
-    noLikedProducts: translatedTexts[1] || "No liked products yet",
-    browseMessage: translatedTexts[2] || "Browse our marketplace and click the heart icon on products you love",
-    exploreProducts: translatedTexts[3] || "Explore Products",
-    view: translatedTexts[4] || "View",
-    addToCart: translatedTexts[5] || "Add to Cart",
-    new: translatedTexts[6] || "NEW",
-    sale: translatedTexts[7] || "SALE",
-    noImage: translatedTexts[8] || "No Image"
-  }), [translatedTexts]);
+    likedProducts: translatedTexts[0] || pageTexts[0],
+    noLikedProducts: translatedTexts[1] || pageTexts[1],
+    browseMessage: translatedTexts[2] || pageTexts[2],
+    exploreProducts: translatedTexts[3] || pageTexts[3],
+    view: translatedTexts[4] || pageTexts[4],
+    addToCart: translatedTexts[5] || pageTexts[5],
+    new: translatedTexts[6] || pageTexts[6],
+    sale: translatedTexts[7] || pageTexts[7],
+    noImage: translatedTexts[8] || pageTexts[8]
+  }), [translatedTexts, pageTexts]);
 
   const getButtonText = () => {
     switch (marketType) {

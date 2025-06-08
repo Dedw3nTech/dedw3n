@@ -361,35 +361,31 @@ export default function ProductDetail() {
       return;
     }
     
-    const updateConvertedPrices = async () => {
-      try {
-        setIsConverting(true);
-        
-        // Convert main price
-        const newPrice = await convertCurrency(product.price, 'GBP', selectedCurrency);
-        setConvertedPrice(newPrice);
-        
-        // Convert discount price if it exists
-        if (product.discountPrice && product.discountPrice < product.price) {
-          const newDiscountPrice = await convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
-          setConvertedDiscountPrice(newDiscountPrice);
-        } else {
-          setConvertedDiscountPrice(null);
-        }
-        
-      } catch (error) {
-        console.error('Error converting currency:', error);
-        toast({
-          title: 'Currency Conversion Error',
-          description: 'Unable to convert currency at this time.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsConverting(false);
+    try {
+      setIsConverting(true);
+      
+      // Convert main price (synchronous function)
+      const newPrice = convertCurrency(product.price, 'GBP', selectedCurrency);
+      setConvertedPrice(newPrice);
+      
+      // Convert discount price if it exists
+      if (product.discountPrice && product.discountPrice < product.price) {
+        const newDiscountPrice = convertCurrency(product.discountPrice, 'GBP', selectedCurrency);
+        setConvertedDiscountPrice(newDiscountPrice);
+      } else {
+        setConvertedDiscountPrice(null);
       }
-    };
-    
-    updateConvertedPrices();
+      
+    } catch (error) {
+      console.error('Error converting currency:', error);
+      toast({
+        title: 'Currency Conversion Error',
+        description: 'Unable to convert currency at this time.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsConverting(false);
+    }
   }, [product, selectedCurrency, toast, forceUpdate]);
 
   // Loading state
