@@ -132,12 +132,7 @@ export function VideoDisplayCard({
           </div>
         )}
 
-        {/* Title header overlay */}
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-3 pointer-events-none">
-          <p className="text-white text-sm font-medium">
-            {entityContent.title}
-          </p>
-        </div>
+
 
         {/* Close button */}
         <Button
