@@ -51,8 +51,11 @@ export default function LikedPage() {
     "NEW",
     "SALE",
     "No Image",
-    // Add all product names to the batch for efficient translation
-    ...(likedProducts?.map(product => product.name) || [])
+    "by",
+    // Add all product names and categories to the batch for efficient translation
+    ...(likedProducts?.map(product => product.name) || []),
+    ...(likedProducts?.map(product => product.category) || []),
+    ...(likedProducts?.map(product => product.vendor?.storeName).filter((name): name is string => Boolean(name)) || [])
   ], [likedProducts]);
 
   // Use master translation system for unified performance
@@ -62,6 +65,18 @@ export default function LikedPage() {
   const getTranslatedProductName = (productName: string) => {
     const productIndex = pageTexts.indexOf(productName);
     return productIndex >= 0 ? (translatedTexts[productIndex] || productName) : productName;
+  };
+
+  // Helper function to get translated category name
+  const getTranslatedCategoryName = (categoryName: string) => {
+    const categoryIndex = pageTexts.indexOf(categoryName);
+    return categoryIndex >= 0 ? (translatedTexts[categoryIndex] || categoryName) : categoryName;
+  };
+
+  // Helper function to get translated store name
+  const getTranslatedStoreName = (storeName: string) => {
+    const storeIndex = pageTexts.indexOf(storeName);
+    return storeIndex >= 0 ? (translatedTexts[storeIndex] || storeName) : storeName;
   };
 
   // Memoize translated values to prevent re-render loops
@@ -74,7 +89,8 @@ export default function LikedPage() {
     addToCart: translatedTexts[5] || pageTexts[5],
     new: translatedTexts[6] || pageTexts[6],
     sale: translatedTexts[7] || pageTexts[7],
-    noImage: translatedTexts[8] || pageTexts[8]
+    noImage: translatedTexts[8] || pageTexts[8],
+    by: translatedTexts[9] || pageTexts[9]
   }), [translatedTexts, pageTexts]);
 
   const getButtonText = () => {
@@ -232,7 +248,7 @@ export default function LikedPage() {
                   {/* Vendor info */}
                   {product.vendor && (
                     <div className="text-sm text-gray-600 mb-2">
-                      by {product.vendor.storeName}
+                      {translatedLabels.by} {getTranslatedStoreName(product.vendor.storeName)}
                       {product.vendor.rating && (
                         <span className="ml-2">
                           ⭐ {product.vendor.rating.toFixed(1)}
@@ -243,7 +259,7 @@ export default function LikedPage() {
 
                   {/* Category */}
                   <div className="text-sm text-gray-500 mt-auto">
-                    {product.category}
+                    {getTranslatedCategoryName(product.category)}
                   </div>
                 </div>
               </Card>
