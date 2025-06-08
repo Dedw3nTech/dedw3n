@@ -30,6 +30,20 @@ interface Product {
   };
 }
 
+// Component for translating product titles using Master Translation
+const ProductTitle = ({ productName, onClick }: { productName: string; onClick: () => void }) => {
+  const { translations } = useMasterBatchTranslation([productName]);
+  const [translatedText] = translations || [productName];
+  return (
+    <h3 
+      className="font-medium text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-gray-700"
+      onClick={onClick}
+    >
+      {translatedText}
+    </h3>
+  );
+};
+
 export default function LikedPage() {
   const [, setLocation] = useLocation();
   const { marketType } = useMarketType();
@@ -187,12 +201,10 @@ export default function LikedPage() {
 
                 <div className="p-4 flex-1 flex flex-col">
                   {/* Product title */}
-                  <h3 
-                    className="font-medium text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-gray-700"
+                  <ProductTitleComponent 
+                    productName={product.name}
                     onClick={() => setLocation(`/product/${product.id}`)}
-                  >
-                    {product.name}
-                  </h3>
+                  />
 
                   {/* Price */}
                   <div className="flex items-center gap-2 mb-3">
