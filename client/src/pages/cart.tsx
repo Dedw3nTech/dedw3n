@@ -245,7 +245,7 @@ export default function Cart() {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {item.product?.name || 'Product'}
+                            {translateText(item.product?.name || 'Product')}
                           </div>
                           {item.product?.vendorId && (
                             <div className="text-xs text-gray-500">
