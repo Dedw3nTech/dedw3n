@@ -92,6 +92,67 @@ export default function AdminDashboard() {
     exportDataText, generateReportText, viewDetailsText, filterText, dateRangeText, downloadText, printText
   ] = t || adminTexts;
 
+// Placeholder components for admin dashboard features
+const UserModeration = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>User Moderation</CardTitle>
+      <CardDescription>Manage user accounts and moderation tasks</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground">User moderation features coming soon</p>
+    </CardContent>
+  </Card>
+);
+
+const OrderManagement = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Order Management</CardTitle>
+      <CardDescription>View and manage all orders</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground">Order management features coming soon</p>
+    </CardContent>
+  </Card>
+);
+
+const CommunityModeration = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Community Moderation</CardTitle>
+      <CardDescription>Moderate community content and posts</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground">Community moderation features coming soon</p>
+    </CardContent>
+  </Card>
+);
+
+const AIInsights = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>AI Insights</CardTitle>
+      <CardDescription>AI-powered analytics and insights</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground">AI insights features coming soon</p>
+    </CardContent>
+  </Card>
+);
+
+const EnhancedModeration = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Enhanced Moderation</CardTitle>
+      <CardDescription>Advanced moderation tools and automation</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p className="text-muted-foreground">Enhanced moderation features coming soon</p>
+    </CardContent>
+  </Card>
+);
+
 // Import placeholder component for development
 const PlaceholderComponent = ({ title }: { title: string }) => (
   <Card>

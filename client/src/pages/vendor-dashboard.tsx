@@ -338,8 +338,14 @@ export default function VendorDashboard() {
   // Use unified master translation system for optimal performance and consistency
   const { translations, isLoading: isTranslating } = useMasterBatchTranslation(vendorTexts, 'instant');
 
-  // Helper function to get translated text
-  const t = (text: string) => translations?.[text] || text;
+  // Helper function to get translated text with proper typing
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = vendorTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
   
   // Authentication wall - redirect if not logged in
   useEffect(() => {
