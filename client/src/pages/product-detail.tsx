@@ -369,11 +369,11 @@ export default function ProductDetail() {
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">Product Not Found</h1>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{translateText('Product Not Found')}</h1>
               <p className="text-gray-500 mb-6">
-                The product you're looking for could not be found or has been removed.
+                {translateText('The product you\'re looking for could not be found or has been removed.')}
               </p>
-              <Button onClick={() => setLocation('/')}>Back to Products</Button>
+              <Button onClick={() => setLocation('/')}>{translateText('Back to Products')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -386,11 +386,11 @@ export default function ProductDetail() {
       {/* Breadcrumbs */}
       <div className="mb-6 text-sm text-gray-500">
         <Link href="/" className="hover:text-primary">
-          Home
+          {translateText('Home')}
         </Link>
         <span className="mx-2">/</span>
         <Link href={`/category/${encodeURIComponent(product.category)}`} className="hover:text-primary">
-          {product.category}
+          {translateText(product.category)}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-700">{product.name}</span>
