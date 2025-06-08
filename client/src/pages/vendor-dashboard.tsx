@@ -107,6 +107,19 @@ export default function VendorDashboard() {
     "Shipping Management",
     "Store Settings",
     
+    // Shipping Tab Specific Text
+    "Shipping",
+    "배송 관리",
+    "Orders",
+    "Total Orders",
+    "Pending Orders", 
+    "Shipped Orders",
+    "Completed Orders",
+    "No orders found",
+    "You don't have any orders yet.",
+    "All Orders",
+    "Search orders...",
+    
     // Marketing Section
     "Promotions & Discounts",
     "Manage discount codes and automatic promotions",

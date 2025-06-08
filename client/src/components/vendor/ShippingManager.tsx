@@ -10,7 +10,7 @@ import {
   Map,
   Barcode
 } from "lucide-react";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 import {
   Card,
   CardContent,
@@ -101,8 +101,8 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
     "Other"
   ], []);
 
-  // Get translations
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(shippingTexts, 'high');
+  // Get translations using stable DOM translation to match parent component
+  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(shippingTexts, 'instant');
 
   // Fetch pending shipments (orders that are paid but not shipped)
   const { data: pendingShipments, isLoading: isLoadingPending } = useQuery({

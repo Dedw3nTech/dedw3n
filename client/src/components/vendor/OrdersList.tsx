@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useStableDOMBatchTranslation } from "@/hooks/use-stable-dom-translation";
 import { 
   ChevronDown, 
   Search, 
@@ -127,8 +127,8 @@ export default function OrdersList({ vendorId }: OrdersListProps) {
     "Open menu"
   ], []);
 
-  // Get translations
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(orderTexts, 'high');
+  // Get translations using stable DOM translation to match parent component
+  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(orderTexts, 'instant');
 
   // Fetch orders
   const { data: orders, isLoading } = useQuery({
