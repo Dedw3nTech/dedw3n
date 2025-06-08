@@ -646,7 +646,7 @@ export default function VendorDashboard() {
             
             {/* Shipping Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{translatedTexts["Shipping Management"] || "Shipping Management"}</h3>
+              <h3 className="text-lg font-semibold">{t("Shipping Management")}</h3>
               <ShippingManager vendorId={vendorId || undefined} />
             </div>
           </TabsContent>
