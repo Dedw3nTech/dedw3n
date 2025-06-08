@@ -63,12 +63,12 @@ interface CommunityFeedResponse {
 const POSTS_PER_PAGE = 10;
 
 // Community Advertisement Components
-function CommunityTopPromoSection() {
+function CommunityTopPromoSection({ altText }: { altText: string }) {
   return (
     <div className="w-full mb-6">
       <img 
         src={communityTopPromo}
-        alt={communityAltText}
+        alt={altText}
         className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
       />
     </div>
@@ -79,12 +79,12 @@ function CommunityMidPromoSection() {
   return null;
 }
 
-function CommunityBottomPromoSection() {
+function CommunityBottomPromoSection({ altText }: { altText: string }) {
   return (
     <div className="w-full mt-8">
       <img 
         src={communityBottomPromo}
-        alt={joinCommunityAltText}
+        alt={altText}
         className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
       />
     </div>
@@ -340,7 +340,7 @@ export default function CommunityPage() {
       <Container className="py-6">
         <div className="max-w-7xl mx-auto">
           {/* Top Community Advertisement */}
-          <CommunityTopPromoSection />
+          <CommunityTopPromoSection altText={communityAltText} />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -372,7 +372,7 @@ export default function CommunityPage() {
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
-                  New
+                  {newText}
                   {sortBy === 'new' && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
@@ -385,7 +385,7 @@ export default function CommunityPage() {
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
-                  Trending
+                  {trendingText}
                   {sortBy === 'trending' && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
@@ -404,7 +404,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  Popular
+                  {popularText}
                 </button>
                 <button
                   onClick={() => setSortBy('following')}
