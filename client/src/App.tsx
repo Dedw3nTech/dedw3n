@@ -412,7 +412,7 @@ function MarketplacePromoSection() {
       case 'b2b':
         return '/attached_assets/Dedw3n Business B2B Header.png';
       case 'b2c':
-        return '/attached_assets/Dedw3n Business B2C Header_1749416079089.png';
+        return '/attached_assets/Dedw3n Business commHeader.png';
       case 'c2c':
         return '/attached_assets/Dedw3n Marketplace (1).png';
       default:
@@ -425,7 +425,7 @@ function MarketplacePromoSection() {
       <img 
         src={getMarketplaceAd()}
         alt={`${marketType.toUpperCase()} Marketplace`}
-        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
+        className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
         loading="lazy"
         onError={(e) => {
           e.currentTarget.src = '/attached_assets/Copy of Dedw3n Marketplace.png';
