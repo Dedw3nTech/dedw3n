@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { 
   Loader2, 
   Star, 
@@ -63,7 +64,8 @@ export default function ProductDetail() {
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
+  const { translatedText, isLoading: translationLoading } = useMasterTranslation();
+
   
   // Review form state
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
@@ -473,33 +475,12 @@ export default function ProductDetail() {
                     }}
                     className="p-2 hover:bg-gray-100 ml-1"
                   >
-                    <span className="text-black font-normal">Send Offer</span>
+                    <span className="text-black font-normal">{t('Send Offer')}</span>
                   </Button>
                 </div>
               </div>
               
-              {/* Currency converter */}
-              <div className="flex items-center mt-2">
-                <div className="flex-1 flex items-center">
-                  <div className="w-48 mr-2">
-                    <Select
-                      value={selectedCurrency}
-                      onValueChange={(value) => setSelectedCurrency(value as CurrencyCode)}
-                    >
-                      <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Currency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {supportedCurrencies.map((currency) => (
-                          <SelectItem key={currency} value={currency}>
-                            {currency}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
 
