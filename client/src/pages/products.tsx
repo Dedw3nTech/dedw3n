@@ -890,7 +890,7 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
-              title={addToProfileTooltipText}
+              title="Add to Dating Profile"
             >
               <Plus className="h-5 w-5 font-bold stroke-2" />
             </Button>
