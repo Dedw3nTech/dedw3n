@@ -9,6 +9,8 @@ import { useMarketType } from "@/hooks/use-market-type";
 import { apiRequest } from "@/lib/queryClient";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency, convertCurrency, CurrencyCode } from "@/lib/currencyConverter";
 
 interface Product {
   id: number;
@@ -32,6 +34,7 @@ export default function LikedPage() {
   const [, setLocation] = useLocation();
   const { marketType } = useMarketType();
   const { currentLanguage } = useLanguage();
+  const { currency } = useCurrency();
 
   const { data: likedProducts = [], isLoading } = useQuery<Product[]>({
     queryKey: ['/api/liked-products'],
@@ -196,15 +199,24 @@ export default function LikedPage() {
                     {product.discountPrice ? (
                       <>
                         <span className="text-lg font-bold text-gray-900">
-                          ${product.discountPrice.toFixed(2)}
+                          {currency === 'GBP' 
+                            ? `£${product.discountPrice.toFixed(2)}`
+                            : formatCurrency(convertCurrency(product.discountPrice, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
+                          }
                         </span>
                         <span className="text-sm text-gray-500 line-through">
-                          ${product.price.toFixed(2)}
+                          {currency === 'GBP' 
+                            ? `£${product.price.toFixed(2)}`
+                            : formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
+                          }
                         </span>
                       </>
                     ) : (
                       <span className="text-lg font-bold text-gray-900">
-                        ${product.price.toFixed(2)}
+                        {currency === 'GBP' 
+                          ? `£${product.price.toFixed(2)}`
+                          : formatCurrency(convertCurrency(product.price, 'GBP', currency as CurrencyCode), currency as CurrencyCode)
+                        }
                       </span>
                     )}
                   </div>

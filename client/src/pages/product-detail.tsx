@@ -353,17 +353,18 @@ export default function ProductDetail() {
     });
   };
   
-  // Effect to handle currency conversion
+  // Effect to handle currency conversion - simplified for better reliability
   useEffect(() => {
-    if (!product || selectedCurrency === 'GBP') {
+    if (!product) return;
+    
+    if (selectedCurrency === 'GBP') {
       setConvertedPrice(null);
       setConvertedDiscountPrice(null);
+      setIsConverting(false);
       return;
     }
     
     try {
-      setIsConverting(true);
-      
       // Convert main price (synchronous function)
       const newPrice = convertCurrency(product.price, 'GBP', selectedCurrency);
       setConvertedPrice(newPrice);
@@ -376,17 +377,20 @@ export default function ProductDetail() {
         setConvertedDiscountPrice(null);
       }
       
+      setIsConverting(false);
+      
     } catch (error) {
       console.error('Error converting currency:', error);
+      setConvertedPrice(null);
+      setConvertedDiscountPrice(null);
+      setIsConverting(false);
       toast({
         title: 'Currency Conversion Error',
         description: 'Unable to convert currency at this time.',
         variant: 'destructive',
       });
-    } finally {
-      setIsConverting(false);
     }
-  }, [product, selectedCurrency, toast, forceUpdate]);
+  }, [product, selectedCurrency, toast]);
 
   // Loading state
   if (isLoading) {
