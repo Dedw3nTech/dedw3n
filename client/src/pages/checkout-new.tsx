@@ -371,11 +371,12 @@ const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
 };
 
 // Checkout Form Component with Stripe
-const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
+const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete, translateText }: {
   total: number;
   cartItems: CartItem[];
   shippingInfo: ShippingInfo;
   onOrderComplete: () => void;
+  translateText: (text: string) => string;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -435,7 +436,7 @@ const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
         {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Processing Payment...
+            {translateText('Processing Payment...')}
           </>
         ) : (
           `${translateText('Complete Order')} - ${formatPriceFromGBP(total)}`
@@ -1144,6 +1145,7 @@ export default function CheckoutNew() {
                             total={total}
                             cartItems={cartItems}
                             shippingInfo={shippingInfo}
+                            translateText={translateText}
                             onOrderComplete={() => {
                               queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
                               setLocation('/order-confirmation');
