@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 import { 
   Loader2, 
@@ -64,6 +65,13 @@ export default function ProductDetail() {
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  
+  // Translation system
+  const translateText = (text: string) => {
+    // For now, return the text as-is since we need to integrate with the master translation system
+    // This will be enhanced to use the actual translation service
+    return text;
+  };
 
 
   
@@ -488,12 +496,12 @@ export default function ProductDetail() {
           <div className="flex flex-wrap gap-2 mb-6">
             {product.isNew && (
               <Badge variant="outline" className="bg-blue-100 hover:bg-blue-100 text-blue-800 border-blue-200">
-                New Arrival
+{translateText('New Arrival')}
               </Badge>
             )}
             {product.isOnSale && (
               <Badge variant="outline" className="bg-red-100 hover:bg-red-100 text-red-800 border-red-200">
-                On Sale
+{translateText('On Sale')}
               </Badge>
             )}
             <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100 text-gray-800 border-gray-200">
@@ -508,8 +516,8 @@ export default function ProductDetail() {
             </div>
             <span className="text-sm text-gray-500">
               {reviews.length === 0
-                ? 'No reviews yet'
-                : `${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`}
+                ? translateText('No reviews yet')
+                : `${reviews.length} ${reviews.length === 1 ? translateText('review') : translateText('reviews')}`}
             </span>
           </div>
 
@@ -542,14 +550,14 @@ export default function ProductDetail() {
               {addToCartMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
+                  {translateText('Adding...')}
                 </>
               ) : product.inventory <= 0 ? (
-                'Out of Stock'
+                translateText('Out of Stock')
               ) : (
                 <>
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  Add to Cart
+                  {translateText('Add to Cart')}
                 </>
               )}
             </Button>
@@ -560,15 +568,15 @@ export default function ProductDetail() {
             <p className="text-sm text-gray-500">
               {product.inventory > 0 ? (
                 <>
-                  <span className="text-green-600 font-medium">In Stock</span>
+                  <span className="text-green-600 font-medium">{translateText('In Stock')}</span>
                   {product.inventory < 10 && (
                     <span className="ml-2 text-orange-500">
-                      Only {product.inventory} left!
+                      {translateText('Only')} {product.inventory} {translateText('left!')}
                     </span>
                   )}
                 </>
               ) : (
-                <span className="text-red-600 font-medium">Out of Stock</span>
+                <span className="text-red-600 font-medium">{translateText('Out of Stock')}</span>
               )}
             </p>
           </div>
@@ -580,8 +588,8 @@ export default function ProductDetail() {
               size="sm"
               onClick={() => {
                 toast({
-                  title: "Product Liked",
-                  description: "Added to your favorites!",
+                  title: translateText("Product Liked"),
+                  description: translateText("Added to your favorites!"),
                 });
               }}
               className="p-2 hover:bg-gray-100"
