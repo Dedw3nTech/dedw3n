@@ -45,6 +45,17 @@ if (!fs.existsSync(avatarsDir)) {
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 console.log(`Serving uploads from: ${path.join(__dirname, '../public/uploads')}`);
 
+// Serve static files from attached_assets directory  
+app.use('/attached_assets', express.static(path.join(__dirname, '../attached_assets'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.png') || path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', path.endsWith('.png') ? 'image/png' : 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
+console.log(`Serving attached_assets from: ${path.join(__dirname, '../attached_assets')}`);
+
 // Serve favicon files with proper content types
 app.get('/favicon.ico', (req, res) => {
   res.setHeader('Content-Type', 'image/x-icon');
