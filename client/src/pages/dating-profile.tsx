@@ -14,7 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera, FileText, Paperclip } from "lucide-react";
+import { Loader2, Heart, User, MapPin, Calendar, Eye, EyeOff, Save, Upload, X, CreditCard, Gift, Check, Star, GripVertical, Trash2, Camera, FileText, Paperclip, Search, Plus } from "lucide-react";
+import { GiftSearchModal } from "@/components/GiftSearchModal";
 import { useLocation, Link } from "wouter";
 
 // Product interface for marketplace gifts
@@ -27,46 +28,49 @@ interface Product {
   category?: string;
 }
 
-// GiftsSelection component
+// Enhanced GiftsSelection component with search functionality
 interface GiftsSelectionProps {
   selectedGifts: number[];
   onGiftsChange: (gifts: number[]) => void;
 }
 
+interface SearchResult {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string | null;
+  category: string;
+  type: 'product' | 'event';
+  vendor?: {
+    id: number;
+    storeName: string;
+    rating: number;
+  };
+  date?: string;
+  location?: string;
+}
+
 function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
   const { formatPriceFromGBP } = useCurrency();
-  const { data: products, isLoading } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  
+  // Fetch selected gifts to display
+  const { data: selectedGiftData, isLoading: selectedGiftsLoading } = useQuery<Product[]>({
+    queryKey: ["/api/dating-profile/gifts"],
+    enabled: selectedGifts.length > 0,
   });
 
-  const toggleGift = (productId: number) => {
-    if (selectedGifts.includes(productId)) {
-      onGiftsChange(selectedGifts.filter(id => id !== productId));
-    } else {
-      onGiftsChange([...selectedGifts, productId]);
+  const handleGiftSelect = (gift: SearchResult) => {
+    if (!selectedGifts.includes(gift.id)) {
+      onGiftsChange([...selectedGifts, gift.id]);
     }
+    setShowSearchModal(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Loading gifts...</span>
-      </div>
-    );
-  }
-
-  if (!products || products.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500">No gifts available in the marketplace</p>
-        <p className="text-sm text-gray-400 mt-2">
-          Visit the <Link href="/marketplace" className="text-blue-600 hover:underline">marketplace</Link> to browse available items
-        </p>
-      </div>
-    );
-  }
+  const removeGift = (giftId: number) => {
+    onGiftsChange(selectedGifts.filter(id => id !== giftId));
+  };
 
   const selectedCount = selectedGifts.length;
   const isValidSelection = selectedCount >= 3;
@@ -90,30 +94,46 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {products.slice(0, 12).map((product) => {
-          const isSelected = selectedGifts.includes(product.id);
-          return (
+      {/* Search Button */}
+      <div className="flex justify-center">
+        <Button
+          onClick={() => setShowSearchModal(true)}
+          className="flex items-center gap-2"
+          variant="outline"
+        >
+          <Search className="h-4 w-4" />
+          Search for Gifts
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Selected Gifts Display */}
+      {selectedGiftsLoading && selectedGifts.length > 0 && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="ml-2">Loading selected gifts...</span>
+        </div>
+      )}
+
+      {selectedGiftData && selectedGiftData.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {selectedGiftData.map((gift) => (
             <div
-              key={product.id}
-              className={`relative border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${
-                isSelected 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => toggleGift(product.id)}
+              key={gift.id}
+              className="relative border border-pink-500 bg-pink-50 rounded-lg p-3 transition-all hover:shadow-md"
             >
-              {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Check className="h-3 w-3 text-white" />
-                </div>
-              )}
+              <button
+                onClick={() => removeGift(gift.id)}
+                className="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+              >
+                <X className="h-3 w-3 text-white" />
+              </button>
               
               <div className="aspect-square bg-gray-100 rounded-md mb-2 flex items-center justify-center">
-                {product.imageUrl ? (
+                {gift.imageUrl ? (
                   <img 
-                    src={product.imageUrl} 
-                    alt={product.name}
+                    src={gift.imageUrl} 
+                    alt={gift.name}
                     className="w-full h-full object-cover rounded-md"
                   />
                 ) : (
@@ -121,22 +141,34 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
                 )}
               </div>
               
-              <h4 className="text-sm font-medium truncate mb-1">{product.name}</h4>
-              <p className="text-xs text-gray-600">{formatPriceFromGBP(product.price)}</p>
+              <h4 className="text-sm font-medium truncate mb-1">{gift.name}</h4>
+              <p className="text-xs text-gray-600">{formatPriceFromGBP(gift.price)}</p>
+              
+              <div className="absolute top-2 left-2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
+                <Heart className="h-3 w-3 text-white fill-current" />
+              </div>
             </div>
-          );
-        })}
-      </div>
-
-      {products.length > 12 && (
-        <div className="text-center pt-4">
-          <Link href="/marketplace">
-            <Button variant="outline" size="sm">
-              View More Gifts in Marketplace
-            </Button>
-          </Link>
+          ))}
         </div>
       )}
+
+      {selectedGifts.length === 0 && (
+        <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+          <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 mb-2">No gifts selected yet</p>
+          <p className="text-sm text-gray-400">
+            Use the search button above to find and add gifts to your profile
+          </p>
+        </div>
+      )}
+
+      {/* Gift Search Modal */}
+      <GiftSearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        onSelectGift={handleGiftSelect}
+        selectedGifts={selectedGifts}
+      />
     </div>
   );
 }

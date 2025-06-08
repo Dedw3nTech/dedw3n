@@ -5412,9 +5412,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/dating-profile/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  // Enhanced gifts endpoint with fallback authentication
+  app.get('/api/dating-profile/gifts', async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      let authenticatedUser = null;
+      
+      // Multi-level authentication with fallback (same as main dating profile endpoint)
+      if (req.user) {
+        authenticatedUser = req.user;
+      } else {
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          try {
+            const payload = verifyToken(token);
+            if (payload) {
+              const user = await storage.getUser(payload.userId);
+              if (user) {
+                authenticatedUser = user;
+              }
+            }
+          } catch (jwtError) {
+            console.log('[DEBUG] Dating profile gifts - JWT verification failed');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const userId = authenticatedUser.id;
       const gifts = await storage.getDatingProfileGifts(userId);
       res.json(gifts);
     } catch (error) {
@@ -5444,6 +5482,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+
+  // Advanced search endpoint for gifts with real-time suggestions
+  app.get('/api/search/gifts', async (req: Request, res: Response) => {
+    try {
+      let authenticatedUser = null;
+      
+      // Multi-level authentication with fallback
+      if (req.user) {
+        authenticatedUser = req.user;
+      } else {
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          try {
+            const payload = verifyToken(token);
+            if (payload) {
+              const user = await storage.getUser(payload.userId);
+              if (user) {
+                authenticatedUser = user;
+              }
+            }
+          } catch (jwtError) {
+            console.log('[DEBUG] Gift search - JWT verification failed');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const { q, type = 'all', limit = 10, offset = 0 } = req.query;
+      const userId = authenticatedUser.id;
+      
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        return res.json({ results: [], total: 0, suggestions: [] });
+      }
+      
+      const searchTerm = q.trim().toLowerCase();
+      let results = [];
+      
+      // Search products if type is 'all' or 'products'
+      if (type === 'all' || type === 'products') {
+        const productResults = await db
+          .select({
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            type: sql<string>`'product'`,
+            vendor: {
+              id: vendors.id,
+              storeName: vendors.storeName,
+              rating: vendors.rating
+            }
+          })
+          .from(products)
+          .innerJoin(vendors, eq(products.vendorId, vendors.id))
+          .where(
+            or(
+              like(products.name, `%${searchTerm}%`),
+              like(products.description, `%${searchTerm}%`),
+              like(products.category, `%${searchTerm}%`)
+            )
+          )
+          .limit(parseInt(limit as string))
+          .offset(parseInt(offset as string));
+        
+        results.push(...productResults);
+      }
+      
+      // Search events if type is 'all' or 'events'
+      if (type === 'all' || type === 'events') {
+        try {
+          const eventResults = await storage.searchEvents(searchTerm, parseInt(limit as string));
+          const formattedEventResults = eventResults.map(event => ({
+            id: event.id,
+            name: event.title,
+            description: event.description,
+            price: event.ticketPrice || 0,
+            imageUrl: event.imageUrl,
+            category: event.category,
+            type: 'event' as const,
+            date: event.eventDate,
+            location: event.location
+          }));
+          results.push(...formattedEventResults);
+        } catch (eventError) {
+          console.log('Event search not available, skipping events');
+        }
+      }
+      
+      // Generate search suggestions based on popular terms
+      const suggestions = await generateSearchSuggestions(searchTerm);
+      
+      res.json({
+        results: results.slice(0, parseInt(limit as string)),
+        total: results.length,
+        suggestions,
+        searchTerm
+      });
+      
+    } catch (error) {
+      console.error('Error in gift search:', error);
+      res.status(500).json({ message: 'Search failed' });
+    }
+  });
+
+  // Helper function for search suggestions
+  async function generateSearchSuggestions(searchTerm: string): Promise<string[]> {
+    try {
+      // Get popular product categories and names that match
+      const productSuggestions = await db
+        .select({ suggestion: products.category })
+        .from(products)
+        .where(like(products.category, `%${searchTerm}%`))
+        .groupBy(products.category)
+        .limit(5);
+      
+      const nameSuggestions = await db
+        .select({ suggestion: products.name })
+        .from(products)
+        .where(like(products.name, `%${searchTerm}%`))
+        .limit(5);
+      
+      // Skip event suggestions for now since events table may not exist
+      const eventSuggestions: { suggestion: string }[] = [];
+      
+      return [
+        ...productSuggestions.map(s => s.suggestion),
+        ...nameSuggestions.map(s => s.suggestion),
+        ...eventSuggestions.map(s => s.suggestion)
+      ].filter(Boolean).slice(0, 8);
+      
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      return [];
+    }
+  }
 
   // User search endpoint for gift functionality
   app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
