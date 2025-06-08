@@ -67,7 +67,9 @@ export default function EventsPage() {
     "Business", "Social", "Educational", "Entertainment", "Sports", "Technology", "Arts & Culture"
   ], []);
 
-  const [t] = useMasterBatchTranslation(eventsTexts);
+  const { translations: translatedEventsTexts, isLoading: isTranslating } = useMasterBatchTranslation(eventsTexts);
+  const finalTexts = translatedEventsTexts || eventsTexts;
+  
   const [
     eventsText, createEventText, myEventsText, attendingText, categoriesText, calendarText, searchEventsText, popularEventsText,
     eventTitleText, descriptionText, dateTimeText, locationText, categoryText, priceText, freeEventText, paidEventText,
@@ -76,7 +78,7 @@ export default function EventsPage() {
     editEventText, deleteEventText, duplicateEventText, promoteEventText,
     upcomingText, liveText, endedText, cancelledText, fullText, availableText, registrationOpenText, registrationClosedText,
     businessText, socialText, educationalText, entertainmentText, sportsText, technologyText, artsCultureText
-  ] = t || eventsTexts;
+  ] = finalTexts;
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -125,9 +127,7 @@ export default function EventsPage() {
   // Event likes mutations
   const likeEventMutation = useMutation({
     mutationFn: async (eventId: number) => {
-      return apiRequest(`/api/events/${eventId}/like`, {
-        method: 'POST'
-      });
+      return apiRequest('POST', `/api/events/${eventId}/like`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
@@ -140,9 +140,7 @@ export default function EventsPage() {
 
   const unlikeEventMutation = useMutation({
     mutationFn: async (eventId: number) => {
-      return apiRequest(`/api/events/${eventId}/like`, {
-        method: 'DELETE'
-      });
+      return apiRequest('DELETE', `/api/events/${eventId}/like`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });
@@ -170,10 +168,7 @@ export default function EventsPage() {
   // Create event mutation
   const createEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
-      return apiRequest('/api/events', {
-        method: 'POST',
-        body: JSON.stringify(eventData)
-      });
+      return apiRequest('POST', '/api/events', eventData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/events'] });

@@ -127,7 +127,13 @@ export default function Home() {
   ];
 
   // Use Master Translation System for optimal performance and persistence
-  const { translations: t, isLoading: isTranslating } = useMasterBatchTranslation(homeTexts);
+  const { translations: translatedTexts, isLoading: isTranslating } = useMasterBatchTranslation(homeTexts);
+  
+  // Create translation function from array
+  const t = (text: string) => {
+    const index = homeTexts.indexOf(text);
+    return index >= 0 && translatedTexts ? translatedTexts[index] || text : text;
+  };
 
   // Fetch featured products (limit to 6)
   const { 
