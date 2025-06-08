@@ -34,7 +34,7 @@ function FooterContent() {
     communityGuidelinesText, contactUsText, faqText, shippingText, partnershipsText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
-  ] = translations;
+  ] = translations || footerTexts;
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">

@@ -165,7 +165,7 @@ export default function Products() {
     
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
     freeShippingText, nextDayDeliveryText, businessOptionsText
-  ] = t;
+  ] = t || textsToTranslate;
   
   // All individual translation calls now consolidated in mega-batch above
   

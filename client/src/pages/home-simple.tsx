@@ -112,10 +112,10 @@ export default function Home() {
         
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isNew && (
-            <Badge className="bg-blue-500"><TranslatedText>New</TranslatedText></Badge>
+            <Badge className="bg-blue-500">New</Badge>
           )}
           {product.isOnSale && (
-            <Badge className="bg-red-500"><TranslatedText>Sale</TranslatedText></Badge>
+            <Badge className="bg-red-500">Sale</Badge>
           )}
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function Home() {
               className="px-8"
             >
               <Search className="mr-2 h-5 w-5" />
-              <TranslatedText>Browse Products</TranslatedText>
+              Browse Products
             </Button>
             <Button 
               size="lg" 
@@ -221,7 +221,7 @@ export default function Home() {
               className="px-8 bg-white/10 border-white/20 text-white hover:bg-white/20"
             >
               <Store className="mr-2 h-5 w-5" />
-              <TranslatedText>Become a Vendor</TranslatedText>
+              Become a Vendor
             </Button>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Market Type Selection */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center"><TranslatedText>Choose Your Market</TranslatedText></h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Choose Your Market</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -242,8 +242,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Store className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                <h3 className="text-xl font-bold mb-2"><TranslatedText>Business to Consumer</TranslatedText></h3>
-                <p className="text-gray-600"><TranslatedText>Shop from businesses selling directly to customers</TranslatedText></p>
+                <h3 className="text-xl font-bold mb-2">Business to Consumer</h3>
+                <p className="text-gray-600">Shop from businesses selling directly to customers</p>
               </CardContent>
             </Card>
             
@@ -256,8 +256,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Building className="h-12 w-12 mx-auto mb-4 text-green-600" />
-                <h3 className="text-xl font-bold mb-2"><TranslatedText>Business to Business</TranslatedText></h3>
-                <p className="text-gray-600"><TranslatedText>Wholesale and bulk purchasing for businesses</TranslatedText></p>
+                <h3 className="text-xl font-bold mb-2">Business to Business</h3>
+                <p className="text-gray-600">Wholesale and bulk purchasing for businesses</p>
               </CardContent>
             </Card>
             
@@ -270,8 +270,8 @@ export default function Home() {
             >
               <CardContent className="text-center p-8">
                 <Users className="h-12 w-12 mx-auto mb-4 text-purple-600" />
-                <h3 className="text-xl font-bold mb-2"><TranslatedText>Consumer to Consumer</TranslatedText></h3>
-                <p className="text-gray-600"><TranslatedText>Buy and sell between individual users</TranslatedText></p>
+                <h3 className="text-xl font-bold mb-2">Consumer to Consumer</h3>
+                <p className="text-gray-600">Buy and sell between individual users</p>
               </CardContent>
             </Card>
           </div>
@@ -281,7 +281,7 @@ export default function Home() {
         {isLoading && (
           <div className="text-center py-12">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-500"><TranslatedText>Loading products...</TranslatedText></p>
+            <p className="text-gray-500">Loading products...</p>
           </div>
         )}
 
@@ -289,12 +289,12 @@ export default function Home() {
         {!isLoading && featuredProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold"><TranslatedText>Featured Products</TranslatedText></h2>
+              <h2 className="text-2xl font-bold">Featured Products</h2>
               <Button 
                 variant="outline"
                 onClick={() => setLocation('/products')}
               >
-                <TranslatedText>View All</TranslatedText>
+                View All
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -307,12 +307,12 @@ export default function Home() {
         {!isLoading && newProducts.length > 0 && (
           <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold"><TranslatedText>New Arrivals</TranslatedText></h2>
+              <h2 className="text-2xl font-bold">New Arrivals</h2>
               <Button 
                 variant="outline"
                 onClick={() => setLocation('/products')}
               >
-                <TranslatedText>View All</TranslatedText>
+                View All
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -324,7 +324,7 @@ export default function Home() {
         {/* Categories */}
         {!isLoading && categories.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-6"><TranslatedText>Shop by Category</TranslatedText></h2>
+            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {categories.map((category) => (
                 <Card 
@@ -334,7 +334,7 @@ export default function Home() {
                 >
                   <CardContent className="text-center p-4">
                     <Tag className="h-8 w-8 mx-auto mb-2 text-gray-600" />
-                    <p className="text-sm font-medium"><TranslatedText>{category.name}</TranslatedText></p>
+                    <p className="text-sm font-medium">{category.name}</p>
                   </CardContent>
                 </Card>
               ))}
