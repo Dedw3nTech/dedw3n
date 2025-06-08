@@ -10,6 +10,7 @@ import { useMasterBatchTranslation, useMasterTranslation } from '@/hooks/use-mas
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
+import { VideoDisplayCard } from '@/components/products/VideoDisplayCard';
 
 import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
 import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
@@ -939,10 +940,44 @@ export default function Products() {
     ));
   };
 
+  // Video content based on marketplace type
+  const getMarketplaceVideo = () => {
+    switch (marketType) {
+      case 'b2b':
+        return {
+          video: '/attached_assets/car selling online  .mp4',
+          title: 'B2B Professional Solutions'
+        };
+      case 'b2c':
+        return {
+          video: '/attached_assets/Cafe.mp4',
+          title: 'Discover Amazing Products'
+        };
+      case 'c2c':
+        return {
+          video: '/attached_assets/Phone finger _1749111831409.mp4',
+          title: 'Connect & Trade with Others'
+        };
+      default:
+        return {
+          video: '/attached_assets/Cafe.mp4',
+          title: 'Marketplace Experience'
+        };
+    }
+  };
+
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-
+      {/* Video Display Component */}
+      <div className="mb-6">
+        <VideoDisplayCard
+          entityContent={getMarketplaceVideo()}
+          onClose={() => {}}
+          autoPlay={true}
+          showControls={true}
+        />
+      </div>
 
       <div>
         <h3 className="font-medium mb-2 text-[14px]">{searchForProductsText}</h3>
