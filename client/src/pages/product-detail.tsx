@@ -604,13 +604,13 @@ export default function ProductDetail() {
                 if (user) {
                   setLocation('/dating');
                   toast({
-                    title: "Added to Dating Profile",
-                    description: "Product added to your dating wishlist!",
+                    title: translateText("Added to Dating Profile"),
+                    description: translateText("Product added to your dating wishlist!"),
                   });
                 } else {
                   toast({
-                    title: "Login Required",
-                    description: "Please log in to add to dating profile",
+                    title: translateText("Login Required"),
+                    description: translateText("Please log in to add to dating profile"),
                     variant: "destructive"
                   });
                   setLocation('/auth');
@@ -629,8 +629,8 @@ export default function ProductDetail() {
                   setIsGiftSearchOpen(true);
                 } else {
                   toast({
-                    title: "Login Required",
-                    description: "Please log in to send gifts",
+                    title: translateText("Login Required"),
+                    description: translateText("Please log in to send gifts"),
                     variant: "destructive"
                   });
                   setLocation('/auth');
@@ -647,9 +647,9 @@ export default function ProductDetail() {
       {/* Tabs for description and reviews */}
       <Tabs defaultValue="description" className="mb-12">
         <TabsList className="mb-6 border-b w-full justify-start rounded-none">
-          <TabsTrigger value="description">Description</TabsTrigger>
+          <TabsTrigger value="description">{translateText('Description')}</TabsTrigger>
           <TabsTrigger value="reviews">
-            Reviews ({reviews.length})
+            {translateText('Reviews')} ({reviews.length})
           </TabsTrigger>
           
           <div className="ml-auto flex items-center">
@@ -657,7 +657,7 @@ export default function ProductDetail() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="px-2">
                   <Share2 className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Share</span>
+                  <span className="hidden sm:inline">{translateText('Share')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -665,17 +665,17 @@ export default function ProductDetail() {
                   window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.href}`)}`, '_blank');
                 }}>
                   <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                  Share via Email
+{translateText('Share via Email')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   toast({
-                    title: "Link Copied",
-                    description: "Product link copied to clipboard",
+                    title: translateText("Link Copied"),
+                    description: translateText("Product link copied to clipboard"),
                   });
                 }}>
                   <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-                  Copy Link
+{translateText('Copy Link')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   if (user) {
