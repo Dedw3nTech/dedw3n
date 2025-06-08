@@ -616,19 +616,15 @@ export function useMasterBatchTranslation(
   }, []);
 
   useEffect(() => {
-    console.log(`[MasterBatchTranslation] Language changed to: ${currentLanguage}, component: ${componentIdRef.current}`);
-    
     // Always reset translations when language changes to force refresh
     setTranslations(stableTexts);
     
     if (!currentLanguage || currentLanguage === 'EN') {
-      console.log(`[MasterBatchTranslation] Using English text for component: ${componentIdRef.current}`);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    console.log(`[MasterBatchTranslation] Starting translation for ${stableTexts.length} texts to ${currentLanguage}`);
     
     // Clear any cached translations for this component when language changes
     const componentId = componentIdRef.current;
@@ -643,7 +639,6 @@ export function useMasterBatchTranslation(
         const orderedTranslations = stableTexts.map(text => 
           batchTranslations[text] || text
         );
-        console.log(`[MasterBatchTranslation] Received translations for component: ${componentId}`, orderedTranslations.slice(0, 3));
         setTranslations(orderedTranslations);
         setIsLoading(false);
       }

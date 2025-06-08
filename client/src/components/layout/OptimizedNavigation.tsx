@@ -72,14 +72,14 @@ export default function OptimizedNavigation() {
 
   // Memoize translated values to prevent re-render loops
   const translatedLabels = useMemo(() => ({
-    marketplace: translatedHeaderTexts["Marketplace"] || "Marketplace",
-    community: translatedHeaderTexts["Community"] || "Community",
-    dating: translatedHeaderTexts["Dating"] || "Dating",
-    contact: translatedHeaderTexts["Contact"] || "Contact",
-    currency: translatedHeaderTexts["Currency"] || "Currency",
-    language: translatedHeaderTexts["Language"] || "Language",
-    login: translatedHeaderTexts["Log in"] || "Log in",
-    signup: translatedHeaderTexts["Sign Up"] || "Sign Up"
+    marketplace: translatedHeaderTexts[0] || "Marketplace",
+    community: translatedHeaderTexts[1] || "Community",
+    dating: translatedHeaderTexts[2] || "Dating",
+    contact: translatedHeaderTexts[3] || "Contact",
+    currency: translatedHeaderTexts[4] || "Currency",
+    language: translatedHeaderTexts[5] || "Language",
+    login: translatedHeaderTexts[6] || "Log in",
+    signup: translatedHeaderTexts[7] || "Sign Up"
   }), [translatedHeaderTexts]);
   
   // Unread counts
