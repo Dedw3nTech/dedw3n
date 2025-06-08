@@ -471,7 +471,7 @@ export default function DiscountForm({ open, onOpenChange, type, vendorId }: Dis
         />
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -763,7 +763,7 @@ export default function DiscountForm({ open, onOpenChange, type, vendorId }: Dis
         />
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -776,7 +776,7 @@ export default function DiscountForm({ open, onOpenChange, type, vendorId }: Dis
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
