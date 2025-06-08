@@ -523,6 +523,24 @@ class MasterTranslationManager {
     };
   }
 
+  // Clear language-specific cache when language changes
+  clearLanguageCache(language: string): void {
+    const keysToDelete: string[] = [];
+    
+    this.cache.forEach((entry, key) => {
+      if (entry.language === language) {
+        keysToDelete.push(key);
+      }
+    });
+    
+    keysToDelete.forEach(key => this.cache.delete(key));
+    
+    if (keysToDelete.length > 0) {
+      console.log(`[Master Translation] Cleared ${keysToDelete.length} cache entries for language ${language}`);
+      this.saveToStorage();
+    }
+  }
+
   // Clear all caches - useful for debugging
   clearCache(): void {
     this.cache.clear();
@@ -598,24 +616,34 @@ export function useMasterBatchTranslation(
   }, []);
 
   useEffect(() => {
+    console.log(`[MasterBatchTranslation] Language changed to: ${currentLanguage}, component: ${componentIdRef.current}`);
+    
+    // Always reset translations when language changes to force refresh
+    setTranslations(stableTexts);
+    
     if (!currentLanguage || currentLanguage === 'EN') {
-      setTranslations(stableTexts);
+      console.log(`[MasterBatchTranslation] Using English text for component: ${componentIdRef.current}`);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
+    console.log(`[MasterBatchTranslation] Starting translation for ${stableTexts.length} texts to ${currentLanguage}`);
+    
+    // Clear any cached translations for this component when language changes
+    const componentId = componentIdRef.current;
     
     masterTranslationManager.translateBatch(
       stableTexts,
       currentLanguage,
       priority,
-      componentIdRef.current,
+      componentId,
       (batchTranslations) => {
         // Convert object to ordered array matching input texts
         const orderedTranslations = stableTexts.map(text => 
           batchTranslations[text] || text
         );
+        console.log(`[MasterBatchTranslation] Received translations for component: ${componentId}`, orderedTranslations.slice(0, 3));
         setTranslations(orderedTranslations);
         setIsLoading(false);
       }

@@ -122,6 +122,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     
     // Clear translation cache when language changes
     translationCache.clear();
+    
+    // Also clear Master Translation cache
+    try {
+      const { clearTranslationCache } = await import('@/hooks/use-master-translation');
+      clearTranslationCache();
+      console.log('[Language Context] Cleared Master Translation cache');
+    } catch (error) {
+      console.warn('[Language Context] Failed to clear Master Translation cache:', error);
+    }
   };
 
   const translateText = async (text: string, targetLanguage?: string): Promise<string> => {
