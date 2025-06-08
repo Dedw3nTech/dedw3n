@@ -93,105 +93,81 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
-  // DeepL-only translation system
-  const { translatedText: filterText } = useDeepLTranslation("Filter");
-  const { translatedText: filterProductsText } = useDeepLTranslation("Filter Products");
-  const { translatedText: narrowDownText } = useDeepLTranslation("Narrow down products based on your preferences");
-  const { translatedText: productText } = useDeepLTranslation("product");
-  const { translatedText: productsText } = useDeepLTranslation("products");
-  const { translatedText: productFoundText } = useDeepLTranslation("found");
-  const { translatedText: clearAllText } = useDeepLTranslation("Clear All");
-  const { translatedText: showText } = useDeepLTranslation("Show");
-  const { translatedText: sortByText } = useDeepLTranslation("Sort by");
-  const { translatedText: sortOptionsText } = useDeepLTranslation("Sort Options");
-  const { translatedText: trendingText } = useDeepLTranslation("Trending");
-  const { translatedText: priceLowHighText } = useDeepLTranslation("Price: Low to High");
-  const { translatedText: priceHighLowText } = useDeepLTranslation("Price: High to Low");
-  const { translatedText: newestProductText } = useDeepLTranslation("Newest Product");
-  const { translatedText: addToCartText } = useDeepLTranslation("Add to Cart");
-  // Consolidated DeepL-only translations
-  const { translatedText: addToCartTooltipText } = useDeepLTranslation("Add to shopping cart");
-  const { translatedText: shareOnFeedTooltipText } = useDeepLTranslation("Share on community feed");
-  const { translatedText: makeOfferTooltipText } = useDeepLTranslation("Make an offer");
-  const { translatedText: sendGiftTooltipText } = useDeepLTranslation("Send as gift");
-  const { translatedText: addToProfileTooltipText } = useDeepLTranslation("Add to profile");
-  const { translatedText: shareProductTooltipText } = useDeepLTranslation("Share product");
-  const { translatedText: viewProductDetailsText } = useDeepLTranslation("View product details");
-  const { translatedText: addToShoppingBagText } = useDeepLTranslation("Add to Shopping Bag");
-  const { translatedText: newBadgeText } = useDeepLTranslation("New");
-  const { translatedText: saleBadgeText } = useDeepLTranslation("Sale");
-  const { translatedText: verifiedBadgeText } = useDeepLTranslation("Verified");
-  const { translatedText: minQtyText } = useDeepLTranslation("Min qty");
-  const { translatedText: buyNowText } = useDeepLTranslation("Buy Now");
-  const { translatedText: shareText } = useDeepLTranslation("Share");
-  const { translatedText: viewProductText } = useDeepLTranslation("View Product");
-  const { translatedText: cancelText } = useDeepLTranslation("Cancel");
-  const { translatedText: sendingText } = useDeepLTranslation("Sending...");
-  const { translatedText: postingText } = useDeepLTranslation("Posting...");
-  const { translatedText: searchForRecipientText } = useDeepLTranslation("Search for recipient");
-  const { translatedText: typeNameUsernameText } = useDeepLTranslation("Type name or username...");
-  const { translatedText: noUsersFoundText } = useDeepLTranslation("No users found matching");
-  const { translatedText: typeAtLeastText } = useDeepLTranslation("Type at least 2 characters to search");
-  const { translatedText: sendGiftText } = useDeepLTranslation("Send Gift");
-  const { translatedText: buyText } = useDeepLTranslation("Buy");
-  const { translatedText: listedByText } = useDeepLTranslation("Listed by");
+  // Master Translation System - Single mega-batch call (34 → 1 API call)
+  const productTexts = [
+    // Filter & Search (7 texts)
+    "Filter", "Filter Products", "Narrow down products based on your preferences",
+    "product", "products", "found", "Clear All",
+    
+    // Sort & Display (7 texts)
+    "Show", "Sort by", "Sort Options", "Trending", "Price: Low to High", 
+    "Price: High to Low", "Newest Product",
+    
+    // Product Actions (8 texts)
+    "Add to Cart", "Add to shopping cart", "Share on community feed", "Make an offer",
+    "Send as gift", "Add to profile", "Share product", "View product details",
+    
+    // Additional Actions (12 texts)
+    "Add to Shopping Bag", "New", "Sale", "Verified", "Min qty", "Buy Now",
+    "Share", "View Product", "Cancel", "Sending...", "Posting...",
+    
+    // Gift & Messaging (11 texts)
+    "Search for recipient", "Type name or username...", "No users found matching",
+    "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
+    "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
+    
+    // Community & Sharing (8 texts)
+    "Services", "Your Region", "Your Country", "Repost to Community Feed",
+    "Would you like to add a message with this product share?", "Add your message (optional)",
+    "What do you think about this product?", "Post Without Text",
+    
+    // Offers & Actions (9 texts)
+    "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
+    "Your Offer Amount", "Enter your offer amount", "Message (optional)",
+    "Add a message with your offer...", "Send via Message",
+    
+    // Search & Filters (11 texts)
+    "Search for Products", "Search within", "Categories", "Region", "Reset Filters",
+    "On Sale", "New Arrivals", "Product or Service", "Product", "Service", "Product Status",
+    
+    // Friend & Store Options (10 texts)
+    "Friend Options", "Friends only", "Local pickup only", "Store Options",
+    "Verified stores only", "Free shipping", "Next day delivery", "Business Options"
+  ];
+
+  const { translations: t } = useMasterBatchTranslation(productTexts);
   
-  // Additional consolidated DeepL-only translations
-  const { translatedText: servicesText } = useDeepLTranslation("Services");
-  const { translatedText: yourRegionText } = useDeepLTranslation("Your Region");
-  const { translatedText: yourCountryText } = useDeepLTranslation("Your Country");
-  const { translatedText: repostToCommunityText } = useDeepLTranslation("Repost to Community Feed");
-  const { translatedText: addMessageText } = useDeepLTranslation("Would you like to add a message with this product share?");
-  const { translatedText: addYourMessageText } = useDeepLTranslation("Add your message (optional)");
-  const { translatedText: whatDoYouThinkText } = useDeepLTranslation("What do you think about this product?");
-  const { translatedText: postWithoutTextButton } = useDeepLTranslation("Post Without Text");
-  const { translatedText: postToFeedButton } = useDeepLTranslation("Post to Feed");
-  const { translatedText: sendOfferTitle } = useDeepLTranslation("Send Offer");
-  const { translatedText: sendPriceOfferText } = useDeepLTranslation("Send a price offer to the product owner");
-  const { translatedText: listedText } = useDeepLTranslation("Listed");
-  const { translatedText: yourOfferAmountText } = useDeepLTranslation("Your Offer Amount");
-  const { translatedText: enterOfferAmountText } = useDeepLTranslation("Enter your offer amount");
-  const { translatedText: messageOptionalText } = useDeepLTranslation("Message (optional)");
-  const { translatedText: addMessageWithOfferText } = useDeepLTranslation("Add a message with your offer...");
-  const { translatedText: sendOfferText } = useDeepLTranslation("Send Offer");
-  const { translatedText: sendGiftTitle } = useDeepLTranslation("Send Gift");
-  const { translatedText: sendProductAsGiftText } = useDeepLTranslation("Send this product as a gift to someone special");
-  const { translatedText: byText } = useDeepLTranslation("By");
-  const { translatedText: shareWithMemberText } = useDeepLTranslation("Share with Member");
-  const { translatedText: sendViaMessageText } = useDeepLTranslation("Send via Message");
-  const { translatedText: searchForProductsText } = useDeepLTranslation("Search for Products");
-  const { translatedText: searchWithinText } = useDeepLTranslation("Search within");
-  const { translatedText: categoriesText } = useDeepLTranslation("Categories");
-  const { translatedText: regionText } = useDeepLTranslation("Region");
-  const { translatedText: resetFiltersText } = useDeepLTranslation("Reset Filters");
-  const { translatedText: onSaleText } = useDeepLTranslation("On Sale");
-  const { translatedText: newArrivalsText } = useDeepLTranslation("New Arrivals");
-  const { translatedText: productOrServiceText } = useDeepLTranslation("Product or Service");
-  const { translatedText: productFilterText } = useDeepLTranslation("Product");
-  const { translatedText: serviceFilterText } = useDeepLTranslation("Service");
-  const { translatedText: productStatusText } = useDeepLTranslation("Product Status");
-  const { translatedText: friendOptionsText } = useDeepLTranslation("Friend Options");
-  const { translatedText: friendsOnlyText } = useDeepLTranslation("Friends only");
-  const { translatedText: localPickupText } = useDeepLTranslation("Local pickup only");
-  const { translatedText: storeOptionsText } = useDeepLTranslation("Store Options");
-  const { translatedText: verifiedStoresText } = useDeepLTranslation("Verified stores only");
-  const { translatedText: freeShippingText } = useDeepLTranslation("Free shipping");
-  const { translatedText: nextDayDeliveryText } = useDeepLTranslation("Next day delivery");
-  const { translatedText: businessOptionsText } = useDeepLTranslation("Business Options");
-  const { translatedText: volumeDiscountsText } = useDeepLTranslation("Volume discounts");
-  const { translatedText: wholesaleOnlyText } = useDeepLTranslation("Wholesale only");
-  const { translatedText: taxExemptText } = useDeepLTranslation("Tax exempt eligible");
-  const { translatedText: friendText } = useDeepLTranslation("Friend");
-  const { translatedText: vatText } = useDeepLTranslation("VAT");
-  const { translatedText: volumeDiscountText } = useDeepLTranslation("Volume discount");
-  const { translatedText: repostButtonText } = useDeepLTranslation("Repost");
-  const { translatedText: sendOfferBtnText } = useDeepLTranslation("Send Offer");
-  const { translatedText: removeFromFavoritesText } = useDeepLTranslation("Remove from favorites");
-  const { translatedText: addToFavoritesText } = useDeepLTranslation("Add to favorites");
-  const { translatedText: shareProductText } = useDeepLTranslation("Share Product");
-  const { translatedText: shareViaEmailText } = useDeepLTranslation("Share via Email");
-  const { translatedText: copyLinkText } = useDeepLTranslation("Copy Link");
-  const { translatedText: shareOnFeedText } = useDeepLTranslation("Share on Feed");
+  // Extract translations with descriptive variable names
+  const [
+    filterText, filterProductsText, narrowDownText, productText, productsText, 
+    productFoundText, clearAllText,
+    
+    showText, sortByText, sortOptionsText, trendingText, priceLowHighText,
+    priceHighLowText, newestProductText,
+    
+    addToCartText, addToCartTooltipText, shareOnFeedTooltipText, makeOfferTooltipText,
+    sendGiftTooltipText, addToProfileTooltipText, shareProductTooltipText, viewProductDetailsText,
+    
+    addToShoppingBagText, newBadgeText, saleBadgeText, verifiedBadgeText, minQtyText,
+    buyNowText, shareText, viewProductText, cancelText, sendingText, postingText,
+    
+    searchForRecipientText, typeNameUsernameText, noUsersFoundText, typeAtLeastText,
+    sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
+    
+    servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
+    addYourMessageText, whatDoYouThinkText, postWithoutTextButton,
+    
+    postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
+    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText,
+    
+    searchForProductsText, searchWithinText, categoriesText, regionText, resetFiltersText,
+    onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
+    
+    friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
+    freeShippingText, nextDayDeliveryText, businessOptionsText
+  ] = t;
+  
+  // All individual translation calls now consolidated in mega-batch above
   
   // Repost dialog state
   const [repostDialogOpen, setRepostDialogOpen] = useState(false);

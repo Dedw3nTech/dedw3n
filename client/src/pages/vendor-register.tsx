@@ -88,94 +88,79 @@ export default function VendorRegisterPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // DeepL-only translation hooks for vendor registration page
-  const { translatedText: chooseVendorTypeText } = useDeepLTranslation("Choose Your Vendor Type");
-  const { translatedText: selectVendorDescText } = useDeepLTranslation("Select the type of vendor account that best describes your business");
-  const { translatedText: yourExistingAccountsText } = useDeepLTranslation("Your Existing Vendor Accounts");
-  const { translatedText: privateVendorText } = useDeepLTranslation("Private Vendor");
-  const { translatedText: businessVendorText } = useDeepLTranslation("Business Vendor");
-  const { translatedText: accountAlreadyCreatedText } = useDeepLTranslation("Account Already Created");
-  const { translatedText: activeText } = useDeepLTranslation("Active");
-  const { translatedText: backToDashboardText } = useDeepLTranslation("Back to Dashboard");
+  // Master Translation System - Single mega-batch call (88 → 1 API call)
+  const vendorRegisterTexts = [
+    // Vendor Type Selection (8 texts)
+    "Choose Your Vendor Type", "Select the type of vendor account that best describes your business",
+    "Your Existing Vendor Accounts", "Private Vendor", "Business Vendor", 
+    "Account Already Created", "Active", "Back to Dashboard",
+    
+    // Private Vendor Section (7 texts)
+    "Private Vendor Registration", "Change to Business Vendor", 
+    "Perfect for individuals selling personal items, handmade products, or small-scale businesses",
+    "Simplified registration process", "Individual seller profile", "Basic tax reporting",
+    "Personal contact information",
+    
+    // Business Vendor Section (8 texts)
+    "Business Vendor Registration", "Change to Private Vendor",
+    "Ideal for registered businesses, companies, and professional retailers",
+    "Comprehensive business profile", "Business verification required", 
+    "Advanced tax documentation", "Professional seller features",
+    
+    // Form Fields (17 texts)
+    "Store Information", "Store Name", "Business Name", "Description", "Business Type",
+    "Contact Information", "Email", "Phone", "Address", "City", "State", "Zip Code",
+    "Country", "Website", "Tax ID", "Business Registration Number", "Business License",
+    
+    // Sales Manager (4 texts)
+    "Sales Manager", "Do you have a Sales Manager?", "Sales Manager Name", "Sales Manager ID",
+    
+    // Actions & Buttons (6 texts)
+    "Back", "Submit Application", "Submitting...", "Registration Successful",
+    "Registration Failed", "Failed to register as vendor. Please try again.",
+    
+    // Business Types (5 texts)
+    "Sole Proprietorship", "Partnership", "Corporation", "LLC", "Other",
+    
+    // Placeholders (19 texts)
+    "Your Store Name", "Your Business Name", "Describe your business",
+    "Describe your store and the products you sell...", "https://yourwebsite.com",
+    "Your Email", "Your Phone", "Your Address", "Your City", "Your State",
+    "Your Zip Code", "Your Country", "Your Website", "Your Tax ID", 
+    "Your Registration Number", "Optional", 
+    "Sales Managers earn an additional 2.5% commission on your sales",
+    "Enter full name", "Enter ID number"
+  ];
+
+  const { translations: t } = useMasterBatchTranslation(vendorRegisterTexts);
   
-  // DeepL-only private vendor section translations
-  const { translatedText: privateVendorRegText } = useDeepLTranslation("Private Vendor Registration");
-  const { translatedText: changeToBusinessText } = useDeepLTranslation("Change to Business Vendor");
-  const { translatedText: privateDescText } = useDeepLTranslation("Perfect for individuals selling personal items, handmade products, or small-scale businesses");
-  const { translatedText: simplifiedRegText } = useDeepLTranslation("Simplified registration process");
-  const { translatedText: individualSellerText } = useDeepLTranslation("Individual seller profile");
-  const { translatedText: basicTaxText } = useDeepLTranslation("Basic tax reporting");
-  const { translatedText: personalContactText } = useDeepLTranslation("Personal contact information");
-  
-  // DeepL-only business vendor section translations  
-  const { translatedText: businessVendorRegText } = useDeepLTranslation("Business Vendor Registration");
-  const { translatedText: changeToPrivateText } = useDeepLTranslation("Change to Private Vendor");
-  const { translatedText: businessDescText } = useDeepLTranslation("Ideal for registered businesses, companies, and professional retailers");
-  const { translatedText: comprehensiveProfileText } = useDeepLTranslation("Comprehensive business profile");
-  const { translatedText: businessVerificationText } = useDeepLTranslation("Business verification required");
-  const { translatedText: advancedTaxText } = useDeepLTranslation("Advanced tax documentation");
-  const { translatedText: professionalFeaturesText } = useDeepLTranslation("Professional seller features");
-  
-  // DeepL-only form field translations
-  const { translatedText: storeInfoText } = useDeepLTranslation("Store Information");
-  const { translatedText: storeNameText } = useDeepLTranslation("Store Name");
-  const { translatedText: businessNameText } = useDeepLTranslation("Business Name");
-  const { translatedText: descriptionText } = useDeepLTranslation("Description");
-  const { translatedText: businessTypeText } = useDeepLTranslation("Business Type");
-  const { translatedText: contactInfoText } = useDeepLTranslation("Contact Information");
-  const { translatedText: emailText } = useDeepLTranslation("Email");
-  const { translatedText: phoneText } = useDeepLTranslation("Phone");
-  const { translatedText: addressText } = useDeepLTranslation("Address");
-  const { translatedText: cityText } = useDeepLTranslation("City");
-  const { translatedText: stateText } = useDeepLTranslation("State");
-  const { translatedText: zipCodeText } = useDeepLTranslation("Zip Code");
-  const { translatedText: countryText } = useDeepLTranslation("Country");
-  const { translatedText: websiteText } = useDeepLTranslation("Website");
-  const { translatedText: taxIdText } = useDeepLTranslation("Tax ID");
-  const { translatedText: businessRegNumText } = useDeepLTranslation("Business Registration Number");
-  const { translatedText: businessLicenseText } = useDeepLTranslation("Business License");
-  
-  // DeepL-only sales manager translations
-  const { translatedText: salesManagerText } = useDeepLTranslation("Sales Manager");
-  const { translatedText: hasSalesManagerText } = useDeepLTranslation("Do you have a Sales Manager?");
-  const { translatedText: salesManagerNameText } = useDeepLTranslation("Sales Manager Name");
-  const { translatedText: salesManagerIdText } = useDeepLTranslation("Sales Manager ID");
-  
-  // DeepL-only button and action translations
-  const { translatedText: backText } = useDeepLTranslation("Back");
-  const { translatedText: submitApplicationText } = useDeepLTranslation("Submit Application");
-  const { translatedText: submittingText } = useDeepLTranslation("Submitting...");
-  const { translatedText: registrationSuccessText } = useDeepLTranslation("Registration Successful");
-  const { translatedText: registrationFailedText } = useDeepLTranslation("Registration Failed");
-  const { translatedText: registrationErrorText } = useDeepLTranslation("Failed to register as vendor. Please try again.");
-  
-  // DeepL-only business type options translations
-  const { translatedText: soleProprietorshipText } = useDeepLTranslation("Sole Proprietorship");
-  const { translatedText: partnershipText } = useDeepLTranslation("Partnership");
-  const { translatedText: corporationText } = useDeepLTranslation("Corporation");
-  const { translatedText: llcText } = useDeepLTranslation("LLC");
-  const { translatedText: otherText } = useDeepLTranslation("Other");
-  
-  // DeepL-only placeholder text translations
-  const { translatedText: yourStoreNameText } = useDeepLTranslation("Your Store Name");
-  const { translatedText: yourBusinessNameText } = useDeepLTranslation("Your Business Name");
-  const { translatedText: describeBusinessText } = useDeepLTranslation("Describe your business");
-  const { translatedText: describeStoreText } = useDeepLTranslation("Describe your store and the products you sell...");
-  const { translatedText: websitePlaceholderText } = useDeepLTranslation("https://yourwebsite.com");
-  const { translatedText: yourEmailText } = useDeepLTranslation("Your Email");
-  const { translatedText: yourPhoneText } = useDeepLTranslation("Your Phone");
-  const { translatedText: yourAddressText } = useDeepLTranslation("Your Address");
-  const { translatedText: yourCityText } = useDeepLTranslation("Your City");
-  const { translatedText: yourStateText } = useDeepLTranslation("Your State");
-  const { translatedText: yourZipCodeText } = useDeepLTranslation("Your Zip Code");
-  const { translatedText: yourCountryText } = useDeepLTranslation("Your Country");
-  const { translatedText: yourWebsiteText } = useDeepLTranslation("Your Website");
-  const { translatedText: yourTaxIdText } = useDeepLTranslation("Your Tax ID");
-  const { translatedText: yourRegNumberText } = useDeepLTranslation("Your Registration Number");
-  const { translatedText: optionalText } = useDeepLTranslation("Optional");
-  const { translatedText: salesManagerCommissionText } = useDeepLTranslation("Sales Managers earn an additional 2.5% commission on your sales");
-  const { translatedText: enterFullNameText } = useDeepLTranslation("Enter full name");
-  const { translatedText: enterIdNumberText } = useDeepLTranslation("Enter ID number");
+  // Extract translations with descriptive variable names for readability
+  const [
+    chooseVendorTypeText, selectVendorDescText, yourExistingAccountsText, privateVendorText, 
+    businessVendorText, accountAlreadyCreatedText, activeText, backToDashboardText,
+    
+    privateVendorRegText, changeToBusinessText, privateDescText, simplifiedRegText, 
+    individualSellerText, basicTaxText, personalContactText,
+    
+    businessVendorRegText, changeToPrivateText, businessDescText, comprehensiveProfileText,
+    businessVerificationText, advancedTaxText, professionalFeaturesText,
+    
+    storeInfoText, storeNameText, businessNameText, descriptionText, businessTypeText,
+    contactInfoText, emailText, phoneText, addressText, cityText, stateText, zipCodeText,
+    countryText, websiteText, taxIdText, businessRegNumText, businessLicenseText,
+    
+    salesManagerText, hasSalesManagerText, salesManagerNameText, salesManagerIdText,
+    
+    backText, submitApplicationText, submittingText, registrationSuccessText,
+    registrationFailedText, registrationErrorText,
+    
+    soleProprietorshipText, partnershipText, corporationText, llcText, otherText,
+    
+    yourStoreNameText, yourBusinessNameText, describeBusinessText, describeStoreText,
+    websitePlaceholderText, yourEmailText, yourPhoneText, yourAddressText, yourCityText,
+    yourStateText, yourZipCodeText, yourCountryText, yourWebsiteText, yourTaxIdText,
+    yourRegNumberText, optionalText, salesManagerCommissionText, enterFullNameText, enterIdNumberText
+  ] = t;
 
   // Check existing vendor accounts
   const { data: vendorStatus } = useQuery({
