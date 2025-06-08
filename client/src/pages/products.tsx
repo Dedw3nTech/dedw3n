@@ -179,6 +179,7 @@ export default function Products() {
   const shareProductText = shareProductTooltipText;
   const shareViaEmailText = "Share via Email";
   const copyLinkText = "Copy Link";
+  const shareOnFeedText = "Share on Feed";
   
   // All individual translation calls now consolidated in mega-batch above
   
