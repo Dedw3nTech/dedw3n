@@ -1193,7 +1193,7 @@ export default function CheckoutNew() {
             {currentStep === 'review' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Review Your Order</CardTitle>
+                  <CardTitle>{translateText('Review Your Order')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Shipping Details */}
@@ -1252,7 +1252,7 @@ export default function CheckoutNew() {
                       variant="outline"
                       onClick={() => setCurrentStep('payment')}
                     >
-                      Back to Payment
+                      {translateText('Back to Payment')}
                     </Button>
                     <Button 
                       onClick={handlePlaceOrder}
@@ -1262,10 +1262,10 @@ export default function CheckoutNew() {
                       {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
+                          {translateText('Processing...')}
                         </>
                       ) : (
-                        `Place Order - ${formatPriceFromGBP(total)}`
+                        `${translateText('Place Order')} - ${formatPriceFromGBP(total)}`
                       )}
                     </Button>
                   </div>
