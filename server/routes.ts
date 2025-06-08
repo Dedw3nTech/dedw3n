@@ -4315,7 +4315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let whereConditions = [eq(returns.userId, userId)];
       
       if (status) {
-        whereConditions.push(eq(returns.status, status));
+        whereConditions.push(eq(returns.status, status as any));
       }
 
       const userReturns = await db.select({
@@ -4512,7 +4512,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cart API routes
   app.get('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const cartItems = await storage.listCartItems(userId);
       res.json(cartItems);
     } catch (error) {
@@ -4523,7 +4526,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const cartData = insertCartSchema.parse({
         ...req.body,
         userId
