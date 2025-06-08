@@ -261,6 +261,14 @@ export interface IStorage {
   assignUserToStore(storeUserData: any): Promise<any>;
   updateStoreUser(id: number, vendorId: number, updates: any): Promise<any>;
   removeUserFromStore(id: number, vendorId: number): Promise<boolean>;
+
+  // Dating profile operations
+  getDatingProfile(userId: number): Promise<DatingProfile | undefined>;
+  createDatingProfile(profileData: InsertDatingProfile): Promise<DatingProfile>;
+  updateDatingProfile(userId: number, updates: Partial<DatingProfile>): Promise<DatingProfile | undefined>;
+  addGiftToDatingProfile(userId: number, productId: number): Promise<boolean>;
+  removeGiftFromDatingProfile(userId: number, productId: number): Promise<boolean>;
+  getDatingProfileGifts(userId: number): Promise<Product[]>;
 }
 
 // Database storage implementation
