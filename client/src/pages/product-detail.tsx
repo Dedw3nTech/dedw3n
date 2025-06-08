@@ -11,7 +11,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useMasterTranslation } from '@/hooks/use-master-translation';
+
 import { 
   Loader2, 
   Star, 
@@ -64,7 +64,7 @@ export default function ProductDetail() {
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const { translatedText, isLoading: translationLoading } = useMasterTranslation();
+
 
   
   // Review form state
@@ -475,7 +475,7 @@ export default function ProductDetail() {
                     }}
                     className="p-2 hover:bg-gray-100 ml-1"
                   >
-                    <span className="text-black font-normal">{t('Send Offer')}</span>
+                    <span className="text-black font-normal">Send Offer</span>
                   </Button>
                 </div>
               </div>
