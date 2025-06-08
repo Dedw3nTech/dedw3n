@@ -5440,47 +5440,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Advanced search endpoint for gifts with real-time suggestions
-  app.get('/api/search/gifts', async (req: Request, res: Response) => {
+  app.get('/api/search/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      let authenticatedUser = null;
-      
-      // Multi-level authentication with fallback
-      if (req.user) {
-        authenticatedUser = req.user;
-      } else {
-        const sessionUserId = req.session?.passport?.user;
-        if (sessionUserId) {
-          const user = await storage.getUser(sessionUserId);
-          if (user) {
-            authenticatedUser = user;
-          }
-        }
-      }
-      
-      if (!authenticatedUser) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          const token = authHeader.substring(7);
-          try {
-            const payload = verifyToken(token);
-            if (payload) {
-              const user = await storage.getUser(payload.userId);
-              if (user) {
-                authenticatedUser = user;
-              }
-            }
-          } catch (jwtError) {
-            console.log('[DEBUG] Gift search - JWT verification failed');
-          }
-        }
-      }
-      
-      if (!authenticatedUser) {
-        return res.status(401).json({ message: 'Authentication required' });
-      }
-
       const { q, type = 'all', limit = 10, offset = 0 } = req.query;
-      const userId = authenticatedUser.id;
+      const userId = req.user!.id;
       
       if (!q || typeof q !== 'string' || q.trim().length < 2) {
         return res.json({ results: [], total: 0, suggestions: [] });
