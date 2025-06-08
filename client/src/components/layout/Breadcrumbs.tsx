@@ -130,21 +130,27 @@ export function Breadcrumbs() {
     }
 
     // Special handling for marketplace subsections (C2C, B2C, B2B)
-    if (path === '/c2c') {
+    if (path === '/c2c' || path === '/marketplace/c2c') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
       breadcrumbs.push({ label: translatedLabels.c2cMarketplace });
       return breadcrumbs;
     }
 
-    if (path === '/b2c') {
+    if (path === '/b2c' || path === '/marketplace/b2c' || path === '/') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
       breadcrumbs.push({ label: translatedLabels.b2cMarketplace });
       return breadcrumbs;
     }
 
-    if (path === '/b2b') {
+    if (path === '/b2b' || path === '/marketplace/b2b') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
       breadcrumbs.push({ label: translatedLabels.b2bMarketplace });
+      return breadcrumbs;
+    }
+
+    // Special handling for marketplace main page
+    if (path === '/marketplace' || path === '/products') {
+      breadcrumbs.push({ label: translatedLabels.marketplace });
       return breadcrumbs;
     }
     
@@ -157,6 +163,7 @@ export function Breadcrumbs() {
       'b2b': translatedLabels.b2bMarketplace, 
       'c2c': translatedLabels.c2cMarketplace,
       'wall': translatedLabels.community,
+      'community': translatedLabels.community,
       'dating': translatedLabels.dating,
       'dating-profile': translatedLabels.datingProfile,
       'contact': translatedLabels.contact,
@@ -186,22 +193,38 @@ export function Breadcrumbs() {
     };
     
     let currentPath = '';
-    segments.forEach((segment, index) => {
+    for (let index = 0; index < segments.length; index++) {
+      const segment = segments[index];
       currentPath += `/${segment}`;
-      const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+      let label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
       
-      // Special handling for B2C - redirect to main B2C marketplace page
-      let finalPath = currentPath;
-      if (segment === 'b2c') {
-        finalPath = '/marketplace/b2c';
+      // Special marketplace path handling for proper translation
+      if (segment === 'marketplace' && index < segments.length - 1) {
+        const nextSegment = segments[index + 1];
+        if (nextSegment === 'b2c' || nextSegment === 'b2b' || nextSegment === 'c2c') {
+          // Skip adding marketplace as we'll handle it in the subsection segment
+          continue;
+        }
+      }
+      
+      // Handle marketplace subsections with proper parent hierarchy
+      if (segment === 'b2c' && index > 0 && segments[index - 1] === 'marketplace') {
+        breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+        label = translatedLabels.b2cMarketplace;
+      } else if (segment === 'b2b' && index > 0 && segments[index - 1] === 'marketplace') {
+        breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+        label = translatedLabels.b2bMarketplace;
+      } else if (segment === 'c2c' && index > 0 && segments[index - 1] === 'marketplace') {
+        breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+        label = translatedLabels.c2cMarketplace;
       }
       
       // Don't add path for the last segment (current page)
       breadcrumbs.push({
         label,
-        path: index === segments.length - 1 ? undefined : finalPath
+        path: index === segments.length - 1 ? undefined : currentPath
       });
-    });
+    }
     
     return breadcrumbs;
   };
