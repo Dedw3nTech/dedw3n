@@ -102,7 +102,7 @@ export default function ShippingManager({ vendorId }: ShippingManagerProps) {
   ], []);
 
   // Get translations using stable DOM translation to match parent component
-  const { translations: translatedTexts, isLoading: isTranslating } = useStableDOMBatchTranslation(shippingTexts, 'instant');
+  const { translations: translatedTexts, isLoading: isTranslating } = useMasterBatchTranslation(shippingTexts, 'instant');
 
   // Fetch pending shipments (orders that are paid but not shipped)
   const { data: pendingShipments, isLoading: isLoadingPending } = useQuery({

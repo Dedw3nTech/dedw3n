@@ -42,7 +42,7 @@ export function BadgeProgress({
     nextBadge?.description || ""
   ];
   
-  const { translations } = useMasterTranslation(badgeTexts, 'high');
+  const { translations } = useMasterBatchTranslation(badgeTexts, 'high');
   
   const badgeStatusText = translations["Badge Status"] || "Badge Status";
   const highestLevelText = translations["You've reached the highest level!"] || "You've reached the highest level!";
