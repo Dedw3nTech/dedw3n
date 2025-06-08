@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
@@ -27,8 +27,42 @@ export function VideoDisplayCard({
 }: VideoDisplayCardProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-play when in view and loaded
+  useEffect(() => {
+    if (isInView && hasLoaded && autoPlay && videoRef.current) {
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        // Handle autoplay restriction
+        setIsPlaying(false);
+      });
+    }
+  }, [isInView, hasLoaded, autoPlay]);
 
   if (!isVisible) {
     return null;
@@ -93,21 +127,29 @@ export function VideoDisplayCard({
   };
 
   return (
-    <Card className="w-full overflow-hidden">
+    <Card className="w-full overflow-hidden" ref={containerRef}>
       <div className="relative">
-        <video
-          ref={videoRef}
-          className="w-full h-48 object-cover"
-          autoPlay={autoPlay}
-          loop
-          muted={isMuted}
-          playsInline
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        >
-          <source src={entityContent.video} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        {isInView ? (
+          <video
+            ref={videoRef}
+            className="w-full h-48 object-cover"
+            autoPlay={false}
+            loop
+            muted={isMuted}
+            playsInline
+            preload="metadata"
+            onLoadedData={() => setHasLoaded(true)}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+          >
+            <source src={entityContent.video} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <div className="w-full h-48 bg-gray-900 flex items-center justify-center">
+            <div className="text-white opacity-75">Loading video...</div>
+          </div>
+        )}
         
         {/* Video controls overlay */}
         {showControls && (
