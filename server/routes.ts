@@ -5334,6 +5334,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dating profile gift management endpoints
+  app.post('/api/dating-profile/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { productId } = req.body;
+      const userId = req.user!.id;
+      
+      if (!productId || isNaN(parseInt(productId))) {
+        return res.status(400).json({ message: 'Valid product ID required' });
+      }
+      
+      // Verify product exists
+      const product = await storage.getProduct(parseInt(productId));
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      
+      // Add gift to dating profile
+      const success = await storage.addGiftToDatingProfile(userId, parseInt(productId));
+      
+      if (success) {
+        // Get updated gift count
+        const profile = await storage.getDatingProfile(userId);
+        const giftCount = profile?.selectedGifts?.length || 1;
+        
+        res.json({
+          success: true,
+          message: 'Product added to dating profile gifts',
+          giftCount,
+          productName: product.name
+        });
+      } else {
+        // Check if it was a duplicate or limit reached
+        const profile = await storage.getDatingProfile(userId);
+        if (profile?.selectedGifts?.includes(parseInt(productId))) {
+          return res.status(400).json({ message: 'Product already in your gifts' });
+        }
+        if (profile?.selectedGifts && profile.selectedGifts.length >= 20) {
+          return res.status(400).json({ message: 'Maximum 20 gifts allowed' });
+        }
+        return res.status(500).json({ message: 'Failed to add gift' });
+      }
+    } catch (error) {
+      console.error('Error adding gift to dating profile:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/dating-profile/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const gifts = await storage.getDatingProfileGifts(userId);
+      res.json(gifts);
+    } catch (error) {
+      console.error('Error getting dating profile gifts:', error);
+      res.status(500).json({ message: 'Failed to get gifts' });
+    }
+  });
+
+  app.delete('/api/dating-profile/gifts/:productId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { productId } = req.params;
+      const userId = req.user!.id;
+      
+      if (!productId || isNaN(parseInt(productId))) {
+        return res.status(400).json({ message: 'Valid product ID required' });
+      }
+      
+      const success = await storage.removeGiftFromDatingProfile(userId, parseInt(productId));
+      
+      if (success) {
+        res.json({ success: true, message: 'Gift removed from dating profile' });
+      } else {
+        res.status(404).json({ message: 'Gift not found in profile' });
+      }
+    } catch (error) {
+      console.error('Error removing gift from dating profile:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // User search endpoint for gift functionality
   app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

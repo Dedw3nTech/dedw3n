@@ -4675,6 +4675,154 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Dating profile operations
+  async getDatingProfile(userId: number): Promise<DatingProfile | undefined> {
+    try {
+      const [profile] = await db
+        .select()
+        .from(datingProfiles)
+        .where(eq(datingProfiles.userId, userId))
+        .limit(1);
+      
+      return profile;
+    } catch (error) {
+      console.error('Error getting dating profile:', error);
+      return undefined;
+    }
+  }
+
+  async createDatingProfile(profileData: InsertDatingProfile): Promise<DatingProfile> {
+    try {
+      const [profile] = await db
+        .insert(datingProfiles)
+        .values(profileData)
+        .returning();
+      
+      return profile;
+    } catch (error) {
+      console.error('Error creating dating profile:', error);
+      throw error;
+    }
+  }
+
+  async updateDatingProfile(userId: number, updates: Partial<DatingProfile>): Promise<DatingProfile | undefined> {
+    try {
+      const [profile] = await db
+        .update(datingProfiles)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(datingProfiles.userId, userId))
+        .returning();
+      
+      return profile;
+    } catch (error) {
+      console.error('Error updating dating profile:', error);
+      return undefined;
+    }
+  }
+
+  async addGiftToDatingProfile(userId: number, productId: number): Promise<boolean> {
+    try {
+      // Get existing dating profile
+      let profile = await this.getDatingProfile(userId);
+      
+      if (!profile) {
+        // Auto-create draft profile with first gift
+        profile = await this.createDatingProfile({
+          userId,
+          selectedGifts: [productId],
+          displayName: '',
+          age: 0,
+          bio: '',
+          location: '',
+          interests: [],
+          lookingFor: '',
+          relationshipType: '',
+          profileImages: [],
+          isActive: false
+        });
+        return true;
+      } else {
+        const currentGifts = profile.selectedGifts || [];
+        
+        // Check if product already exists
+        if (currentGifts.includes(productId)) {
+          return false; // Already exists
+        }
+        
+        // Check 20-gift limit
+        if (currentGifts.length >= 20) {
+          return false; // Limit reached
+        }
+        
+        const updatedGifts = [...currentGifts, productId];
+        await this.updateDatingProfile(userId, { selectedGifts: updatedGifts });
+        return true;
+      }
+    } catch (error) {
+      console.error('Error adding gift to dating profile:', error);
+      return false;
+    }
+  }
+
+  async removeGiftFromDatingProfile(userId: number, productId: number): Promise<boolean> {
+    try {
+      const profile = await this.getDatingProfile(userId);
+      
+      if (!profile || !profile.selectedGifts) {
+        return false;
+      }
+      
+      const currentGifts = profile.selectedGifts;
+      const updatedGifts = currentGifts.filter(id => id !== productId);
+      
+      await this.updateDatingProfile(userId, { selectedGifts: updatedGifts });
+      return true;
+    } catch (error) {
+      console.error('Error removing gift from dating profile:', error);
+      return false;
+    }
+  }
+
+  async getDatingProfileGifts(userId: number): Promise<Product[]> {
+    try {
+      const profile = await this.getDatingProfile(userId);
+      
+      if (!profile || !profile.selectedGifts || profile.selectedGifts.length === 0) {
+        return [];
+      }
+      
+      const giftProducts = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          vendorId: products.vendorId,
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            rating: vendors.rating
+          }
+        })
+        .from(products)
+        .innerJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(inArray(products.id, profile.selectedGifts));
+      
+      return giftProducts.map(item => ({
+        ...item,
+        vendor: item.vendor
+      })) as Product[];
+    } catch (error) {
+      console.error('Error getting dating profile gifts:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -436,6 +436,42 @@ export default function Products() {
       });
     }
   });
+
+  // Add to dating profile mutation
+  const addToDatingProfileMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await apiRequest('POST', '/api/dating-profile/gifts', {
+        productId
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Added to Dating Profile!",
+        description: `${data.productName} added to your gifts (${data.giftCount}/20)`,
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || "Failed to add to dating profile";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAddToDatingProfile = (productId: number) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to add items to your dating profile",
+        variant: "destructive"
+      });
+      return;
+    }
+    addToDatingProfileMutation.mutate(productId);
+  };
   
   // Force rerender when currency changes
   useEffect(() => {
