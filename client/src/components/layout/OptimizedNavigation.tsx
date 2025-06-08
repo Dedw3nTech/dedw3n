@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { TranslatedText } from "@/hooks/use-translated-text";
+
 import { Badge } from "@/components/ui/badge";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
@@ -164,7 +164,7 @@ export default function OptimizedNavigation() {
                     item.isActive && "bg-gray-100 text-gray-700"
                   )}
                 >
-                  <TranslatedText>{item.title}</TranslatedText>
+                  {item.title}
                 </Link>
               ))}
             </nav>

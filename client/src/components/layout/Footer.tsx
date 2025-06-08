@@ -26,27 +26,15 @@ function FooterContent() {
     "our sole official website is"
   ], []);
 
-  const { translatedTexts } = useDeepLBatchTranslation(footerTexts);
+  const { translations } = useMasterBatchTranslation(footerTexts);
 
-  // Extract individual translations from array
-  const allRightsReservedText = translatedTexts[0] || "All rights reserved.";
-  const privacyPolicyText = translatedTexts[1] || "Privacy Policy";
-  const termsOfServiceText = translatedTexts[2] || "Terms of Service";
-  const cookiePolicyText = translatedTexts[3] || "Cookie Policy";
-  const communityGuidelinesText = translatedTexts[4] || "Community Guidelines";
-  const contactUsText = translatedTexts[5] || "Contact Us";
-  const faqText = translatedTexts[6] || "FAQ";
-  const shippingText = translatedTexts[7] || "Shipping";
-  const partnershipsText = translatedTexts[8] || "Partnerships";
-  const downloadMobileAppText = translatedTexts[9] || "Download our mobile app";
-  const downloadOnTheText = translatedTexts[10] || "Download on the";
-  const appStoreText = translatedTexts[11] || "App Store";
-  const getItOnText = translatedTexts[12] || "Get it on";
-  const googlePlayText = translatedTexts[13] || "Google Play";
-  const britishCompanyText = translatedTexts[14] || "is a British Company registered in England, Wales and Scotland under registration number";
-  const registeredOfficeText = translatedTexts[15] || "whose registered office is situated";
-  const bankRegisteredText = translatedTexts[16] || "Our bank is registered with HSBC UK IBAN";
-  const officialWebsiteText = translatedTexts[17] || "our sole official website is";
+  // Extract individual translations from array using Master Translation System
+  const [
+    allRightsReservedText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
+    communityGuidelinesText, contactUsText, faqText, shippingText, partnershipsText,
+    downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
+    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
+  ] = translations;
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
