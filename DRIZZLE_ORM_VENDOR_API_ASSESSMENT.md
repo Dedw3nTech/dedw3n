@@ -45,34 +45,40 @@ if (!userId) {
 
 ### Database Statistics Summary
 ```
-Total Tables: 50+ (marketplace, community, dating, vendor systems)
-Active Data: Limited (development environment)
-Query Patterns: Join-heavy operations for vendor analytics
-Connection Type: HTTP-only mode for Neon database
+Total Tables: 100+ (marketplace, community, dating, vendor, fraud detection systems)
+Active Data: Development environment with full schema
+Query Patterns: Complex joins for analytics, messaging, vendor operations
+Connection Type: HTTP-only mode for Neon PostgreSQL database
+Current Indexes: 150+ indexes across all tables
 ```
 
-### Performance Bottlenecks Identified
+### Critical Performance Issues Identified
 
-#### 1. Missing Database Indexes
-**Issue**: Complex vendor analytics queries lack optimized indexes.
+#### 1. Missing Strategic Database Indexes
+**Analysis**: After examining current index structure, critical performance indexes are missing for high-frequency operations.
 
-**Critical Missing Indexes**:
-- `vendors(userId)` - For user vendor account lookups
-- `products(vendorId, status)` - For vendor product filtering
-- `orders(vendorId, createdAt)` - For vendor order analytics
-- `messages(senderId, receiverId, category)` - For messaging performance
+**Critical Missing Indexes for Vendor Operations**:
+- `vendors(user_id, is_active)` - User vendor lookups with status filtering
+- `products(vendor_id, status, created_at)` - Vendor product analytics
+- `orders(user_id, created_at)` - User order history performance  
+- `order_items(vendor_id, created_at)` - Vendor sales analytics
+- `messages(sender_id, receiver_id, category, created_at)` - Message threading performance
 
-#### 2. N+1 Query Patterns
-**Locations**:
-- Vendor dashboard loading (multiple sequential queries)
-- Product listings with vendor information
-- Analytics dashboard data aggregation
+#### 2. Complex Join Query Bottlenecks
+**Analysis**: Storage layer contains multiple complex analytics queries performing expensive joins without optimization.
 
-#### 3. Inefficient Join Operations
-**Issues**:
-- Vendor analytics queries perform complex joins without proper query optimization
-- Missing query result caching for expensive operations
-- Redundant database calls in vendor summary endpoints
+**Performance-Critical Query Patterns**:
+- `getCategoryTrendsData()` - Triple join across products, categories, order_items
+- `getRevenueByCategory()` - Complex aggregation with date filtering
+- `getProductPerformanceMetrics()` - Multi-table analytics calculation
+- Vendor dashboard queries - Sequential database calls instead of batch operations
+
+#### 3. N+1 Query Anti-Patterns
+**Identified Locations**:
+- Vendor dashboard component loading (lines 3016-3100 in storage.ts)
+- Product listings with vendor information joins
+- Comment system with user data (lines 2490-2527 in storage.ts)
+- Message conversations with user details
 
 ## Comprehensive Fix Plan
 

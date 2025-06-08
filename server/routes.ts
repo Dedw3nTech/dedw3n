@@ -7156,7 +7156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
         .where(or(
           eq(orderItems.vendorId, vendorId),
-          isNull(orderItems.vendorId)
+          sql`${orderItems.vendorId} IS NULL`
         ))
         .groupBy(users.id, users.name, users.email, users.avatar)
         .having(sql`COUNT(DISTINCT ${messages.id}) > 0`)
