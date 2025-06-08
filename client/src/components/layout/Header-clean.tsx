@@ -1,9 +1,10 @@
 import { useLocation } from "wouter";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Search, User, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import UserMenu from "../ui/user-menu";
 import Logo from "../ui/logo";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 interface SearchSuggestion {
   id: number;
@@ -21,6 +22,27 @@ export default function Header() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Define all translatable texts for the header
+  const headerTexts = useMemo(() => [
+    "BETA VERSION",
+    "Marketplace", 
+    "Community",
+    "Dating",
+    "Search anything...",
+    "Contact"
+  ], []);
+
+  // Get translations using the master batch translation system
+  const { translations: translatedTexts } = useMasterBatchTranslation(headerTexts);
+
+  // Extract translated values with fallbacks (translations returns an array)
+  const betaVersionText = translatedTexts[0] || "BETA VERSION";
+  const marketplaceText = translatedTexts[1] || "Marketplace";
+  const communityText = translatedTexts[2] || "Community";
+  const datingText = translatedTexts[3] || "Dating";
+  const searchPlaceholderText = translatedTexts[4] || "Search anything...";
+  const contactText = translatedTexts[5] || "Contact";
 
   // Fetch search suggestions when user types
   const { data: suggestions = [] } = useQuery<SearchSuggestion[]>({
@@ -131,7 +153,7 @@ export default function Header() {
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-3">
             <Logo size="md" />
-            <span className="text-xs font-bold text-blue-600 ml-1">BETA VERSION</span>
+            <span className="text-xs font-bold text-blue-600 ml-1">{betaVersionText}</span>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -141,19 +163,19 @@ export default function Header() {
                 onClick={() => setLocation("/marketplace")}
                 className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
               >
-                Marketplace
+                {marketplaceText}
               </button>
               <button
                 onClick={() => setLocation("/community")}
                 className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
               >
-                Community
+                {communityText}
               </button>
               <button
                 onClick={() => setLocation("/dating")}
                 className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
               >
-                Dating
+                {datingText}
               </button>
             </div>
             {/* Smart Search Bar with Suggestions */}
@@ -163,7 +185,7 @@ export default function Header() {
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Search anything..."
+                    placeholder={searchPlaceholderText}
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
