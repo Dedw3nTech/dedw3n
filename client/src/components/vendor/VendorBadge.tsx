@@ -1,7 +1,7 @@
 import { getBadgeInfo, type BadgeLevel } from "@/lib/vendor-badges";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useUnifiedBatchTranslation } from "@/hooks/use-unified-translation";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useMemo } from "react";
 
 interface VendorBadgeProps {
@@ -28,7 +28,7 @@ export function VendorBadge({
     badgeInfo.description
   ], [badgeInfo.name, badgeInfo.description]);
 
-  const { translations: translatedTexts, isLoading: isTranslating } = useUnifiedBatchTranslation(badgeTexts, 'high');
+  const { translations: translatedTexts, isLoading: isTranslating } = useMasterBatchTranslation(badgeTexts, 'high');
   const translatedName = translatedTexts[badgeInfo.name] || badgeInfo.name;
   const translatedDescription = translatedTexts[badgeInfo.description] || badgeInfo.description;
   
