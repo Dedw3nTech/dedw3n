@@ -34,7 +34,13 @@ export default function Header() {
   ], []);
 
   // Get translations using the master batch translation system
-  const { translations: translatedTexts } = useMasterBatchTranslation(headerTexts);
+  const { translations: translatedTexts, isLoading } = useMasterBatchTranslation(headerTexts);
+  
+  // Debug logging to see what's happening with translations
+  console.log('[Header Debug] Current language:', useLanguage().currentLanguage);
+  console.log('[Header Debug] Original texts:', headerTexts);
+  console.log('[Header Debug] Translated texts:', translatedTexts);
+  console.log('[Header Debug] Is loading:', isLoading);
 
   // Extract translated values with fallbacks (translations returns an array)
   const betaVersionText = translatedTexts[0] || "BETA VERSION";
