@@ -740,39 +740,39 @@ export default function ProductDetail() {
                   <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="mt-4">
-                        Write a Review
+{translateText('Write a Review')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
-                        <DialogTitle>Write a Review</DialogTitle>
+                        <DialogTitle>{translateText('Write a Review')}</DialogTitle>
                         <DialogDescription>
-                          Share your experience with this product
+                          {translateText('Share your experience with this product')}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                          <Label htmlFor="rating">Rating</Label>
+                          <Label htmlFor="rating">{translateText('Rating')}</Label>
                           <div className="flex gap-1">
                             {renderInteractiveStars(reviewRating, setReviewRating)}
                           </div>
                         </div>
                         <div className="grid gap-2">
-                          <Label htmlFor="title">Title (optional)</Label>
+                          <Label htmlFor="title">{translateText('Title (optional)')}</Label>
                           <Input
                             id="title"
                             value={reviewTitle}
                             onChange={(e) => setReviewTitle(e.target.value)}
-                            placeholder="Brief summary of your review"
+                            placeholder={translateText("Brief summary of your review")}
                           />
                         </div>
                         <div className="grid gap-2">
-                          <Label htmlFor="content">Review</Label>
+                          <Label htmlFor="content">{translateText('Review')}</Label>
                           <Textarea
                             id="content"
                             value={reviewContent}
                             onChange={(e) => setReviewContent(e.target.value)}
-                            placeholder="Tell others about your experience with this product..."
+                            placeholder={translateText("Tell others about your experience with this product...")}
                             rows={4}
                           />
                         </div>
@@ -782,7 +782,7 @@ export default function ProductDetail() {
                           variant="outline" 
                           onClick={() => setIsReviewDialogOpen(false)}
                         >
-                          Cancel
+                          {translateText('Cancel')}
                         </Button>
                         <Button 
                           onClick={handleSubmitReview}
