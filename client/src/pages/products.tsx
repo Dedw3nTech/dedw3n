@@ -802,6 +802,11 @@ export default function Products() {
             <CategoryName categoryName={product.category} />
           </div>
           
+          {/* Vendor/Store information */}
+          <div className="text-xs text-gray-500 mt-1">
+            Sold by {product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
+          </div>
+          
           {/* Additional info based on market type */}
           {marketType === 'b2b' && (
             <div className="text-xs text-gray-500">
