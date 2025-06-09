@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw } from 'lucide-react';
 import { useUnifiedRecaptcha } from './UnifiedRecaptchaProvider';
-import { useMasterBatchTranslation } from '@/hooks/use-master-batch-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 interface MathCaptchaProps {
   onValidation: (isValid: boolean, token?: string) => void;
@@ -17,6 +17,19 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   const [userAnswer, setUserAnswer] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState('');
+
+  // Translation strings for MathCaptcha
+  const captchaTexts = useMemo(() => [
+    "Security Verification",
+    "Please solve the math problem to verify you are human",
+    "Enter your answer",
+    "Verify",
+    "New Problem",
+    "Please solve the math problem",
+    "Incorrect answer. Please try again.",
+    "Verifying..."
+  ], []);
+  const { translations } = useMasterBatchTranslation(captchaTexts);
 
   // Generate initial challenge
   useEffect(() => {
@@ -34,7 +47,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!challenge || !userAnswer.trim()) {
-      setError('Please solve the math problem');
+      setError(translations["Please solve the math problem"] || 'Please solve the math problem');
       return;
     }
 
@@ -48,7 +61,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
         onValidation(true, challenge.token);
         setError('');
       } else {
-        setError('Incorrect answer. Please try again.');
+        setError(translations["Incorrect answer. Please try again."] || 'Incorrect answer. Please try again.');
         onValidation(false);
         refreshChallenge();
       }
@@ -65,7 +78,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   if (!challenge) {
     return (
       <div className={`flex items-center justify-center p-4 ${className}`}>
-        <div className="text-sm text-muted-foreground">Loading security check...</div>
+        <div className="text-sm text-muted-foreground">{translations["Verifying..."] || "Loading security check..."}</div>
       </div>
     );
   }
@@ -73,7 +86,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        Captcha verification
+        {translations["Security Verification"] || "Security Verification"}
       </div>
       
       <div className="space-y-3">
@@ -89,7 +102,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             size="sm"
             onClick={refreshChallenge}
             className="h-8 w-8 p-0 hover:bg-gray-800"
-            title="Generate new problem"
+            title={translations["New Problem"] || "Generate new problem"}
           >
             <RefreshCw className="h-4 w-4 text-white" />
           </Button>
@@ -101,7 +114,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             type="number"
             value={userAnswer}
             onChange={handleInputChange}
-            placeholder="Your answer"
+            placeholder={translations["Enter your answer"] || "Your answer"}
             className="flex-1"
             disabled={isValidating}
             autoComplete="off"
@@ -112,7 +125,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             disabled={!userAnswer.trim() || isValidating}
             className="px-6 bg-black hover:bg-gray-800 text-white"
           >
-            {isValidating ? 'Checking...' : 'Verify'}
+            {isValidating ? (translations["Verifying..."] || 'Checking...') : (translations["Verify"] || 'Verify')}
           </Button>
         </div>
 
