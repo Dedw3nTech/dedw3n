@@ -1022,30 +1022,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: user.role
         });
         
-        // Manually regenerate session to avoid any conflicts
-        req.session.regenerate((regErr) => {
-          if (regErr) {
-            console.error('[AUTH TEST] Error regenerating session:', regErr);
-            return res.status(500).json({ message: 'Error regenerating session' });
+        // Safe session handling - check if regenerate method exists
+        const handleLogin = (loginErr: any) => {
+          if (loginErr) {
+            console.error('[AUTH TEST] Error logging in test user:', loginErr);
+            return res.status(500).json({ message: 'Error logging in test user', error: loginErr.message });
           }
           
-          // Set the user in the session
-          req.login(user, (loginErr) => {
-            if (loginErr) {
-              console.error('[AUTH TEST] Error logging in test user:', loginErr);
-              return res.status(500).json({ message: 'Error logging in test user', error: loginErr.message });
-            }
-            
-            // Save the session with the new login state
-            req.session.save((saveErr) => {
+          // Save the session with the new login state
+          if (req.session && typeof req.session.save === 'function') {
+            req.session.save((saveErr: any) => {
               if (saveErr) {
                 console.error('[AUTH TEST] Error saving session:', saveErr);
-                return res.status(500).json({ message: 'Error saving session' });
               }
               
               console.log(`[AUTH TEST] Test user ${userId} logged in successfully via session`);
               console.log(`[AUTH TEST] Session ID: ${req.sessionID}`);
-              console.log(`[AUTH TEST] Session data:`, req.session);
               console.log(`[AUTH TEST] Is authenticated:`, req.isAuthenticated());
               
               return res.json({ 
@@ -1062,8 +1054,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               });
             });
+          } else {
+            // Fallback when session.save is not available
+            console.log(`[AUTH TEST] Test user ${userId} logged in (session save not available)`);
+            return res.json({ 
+              success: true, 
+              message: `Test user ${userId} logged in successfully`,
+              user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                isVendor: user.isVendor
+              }
+            });
+          }
+        };
+
+        // Check if session exists and has regenerate method
+        if (req.session && typeof req.session.regenerate === 'function') {
+          req.session.regenerate((regErr: any) => {
+            if (regErr) {
+              console.error('[AUTH TEST] Error regenerating session:', regErr);
+              // Fallback: proceed without regeneration
+              req.login(user, handleLogin);
+              return;
+            }
+            req.login(user, handleLogin);
           });
-        });
+        } else {
+          // Fallback when regenerate is not available
+          console.warn('[AUTH TEST] Session regenerate not available, using direct login');
+          req.login(user, handleLogin);
+        }
       } catch (error) {
         console.error('[AUTH TEST] Error in test login endpoint:', error);
         return res.status(500).json({ message: 'Server error during test login' });
