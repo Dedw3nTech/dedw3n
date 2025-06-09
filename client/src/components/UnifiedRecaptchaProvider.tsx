@@ -99,7 +99,7 @@ export function UnifiedRecaptchaProvider({ children }: UnifiedRecaptchaProviderP
     // Create and configure script
     const script = document.createElement('script');
     script.id = 'unified-recaptcha-script';
-    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}&onload=onUnifiedRecaptchaLoad&hl=en`;
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}&onload=onUnifiedRecaptchaLoad`;
     script.async = true;
     script.defer = true;
     

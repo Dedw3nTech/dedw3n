@@ -500,30 +500,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-            {/* reCAPTCHA Security Indicator */}
-            <div className="flex items-center justify-center mb-3 mt-2 p-2 bg-gray-50 rounded-md border">
-              {error ? (
-                <>
-                  <Shield className="h-4 w-4 mr-2 text-orange-600" />
-                  <span className="text-sm text-gray-600 font-medium">protected by reCAPTCHA</span>
-                </>
-              ) : isReady ? (
-                <>
-                  <Shield className="h-4 w-4 mr-2 text-green-600" />
-                  <span className="text-sm text-gray-600 font-medium">protected by reCAPTCHA</span>
-                </>
-              ) : isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
-                  <span className="text-sm text-gray-600 font-medium">Loading reCAPTCHA...</span>
-                </>
-              ) : (
-                <>
-                  <Shield className="h-4 w-4 mr-2 text-blue-600" />
-                  <span className="text-sm text-gray-600 font-medium">protected by reCAPTCHA</span>
-                </>
-              )}
-            </div>
+
 
             <Button 
               type="submit" 
