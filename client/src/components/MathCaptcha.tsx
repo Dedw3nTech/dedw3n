@@ -76,10 +76,10 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
       </div>
       
       <div className="space-y-3">
-        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
+        <div className="flex items-center gap-3 p-3 bg-black rounded-lg border border-gray-700">
           <div className="flex-1">
-            <Label htmlFor="captcha-answer" className="text-sm font-medium">
-              Solve: <span className="font-mono text-lg">{challenge.question}</span>
+            <Label htmlFor="captcha-answer" className="text-sm font-medium text-white">
+              Solve: <span className="font-mono text-lg text-white">{challenge.question}</span>
             </Label>
           </div>
           <Button
@@ -87,10 +87,10 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             variant="ghost"
             size="sm"
             onClick={refreshChallenge}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-gray-800"
             title="Generate new problem"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 text-white" />
           </Button>
         </div>
 
