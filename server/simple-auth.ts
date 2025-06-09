@@ -147,25 +147,57 @@ export function setupSimpleAuth(app: Express) {
         return res.status(401).json({ message: "Account is locked. Please reset your password or contact support." });
       }
       
-      // Verify password - reuse the password comparison function from auth.ts 
-      const comparePasswords = async (plaintext: string, hashed: string) => {
-        // Extract the auth module's implementation
+      // Verify password using backward-compatible comparison
+      const comparePasswords = async (supplied: string, stored: string) => {
+        if (!stored || !supplied) {
+          console.error('[ERROR] Missing password for comparison');
+          return false;
+        }
+        
         try {
-          const [hash, salt] = hashed.split('.');
-          if (!hash || !salt) return false;
+          const [hashed, salt] = stored.split(".");
+          
+          if (!hashed || !salt) {
+            console.error('[ERROR] Invalid stored password format');
+            return false;
+          }
           
           const crypto = require('crypto');
           const util = require('util');
           const scryptAsync = util.promisify(crypto.scrypt);
+          const PASSWORD_PEPPER = process.env.PASSWORD_PEPPER || 'DedW3nSecurePepper2025!@#';
           
-          const keyLen = 64;
-          const hashedBuf = Buffer.from(hash, 'hex');
-          const suppliedBuf = await scryptAsync(plaintext, salt, keyLen) as Buffer;
+          const hashedBuf = Buffer.from(hashed, "hex");
+          const keylen = hashedBuf.length; // Use the actual length of the stored hash
           
-          // Timing-safe comparison
-          return crypto.timingSafeEqual(hashedBuf, suppliedBuf);
-        } catch (err) {
-          console.error('Password comparison error:', err);
+          // Try with pepper first (new password format)
+          try {
+            const pepperedSupplied = supplied + PASSWORD_PEPPER;
+            const suppliedBufWithPepper = (await scryptAsync(pepperedSupplied, salt, keylen)) as Buffer;
+            
+            if (crypto.timingSafeEqual(hashedBuf, suppliedBufWithPepper)) {
+              console.log('[AUTH] Password verified with pepper');
+              return true;
+            }
+          } catch (pepperError) {
+            console.log('[AUTH] Pepper-based verification failed, trying legacy format');
+          }
+          
+          // Fallback to legacy format without pepper (for existing users)
+          try {
+            const suppliedBufLegacy = (await scryptAsync(supplied, salt, keylen)) as Buffer;
+            
+            if (crypto.timingSafeEqual(hashedBuf, suppliedBufLegacy)) {
+              console.log('[AUTH] Password verified with legacy format (no pepper)');
+              return true;
+            }
+          } catch (legacyError) {
+            console.log('[AUTH] Legacy verification also failed');
+          }
+          
+          return false;
+        } catch (error) {
+          console.error('[ERROR] Password comparison failed:', error);
           return false;
         }
       };

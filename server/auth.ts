@@ -340,16 +340,35 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
     
-    // Add pepper to supplied password for comparison
-    const pepperedSupplied = supplied + PASSWORD_PEPPER;
-    
     const hashedBuf = Buffer.from(hashed, "hex");
     const keylen = hashedBuf.length; // Use the actual length of the stored hash
     
-    // Use enhanced pepper-based comparison only
-    const suppliedBuf = (await scryptAsync(pepperedSupplied, salt, keylen)) as Buffer;
+    // Try with pepper first (new password format)
+    try {
+      const pepperedSupplied = supplied + PASSWORD_PEPPER;
+      const suppliedBufWithPepper = (await scryptAsync(pepperedSupplied, salt, keylen)) as Buffer;
+      
+      if (timingSafeEqual(hashedBuf, suppliedBufWithPepper)) {
+        console.log('[AUTH] Password verified with pepper');
+        return true;
+      }
+    } catch (pepperError) {
+      console.log('[AUTH] Pepper-based verification failed, trying legacy format');
+    }
     
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    // Fallback to legacy format without pepper (for existing users)
+    try {
+      const suppliedBufLegacy = (await scryptAsync(supplied, salt, keylen)) as Buffer;
+      
+      if (timingSafeEqual(hashedBuf, suppliedBufLegacy)) {
+        console.log('[AUTH] Password verified with legacy format (no pepper)');
+        return true;
+      }
+    } catch (legacyError) {
+      console.log('[AUTH] Legacy verification also failed');
+    }
+    
+    return false;
   } catch (error) {
     console.error('[ERROR] Password comparison failed:', error);
     return false;
