@@ -4834,6 +4834,25 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  async updateGiftStatus(giftId: string, status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'shipped' | 'delivered'): Promise<any> {
+    try {
+      const [updatedGift] = await db
+        .update(giftPropositions)
+        .set({ 
+          status,
+          respondedAt: status === 'accepted' || status === 'rejected' ? new Date() : undefined,
+          updatedAt: new Date()
+        })
+        .where(eq(giftPropositions.id, parseInt(giftId)))
+        .returning();
+      
+      return updatedGift;
+    } catch (error) {
+      console.error('Error updating gift status:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
