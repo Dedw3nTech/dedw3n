@@ -201,6 +201,48 @@ export default function MessagesPage() {
     },
   });
 
+  // Gift response mutation
+  const giftResponseMutation = useMutation({
+    mutationFn: async ({ messageId, status }: { messageId: number; status: 'accepted' | 'declined' }) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/gifts/respond`,
+        { messageId, status }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to respond to gift");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Gift Response Sent",
+        description: data.status === 'accepted' ? "Gift accepted successfully!" : "Gift declined",
+      });
+      
+      // Refetch messages to update UI
+      refetchMessages();
+      
+      // Invalidate conversations list
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to respond to gift",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle gift response
+  const handleGiftResponse = (messageId: number, status: 'accepted' | 'declined') => {
+    giftResponseMutation.mutate({ messageId, status });
+  };
+
   // New conversation mutation
   const startConversationMutation = useMutation({
     mutationFn: async ({
@@ -766,6 +808,28 @@ export default function MessagesPage() {
                                   return <span key={i}>{word} </span>;
                                 })}
                               </p>
+                              {/* Gift interaction buttons for received gift messages */}
+                              {!isCurrentUser && message.content.includes("🎁 I've sent you a gift:") && (
+                                <div className="mt-3 flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => handleGiftResponse(message.id, 'accepted')}
+                                  >
+                                    <i className="ri-check-line mr-1"></i>
+                                    Accept Gift
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-red-300 text-red-600 hover:bg-red-50"
+                                    onClick={() => handleGiftResponse(message.id, 'declined')}
+                                  >
+                                    <i className="ri-close-line mr-1"></i>
+                                    Decline
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                             <div
                               className={`text-xs text-muted-foreground mt-1 ${
