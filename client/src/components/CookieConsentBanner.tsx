@@ -116,7 +116,7 @@ export function CookieConsentBanner() {
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
                   onClick={handleAcceptAll} 
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-black hover:bg-gray-800"
                   disabled={gpcOptedOut}
                 >
                   Accept All Cookies
@@ -209,7 +209,7 @@ export function CookieConsentBanner() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   onClick={handleSaveCustom}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-black hover:bg-gray-800"
                 >
                   Save Preferences
                 </Button>
