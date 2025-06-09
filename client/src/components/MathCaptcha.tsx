@@ -27,7 +27,8 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
     "New Problem",
     "Please solve the math problem",
     "Incorrect answer. Please try again.",
-    "Verifying..."
+    "Verifying...",
+    "Solve"
   ], []);
   const { translations } = useMasterBatchTranslation(captchaTexts);
   
@@ -99,7 +100,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
         <div className="flex items-center gap-3 p-3 bg-black rounded-lg border border-gray-700">
           <div className="flex-1">
             <Label htmlFor="captcha-answer" className="text-sm font-medium text-white">
-              Solve: <span className="font-mono text-lg text-white">{challenge.question}</span>
+              {t["Solve"]}: <span className="font-mono text-lg text-white">{challenge.question}</span>
             </Label>
           </div>
           <Button
