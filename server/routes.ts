@@ -512,6 +512,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Temporary test endpoint for password verification (remove in production)
+  app.post('/api/auth/test-password', async (req: Request, res: Response) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password required" });
+    }
+    
+    try {
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`[TEST] Testing password for user: ${username}`);
+      console.log(`[TEST] Stored hash: ${user.password}`);
+      console.log(`[TEST] Input password: ${password}`);
+      
+      const isValid = await comparePasswords(password, user.password);
+      console.log(`[TEST] Password validation result: ${isValid}`);
+      
+      return res.json({ 
+        username: username,
+        passwordValid: isValid,
+        storedHashLength: user.password?.length || 0
+      });
+    } catch (error) {
+      console.error('[TEST] Password test error:', error);
+      return res.status(500).json({ message: "Test failed" });
+    }
+  });
+
   // reCAPTCHA-protected login endpoint
   app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
     const { username, password, recaptchaToken } = req.body;
