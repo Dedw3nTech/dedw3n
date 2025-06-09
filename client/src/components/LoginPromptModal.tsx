@@ -217,13 +217,13 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
       // Use the math captcha token for security verification
       console.log('[MATH-CAPTCHA] Using verified captcha token for authentication');
-      const recaptchaToken = captchaToken;
-
+      
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
           password: formData.password,
-          recaptchaToken
+          captchaId: captchaToken,
+          captchaInput: "verified" // Math CAPTCHA already verified
         });
         toast({
           title: "Welcome back!",
@@ -240,7 +240,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          recaptchaToken
+          captchaId: captchaToken,
+          captchaInput: "verified"
         });
         toast({
           title: "Account created!",

@@ -32,10 +32,10 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<any, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { recaptchaToken?: string }>;
+  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { captchaId?: string; captchaInput?: string }>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password"> & { recaptchaToken?: string };
+type LoginData = Pick<InsertUser, "username" | "password"> & { captchaId?: string; captchaInput?: string };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         debugger; // For Node.js debugging as suggested in nodejs.org/api/debugger.html
         console.log('Login attempt with credentials (username only):', credentials.username);
         
-        const res = await apiRequest("POST", "/api/auth/login-with-recaptcha", credentials);
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
         
         // Add debugger to inspect response
         debugger; // For Node.js debugging
@@ -283,13 +283,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser & { recaptchaToken?: string }) => {
+    mutationFn: async (credentials: InsertUser & { captchaId?: string; captchaInput?: string }) => {
       try {
         // Add debugger statement before registration request
         debugger; // For Node.js debugging
         console.log('Registration attempt with credentials (username only):', credentials.username);
         
-        const res = await apiRequest("POST", "/api/auth/register-with-recaptcha", credentials);
+        const res = await apiRequest("POST", "/api/auth/register", credentials);
         
         // Add debugger to inspect response
         debugger; // For Node.js debugging
