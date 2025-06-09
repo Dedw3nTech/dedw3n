@@ -9858,6 +9858,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Escrow.com API integration for secure payments
+  app.post('/api/escrow/create-transaction', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { amount, currency, description, buyerEmail, sellerEmail, items } = req.body;
+      
+      if (!amount || !currency || !items) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Amount, currency, and items are required' 
+        });
+      }
+
+      // Escrow.com API configuration
+      const escrowApiUrl = 'https://api.escrow.com/2017-09-01';
+      const escrowApiKey = process.env.ESCROW_API_KEY;
+      
+      if (!escrowApiKey) {
+        return res.status(500).json({
+          success: false,
+          message: 'Escrow API key not configured. Please contact administrator.'
+        });
+      }
+
+      // Create transaction payload for Escrow.com
+      const transactionData = {
+        parties: [
+          {
+            role: 'buyer',
+            customer: {
+              first_name: req.user?.name?.split(' ')[0] || 'Buyer',
+              last_name: req.user?.name?.split(' ')[1] || 'User',
+              email: req.user?.email || buyerEmail,
+              phone: {
+                country_code: '+1',
+                national_number: '5551234567'
+              }
+            }
+          },
+          {
+            role: 'seller',
+            customer: {
+              first_name: 'Seller',
+              last_name: 'User', 
+              email: sellerEmail || 'seller@marketplace.com',
+              phone: {
+                country_code: '+1',
+                national_number: '5551234567'
+              }
+            }
+          }
+        ],
+        items: items.map((item: any) => ({
+          title: item.title,
+          description: item.description,
+          type: 'general_merchandise',
+          inspection_period: 3,
+          quantity: item.quantity || 1,
+          schedule: [
+            {
+              amount: item.price,
+              payer_customer: 'buyer',
+              beneficiary_customer: 'seller'
+            }
+          ]
+        })),
+        currency: currency.toLowerCase(),
+        description: description
+      };
+
+      console.log('[ESCROW] Creating transaction with data:', JSON.stringify(transactionData, null, 2));
+
+      // Make actual API call to Escrow.com
+      try {
+        const escrowResponse = await fetch(`${escrowApiUrl}/transaction`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${escrowApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(transactionData)
+        });
+
+        if (!escrowResponse.ok) {
+          throw new Error(`Escrow API error: ${escrowResponse.status}`);
+        }
+
+        const escrowData = await escrowResponse.json();
+        
+        console.log('[ESCROW] Transaction created successfully:', escrowData.id);
+
+        res.json({
+          success: true,
+          message: 'Escrow transaction created successfully',
+          transaction: escrowData,
+          escrowUrl: escrowData.escrow_url || `https://www.escrow.com/transaction/${escrowData.id}`
+        });
+
+      } catch (apiError) {
+        console.error('[ESCROW] API call failed:', apiError);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to create escrow transaction with Escrow.com API',
+          error: apiError instanceof Error ? apiError.message : 'API call failed'
+        });
+      }
+
+    } catch (error) {
+      console.error('[ESCROW] Error creating transaction:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create escrow transaction',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Escrow webhook endpoint for status updates
+  app.post('/api/escrow/webhook', async (req: Request, res: Response) => {
+    try {
+      const { event_type, transaction } = req.body;
+      
+      console.log('[ESCROW WEBHOOK] Received event:', event_type, 'for transaction:', transaction?.id);
+
+      // Handle different escrow events
+      switch (event_type) {
+        case 'transaction.updated':
+          console.log('[ESCROW WEBHOOK] Transaction updated:', transaction?.id);
+          break;
+        case 'transaction.disputed':
+          console.log('[ESCROW WEBHOOK] Transaction disputed:', transaction?.id);
+          break;
+        case 'transaction.completed':
+          console.log('[ESCROW WEBHOOK] Transaction completed:', transaction?.id);
+          break;
+        default:
+          console.log('[ESCROW WEBHOOK] Unhandled event type:', event_type);
+      }
+
+      res.json({ success: true, message: 'Webhook processed' });
+    } catch (error) {
+      console.error('[ESCROW WEBHOOK] Error processing webhook:', error);
+      res.status(500).json({ success: false, message: 'Webhook processing failed' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({

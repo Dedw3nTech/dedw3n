@@ -86,6 +86,52 @@ export default function ShippingCostCalculator({
   const { formatPrice } = useCurrency();
   const { translateText } = useMasterTranslation();
 
+  // Handle escrow payment integration
+  const handleEscrowPayment = async () => {
+    try {
+      // Calculate total transaction amount including shipping
+      const selectedShipping = calculations.find(calc => calc.carrierId === selectedCalculation?.carrierId);
+      const shippingCost = selectedShipping?.cost || 0;
+      const totalAmount = orderTotal + shippingCost;
+
+      // Create escrow transaction via API
+      const escrowData = {
+        amount: totalAmount,
+        currency: 'USD', // This should come from currency context
+        description: `Marketplace transaction - Order total: ${formatPrice(orderTotal)}, Shipping: ${formatPrice(shippingCost)}`,
+        buyerEmail: '', // This should come from user data
+        sellerEmail: '', // This should come from vendor data
+        items: [
+          {
+            title: 'Marketplace Purchase',
+            description: 'Product purchase with shipping',
+            quantity: 1,
+            price: totalAmount
+          }
+        ]
+      };
+
+      // Call escrow API endpoint
+      const response = await fetch('/api/escrow/create-transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(escrowData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Redirect to escrow payment page
+        window.open(result.escrowUrl, '_blank');
+      } else {
+        console.error('Failed to create escrow transaction');
+      }
+    } catch (error) {
+      console.error('Error creating escrow transaction:', error);
+    }
+  };
+
   // Auto-fetch vendor and customer location data from account settings
   useEffect(() => {
     const fetchLocationData = async () => {
@@ -614,6 +660,66 @@ export default function ShippingCostCalculator({
             <p>{translateText('Add carriers to calculate shipping costs')}</p>
           </div>
         )}
+
+        {/* Escrow Payment Option */}
+        <Card className="mt-6 border-yellow-200 bg-yellow-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="h-5 w-5 text-yellow-600" />
+              {translateText('Secure Payment with Escrow')}
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                {translateText('Recommended')}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {translateText('Use Escrow.com for secure payment protection. Your payment is held safely until you receive and approve your purchase.')}
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <span>{translateText('Buyer Protection')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <span>{translateText('Secure Transactions')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <span>{translateText('Dispute Resolution')}</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-sm mb-1">{translateText('Would you like to use Escrow.com for this transaction?')}</h4>
+                  <p className="text-xs text-gray-500">{translateText('Small fee applies based on transaction amount')}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="border-gray-300"
+                  >
+                    {translateText('No, Skip')}
+                  </Button>
+                  <Button 
+                    size="sm"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                    onClick={handleEscrowPayment}
+                  >
+                    {translateText('Use Escrow')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </CardContent>
     </Card>
   );
