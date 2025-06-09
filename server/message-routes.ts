@@ -91,6 +91,9 @@ export function registerMessageRoutes(app: Express) {
         unreadMessages.map(msg => storage.markMessageAsRead(msg.id))
       );
       
+      // Get current user details
+      const currentUser = await storage.getUser(currentUserId);
+      
       // Format enhanced response with user details
       const response = {
         messages,
@@ -100,7 +103,13 @@ export function registerMessageRoutes(app: Express) {
           name: otherUser.name,
           avatar: otherUser.avatar,
           bio: otherUser.bio
-        }
+        },
+        currentUser: currentUser ? {
+          id: currentUser.id,
+          username: currentUser.username,
+          name: currentUser.name,
+          avatar: currentUser.avatar
+        } : null
       };
       
       res.json(response);

@@ -159,11 +159,43 @@ export default function MessagesPage() {
   
   // If we have otherUser in the response, use it to enhance the conversation partner info
   const responseOtherUser = messagesResponse?.otherUser;
+  const responseCurrentUser = messagesResponse?.currentUser;
 
   // Find the active conversation partner
   const conversationPartner = activeApiConversation?.participants?.find(
     (p: any) => p.id !== currentUser.id
   );
+
+  // Create a user map for message senders (includes current user and conversation partner)
+  const userMap = new Map();
+  
+  // Use the current user info from API response if available, otherwise fallback to auth context
+  const currentUserInfo = responseCurrentUser || {
+    id: currentUser.id,
+    name: currentUser.name || currentUser.username,
+    username: currentUser.username,
+    avatar: currentUser.avatar
+  };
+  userMap.set(currentUser.id, currentUserInfo);
+  
+  if (conversationPartner) {
+    userMap.set(conversationPartner.id, conversationPartner);
+  }
+  
+  if (responseOtherUser) {
+    userMap.set(responseOtherUser.id, responseOtherUser);
+  }
+
+  // Helper function to get sender info from message
+  const getSenderInfo = (message: any) => {
+    const senderId = message.senderId || message.userId;
+    return userMap.get(senderId) || {
+      id: senderId,
+      name: `User ${senderId}`,
+      username: `user${senderId}`,
+      avatar: ''
+    };
+  };
 
   // Send message mutation (sends a message to a user by their ID)
   const sendMessageMutation = useMutation({
@@ -670,13 +702,13 @@ export default function MessagesPage() {
               <div className="p-4 border-b flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={conversationPartner?.avatar || ""} alt={conversationPartner?.name} />
-                    <AvatarFallback>{getInitials(conversationPartner?.name || "")}</AvatarFallback>
+                    <AvatarImage src={(conversationPartner || responseOtherUser)?.avatar || ""} alt={(conversationPartner || responseOtherUser)?.name} />
+                    <AvatarFallback>{getInitials((conversationPartner || responseOtherUser)?.name || (conversationPartner || responseOtherUser)?.username || "")}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="font-medium">{conversationPartner?.name}</h2>
+                    <h2 className="font-medium">{(conversationPartner || responseOtherUser)?.name || (conversationPartner || responseOtherUser)?.username}</h2>
                     <p className="text-xs text-muted-foreground">
-                      {conversationPartner?.isOnline ? (
+                      {(conversationPartner || responseOtherUser)?.isOnline ? (
                         <span className="text-green-500">Online</span>
                       ) : (
                         "Offline"
@@ -719,8 +751,8 @@ export default function MessagesPage() {
                       const showAvatar = index === 0 || 
                         (apiMessages[index - 1].senderId || apiMessages[index - 1].userId) !== messageUserId;
                       
-                      // Log message details for debugging
-                      console.log(`Message ${index}:`, message);
+                      // Get the actual sender information
+                      const senderInfo = getSenderInfo(message);
                       
                       return (
                         <div
@@ -730,11 +762,11 @@ export default function MessagesPage() {
                           {!isCurrentUser && showAvatar && (
                             <Avatar className="h-8 w-8 mr-2 mt-1">
                               <AvatarImage 
-                                src={conversationPartner?.avatar || ""} 
-                                alt={conversationPartner?.name} 
+                                src={senderInfo.avatar || ""} 
+                                alt={senderInfo.name || senderInfo.username} 
                               />
                               <AvatarFallback>
-                                {getInitials(conversationPartner?.name || "")}
+                                {getInitials(senderInfo.name || senderInfo.username || "")}
                               </AvatarFallback>
                             </Avatar>
                           )}
