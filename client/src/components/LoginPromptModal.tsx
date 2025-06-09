@@ -171,6 +171,26 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       }
     }
 
+    // Email validation for signup
+    if (!isLogin && emailTouched && emailIsValid === false) {
+      toast({
+        title: "Email Validation Failed",
+        description: getValidationMessage() || "Please enter a valid email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Prevent submission while email is being validated
+    if (!isLogin && isValidating) {
+      toast({
+        title: "Please wait",
+        description: "Email validation in progress...",
+        variant: "default"
+      });
+      return;
+    }
+
     try {
       // Execute reCAPTCHA v3 verification with robust error handling
       let recaptchaToken = '';
@@ -341,15 +361,62 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="email">{translations["Email"] || "Email"}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={translations["Enter your email"] || "Enter your email"}
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required={!isLogin}
-              />
+              <Label htmlFor="email" className="flex items-center">
+                <Mail className="mr-2 h-4 w-4" />
+                {translations["Email"] || "Email"}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={translations["Enter your email"] || "Enter your email"}
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (!emailTouched) setEmailTouched(true);
+                  }}
+                  onBlur={() => setEmailTouched(true)}
+                  required={!isLogin}
+                  className={`pr-10 ${
+                    emailTouched && formData.email ? (
+                      emailIsValid === true ? "border-green-500 focus:ring-green-500" :
+                      emailIsValid === false ? "border-red-500 focus:ring-red-500" :
+                      "border-blue-500 focus:ring-blue-500"
+                    ) : ""
+                  }`}
+                />
+                {emailTouched && formData.email && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {isValidating ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    ) : emailIsValid === true ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : emailIsValid === false ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : null}
+                  </div>
+                )}
+              </div>
+              {emailTouched && formData.email && (
+                <div className="text-sm">
+                  {isValidating ? (
+                    <p className="text-blue-600 flex items-center">
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      Validating email...
+                    </p>
+                  ) : emailIsValid === true ? (
+                    <p className="text-green-600 flex items-center">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Email is valid and deliverable
+                    </p>
+                  ) : emailIsValid === false ? (
+                    <p className="text-red-500 flex items-center">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      {getValidationMessage() || "Invalid email address"}
+                    </p>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
 
@@ -452,7 +519,13 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
-              disabled={Boolean(loginMutation.isPending || registerMutation.isPending || (!isLogin && ageError))}
+              disabled={Boolean(
+                loginMutation.isPending || 
+                registerMutation.isPending || 
+                (!isLogin && ageError) ||
+                (!isLogin && isValidating) ||
+                (!isLogin && emailTouched && emailIsValid === false)
+              )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
                 (translations["Please wait..."] || "Please wait...") : 

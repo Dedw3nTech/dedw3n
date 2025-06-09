@@ -1,5 +1,4 @@
-import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useCallback, useRef } from 'react';
 
 interface EmailValidationResult {
   valid: boolean;
@@ -22,108 +21,106 @@ interface EmailValidationState {
 }
 
 export function useEmailValidation() {
-  const [validationState, setValidationState] = useState<EmailValidationState>({
+  const [state, setState] = useState<EmailValidationState>({
     isValidating: false,
     isValid: null,
     validationResult: null,
     error: null
   });
-  
-  const { toast } = useToast();
 
-  const validateEmail = useCallback(async (email: string): Promise<EmailValidationResult | null> => {
-    if (!email || !email.includes('@')) {
-      setValidationState({
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const validateEmail = useCallback(async (email: string) => {
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Abort any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Basic email format validation first
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setState({
         isValidating: false,
         isValid: false,
-        validationResult: null,
-        error: 'Please enter a valid email address'
-      });
-      return null;
-    }
-
-    setValidationState(prev => ({
-      ...prev,
-      isValidating: true,
-      error: null
-    }));
-
-    try {
-      const response = await fetch('/api/validate-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+        validationResult: {
+          valid: false,
+          reason: 'Invalid email format',
+          syntax_valid: false,
+          mx_valid: false,
+          disposable: false,
+          free_provider: false,
+          deliverable: false,
+          role_based: false
         },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Validation service error: ${response.status}`);
-      }
-
-      const result: EmailValidationResult = await response.json();
-
-      // Determine if email is valid based on multiple criteria
-      const isValid = result.syntax_valid && 
-                     result.mx_valid && 
-                     !result.disposable && 
-                     result.deliverable &&
-                     (result.confidence_score ? result.confidence_score > 70 : true);
-
-      setValidationState({
-        isValidating: false,
-        isValid,
-        validationResult: result,
         error: null
       });
-
-      return result;
-    } catch (error) {
-      console.error('Email validation error:', error);
-      
-      setValidationState({
-        isValidating: false,
-        isValid: null,
-        validationResult: null,
-        error: 'Unable to validate email. Please check your connection and try again.'
-      });
-
-      return null;
+      return;
     }
+
+    // Debounce the API call
+    debounceTimerRef.current = setTimeout(async () => {
+      setState(prev => ({ ...prev, isValidating: true, error: null }));
+
+      try {
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        const response = await fetch('/api/validate-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+          signal: abortControllerRef.current.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`Validation failed: ${response.status}`);
+        }
+
+        const result: EmailValidationResult = await response.json();
+
+        setState({
+          isValidating: false,
+          isValid: result.valid,
+          validationResult: result,
+          error: null
+        });
+
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          // Request was cancelled, don't update state
+          return;
+        }
+
+        console.error('[EMAIL_VALIDATION] Validation error:', error);
+        
+        setState({
+          isValidating: false,
+          isValid: null,
+          validationResult: null,
+          error: 'Validation service temporarily unavailable'
+        });
+      }
+    }, 500); // 500ms debounce
   }, []);
 
-  const getValidationMessage = useCallback(() => {
-    const { isValid, validationResult, error } = validationState;
-
-    if (error) return error;
-    if (!validationResult) return null;
-
-    if (isValid) {
-      return 'Email verified successfully';
-    }
-
-    // Provide specific feedback based on validation results
-    if (!validationResult.syntax_valid) {
-      return 'Invalid email format';
-    }
-    if (!validationResult.mx_valid) {
-      return 'Email domain does not accept emails';
-    }
-    if (validationResult.disposable) {
-      return 'Disposable email addresses are not allowed';
-    }
-    if (!validationResult.deliverable) {
-      return 'Email address cannot receive emails';
-    }
-    if (validationResult.role_based) {
-      return 'Role-based emails (like admin@, support@) are not recommended';
-    }
-
-    return 'Email validation failed';
-  }, [validationState]);
-
   const resetValidation = useCallback(() => {
-    setValidationState({
+    // Clear timers and abort requests
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    setState({
       isValidating: false,
       isValid: null,
       validationResult: null,
@@ -131,13 +128,46 @@ export function useEmailValidation() {
     });
   }, []);
 
+  const getValidationMessage = useCallback(() => {
+    if (state.error) {
+      return state.error;
+    }
+
+    if (!state.validationResult) {
+      return null;
+    }
+
+    const result = state.validationResult;
+
+    if (!result.valid) {
+      if (!result.syntax_valid) {
+        return 'Invalid email format';
+      }
+      if (!result.mx_valid) {
+        return 'Domain does not accept emails';
+      }
+      if (result.disposable) {
+        return 'Disposable email addresses are not allowed';
+      }
+      if (result.role_based) {
+        return 'Role-based email addresses are not recommended';
+      }
+      if (!result.deliverable) {
+        return 'Email address is not deliverable';
+      }
+      return result.reason || 'Invalid email address';
+    }
+
+    return null;
+  }, [state.error, state.validationResult]);
+
   return {
     validateEmail,
-    isValidating: validationState.isValidating,
-    isValid: validationState.isValid,
-    validationResult: validationState.validationResult,
-    error: validationState.error,
-    getValidationMessage,
-    resetValidation
+    resetValidation,
+    isValidating: state.isValidating,
+    isValid: state.isValid,
+    validationResult: state.validationResult,
+    error: state.error,
+    getValidationMessage
   };
 }
