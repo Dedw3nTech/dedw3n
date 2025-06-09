@@ -736,4 +736,60 @@ export function useMasterTranslation() {
   return { translateText };
 }
 
+// Typed translation accessor hook for LoginPromptModal
+export function useTypedTranslation() {
+  const { currentLanguage } = useLanguage();
+  const componentIdRef = useRef(`typed_${Math.random().toString(36).substr(2, 9)}`);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const componentId = componentIdRef.current;
+    masterTranslationManager.registerComponent(componentId);
+
+    return () => {
+      masterTranslationManager.unregisterComponent(componentId);
+    };
+  }, []);
+
+  const getTranslation = useCallback((text: string, priority: TranslationPriority = 'normal'): string => {
+    if (!currentLanguage || currentLanguage === 'EN') {
+      return text;
+    }
+
+    const cacheKey = `${text}_${currentLanguage}`;
+    if (translations[cacheKey]) {
+      return translations[cacheKey];
+    }
+
+    masterTranslationManager.translateText(
+      text,
+      currentLanguage,
+      priority,
+      componentIdRef.current,
+      (translated) => {
+        setTranslations(prev => ({
+          ...prev,
+          [cacheKey]: translated
+        }));
+      }
+    );
+
+    return text;
+  }, [currentLanguage, translations]);
+
+  // Create a proxy object that acts like an array accessor but provides proper typing
+  const translationProxy = useMemo(() => {
+    return new Proxy({} as Record<string, string>, {
+      get: (target, key) => {
+        if (typeof key === 'string') {
+          return getTranslation(key);
+        }
+        return undefined;
+      }
+    });
+  }, [getTranslation]);
+
+  return translationProxy;
+}
+
 export { type TranslationPriority };

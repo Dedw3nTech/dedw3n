@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
-import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useTypedTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
@@ -79,66 +79,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
 
-  // Comprehensive translation strings for login popup auto-translation
-  const stableModalTexts = useMemo(() => [
-    // Main titles and descriptions
-    "Join Dedw3n",
-    "Welcome back! Sign in to your account.",
-    "Create your account to get started with Dedw3n.",
-    
-    // Form fields
-    "Full Name",
-    "Enter your full name",
-    "Username", 
-    "Enter your username",
-    "Email",
-    "Enter your email",
-    "Date of Birth",
-    "Gender",
-    "Select your gender",
-    "Male",
-    "Female", 
-    "Other",
-    "Location",
-    "Password",
-    "Enter your password",
-    
-    // Email validation messages
-    "Validating email...",
-    "Email is valid and deliverable",
-    "Invalid email address",
-    
-    // Button and action text
-    "Please wait...",
-    "Sign In",
-    "Create Account", 
-    "Don't have an account?",
-    "Already have an account?",
-    "Sign up",
-    "Sign in",
-    
-    // Legal and terms
-    "By continuing, you agree to our",
-    "Terms of Service",
-    "and", 
-    "Privacy Policy",
-    
-    // Validation and error messages
-    "You must be at least 13 years old to register",
-    "Age Verification Failed",
-    "You must be at least 18 years old to create an account.",
-    "Email Validation Failed", 
-    "Please enter a valid email address.",
-    "Please wait",
-    "Email validation in progress...",
-    "Security Verification Required",
-    "Please complete the math problem to verify you are human.",
-    "Welcome back!",
-    "You've successfully logged in.",
-    "Account created!",
-    "Welcome to Dedw3n! You can now enjoy all features."
-  ], []);
-  const { translations: t } = useMasterBatchTranslation(stableModalTexts);
+  // Translation using typed hook
+  const t = useTypedTranslation();
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth: string) => {
@@ -162,7 +104,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     if (dateValue) {
       const age = calculateAge(dateValue);
       if (age < 18) {
-        setAgeError(translations["You must be at least 13 years old to register"] || "You must be at least 18 years old to create an account.");
+        setAgeError(t["You must be at least 13 years old to register"] || "You must be at least 18 years old to create an account.");
       } else {
         setAgeError("");
       }
@@ -202,8 +144,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       const age = calculateAge(formData.dateOfBirth);
       if (age < 18) {
         toast({
-          title: t["Age Verification Failed"],
-          description: t["You must be at least 18 years old to create an account."],
+          title: t["Age Verification Failed"] || "Age Verification Failed",
+          description: t["You must be at least 18 years old to create an account."] || "You must be at least 18 years old to create an account.",
           variant: "destructive",
         });
         return;
@@ -420,12 +362,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   ) : emailIsValid === true ? (
                     <p className="text-green-600 flex items-center">
                       <CheckCircle className="mr-1 h-3 w-3" />
-                      {t["Email is valid and deliverable"]}
+                      {t["Email is valid and deliverable"] || "Email is valid and deliverable"}
                     </p>
                   ) : emailIsValid === false ? (
                     <p className="text-red-500 flex items-center">
                       <XCircle className="mr-1 h-3 w-3" />
-                      {getValidationMessage() || translations["Invalid email address"] || "Invalid email address"}
+                      {getValidationMessage() || t["Invalid email address"] || "Invalid email address"}
                     </p>
                   ) : null}
                 </div>
