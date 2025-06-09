@@ -41,7 +41,7 @@ interface LoginPromptModalProps {
 
 export function LoginPromptModal({ isOpen, onClose, action = "continue" }: LoginPromptModalProps) {
   const [, setLocation] = useLocation();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(action !== "register");
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
