@@ -1,25 +1,32 @@
 User-agent: *
 Allow: /
 
-# Only block truly sensitive areas
+# Sitemaps
+Sitemap: https://d7e2c77e-31e2-4ebb-8dc2-54c5a9909834-00-2fqleetycs13f.picard.replit.dev/sitemap.xml
+
+# Disallow admin and private areas
 Disallow: /admin/
 Disallow: /api/
-Disallow: /checkout
-Disallow: /cart
-Disallow: /settings
-Disallow: /profile-settings
-Disallow: /wallet
+Disallow: /auth/
+Disallow: /checkout/
+Disallow: /payment/
+Disallow: /vendor-dashboard/
+Disallow: /profile-settings/
+Disallow: /settings/
 
-# Block dynamic user-specific content to avoid duplicate content issues
-Disallow: /messages/
-Disallow: /posts/
-Disallow: /notifications/
+# Allow important pages
+Allow: /products
+Allow: /vendors
+Allow: /community
+Allow: /dating
+Allow: /government
+Allow: /marketplace
+Allow: /faq
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /shipping
+Allow: /partnerships
 
-# Allow all important public pages (no need to explicitly allow with Allow: / above)
-# This includes: /products, /wall, /dating, /contact, /faq, /privacy, /terms, etc.
-
-# Sitemap location
-Sitemap: https://dedw3n.com/sitemap.xml
-
-# Crawl delay for respectful crawling
+# Crawl delay
 Crawl-delay: 1

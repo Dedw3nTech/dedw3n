@@ -333,7 +333,10 @@ function Router() {
       <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
-      <Route path="/community" component={CommunityPage} />
+      <Route path="/community">
+        <SEOHead {...seoConfigs.community} />
+        <CommunityPage />
+      </Route>
       <ProtectedRoute path="/community/chatrooms" component={Chatrooms} />
       <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/event/:id" component={EventDetailPage} />

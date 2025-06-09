@@ -7531,6 +7531,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // Serve SEO files
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    res.type('text/plain');
+    res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));
+  });
+
+  app.get('/sitemap.xml', (req: Request, res: Response) => {
+    res.type('application/xml');
+    res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
+  });
+
   // Add canonical URL headers for API responses
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
