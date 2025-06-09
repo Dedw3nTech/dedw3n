@@ -1225,6 +1225,14 @@ export default function Products() {
       >
         {resetFiltersText}
       </Button>
+      
+      <Button
+        onClick={() => window.location.href = '/add-product'}
+        className="w-full bg-black text-white hover:bg-gray-800 mt-3"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Product/Service
+      </Button>
     </div>
   );
 
