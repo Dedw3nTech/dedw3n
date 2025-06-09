@@ -1594,6 +1594,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search users endpoint with authentication - MUST be before /:username route
+  app.get('/api/users/search', async (req: Request, res: Response) => {
+    try {
+      console.log('[DEBUG] /api/users/search called');
+      console.log('[AUTH] Authentication check for GET /api/users/search');
+      
+      let authenticatedUser = null;
+      
+      // Try session authentication first
+      if (req.user) {
+        authenticatedUser = req.user;
+        console.log('[AUTH] Session user found:', authenticatedUser.id);
+      } else {
+        // Fallback authentication for /api/users/search
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+            console.log('[AUTH] Fallback authentication for /api/users/search:', user.username, '(ID:', user.id + ')');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[AUTH] No authentication provided for user search');
+        return res.status(401).json({ message: 'Authentication required for user search' });
+      }
+      
+      const query = req.query.q as string;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const currentUserId = authenticatedUser.id;
+      
+      console.log(`[DEBUG] Searching users with query: "${query}" for user ${currentUserId}`);
+      
+      if (!query || query.trim().length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query, limit);
+      console.log(`[DEBUG] Found ${users.length} users matching "${query}"`);
+      
+      // Remove current user from results and sensitive data
+      const safeUsers = users
+        .filter(user => user.id !== currentUserId)
+        .map(user => ({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar,
+          bio: user.bio,
+          isVendor: user.isVendor,
+          role: user.role
+        }));
+      
+      console.log(`[DEBUG] Returning ${safeUsers.length} filtered users for recipient search`);
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      res.status(500).json({ message: 'Failed to search users' });
+    }
+  });
+
   // Get user profile by username
   app.get('/api/users/:username', unifiedIsAuthenticated, async (req, res) => {
     try {
@@ -2147,69 +2210,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting user followers:', error);
       res.status(500).json({ message: 'Failed to get user followers' });
-    }
-  });
-
-  // Search users endpoint with authentication
-  app.get('/api/users/search', async (req: Request, res: Response) => {
-    try {
-      console.log('[DEBUG] /api/users/search called');
-      console.log('[AUTH] Authentication check for GET /api/users/search');
-      
-      let authenticatedUser = null;
-      
-      // Try session authentication first
-      if (req.user) {
-        authenticatedUser = req.user;
-        console.log('[AUTH] Session user found:', authenticatedUser.id);
-      } else {
-        // Fallback authentication for /api/users/search
-        const sessionUserId = req.session?.passport?.user;
-        if (sessionUserId) {
-          const user = await storage.getUser(sessionUserId);
-          if (user) {
-            authenticatedUser = user;
-            console.log('[AUTH] Fallback authentication for /api/users/search:', user.username, '(ID:', user.id + ')');
-          }
-        }
-      }
-      
-      if (!authenticatedUser) {
-        console.log('[AUTH] No authentication provided for user search');
-        return res.status(401).json({ message: 'Authentication required for user search' });
-      }
-      
-      const query = req.query.q as string;
-      const limit = parseInt(req.query.limit as string) || 20;
-      const currentUserId = authenticatedUser.id;
-      
-      console.log(`[DEBUG] Searching users with query: "${query}" for user ${currentUserId}`);
-      
-      if (!query || query.trim().length < 2) {
-        return res.json([]);
-      }
-      
-      const users = await storage.searchUsers(query, limit);
-      console.log(`[DEBUG] Found ${users.length} users matching "${query}"`);
-      
-      // Remove current user from results and sensitive data
-      const safeUsers = users
-        .filter(user => user.id !== currentUserId)
-        .map(user => ({
-          id: user.id,
-          username: user.username,
-          name: user.name,
-          avatar: user.avatar,
-          bio: user.bio,
-          isVendor: user.isVendor,
-          role: user.role
-        }));
-      
-      console.log(`[DEBUG] Returning ${safeUsers.length} filtered users for recipient search`);
-      res.json(safeUsers);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      res.status(500).json({ message: 'Failed to search users' });
     }
   });
 
