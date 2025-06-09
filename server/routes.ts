@@ -2261,16 +2261,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('[LOGOUT] Starting logout process');
       
-      // 1. Clear Passport.js session if authenticated
-      if (req.isAuthenticated && req.isAuthenticated()) {
-        req.logout((err) => {
-          if (err) {
-            console.error('[LOGOUT] Session logout error:', err);
+      // Use a promise-based approach to handle logout properly
+      const performLogout = () => {
+        return new Promise<void>((resolve) => {
+          // 1. Clear Passport.js session if authenticated and session exists
+          if (req.isAuthenticated && req.isAuthenticated() && req.session) {
+            // Use passport's logout but handle session regeneration errors gracefully
+            req.logout({ keepSessionInfo: false }, (err) => {
+              if (err) {
+                console.error('[LOGOUT] Passport logout error:', err);
+                // Continue with manual cleanup even if passport logout fails
+              } else {
+                console.log('[LOGOUT] Passport logout successful');
+              }
+              resolve();
+            });
           } else {
-            console.log('[LOGOUT] Session logout successful');
+            console.log('[LOGOUT] No authenticated session to logout');
+            resolve();
           }
         });
-      }
+      };
+
+      await performLogout();
       
       // 2. Destroy session if it exists
       if (req.session) {
