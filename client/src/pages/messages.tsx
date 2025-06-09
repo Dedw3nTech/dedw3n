@@ -191,34 +191,17 @@ export default function MessagesPage() {
     userMap.set(responseOtherUser.id, responseOtherUser);
   }
   
-  console.log('User map created:', {
-    currentUserId: currentUser.id,
-    currentUserInfo,
-    conversationPartner,
-    responseOtherUser,
-    userMapEntries: Array.from(userMap.entries())
-  });
+
 
   // Helper function to get sender info from message
   const getSenderInfo = (message: any) => {
     const senderId = message.senderId || message.userId;
-    console.log('getSenderInfo called:', { 
-      messageId: message.id, 
-      senderId, 
-      userMapSize: userMap.size,
-      userMapKeys: Array.from(userMap.keys()),
-      foundUser: userMap.get(senderId)
-    });
-    
-    const senderInfo = userMap.get(senderId) || {
+    return userMap.get(senderId) || {
       id: senderId,
       name: `User ${senderId}`,
       username: `user${senderId}`,
       avatar: ''
     };
-    
-    console.log('Returning sender info:', senderInfo);
-    return senderInfo;
   };
 
   // Send message mutation (sends a message to a user by their ID)
@@ -825,7 +808,7 @@ export default function MessagesPage() {
                               }`}
                             >
                               <p className="break-words">
-                                {message.content.split(/\s+/).map((word: string, i: number) => {
+                                {displayContent.split(/\s+/).map((word: string, i: number) => {
                                   // Check for URLs with http/https/www
                                   if (word.match(/^(https?:\/\/|www\.)/i)) {
                                     const url = word.startsWith('http') ? word : `https://${word}`;
