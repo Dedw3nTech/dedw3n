@@ -17,23 +17,22 @@ import svgCaptcha from "svg-captcha";
 // reCAPTCHA verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
-    // Temporary bypass for testing authentication (remove in production)
-    if (token === "test-bypass-token") {
-      console.log(`[RECAPTCHA] Using test bypass token for action ${action}`);
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    if (!secretKey) {
+      console.error('[RECAPTCHA] SECRET KEY NOT CONFIGURED');
+      return false; // Fail secure when not configured
+    }
+    
+    // Allow development bypass only in specific conditions
+    if (token === 'recaptcha-bypass-dev-mode' && process.env.NODE_ENV !== 'production') {
+      console.warn('[RECAPTCHA] Development bypass mode active');
       return true;
     }
     
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    if (!secretKey) {
-      console.error('[RECAPTCHA] Secret key not configured - check RECAPTCHA_SECRET_KEY environment variable');
-      console.log('[RECAPTCHA] Allowing authentication without ReCAPTCHA verification');
-      return true; // Allow authentication when ReCAPTCHA is not configured
-    }
-
-    if (!token || token.length < 10) {
-      console.error('[RECAPTCHA] Invalid token provided:', token ? 'token too short' : 'no token');
-      console.log('[RECAPTCHA] Allowing authentication due to invalid token');
-      return true; // Allow authentication for now to fix login issues
+    // Validate token format
+    if (!token || token.length < 20) {
+      console.error('[RECAPTCHA] Invalid token format');
+      return false;
     }
 
     console.log(`[RECAPTCHA] Verifying token for action ${action}...`);
@@ -42,32 +41,24 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
 
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `secret=${secretKey}&response=${token}`,
     });
 
     const data = await response.json();
     console.log(`[RECAPTCHA] Google verification response:`, data);
     
-    // For reCAPTCHA v3, check both success and score
+    // Strict validation for production
     if (data.success && data.score >= 0.5) {
-      console.log(`[RECAPTCHA] Verification successful for action ${action}, score: ${data.score}`);
+      console.log(`[RECAPTCHA] Verification successful: ${data.score}`);
       return true;
     } else {
-      console.warn(`[RECAPTCHA] Verification failed for action ${action}:`, {
-        success: data.success,
-        score: data.score,
-        'error-codes': data['error-codes']
-      });
-      console.log('[RECAPTCHA] Allowing authentication despite verification failure');
-      return true; // Allow authentication when ReCAPTCHA fails to fix login issues
+      console.warn('[RECAPTCHA] Verification failed:', data['error-codes']);
+      return false; // Fail secure
     }
   } catch (error) {
     console.error('[RECAPTCHA] Verification error:', error);
-    console.log('[RECAPTCHA] Allowing authentication due to verification error');
-    return true; // Allow authentication when ReCAPTCHA verification fails
+    return false; // Fail secure
   }
 }
 

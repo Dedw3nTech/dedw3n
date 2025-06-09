@@ -423,8 +423,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: t('auth.please_wait') || "Please wait...",
       });
       
-      // Set the logged out flag before making the request to prevent auto-login
-      setLoggedOutFlag(true);
+      // Clear any logged out flag to allow immediate re-login after logout completion
+      setLoggedOutFlag(false);
       
       // Add cache-busting parameter to prevent issues with caching
       const timestamp = new Date().getTime();
@@ -453,8 +453,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       console.log('Logout mutation successful, cleaning up client state');
       
-      // Ensure the logged out flag is set
-      setLoggedOutFlag(true);
+      // Clear the logged out flag to allow immediate re-login
+      setLoggedOutFlag(false);
       
       // Clear the JWT token from storage
       clearAuthToken();
@@ -509,8 +509,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       console.error("Logout error:", error);
       
-      // Even on error, ensure the logged out flag is set
-      setLoggedOutFlag(true);
+      // Clear the logged out flag to allow re-login attempts
+      setLoggedOutFlag(false);
       
       // Even on error, clear user data for security
       clearAuthToken();
