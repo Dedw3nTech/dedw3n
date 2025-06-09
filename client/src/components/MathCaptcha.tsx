@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw } from 'lucide-react';
 import { useUnifiedRecaptcha } from './UnifiedRecaptchaProvider';
+import { useMasterBatchTranslation } from '@/hooks/use-master-batch-translation';
 
 interface MathCaptchaProps {
   onValidation: (isValid: boolean, token?: string) => void;

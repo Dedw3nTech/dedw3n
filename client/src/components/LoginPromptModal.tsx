@@ -79,14 +79,17 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
 
-  // Use stable modal texts to prevent infinite re-renders
+  // Comprehensive translation strings for login popup auto-translation
   const stableModalTexts = useMemo(() => [
+    // Main titles and descriptions
     "Join Dedw3n",
     "Welcome back! Sign in to your account.",
     "Create your account to get started with Dedw3n.",
+    
+    // Form fields
     "Full Name",
     "Enter your full name",
-    "Username",
+    "Username", 
     "Enter your username",
     "Email",
     "Enter your email",
@@ -94,23 +97,46 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     "Gender",
     "Select your gender",
     "Male",
-    "Female",
+    "Female", 
     "Other",
     "Location",
     "Password",
     "Enter your password",
+    
+    // Email validation messages
+    "Validating email...",
+    "Email is valid and deliverable",
+    "Invalid email address",
+    
+    // Button and action text
     "Please wait...",
     "Sign In",
-    "Create Account",
+    "Create Account", 
     "Don't have an account?",
     "Already have an account?",
     "Sign up",
     "Sign in",
+    
+    // Legal and terms
     "By continuing, you agree to our",
     "Terms of Service",
-    "and",
+    "and", 
     "Privacy Policy",
-    "You must be at least 13 years old to register"
+    
+    // Validation and error messages
+    "You must be at least 13 years old to register",
+    "Age Verification Failed",
+    "You must be at least 18 years old to create an account.",
+    "Email Validation Failed", 
+    "Please enter a valid email address.",
+    "Please wait",
+    "Email validation in progress...",
+    "Security Verification Required",
+    "Please complete the math problem to verify you are human.",
+    "Welcome back!",
+    "You've successfully logged in.",
+    "Account created!",
+    "Welcome to Dedw3n! You can now enjoy all features."
   ], []);
   const { translations } = useMasterBatchTranslation(stableModalTexts);
 
@@ -176,8 +202,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       const age = calculateAge(formData.dateOfBirth);
       if (age < 18) {
         toast({
-          title: "Age Verification Failed",
-          description: "You must be at least 18 years old to create an account.",
+          title: translations["Age Verification Failed"] || "Age Verification Failed",
+          description: translations["You must be at least 18 years old to create an account."] || "You must be at least 18 years old to create an account.",
           variant: "destructive",
         });
         return;
@@ -187,8 +213,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Email validation for signup
     if (!isLogin && emailTouched && emailIsValid === false) {
       toast({
-        title: "Email Validation Failed",
-        description: getValidationMessage() || "Please enter a valid email address.",
+        title: translations["Email Validation Failed"] || "Email Validation Failed",
+        description: getValidationMessage() || translations["Please enter a valid email address."] || "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
@@ -197,8 +223,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Prevent submission while email is being validated
     if (!isLogin && isValidating) {
       toast({
-        title: "Please wait",
-        description: "Email validation in progress...",
+        title: translations["Please wait"] || "Please wait",
+        description: translations["Email validation in progress..."] || "Email validation in progress...",
         variant: "default"
       });
       return;
@@ -208,8 +234,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       // Check if math CAPTCHA is completed
       if (!captchaValid || !captchaToken) {
         toast({
-          title: "Security Verification Required", 
-          description: "Please complete the math problem to verify you are human.",
+          title: translations["Security Verification Required"] || "Security Verification Required", 
+          description: translations["Please complete the math problem to verify you are human."] || "Please complete the math problem to verify you are human.",
           variant: "default"
         });
         return;
@@ -226,8 +252,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified" // Math CAPTCHA already verified
         });
         toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
+          title: translations["Welcome back!"] || "Welcome back!",
+          description: translations["You've successfully logged in."] || "You've successfully logged in.",
         });
       } else {
         await registerMutation.mutateAsync({
@@ -244,8 +270,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified"
         });
         toast({
-          title: "Account created!",
-          description: "Welcome to Dedw3n! You can now enjoy all features.",
+          title: translations["Account created!"] || "Account created!",
+          description: translations["Welcome to Dedw3n! You can now enjoy all features."] || "Welcome to Dedw3n! You can now enjoy all features.",
         });
       }
       onClose();
@@ -389,17 +415,17 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   {isValidating ? (
                     <p className="text-blue-600 flex items-center">
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      Validating email...
+                      {translations["Validating email..."] || "Validating email..."}
                     </p>
                   ) : emailIsValid === true ? (
                     <p className="text-green-600 flex items-center">
                       <CheckCircle className="mr-1 h-3 w-3" />
-                      Email is valid and deliverable
+                      {translations["Email is valid and deliverable"] || "Email is valid and deliverable"}
                     </p>
                   ) : emailIsValid === false ? (
                     <p className="text-red-500 flex items-center">
                       <XCircle className="mr-1 h-3 w-3" />
-                      {getValidationMessage() || "Invalid email address"}
+                      {getValidationMessage() || translations["Invalid email address"] || "Invalid email address"}
                     </p>
                   ) : null}
                 </div>
