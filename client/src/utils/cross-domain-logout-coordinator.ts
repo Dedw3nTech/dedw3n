@@ -3,7 +3,7 @@
  * Handles logout state synchronization across tabs, domains, and browser sessions
  */
 
-import { setLoggedOutFlag } from '@/lib/queryClient';
+// Removed: Using unified logout system instead
 import { queryClient } from '@/lib/queryClient';
 
 export class CrossDomainLogoutCoordinator {
@@ -126,8 +126,8 @@ export class CrossDomainLogoutCoordinator {
       sessionStorage.removeItem('userData');
       localStorage.removeItem('enable_auto_login');
       
-      // Set logout flag to ensure consistent state
-      setLoggedOutFlag(true);
+      // Set unified logout state
+      localStorage.setItem('unified_logout_state', 'true');
       
       // Broadcast logout to other windows/tabs
       this.broadcastLogout();
