@@ -11,52 +11,26 @@ export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Set page title
+    // Set page title immediately for faster perception
     document.title = 'You have successfully logged out';
     
-    // Set anti-caching headers
-    const metaTags = [
-      { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate, private' },
-      { httpEquiv: 'Pragma', content: 'no-cache' },
-      { httpEquiv: 'Expires', content: '0' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' },
-    ];
-    
-    const addedMetaTags = metaTags.map(tagProps => {
-      const metaTag = document.createElement('meta');
-      Object.entries(tagProps).forEach(([key, value]) => {
-        metaTag.setAttribute(key, value);
-      });
-      document.head.appendChild(metaTag);
-      return metaTag;
-    });
-    
-    // Handle browser back button
+    // Handle browser back button (minimal DOM manipulation for speed)
     const handlePopState = () => setLocation('/');
     window.history.pushState(null, '', window.location.pathname);
     window.addEventListener('popstate', handlePopState);
     
-    // Auto-clear logout state after 60 seconds to allow fresh logins
+    // Auto-clear logout state after 15 seconds to allow fresh logins
     const clearTimer = setTimeout(() => {
       clearLogoutState();
       console.log('Logout state auto-cleared after timeout');
-    }, 60000);
+    }, 15000);
     
-    console.log('Logout success page: Security measures applied');
+    console.log('Logout success page: Applied fast security measures');
     
     // Cleanup
     return () => {
-      try {
-        addedMetaTags.forEach(tag => {
-          if (tag.parentNode) {
-            document.head.removeChild(tag);
-          }
-        });
-        window.removeEventListener('popstate', handlePopState);
-        clearTimeout(clearTimer);
-      } catch (e) {
-        console.error('Cleanup error:', e);
-      }
+      window.removeEventListener('popstate', handlePopState);
+      clearTimeout(clearTimer);
     };
   }, [setLocation]);
 

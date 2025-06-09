@@ -63,6 +63,9 @@ export default function UserMenu() {
   }
 
   const handleLogout = async () => {
+    // Close menu immediately for better UX
+    setIsOpen(false);
+    
     // Show loading state
     toast({
       title: t('auth.logging_out') || 'Logging out',
@@ -70,19 +73,18 @@ export default function UserMenu() {
     });
     
     try {
+      // Start logout process immediately
       await performUnifiedLogout({
         redirectToSuccessPage: true,
         clearRememberedCredentials: false,
         broadcastToTabs: true
       });
-      setIsOpen(false);
     } catch (error) {
       toast({
         title: t('auth.logout_error') || 'Logout Error',
         description: t('auth.try_again') || 'Please try again',
         variant: "destructive"
       });
-      setIsOpen(false);
     }
   };
 

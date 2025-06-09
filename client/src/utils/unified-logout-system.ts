@@ -102,20 +102,34 @@ class UnifiedLogoutSystem {
 
   private async callServerLogout(): Promise<void> {
     try {
+      // Add timeout for faster logout response
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
       const response = await fetch('/api/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'X-Unified-Logout': 'true'
-        }
+          'X-Unified-Logout': 'true',
+          'X-Fast-Logout': 'true'
+        },
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         console.warn('[UNIFIED-LOGOUT] Server logout warning:', response.status);
+      } else {
+        console.log('[UNIFIED-LOGOUT] Server logout completed successfully');
       }
-    } catch (error) {
-      console.warn('[UNIFIED-LOGOUT] Server logout error (non-blocking):', error);
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        console.warn('[UNIFIED-LOGOUT] Server logout timeout - continuing with client cleanup');
+      } else {
+        console.warn('[UNIFIED-LOGOUT] Server logout error (non-blocking):', error);
+      }
     }
   }
 
@@ -147,12 +161,12 @@ class UnifiedLogoutSystem {
 
   private setLogoutFlags(): void {
     try {
-      // Set unified logout flags
+      // Set unified logout flags with faster expiration
       localStorage.setItem('unified_logout_state', 'true');
       localStorage.setItem('unified_logout_timestamp', Date.now().toString());
       
-      // Set short-lived logout cookies for server coordination
-      const expires = new Date(Date.now() + 30000).toUTCString(); // 30 seconds
+      // Set short-lived logout cookies for server coordination (reduced to 10 seconds)
+      const expires = new Date(Date.now() + 10000).toUTCString(); // 10 seconds
       document.cookie = `unified_logout=true; path=/; expires=${expires}; SameSite=Lax`;
       
     } catch (e) {
