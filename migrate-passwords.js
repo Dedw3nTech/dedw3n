@@ -1,6 +1,6 @@
 // Password migration script to convert all existing passwords to enhanced pepper-based security
-const { randomBytes, scrypt } = require('crypto');
-const { promisify } = require('util');
+import { randomBytes, scrypt } from 'crypto';
+import { promisify } from 'util';
 
 const scryptAsync = promisify(scrypt);
 const PASSWORD_PEPPER = 'DedW3nSecurePepper2025!@#';
