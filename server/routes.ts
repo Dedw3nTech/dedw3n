@@ -1049,11 +1049,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Quick login endpoint to authenticate as your real account
-    app.post('/api/quick-login', async (req: Request, res: Response) => {
+    // User switch endpoint for testing perspectives
+    app.post('/api/auth/switch-perspective', async (req: Request, res: Response) => {
+      const { userId } = req.body;
+      
       try {
-        // Get your real user account (ID 6)
-        const user = await storage.getUser(6);
+        const targetUserId = userId || 6; // Default to Fernando (user 6)
+        const user = await storage.getUser(targetUserId);
         
         if (!user) {
           return res.status(404).json({ 
@@ -1062,32 +1064,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Manually set up the session
-        req.login(user, (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.status(500).json({ 
-              success: false, 
-              message: "Failed to establish session" 
-            });
-          }
-          
-          res.json({ 
-            success: true, 
-            message: "Logged in successfully", 
-            user: {
-              id: user.id,
-              username: user.username,
-              name: user.name
+        // Clear current session
+        req.logout(() => {
+          // Login as the target user
+          req.login(user, (err) => {
+            if (err) {
+              console.error('Perspective switch error:', err);
+              return res.status(500).json({ 
+                success: false, 
+                message: "Failed to switch perspective" 
+              });
             }
+            
+            console.log(`[DEBUG] Switched perspective to user: ${user.username} (ID: ${user.id})`);
+            
+            res.json({ 
+              success: true, 
+              message: `Now viewing as ${user.username}`, 
+              user: {
+                id: user.id,
+                username: user.username,
+                name: user.name
+              }
+            });
           });
         });
         
       } catch (error) {
-        console.error('Quick login error:', error);
+        console.error('Perspective switch error:', error);
         res.status(500).json({ 
           success: false, 
-          message: "Login failed" 
+          message: "Switch failed" 
         });
       }
     });
