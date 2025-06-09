@@ -10,13 +10,14 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag } from 'lucide-react';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
+import CartShippingSelector, { type ShippingRate } from '@/components/cart/CartShippingSelector';
 
 export default function Cart() {
   const [, setLocation] = useLocation();
@@ -24,6 +25,10 @@ export default function Cart() {
   const { toast } = useToast();
   const { formatPriceFromGBP } = useCurrency();
   const { translateText } = useMasterTranslation();
+  
+  // Shipping state management
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingRate | null>(null);
+  const [dynamicShippingCost, setDynamicShippingCost] = useState<number>(0);
   
   // Show authentication message if not logged in
   if (!user) {
@@ -115,8 +120,22 @@ export default function Cart() {
     removeFromCartMutation.mutate(id);
   };
   
+  // Shipping method change handler
+  const handleShippingMethodChange = (method: ShippingRate | null, cost: number) => {
+    setSelectedShippingMethod(method);
+    setDynamicShippingCost(cost);
+  };
+
   // Proceed to checkout handler
   const handleCheckout = () => {
+    if (!selectedShippingMethod) {
+      toast({
+        title: translateText('Shipping Required'),
+        description: translateText('Please select a shipping method before proceeding to checkout.'),
+        variant: 'destructive',
+      });
+      return;
+    }
     setLocation('/checkout-new');
   };
   
@@ -134,9 +153,16 @@ export default function Cart() {
     // taxRate: vendor?.taxRate || 0.2
   };
   
-  // Calculate pricing using centralized system with vendor config
-  const pricing = calculatePricing(cartItems, pricingConfig);
-  const { subtotal, shippingCost, tax } = pricing;
+  // Calculate pricing using centralized system with dynamic shipping cost
+  const pricingConfigWithDynamicShipping = {
+    ...pricingConfig,
+    shippingCost: dynamicShippingCost
+  };
+  const pricing = calculatePricing(cartItems, pricingConfigWithDynamicShipping);
+  const { subtotal, tax } = pricing;
+  
+  // Use dynamic shipping cost instead of calculated one
+  const shippingCost = dynamicShippingCost;
   
   // Calculate 1.5% transaction commission on subtotal
   const transactionCommission = subtotal * 0.015;
