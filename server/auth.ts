@@ -14,6 +14,43 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import svgCaptcha from "svg-captcha";
 
+// reCAPTCHA verification
+async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    if (!secretKey) {
+      console.warn('[RECAPTCHA] Secret key not configured');
+      return false;
+    }
+
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${secretKey}&response=${token}`,
+    });
+
+    const data = await response.json();
+    
+    // For reCAPTCHA v3, check both success and score
+    if (data.success && data.score >= 0.5) {
+      console.log(`[RECAPTCHA] Verification successful for action ${action}, score: ${data.score}`);
+      return true;
+    } else {
+      console.warn(`[RECAPTCHA] Verification failed for action ${action}:`, {
+        success: data.success,
+        score: data.score,
+        'error-codes': data['error-codes']
+      });
+      return false;
+    }
+  } catch (error) {
+    console.error('[RECAPTCHA] Verification error:', error);
+    return false;
+  }
+}
+
 // Simple in-memory rate limiter for authentication endpoints
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
 
@@ -891,3 +928,6 @@ export function setupAuth(app: Express) {
     next();
   });
 }
+
+// Export reCAPTCHA verification function for use in routes
+export { verifyRecaptcha };
