@@ -62,7 +62,37 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
   */
 
-  // Skip logout header check for login/register endpoints to allow fresh login attempts
+  // Third priority: Check Passport session authentication first
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    console.log('[AUTH] Passport authentication detected via req.isAuthenticated()');
+    if (req.user) {
+      console.log('[AUTH] Passport session authentication successful:', {
+        userId: (req.user as any).id,
+        username: (req.user as any).username
+      });
+      return next();
+    }
+  }
+  
+  // Fallback: Check session passport data directly
+  if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
+    try {
+      const userId = (req.session as any).passport.user;
+      const user = await storage.getUser(userId);
+      if (user) {
+        console.log('[AUTH] Passport session authentication successful (fallback):', {
+          userId: user.id,
+          username: user.username
+        });
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[AUTH] Error with passport session authentication:', error);
+    }
+  }
+
+  // Check for logout headers after session checks to avoid blocking valid sessions
   const isAuthEndpoint = req.path === '/api/auth/login-with-recaptcha' || 
                          req.path === '/api/auth/register-with-recaptcha' ||
                          req.path.includes('/api/auth/login') || 
@@ -70,22 +100,8 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
                          req.path.includes('/api/login') ||
                          req.path.includes('/api/register');
                          
-  if ((req.headers['x-auth-logged-out'] === 'true' || 
-       req.headers['x-user-logged-out'] === 'true') && !isAuthEndpoint) {
-    console.log('[AUTH] X-User-Logged-Out header detected for non-auth endpoint, rejecting authentication');
-    return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
-  }
-
-  // Fourth priority: Check Passport session authentication
-  if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
-    if (req.user) {
-      console.log('[AUTH] Session authentication successful:', {
-        userId: (req.user as any).id,
-        username: (req.user as any).username
-      });
-      return next();
-    }
-  }
+  // Skip logout header checks entirely - let session/token authentication handle authorization
+  // The logout headers are temporary and should not block fresh authentication attempts
 
   // Check for stored user session (fallback for messaging)
   if (req.session && (req.session as any).userId) {
@@ -101,24 +117,6 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       }
     } catch (error) {
       console.error('[AUTH] Error with session fallback authentication:', error);
-    }
-  }
-
-  // Check if session contains user data directly
-  if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
-    try {
-      const userId = (req.session as any).passport.user;
-      const user = await storage.getUser(userId);
-      if (user) {
-        console.log('[AUTH] Passport session authentication successful:', {
-          userId: user.id,
-          username: user.username
-        });
-        req.user = user;
-        return next();
-      }
-    } catch (error) {
-      console.error('[AUTH] Error with passport session authentication:', error);
     }
   }
   
