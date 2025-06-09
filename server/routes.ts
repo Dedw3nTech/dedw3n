@@ -1847,17 +1847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fallback to user 9 for development
-      if (!authenticatedUser) {
-        try {
-          const fallbackUser = await storage.getUser(9);
-          if (fallbackUser) {
-            authenticatedUser = fallbackUser;
-            console.log(`[AUTH] Fallback authentication for user search: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         console.log('[AUTH] No authentication available for user search');
@@ -3271,18 +3261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = sessionUser?.id;
       }
       
-      // Fallback authentication pattern
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9); // Serruti user
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for /api/vendors/products: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
@@ -3322,18 +3301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = sessionUser?.id;
       }
       
-      // Fallback authentication pattern
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9); // Serruti user
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for product creation: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
@@ -3386,18 +3354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = sessionUser?.id;
       }
       
-      // Fallback authentication pattern
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9); // Serruti user
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for product update: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
@@ -3450,18 +3407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = sessionUser?.id;
       }
       
-      // Fallback authentication pattern
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9); // Serruti user
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for product deletion: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
@@ -5267,16 +5213,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.user) {
         authenticatedUser = req.user;
         console.log('[AUTH] Session user found:', authenticatedUser.id);
-      } else {
-        // Fallback authentication for /api/dating-profile
-        const sessionUserId = req.session?.passport?.user;
-        if (sessionUserId) {
-          const user = await storage.getUser(sessionUserId);
-          if (user) {
-            authenticatedUser = user;
-            console.log('[AUTH] Fallback authentication for /api/dating-profile:', user.username, '(ID:', user.id + ')');
-          }
-        }
       }
       
       if (!authenticatedUser) {
