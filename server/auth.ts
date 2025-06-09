@@ -718,6 +718,9 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
+  // Logout endpoint - DISABLED to prevent conflicts with fast logout system
+  // Use /api/logout instead (handled by fast-logout.ts)
+  /*
   app.post("/api/auth/logout", (req, res) => {
     console.log(`[DEBUG] Logout request for session: ${req.sessionID}`);
     
@@ -749,6 +752,7 @@ export function setupAuth(app: Express) {
       res.status(200).json({ message: "Logged out" });
     }
   });
+  */
 
   // Password reset request
   app.post("/api/auth/forgot-password", async (req, res) => {

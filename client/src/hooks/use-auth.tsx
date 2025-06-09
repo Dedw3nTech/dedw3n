@@ -430,87 +430,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
     },
     onSuccess: () => {
-      console.log('Logout mutation successful, cleaning up client state');
+      console.log('[FAST-LOGOUT] Client cleanup starting');
       
-      // Clear the logged out flag to allow immediate re-login
-      setLoggedOutFlag(false);
-      
-      // Clear the JWT token from storage
+      // Immediate cleanup without complex operations
       clearAuthToken();
-      
-      // Clear authentication-specific cookies directly if possible
-      // Note: This is a best-effort approach as it requires same-site/origin
-      if (document.cookie) {
-        document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = 'connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      }
-      
-      // Clear user data from all possible auth caches
+      clearUserData();
       queryClient.setQueryData(["/api/user"], null);
-      
-      // Clear user data from persistent storage (localStorage and sessionStorage)
-      try {
-        console.log('Clearing user data from persistent storage during logout');
-        clearUserData();
-      } catch (error) {
-        console.error('Error clearing user data from storage:', error);
-      }
-      
-      // Clear websocket connection if it exists
-      try {
-        // Access socket only if it exists as a global variable
-        if (typeof window !== 'undefined' && (window as any).socket) {
-          const socket = (window as any).socket;
-          if (typeof socket.close === 'function') {
-            socket.close();
-            console.log('WebSocket connection closed during logout');
-          }
-        }
-      } catch (e) {
-        console.error("Error closing websocket:", e);
-      }
-      
-      // Invalidate all queries to force refetch when user logs back in
-      queryClient.invalidateQueries();
-      
-      // Reset application state completely by killing all prior API caches
       queryClient.clear();
       
-      // Use wouter navigation for client-side routing with no-cache headers
-      // Add cache buster to URL to avoid any cache issues
-      const timestamp = new Date().getTime();
-      setLocation(`/logout-success?_cb=${timestamp}`);
+      // Navigate immediately
+      setLocation("/logout-success");
       
-      // Post-logout cleanup
-      console.log('Client-side logout completed');
+      console.log('[FAST-LOGOUT] Client logout completed');
     },
     onError: (error: Error) => {
-      console.error("Logout error:", error);
+      console.warn('[FAST-LOGOUT] Logout error (non-blocking):', error);
       
-      // Clear the logged out flag to allow re-login attempts
-      setLoggedOutFlag(false);
-      
-      // Even on error, clear user data for security
+      // Even on error, perform cleanup and redirect
       clearAuthToken();
-      
-      // Handle cookie clearing directly
-      if (document.cookie) {
-        document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = 'connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      }
-      
-      // Clear all API caches on error too
+      clearUserData();
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
-      
-      // Log the error but still redirect to logout success
-      console.error("Logout process error:", error);
-      
-      // Redirect to logout success page anyway with cache busting
-      const timestamp = new Date().getTime();
-      setLocation(`/logout-success?_cb=${timestamp}`);
+      setLocation("/logout-success");
     },
   });
 

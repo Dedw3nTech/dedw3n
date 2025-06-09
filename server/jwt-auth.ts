@@ -371,7 +371,9 @@ export function setupJwtAuth(app: any): void {
     }
   });
   
-  // Logout route
+  // Logout route - DISABLED to prevent conflicts with fast logout system
+  // Use /api/logout instead (handled by fast-logout.ts)
+  /*
   app.post('/api/auth/logout', authenticate, async (req: Request, res: Response) => {
     try {
       if (!req.token) {
@@ -389,6 +391,7 @@ export function setupJwtAuth(app: any): void {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+  */
   
   // Get current user - COMMENTED OUT as this is now handled by unified auth in routes.ts
   /*

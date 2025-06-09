@@ -243,7 +243,9 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
-  // Logout user (invalidate token)
+  // Logout user - DISABLED to prevent conflicts with fast logout system
+  // Use /api/logout instead (handled by fast-logout.ts)
+  /*
   app.post("/api/v2/auth/logout", authenticateToken, (req, res) => {
     try {
       const authHeader = req.headers['authorization'];
@@ -260,6 +262,7 @@ export function setupSimpleAuth(app: Express) {
       res.status(500).json({ message: "Logout failed" });
     }
   });
+  */
 
   // Get current user
   app.get("/api/v2/auth/me", authenticateToken, (req, res) => {
