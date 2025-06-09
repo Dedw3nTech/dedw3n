@@ -155,8 +155,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Email validation for signup
     if (!isLogin && emailTouched && emailIsValid === false) {
       toast({
-        title: t["Email Validation Failed"],
-        description: getValidationMessage() || t["Please enter a valid email address."],
+        title: t["Email Validation Failed"] || "Email Validation Failed",
+        description: getValidationMessage() || t["Please enter a valid email address."] || "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
@@ -165,8 +165,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Prevent submission while email is being validated
     if (!isLogin && isValidating) {
       toast({
-        title: t["Please wait"],
-        description: t["Email validation in progress..."],
+        title: t["Please wait"] || "Please wait",
+        description: t["Email validation in progress..."] || "Email validation in progress...",
         variant: "default"
       });
       return;
@@ -176,8 +176,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       // Check if math CAPTCHA is completed
       if (!captchaValid || !captchaToken) {
         toast({
-          title: t["Security Verification Required"], 
-          description: t["Please complete the math problem to verify you are human."],
+          title: t["Security Verification Required"] || "Security Verification Required", 
+          description: t["Please complete the math problem to verify you are human."] || "Please complete the math problem to verify you are human.",
           variant: "default"
         });
         return;
@@ -194,8 +194,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified" // Math CAPTCHA already verified
         });
         toast({
-          title: t["Welcome back!"],
-          description: t["You've successfully logged in."],
+          title: t["Welcome back!"] || "Welcome back!",
+          description: t["You've successfully logged in."] || "You've successfully logged in.",
         });
       } else {
         await registerMutation.mutateAsync({
@@ -212,8 +212,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified"
         });
         toast({
-          title: t["Account created!"],
-          description: t["Welcome to Dedw3n! You can now enjoy all features."],
+          title: t["Account created!"] || "Account created!",
+          description: t["Welcome to Dedw3n! You can now enjoy all features."] || "Welcome to Dedw3n! You can now enjoy all features.",
         });
       }
       onClose();
