@@ -20,6 +20,7 @@ import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
+import { MathCaptcha } from "@/components/MathCaptcha";
 import { 
   User, 
   Eye, 
@@ -75,6 +76,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [captchaValid, setCaptchaValid] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
 
   // Use stable modal texts to prevent infinite re-renders
   const stableModalTexts = useMemo(() => [
