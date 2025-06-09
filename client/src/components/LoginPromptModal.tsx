@@ -348,11 +348,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="name">{translations["Full Name"] || "Full Name"}</Label>
+              <Label htmlFor="name">{t["Full Name"]}</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder={translations["Enter your full name"] || "Enter your full name"}
+                placeholder={t["Enter your full name"]}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required={!isLogin}
@@ -365,7 +365,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Input
               id="username"
               type="text"
-              placeholder={t["Enter your username"]}
+              placeholder={t["Choose a username"]}
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               required
