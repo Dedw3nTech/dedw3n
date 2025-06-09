@@ -832,20 +832,21 @@ export default function MessagesPage() {
                           key={message.id}
                           className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
                         >
-                          {!isCurrentUser && showAvatar && (
-                            <Avatar className="h-8 w-8 mr-2 mt-1">
-                              <AvatarImage 
-                                src={senderInfo.avatar || ""} 
-                                alt={senderInfo.name || senderInfo.username || `User ${senderInfo.id}`} 
-                              />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                                {getInitials(senderInfo.name || senderInfo.username || `User ${senderInfo.id}`)}
-                              </AvatarFallback>
-                            </Avatar>
-                          )}
-                          
-                          {!isCurrentUser && !showAvatar && (
-                            <div className="w-8 mr-2"></div>
+                          {!isCurrentUser && (
+                            <div className="flex items-start mr-2 mt-1" style={{ minWidth: '32px' }}>
+                              {showAvatar && (
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage 
+                                    src={senderInfo.avatar || ""} 
+                                    alt={senderInfo.name || senderInfo.username || `User ${senderInfo.id}`} 
+                                  />
+                                  <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold border border-blue-200">
+                                    {getInitials(senderInfo.name || senderInfo.username || `User ${senderInfo.id}`)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              {!showAvatar && <div className="w-8"></div>}
+                            </div>
                           )}
                           
                           <div className={`max-w-[75%] ${isCurrentUser ? "order-1" : "order-2"}`}>
