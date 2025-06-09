@@ -301,6 +301,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication with passport FIRST - before any routes that need auth
+  setupAuth(app);
+  
+  // Setup JWT authentication routes
+  setupJwtAuth(app);
+  
   // Stripe payment intent creation
   app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
     try {
@@ -566,14 +572,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         // Fallback: set session manually
-        (req.session as any).passport = { user: user.id };
-        req.user = user;
-        
-        console.log(`[DEBUG] reCAPTCHA-protected login successful (session fallback) for: ${user.username}`);
-        
-        // Return user without password
-        const { password: _, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
+        if (req.session) {
+          (req.session as any).passport = { user: user.id };
+          req.user = user;
+          
+          console.log(`[DEBUG] reCAPTCHA-protected login successful (session fallback) for: ${user.username}`);
+          
+          // Return user without password
+          const { password: _, ...userWithoutPassword } = user;
+          res.json(userWithoutPassword);
+        } else {
+          console.error('[ERROR] No session available for login');
+          return res.status(500).json({ message: "Session unavailable" });
+        }
       }
       
     } catch (error) {
@@ -864,11 +875,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json(contactSubmissions);
   });
-  // Setup authentication with passport
-  setupAuth(app);
-  
-  // Setup JWT authentication routes
-  setupJwtAuth(app);
   
   // Apply fraud prevention middleware globally
   app.use(fraudRiskMiddleware);
