@@ -2267,6 +2267,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed due to server error" });
     });
   });
+  // Add security headers middleware for sensitive routes
+  app.use(addSecurityHeaders());
+  app.use(logoutStateChecker());
+
   // Single comprehensive secure logout endpoint
   app.post("/api/logout", createEnhancedLogout());
 
