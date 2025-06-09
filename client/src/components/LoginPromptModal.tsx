@@ -82,20 +82,40 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
 
-  // Translation using typed hook with additional remember password texts
-  const rememberPasswordTexts = useMemo(() => [
-    "Remember Password",
-    "Remember my password for next time"
-  ], []);
-  
-  const { translations: rememberPasswordTranslations } = useMasterBatchTranslation(rememberPasswordTexts, 'high');
-  
-  const tRemember = rememberPasswordTexts.reduce((acc, text, index) => {
-    acc[text] = rememberPasswordTranslations[index] || text;
-    return acc;
-  }, {} as Record<string, string>);
-
+  // Translation using typed hook
   const t = useTypedTranslation();
+
+  // Load remembered credentials on component mount
+  useEffect(() => {
+    if (isLogin) {
+      const rememberedCredentials = localStorage.getItem('dedwen_remembered_credentials');
+      if (rememberedCredentials) {
+        try {
+          const credentials = JSON.parse(rememberedCredentials);
+          
+          // Check if credentials are not older than 30 days (for security)
+          const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+          const isExpired = credentials.timestamp && (Date.now() - credentials.timestamp > thirtyDaysInMs);
+          
+          if (isExpired) {
+            // Remove expired credentials
+            localStorage.removeItem('dedwen_remembered_credentials');
+          } else {
+            // Load valid credentials
+            setFormData(prev => ({
+              ...prev,
+              username: credentials.username || '',
+              password: credentials.password || ''
+            }));
+            setRememberPassword(true);
+          }
+        } catch (error) {
+          console.error('Failed to load remembered credentials:', error);
+          localStorage.removeItem('dedwen_remembered_credentials');
+        }
+      }
+    }
+  }, [isLogin]);
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth: string) => {
@@ -208,6 +228,21 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaId: captchaToken,
           captchaInput: "verified" // Math CAPTCHA already verified
         });
+        
+        // Handle remember password functionality
+        if (rememberPassword) {
+          // Save credentials to localStorage
+          const credentialsToSave = {
+            username: formData.username,
+            password: formData.password,
+            timestamp: Date.now()
+          };
+          localStorage.setItem('dedwen_remembered_credentials', JSON.stringify(credentialsToSave));
+        } else {
+          // Clear remembered credentials if checkbox is unchecked
+          localStorage.removeItem('dedwen_remembered_credentials');
+        }
+        
         toast({
           title: t["Welcome back!"] || "Welcome back!",
           description: t["You've successfully logged in."] || "You've successfully logged in.",
@@ -479,6 +514,23 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               </Button>
             </div>
           </div>
+
+          {/* Remember Password Checkbox - Only show for login */}
+          {isLogin && (
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox
+                id="remember-password"
+                checked={rememberPassword}
+                onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+              />
+              <Label 
+                htmlFor="remember-password" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {t["Remember Password"] || "Remember Password"}
+              </Label>
+            </div>
+          )}
 
           {/* Math CAPTCHA Security Verification */}
           <MathCaptcha 
