@@ -567,30 +567,23 @@ export function setupAuth(app: Express) {
 
       // Log in the user
       console.log(`[DEBUG] Calling req.login for newly created user ${user.username}`);
-      // Regenerate session on registration to prevent session fixation
-      req.session.regenerate((err) => {
+      // Login the user directly without session regeneration to avoid conflicts
+      req.login(user, (err) => {
         if (err) {
-          console.error(`[ERROR] Session regeneration after registration failed:`, err);
+          console.error(`[ERROR] Login after registration failed:`, err);
           return next(err);
         }
         
-        req.login(user, (err) => {
-          if (err) {
-            console.error(`[ERROR] Login after registration failed:`, err);
-            return next(err);
-          }
-          
-          console.log(`[DEBUG] User ${user.username} logged in after registration with new session`);
-          console.log(`[DEBUG] New session ID after login:`, req.sessionID);
-          
-          // Double-check authentication status
-          console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
-          console.log(`[DEBUG] User in session:`, req.user);
-          
-          // Return user without password
-          const { password, ...userWithoutPassword } = user;
-          res.status(201).json(userWithoutPassword);
-        });
+        console.log(`[DEBUG] User ${user.username} logged in after registration`);
+        console.log(`[DEBUG] Session ID after login:`, req.sessionID);
+        
+        // Double-check authentication status
+        console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
+        console.log(`[DEBUG] User in session:`, req.user);
+        
+        // Return user without password
+        const { password, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
       console.error(`[ERROR] Registration failed:`, error);
@@ -662,39 +655,32 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
-      console.log(`[DEBUG] User ${user.username} authenticated, regenerating session`);
+      console.log(`[DEBUG] User ${user.username} authenticated, logging in`);
       
-      // Regenerate session on login to prevent session fixation attacks
-      req.session.regenerate((err) => {
+      // Login user directly without session regeneration to avoid conflicts
+      req.login(user, async (err: Error | null) => {
         if (err) {
-          console.error(`[ERROR] Session regeneration on login failed:`, err);
+          console.error(`[ERROR] req.login error:`, err);
           return next(err);
         }
         
-        req.login(user, async (err: Error | null) => {
-          if (err) {
-            console.error(`[ERROR] req.login error:`, err);
-            return next(err);
-          }
-          
-          console.log(`[DEBUG] req.login successful for ${user.username} with new session`);
-          console.log(`[DEBUG] New session ID: ${req.sessionID}`);
-          console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
-          
-          // Reset auth attempts on successful login
-          resetAuthAttempts(clientIp);
-          
-          // Handle successful login tracking
-          try {
-            await handleSuccessfulLogin(user);
-          } catch (error) {
-            console.error(`[ERROR] Error handling successful login:`, error);
-          }
-          
-          // Return user without password
-          const { password, ...userWithoutPassword } = user;
-          return res.json(userWithoutPassword);
-        });
+        console.log(`[DEBUG] req.login successful for ${user.username}`);
+        console.log(`[DEBUG] Session ID: ${req.sessionID}`);
+        console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
+        
+        // Reset auth attempts on successful login
+        resetAuthAttempts(clientIp);
+        
+        // Handle successful login tracking
+        try {
+          await handleSuccessfulLogin(user);
+        } catch (error) {
+          console.error(`[ERROR] Error handling successful login:`, error);
+        }
+        
+        // Return user without password
+        const { password, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
       });
     })(req, res, next);
   });

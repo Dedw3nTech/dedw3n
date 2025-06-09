@@ -2183,13 +2183,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed due to server error" });
     });
   });
-  // Simple and effective logout endpoint
+  // Single logout endpoint - handles session cleanup properly
   app.post("/api/logout", async (req, res) => {
     try {
       console.log('[LOGOUT] Starting logout process');
       
-      // 1. Clear Passport.js session
-      if (req.isAuthenticated()) {
+      // 1. Clear Passport.js session if authenticated
+      if (req.isAuthenticated && req.isAuthenticated()) {
         req.logout((err) => {
           if (err) {
             console.error('[LOGOUT] Session logout error:', err);
@@ -2199,7 +2199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // 2. Destroy session completely
+      // 2. Destroy session if it exists
       if (req.session) {
         req.session.destroy((err) => {
           if (err) {
@@ -2210,8 +2210,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // 3. Clear all auth cookies
+      // 3. Clear authentication cookies
       res.clearCookie('connect.sid', { path: '/' });
+      res.clearCookie('sessionId', { path: '/' });
       res.clearCookie('token', { path: '/' });
       res.clearCookie('auth', { path: '/' });
       
@@ -2238,48 +2239,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Logged out',
         redirect: '/auth'
       });
-    }
-  });
-
-  // Remove the old complex logout implementation
-  // Keep only the simple one above
-
-  // This is the endpoint called by useAuth() in client code - we need direct implementation, not redirect
-  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
-    console.log('[DEBUG] /api/user - Authenticated with unified auth');
-    res.json(req.user);
-  });
-
-  // Simple logout endpoint that properly clears sessions and prevents auto-login
-  app.post("/api/logout", async (req, res) => {
-    try {
-      console.log('[DEBUG] Logout request received');
-      
-      // Clear session if it exists
-      if (req.session) {
-        await new Promise<void>((resolve) => {
-          req.session.destroy((err) => {
-            if (err) {
-              console.error('[ERROR] Session destroy failed:', err);
-            } else {
-              console.log('[DEBUG] Session destroyed successfully');
-            }
-            resolve();
-          });
-        });
-      }
-      
-      // Clear req.user
-      req.user = undefined;
-      
-      // Set headers to prevent auto-login
-      res.setHeader('X-Auth-Logged-Out', 'true');
-      res.setHeader('X-User-Logged-Out', 'true');
-      
-      return res.status(204).end();
-    } catch (error) {
-      console.error('[ERROR] Logout error:', error);
-      return res.status(204).end();
     }
   });
 
