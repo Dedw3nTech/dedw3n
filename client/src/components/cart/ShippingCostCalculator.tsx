@@ -69,6 +69,8 @@ export default function ShippingCostCalculator({
   const [deliveryType, setDeliveryType] = useState<'local' | 'national' | 'international'>('local');
   const [vendorCountry, setVendorCountry] = useState<string>('');
   const [vendorCity, setVendorCity] = useState<string>('');
+  const [customerCountry, setCustomerCountry] = useState<string>('');
+  const [customerCity, setCustomerCity] = useState<string>('');
   const [newCarrier, setNewCarrier] = useState<Partial<CustomCarrier>>({
     name: '',
     baseRate: 0,
@@ -84,22 +86,29 @@ export default function ShippingCostCalculator({
   const { formatPrice } = useCurrency();
   const { translateText } = useMasterTranslation();
 
-  // Auto-fetch vendor location data from account settings
+  // Auto-fetch vendor and customer location data from account settings
   useEffect(() => {
-    const fetchVendorLocation = async () => {
+    const fetchLocationData = async () => {
       try {
-        const response = await fetch('/api/user/profile');
+        // Fetch current user data for both vendor and customer locations
+        const response = await fetch('/api/user');
         if (response.ok) {
           const userData = await response.json();
+          
+          // Set vendor location (same as current user for marketplace vendors)
           if (userData.country) setVendorCountry(userData.country);
           if (userData.city) setVendorCity(userData.city);
+          
+          // Set customer location (current user as customer)
+          if (userData.country) setCustomerCountry(userData.country);
+          if (userData.city) setCustomerCity(userData.city);
         }
       } catch (error) {
-        console.warn('Could not fetch vendor location data:', error);
+        console.warn('Could not fetch location data:', error);
       }
     };
 
-    fetchVendorLocation();
+    fetchLocationData();
   }, []);
 
   // Initialize with default carriers
@@ -138,7 +147,7 @@ export default function ShippingCostCalculator({
     if (customCarriers.length > 0) {
       calculateShippingCosts();
     }
-  }, [customCarriers, orderTotal, orderWeight, distance, deliveryType]);
+  }, [customCarriers, orderTotal, orderWeight, distance, deliveryType, vendorCountry, vendorCity, customerCountry, customerCity]);
 
   const calculateShippingCosts = () => {
     setLoading(true);
@@ -380,6 +389,34 @@ export default function ShippingCostCalculator({
                     onChange={(e) => setVendorCity(e.target.value)}
                     placeholder="Auto-fetched from account settings"
                     className="bg-gray-50 border-green-200"
+                  />
+                </div>
+                
+                {/* Customer Location Fields */}
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600" />
+                    {translateText("Your Country")}
+                    <Badge variant="outline" className="text-xs">Auto-fetch</Badge>
+                  </Label>
+                  <Input
+                    value={customerCountry}
+                    onChange={(e) => setCustomerCountry(e.target.value)}
+                    placeholder="Auto-fetched from your profile"
+                    className="bg-blue-50 border-blue-200"
+                  />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600" />
+                    {translateText("Your City")}
+                    <Badge variant="outline" className="text-xs">Auto-fetch</Badge>
+                  </Label>
+                  <Input
+                    value={customerCity}
+                    onChange={(e) => setCustomerCity(e.target.value)}
+                    placeholder="Auto-fetched from your profile"
+                    className="bg-blue-50 border-blue-200"
                   />
                 </div>
                 
