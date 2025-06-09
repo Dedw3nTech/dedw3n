@@ -19,7 +19,7 @@ import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
-import "@/utils/cross-domain-logout-coordinator"; // Initialize cross-domain logout coordination
+import "@/utils/unified-logout-system"; // Initialize unified logout system
 
 import { useEffect, useState } from "react";
 

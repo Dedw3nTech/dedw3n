@@ -2,24 +2,19 @@ import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { queryClient } from "@/lib/queryClient";
+import { clearLogoutState } from "@/utils/unified-logout-system";
 
 // Import the Dedwen logo
-import dedwenLogo from "../assets/d3-black-logo.png";
 import newDedwenLogo from "@assets/Dedw3n Logo_1749096270700.png";
 
 export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Declare cleanup variables at function scope
-    let preventNavigation: ((e: BeforeUnloadEvent) => void) | null = null;
-    let maintainLogoutState: NodeJS.Timeout | null = null;
-    let cleanupTimer: NodeJS.Timeout | null = null;
-    // Force page title to be exactly as requested
+    // Set page title
     document.title = 'You have successfully logged out';
     
-    // Set all anti-caching headers via meta tags
+    // Set anti-caching headers
     const metaTags = [
       { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate, private' },
       { httpEquiv: 'Pragma', content: 'no-cache' },
@@ -27,7 +22,6 @@ export default function LogoutSuccess() {
       { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' },
     ];
     
-    // Create and append all meta tags
     const addedMetaTags = metaTags.map(tagProps => {
       const metaTag = document.createElement('meta');
       Object.entries(tagProps).forEach(([key, value]) => {
@@ -37,145 +31,31 @@ export default function LogoutSuccess() {
       return metaTag;
     });
     
-    // Additional security measures
-    try {
-      // Clear all auth-related localStorage items
-      const keysToRemove = [
-        'dedwen_auth_token',  // Main auth token
-        'i18nextLng',         // Language settings
-        'user_session',       // Any session data
-        'last_login',         // Login timestamps
-        'auth_state',         // Auth state management
-      ];
-      
-      keysToRemove.forEach(key => {
-        try {
-          localStorage.removeItem(key);
-        } catch (e) {
-          console.error(`Failed to remove ${key} from localStorage:`, e);
-        }
-      });
-      
-      // Clear session storage as well
-      sessionStorage.clear();
-      
-      // Forcefully clear React Query cache for all auth endpoints
-      queryClient.clear();
-      
-      // Set cross-domain logout indicators
-      localStorage.setItem('dedwen_logged_out', 'true');
-      sessionStorage.setItem('dedwen_logged_out', 'true');
-      
-      // Set cross-domain logout cookies with proper domain handling
-      const host = window.location.hostname;
-      const isReplit = host.includes('.replit.dev');
-      
-      // Set logout cookies for current domain
-      document.cookie = 'dedwen_logout=true; path=/; max-age=15; SameSite=Lax';
-      document.cookie = 'user_logged_out=true; path=/; max-age=15; SameSite=Lax';
-      document.cookie = 'cross_domain_logout=true; path=/; max-age=15; SameSite=Lax';
-      
-      // For Replit domains, also set for the parent domain
-      if (isReplit) {
-        const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
-        if (replitMatch) {
-          const replitDomain = replitMatch[1];
-          document.cookie = `dedwen_logout=true; path=/; max-age=15; domain=.${replitDomain}; SameSite=Lax`;
-          document.cookie = `user_logged_out=true; path=/; max-age=15; domain=.${replitDomain}; SameSite=Lax`;
-        }
-      }
-      
-      // Clear all cookies systematically
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i];
-        const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        
-        // Clear auth-related cookies
-        if (name.includes('token') || name.includes('auth') || name.includes('session') || 
-            name.includes('sid') || name.includes('dedwen') || name.includes('connect.sid')) {
-          // Clear for current domain
-          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure;`;
-          
-          // Clear for parent domain if on Replit
-          if (isReplit) {
-            const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
-            if (replitMatch) {
-              const replitDomain = replitMatch[1];
-              document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=.${replitDomain};`;
-            }
-          }
-        }
-      }
-      
-      // Trigger storage event for cross-tab/cross-domain coordination
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'dedwen_logged_out',
-        newValue: 'true',
-        storageArea: localStorage
-      }));
-      
-      // Force browser history manipulation to prevent back-button issues
-      if (typeof window.history.pushState === 'function') {
-        window.history.pushState(null, '', window.location.pathname);
-        window.addEventListener('popstate', () => {
-          // If user tries to go back, redirect to home
-          setLocation('/');
-        }, { once: true });
-      }
-      
-      // Prevent automatic navigation away from logout page for 60 seconds
-      preventNavigation = (e: BeforeUnloadEvent) => {
-        // Only prevent if we're still on logout success page
-        if (window.location.pathname.includes('/logout-success')) {
-          e.preventDefault();
-          e.returnValue = '';
-        }
-      };
-      
-      window.addEventListener('beforeunload', preventNavigation);
-      
-      // Set up a timer to maintain logout state visibility
-      maintainLogoutState = setInterval(() => {
-        // Ensure logout flags remain set while on this page
-        localStorage.setItem('dedwen_logged_out', 'true');
-        sessionStorage.setItem('dedwen_logged_out', 'true');
-      }, 5000);
-      
-      // Cleanup after 60 seconds or when user navigates away
-      cleanupTimer = setTimeout(() => {
-        if (preventNavigation) {
-          window.removeEventListener('beforeunload', preventNavigation);
-        }
-        if (maintainLogoutState) {
-          clearInterval(maintainLogoutState);
-        }
-      }, 60000);
-      
-      console.log('Logout success page: Applied comprehensive security and anti-caching measures');
-    } catch (e) {
-      console.error('Error during logout security cleanup:', e);
-    }
+    // Handle browser back button
+    const handlePopState = () => setLocation('/');
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
     
-    // Clean up function to remove meta tags and event listeners when component unmounts
+    // Auto-clear logout state after 60 seconds to allow fresh logins
+    const clearTimer = setTimeout(() => {
+      clearLogoutState();
+      console.log('Logout state auto-cleared after timeout');
+    }, 60000);
+    
+    console.log('Logout success page: Security measures applied');
+    
+    // Cleanup
     return () => {
       try {
         addedMetaTags.forEach(tag => {
-          document.head.removeChild(tag);
+          if (tag.parentNode) {
+            document.head.removeChild(tag);
+          }
         });
-        if (preventNavigation) {
-          window.removeEventListener('beforeunload', preventNavigation);
-        }
-        if (maintainLogoutState) {
-          clearInterval(maintainLogoutState);
-        }
-        if (cleanupTimer) {
-          clearTimeout(cleanupTimer);
-        }
+        window.removeEventListener('popstate', handlePopState);
+        clearTimeout(clearTimer);
       } catch (e) {
-        console.error('Failed to cleanup logout success page:', e);
+        console.error('Cleanup error:', e);
       }
     };
   }, [setLocation]);

@@ -3,89 +3,9 @@ import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from ".
 
 // Auth token management
 const AUTH_TOKEN_KEY = 'dedwen_auth_token';
-const LOGGED_OUT_FLAG_KEY = 'dedwen_logged_out';
-
-// Check if user is logged out
-export function isUserLoggedOut(): boolean {
-  try {
-    return localStorage.getItem(LOGGED_OUT_FLAG_KEY) === 'true';
-  } catch (e) {
-    console.error('Error accessing localStorage:', e);
-    return false;
-  }
-}
-
-// Set the logged out flag with automatic cleanup and cross-domain coordination
-export function setLoggedOutFlag(isLoggedOut: boolean): void {
-  try {
-    if (isLoggedOut) {
-      // Set logout flags in local storage
-      localStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
-      sessionStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
-      
-      // Set cross-domain logout cookies
-      document.cookie = 'dedwen_logout=true; path=/; max-age=10; SameSite=Lax';
-      document.cookie = 'user_logged_out=true; path=/; max-age=10; SameSite=Lax';
-      document.cookie = 'cross_domain_logout=true; path=/; max-age=10; SameSite=Lax';
-      
-      // Clear any user data to ensure clean logout
-      localStorage.removeItem('userData');
-      sessionStorage.removeItem('userData');
-      localStorage.removeItem('enable_auto_login');
-      
-      console.log('Cross-domain logout flag set - user officially logged out');
-      
-      // Trigger storage event for cross-tab/cross-domain coordination
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: LOGGED_OUT_FLAG_KEY,
-        newValue: 'true',
-        storageArea: localStorage
-      }));
-      
-      // Automatically clear logout flag after 30 seconds to prevent permanent login blocks
-      // But only if user is not on logout success page
-      setTimeout(() => {
-        try {
-          // Don't auto-clear if user is still on logout success page
-          if (window.location.pathname.includes('/logout-success')) {
-            console.log('Skipping auto-clear - user still on logout success page');
-            return;
-          }
-          
-          localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
-          sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
-          
-          // Clear cross-domain logout cookies
-          document.cookie = 'dedwen_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          document.cookie = 'user_logged_out=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          document.cookie = 'cross_domain_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          
-          console.log('Cross-domain logout flag automatically cleared after timeout');
-        } catch (e) {
-          console.error('Error auto-clearing cross-domain logout flag:', e);
-        }
-      }, 30000);
-    } else {
-      // Clear all logout indicators
-      localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
-      sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
-      
-      // Clear logout cookies
-      document.cookie = 'dedwen_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = 'user_logged_out=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = 'cross_domain_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-  } catch (e) {
-    console.error('Error setting cross-domain logged out flag:', e);
-  }
-}
 
 export function getStoredAuthToken(): string | null {
   try {
-    // If user explicitly logged out, don't return token
-    if (isUserLoggedOut()) {
-      return null;
-    }
     return localStorage.getItem(AUTH_TOKEN_KEY);
   } catch (e) {
     console.error('Error accessing localStorage:', e);
@@ -95,8 +15,6 @@ export function getStoredAuthToken(): string | null {
 
 export function setAuthToken(token: string): void {
   try {
-    // When setting a token, clear the logged out flag
-    setLoggedOutFlag(false);
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   } catch (e) {
     console.error('Error storing auth token:', e);
@@ -105,8 +23,6 @@ export function setAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   try {
-    // When clearing token, set the logged out flag
-    setLoggedOutFlag(true);
     localStorage.removeItem(AUTH_TOKEN_KEY);
   } catch (e) {
     console.error('Error clearing auth token:', e);

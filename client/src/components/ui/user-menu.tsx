@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { performUnifiedLogout } from "@/utils/unified-logout-system";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,27 +62,28 @@ export default function UserMenu() {
     );
   }
 
-  const handleLogout = () => {
-    // Show loading state for better UX
+  const handleLogout = async () => {
+    // Show loading state
     toast({
       title: t('auth.logging_out') || 'Logging out',
       description: t('auth.please_wait') || 'Please wait...',
     });
     
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        // Toast will be shown on logout success page
-        setIsOpen(false);
-      },
-      onError: (error) => {
-        toast({
-          title: t('auth.logout_error') || 'Logout Error',
-          description: error.message || t('auth.try_again') || 'Please try again',
-          variant: "destructive"
-        });
-        setIsOpen(false);
-      }
-    });
+    try {
+      await performUnifiedLogout({
+        redirectToSuccessPage: true,
+        clearRememberedCredentials: false,
+        broadcastToTabs: true
+      });
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: t('auth.logout_error') || 'Logout Error',
+        description: t('auth.try_again') || 'Please try again',
+        variant: "destructive"
+      });
+      setIsOpen(false);
+    }
   };
 
   const handleSwitchToDashboard = () => {
