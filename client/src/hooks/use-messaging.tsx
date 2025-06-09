@@ -518,8 +518,10 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.log(`WebSocket health check: ${zombieDetectionReason}`);
         
         try {
-          // Gracefully close existing connection
-          socket.close(1000, "Scheduled connection refresh");
+          // Gracefully close existing connection with proper error handling
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.close(1000, "Scheduled connection refresh");
+          }
           socket = null;
           // Don't increment reconnect attempts for scheduled refresh
           connectRef.current();
@@ -1029,68 +1031,35 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       // Save connection start time for tracking
       const connectionStartAttemptTime = Date.now();
       
-      // Try with echo-protocol first and implement proper error handling
+      // Validate WebSocket URL before attempting connection
+      if (!wsUrl || !wsUrl.toString().startsWith('ws')) {
+        console.error("Invalid WebSocket URL:", wsUrl.toString());
+        setConnectionStatus('disconnected');
+        reconnectAttempts++;
+        
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+        return;
+      }
+      
+      // Simplified WebSocket creation to prevent DOMException
       try {
-        // Create a new connection with the specified protocol
-        socket = new WebSocket(wsUrl.toString(), "echo-protocol");
-        console.log("WebSocket initialized with echo-protocol");
+        // Create WebSocket without protocol to avoid compatibility issues
+        socket = new WebSocket(wsUrl.toString());
+        console.log("WebSocket initialized successfully");
+      } catch (constructorError) {
+        console.error("Failed to construct WebSocket:", constructorError);
+        socket = null;
+        reconnectAttempts++;
         
-        // Add a local error handler for the connection attempt
-        const tempErrorHandler = (event: Event) => {
-          console.error("Error during WebSocket initialization:", event);
-          // Only try the fallback if we're still using this handler (not replaced yet)
-          if (socket && socket.onerror === tempErrorHandler) {
-            try {
-              // Clean up the failed connection
-              socket.onclose = null;
-              socket.onerror = null;
-              socket.onopen = null;
-              socket.onmessage = null;
-              
-              // Try to properly close the socket if possible
-              if (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN) {
-                socket.close();
-              }
-              
-              // Try without a protocol as fallback
-              console.warn("Failed to connect with echo-protocol, trying without protocol specification");
-              socket = new WebSocket(wsUrl.toString());
-              console.log("WebSocket initialized without protocol specification");
-            } catch (fallbackError) {
-              console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
-              socket = null; // Ensure the socket reference is cleared
-              reconnectAttempts++;
-              
-              // Schedule a retry with exponential backoff
-              if (reconnectTimer) clearTimeout(reconnectTimer);
-              reconnectTimer = setTimeout(() => {
-                connect();
-              }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
-            }
-          }
-        };
-        
-        // Attach the temporary error handler
-        socket.onerror = tempErrorHandler;
-      } catch (protocolError) {
-        // Handle synchronous exceptions during initialization
-        console.warn("Failed to connect with echo-protocol, trying without protocol:", protocolError);
-        
-        try {
-          socket = new WebSocket(wsUrl.toString());
-          console.log("WebSocket initialized without protocol specification");
-        } catch (fallbackError) {
-          console.error("Failed to initialize WebSocket with fallback approach:", fallbackError);
-          socket = null; // Ensure the socket reference is cleared
-          reconnectAttempts++;
-          
-          // Schedule a retry
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          reconnectTimer = setTimeout(() => {
-            connect();
-          }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
-          return; // Exit the connect function early
-        }
+        // Schedule a retry with exponential backoff
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, Math.min(RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+        return;
       }
       
       // Store connection attempt time for stuck detection
