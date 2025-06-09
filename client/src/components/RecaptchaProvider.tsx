@@ -1,5 +1,4 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 interface RecaptchaContextType {
   executeRecaptcha: ((action: string) => Promise<string>) | undefined;
@@ -23,94 +22,115 @@ interface RecaptchaProviderProps {
   children: ReactNode;
 }
 
-function RecaptchaInner({ children }: RecaptchaProviderProps) {
-  const { executeRecaptcha } = useGoogleReCaptcha();
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const checkReadiness = () => {
-      if (typeof window.grecaptcha !== 'undefined' && executeRecaptcha) {
-        console.log('[RECAPTCHA] Service is ready');
-        setIsReady(true);
-      } else {
-        console.log('[RECAPTCHA] Waiting for service to be ready...');
-        setTimeout(checkReadiness, 100);
-      }
-    };
-
-    checkReadiness();
-  }, [executeRecaptcha]);
-
-  // Wrapper function with enhanced error handling
-  const enhancedExecuteRecaptcha = async (action: string): Promise<string> => {
-    if (!executeRecaptcha) {
-      throw new Error('reCAPTCHA service not available');
-    }
-
-    if (typeof window.grecaptcha === 'undefined') {
-      throw new Error('reCAPTCHA script not loaded');
-    }
-
-    try {
-      console.log(`[RECAPTCHA] Executing action: ${action}`);
-      const token = await executeRecaptcha(action);
-      
-      if (!token || typeof token !== 'string') {
-        throw new Error('Invalid token received from reCAPTCHA');
-      }
-
-      console.log(`[RECAPTCHA] Token generated successfully for action: ${action}`);
-      return token;
-    } catch (error) {
-      console.error('[RECAPTCHA] Execution failed:', error);
-      throw error;
-    }
-  };
-
-  return (
-    <RecaptchaContext.Provider value={{ 
-      executeRecaptcha: executeRecaptcha ? enhancedExecuteRecaptcha : undefined,
-      isReady 
-    }}>
-      {children}
-    </RecaptchaContext.Provider>
-  );
+declare global {
+  interface Window {
+    grecaptcha: any;
+    onRecaptchaLoad: () => void;
+  }
 }
 
 export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
-  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-  
-  if (!siteKey) {
-    console.error('[RECAPTCHA] VITE_RECAPTCHA_SITE_KEY not found in environment variables');
-    // Provide fallback context without reCAPTCHA
-    return (
-      <RecaptchaContext.Provider value={{ executeRecaptcha: undefined, isReady: false }}>
-        {children}
-      </RecaptchaContext.Provider>
-    );
-  }
+  const [isReady, setIsReady] = useState(false);
+  const [siteKey] = useState(import.meta.env.VITE_RECAPTCHA_SITE_KEY);
 
-  // Add global callback for reCAPTCHA load
-  if (typeof window !== 'undefined') {
-    (window as any).onRecaptchaLoad = () => {
-      console.log('[RECAPTCHA] Script loaded via global callback');
+  useEffect(() => {
+    if (!siteKey) {
+      console.error('[RECAPTCHA] VITE_RECAPTCHA_SITE_KEY not found in environment variables');
+      return;
+    }
+
+    // Check if script is already loaded
+    if (window.grecaptcha && window.grecaptcha.ready) {
+      console.log('[RECAPTCHA] Script already loaded');
+      window.grecaptcha.ready(() => {
+        setIsReady(true);
+        console.log('[RECAPTCHA] Ready callback executed');
+      });
+      return;
+    }
+
+    // Load reCAPTCHA script manually
+    const scriptId = 'recaptcha-script';
+    if (document.getElementById(scriptId)) {
+      return; // Script already exists
+    }
+
+    console.log('[RECAPTCHA] Loading script manually...');
+    
+    // Define global callback
+    window.onRecaptchaLoad = () => {
+      console.log('[RECAPTCHA] Script loaded via callback');
+      if (window.grecaptcha && window.grecaptcha.ready) {
+        window.grecaptcha.ready(() => {
+          setIsReady(true);
+          console.log('[RECAPTCHA] Ready state achieved');
+        });
+      }
     };
-  }
 
-  console.log('[RECAPTCHA] Initializing with site key:', siteKey.substring(0, 10) + '...');
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}&onload=onRecaptchaLoad`;
+    script.async = true;
+    script.defer = false;
+    
+    script.onload = () => {
+      console.log('[RECAPTCHA] Script onload event');
+    };
+    
+    script.onerror = (error) => {
+      console.error('[RECAPTCHA] Script failed to load:', error);
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup on unmount
+      const existingScript = document.getElementById(scriptId);
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+      delete window.onRecaptchaLoad;
+    };
+  }, [siteKey]);
+
+  const executeRecaptcha = async (action: string): Promise<string> => {
+    if (!siteKey) {
+      throw new Error('reCAPTCHA site key not configured');
+    }
+
+    if (!window.grecaptcha || !window.grecaptcha.ready) {
+      throw new Error('reCAPTCHA not loaded');
+    }
+
+    return new Promise((resolve, reject) => {
+      window.grecaptcha.ready(async () => {
+        try {
+          console.log(`[RECAPTCHA] Executing action: ${action}`);
+          const token = await window.grecaptcha.execute(siteKey, { action });
+          
+          if (!token || typeof token !== 'string') {
+            throw new Error('Invalid token received');
+          }
+
+          console.log(`[RECAPTCHA] Token generated successfully for action: ${action}`);
+          resolve(token);
+        } catch (error) {
+          console.error('[RECAPTCHA] Execution failed:', error);
+          reject(error);
+        }
+      });
+    });
+  };
+
+  const contextValue = {
+    executeRecaptcha: isReady && siteKey ? executeRecaptcha : undefined,
+    isReady: isReady && !!siteKey
+  };
 
   return (
-    <GoogleReCaptchaProvider 
-      reCaptchaKey={siteKey}
-      useRecaptchaNet={true}
-      scriptProps={{
-        async: true,
-        defer: false,
-        appendTo: 'head',
-        onLoadCallbackName: 'onRecaptchaLoad'
-      }}
-    >
-      <RecaptchaInner>{children}</RecaptchaInner>
-    </GoogleReCaptchaProvider>
+    <RecaptchaContext.Provider value={contextValue}>
+      {children}
+    </RecaptchaContext.Provider>
   );
 }
