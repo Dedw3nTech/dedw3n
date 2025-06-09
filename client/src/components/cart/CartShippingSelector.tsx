@@ -1,40 +1,55 @@
 import { useState, useEffect } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Truck, Clock, AlertCircle, MapPin, Shield, Package, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Truck, Clock, AlertCircle, MapPin, Shield, Package, Zap, Calculator, Upload, Plus, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
 
-export type ShippingRate = {
+export type CustomCarrier = {
   id: string;
   name: string;
-  description: string;
-  cost: number;
-  estimatedDeliveryDays: number;
-  estimatedDeliveryDate: string;
-  guaranteedDelivery: boolean;
-  carrier: string;
-  carrierId: string;
-  carrierLogo: string;
-  // Enhanced shipping properties
-  deliveryScope: 'local' | 'national' | 'international';
-  deliverySpeed: 'standard' | 'express' | 'overnight';
-  costMethod: 'flat_rate' | 'weight_based' | 'distance_based';
-  trackingIncluded: boolean;
-  insuranceAvailable: boolean;
-  pickupLocationAvailable: boolean;
-  vendorLocation?: string;
-  maxWeight?: number;
-  zones?: string[];
+  logo?: string;
+  baseRate: number;
+  perKgRate: number;
+  perKmRate: number;
+  freeThreshold: number;
+  maxWeight: number;
+  zones: string[];
+  deliveryDays: {
+    local: number;
+    national: number;
+    international: number;
+  };
+  services: {
+    tracking: boolean;
+    insurance: boolean;
+    pickup: boolean;
+  };
 };
 
-interface CartShippingSelectorProps {
+export type ShippingCalculation = {
+  carrierId: string;
+  carrierName: string;
+  logo?: string;
+  baseCost: number;
+  weightCost: number;
+  distanceCost: number;
+  totalCost: number;
+  estimatedDays: number;
+  isFree: boolean;
+  services: string[];
+};
+
+interface CartShippingCalculatorProps {
   orderTotal: number;
-  onShippingMethodChange: (method: ShippingRate | null, cost: number) => void;
-  selectedMethod: ShippingRate | null;
+  orderWeight: number;
+  distance: number;
+  onCalculationComplete: (calculation: ShippingCalculation | null, cost: number) => void;
+  selectedCalculation: ShippingCalculation | null;
 }
 
 export default function CartShippingSelector({ 

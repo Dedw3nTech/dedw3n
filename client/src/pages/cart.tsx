@@ -17,7 +17,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
-import CartShippingSelector, { type ShippingRate } from '@/components/cart/CartShippingSelector';
+import ShippingCostCalculator, { type ShippingCalculation } from '@/components/cart/ShippingCostCalculator';
 
 export default function Cart() {
   const [, setLocation] = useLocation();
@@ -27,7 +27,7 @@ export default function Cart() {
   const { translateText } = useMasterTranslation();
   
   // Shipping state management
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingRate | null>(null);
+  const [selectedShippingCalculation, setSelectedShippingCalculation] = useState<ShippingCalculation | null>(null);
   const [dynamicShippingCost, setDynamicShippingCost] = useState<number>(0);
   
   // Show authentication message if not logged in
