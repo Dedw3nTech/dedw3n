@@ -71,14 +71,14 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     enabled: isAuthenticated,
   });
   
-  const { data: notificationsData } = useQuery<{ count: number }>({
-    queryKey: ['/api/notifications/unread/count'],
+  const { data: ordersNotificationsData } = useQuery<{ count: number }>({
+    queryKey: ['/api/orders/notifications/count'],
     staleTime: 10000,
     enabled: isAuthenticated,
   });
 
   const likedProductsCount = isAuthenticated && Array.isArray(likedProducts) ? likedProducts.length : 0;
-  const ordersNotificationsCount = isAuthenticated ? (notificationsData?.count || 0) : 0;
+  const ordersNotificationsCount = isAuthenticated ? (ordersNotificationsData?.count || 0) : 0;
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
