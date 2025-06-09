@@ -4121,10 +4121,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[DEBUG] Found ${filteredProducts.length} products after filtering`);
       
-      // Cache the result for 30 seconds to speed up subsequent requests
-      queryCache.set(cacheKey, filteredProducts, 30 * 1000);
+      // Map database fields to expected frontend fields
+      const mappedProducts = filteredProducts.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      }));
       
-      res.json(filteredProducts);
+      // Cache the result for 30 seconds to speed up subsequent requests
+      queryCache.set(cacheKey, mappedProducts, 30 * 1000);
+      
+      res.json(mappedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Failed to fetch products' });
@@ -4142,10 +4148,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const popularProducts = await storage.getPopularProducts();
       
-      // Cache for 60 seconds
-      queryCache.set('products:popular', popularProducts, 60 * 1000);
+      // Map database fields to expected frontend fields
+      const mappedPopularProducts = popularProducts.map(product => ({
+        ...product,
+        imageUrl: product.image_url || product.imageUrl // Map image_url to imageUrl
+      }));
       
-      res.json(popularProducts);
+      // Cache for 60 seconds
+      queryCache.set('products:popular', mappedPopularProducts, 60 * 1000);
+      
+      res.json(mappedPopularProducts);
     } catch (error) {
       console.error('Error fetching popular products:', error);
       res.status(500).json({ message: 'Failed to fetch popular products' });
