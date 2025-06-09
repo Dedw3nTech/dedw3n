@@ -50,18 +50,11 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
     
-    console.log(`[DEBUG] Password comparison - hashed length: ${hashed.length}, salt length: ${salt.length}`);
-    console.log(`[DEBUG] Password comparison - hashed: ${hashed.substring(0, 16)}..., salt: ${salt.substring(0, 16)}...`);
-    
     const hashedBuf = Buffer.from(hashed, "hex");
     const keylen = hashedBuf.length; // Use the actual length of the stored hash
     
-    console.log(`[DEBUG] Password comparison - using keylen: ${keylen}`);
-    
     // Use same parameters as the hashing function
     const suppliedBuf = (await scryptAsync(supplied, salt, keylen)) as Buffer;
-    
-    console.log(`[DEBUG] Password comparison - hashedBuf length: ${hashedBuf.length}, suppliedBuf length: ${suppliedBuf.length}`);
     
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
@@ -473,42 +466,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Debug endpoint to reset user password - FOR DEVELOPMENT ONLY
-  app.post("/api/auth/reset-user-password", async (req, res) => {
-    try {
-      console.log("[DEBUG] Resetting user password");
-      const { username, newPassword } = req.body;
-      
-      if (!username || !newPassword) {
-        return res.status(400).json({ message: "Username and newPassword required" });
-      }
-      
-      // Get user from database
-      const user = await storage.getUserByUsername(username);
-      console.log(`[DEBUG] Password reset - User lookup for "${username}": ${user ? "Found" : "Not found"}`);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Hash new password
-      const hashedPassword = await hashPassword(newPassword);
-      console.log(`[DEBUG] Password reset - New hash created for ${username}`);
-      
-      // Update user password and reset login attempts
-      await storage.updateUser(user.id, {
-        password: hashedPassword,
-        failedLoginAttempts: 0,
-        isLocked: false
-      });
-      
-      console.log(`[DEBUG] Password reset successful for user: ${username}`);
-      return res.json({ success: true, message: `Password reset successful for ${username}` });
-    } catch (error) {
-      console.error("[ERROR] Password reset failed:", error);
-      res.status(500).json({ message: "Password reset failed", error: String(error) });
-    }
-  });
+
 
   // Middleware to check if user is authenticated
   app.use((req, res, next) => {
