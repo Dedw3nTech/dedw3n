@@ -332,8 +332,6 @@ async function comparePasswords(supplied: string, stored: string) {
     return false;
   }
   
-  console.log(`[DEBUG] Password comparison - supplied length: ${supplied.length}, stored format: ${stored.substring(0, 20)}...`);
-  
   try {
     const [hashed, salt] = stored.split(".");
     
@@ -342,26 +340,19 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
     
-    console.log(`[DEBUG] Extracted hash length: ${hashed.length}, salt length: ${salt.length}`);
-    
     const hashedBuf = Buffer.from(hashed, "hex");
     const keylen = hashedBuf.length; // Use the actual length of the stored hash
-    
-    console.log(`[DEBUG] Hash buffer length: ${keylen}`);
     
     // Try with pepper first (new password format)
     try {
       const pepperedSupplied = supplied + PASSWORD_PEPPER;
-      console.log(`[DEBUG] Trying pepper-based verification with keylen: ${keylen}`);
       const suppliedBufWithPepper = (await scryptAsync(pepperedSupplied, salt, keylen)) as Buffer;
       
       if (timingSafeEqual(hashedBuf, suppliedBufWithPepper)) {
-        console.log('[AUTH] Password verified with pepper');
         return true;
       }
-      console.log('[DEBUG] Pepper-based verification failed - hashes do not match');
     } catch (pepperError) {
-      console.log('[AUTH] Pepper-based verification failed with error:', pepperError);
+      console.log('[AUTH] Pepper-based verification failed, trying legacy format');
     }
     
     // Fallback to legacy format without pepper (for existing users)
@@ -370,7 +361,6 @@ async function comparePasswords(supplied: string, stored: string) {
     
     for (const tryKeylen of commonKeyLengths) {
       try {
-        console.log(`[DEBUG] Trying legacy verification without pepper with keylen: ${tryKeylen}`);
         const suppliedBufLegacy = (await scryptAsync(supplied, salt, tryKeylen)) as Buffer;
         
         // Handle different buffer lengths for comparison
@@ -380,22 +370,18 @@ async function comparePasswords(supplied: string, stored: string) {
           suppliedBufLegacy.copy(adjustedBuf, 0, 0, Math.min(suppliedBufLegacy.length, keylen));
           
           if (timingSafeEqual(hashedBuf, adjustedBuf)) {
-            console.log(`[AUTH] Password verified with legacy format (no pepper, keylen: ${tryKeylen})`);
             return true;
           }
         } else {
           if (timingSafeEqual(hashedBuf, suppliedBufLegacy)) {
-            console.log(`[AUTH] Password verified with legacy format (no pepper, keylen: ${tryKeylen})`);
             return true;
           }
         }
-        console.log(`[DEBUG] Legacy verification failed with keylen ${tryKeylen} - hashes do not match`);
       } catch (legacyError) {
-        console.log(`[AUTH] Legacy verification failed with keylen ${tryKeylen}, error:`, legacyError);
+        // Continue trying other key lengths
       }
     }
     
-    console.log('[DEBUG] Both pepper and legacy verification failed');
     return false;
   } catch (error) {
     console.error('[ERROR] Password comparison failed:', error);
