@@ -782,6 +782,13 @@ export default function MessagesPage() {
                       // Handle both senderId and userId for compatibility
                       const messageUserId = message.senderId || message.userId;
                       const isCurrentUser = messageUserId === currentUser.id;
+                      
+                      // Debug logging for each message
+                      console.log(`Message ${message.id}: senderId=${message.senderId}, currentUser=${currentUser.id}, isCurrentUser=${isCurrentUser}`);
+                      console.log(`Content: "${message.content}"`);
+                      console.log(`Contains gift text: ${message.content.includes("I've sent you a gift:")}`);
+                      console.log(`Should transform: ${isCurrentUser && message.content.includes("I've sent you a gift:")}`);
+                      console.log("---");
                       const showAvatar = index === 0 || 
                         (apiMessages[index - 1].senderId || apiMessages[index - 1].userId) !== messageUserId;
                       
