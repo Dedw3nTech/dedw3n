@@ -16,9 +16,8 @@ import { getInitials } from "@/lib/utils";
 import { ConnectionDiagnostics } from "@/components/messaging/ConnectionDiagnostics";
 import { ConnectionStatusIndicator } from "@/components/messaging/ConnectionStatusIndicator";
 import { 
-  Loader2, Search, Settings, Phone, VideoIcon, Video,
-  Info, SendHorizonal, Paperclip, Smile, Plus, X,
-  Mic, MicOff, Camera, CameraOff, MonitorUp, Volume2, Volume, PhoneOff 
+  Loader2, Search, Settings,
+  Info, SendHorizonal, Paperclip, Smile, Plus, X
 } from "lucide-react";
 import {
   Dialog,
@@ -38,11 +37,8 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [callType, setCallType] = useState<"audio" | "video">("video");
   const [selectedCategory, setSelectedCategory] = useState<"marketplace" | "community" | "dating">("marketplace");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
   
   // Messaging context
   const {
@@ -51,26 +47,12 @@ export default function MessagesPage() {
     messages: wsMessages,
     unreadCount,
     isConnected,
-    activeCall,
-    incomingCall,
-    localStream,
-    remoteStream,
-    isMuted,
-    isVideoOff,
-    isScreenSharing,
     connect,
     disconnect,
     sendMessage: wsSendMessage,
     startConversation: wsStartConversation,
     setActiveConversation: setWsActiveConversation,
-    markAsRead,
-    initiateCall,
-    acceptCall,
-    declineCall,
-    endCall,
-    toggleMicrophone,
-    toggleCamera,
-    shareScreen
+    markAsRead
   } = useMessaging();
 
   // Redirect if not logged in
@@ -451,27 +433,7 @@ export default function MessagesPage() {
     };
   }, [currentUser]);
   
-  // Set local stream to video element
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
-  
-  // Set remote stream to video element
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream]);
-  
-  // Handle call button click
-  const handleCall = async (type: "audio" | "video") => {
-    setCallType(type);
-    if (conversationPartner?.id) {
-      await initiateCall(conversationPartner.id, type);
-    }
-  };
+
   
   return (
     <div className="container mx-auto py-8">
@@ -501,129 +463,7 @@ export default function MessagesPage() {
         </div>
       </div>
       
-      {/* Active Call Dialog */}
-      <Dialog open={!!activeCall} onOpenChange={(open) => !open && endCall()}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
-          <div className="relative w-full h-full">
-            {/* Remote Video (Full size) */}
-            <div className="w-full h-[600px] bg-black relative">
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className={`w-full h-full object-cover ${!remoteStream ? 'hidden' : ''}`}
-              />
-              
-              {!remoteStream && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Avatar className="h-32 w-32">
-                    <AvatarImage src={conversationPartner?.avatar || ""} />
-                    <AvatarFallback>{getInitials(conversationPartner?.name || "")}</AvatarFallback>
-                  </Avatar>
-                </div>
-              )}
-              
-              {/* Local Video (Picture-in-picture) */}
-              <div className="absolute bottom-4 right-4 w-1/4 h-1/4 border-2 border-white rounded-md overflow-hidden">
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full object-cover ${(!localStream || isVideoOff) ? 'hidden' : ''}`}
-                />
-                
-                {(!localStream || isVideoOff) && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={currentUser?.avatar || ""} />
-                      <AvatarFallback>{getInitials(currentUser?.name || currentUser?.username || "")}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Call Controls */}
-            <div className="p-4 bg-background flex justify-center gap-4">
-              <Button
-                variant={isMuted ? "destructive" : "secondary"}
-                size="icon"
-                onClick={() => toggleMicrophone(!isMuted)}
-                className="rounded-full h-12 w-12"
-              >
-                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </Button>
-              
-              <Button
-                variant={isVideoOff ? "destructive" : "secondary"}
-                size="icon"
-                onClick={() => toggleCamera(!isVideoOff)}
-                className="rounded-full h-12 w-12"
-              >
-                {isVideoOff ? <CameraOff className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
-              </Button>
-              
-              <Button
-                variant={isScreenSharing ? "destructive" : "secondary"}
-                size="icon"
-                onClick={() => shareScreen(!isScreenSharing)}
-                className="rounded-full h-12 w-12"
-              >
-                <MonitorUp className="h-5 w-5" />
-              </Button>
-              
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => endCall()}
-                className="rounded-full h-12 w-12"
-              >
-                <PhoneOff className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Incoming Call Dialog */}
-      <Dialog open={!!incomingCall} onOpenChange={(open) => !open && declineCall()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Incoming {incomingCall?.type === "video" ? "Video" : "Audio"} Call</DialogTitle>
-            <DialogDescription>
-              {conversationPartner?.name || "Someone"} is calling you
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex justify-center py-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={conversationPartner?.avatar || ""} />
-              <AvatarFallback>{getInitials(conversationPartner?.name || "")}</AvatarFallback>
-            </Avatar>
-          </div>
-          
-          <DialogFooter className="flex sm:justify-center gap-4">
-            <Button
-              variant="destructive"
-              onClick={() => declineCall()}
-              className="flex-1 sm:flex-initial"
-            >
-              <PhoneOff className="mr-2 h-4 w-4" />
-              Decline
-            </Button>
-            
-            <Button
-              variant="default"
-              onClick={() => acceptCall()}
-              className="flex-1 sm:flex-initial"
-            >
-              <Phone className="mr-2 h-4 w-4" />
-              Accept
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
         {/* Conversations sidebar */}
         <div className="md:col-span-1 border rounded-lg flex flex-col overflow-hidden bg-background">
@@ -788,12 +628,6 @@ export default function MessagesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleCall("audio")}>
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleCall("video")}>
-                    <VideoIcon className="h-4 w-4" />
-                  </Button>
                   <Button variant="ghost" size="icon">
                     <Info className="h-4 w-4" />
                   </Button>
