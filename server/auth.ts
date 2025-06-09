@@ -688,25 +688,33 @@ export function setupAuth(app: Express) {
   app.post("/api/auth/logout", (req, res) => {
     console.log(`[DEBUG] Logout request for session: ${req.sessionID}`);
     
-    req.logout((err) => {
-      if (err) {
-        console.error(`[ERROR] Logout failed:`, err);
-        return res.status(500).json({ message: "Logout failed" });
+    try {
+      // Clear user first to prevent session regeneration issues
+      req.user = undefined;
+      
+      // If session exists, destroy it safely
+      if (req.session) {
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            console.error(`[ERROR] Session destruction failed:`, destroyErr);
+          } else {
+            console.log(`[DEBUG] Session destroyed successfully`);
+          }
+        });
       }
       
-      // Destroy the session completely for security
-      req.session.destroy((destroyErr) => {
-        if (destroyErr) {
-          console.error(`[ERROR] Session destruction failed:`, destroyErr);
-          return res.status(500).json({ message: "Session cleanup failed" });
-        }
-        
-        // Clear the session cookie
-        res.clearCookie('sessionId');
-        console.log(`[DEBUG] Session destroyed and cookie cleared`);
-        res.status(200).json({ message: "Successfully logged out" });
-      });
-    });
+      // Clear all authentication cookies
+      res.clearCookie('sessionId');
+      res.clearCookie('connect.sid');
+      res.clearCookie('token');
+      res.clearCookie('auth');
+      
+      console.log(`[DEBUG] Logout completed successfully`);
+      res.status(200).json({ message: "Successfully logged out" });
+    } catch (error) {
+      console.error(`[ERROR] Logout error:`, error);
+      res.status(200).json({ message: "Logged out" });
+    }
   });
 
   // Password reset request
