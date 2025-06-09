@@ -5803,21 +5803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Manual authentication check with fallback
       let authenticatedUser = await getAuthenticatedUser(req);
       
-      if (!authenticatedUser) {
-        // Fallback authentication for testing
-        const testUserId = req.headers['x-test-user-id'];
-        if (testUserId) {
-          const [testUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, parseInt(testUserId as string)));
-          
-          if (testUser) {
-            authenticatedUser = testUser;
-            console.log(`[AUTH] Fallback authentication for gift response: ${testUser.name || testUser.username} (ID: ${testUser.id})`);
-          }
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -5924,21 +5910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let authenticatedUser = await getAuthenticatedUser(req);
       
-      if (!authenticatedUser) {
-        // Fallback authentication for testing
-        const testUserId = req.headers['x-test-user-id'];
-        if (testUserId) {
-          const [testUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, parseInt(testUserId as string)));
-          
-          if (testUser) {
-            authenticatedUser = testUser;
-            console.log(`[AUTH] Fallback authentication for received gifts: ${testUser.name || testUser.username} (ID: ${testUser.id})`);
-          }
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -5982,21 +5954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let authenticatedUser = await getAuthenticatedUser(req);
       
-      if (!authenticatedUser) {
-        // Fallback authentication for testing
-        const testUserId = req.headers['x-test-user-id'];
-        if (testUserId) {
-          const [testUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, parseInt(testUserId as string)));
-          
-          if (testUser) {
-            authenticatedUser = testUser;
-            console.log(`[AUTH] Fallback authentication for sent gifts: ${testUser.name || testUser.username} (ID: ${testUser.id})`);
-          }
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -6056,18 +6014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Fallback to user 9 for development
-      if (!authenticatedUser) {
-        try {
-          const fallbackUser = await storage.getUser(9);
-          if (fallbackUser) {
-            authenticatedUser = fallbackUser;
-            console.log(`[AUTH] Fallback authentication for gift proposal: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         console.log('[AUTH] No authentication available for gift proposal');
@@ -6221,18 +6168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Fallback authentication
-      if (!authenticatedUser) {
-        try {
-          const fallbackUser = await storage.getUser(6); // Da Costa user - gift recipient
-          if (fallbackUser) {
-            console.log(`[AUTH] Fallback authentication for gift response: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-            authenticatedUser = fallbackUser;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!authenticatedUser) {
         return res.status(401).json({ message: 'Authentication required' });
