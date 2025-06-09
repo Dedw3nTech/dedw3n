@@ -534,7 +534,7 @@ export default function MessagesPage() {
             <div className="flex-1 flex justify-center items-center">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ) : !filteredConversations || filteredConversations.length === 0 ? (
+          ) : !apiConversations || apiConversations.length === 0 ? (
             <div className="flex-1 flex flex-col justify-center items-center p-4 text-center">
               <i className="ri-message-3-line text-4xl text-muted-foreground mb-2"></i>
               <p className="text-muted-foreground mb-2">No conversations yet</p>
@@ -547,7 +547,7 @@ export default function MessagesPage() {
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.map((conversation: any) => {
+              {(filteredConversations || apiConversations || []).map((conversation: any) => {
                 // Find the other participant (not current user)
                 let otherParticipant;
                 
