@@ -790,17 +790,19 @@ export default function MessagesPage() {
                       
                       // Fix message content perspective based on who is viewing
                       let displayContent = message.content;
-                      if (message.content.includes("I've sent you a gift:") && isCurrentUser) {
-                        // Current user viewing their own gift message - change to "You sent a gift"
+                      
+                      // For gift messages sent by current user - change perspective to "You sent"
+                      if (isCurrentUser && message.content.includes("I've sent you a gift:")) {
                         displayContent = message.content.replace("🎁 I've sent you a gift:", "🎁 You sent a gift:");
                         displayContent = displayContent.replace("Hope you like this gift!", "Hope they like it!");
                         displayContent = displayContent.replace("Hope you like it!", "Hope they like it!");
-                      } else if (message.content.includes("I've accepted your gift:") && !isCurrentUser) {
-                        // Other user's acceptance message viewed by current user
+                      }
+                      // For gift responses from other users - change perspective 
+                      else if (!isCurrentUser && message.content.includes("I've accepted your gift:")) {
                         displayContent = message.content.replace("✅ Thank you! I've accepted your gift:", "✅ They accepted your gift:");
                         displayContent = displayContent.replace("I really appreciate it!", "");
-                      } else if (message.content.includes("I must decline at this time") && !isCurrentUser) {
-                        // Other user's decline message viewed by current user  
+                      } 
+                      else if (!isCurrentUser && message.content.includes("I must decline at this time")) {
                         displayContent = message.content.replace("❌ Thank you for the gift offer:", "❌ They declined your gift:");
                         displayContent = displayContent.replace(", but I must decline at this time.", "");
                       }
