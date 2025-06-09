@@ -516,13 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
     const { username, password, recaptchaToken } = req.body;
     
-    console.log(`[DEBUG] reCAPTCHA login request received:`);
-    console.log(`[DEBUG] - Username: "${username}"`);
-    console.log(`[DEBUG] - Password provided: ${password ? 'YES' : 'NO'}`);
-    console.log(`[DEBUG] - Password length: ${password ? password.length : 0}`);
-    console.log(`[DEBUG] - reCAPTCHA token: ${recaptchaToken ? 'YES' : 'NO'}`);
-    console.log(`[DEBUG] - Request body keys: ${Object.keys(req.body).join(', ')}`);
-    
+
     try {
       // Verify reCAPTCHA token
       if (!recaptchaToken) {
@@ -557,20 +551,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password using the imported comparePasswords function
-      console.log(`[DEBUG] reCAPTCHA login password verification for ${username}:`);
-      console.log(`[DEBUG] - Password length: ${password.length}`);
-      console.log(`[DEBUG] - Stored hash length: ${user.password.length}`);
-      console.log(`[DEBUG] - Stored hash starts with: ${user.password.substring(0, 10)}...`);
-      
       const isPasswordValid = await comparePasswords(password, user.password);
-      console.log(`[DEBUG] - Password validation result: ${isPasswordValid}`);
       
       if (!isPasswordValid) {
-        console.log(`[DEBUG] reCAPTCHA login: Password validation failed for ${username}`);
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
-      console.log(`[DEBUG] reCAPTCHA login: Password validation successful for ${username}`);
       
       // Login the user using session
       if (req.login && typeof req.login === 'function') {
