@@ -5712,12 +5712,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Create inbox message
-      await storage.createMessage({
+      const messageData = {
         senderId,
-        recipientId,
+        receiverId: recipientId,
         content: `🎁 I've sent you a gift: ${product.name}. ${message || 'Hope you like it!'}`,
         messageType: 'text'
+      };
+      
+      console.log('[DEBUG] Message data before creation:', {
+        senderId: messageData.senderId,
+        receiverId: messageData.receiverId,
+        recipientId,
+        messageType: messageData.messageType
       });
+      
+      await storage.createMessage(messageData);
 
       res.json({ message: 'Gift proposition sent successfully', gift: giftProposition });
     } catch (error) {
