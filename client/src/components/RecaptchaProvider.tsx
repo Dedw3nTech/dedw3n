@@ -39,6 +39,13 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
       return;
     }
 
+    // In development mode, skip reCAPTCHA loading to prevent popup
+    if (import.meta.env.DEV) {
+      console.log('[RECAPTCHA] Development mode detected - using bypass mode');
+      setIsReady(true);
+      return;
+    }
+
     // Check if script is already loaded
     if (window.grecaptcha && window.grecaptcha.ready) {
       console.log('[RECAPTCHA] Script already loaded');
@@ -98,6 +105,12 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
     if (!siteKey) {
       console.error('[RECAPTCHA] Site key not configured');
       throw new Error('reCAPTCHA site key not configured');
+    }
+
+    // In development mode, return a development token
+    if (import.meta.env.DEV) {
+      console.log(`[RECAPTCHA] Development mode - returning bypass token for action: ${action}`);
+      return 'development-bypass-token';
     }
 
     if (!window.grecaptcha) {
