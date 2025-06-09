@@ -190,16 +190,35 @@ export default function MessagesPage() {
   if (responseOtherUser) {
     userMap.set(responseOtherUser.id, responseOtherUser);
   }
+  
+  console.log('User map created:', {
+    currentUserId: currentUser.id,
+    currentUserInfo,
+    conversationPartner,
+    responseOtherUser,
+    userMapEntries: Array.from(userMap.entries())
+  });
 
   // Helper function to get sender info from message
   const getSenderInfo = (message: any) => {
     const senderId = message.senderId || message.userId;
-    return userMap.get(senderId) || {
+    console.log('getSenderInfo called:', { 
+      messageId: message.id, 
+      senderId, 
+      userMapSize: userMap.size,
+      userMapKeys: Array.from(userMap.keys()),
+      foundUser: userMap.get(senderId)
+    });
+    
+    const senderInfo = userMap.get(senderId) || {
       id: senderId,
       name: `User ${senderId}`,
       username: `user${senderId}`,
       avatar: ''
     };
+    
+    console.log('Returning sender info:', senderInfo);
+    return senderInfo;
   };
 
   // Send message mutation (sends a message to a user by their ID)
@@ -759,13 +778,22 @@ export default function MessagesPage() {
                       // Get the actual sender information
                       const senderInfo = getSenderInfo(message);
                       
-                      // Debug logging to understand the display issue
-                      console.log(`Message ${index} from sender ${messageUserId}:`, {
-                        messageUserId,
-                        isCurrentUser,
-                        senderInfo,
-                        currentUserId: currentUser.id
-                      });
+                      // Fix message content perspective based on who is viewing
+                      let displayContent = message.content;
+                      if (message.content.includes("I've sent you a gift:") && isCurrentUser) {
+                        // Current user viewing their own gift message - change to "You sent a gift"
+                        displayContent = message.content.replace("🎁 I've sent you a gift:", "🎁 You sent a gift:");
+                        displayContent = displayContent.replace("Hope you like this gift!", "Hope they like it!");
+                        displayContent = displayContent.replace("Hope you like it!", "Hope they like it!");
+                      } else if (message.content.includes("I've accepted your gift:") && !isCurrentUser) {
+                        // Other user's acceptance message viewed by current user
+                        displayContent = message.content.replace("✅ Thank you! I've accepted your gift:", "✅ They accepted your gift:");
+                        displayContent = displayContent.replace("I really appreciate it!", "");
+                      } else if (message.content.includes("I must decline at this time") && !isCurrentUser) {
+                        // Other user's decline message viewed by current user  
+                        displayContent = message.content.replace("❌ Thank you for the gift offer:", "❌ They declined your gift:");
+                        displayContent = displayContent.replace(", but I must decline at this time.", "");
+                      }
                       
                       return (
                         <div
