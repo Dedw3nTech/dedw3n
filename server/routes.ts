@@ -552,7 +552,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Verify ReCAPTCHA first - fail early if invalid
-      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'login');
+      let isRecaptchaValid = false;
+      
+      // Handle development bypass token
+      if (recaptchaToken === 'dev_bypass_token') {
+        console.log('[RECAPTCHA] Development bypass token detected');
+        const isDevelopment = process.env.NODE_ENV === 'development' || 
+                             req.headers.host?.includes('replit.dev') ||
+                             req.headers.host?.includes('localhost');
+        
+        if (isDevelopment) {
+          console.log('[RECAPTCHA] Development environment detected, allowing bypass');
+          isRecaptchaValid = true;
+        } else {
+          console.log('[RECAPTCHA] Production environment detected, bypass not allowed');
+          isRecaptchaValid = false;
+        }
+      } else {
+        // Verify real reCAPTCHA token
+        isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'login');
+      }
+      
       if (!isRecaptchaValid) {
         return res.status(400).json({ 
           message: "Security verification failed. Please try again.",

@@ -96,27 +96,68 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
 
   const executeRecaptcha = async (action: string): Promise<string> => {
     if (!siteKey) {
+      console.error('[RECAPTCHA] Site key not configured');
       throw new Error('reCAPTCHA site key not configured');
     }
 
-    if (!window.grecaptcha || !window.grecaptcha.ready) {
+    if (!window.grecaptcha) {
+      console.error('[RECAPTCHA] grecaptcha object not found');
       throw new Error('reCAPTCHA not loaded');
     }
 
+    if (!window.grecaptcha.ready) {
+      console.error('[RECAPTCHA] grecaptcha.ready not available');
+      throw new Error('reCAPTCHA ready function not available');
+    }
+
+    if (!window.grecaptcha.execute) {
+      console.error('[RECAPTCHA] grecaptcha.execute not available');
+      throw new Error('reCAPTCHA execute function not available');
+    }
+
+    console.log(`[RECAPTCHA] Starting execution for action: ${action}`);
+    console.log(`[RECAPTCHA] Site key: ${siteKey.substring(0, 10)}...`);
+    console.log(`[RECAPTCHA] grecaptcha object:`, typeof window.grecaptcha);
+
     return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        console.error('[RECAPTCHA] Execution timeout after 15 seconds');
+        reject(new Error('reCAPTCHA execution timeout'));
+      }, 15000);
+
       window.grecaptcha.ready(async () => {
         try {
-          console.log(`[RECAPTCHA] Executing action: ${action}`);
-          const token = await window.grecaptcha.execute(siteKey, { action });
+          console.log(`[RECAPTCHA] Ready callback executed, now calling execute`);
+          console.log(`[RECAPTCHA] Calling grecaptcha.execute with:`, { siteKey: siteKey.substring(0, 10) + '...', action });
           
-          if (!token || typeof token !== 'string') {
-            throw new Error('Invalid token received');
+          const token = await window.grecaptcha.execute(siteKey, { action });
+          clearTimeout(timeout);
+          
+          console.log(`[RECAPTCHA] Raw token received:`, typeof token, token ? token.length : 'null');
+          
+          if (!token) {
+            console.error('[RECAPTCHA] No token received from grecaptcha.execute');
+            throw new Error('No token received from reCAPTCHA');
+          }
+          
+          if (typeof token !== 'string') {
+            console.error('[RECAPTCHA] Invalid token type:', typeof token);
+            throw new Error('Invalid token type received from reCAPTCHA');
+          }
+          
+          if (token.length < 20) {
+            console.error('[RECAPTCHA] Token too short:', token.length);
+            throw new Error('Invalid token length received from reCAPTCHA');
           }
 
-          console.log(`[RECAPTCHA] Token generated successfully for action: ${action}`);
+          console.log(`[RECAPTCHA] Token generated successfully for action: ${action}, length: ${token.length}`);
           resolve(token);
         } catch (error) {
-          console.error('[RECAPTCHA] Execution failed:', error);
+          clearTimeout(timeout);
+          console.error('[RECAPTCHA] Execution failed with error:', error);
+          console.error('[RECAPTCHA] Error type:', typeof error);
+          console.error('[RECAPTCHA] Error message:', error instanceof Error ? error.message : 'Unknown error');
+          console.error('[RECAPTCHA] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
           reject(error);
         }
       });
