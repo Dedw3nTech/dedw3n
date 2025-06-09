@@ -11,6 +11,9 @@ export function enableAutoLogin(): void {
     localStorage.removeItem('userData');
     sessionStorage.removeItem('userData');
     
+    // Clear auto-login disabled flag
+    localStorage.removeItem('auto_login_disabled');
+    
     // Enable auto-login
     localStorage.setItem('enable_auto_login', 'true');
     
@@ -39,6 +42,19 @@ export function disableAutoLogin(): void {
 // Check if auto-login is enabled
 export function isAutoLoginEnabled(): boolean {
   try {
+    // Check if auto-login has been explicitly disabled
+    if (localStorage.getItem('auto_login_disabled') === 'true') {
+      console.log('Auto-login explicitly disabled');
+      return false;
+    }
+    
+    // Check if user is currently logged out
+    if (localStorage.getItem('dedwen_logged_out') === 'true' || 
+        sessionStorage.getItem('dedwen_logged_out') === 'true') {
+      console.log('Auto-login blocked - user is logged out');
+      return false;
+    }
+    
     return localStorage.getItem('enable_auto_login') === 'true' ||
            window.location.search.includes('auto_login=true') ||
            window.location.search.includes('serruti=true');

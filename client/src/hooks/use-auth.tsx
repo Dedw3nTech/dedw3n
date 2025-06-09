@@ -419,6 +419,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       console.log('[FAST-LOGOUT] Starting client logout process');
       
+      // Disable auto-login immediately to prevent re-authentication
+      try {
+        localStorage.removeItem('enable_auto_login');
+        sessionStorage.removeItem('enable_auto_login');
+        localStorage.setItem('auto_login_disabled', 'true');
+        console.log('[FAST-LOGOUT] Auto-login disabled');
+      } catch (error) {
+        console.warn('[FAST-LOGOUT] Error disabling auto-login:', error);
+      }
+      
+      // Set logged out flag to prevent immediate re-authentication
+      setLoggedOutFlag(true);
+      
       // Fire logout request without waiting (let it complete in background)
       apiRequest("POST", "/api/logout", undefined, {
         headers: { 'X-User-Logged-Out': 'true' }
@@ -438,6 +451,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       
+      // Clear any authentication state from session storage
+      try {
+        sessionStorage.clear();
+        // Only clear specific auth-related items from localStorage to preserve other settings
+        localStorage.removeItem('userData');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('jwt_token');
+      } catch (error) {
+        console.warn('[FAST-LOGOUT] Error clearing storage:', error);
+      }
+      
       // Navigate immediately
       setLocation("/logout-success");
       
@@ -451,6 +475,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearUserData();
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
+      
+      // Disable auto-login even on error
+      try {
+        localStorage.removeItem('enable_auto_login');
+        localStorage.setItem('auto_login_disabled', 'true');
+      } catch (error) {
+        console.warn('[FAST-LOGOUT] Error disabling auto-login on error:', error);
+      }
+      
       setLocation("/logout-success");
     },
   });
