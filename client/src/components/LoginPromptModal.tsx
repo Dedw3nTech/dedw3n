@@ -13,10 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
-import { useTypedTranslation } from "@/hooks/use-master-translation";
+import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
@@ -74,12 +75,26 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     gender: ""
   });
 
+  const [rememberPassword, setRememberPassword] = useState(false);
+
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
 
-  // Translation using typed hook
+  // Translation using typed hook with additional remember password texts
+  const rememberPasswordTexts = useMemo(() => [
+    "Remember Password",
+    "Remember my password for next time"
+  ], []);
+  
+  const { translations: rememberPasswordTranslations } = useMasterBatchTranslation(rememberPasswordTexts, 'high');
+  
+  const tRemember = rememberPasswordTexts.reduce((acc, text, index) => {
+    acc[text] = rememberPasswordTranslations[index] || text;
+    return acc;
+  }, {} as Record<string, string>);
+
   const t = useTypedTranslation();
 
   // Calculate age from date of birth

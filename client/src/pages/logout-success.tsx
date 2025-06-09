@@ -12,6 +12,10 @@ export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    // Declare cleanup variables at function scope
+    let preventNavigation: ((e: BeforeUnloadEvent) => void) | null = null;
+    let maintainLogoutState: NodeJS.Timeout | null = null;
+    let cleanupTimer: NodeJS.Timeout | null = null;
     // Force page title to be exactly as requested
     document.title = 'You have successfully logged out';
     
@@ -123,7 +127,7 @@ export default function LogoutSuccess() {
       }
       
       // Prevent automatic navigation away from logout page for 60 seconds
-      const preventNavigation = (e: BeforeUnloadEvent) => {
+      preventNavigation = (e: BeforeUnloadEvent) => {
         // Only prevent if we're still on logout success page
         if (window.location.pathname.includes('/logout-success')) {
           e.preventDefault();
@@ -134,16 +138,20 @@ export default function LogoutSuccess() {
       window.addEventListener('beforeunload', preventNavigation);
       
       // Set up a timer to maintain logout state visibility
-      const maintainLogoutState = setInterval(() => {
+      maintainLogoutState = setInterval(() => {
         // Ensure logout flags remain set while on this page
         localStorage.setItem('dedwen_logged_out', 'true');
         sessionStorage.setItem('dedwen_logged_out', 'true');
       }, 5000);
       
       // Cleanup after 60 seconds or when user navigates away
-      const cleanupTimer = setTimeout(() => {
-        window.removeEventListener('beforeunload', preventNavigation);
-        clearInterval(maintainLogoutState);
+      cleanupTimer = setTimeout(() => {
+        if (preventNavigation) {
+          window.removeEventListener('beforeunload', preventNavigation);
+        }
+        if (maintainLogoutState) {
+          clearInterval(maintainLogoutState);
+        }
       }, 60000);
       
       console.log('Logout success page: Applied comprehensive security and anti-caching measures');
@@ -157,9 +165,15 @@ export default function LogoutSuccess() {
         addedMetaTags.forEach(tag => {
           document.head.removeChild(tag);
         });
-        window.removeEventListener('beforeunload', preventNavigation);
-        clearInterval(maintainLogoutState);
-        clearTimeout(cleanupTimer);
+        if (preventNavigation) {
+          window.removeEventListener('beforeunload', preventNavigation);
+        }
+        if (maintainLogoutState) {
+          clearInterval(maintainLogoutState);
+        }
+        if (cleanupTimer) {
+          clearTimeout(cleanupTimer);
+        }
       } catch (e) {
         console.error('Failed to cleanup logout success page:', e);
       }
