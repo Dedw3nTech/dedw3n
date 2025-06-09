@@ -680,6 +680,17 @@ export function setupAuth(app: Express) {
           code: "RATE_LIMIT_EXCEEDED"
         });
       }
+
+      // Verify CAPTCHA if provided
+      if (req.body.captchaId && req.body.captchaInput) {
+        if (!verifyCaptcha(req.body.captchaId, req.body.captchaInput)) {
+          console.log(`[SECURITY] Invalid CAPTCHA for registration attempt: ${req.body.username}`);
+          return res.status(400).json({ 
+            message: "Invalid CAPTCHA. Please try again.",
+            code: "INVALID_CAPTCHA"
+          });
+        }
+      }
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
