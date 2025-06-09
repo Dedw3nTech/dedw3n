@@ -111,12 +111,13 @@ export default function ShippingCostCalculator({
         ]
       };
 
-      // Call escrow API endpoint
+      // Call escrow API endpoint with proper credentials
       const response = await fetch('/api/escrow/create-transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include session cookies
         body: JSON.stringify(escrowData)
       });
 

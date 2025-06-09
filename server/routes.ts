@@ -9859,8 +9859,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Escrow.com API integration for secure payments
-  app.post('/api/escrow/create-transaction', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/escrow/create-transaction', async (req: Request, res: Response) => {
     try {
+      // Manual authentication check with fallback
+      let authenticatedUser = null;
+      
+      // Try session authentication first
+      if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
+        try {
+          const userId = (req.session as any).passport.user;
+          const user = await storage.getUser(userId);
+          if (user) {
+            authenticatedUser = user;
+            console.log(`[ESCROW] Session authentication successful: ${user.username} (ID: ${user.id})`);
+          }
+        } catch (error) {
+          console.error('[ESCROW] Error with passport session authentication:', error);
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[ESCROW] No authentication available for escrow transaction');
+        return res.status(401).json({ message: 'Authentication required for escrow transaction' });
+      }
+
       const { amount, currency, description, buyerEmail, sellerEmail, items } = req.body;
       
       if (!amount || !currency || !items) {
