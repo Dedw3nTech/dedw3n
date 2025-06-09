@@ -62,30 +62,18 @@ export default function UserMenu() {
     );
   }
 
-  const handleLogout = async () => {
-    // Close menu immediately for better UX
+  const handleLogout = () => {
+    // Close menu and start logout immediately
     setIsOpen(false);
     
-    // Show loading state
-    toast({
-      title: t('auth.logging_out') || 'Logging out',
-      description: t('auth.please_wait') || 'Please wait...',
+    // Start instant logout process (non-blocking)
+    performUnifiedLogout({
+      redirectToSuccessPage: true,
+      clearRememberedCredentials: false,
+      broadcastToTabs: true
+    }).catch(() => {
+      // Silent fail - user already redirected
     });
-    
-    try {
-      // Start logout process immediately
-      await performUnifiedLogout({
-        redirectToSuccessPage: true,
-        clearRememberedCredentials: false,
-        broadcastToTabs: true
-      });
-    } catch (error) {
-      toast({
-        title: t('auth.logout_error') || 'Logout Error',
-        description: t('auth.try_again') || 'Please try again',
-        variant: "destructive"
-      });
-    }
   };
 
   const handleSwitchToDashboard = () => {

@@ -11,23 +11,21 @@ export default function LogoutSuccess() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Set page title immediately for faster perception
+    // Instant page setup - no blocking operations
     document.title = 'You have successfully logged out';
     
-    // Handle browser back button (minimal DOM manipulation for speed)
+    // Minimal back button handling
     const handlePopState = () => setLocation('/');
-    window.history.pushState(null, '', window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', handlePopState, { once: true });
     
-    // Auto-clear logout state after 15 seconds to allow fresh logins
+    // Fast 10-second auto-clear for quicker re-login
     const clearTimer = setTimeout(() => {
       clearLogoutState();
       console.log('Logout state auto-cleared after timeout');
-    }, 15000);
+    }, 10000);
     
-    console.log('Logout success page: Applied fast security measures');
+    console.log('Logout success page: Instant load complete');
     
-    // Cleanup
     return () => {
       window.removeEventListener('popstate', handlePopState);
       clearTimeout(clearTimer);

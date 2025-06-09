@@ -49,7 +49,7 @@ class UnifiedLogoutSystem {
   }
 
   public async performLogout(config: LogoutConfig = {}): Promise<void> {
-    console.log('[UNIFIED-LOGOUT] Starting logout process');
+    console.log('[UNIFIED-LOGOUT] Starting fast logout process');
 
     const {
       redirectToSuccessPage = true,
@@ -57,54 +57,38 @@ class UnifiedLogoutSystem {
       broadcastToTabs = true
     } = config;
 
-    try {
-      // 1. Clear React Query cache immediately
-      queryClient.clear();
-
-      // 2. Clear user data from storage
-      this.clearUserData();
-
-      // 3. Clear remembered credentials if requested
-      if (clearRememberedCredentials) {
-        localStorage.removeItem('dedwen_remembered_credentials');
-      }
-
-      // 4. Call server logout endpoint
-      await this.callServerLogout();
-
-      // 5. Set unified logout flags
-      this.setLogoutFlags();
-
-      // 6. Broadcast to other tabs if needed
-      if (broadcastToTabs) {
-        this.broadcastLogout();
-      }
-
-      // 7. Redirect to success page
-      if (redirectToSuccessPage) {
-        window.location.href = '/logout-success';
-      }
-
-      console.log('[UNIFIED-LOGOUT] Logout completed successfully');
-
-    } catch (error) {
-      console.error('[UNIFIED-LOGOUT] Logout error:', error);
-      
-      // Even on error, clear local state and redirect
-      this.clearUserData();
-      this.setLogoutFlags();
-      
-      if (redirectToSuccessPage) {
-        window.location.href = '/logout-success';
-      }
+    // Immediate client-side cleanup (steps 2-6) - no awaiting
+    queryClient.clear();
+    this.clearUserData();
+    
+    if (clearRememberedCredentials) {
+      localStorage.removeItem('dedwen_remembered_credentials');
     }
+    
+    this.setLogoutFlags();
+    
+    if (broadcastToTabs) {
+      this.broadcastLogout();
+    }
+
+    // Start server logout in background (non-blocking)
+    this.callServerLogout().catch(() => {
+      // Silent fail - client cleanup already done
+    });
+
+    // Immediate redirect (step 7)
+    if (redirectToSuccessPage) {
+      window.location.href = '/logout-success';
+    }
+
+    console.log('[UNIFIED-LOGOUT] Fast logout completed');
   }
 
   private async callServerLogout(): Promise<void> {
     try {
-      // Add timeout for faster logout response
+      // Ultra-fast 1-second timeout for background cleanup
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 1000);
       
       const response = await fetch('/api/logout', {
         method: 'POST',
@@ -112,24 +96,19 @@ class UnifiedLogoutSystem {
         headers: {
           'Content-Type': 'application/json',
           'X-Unified-Logout': 'true',
-          'X-Fast-Logout': 'true'
+          'X-Fast-Logout': 'true',
+          'X-Background-Logout': 'true'
         },
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        console.warn('[UNIFIED-LOGOUT] Server logout warning:', response.status);
-      } else {
-        console.log('[UNIFIED-LOGOUT] Server logout completed successfully');
+      if (response.ok) {
+        console.log('[UNIFIED-LOGOUT] Background server logout completed');
       }
     } catch (error: any) {
-      if (error?.name === 'AbortError') {
-        console.warn('[UNIFIED-LOGOUT] Server logout timeout - continuing with client cleanup');
-      } else {
-        console.warn('[UNIFIED-LOGOUT] Server logout error (non-blocking):', error);
-      }
+      // Silent fail for background operation
     }
   }
 
