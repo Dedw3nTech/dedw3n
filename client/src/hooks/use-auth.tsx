@@ -417,38 +417,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Show toast notification that logout is in progress
-      toast({
-        title: t('auth.logging_out') || "Logging out",
-        description: t('auth.please_wait') || "Please wait...",
+      console.log('[FAST-LOGOUT] Starting client logout process');
+      
+      // Fire logout request without waiting (let it complete in background)
+      apiRequest("POST", "/api/logout", undefined, {
+        headers: { 'X-User-Logged-Out': 'true' }
+      }).catch(error => {
+        console.warn('[FAST-LOGOUT] Server logout error (non-blocking):', error);
       });
       
-      // Clear any logged out flag to allow immediate re-login after logout completion
-      setLoggedOutFlag(false);
-      
-      // Add cache-busting parameter to prevent issues with caching
-      const timestamp = new Date().getTime();
-      const cacheBuster = `?_cb=${timestamp}`;
-      
-      // Call the real API endpoint for logout with options for network-level debugging
-      const response = await apiRequest("POST", `/api/logout${cacheBuster}`, undefined, {
-        // Set cache-control headers explicitly
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-          // Add special header to prevent auto-login
-          'X-Auth-Logged-Out': 'true'
-        }
-      });
-      
-      // Special handling for 204 status (No Content)
-      if (response.status === 204) {
-        console.log('Logout successful with 204 status');
-        return null;
-      }
-      
-      return response;
+      // Return immediately for fast user experience
+      return { success: true };
     },
     onSuccess: () => {
       console.log('Logout mutation successful, cleaning up client state');

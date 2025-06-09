@@ -42,6 +42,7 @@ import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 import TranslationOptimizer from "./translation-optimizer";
 import { queryCache } from "./query-cache";
+import { createFastLogout, logoutStateMiddleware } from "./fast-logout";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -2246,77 +2247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed due to server error" });
     });
   });
-  // Single logout endpoint - handles session cleanup properly
-  app.post("/api/logout", async (req, res) => {
-    try {
-      console.log('[LOGOUT] Starting logout process');
-      
-      // Use a promise-based approach to handle logout properly
-      const performLogout = () => {
-        return new Promise<void>((resolve) => {
-          // 1. Clear Passport.js session if authenticated and session exists
-          if (req.isAuthenticated && req.isAuthenticated() && req.session) {
-            // Use passport's logout but handle session regeneration errors gracefully
-            req.logout({ keepSessionInfo: false }, (err) => {
-              if (err) {
-                console.error('[LOGOUT] Passport logout error:', err);
-                // Continue with manual cleanup even if passport logout fails
-              } else {
-                console.log('[LOGOUT] Passport logout successful');
-              }
-              resolve();
-            });
-          } else {
-            console.log('[LOGOUT] No authenticated session to logout');
-            resolve();
-          }
-        });
-      };
-
-      await performLogout();
-      
-      // 2. Destroy session if it exists
-      if (req.session) {
-        req.session.destroy((err) => {
-          if (err) {
-            console.error('[LOGOUT] Session destroy error:', err);
-          } else {
-            console.log('[LOGOUT] Session destroyed');
-          }
-        });
-      }
-      
-      // 3. Clear authentication cookies
-      res.clearCookie('connect.sid', { path: '/' });
-      res.clearCookie('sessionId', { path: '/' });
-      res.clearCookie('token', { path: '/' });
-      res.clearCookie('auth', { path: '/' });
-      
-      // 4. Clear user reference
-      req.user = undefined;
-      
-      // 5. Set logout headers
-      res.setHeader('X-Auth-Logged-Out', 'true');
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      
-      console.log('[LOGOUT] Logout completed successfully');
-      
-      // Return simple success response
-      res.status(200).json({ 
-        success: true, 
-        message: 'Logged out successfully',
-        redirect: '/auth'
-      });
-      
-    } catch (error) {
-      console.error('[LOGOUT] Logout error:', error);
-      res.status(200).json({ 
-        success: true, 
-        message: 'Logged out',
-        redirect: '/auth'
-      });
-    }
-  });
+  // Fast logout endpoint - prioritizes speed and eliminates timeouts
+  app.post("/api/logout", createFastLogout());
 
   // User endpoint for authentication checks  
   app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
