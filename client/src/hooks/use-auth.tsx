@@ -32,10 +32,10 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<any, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { recaptchaToken?: string }>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
+type LoginData = Pick<InsertUser, "username" | "password"> & { recaptchaToken?: string };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         debugger; // For Node.js debugging as suggested in nodejs.org/api/debugger.html
         console.log('Login attempt with credentials (username only):', credentials.username);
         
-        const res = await apiRequest("POST", "/api/login", credentials);
+        const res = await apiRequest("POST", "/api/auth/login-with-recaptcha", credentials);
         
         // Add debugger to inspect response
         debugger; // For Node.js debugging

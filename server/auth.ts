@@ -929,5 +929,5 @@ export function setupAuth(app: Express) {
   });
 }
 
-// Export reCAPTCHA verification function for use in routes
-export { verifyRecaptcha };
+// Export reCAPTCHA verification function and password utilities for use in routes
+export { verifyRecaptcha, comparePasswords };
