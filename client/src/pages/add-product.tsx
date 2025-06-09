@@ -86,6 +86,7 @@ export default function AddProduct() {
   const { toast } = useToast();
   const [isVendor, setIsVendor] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
+  const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
 
   // Comprehensive Add Product Page Text Collection for Translation
   const addProductTexts = [
@@ -382,6 +383,28 @@ export default function AddProduct() {
     },
   });
 
+  // Add custom field handler
+  const addCustomField = () => {
+    const newField = {
+      id: `custom_${Date.now()}`,
+      name: '',
+      value: ''
+    };
+    setCustomFields(prev => [...prev, newField]);
+  };
+
+  // Remove custom field handler
+  const removeCustomField = (id: string) => {
+    setCustomFields(prev => prev.filter(field => field.id !== id));
+  };
+
+  // Update custom field handler
+  const updateCustomField = (id: string, field: 'name' | 'value', newValue: string) => {
+    setCustomFields(prev => prev.map(f => 
+      f.id === id ? { ...f, [field]: newValue } : f
+    ));
+  };
+
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
     // Check if user has isVendor flag set to true (system-level vendor status)
@@ -394,9 +417,15 @@ export default function AddProduct() {
       return;
     }
     
+    // Add custom fields to submission data
+    const submitData = {
+      ...values,
+      customFields: customFields.filter(field => field.name && field.value)
+    };
+    
     // If user has isVendor but no vendorId, we'll handle this on the server side
     // The server will create a temporary vendor profile if needed
-    createProductMutation.mutate(values);
+    createProductMutation.mutate(submitData);
   };
 
   // Handle vendor creation
@@ -874,10 +903,41 @@ export default function AddProduct() {
                           )}
                         />
                       
-                      <Button type="button" variant="outline" className="w-full">
+                      <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>
                         <Plus className="mr-2 h-4 w-4" />
                         {t("Add customs information")}
                       </Button>
+                      
+                      {/* Display custom fields */}
+                      {customFields.length > 0 && (
+                        <div className="space-y-3 mt-4">
+                          {customFields.map((field) => (
+                            <div key={field.id} className="grid grid-cols-2 gap-2 p-3 border rounded-lg">
+                              <Input
+                                placeholder="Field name"
+                                value={field.name}
+                                onChange={(e) => updateCustomField(field.id, 'name', e.target.value)}
+                              />
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Field value"
+                                  value={field.value}
+                                  onChange={(e) => updateCustomField(field.id, 'value', e.target.value)}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeCustomField(field.id)}
+                                  className="px-3"
+                                >
+                                  ×
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       </div>
                     </div>
                   )}
