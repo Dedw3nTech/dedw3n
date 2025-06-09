@@ -64,18 +64,27 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Set up session using the session store from storage
+  // Generate cryptographically secure session secret if not provided
+  const sessionSecret = process.env.SESSION_SECRET || randomBytes(64).toString('hex');
+  
+  // Set up session using the session store from storage with enhanced security
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "socialmarket-secret-key",
+    secret: sessionSecret,
     resave: false,
-    saveUninitialized: true, // Ensures guest sessions are saved
+    saveUninitialized: false, // Don't save uninitialized sessions for security
     store: storage.sessionStore, // Use the session store from storage
+    name: 'sessionId', // Change default session cookie name
+    genid: () => {
+      // Generate cryptographically secure session IDs (minimum 128 bits)
+      return randomBytes(32).toString('hex'); // 256 bits for extra security
+    },
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-      httpOnly: true,
-      sameSite: 'lax',
-      // secure: process.env.NODE_ENV === 'production', // Enable in production
-    }
+      maxAge: 1000 * 60 * 15, // 15 minutes for sensitive applications
+      httpOnly: true, // Prevent XSS attacks
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict', // Strict CSRF protection
+    },
+    rolling: true, // Reset expiration on activity (idle timeout)
   };
 
   // Trust the first proxy if behind a reverse proxy
@@ -84,6 +93,40 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Session activity tracking middleware for security monitoring
+  app.use((req, res, next) => {
+    if (req.session && req.isAuthenticated()) {
+      const now = new Date();
+      
+      // Check for session timeout (idle sessions)
+      if (req.session.lastActivity) {
+        const timeSinceLastActivity = now.getTime() - new Date(req.session.lastActivity).getTime();
+        const timeoutMinutes = 15; // 15 minutes idle timeout
+        
+        if (timeSinceLastActivity > timeoutMinutes * 60 * 1000) {
+          console.log(`[SECURITY] Session timeout for user ${req.user?.id} after ${Math.round(timeSinceLastActivity / 60000)} minutes`);
+          
+          // Destroy expired session
+          req.session.destroy((err) => {
+            if (err) {
+              console.error(`[ERROR] Failed to destroy expired session:`, err);
+            }
+          });
+          
+          return res.status(401).json({ 
+            message: "Session expired due to inactivity",
+            code: "SESSION_TIMEOUT"
+          });
+        }
+      }
+      
+      // Update last activity timestamp
+      req.session.lastActivity = now.toISOString();
+    }
+    
+    next();
+  });
 
   // Configure passport to use local strategy with enhanced security
   passport.use(
@@ -194,23 +237,30 @@ export function setupAuth(app: Express) {
 
       // Log in the user
       console.log(`[DEBUG] Calling req.login for newly created user ${user.username}`);
-      req.login(user, (err) => {
+      // Regenerate session on registration to prevent session fixation
+      req.session.regenerate((err) => {
         if (err) {
-          console.error(`[ERROR] Login after registration failed:`, err);
+          console.error(`[ERROR] Session regeneration after registration failed:`, err);
           return next(err);
         }
         
-        console.log(`[DEBUG] User ${user.username} logged in after registration`);
-        console.log(`[DEBUG] Session ID after login:`, req.sessionID);
-        
-        // Double-check authentication status
-        console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
-        console.log(`[DEBUG] User in session:`, req.user);
-        console.log(`[DEBUG] Session object:`, req.session);
-        
-        // Return user without password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+        req.login(user, (err) => {
+          if (err) {
+            console.error(`[ERROR] Login after registration failed:`, err);
+            return next(err);
+          }
+          
+          console.log(`[DEBUG] User ${user.username} logged in after registration with new session`);
+          console.log(`[DEBUG] New session ID after login:`, req.sessionID);
+          
+          // Double-check authentication status
+          console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
+          console.log(`[DEBUG] User in session:`, req.user);
+          
+          // Return user without password
+          const { password, ...userWithoutPassword } = user;
+          res.status(201).json(userWithoutPassword);
+        });
       });
     } catch (error) {
       console.error(`[ERROR] Registration failed:`, error);
@@ -232,31 +282,54 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
-      console.log(`[DEBUG] User ${user.username} authenticated, calling req.login`);
+      console.log(`[DEBUG] User ${user.username} authenticated, regenerating session`);
       
-      req.login(user, (err: Error | null) => {
+      // Regenerate session on login to prevent session fixation attacks
+      req.session.regenerate((err) => {
         if (err) {
-          console.error(`[ERROR] req.login error:`, err);
+          console.error(`[ERROR] Session regeneration on login failed:`, err);
           return next(err);
         }
         
-        console.log(`[DEBUG] req.login successful for ${user.username}`);
-        console.log(`[DEBUG] Session ID: ${req.sessionID}`);
-        console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
-        
-        // Return user without password
-        const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+        req.login(user, (err: Error | null) => {
+          if (err) {
+            console.error(`[ERROR] req.login error:`, err);
+            return next(err);
+          }
+          
+          console.log(`[DEBUG] req.login successful for ${user.username} with new session`);
+          console.log(`[DEBUG] New session ID: ${req.sessionID}`);
+          console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
+          
+          // Return user without password
+          const { password, ...userWithoutPassword } = user;
+          return res.json(userWithoutPassword);
+        });
       });
     })(req, res, next);
   });
 
   app.post("/api/auth/logout", (req, res) => {
+    console.log(`[DEBUG] Logout request for session: ${req.sessionID}`);
+    
     req.logout((err) => {
       if (err) {
+        console.error(`[ERROR] Logout failed:`, err);
         return res.status(500).json({ message: "Logout failed" });
       }
-      res.status(200).json({ message: "Successfully logged out" });
+      
+      // Destroy the session completely for security
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          console.error(`[ERROR] Session destruction failed:`, destroyErr);
+          return res.status(500).json({ message: "Session cleanup failed" });
+        }
+        
+        // Clear the session cookie
+        res.clearCookie('sessionId');
+        console.log(`[DEBUG] Session destroyed and cookie cleared`);
+        res.status(200).json({ message: "Successfully logged out" });
+      });
     });
   });
 
