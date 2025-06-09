@@ -13,7 +13,7 @@ import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { RecaptchaProvider } from "@/components/RecaptchaProvider";
+import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider";
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
@@ -416,7 +416,7 @@ function App() {
   // Using forceRefresh in a key forces re-rendering when language changes
   return (
     <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
-      <RecaptchaProvider>
+      <UnifiedRecaptchaProvider>
         <GPCProvider>
           <CookieConsentProvider>
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -488,7 +488,7 @@ function App() {
           </ThemeProvider>
           </CookieConsentProvider>
         </GPCProvider>
-      </RecaptchaProvider>
+      </UnifiedRecaptchaProvider>
     </QueryClientProvider>
   );
 }

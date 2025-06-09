@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
-import { useRecaptcha } from "@/components/RecaptchaProvider";
+import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { 
   User, 
@@ -50,7 +50,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const { executeRecaptcha, isReady } = useRecaptcha();
+  const { executeRecaptcha, isReady, isLoading, error } = useUnifiedRecaptcha();
   const { 
     validateEmail, 
     isValidating, 
@@ -202,39 +202,23 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
         return;
       }
 
-      // Execute reCAPTCHA v3 verification
+      // Execute reCAPTCHA v3 verification - no bypass allowed
       let recaptchaToken = '';
       try {
-        console.log('Starting reCAPTCHA execution...');
+        console.log('[UNIFIED-RECAPTCHA] Starting secure authentication verification...');
         recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-        console.log('reCAPTCHA token generated successfully');
+        console.log('[UNIFIED-RECAPTCHA] Security verification completed successfully');
       } catch (recaptchaError) {
-        console.error('reCAPTCHA execution failed:', recaptchaError);
+        console.error('[UNIFIED-RECAPTCHA] Security verification failed:', recaptchaError);
         
-        // Check if this is a domain configuration issue
-        const errorMessage = recaptchaError instanceof Error ? recaptchaError.message : 'Unknown error';
-        const isDomainError = errorMessage.includes('Invalid domain') || 
-                             errorMessage.includes('not loaded') || 
-                             errorMessage.includes('execute');
+        const errorMessage = recaptchaError instanceof Error ? recaptchaError.message : 'Security verification failed';
         
-        if (isDomainError) {
-          // For development/testing, attempt login without reCAPTCHA but with warning
-          console.warn('[RECAPTCHA] Domain configuration issue detected, proceeding without reCAPTCHA verification');
-          recaptchaToken = 'dev_bypass_token'; // Special token for development
-          
-          toast({
-            title: "Development Mode",
-            description: "reCAPTCHA domain needs configuration. Using development bypass.",
-            variant: "default"
-          });
-        } else {
-          toast({
-            title: "Security Verification Failed",
-            description: "Please refresh the page and try again.",
-            variant: "destructive"
-          });
-          return;
-        }
+        toast({
+          title: "Security Verification Required",
+          description: `Authentication requires security verification. ${errorMessage}`,
+          variant: "destructive"
+        });
+        return;
       }
 
       if (isLogin) {
