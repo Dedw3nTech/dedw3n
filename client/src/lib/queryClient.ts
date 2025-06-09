@@ -42,9 +42,16 @@ export function setLoggedOutFlag(isLoggedOut: boolean): void {
         storageArea: localStorage
       }));
       
-      // Automatically clear logout flag after 10 seconds to prevent permanent login blocks
+      // Automatically clear logout flag after 30 seconds to prevent permanent login blocks
+      // But only if user is not on logout success page
       setTimeout(() => {
         try {
+          // Don't auto-clear if user is still on logout success page
+          if (window.location.pathname.includes('/logout-success')) {
+            console.log('Skipping auto-clear - user still on logout success page');
+            return;
+          }
+          
           localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
           sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
           
@@ -57,7 +64,7 @@ export function setLoggedOutFlag(isLoggedOut: boolean): void {
         } catch (e) {
           console.error('Error auto-clearing cross-domain logout flag:', e);
         }
-      }, 10000);
+      }, 30000);
     } else {
       // Clear all logout indicators
       localStorage.removeItem(LOGGED_OUT_FLAG_KEY);

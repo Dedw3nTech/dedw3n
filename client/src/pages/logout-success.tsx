@@ -122,19 +122,46 @@ export default function LogoutSuccess() {
         }, { once: true });
       }
       
+      // Prevent automatic navigation away from logout page for 60 seconds
+      const preventNavigation = (e: BeforeUnloadEvent) => {
+        // Only prevent if we're still on logout success page
+        if (window.location.pathname.includes('/logout-success')) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      };
+      
+      window.addEventListener('beforeunload', preventNavigation);
+      
+      // Set up a timer to maintain logout state visibility
+      const maintainLogoutState = setInterval(() => {
+        // Ensure logout flags remain set while on this page
+        localStorage.setItem('dedwen_logged_out', 'true');
+        sessionStorage.setItem('dedwen_logged_out', 'true');
+      }, 5000);
+      
+      // Cleanup after 60 seconds or when user navigates away
+      const cleanupTimer = setTimeout(() => {
+        window.removeEventListener('beforeunload', preventNavigation);
+        clearInterval(maintainLogoutState);
+      }, 60000);
+      
       console.log('Logout success page: Applied comprehensive security and anti-caching measures');
     } catch (e) {
       console.error('Error during logout security cleanup:', e);
     }
     
-    // Clean up function to remove meta tags when component unmounts
+    // Clean up function to remove meta tags and event listeners when component unmounts
     return () => {
       try {
         addedMetaTags.forEach(tag => {
           document.head.removeChild(tag);
         });
+        window.removeEventListener('beforeunload', preventNavigation);
+        clearInterval(maintainLogoutState);
+        clearTimeout(cleanupTimer);
       } catch (e) {
-        console.error('Failed to remove meta tags:', e);
+        console.error('Failed to cleanup logout success page:', e);
       }
     };
   }, [setLocation]);

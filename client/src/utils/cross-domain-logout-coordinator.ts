@@ -33,7 +33,10 @@ export class CrossDomainLogoutCoordinator {
     this.storageEventListener = (event: StorageEvent) => {
       if (event.key === 'dedwen_logged_out' && event.newValue === 'true') {
         console.log('[CROSS-DOMAIN] Logout detected from another tab/domain');
-        this.handleLogoutEvent('storage');
+        // Don't process if already on logout success page
+        if (!window.location.pathname.includes('/logout-success')) {
+          this.handleLogoutEvent('storage');
+        }
       }
     };
     
