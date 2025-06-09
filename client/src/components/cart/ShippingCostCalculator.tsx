@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, Calculator, Upload, Plus, X, Truck, MapPin, Package, Shield } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
+import { useToast } from "@/hooks/use-toast";
 
 export type CustomCarrier = {
   id: string;
@@ -85,6 +86,7 @@ export default function ShippingCostCalculator({
   
   const { formatPrice } = useCurrency();
   const { translateText } = useMasterTranslation();
+  const { toast } = useToast();
 
   // Handle escrow payment integration
   const handleEscrowPayment = async () => {
@@ -123,13 +125,26 @@ export default function ShippingCostCalculator({
 
       if (response.ok) {
         const result = await response.json();
+        toast({
+          title: translateText('Escrow Transaction Created'),
+          description: translateText('Redirecting to secure payment page...'),
+        });
         // Redirect to escrow payment page
         window.open(result.escrowUrl, '_blank');
       } else {
-        console.error('Failed to create escrow transaction');
+        const errorData = await response.json();
+        toast({
+          title: translateText('Payment Setup Failed'),
+          description: errorData.message || translateText('Unable to create secure payment. Please try again.'),
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      console.error('Error creating escrow transaction:', error);
+      toast({
+        title: translateText('Connection Error'),
+        description: translateText('Unable to connect to payment service. Please check your connection and try again.'),
+        variant: 'destructive',
+      });
     }
   };
 

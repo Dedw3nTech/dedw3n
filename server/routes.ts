@@ -9865,6 +9865,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let authenticatedUser = null;
       
       // Try session authentication first
+      console.log('[ESCROW] Session data:', req.session);
+      console.log('[ESCROW] Session passport:', (req.session as any)?.passport);
+      
       if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
         try {
           const userId = (req.session as any).passport.user;
@@ -9875,6 +9878,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (error) {
           console.error('[ESCROW] Error with passport session authentication:', error);
+        }
+      } else {
+        // Try alternative session check
+        console.log('[ESCROW] Checking for isAuthenticated method...');
+        if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+          try {
+            const user = await storage.getUser((req.user as any).id);
+            if (user) {
+              authenticatedUser = user;
+              console.log(`[ESCROW] Alternative authentication successful: ${user.username} (ID: ${user.id})`);
+            }
+          } catch (error) {
+            console.error('[ESCROW] Error with alternative authentication:', error);
+          }
         }
       }
       
