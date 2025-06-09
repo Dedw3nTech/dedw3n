@@ -11,6 +11,31 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import createMemoryStore from "memorystore";
 
+// Simple in-memory rate limiter for authentication endpoints
+const authAttempts = new Map<string, { count: number; resetTime: number }>();
+
+function rateLimitAuth(ip: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const attempt = authAttempts.get(ip);
+  
+  if (!attempt || now > attempt.resetTime) {
+    authAttempts.set(ip, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (attempt.count >= maxAttempts) {
+    console.log(`[SECURITY] Rate limit exceeded for IP ${ip}: ${attempt.count} attempts`);
+    return false;
+  }
+  
+  attempt.count++;
+  return true;
+}
+
+function resetAuthAttempts(ip: string): void {
+  authAttempts.delete(ip);
+}
+
 declare global {
   namespace Express {
     interface User extends SelectUser {}
@@ -205,10 +230,21 @@ export function setupAuth(app: Express) {
 
   // Authentication routes
   app.post("/api/auth/register", async (req, res, next) => {
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    
     try {
-      console.log(`[DEBUG] Registration attempt for username: ${req.body.username}`);
+      console.log(`[DEBUG] Registration attempt for username: ${req.body.username} from IP: ${clientIp}`);
       console.log(`[DEBUG] Registration: request body:`, req.body);
       console.log(`[DEBUG] Registration: session ID before:`, req.sessionID);
+      
+      // Rate limiting for registration attempts (more restrictive than login)
+      if (!rateLimitAuth(clientIp, 3, 30 * 60 * 1000)) { // 3 attempts per 30 minutes
+        console.log(`[SECURITY] Registration rate limit exceeded for IP: ${clientIp}`);
+        return res.status(429).json({ 
+          message: "Too many registration attempts. Please try again later.",
+          code: "RATE_LIMIT_EXCEEDED"
+        });
+      }
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -269,7 +305,17 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/auth/login", (req, res, next) => {
-    console.log(`[DEBUG] Login attempt for username: ${req.body.username}`);
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    console.log(`[DEBUG] Login attempt for username: ${req.body.username} from IP: ${clientIp}`);
+    
+    // Rate limiting for authentication attempts
+    if (!rateLimitAuth(clientIp)) {
+      console.log(`[SECURITY] Login rate limit exceeded for IP: ${clientIp}`);
+      return res.status(429).json({ 
+        message: "Too many login attempts. Please try again later.",
+        code: "RATE_LIMIT_EXCEEDED"
+      });
+    }
     
     passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
       if (err) {
@@ -300,6 +346,9 @@ export function setupAuth(app: Express) {
           console.log(`[DEBUG] req.login successful for ${user.username} with new session`);
           console.log(`[DEBUG] New session ID: ${req.sessionID}`);
           console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
+          
+          // Reset auth attempts on successful login
+          resetAuthAttempts(clientIp);
           
           // Return user without password
           const { password, ...userWithoutPassword } = user;
