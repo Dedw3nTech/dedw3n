@@ -1,9 +1,21 @@
 import { Link } from "wouter";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
+import { useCookieConsent } from "@/components/CookieConsentProvider";
+import { Button } from "@/components/ui/button";
+import { X, Star, Users, ShoppingBag } from "lucide-react";
 
 function FooterContent() {
+  const { isFirstVisit } = useCookieConsent();
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+
+  useEffect(() => {
+    if (isFirstVisit) {
+      setShowWelcomeBanner(true);
+    }
+  }, [isFirstVisit]);
+
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
     "All rights reserved.",
@@ -23,7 +35,19 @@ function FooterContent() {
     "is a British Company registered in England, Wales and Scotland under registration number",
     "whose registered office is situated",
     "Our bank is registered with HSBC UK IBAN",
-    "our sole official website is"
+    "our sole official website is",
+    // Welcome banner texts
+    "Welcome to Dedw3n!",
+    "Join thousands of users in our trusted marketplace and community",
+    "Secure Shopping",
+    "Verified sellers and secure payments",
+    "Global Community",
+    "Connect with people worldwide",
+    "Easy Trading",
+    "Buy, sell, and trade with confidence",
+    "Get Started",
+    "Explore Now",
+    "Maybe Later"
   ], []);
 
   const { translations } = useMasterBatchTranslation(footerTexts);
@@ -33,10 +57,80 @@ function FooterContent() {
     allRightsReservedText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
     communityGuidelinesText, contactUsText, faqText, shippingText, partnershipsText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
-    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
+    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText,
+    welcomeTitleText, welcomeSubtitleText, secureShoppingText, secureShoppingDescText,
+    globalCommunityText, globalCommunityDescText, easyTradingText, easyTradingDescText,
+    getStartedText, exploreNowText, maybeLaterText
   ] = translations || footerTexts;
+
+  const handleDismissBanner = () => {
+    setShowWelcomeBanner(false);
+  };
+
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
+      {/* First-time visitor welcome banner */}
+      {showWelcomeBanner && (
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-4">
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="flex-1 mb-4 md:mb-0">
+                <h3 className="text-lg font-bold mb-1">{welcomeTitleText}</h3>
+                <p className="text-sm opacity-90">{welcomeSubtitleText}</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 md:mb-0">
+                <div className="flex gap-6 text-center">
+                  <div className="flex flex-col items-center">
+                    <ShoppingBag className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-medium">{secureShoppingText}</span>
+                    <span className="text-xs opacity-75">{secureShoppingDescText}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Users className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-medium">{globalCommunityText}</span>
+                    <span className="text-xs opacity-75">{globalCommunityDescText}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Star className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-medium">{easyTradingText}</span>
+                    <span className="text-xs opacity-75">{easyTradingDescText}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="bg-white text-blue-600 hover:bg-gray-100"
+                  onClick={() => window.location.href = '/marketplace'}
+                >
+                  {exploreNowText}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-white hover:bg-white/10"
+                  onClick={handleDismissBanner}
+                >
+                  {maybeLaterText}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/10 p-1"
+                  onClick={handleDismissBanner}
+                  aria-label="Close welcome banner"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="container mx-auto px-4 py-8">
 
 
