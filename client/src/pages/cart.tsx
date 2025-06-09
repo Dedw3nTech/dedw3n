@@ -120,18 +120,18 @@ export default function Cart() {
     removeFromCartMutation.mutate(id);
   };
   
-  // Shipping method change handler
-  const handleShippingMethodChange = (method: ShippingRate | null, cost: number) => {
-    setSelectedShippingMethod(method);
+  // Shipping calculation change handler
+  const handleShippingCalculationChange = (calculation: ShippingCalculation | null, cost: number) => {
+    setSelectedShippingCalculation(calculation);
     setDynamicShippingCost(cost);
   };
 
   // Proceed to checkout handler
   const handleCheckout = () => {
-    if (!selectedShippingMethod) {
+    if (!selectedShippingCalculation) {
       toast({
         title: translateText('Shipping Required'),
-        description: translateText('Please select a shipping method before proceeding to checkout.'),
+        description: translateText('Please calculate shipping costs before proceeding to checkout.'),
         variant: 'destructive',
       });
       return;
@@ -152,6 +152,16 @@ export default function Cart() {
     // shippingCost: vendor?.shippingCost || 5.99,
     // taxRate: vendor?.taxRate || 0.2
   };
+  
+  // Calculate total weight and estimated distance for shipping
+  const totalWeight = cartItems.reduce((sum: number, item: any) => {
+    // Default weight per item if not specified (in kg)
+    const itemWeight = item.product?.weight || 0.5;
+    return sum + (itemWeight * item.quantity);
+  }, 0);
+  
+  // Default estimated distance (in km) - this could be calculated based on user location
+  const estimatedDistance = 50; // Default 50km for local delivery
   
   // Calculate pricing using centralized system with dynamic shipping cost
   const pricingConfigWithDynamicShipping = {
@@ -382,12 +392,14 @@ export default function Cart() {
           )}
         </CardContent>
         
-        {/* Shipping Service Selection */}
+        {/* Shipping Cost Calculator */}
         <div className="mt-6">
-          <CartShippingSelector
+          <ShippingCostCalculator
             orderTotal={subtotal}
-            onShippingMethodChange={handleShippingMethodChange}
-            selectedMethod={selectedShippingMethod}
+            orderWeight={totalWeight}
+            distance={estimatedDistance}
+            onCalculationComplete={handleShippingCalculationChange}
+            selectedCalculation={selectedShippingCalculation}
           />
         </div>
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
@@ -399,12 +411,12 @@ export default function Cart() {
             {translateText('Continue Shopping')}
           </Button>
           <div className="w-full sm:w-auto">
-            {!selectedShippingMethod && (
+            {!selectedShippingCalculation && (
               <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                   <p className="text-sm text-amber-800">
-                    {translateText('Please select a shipping method to continue')}
+                    {translateText('Please calculate shipping costs to continue')}
                   </p>
                 </div>
               </div>
@@ -413,7 +425,7 @@ export default function Cart() {
               onClick={handleCheckout}
               className="w-full sm:w-auto"
               disabled={
-                !selectedShippingMethod || 
+                !selectedShippingCalculation || 
                 updateQuantityMutation.isPending || 
                 removeFromCartMutation.isPending
               }
