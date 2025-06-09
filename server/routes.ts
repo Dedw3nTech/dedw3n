@@ -5707,47 +5707,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[EMAIL_VALIDATION] Clearout response status: ${clearoutData.status}`);
       console.log(`[EMAIL_VALIDATION] Full Clearout response:`, JSON.stringify(clearoutData, null, 2));
 
-      // Enhanced response mapping with intelligent fallback
-      const isValidFormat = emailRegex.test(email);
-      const isBusinessEmail = !email.toLowerCase().includes('@gmail.') && 
-                             !email.toLowerCase().includes('@yahoo.') && 
-                             !email.toLowerCase().includes('@hotmail.') &&
-                             !email.toLowerCase().includes('@outlook.') &&
-                             !email.toLowerCase().includes('@aol.') &&
-                             !email.toLowerCase().includes('@icloud.');
-      
-      // If Clearout says invalid/undeliverable or success but deliverable=false for business emails, use fallback validation
-      const shouldUseFallback = ((clearoutData.status === 'invalid' || 
-                                 clearoutData.status === 'undeliverable' ||
-                                 (clearoutData.status === 'success' && !clearoutData.deliverable)) 
-                                && isValidFormat && isBusinessEmail) ||
-                               // Special handling for specific business domains that are known to be valid
-                               (isValidFormat && (email.toLowerCase().includes('@dedw3n.') ||
-                                                 email.toLowerCase().includes('@company.') ||
-                                                 email.toLowerCase().includes('@business.')));
-      
-      const result = shouldUseFallback ? {
-        valid: true,
-        reason: 'Validated using fallback method',
-        syntax_valid: true,
-        mx_valid: true,
-        disposable: false,
-        free_provider: false,
-        deliverable: true,
-        role_based: false,
-        confidence_score: 85,
-        service_error: false,
-        fallback_used: true
-      } : {
-        valid: clearoutData.status === 'valid' || clearoutData.status === 'accept_all',
-        reason: clearoutData.reason || '',
-        syntax_valid: !['invalid', 'syntax_error'].includes(clearoutData.status),
-        mx_valid: !['invalid', 'mx_error', 'mx_not_found'].includes(clearoutData.status),
-        disposable: clearoutData.disposable === true,
-        free_provider: clearoutData.free_email === true,
-        deliverable: ['valid', 'accept_all'].includes(clearoutData.status),
-        role_based: clearoutData.role === true,
-        confidence_score: clearoutData.confidence || 0,
+      // Direct mapping from Clearout API response without fallbacks
+      const result = {
+        valid: clearoutData.data?.status === 'valid',
+        reason: clearoutData.data?.ai_verdict || '',
+        syntax_valid: clearoutData.data?.status !== 'invalid' || clearoutData.data?.sub_status?.code !== 400,
+        mx_valid: clearoutData.data?.detail_info?.mx_record ? true : false,
+        disposable: clearoutData.data?.disposable === 'yes',
+        free_provider: clearoutData.data?.free === 'yes',
+        deliverable: clearoutData.data?.status === 'valid' && clearoutData.data?.safe_to_send !== 'no',
+        role_based: clearoutData.data?.role === 'yes',
+        confidence_score: clearoutData.data?.safe_to_send === 'yes' ? 95 : 
+                         clearoutData.data?.safe_to_send === 'risky' ? 70 : 30,
         service_error: false,
         fallback_used: false
       };
