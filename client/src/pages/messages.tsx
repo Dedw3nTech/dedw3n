@@ -184,19 +184,51 @@ export default function MessagesPage() {
   userMap.set(currentUser.id, currentUserInfo);
   
   if (conversationPartner) {
+    console.log('Adding conversationPartner to userMap:', conversationPartner);
     userMap.set(conversationPartner.id, conversationPartner);
   }
   
   if (responseOtherUser) {
+    console.log('Adding responseOtherUser to userMap:', responseOtherUser);
     userMap.set(responseOtherUser.id, responseOtherUser);
   }
+  
+  console.log('Final userMap contents:', Array.from(userMap.entries()));
   
 
 
   // Helper function to get sender info from message
   const getSenderInfo = (message: any) => {
     const senderId = message.senderId || message.userId;
-    return userMap.get(senderId) || {
+    
+    // First check if user is in the map
+    const foundUser = userMap.get(senderId);
+    if (foundUser) {
+      return foundUser;
+    }
+    
+    // If not found, check if it's one of the known users from the API response
+    if (senderId === responseCurrentUser?.id) {
+      return responseCurrentUser;
+    }
+    
+    if (senderId === responseOtherUser?.id) {
+      return responseOtherUser;
+    }
+    
+    // If it's the current user from auth context
+    if (senderId === currentUser.id) {
+      return {
+        id: currentUser.id,
+        name: currentUser.name || currentUser.username,
+        username: currentUser.username,
+        avatar: currentUser.avatar
+      };
+    }
+    
+    // Final fallback - this shouldn't happen if user map is correct
+    console.error('User not found anywhere, using fallback for sender:', senderId);
+    return {
       id: senderId,
       name: `User ${senderId}`,
       username: `user${senderId}`,
