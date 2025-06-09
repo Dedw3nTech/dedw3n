@@ -1,21 +1,9 @@
 import { Link } from "wouter";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
-import { useCookieConsent } from "@/components/CookieConsentProvider";
-import { Button } from "@/components/ui/button";
-import { Shield, Eye, Cookie } from "lucide-react";
 
 function FooterContent() {
-  const { isFirstVisit, acceptAll } = useCookieConsent();
-  const [showPrivacyBanner, setShowPrivacyBanner] = useState(false);
-
-  useEffect(() => {
-    if (isFirstVisit) {
-      setShowPrivacyBanner(true);
-    }
-  }, [isFirstVisit]);
-
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
     "All rights reserved.",
@@ -35,19 +23,7 @@ function FooterContent() {
     "is a British Company registered in England, Wales and Scotland under registration number",
     "whose registered office is situated",
     "Our bank is registered with HSBC UK IBAN",
-    "our sole official website is",
-    // Privacy banner texts
-    "Your Privacy Matters",
-    "We use cookies to enhance your experience and protect your data",
-    "Essential Cookies",
-    "Required for site functionality",
-    "Analytics Cookies", 
-    "Help us improve our service",
-    "Marketing Cookies",
-    "Personalized content and ads",
-    "Accept All Cookies",
-    "Cookie Settings",
-    "Learn More"
+    "our sole official website is"
   ], []);
 
   const { translations } = useMasterBatchTranslation(footerTexts);
@@ -57,82 +33,10 @@ function FooterContent() {
     allRightsReservedText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
     communityGuidelinesText, contactUsText, faqText, shippingText, partnershipsText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
-    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText,
-    privacyMattersTitleText, privacyMatterDescText, essentialCookiesText, essentialCookiesDescText,
-    analyticsCookiesText, analyticsCookiesDescText, marketingCookiesText, marketingCookiesDescText,
-    acceptAllText, cookieSettingsText, learnMoreText
+    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
   ] = translations || footerTexts;
-
-  const handleAcceptAll = () => {
-    acceptAll();
-    setShowPrivacyBanner(false);
-  };
-
-  const handleLearnMore = () => {
-    window.location.href = '/privacy';
-  };
-
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
-      {/* Privacy & Cookie banner for first-time visitors */}
-      {showPrivacyBanner && (
-        <div className="bg-gray-50 border-b border-gray-200 py-4 px-4">
-          <div className="container mx-auto">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center mb-2">
-                  <Shield className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="text-lg font-semibold text-gray-900">{privacyMattersTitleText}</h3>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">{privacyMatterDescText}</p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="flex items-start space-x-2">
-                    <Cookie className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-xs font-medium text-gray-900">{essentialCookiesText}</span>
-                      <p className="text-xs text-gray-600">{essentialCookiesDescText}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <Eye className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-xs font-medium text-gray-900">{analyticsCookiesText}</span>
-                      <p className="text-xs text-gray-600">{analyticsCookiesDescText}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <Shield className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-xs font-medium text-gray-900">{marketingCookiesText}</span>
-                      <p className="text-xs text-gray-600">{marketingCookiesDescText}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 min-w-fit">
-                <Button 
-                  size="sm" 
-                  onClick={handleAcceptAll}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {acceptAllText}
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={handleLearnMore}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  {learnMoreText}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
       <div className="container mx-auto px-4 py-8">
 
 
