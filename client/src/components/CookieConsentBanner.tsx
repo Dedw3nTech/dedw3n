@@ -45,11 +45,11 @@ export function CookieConsentBanner() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-black/50 to-transparent">
-      <Card className="max-w-4xl mx-auto shadow-2xl border-2 border-blue-200 bg-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-gray-200 bg-white">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <Cookie className="h-6 w-6 text-blue-600" />
+            <Cookie className="h-6 w-6 text-black" />
             <div className="flex-1">
               <CardTitle className="text-lg font-semibold text-gray-900">
                 Cookie & Privacy Preferences
@@ -61,7 +61,7 @@ export function CookieConsentBanner() {
             </div>
             {gpcOptedOut && (
               <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
-                <Shield className="h-4 w-4 text-green-600" />
+                <Shield className="h-4 w-4 text-black" />
                 <span className="text-xs font-medium text-green-700">GPC Protected</span>
               </div>
             )}
@@ -72,7 +72,7 @@ export function CookieConsentBanner() {
           {gpcOptedOut && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-start gap-2">
-                <Shield className="h-5 w-5 text-green-600 mt-0.5" />
+                <Shield className="h-5 w-5 text-black mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-green-800">
                     Global Privacy Control Detected
@@ -89,7 +89,7 @@ export function CookieConsentBanner() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Necessary Cookies</p>
                     <p className="text-xs text-gray-500">Essential for website functionality</p>
@@ -97,7 +97,7 @@ export function CookieConsentBanner() {
                 </div>
                 
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <Info className="h-5 w-5 text-blue-600" />
+                  <Info className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Analytics Cookies</p>
                     <p className="text-xs text-gray-500">Help us improve our service</p>
@@ -105,7 +105,7 @@ export function CookieConsentBanner() {
                 </div>
                 
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <Info className="h-5 w-5 text-purple-600" />
+                  <Info className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Marketing Cookies</p>
                     <p className="text-xs text-gray-500">Personalized ads and content</p>
@@ -134,7 +134,7 @@ export function CookieConsentBanner() {
                   className="flex items-center gap-2"
                   disabled={gpcOptedOut}
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-4 w-4 text-black" />
                   Customize
                 </Button>
               </div>
@@ -144,7 +144,7 @@ export function CookieConsentBanner() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                   <div className="flex items-center space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <CheckCircle className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Necessary Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -157,7 +157,7 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Info className="h-5 w-5 text-blue-600" />
+                    <Info className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Analytics Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -173,7 +173,7 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Info className="h-5 w-5 text-purple-600" />
+                    <Info className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Marketing Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -189,7 +189,7 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Settings className="h-5 w-5 text-gray-600" />
+                    <Settings className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Preference Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
