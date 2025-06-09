@@ -11,10 +11,9 @@ import {
   queryClient, 
   getStoredAuthToken, 
   setAuthToken, 
-  clearAuthToken,
-  setLoggedOutFlag,
-  isUserLoggedOut 
+  clearAuthToken
 } from "../lib/queryClient";
+import { performUnifiedLogout, isUserLoggedOut, clearLogoutState } from "../utils/unified-logout-system";
 import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
 import { 
   saveUserData, 
@@ -168,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Ensure session cookies are saved by the browser
         if (res.ok) {
           // For session-based auth, clear any logged out flags
-          setLoggedOutFlag(false);
+          clearLogoutState();
           
           // Try to parse the response as JSON
           let data;
@@ -222,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Login success, response data:', response);
       
       // Clear any logged out flags
-      setLoggedOutFlag(false);
+      clearLogoutState();
       
       // Extract user from response (might be nested in user property or directly in response)
       // Handle various response structures safely
@@ -298,7 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Ensure session cookies are saved by the browser
         if (res.ok) {
           // For session-based auth, clear any logged out flags
-          setLoggedOutFlag(false);
+          clearLogoutState();
           
           // Try to parse the response as JSON
           let data;
@@ -352,7 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Registration success, response data:', response);
       
       // Clear any logged out flags
-      setLoggedOutFlag(false);
+      clearLogoutState();
       
       // Extract user from response (might be nested in user property or directly in response)
       // Handle various response structures safely
@@ -430,7 +429,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       // Set logged out flag to prevent immediate re-authentication
-      setLoggedOutFlag(true);
+      performUnifiedLogout();
       
       // Fire logout request without waiting (let it complete in background)
       apiRequest("POST", "/api/logout", undefined, {
