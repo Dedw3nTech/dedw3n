@@ -2150,32 +2150,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search users endpoint
-  app.get('/api/users/search', async (req, res) => {
+  // Search users endpoint with authentication
+  app.get('/api/users/search', async (req: Request, res: Response) => {
     try {
+      console.log('[DEBUG] /api/users/search called');
+      console.log('[AUTH] Authentication check for GET /api/users/search');
+      
+      let authenticatedUser = null;
+      
+      // Try session authentication first
+      if (req.user) {
+        authenticatedUser = req.user;
+        console.log('[AUTH] Session user found:', authenticatedUser.id);
+      } else {
+        // Fallback authentication for /api/users/search
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+            console.log('[AUTH] Fallback authentication for /api/users/search:', user.username, '(ID:', user.id + ')');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[AUTH] No authentication provided for user search');
+        return res.status(401).json({ message: 'Authentication required for user search' });
+      }
+      
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 20;
+      const currentUserId = authenticatedUser.id;
       
-      console.log(`[DEBUG] Searching users with query: "${query}"`);
+      console.log(`[DEBUG] Searching users with query: "${query}" for user ${currentUserId}`);
       
-      if (!query || query.trim().length === 0) {
+      if (!query || query.trim().length < 2) {
         return res.json([]);
       }
       
       const users = await storage.searchUsers(query, limit);
       console.log(`[DEBUG] Found ${users.length} users matching "${query}"`);
       
-      // Remove sensitive data before sending
-      const safeUsers = users.map(user => ({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        bio: user.bio,
-        isVendor: user.isVendor,
-        role: user.role
-      }));
+      // Remove current user from results and sensitive data
+      const safeUsers = users
+        .filter(user => user.id !== currentUserId)
+        .map(user => ({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar: user.avatar,
+          bio: user.bio,
+          isVendor: user.isVendor,
+          role: user.role
+        }));
       
+      console.log(`[DEBUG] Returning ${safeUsers.length} filtered users for recipient search`);
       res.json(safeUsers);
     } catch (error) {
       console.error('Error searching users:', error);
@@ -5584,44 +5614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // User search endpoint for gift functionality
-  app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const { q } = req.query;
-      
-      if (!q || typeof q !== 'string' || q.trim().length < 2) {
-        return res.json([]);
-      }
-      
-      const searchTerm = q.trim();
-      const currentUserId = req.user!.id;
-      
-      // Search users by username or name, excluding current user
-      const userResults = await db
-        .select({
-          id: users.id,
-          username: users.username,
-          name: users.name,
-          avatar: users.avatar
-        })
-        .from(users)
-        .where(
-          and(
-            or(
-              like(users.username, `%${searchTerm}%`),
-              like(users.name, `%${searchTerm}%`)
-            ),
-            sql`${users.id} != ${currentUserId}`
-          )
-        )
-        .limit(10);
-      
-      res.json(userResults);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      res.status(500).json({ message: 'Failed to search users' });
-    }
-  });
+  // User search endpoint removed - using unified endpoint above
 
   // Gift proposition endpoints
   app.post('/api/gifts/propose', unifiedIsAuthenticated, async (req: Request, res: Response) => {

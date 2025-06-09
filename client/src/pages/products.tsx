@@ -1655,10 +1655,30 @@ export default function Products() {
                     }`}
                     onClick={() => setSelectedRecipient(user)}
                   >
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200">
+                      {user.avatar ? (
+                        <img 
+                          src={user.avatar} 
+                          alt={`${user.name || user.username}'s profile`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${user.avatar ? 'hidden' : 'flex'}`}
+                      >
+                        {(user.name || user.username).charAt(0).toUpperCase()}
+                      </div>
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{user.username}</p>
-                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <p className="font-medium text-sm truncate">{user.name || user.username}</p>
+                      <p className="text-xs text-gray-500 truncate">@{user.username}</p>
+                      {user.bio && (
+                        <p className="text-xs text-gray-400 truncate mt-1">{user.bio}</p>
+                      )}
                     </div>
                     {selectedRecipient?.id === user.id && (
                       <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
