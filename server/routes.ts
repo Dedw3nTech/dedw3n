@@ -1614,6 +1614,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register message routes for direct messaging API
   registerMessageRoutes(app);
   
+  // Register shipping routes
+  registerShippingRoutes(app);
+  
   // Post creation endpoint
   app.post("/api/posts", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
