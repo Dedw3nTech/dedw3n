@@ -6,6 +6,7 @@ import { useCurrency, currencies } from '@/contexts/CurrencyContext';
 import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useAuth } from '@/hooks/use-auth';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   const { marketType, setMarketType } = useMarketType();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { cartItemCount } = useCart();
+  const { user, isAuthenticated } = useAuth();
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
@@ -61,9 +63,21 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     setLocation(path);
   }, [setLocation]);
 
-  // Static counts for testing
-  const likedProductsCount = 0;
-  const ordersNotificationsCount = 0;
+  // Fetch real notification counts only when authenticated
+  const { data: likedProducts = [] } = useQuery({
+    queryKey: ['/api/liked-products'],
+    staleTime: 30000,
+    enabled: isAuthenticated,
+  });
+  
+  const { data: notificationsData } = useQuery({
+    queryKey: ['/api/notifications/unread/count'],
+    staleTime: 10000,
+    enabled: isAuthenticated,
+  });
+
+  const likedProductsCount = isAuthenticated ? (Array.isArray(likedProducts) ? likedProducts.length : 0) : 0;
+  const ordersNotificationsCount = isAuthenticated ? (notificationsData as { count: number })?.count || 0 : 0;
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
