@@ -406,6 +406,16 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(req.body.password);
+      if (!passwordValidation.isValid) {
+        console.log(`[SECURITY] Weak password attempt for user: ${req.body.username}`);
+        return res.status(400).json({ 
+          message: "Password does not meet security requirements",
+          errors: passwordValidation.errors
+        });
+      }
+
       // Hash password
       const hashedPassword = await hashPassword(req.body.password);
 
