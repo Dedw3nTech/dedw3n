@@ -23,7 +23,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
         }
 
         if (!user) {
-          return <Redirect to="/auth" />;
+          return <Redirect to="/" />;
         }
 
         // Render the protected component with all original props

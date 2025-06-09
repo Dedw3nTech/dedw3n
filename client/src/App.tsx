@@ -243,6 +243,10 @@ function Router() {
         <TestCookiesPage />
       </Route>
 
+      <Route path="/auth">
+        <Redirect to="/" />
+      </Route>
+
       <Route path="/">
         <SEOHead {...seoConfigs.home} />
         <Products />
