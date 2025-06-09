@@ -550,19 +550,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
-      // Login the user
-      req.login(user, (err) => {
-        if (err) {
-          console.error('[ERROR] Login failed:', err);
-          return res.status(500).json({ message: "Login failed" });
-        }
+      // Login the user using session
+      if (req.login && typeof req.login === 'function') {
+        req.login(user, (err) => {
+          if (err) {
+            console.error('[ERROR] Login failed:', err);
+            return res.status(500).json({ message: "Login failed" });
+          }
+          
+          console.log(`[DEBUG] reCAPTCHA-protected login successful for: ${user.username}`);
+          
+          // Return user without password
+          const { password: _, ...userWithoutPassword } = user;
+          res.json(userWithoutPassword);
+        });
+      } else {
+        // Fallback: set session manually
+        (req.session as any).passport = { user: user.id };
+        req.user = user;
         
-        console.log(`[DEBUG] reCAPTCHA-protected login successful for: ${user.username}`);
+        console.log(`[DEBUG] reCAPTCHA-protected login successful (session fallback) for: ${user.username}`);
         
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
         res.json(userWithoutPassword);
-      });
+      }
       
     } catch (error) {
       console.error('[ERROR] reCAPTCHA login failed:', error);
