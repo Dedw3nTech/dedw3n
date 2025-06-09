@@ -9477,16 +9477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = sessionUser?.id;
       }
       
-      if (!userId) {
-        try {
-          const fallbackUser = await storage.getUser(9);
-          if (fallbackUser) {
-            userId = fallbackUser.id;
-          }
-        } catch (error) {
-          console.error('[AUTH] Fallback authentication failed:', error);
-        }
-      }
+      // No fallback authentication - require proper login
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
