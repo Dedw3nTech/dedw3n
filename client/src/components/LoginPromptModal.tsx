@@ -525,7 +525,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               />
               <Label 
                 htmlFor="remember-password" 
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                style={{ fontSize: '10px', fontWeight: 'normal' }}
               >
                 {t["Remember Password"] || "Remember Password"}
               </Label>
