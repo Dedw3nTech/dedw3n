@@ -50,7 +50,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const { executeRecaptcha } = useRecaptcha();
+  const { executeRecaptcha, isReady } = useRecaptcha();
   const { 
     validateEmail, 
     isValidating, 
@@ -192,41 +192,30 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
-      // Execute reCAPTCHA v3 verification with robust error handling
+      // Check reCAPTCHA readiness before proceeding
+      if (!isReady || !executeRecaptcha) {
+        toast({
+          title: "Security Service Loading",
+          description: "Please wait a moment for security verification to initialize...",
+          variant: "default"
+        });
+        return;
+      }
+
+      // Execute reCAPTCHA v3 verification
       let recaptchaToken = '';
-      if (executeRecaptcha) {
-        try {
-          console.log('Starting reCAPTCHA execution...');
-          
-          // Verify ReCAPTCHA script is loaded and functional
-          if (typeof window.grecaptcha === 'undefined') {
-            throw new Error('ReCAPTCHA script not available');
-          }
-          
-          console.log('reCAPTCHA script loaded, executing with action:', isLogin ? 'login' : 'register');
-          
-          // Execute with timeout protection
-          const recaptchaPromise = executeRecaptcha(isLogin ? 'login' : 'register');
-          const timeoutPromise = new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('ReCAPTCHA timeout')), 10000)
-          );
-          
-          recaptchaToken = await Promise.race([recaptchaPromise, timeoutPromise]);
-          
-          console.log('Raw token result:', recaptchaToken);
-          console.log('Token type:', typeof recaptchaToken);
-          console.log('Token length:', recaptchaToken?.length || 0);
-          
-          // Validate token format and length
-          if (!recaptchaToken || typeof recaptchaToken !== 'string' || recaptchaToken.length < 20) {
-            throw new Error('Invalid ReCAPTCHA token received');
-          }
-        } catch (recaptchaError) {
-          console.error('reCAPTCHA execution failed:', recaptchaError);
-          throw new Error('reCAPTCHA verification failed. Please refresh the page and try again.');
-        }
-      } else {
-        throw new Error('reCAPTCHA service is not available. Please refresh the page and try again.');
+      try {
+        console.log('Starting reCAPTCHA execution...');
+        recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+        console.log('reCAPTCHA token generated successfully');
+      } catch (recaptchaError) {
+        console.error('reCAPTCHA execution failed:', recaptchaError);
+        toast({
+          title: "Security Verification Failed",
+          description: "Please refresh the page and try again.",
+          variant: "destructive"
+        });
+        return;
       }
 
       if (isLogin) {
@@ -508,8 +497,17 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
             {/* reCAPTCHA Security Indicator - Above Submit Button */}
             <div className="flex items-center justify-center mb-3 mt-2 p-2 bg-gray-50 rounded-md border">
-              <Shield className="h-4 w-4 mr-2 text-green-600" />
-              <span className="text-sm text-gray-600 font-medium">Protected by reCAPTCHA v3</span>
+              {isReady ? (
+                <>
+                  <Shield className="h-4 w-4 mr-2 text-green-600" />
+                  <span className="text-sm text-gray-600 font-medium">Protected by reCAPTCHA v3</span>
+                </>
+              ) : (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
+                  <span className="text-sm text-gray-600 font-medium">Loading security verification...</span>
+                </>
+              )}
             </div>
 
             <Button 
