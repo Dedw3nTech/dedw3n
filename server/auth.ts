@@ -10,9 +10,19 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import createMemoryStore from "memorystore";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
+import svgCaptcha from "svg-captcha";
 
 // Simple in-memory rate limiter for authentication endpoints
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
+
+// CAPTCHA store for verification
+const captchaStore = new Map<string, { text: string; expires: number }>();
+
+// Account lockout settings
+const ACCOUNT_LOCKOUT_ATTEMPTS = 5;
+const ACCOUNT_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 
 function rateLimitAuth(ip: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): boolean {
   const now = Date.now();
@@ -34,6 +44,81 @@ function rateLimitAuth(ip: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): 
 
 function resetAuthAttempts(ip: string): void {
   authAttempts.delete(ip);
+}
+
+// Generate CAPTCHA
+function generateCaptcha(): { id: string; svg: string; text: string } {
+  const captcha = svgCaptcha.create({
+    size: 5,
+    noise: 3,
+    color: true,
+    background: '#f8f9fa'
+  });
+  
+  const id = randomBytes(16).toString('hex');
+  const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+  
+  captchaStore.set(id, { text: captcha.text.toLowerCase(), expires });
+  
+  return {
+    id,
+    svg: captcha.data,
+    text: captcha.text
+  };
+}
+
+// Verify CAPTCHA
+function verifyCaptcha(id: string, userInput: string): boolean {
+  const stored = captchaStore.get(id);
+  if (!stored) return false;
+  
+  if (Date.now() > stored.expires) {
+    captchaStore.delete(id);
+    return false;
+  }
+  
+  const isValid = stored.text === userInput.toLowerCase();
+  captchaStore.delete(id); // Single use
+  return isValid;
+}
+
+// Account lockout functions
+async function checkAccountLockout(user: any): Promise<{ isLocked: boolean; lockoutExpires?: Date }> {
+  if (!user.isLocked) return { isLocked: false };
+  
+  // Check if lockout has expired
+  const lockoutTime = user.lastLogin ? new Date(user.lastLogin).getTime() + ACCOUNT_LOCKOUT_DURATION : 0;
+  if (Date.now() > lockoutTime) {
+    // Unlock account
+    await storage.updateUser(user.id, {
+      isLocked: false,
+      failedLoginAttempts: 0
+    });
+    return { isLocked: false };
+  }
+  
+  return { isLocked: true, lockoutExpires: new Date(lockoutTime) };
+}
+
+async function handleFailedLogin(user: any): Promise<void> {
+  const newAttempts = (user.failedLoginAttempts || 0) + 1;
+  const shouldLock = newAttempts >= ACCOUNT_LOCKOUT_ATTEMPTS;
+  
+  await storage.updateUser(user.id, {
+    failedLoginAttempts: newAttempts,
+    isLocked: shouldLock,
+    lastLogin: shouldLock ? new Date() : user.lastLogin
+  });
+  
+  console.log(`[SECURITY] Failed login attempt ${newAttempts}/${ACCOUNT_LOCKOUT_ATTEMPTS} for user ${user.username}${shouldLock ? ' - Account locked' : ''}`);
+}
+
+async function handleSuccessfulLogin(user: any): Promise<void> {
+  await storage.updateUser(user.id, {
+    failedLoginAttempts: 0,
+    isLocked: false,
+    lastLogin: new Date()
+  });
 }
 
 declare global {
@@ -228,6 +313,22 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // CAPTCHA endpoint
+  app.get("/api/auth/captcha", (req, res) => {
+    try {
+      const captcha = generateCaptcha();
+      console.log(`[SECURITY] Generated CAPTCHA: ${captcha.id}`);
+      
+      res.json({
+        id: captcha.id,
+        svg: captcha.svg
+      });
+    } catch (error) {
+      console.error(`[ERROR] CAPTCHA generation failed:`, error);
+      res.status(500).json({ message: "Failed to generate CAPTCHA" });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
@@ -304,7 +405,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/auth/login", async (req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
     console.log(`[DEBUG] Login attempt for username: ${req.body.username} from IP: ${clientIp}`);
     
@@ -316,8 +417,37 @@ export function setupAuth(app: Express) {
         code: "RATE_LIMIT_EXCEEDED"
       });
     }
+
+    // Verify CAPTCHA if provided
+    if (req.body.captchaId && req.body.captchaInput) {
+      if (!verifyCaptcha(req.body.captchaId, req.body.captchaInput)) {
+        console.log(`[SECURITY] Invalid CAPTCHA for login attempt: ${req.body.username}`);
+        return res.status(400).json({ 
+          message: "Invalid CAPTCHA. Please try again.",
+          code: "INVALID_CAPTCHA"
+        });
+      }
+    }
+
+    // Check for account lockout first
+    try {
+      const userForLockoutCheck = await storage.getUserByUsername(req.body.username);
+      if (userForLockoutCheck) {
+        const lockoutStatus = await checkAccountLockout(userForLockoutCheck);
+        if (lockoutStatus.isLocked) {
+          console.log(`[SECURITY] Account locked for user: ${req.body.username}`);
+          return res.status(423).json({ 
+            message: `Account is locked due to multiple failed login attempts. Please try again later.`,
+            code: "ACCOUNT_LOCKED",
+            lockoutExpires: lockoutStatus.lockoutExpires
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`[ERROR] Error checking account lockout:`, error);
+    }
     
-    passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
+    passport.authenticate("local", async (err: Error | null, user: any, info: { message: string } | undefined) => {
       if (err) {
         console.error(`[ERROR] Login authentication error:`, err);
         return next(err);
@@ -325,6 +455,17 @@ export function setupAuth(app: Express) {
       
       if (!user) {
         console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+        
+        // Handle failed login attempt for account lockout
+        try {
+          const userForFailedAttempt = await storage.getUserByUsername(req.body.username);
+          if (userForFailedAttempt) {
+            await handleFailedLogin(userForFailedAttempt);
+          }
+        } catch (error) {
+          console.error(`[ERROR] Error handling failed login:`, error);
+        }
+        
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
@@ -337,7 +478,7 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         
-        req.login(user, (err: Error | null) => {
+        req.login(user, async (err: Error | null) => {
           if (err) {
             console.error(`[ERROR] req.login error:`, err);
             return next(err);
@@ -349,6 +490,13 @@ export function setupAuth(app: Express) {
           
           // Reset auth attempts on successful login
           resetAuthAttempts(clientIp);
+          
+          // Handle successful login tracking
+          try {
+            await handleSuccessfulLogin(user);
+          } catch (error) {
+            console.error(`[ERROR] Error handling successful login:`, error);
+          }
           
           // Return user without password
           const { password, ...userWithoutPassword } = user;
