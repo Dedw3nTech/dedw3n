@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RefreshCw, Shield } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { useUnifiedRecaptcha } from './UnifiedRecaptchaProvider';
 
 interface MathCaptchaProps {
@@ -72,11 +72,10 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <Shield className="h-4 w-4" />
-        Security Verification
+        Captcha verification
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="space-y-3">
         <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
           <div className="flex-1">
             <Label htmlFor="captcha-answer" className="text-sm font-medium">
@@ -107,7 +106,8 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             autoComplete="off"
           />
           <Button 
-            type="submit" 
+            type="button"
+            onClick={handleSubmit}
             disabled={!userAnswer.trim() || isValidating}
             className="px-6"
           >
@@ -120,7 +120,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             {error}
           </div>
         )}
-      </form>
+      </div>
     </div>
   );
 }
