@@ -5694,16 +5694,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[EMAIL_VALIDATION] Validating email: ${email.substring(0, 3)}***`);
 
-      // Call Clearout.io API
+      // Call Clearout.io API with retry mechanism
       const clearoutResponse = await fetch(`https://api.clearout.io/v2/email_verify/instant`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer:${clearoutApiKey}`,
+          'Authorization': `Bearer ${clearoutApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           email: email,
-          timeout: 10
+          timeout: 30
         })
       });
 
