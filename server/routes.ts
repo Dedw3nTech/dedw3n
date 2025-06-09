@@ -5628,6 +5628,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User search endpoint removed - using unified endpoint above
 
   // Gift proposition endpoints
+  
+  // Gift response route - accept or decline
+  app.post('/api/gifts/:giftId/respond', async (req: Request, res: Response) => {
+    try {
+      const { giftId } = req.params;
+      const { action } = req.body; // 'accept' or 'decline'
+      
+      // Get authenticated user
+      const authenticatedUser = await getAuthenticatedUser(req);
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const userId = authenticatedUser.id;
+      
+      // Get the gift proposition
+      const [gift] = await db
+        .select()
+        .from(giftPropositions)
+        .where(eq(giftPropositions.id, parseInt(giftId)));
+        
+      if (!gift) {
+        return res.status(404).json({ message: 'Gift not found' });
+      }
+      
+      // Verify user is the recipient
+      if (gift.recipientId !== userId) {
+        return res.status(403).json({ message: 'You are not authorized to respond to this gift' });
+      }
+      
+      // Check if already responded
+      if (gift.status !== 'pending') {
+        return res.status(400).json({ message: 'Gift has already been responded to' });
+      }
+      
+      // Get product and sender details
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, gift.productId));
+        
+      const [sender] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, gift.senderId));
+      
+      if (!product || !sender) {
+        return res.status(404).json({ message: 'Product or sender not found' });
+      }
+      
+      // Update gift status
+      const newStatus = action === 'accept' ? 'accepted' : 'declined';
+      await db
+        .update(giftPropositions)
+        .set({ 
+          status: newStatus,
+          respondedAt: new Date()
+        })
+        .where(eq(giftPropositions.id, parseInt(giftId)));
+      
+      // Create notifications for both users
+      if (action === 'accept') {
+        // Notify sender that gift was accepted
+        await db.insert(notifications).values({
+          userId: gift.senderId,
+          type: 'gift_accepted',
+          content: `${authenticatedUser.name || authenticatedUser.username} accepted your gift: ${product.name}`,
+          isRead: false
+        });
+        
+        // Create message to sender
+        await db.insert(messages).values({
+          senderId: userId,
+          receiverId: gift.senderId,
+          content: `✅ I accepted your gift: ${product.name}. Thank you!`,
+          messageType: 'text',
+          category: 'marketplace'
+        });
+      } else {
+        // Notify sender that gift was declined
+        await db.insert(notifications).values({
+          userId: gift.senderId,
+          type: 'gift_declined',
+          content: `${authenticatedUser.name || authenticatedUser.username} declined your gift: ${product.name}`,
+          isRead: false
+        });
+        
+        // Create message to sender
+        await db.insert(messages).values({
+          senderId: userId,
+          receiverId: gift.senderId,
+          content: `❌ I declined your gift: ${product.name}. Thank you for thinking of me.`,
+          messageType: 'text',
+          category: 'marketplace'
+        });
+      }
+      
+      res.json({ 
+        message: `Gift ${action}ed successfully`,
+        status: newStatus
+      });
+      
+    } catch (error) {
+      console.error('Error responding to gift:', error);
+      res.status(500).json({ message: 'Failed to respond to gift' });
+    }
+  });
+
+  // Get received gifts for user
+  app.get('/api/gifts/received', async (req: Request, res: Response) => {
+    try {
+      const authenticatedUser = await getAuthenticatedUser(req);
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const userId = authenticatedUser.id;
+      
+      const gifts = await db
+        .select({
+          id: giftPropositions.id,
+          senderId: giftPropositions.senderId,
+          productId: giftPropositions.productId,
+          message: giftPropositions.message,
+          status: giftPropositions.status,
+          amount: giftPropositions.amount,
+          currency: giftPropositions.currency,
+          createdAt: giftPropositions.createdAt,
+          respondedAt: giftPropositions.respondedAt,
+          senderName: users.name,
+          senderUsername: users.username,
+          senderAvatar: users.avatar,
+          productName: products.name,
+          productImage: products.images,
+          productPrice: products.price
+        })
+        .from(giftPropositions)
+        .leftJoin(users, eq(giftPropositions.senderId, users.id))
+        .leftJoin(products, eq(giftPropositions.productId, products.id))
+        .where(eq(giftPropositions.recipientId, userId))
+        .orderBy(desc(giftPropositions.createdAt));
+      
+      res.json(gifts);
+    } catch (error) {
+      console.error('Error getting received gifts:', error);
+      res.status(500).json({ message: 'Failed to get received gifts' });
+    }
+  });
+
+  // Get sent gifts for user
+  app.get('/api/gifts/sent', async (req: Request, res: Response) => {
+    try {
+      const authenticatedUser = await getAuthenticatedUser(req);
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const userId = authenticatedUser.id;
+      
+      const gifts = await db
+        .select({
+          id: giftPropositions.id,
+          recipientId: giftPropositions.recipientId,
+          productId: giftPropositions.productId,
+          message: giftPropositions.message,
+          status: giftPropositions.status,
+          amount: giftPropositions.amount,
+          currency: giftPropositions.currency,
+          createdAt: giftPropositions.createdAt,
+          respondedAt: giftPropositions.respondedAt,
+          recipientName: users.name,
+          recipientUsername: users.username,
+          recipientAvatar: users.avatar,
+          productName: products.name,
+          productImage: products.images,
+          productPrice: products.price
+        })
+        .from(giftPropositions)
+        .leftJoin(users, eq(giftPropositions.recipientId, users.id))
+        .leftJoin(products, eq(giftPropositions.productId, products.id))
+        .where(eq(giftPropositions.senderId, userId))
+        .orderBy(desc(giftPropositions.createdAt));
+      
+      res.json(gifts);
+    } catch (error) {
+      console.error('Error getting sent gifts:', error);
+      res.status(500).json({ message: 'Failed to get sent gifts' });
+    }
+  });
+
   app.post('/api/gifts/propose', async (req: Request, res: Response) => {
     try {
       const { recipientId, productId, message } = req.body;
@@ -5711,22 +5901,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isRead: false
       });
 
-      // Create inbox message
-      const messageData = {
+      // Create inbox message directly to avoid storage layer issues
+      await db.insert(messages).values({
         senderId,
         receiverId: recipientId,
         content: `🎁 I've sent you a gift: ${product.name}. ${message || 'Hope you like it!'}`,
-        messageType: 'text'
-      };
-      
-      console.log('[DEBUG] Message data before creation:', {
-        senderId: messageData.senderId,
-        receiverId: messageData.receiverId,
-        recipientId,
-        messageType: messageData.messageType
+        messageType: 'text',
+        category: 'marketplace'
       });
-      
-      await storage.createMessage(messageData);
 
       res.json({ message: 'Gift proposition sent successfully', gift: giftProposition });
     } catch (error) {
