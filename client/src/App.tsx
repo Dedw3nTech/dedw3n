@@ -209,6 +209,7 @@ import PawapayRefundCallback from "@/pages/pawapay-refund-callback";
 
 import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
+import TestCookiesPage from "@/pages/test-cookies";
 
 
 // SEO wrapper component for routing
@@ -237,6 +238,9 @@ function Router() {
       </Route>
       <Route path="/test-auth">
         <TestAuthPage />
+      </Route>
+      <Route path="/test-cookies">
+        <TestCookiesPage />
       </Route>
 
       <Route path="/">
