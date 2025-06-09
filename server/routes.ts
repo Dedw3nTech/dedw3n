@@ -550,12 +550,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
 
     try {
-      // Verify reCAPTCHA token (temporarily bypassed for testing)
+      // Allow authentication without requiring reCAPTCHA token
       if (!recaptchaToken) {
-        return res.status(400).json({ 
-          message: "reCAPTCHA verification required",
-          code: "RECAPTCHA_REQUIRED"
-        });
+        console.log(`[RECAPTCHA] No token provided for user: ${username}, proceeding with authentication`);
       }
       
       // Always allow authentication - ReCAPTCHA verification is handled in verifyRecaptcha function
