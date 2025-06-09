@@ -5678,6 +5678,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
+      
+      console.log('[DEBUG] Gift proposal - Product details:', {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        type: typeof product.price
+      });
 
       // Check if recipient exists
       const recipient = await storage.getUser(recipientId);
@@ -5700,9 +5707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createNotification({
         userId: recipientId,
         type: 'message',
-        title: 'New Gift Received',
-        message: `You received a gift from ${authenticatedUser.name || authenticatedUser.username}: ${product.name}`,
-        actionUrl: `/gifts`,
+        content: `🎁 Gift received from ${authenticatedUser.name || authenticatedUser.username}: ${product.name}`,
         isRead: false
       });
 
