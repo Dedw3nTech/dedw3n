@@ -393,30 +393,98 @@ export function setupAuth(app: Express) {
   // Generate cryptographically secure session secret if not provided
   const sessionSecret = process.env.SESSION_SECRET || randomBytes(64).toString('hex');
   
-  // Set up session using the session store from storage with enhanced security
-  const sessionSettings: session.SessionOptions = {
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false, // Don't save uninitialized sessions for security
-    store: storage.sessionStore, // Use the session store from storage
-    name: 'sessionId', // Change default session cookie name
-    genid: () => {
-      // Generate cryptographically secure session IDs (minimum 128 bits)
-      return randomBytes(32).toString('hex'); // 256 bits for extra security
-    },
-    cookie: {
-      maxAge: 1000 * 60 * 15, // 15 minutes for sensitive applications
-      httpOnly: true, // Prevent XSS attacks
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict', // Strict CSRF protection
-    },
-    rolling: true, // Reset expiration on activity (idle timeout)
+  // Enhanced session configuration with cross-domain support
+  const getCookieDomain = (req: Request): string | undefined => {
+    const host = req.get('host') || '';
+    
+    // In development, don't set domain to allow localhost
+    if (process.env.NODE_ENV === 'development') {
+      return undefined;
+    }
+    
+    // For Replit domains, extract the base domain
+    if (host.includes('.replit.dev')) {
+      const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
+      if (replitMatch) {
+        return `.${replitMatch[1]}`;
+      }
+    }
+    
+    return undefined;
   };
+  
+  // Dynamic session configuration middleware with cross-domain support
+  app.use((req, res, next) => {
+    const cookieDomain = getCookieDomain(req);
+    
+    const sessionSettings: session.SessionOptions = {
+      secret: sessionSecret,
+      resave: false,
+      saveUninitialized: false,
+      store: storage.sessionStore,
+      name: 'dedwen_session',
+      genid: () => {
+        return randomBytes(32).toString('hex');
+      },
+      cookie: {
+        maxAge: 1000 * 60 * 15, // 15 minutes
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        domain: cookieDomain,
+        path: '/'
+      },
+      rolling: true,
+    };
+    
+    // Apply session only if not already configured for this request
+    if (!req.session) {
+      session(sessionSettings)(req, res, next);
+    } else {
+      next();
+    }
+  });
 
   // Trust the first proxy if behind a reverse proxy
   app.set('trust proxy', 1);
   
-  app.use(session(sessionSettings));
+  // Cross-domain logout middleware
+  app.use((req, res, next) => {
+    const logoutHeaders = [
+      'x-user-logged-out',
+      'x-auth-logged-out',
+      'x-cross-domain-logout'
+    ];
+    
+    const isLoggedOut = logoutHeaders.some(header => 
+      req.headers[header] === 'true'
+    );
+    
+    const cookies = req.headers.cookie || '';
+    const hasLogoutCookie = [
+      'user_logged_out=true',
+      'dedwen_logout=true',
+      'cross_domain_logout=true'
+    ].some(cookieCheck => cookies.includes(cookieCheck));
+    
+    const isAuthEndpoint = [
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/login',
+      '/api/register'
+    ].some(endpoint => req.path.includes(endpoint));
+    
+    if ((isLoggedOut || hasLogoutCookie) && !isAuthEndpoint) {
+      console.log('[CROSS-DOMAIN] Logout state detected, rejecting authentication');
+      return res.status(401).json({ 
+        message: 'User logged out across domains',
+        code: 'CROSS_DOMAIN_LOGOUT'
+      });
+    }
+    
+    next();
+  });
+  
   app.use(passport.initialize());
   app.use(passport.session());
 

@@ -15,33 +15,61 @@ export function isUserLoggedOut(): boolean {
   }
 }
 
-// Set the logged out flag with automatic cleanup
+// Set the logged out flag with automatic cleanup and cross-domain coordination
 export function setLoggedOutFlag(isLoggedOut: boolean): void {
   try {
     if (isLoggedOut) {
+      // Set logout flags in local storage
       localStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
       sessionStorage.setItem(LOGGED_OUT_FLAG_KEY, 'true');
-      // Also clear any user data to ensure clean logout
+      
+      // Set cross-domain logout cookies
+      document.cookie = 'dedwen_logout=true; path=/; max-age=10; SameSite=Lax';
+      document.cookie = 'user_logged_out=true; path=/; max-age=10; SameSite=Lax';
+      document.cookie = 'cross_domain_logout=true; path=/; max-age=10; SameSite=Lax';
+      
+      // Clear any user data to ensure clean logout
       localStorage.removeItem('userData');
       sessionStorage.removeItem('userData');
-      console.log('Logout flag set - user officially logged out');
+      localStorage.removeItem('enable_auto_login');
       
-      // Automatically clear logout flag after 5 seconds to prevent permanent login blocks
+      console.log('Cross-domain logout flag set - user officially logged out');
+      
+      // Trigger storage event for cross-tab/cross-domain coordination
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: LOGGED_OUT_FLAG_KEY,
+        newValue: 'true',
+        storageArea: localStorage
+      }));
+      
+      // Automatically clear logout flag after 10 seconds to prevent permanent login blocks
       setTimeout(() => {
         try {
           localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
           sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
-          console.log('Logout flag automatically cleared after timeout');
+          
+          // Clear cross-domain logout cookies
+          document.cookie = 'dedwen_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          document.cookie = 'user_logged_out=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          document.cookie = 'cross_domain_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          
+          console.log('Cross-domain logout flag automatically cleared after timeout');
         } catch (e) {
-          console.error('Error auto-clearing logout flag:', e);
+          console.error('Error auto-clearing cross-domain logout flag:', e);
         }
-      }, 5000);
+      }, 10000);
     } else {
+      // Clear all logout indicators
       localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
       sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
+      
+      // Clear logout cookies
+      document.cookie = 'dedwen_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'user_logged_out=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'cross_domain_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
   } catch (e) {
-    console.error('Error setting logged out flag:', e);
+    console.error('Error setting cross-domain logged out flag:', e);
   }
 }
 

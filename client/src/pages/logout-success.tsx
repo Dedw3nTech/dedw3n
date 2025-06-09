@@ -58,18 +58,60 @@ export default function LogoutSuccess() {
       // Forcefully clear React Query cache for all auth endpoints
       queryClient.clear();
       
-      // Clear any cookies that might be auth-related
+      // Set cross-domain logout indicators
+      localStorage.setItem('dedwen_logged_out', 'true');
+      sessionStorage.setItem('dedwen_logged_out', 'true');
+      
+      // Set cross-domain logout cookies with proper domain handling
+      const host = window.location.hostname;
+      const isReplit = host.includes('.replit.dev');
+      
+      // Set logout cookies for current domain
+      document.cookie = 'dedwen_logout=true; path=/; max-age=15; SameSite=Lax';
+      document.cookie = 'user_logged_out=true; path=/; max-age=15; SameSite=Lax';
+      document.cookie = 'cross_domain_logout=true; path=/; max-age=15; SameSite=Lax';
+      
+      // For Replit domains, also set for the parent domain
+      if (isReplit) {
+        const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
+        if (replitMatch) {
+          const replitDomain = replitMatch[1];
+          document.cookie = `dedwen_logout=true; path=/; max-age=15; domain=.${replitDomain}; SameSite=Lax`;
+          document.cookie = `user_logged_out=true; path=/; max-age=15; domain=.${replitDomain}; SameSite=Lax`;
+        }
+      }
+      
+      // Clear all cookies systematically
       const cookies = document.cookie.split(';');
       for (let i = 0; i < cookies.length; i++) {
         const cookie = cookies[i];
         const eqPos = cookie.indexOf('=');
         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
         
-        // Only attempt to clear cookies that might be auth related
-        if (name.includes('token') || name.includes('auth') || name.includes('session') || name.includes('sid')) {
-          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure; SameSite=Strict;`;
+        // Clear auth-related cookies
+        if (name.includes('token') || name.includes('auth') || name.includes('session') || 
+            name.includes('sid') || name.includes('dedwen') || name.includes('connect.sid')) {
+          // Clear for current domain
+          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure;`;
+          
+          // Clear for parent domain if on Replit
+          if (isReplit) {
+            const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
+            if (replitMatch) {
+              const replitDomain = replitMatch[1];
+              document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=.${replitDomain};`;
+            }
+          }
         }
       }
+      
+      // Trigger storage event for cross-tab/cross-domain coordination
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'dedwen_logged_out',
+        newValue: 'true',
+        storageArea: localStorage
+      }));
       
       // Force browser history manipulation to prevent back-button issues
       if (typeof window.history.pushState === 'function') {

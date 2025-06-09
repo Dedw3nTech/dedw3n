@@ -2267,8 +2267,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Login failed due to server error" });
     });
   });
-  // Fast logout endpoint - prioritizes speed and eliminates timeouts
-  app.post("/api/logout", createFastLogout());
+  // Enhanced cross-domain logout endpoint
+  app.post("/api/logout", async (req, res) => {
+    console.log('[CROSS-DOMAIN] Processing logout request');
+    
+    try {
+      // Destroy the session
+      if (req.session) {
+        await new Promise<void>((resolve, reject) => {
+          req.session.destroy((err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+      
+      // Clear authentication
+      if (req.logout) {
+        await new Promise<void>((resolve) => {
+          req.logout(() => resolve());
+        });
+      }
+      
+      // Set cross-domain logout cookies
+      const host = req.get('host') || '';
+      const isReplit = host.includes('.replit.dev');
+      
+      const cookieOptions = {
+        httpOnly: false, // Allow JavaScript access for cross-domain cleanup
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        maxAge: 10000, // 10 seconds - short-lived signal
+        path: '/'
+      };
+      
+      // Set logout cookies for current domain
+      res.cookie('dedwen_logout', 'true', cookieOptions);
+      res.cookie('user_logged_out', 'true', cookieOptions);
+      res.cookie('cross_domain_logout', 'true', cookieOptions);
+      
+      // For Replit domains, also set for the parent domain
+      if (isReplit) {
+        const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
+        if (replitMatch) {
+          const replitDomain = replitMatch[1];
+          res.cookie('dedwen_logout', 'true', { ...cookieOptions, domain: `.${replitDomain}` });
+          res.cookie('user_logged_out', 'true', { ...cookieOptions, domain: `.${replitDomain}` });
+        }
+      }
+      
+      // Clear session cookies across domains
+      const clearCookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict' as const,
+        path: '/'
+      };
+      
+      // Clear main session cookies
+      res.clearCookie('dedwen_session', clearCookieOptions);
+      res.clearCookie('sessionId', clearCookieOptions);
+      res.clearCookie('connect.sid', clearCookieOptions);
+      
+      // Clear domain-specific session cookies for Replit
+      if (isReplit) {
+        const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
+        if (replitMatch) {
+          const replitDomain = replitMatch[1];
+          res.clearCookie('dedwen_session', { ...clearCookieOptions, domain: `.${replitDomain}` });
+          res.clearCookie('sessionId', { ...clearCookieOptions, domain: `.${replitDomain}` });
+          res.clearCookie('connect.sid', { ...clearCookieOptions, domain: `.${replitDomain}` });
+        }
+      }
+      
+      // Set headers to prevent caching
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Clear-Site-Data': '"cache", "cookies", "storage"'
+      });
+      
+      console.log('[CROSS-DOMAIN] Logout completed successfully');
+      
+      res.json({ 
+        success: true, 
+        message: 'Logged out successfully across all domains',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('[CROSS-DOMAIN] Logout error:', error);
+      
+      // Fallback to fast logout if cross-domain fails
+      const fastLogoutHandler = createFastLogout();
+      fastLogoutHandler(req, res);
+    }
+  });
 
   // User endpoint for authentication checks  
   app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
