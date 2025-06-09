@@ -1227,7 +1227,7 @@ export default function Products() {
       </Button>
       
       <Button
-        onClick={() => window.location.href = '/add-product'}
+        onClick={() => setLocation('/add-product')}
         className="w-full bg-black text-white hover:bg-gray-800 mt-3"
       >
         <Plus className="h-4 w-4 mr-2" />
