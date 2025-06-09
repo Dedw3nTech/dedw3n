@@ -66,103 +66,36 @@ export default function CommunityModeration() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedReportType, setSelectedReportType] = useState("all");
 
-  // Sample mock data for community reports
-  const mockCommunityReports = [
-    {
-      id: 1,
-      communityName: "Tech Enthusiasts",
-      reportType: "content",
-      status: "pending",
-      reports: 5,
-      lastReportedAt: "2025-04-26T14:30:00Z",
-      description: "Inappropriate content being shared regularly",
-      reporter: "john_doe",
-    },
-    {
-      id: 2,
-      communityName: "Cooking Together",
-      reportType: "spam",
-      status: "reviewing",
-      reports: 3,
-      lastReportedAt: "2025-04-25T10:15:00Z",
-      description: "Multiple promotional posts without context",
-      reporter: "cooking_fan",
-    },
-    {
-      id: 3,
-      communityName: "Gaming Central",
-      reportType: "harassment",
-      status: "actioned",
-      reports: 8,
-      lastReportedAt: "2025-04-24T18:45:00Z",
-      description: "Members bullying new users",
-      reporter: "game_master",
-    },
-    {
-      id: 4,
-      communityName: "Photography Club",
-      reportType: "misinformation",
-      status: "dismissed",
-      reports: 2,
-      lastReportedAt: "2025-04-23T09:20:00Z",
-      description: "Claims about photography equipment are misleading",
-      reporter: "photo_enthusiast",
-    },
-    {
-      id: 5,
-      communityName: "Book Readers",
-      reportType: "violation",
-      status: "pending",
-      reports: 4,
-      lastReportedAt: "2025-04-22T15:10:00Z",
-      description: "Copyright violations in shared content",
-      reporter: "bookworm123",
-    },
-  ];
-
-  // Sample data for community statistics
-  const communitiesStats = {
-    total: 216,
-    active: 184,
-    reported: 12,
-    suspended: 3,
-    newToday: 4,
-    contentReported: 87,
-    contentRemoved: 24,
-    averageResponseTime: "5.2 hours",
-  };
-
-  // Fetch community reports
-  const { data: communityReports = mockCommunityReports, isLoading } = useQuery({
-    queryKey: ["/api/admin/community-reports", searchTerm, filterStatus, selectedReportType],
+  // Fetch real community reports from API
+  const { data: apiReports = [], isLoading: reportsLoading } = useQuery({
+    queryKey: ['/api/admin/community/reports'],
     queryFn: async () => {
-      // Filter mock data based on search and filters
-      let filteredReports = [...mockCommunityReports];
-      
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        filteredReports = filteredReports.filter(report => 
-          report.communityName.toLowerCase().includes(search) ||
-          report.description.toLowerCase().includes(search) ||
-          report.reporter.toLowerCase().includes(search)
-        );
-      }
-      
-      if (filterStatus !== "all") {
-        filteredReports = filteredReports.filter(report => 
-          report.status === filterStatus
-        );
-      }
-      
-      if (selectedReportType !== "all") {
-        filteredReports = filteredReports.filter(report => 
-          report.reportType === selectedReportType
-        );
-      }
-      
-      return filteredReports;
+      const res = await fetch('/api/admin/community/reports');
+      if (!res.ok) throw new Error('Failed to fetch community reports');
+      return res.json();
     },
-    initialData: mockCommunityReports,
+  });
+
+  const { data: moderationStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/admin/community/stats'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/community/stats');
+      if (!res.ok) throw new Error('Failed to fetch moderation stats');
+      return res.json();
+    },
+  });
+
+  // Filter and search community reports from real API data
+  const filteredReports = apiReports.filter((report: any) => {
+    const matchesSearch = !searchTerm || 
+      report.communityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.reporter?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === "all" || report.status === filterStatus;
+    const matchesType = selectedReportType === "all" || report.reportType === selectedReportType;
+    
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   const handleReviewReport = (reportId: number) => {
