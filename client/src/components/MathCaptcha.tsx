@@ -30,6 +30,12 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
     "Verifying..."
   ], []);
   const { translations } = useMasterBatchTranslation(captchaTexts);
+  
+  // Create translation map for easy access
+  const t = captchaTexts.reduce((acc, text, index) => {
+    acc[text] = translations[index] || text;
+    return acc;
+  }, {} as Record<string, string>);
 
   // Generate initial challenge
   useEffect(() => {
@@ -47,7 +53,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!challenge || !userAnswer.trim()) {
-      setError(translations["Please solve the math problem"] || 'Please solve the math problem');
+      setError(t["Please solve the math problem"]);
       return;
     }
 
@@ -61,7 +67,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
         onValidation(true, challenge.token);
         setError('');
       } else {
-        setError(translations["Incorrect answer. Please try again."] || 'Incorrect answer. Please try again.');
+        setError(t["Incorrect answer. Please try again."]);
         onValidation(false);
         refreshChallenge();
       }
@@ -78,7 +84,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   if (!challenge) {
     return (
       <div className={`flex items-center justify-center p-4 ${className}`}>
-        <div className="text-sm text-muted-foreground">{translations["Verifying..."] || "Loading security check..."}</div>
+        <div className="text-sm text-muted-foreground">{t["Verifying..."]}</div>
       </div>
     );
   }
@@ -86,7 +92,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
   return (
     <div className={`space-y-3 ${className}`}>
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-        {translations["Security Verification"] || "Security Verification"}
+        {t["Security Verification"]}
       </div>
       
       <div className="space-y-3">
@@ -114,7 +120,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             type="number"
             value={userAnswer}
             onChange={handleInputChange}
-            placeholder={translations["Enter your answer"] || "Your answer"}
+            placeholder={t["Enter your answer"]}
             className="flex-1"
             disabled={isValidating}
             autoComplete="off"
