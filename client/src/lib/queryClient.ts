@@ -200,7 +200,7 @@ async function apiRequestFull(
   }
 
   // Check if auto-login should be enabled (development mode)
-  const shouldAutoLogin = process.env.NODE_ENV === 'development' || 
+  const shouldAutoLogin = import.meta.env.DEV || 
                           localStorage.getItem('enable_auto_login') === 'true' ||
                           window.location.search.includes('auto_login=true') ||
                           window.location.search.includes('serruti=true');

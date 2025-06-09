@@ -5,14 +5,19 @@
 // Clear all logout flags and enable auto-login
 export function enableAutoLogin(): void {
   try {
-    // Clear logout flags
+    // Clear logout flags from all possible storage locations
     localStorage.removeItem('dedwen_logged_out');
     sessionStorage.removeItem('dedwen_logged_out');
+    localStorage.removeItem('userData');
+    sessionStorage.removeItem('userData');
     
     // Enable auto-login
     localStorage.setItem('enable_auto_login', 'true');
     
-    console.log('Auto-login enabled - page will refresh');
+    console.log('Auto-login enabled - clearing all logout state and refreshing');
+    
+    // Also clear any cookies that might persist logout state
+    document.cookie = 'user_logged_out=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
     
     // Refresh the page to trigger auto-login
     window.location.reload();

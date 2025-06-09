@@ -19,6 +19,18 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 
 import { useEffect, useState } from "react";
 
+// Auto-enable login in development mode
+if (import.meta.env.DEV) {
+  try {
+    localStorage.removeItem('dedwen_logged_out');
+    sessionStorage.removeItem('dedwen_logged_out');
+    localStorage.setItem('enable_auto_login', 'true');
+    console.log('Development mode: Auto-login enabled, logout flags cleared');
+  } catch (error) {
+    console.error('Error enabling auto-login:', error);
+  }
+}
+
 // Initialize advertisement preloader on app startup
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { ProtectedRoute } from "@/lib/protected-route";
