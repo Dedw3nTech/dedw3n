@@ -50,10 +50,14 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
     
     // Strict validation for production
     if (data.success && data.score >= 0.5) {
-      console.log(`[RECAPTCHA] Verification successful: ${data.score}`);
+      console.log(`[RECAPTCHA] Verification successful for action ${action}: score ${data.score}`);
       return true;
     } else {
-      console.warn('[RECAPTCHA] Verification failed:', data['error-codes']);
+      console.warn(`[RECAPTCHA] Verification failed for action ${action}:`, {
+        success: data.success,
+        score: data.score,
+        'error-codes': data['error-codes']
+      });
       return false; // Fail secure
     }
   } catch (error) {

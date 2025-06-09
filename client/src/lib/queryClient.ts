@@ -15,7 +15,7 @@ export function isUserLoggedOut(): boolean {
   }
 }
 
-// Set the logged out flag
+// Set the logged out flag with automatic cleanup
 export function setLoggedOutFlag(isLoggedOut: boolean): void {
   try {
     if (isLoggedOut) {
@@ -25,6 +25,17 @@ export function setLoggedOutFlag(isLoggedOut: boolean): void {
       localStorage.removeItem('userData');
       sessionStorage.removeItem('userData');
       console.log('Logout flag set - user officially logged out');
+      
+      // Automatically clear logout flag after 5 seconds to prevent permanent login blocks
+      setTimeout(() => {
+        try {
+          localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
+          sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
+          console.log('Logout flag automatically cleared after timeout');
+        } catch (e) {
+          console.error('Error auto-clearing logout flag:', e);
+        }
+      }, 5000);
     } else {
       localStorage.removeItem(LOGGED_OUT_FLAG_KEY);
       sessionStorage.removeItem(LOGGED_OUT_FLAG_KEY);
