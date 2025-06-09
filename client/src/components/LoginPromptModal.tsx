@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { 
   User, 
   Eye, 
