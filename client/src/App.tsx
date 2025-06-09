@@ -13,6 +13,7 @@ import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 

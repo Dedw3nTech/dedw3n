@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
+import { useRecaptcha } from "@/components/RecaptchaProvider";
 import { 
   User, 
   Eye, 
@@ -28,7 +29,8 @@ import {
   ShoppingBag,
   Users,
   Globe,
-  Calendar
+  Calendar,
+  Shield
 } from "lucide-react";
 
 interface LoginPromptModalProps {
@@ -43,6 +45,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
+  const { executeRecaptcha } = useRecaptcha();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -141,10 +144,22 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
+      // Execute reCAPTCHA v3 verification
+      let recaptchaToken = '';
+      if (executeRecaptcha) {
+        try {
+          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+        } catch (recaptchaError) {
+          console.warn('reCAPTCHA failed:', recaptchaError);
+          // Continue without reCAPTCHA if not available
+        }
+      }
+
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          recaptchaToken
         });
         toast({
           title: "Welcome back!",
@@ -161,6 +176,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
+          recaptchaToken
         });
         toast({
           title: "Account created!",
@@ -381,6 +397,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   (translations["Create Account"] || "Create Account")
               }
             </Button>
+
+            {/* reCAPTCHA Security Indicator */}
+            <div className="flex items-center justify-center mt-2 text-xs text-gray-500">
+              <Shield className="h-3 w-3 mr-1" />
+              Protected by reCAPTCHA v3
+            </div>
           </form>
 
           <div className="text-center">
