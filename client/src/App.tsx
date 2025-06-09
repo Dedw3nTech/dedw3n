@@ -19,13 +19,13 @@ import { initializeLanguageFromLocation } from "@/lib/i18n";
 
 import { useEffect, useState } from "react";
 
-// Auto-enable login in development mode
-if (import.meta.env.DEV) {
+// Only enable auto-login if explicitly requested via URL parameter (security measure)
+if (import.meta.env.DEV && (window.location.search.includes('auto_login=true') || window.location.search.includes('serruti=true'))) {
   try {
     localStorage.removeItem('dedwen_logged_out');
     sessionStorage.removeItem('dedwen_logged_out');
     localStorage.setItem('enable_auto_login', 'true');
-    console.log('Development mode: Auto-login enabled, logout flags cleared');
+    console.log('Development mode: Auto-login enabled via URL parameter');
   } catch (error) {
     console.error('Error enabling auto-login:', error);
   }

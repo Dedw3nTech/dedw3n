@@ -42,19 +42,21 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Third priority: Auto-login for development (check BEFORE logout headers)
+  // Third priority: Auto-login for development ONLY (check BEFORE logout headers)
   const autoLogin = req.headers['x-auto-login'];
-  if (autoLogin === 'true') {
+  if (autoLogin === 'true' && process.env.NODE_ENV === 'development') {
     try {
       const user = await storage.getUser(9); // Use Serruti user for development
       if (user) {
-        console.log(`[AUTH] Auto-login successful: ${user.username} (ID: ${user.id})`);
+        console.log(`[AUTH] Auto-login successful (DEV MODE): ${user.username} (ID: ${user.id})`);
         req.user = user;
         return next();
       }
     } catch (error) {
       console.error('[AUTH] Error with auto-login:', error);
     }
+  } else if (autoLogin === 'true' && process.env.NODE_ENV !== 'development') {
+    console.warn('[SECURITY] Auto-login attempt blocked in production environment');
   }
 
   // Skip logout header check for login/register endpoints to allow fresh login attempts
@@ -136,24 +138,26 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
   
-  // Final fallback for posts, feed, messaging, user, notifications, cart, and product interaction endpoints
-  const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
-  const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
-  const isUserRoute = req.path.includes('/api/users') || req.path.includes('/api/search');
-  const isNotificationRoute = req.path.includes('/api/notifications');
-  const isCartRoute = req.path.includes('/api/cart');
-  const isProductInteractionRoute = req.path.includes('/api/products/') && (req.path.includes('/like') || req.path.includes('/favorites')) || req.path.includes('/api/liked-products');
-  
-  if (isPostOrFeedRoute || isMessagingRoute || isUserRoute || isNotificationRoute || isCartRoute || isProductInteractionRoute) {
-    try {
-      const fallbackUser = await storage.getUser(9); // Serruti user
-      if (fallbackUser) {
-        console.log(`[AUTH] Fallback authentication for ${req.path}: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
-        req.user = fallbackUser;
-        return next();
+  // Final fallback for specific endpoints - ONLY in development mode
+  if (process.env.NODE_ENV === 'development') {
+    const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
+    const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
+    const isUserRoute = req.path.includes('/api/users') || req.path.includes('/api/search');
+    const isNotificationRoute = req.path.includes('/api/notifications');
+    const isCartRoute = req.path.includes('/api/cart');
+    const isProductInteractionRoute = req.path.includes('/api/products/') && (req.path.includes('/like') || req.path.includes('/favorites')) || req.path.includes('/api/liked-products');
+    
+    if (isPostOrFeedRoute || isMessagingRoute || isUserRoute || isNotificationRoute || isCartRoute || isProductInteractionRoute) {
+      try {
+        const fallbackUser = await storage.getUser(9); // Serruti user
+        if (fallbackUser) {
+          console.log(`[AUTH] Development fallback authentication for ${req.path}: ${fallbackUser.username} (ID: ${fallbackUser.id})`);
+          req.user = fallbackUser;
+          return next();
+        }
+      } catch (error) {
+        console.error('[AUTH] Fallback authentication failed:', error);
       }
-    } catch (error) {
-      console.error('[AUTH] Fallback authentication failed:', error);
     }
   }
   

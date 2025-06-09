@@ -191,19 +191,22 @@ async function apiRequestFull(
     };
   }
   
-  if (autoLogin === 'true') {
+  if (autoLogin === 'true' && import.meta.env.DEV) {
     console.log('Development mode - auto login enabled');
     requestOptions.headers = {
       ...requestOptions.headers,
       'X-Auto-Login': 'true'
     };
+  } else if (autoLogin === 'true' && !import.meta.env.DEV) {
+    console.warn('[SECURITY] Auto-login blocked in production environment');
   }
 
-  // Check if auto-login should be enabled (development mode)
-  const shouldAutoLogin = import.meta.env.DEV || 
+  // Check if auto-login should be enabled (ONLY in development mode)
+  const shouldAutoLogin = import.meta.env.DEV && (
                           localStorage.getItem('enable_auto_login') === 'true' ||
                           window.location.search.includes('auto_login=true') ||
-                          window.location.search.includes('serruti=true');
+                          window.location.search.includes('serruti=true')
+                        );
 
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
   if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
