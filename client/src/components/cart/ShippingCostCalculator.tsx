@@ -67,6 +67,8 @@ export default function ShippingCostCalculator({
   const [error, setError] = useState<string | null>(null);
   const [showCarrierForm, setShowCarrierForm] = useState(false);
   const [deliveryType, setDeliveryType] = useState<'local' | 'national' | 'international'>('local');
+  const [vendorCountry, setVendorCountry] = useState<string>('');
+  const [vendorCity, setVendorCity] = useState<string>('');
   const [newCarrier, setNewCarrier] = useState<Partial<CustomCarrier>>({
     name: '',
     baseRate: 0,
@@ -81,6 +83,24 @@ export default function ShippingCostCalculator({
   
   const { formatPrice } = useCurrency();
   const { translateText } = useMasterTranslation();
+
+  // Auto-fetch vendor location data from account settings
+  useEffect(() => {
+    const fetchVendorLocation = async () => {
+      try {
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData.country) setVendorCountry(userData.country);
+          if (userData.city) setVendorCity(userData.city);
+        }
+      } catch (error) {
+        console.warn('Could not fetch vendor location data:', error);
+      }
+    };
+
+    fetchVendorLocation();
+  }, []);
 
   // Initialize with default carriers
   useEffect(() => {
@@ -335,6 +355,35 @@ export default function ShippingCostCalculator({
           <Card className="border-dashed">
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Vendor Location Fields */}
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    {translateText("Vendor's Country")}
+                    <Badge variant="secondary" className="text-xs">Auto-fetch</Badge>
+                  </Label>
+                  <Input
+                    value={vendorCountry}
+                    onChange={(e) => setVendorCountry(e.target.value)}
+                    placeholder="Auto-fetched from account settings"
+                    className="bg-gray-50 border-green-200"
+                  />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    {translateText("Vendor's City")}
+                    <Badge variant="secondary" className="text-xs">Auto-fetch</Badge>
+                  </Label>
+                  <Input
+                    value={vendorCity}
+                    onChange={(e) => setVendorCity(e.target.value)}
+                    placeholder="Auto-fetched from account settings"
+                    className="bg-gray-50 border-green-200"
+                  />
+                </div>
+                
+                {/* Carrier Details */}
                 <div>
                   <Label>{translateText('Carrier Name')} *</Label>
                   <Input
