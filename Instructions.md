@@ -1,490 +1,208 @@
-# GIFT SYSTEM COMPREHENSIVE IMPLEMENTATION PLAN
-
-## EXECUTIVE SUMMARY
-
-The gift functionality is currently failing due to missing database schema, incomplete notification flow, and broken payment integration. This plan addresses all issues to create a complete gift sending system with proper recipient selection, notifications, and payment processing.
-
-## ROOT CAUSE ANALYSIS
-
-### 1. Database Schema Missing
-**Issue**: `gift_propositions` table doesn't exist in database
-**Evidence**: Database query shows no gift-related tables, causing "relation does not exist" errors
-**Impact**: Cannot store gift proposals, entire gift system non-functional
-
-### 2. Incomplete Notification System
-**Issue**: No notification creation when gifts are sent/received
-**Evidence**: Gift routes exist but don't trigger notifications to recipients
-**Impact**: Recipients unaware of incoming gifts
-
-### 3. Payment Integration Gaps
-**Issue**: No Stripe payment intent creation for accepted gifts
-**Evidence**: Gift acceptance flow missing payment processing
-**Impact**: Cannot complete gift transactions
-
-### 4. Missing Message System Integration
-**Issue**: No inbox messages for gift notifications
-**Evidence**: Gift notifications not appearing in user message feed
-**Impact**: Poor user experience for gift communication
-
-## TECHNICAL ARCHITECTURE ANALYSIS
-
-### Current Gift Flow (Broken)
-1. User clicks gift icon → Opens recipient search modal ✓
-2. User selects recipient → Frontend sends gift proposal ✗ (DB error)
-3. Recipient gets notification → ✗ (No notification system)
-4. Recipient accepts/declines → ✗ (No message integration)
-5. Payment processing → ✗ (No Stripe integration)
-
-### Required Components Analysis
-
-#### Database Layer
-- **Missing**: `gift_propositions` table
-- **Existing**: Schema definition in `/shared/schema.ts`
-- **Action Required**: Database migration
-
-#### API Layer
-- **Existing**: Gift routes in `/server/routes.ts`
-- **Missing**: Notification creation, message integration
-- **Action Required**: Enhanced route handlers
-
-#### Frontend Layer
-- **Existing**: Gift modal, recipient search
-- **Missing**: Gift inbox, payment flow, status updates
-- **Action Required**: New components and integration
-
-#### Notification System
-- **Existing**: Basic notification infrastructure
-- **Missing**: Gift-specific notification types
-- **Action Required**: Gift notification templates
-
-## DETAILED IMPLEMENTATION PLAN
-
-### PHASE 1: DATABASE FOUNDATION (Priority: Critical)
-
-#### Step 1.1: Create Gift Propositions Table
-```sql
-CREATE TABLE gift_propositions (
-  id SERIAL PRIMARY KEY,
-  sender_id INTEGER NOT NULL REFERENCES users(id),
-  recipient_id INTEGER NOT NULL REFERENCES users(id),
-  product_id INTEGER NOT NULL REFERENCES products(id),
-  message TEXT,
-  status VARCHAR(20) NOT NULL DEFAULT 'pending',
-  amount DOUBLE PRECISION NOT NULL,
-  currency VARCHAR(3) NOT NULL DEFAULT 'GBP',
-  payment_intent_id TEXT,
-  responded_at TIMESTAMP,
-  paid_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX idx_gift_propositions_sender ON gift_propositions(sender_id);
-CREATE INDEX idx_gift_propositions_recipient ON gift_propositions(recipient_id);
-CREATE INDEX idx_gift_propositions_status ON gift_propositions(status);
-```
-
-#### Step 1.2: Add Gift Status Enum
-```sql
-CREATE TYPE gift_status AS ENUM ('pending', 'accepted', 'rejected', 'paid', 'shipped', 'delivered');
-ALTER TABLE gift_propositions ALTER COLUMN status TYPE gift_status USING status::gift_status;
-```
-
-### PHASE 2: API ENHANCEMENTS (Priority: High)
-
-#### Step 2.1: Enhanced Gift Proposal Route
-**File**: `/server/routes.ts`
-**Function**: `POST /api/gifts/propose`
-**Enhancements Needed**:
-- Add product price validation
-- Create notification for recipient
-- Send inbox message
-- Add error handling
-
-```typescript
-app.post('/api/gifts/propose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const { recipientId, productId, message } = req.body;
-    const senderId = req.user!.id;
-
-    // Validate inputs
-    if (!recipientId || !productId) {
-      return res.status(400).json({ message: 'Recipient and product are required' });
-    }
-
-    // Get product details for amount
-    const product = await storage.getProduct(productId);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    // Get recipient details
-    const recipient = await storage.getUser(recipientId);
-    if (!recipient) {
-      return res.status(404).json({ message: 'Recipient not found' });
-    }
-
-    // Create gift proposition
-    const giftData = {
-      senderId,
-      recipientId,
-      productId,
-      message: message || '',
-      amount: product.price,
-      currency: 'GBP',
-      status: 'pending' as const
-    };
-
-    const gift = await storage.createGiftProposition(giftData);
-
-    // Create notification for recipient
-    await storage.createNotification({
-      userId: recipientId,
-      type: 'gift_received',
-      title: 'New Gift Received',
-      message: `You received a gift from ${req.user!.name || req.user!.username}`,
-      actionUrl: `/gifts/${gift.id}`,
-      isRead: false
-    });
-
-    // Send inbox message
-    await storage.createMessage({
-      senderId,
-      recipientId,
-      content: `🎁 I've sent you a gift: ${product.name}. ${message || 'Hope you like it!'}`,
-      type: 'gift_proposal',
-      giftId: gift.id
-    });
-
-    res.json({ 
-      message: 'Gift proposal sent successfully', 
-      gift: {
-        id: gift.id,
-        status: gift.status,
-        recipient: {
-          id: recipient.id,
-          name: recipient.name,
-          username: recipient.username
-        },
-        product: {
-          id: product.id,
-          name: product.name,
-          price: product.price
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error creating gift proposition:', error);
-    res.status(500).json({ message: 'Failed to send gift proposal' });
-  }
-});
-```
-
-#### Step 2.2: Gift Response Route Enhancement
-**Function**: `POST /api/gifts/:id/respond`
-**Enhancements Needed**:
-- Add notification to sender
-- Create message thread
-- Integrate Stripe for accepted gifts
-
-```typescript
-app.post('/api/gifts/:id/respond', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const giftId = parseInt(req.params.id);
-    const { action } = req.body; // 'accept' or 'reject'
-    const userId = req.user!.id;
-
-    const gift = await storage.getGiftProposition(giftId);
-    if (!gift || gift.recipientId !== userId || gift.status !== 'pending') {
-      return res.status(400).json({ message: 'Invalid gift or already responded' });
-    }
-
-    if (action === 'reject') {
-      await storage.updateGiftStatus(giftId, 'rejected');
-      
-      // Notify sender of rejection
-      await storage.createNotification({
-        userId: gift.senderId,
-        type: 'gift_rejected',
-        title: 'Gift Declined',
-        message: `Your gift was declined by ${req.user!.name || req.user!.username}`,
-        isRead: false
-      });
-
-      // Send message to sender
-      await storage.createMessage({
-        senderId: userId,
-        recipientId: gift.senderId,
-        content: `I appreciate the gift offer, but I have to decline this time.`,
-        type: 'gift_response'
-      });
-
-    } else if (action === 'accept') {
-      await storage.updateGiftStatus(giftId, 'accepted');
-
-      // Create Stripe payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(gift.amount * 100), // Convert to cents
-        currency: gift.currency.toLowerCase(),
-        metadata: {
-          giftId: gift.id,
-          senderId: gift.senderId,
-          recipientId: gift.recipientId
-        }
-      });
-
-      // Update gift with payment intent
-      await storage.updateGiftStatus(giftId, 'accepted', paymentIntent.id);
-
-      // Notify sender with payment link
-      await storage.createNotification({
-        userId: gift.senderId,
-        type: 'gift_accepted',
-        title: 'Gift Accepted!',
-        message: `${req.user!.name || req.user!.username} accepted your gift. Complete payment to send.`,
-        actionUrl: `/payment/${gift.id}`,
-        isRead: false
-      });
-
-      res.json({ 
-        message: 'Gift accepted', 
-        paymentUrl: `/payment/${gift.id}`,
-        clientSecret: paymentIntent.client_secret
-      });
-    }
-  } catch (error) {
-    console.error('Error responding to gift:', error);
-    res.status(500).json({ message: 'Failed to respond to gift' });
-  }
-});
-```
-
-### PHASE 3: FRONTEND IMPLEMENTATION (Priority: Medium)
-
-#### Step 3.1: Gift Inbox Component
-**File**: `/client/src/components/GiftInbox.tsx`
-**Purpose**: Display received gifts with accept/decline options
-
-```typescript
-interface GiftInboxProps {
-  gifts: GiftProposition[];
-  onGiftResponse: (giftId: number, action: 'accept' | 'reject') => void;
-}
-
-export function GiftInbox({ gifts, onGiftResponse }: GiftInboxProps) {
-  return (
-    <div className="space-y-4">
-      {gifts.map((gift) => (
-        <Card key={gift.id} className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={gift.sender?.avatar} />
-                <AvatarFallback>{gift.sender?.name?.[0]}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{gift.sender?.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  Sent you: {gift.product?.name}
-                </p>
-                <p className="text-sm text-green-600 font-medium">
-                  £{gift.amount.toFixed(2)}
-                </p>
-              </div>
-            </div>
-            
-            {gift.status === 'pending' && (
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => onGiftResponse(gift.id, 'reject')}
-                >
-                  Decline
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={() => onGiftResponse(gift.id, 'accept')}
-                >
-                  Accept
-                </Button>
-              </div>
-            )}
-            
-            {gift.status === 'accepted' && (
-              <Badge variant="secondary">Waiting for payment</Badge>
-            )}
-            
-            {gift.status === 'rejected' && (
-              <Badge variant="destructive">Declined</Badge>
-            )}
-          </div>
-          
-          {gift.message && (
-            <p className="mt-2 text-sm text-muted-foreground italic">
-              "{gift.message}"
-            </p>
-          )}
-        </Card>
-      ))}
-    </div>
-  );
-}
-```
-
-#### Step 3.2: Payment Completion Page
-**File**: `/client/src/pages/payment.tsx`
-**Purpose**: Handle Stripe payment for accepted gifts
-
-```typescript
-export function PaymentPage() {
-  const { giftId } = useParams();
-  const { data: gift } = useQuery({
-    queryKey: [`/api/gifts/${giftId}`],
-    enabled: !!giftId
-  });
-
-  const handlePaymentSuccess = async (paymentIntent: any) => {
-    // Update gift status to paid
-    await apiRequest('POST', `/api/gifts/${giftId}/payment-confirm`, {
-      paymentIntentId: paymentIntent.id
-    });
-    
-    // Show success message and redirect
-    toast({
-      title: "Payment Successful!",
-      description: "Your gift is being processed for delivery."
-    });
-  };
-
-  return (
-    <div className="max-w-md mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Complete Gift Payment</CardTitle>
-          <CardDescription>
-            Paying for gift to {gift?.recipient?.name}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Elements stripe={stripePromise}>
-            <PaymentForm 
-              clientSecret={gift?.paymentClientSecret}
-              onSuccess={handlePaymentSuccess}
-            />
-          </Elements>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-```
-
-### PHASE 4: NOTIFICATION & MESSAGE INTEGRATION (Priority: Medium)
-
-#### Step 4.1: Enhanced Notification Types
-**File**: `/shared/schema.ts`
-**Addition**: Gift-specific notification types
-
-```typescript
-export const notificationTypeEnum = pgEnum('notification_type', [
-  'message', 'like', 'follow', 'comment', 'mention', 'system',
-  'gift_received', 'gift_accepted', 'gift_rejected', 'gift_paid', 'gift_shipped'
-]);
-```
-
-#### Step 4.2: Message Type Extensions
-**File**: `/shared/schema.ts`
-**Addition**: Gift message types
-
-```typescript
-export const messageTypeEnum = pgEnum('message_type', [
-  'text', 'image', 'video', 'audio', 'file',
-  'gift_proposal', 'gift_response', 'gift_payment'
-]);
-```
-
-### PHASE 5: TESTING & VALIDATION (Priority: Low)
-
-#### Step 5.1: Database Migration Test
-```sql
--- Test gift proposition creation
-INSERT INTO gift_propositions (sender_id, recipient_id, product_id, amount, currency)
-VALUES (9, 6, 1, 99.99, 'GBP');
-
--- Verify table structure
-SELECT * FROM gift_propositions WHERE id = 1;
-```
-
-#### Step 5.2: API Endpoint Testing
-```bash
-# Test gift proposal
-curl -X POST "http://localhost:5000/api/gifts/propose" \
-  -H "Content-Type: application/json" \
-  -H "Cookie: connect.sid=..." \
-  -d '{"recipientId": 6, "productId": 1, "message": "Hope you like this!"}'
-
-# Test gift response
-curl -X POST "http://localhost:5000/api/gifts/1/respond" \
-  -H "Content-Type: application/json" \
-  -H "Cookie: connect.sid=..." \
-  -d '{"action": "accept"}'
-```
-
-## IMPLEMENTATION PRIORITY ORDER
-
-### Immediate (Day 1)
-1. Create `gift_propositions` table via database migration
-2. Fix gift proposal route to handle database properly
-3. Test basic gift sending functionality
-
-### Day 2
-1. Implement notification system for gifts
-2. Add message integration for gift communications
-3. Create gift inbox component
-
-### Day 3
-1. Integrate Stripe payment processing
-2. Build payment completion flow
-3. Add shipping form for recipients
-
-### Day 4-5
-1. Comprehensive testing of entire flow
-2. Error handling and edge cases
-3. Performance optimization
-
-## SUCCESS METRICS
-
-### Technical Metrics
-- Gift proposal success rate: >95%
-- Notification delivery: <2 seconds
-- Payment processing: <10 seconds
-- Database query performance: <100ms
-
-### User Experience Metrics
-- Gift sending completion rate: >80%
-- Payment abandonment rate: <20%
-- User satisfaction with gift flow: >4.5/5
-
-## RISK MITIGATION
-
-### Database Risks
-- **Risk**: Migration failure
-- **Mitigation**: Test on staging, backup production data
-
-### Payment Risks
-- **Risk**: Stripe integration errors
-- **Mitigation**: Comprehensive error handling, webhook verification
-
-### Notification Risks
-- **Risk**: Notification delivery failure
-- **Mitigation**: Queue system with retry logic
-
-## DEPLOYMENT STRATEGY
-
-1. **Database Changes**: Deploy during low-traffic period
-2. **API Updates**: Rolling deployment with backward compatibility
-3. **Frontend Changes**: Feature flag controlled rollout
-4. **Testing**: Staged rollout to 10% → 50% → 100% of users
-
-This comprehensive plan addresses all identified issues and provides a complete roadmap for implementing a robust gift system with proper user notifications, payment processing, and message integration.
+# Login Issues Assessment and Fix Plan
+
+## Executive Summary
+The login system is experiencing multiple authentication failures due to a complex multi-layered authentication architecture with conflicting authentication methods and ReCAPTCHA verification issues.
+
+## Key Problems Identified
+
+### 1. ReCAPTCHA Verification Failures
+**Files Affected:**
+- `client/src/components/LoginPromptModal.tsx`
+- `client/src/components/RecaptchaProvider.tsx`
+- `server/auth.ts`
+- `server/routes.ts`
+
+**Issues:**
+- ReCAPTCHA execution consistently failing with empty error objects
+- Debug bypass token being used instead of actual ReCAPTCHA verification
+- Frontend showing "reCAPTCHA execution failed" errors repeatedly
+
+**Root Cause:**
+- ReCAPTCHA v3 integration not properly initialized or configured
+- Network issues preventing ReCAPTCHA script loading
+- Invalid site key configuration
+
+### 2. Session Authentication Conflicts
+**Files Affected:**
+- `server/unified-auth.ts`
+- `client/src/hooks/use-auth.tsx`
+- `client/src/lib/queryClient.ts`
+
+**Issues:**
+- Multiple authentication methods competing (session, JWT, headers)
+- X-User-Logged-Out header preventing successful authentication
+- Session data not properly synchronized between client and server
+
+**Root Cause:**
+- Complex authentication middleware with too many fallback mechanisms
+- Logout state persisting and blocking subsequent login attempts
+- Session storage conflicts between different authentication methods
+
+### 3. Password Verification Failures
+**Files Affected:**
+- `server/simple-auth.ts`
+- `server/routes.ts`
+
+**Issues:**
+- Login attempts returning "Invalid credentials" despite correct username/password
+- Password comparison failing in authentication flow
+
+**Root Cause:**
+- Password hashing/comparison logic may have issues
+- Database password storage format inconsistencies
+
+## Detailed Analysis
+
+### Authentication Flow Issues
+
+1. **Client-Side Flow:**
+   - User submits login form
+   - ReCAPTCHA verification fails
+   - Fallback to debug bypass token
+   - Request sent to `/api/auth/login-with-recaptcha`
+   - Server processes request but fails password verification
+
+2. **Server-Side Flow:**
+   - Multiple authentication middleware layers checking different sources
+   - Unified auth middleware has 5 different authentication priorities
+   - Session-based and JWT-based authentication systems conflicting
+   - Logout state headers preventing authentication even for valid requests
+
+3. **State Management Issues:**
+   - Client maintains logout flag in localStorage
+   - Server checks for logout headers and session flags
+   - Inconsistent state between client storage and server session
+
+## Fix Plan
+
+### Phase 1: ReCAPTCHA Resolution (High Priority)
+
+**Actions:**
+1. **Verify ReCAPTCHA Configuration:**
+   - Check VITE_RECAPTCHA_SITE_KEY matches Google reCAPTCHA console
+   - Verify RECAPTCHA_SECRET_KEY is correct server-side key
+   - Ensure domain is properly configured in Google reCAPTCHA console
+
+2. **Fix ReCAPTCHA Integration:**
+   - Update `RecaptchaProvider.tsx` to handle loading errors gracefully
+   - Add proper error handling in `LoginPromptModal.tsx`
+   - Remove debug bypass logic from production code
+
+3. **Test ReCAPTCHA Independently:**
+   - Create isolated test endpoint to verify ReCAPTCHA functionality
+   - Add detailed logging for ReCAPTCHA verification process
+
+### Phase 2: Authentication Simplification (High Priority)
+
+**Actions:**
+1. **Streamline Authentication Middleware:**
+   - Simplify `unified-auth.ts` to use single primary authentication method
+   - Remove conflicting fallback mechanisms
+   - Implement clear authentication priority order
+
+2. **Fix Logout State Management:**
+   - Clear logout flags properly on login attempts
+   - Synchronize client and server logout states
+   - Remove persistent logout headers that block authentication
+
+3. **Session Management Cleanup:**
+   - Ensure session cookies are properly set and maintained
+   - Fix session serialization/deserialization in Passport.js
+   - Remove duplicate session storage mechanisms
+
+### Phase 3: Password Verification Fix (Medium Priority)
+
+**Actions:**
+1. **Debug Password Comparison:**
+   - Add detailed logging to password verification process
+   - Check password hashing algorithm consistency
+   - Verify user data retrieval from database
+
+2. **Database Password Audit:**
+   - Check password storage format in database
+   - Verify password migration script (`migrate-passwords.js`) was applied correctly
+   - Test password comparison with known good credentials
+
+### Phase 4: Error Handling and Logging (Medium Priority)
+
+**Actions:**
+1. **Improve Error Messages:**
+   - Replace generic "Invalid credentials" with specific error types
+   - Add user-friendly error messages for different failure scenarios
+   - Implement proper error propagation from server to client
+
+2. **Enhanced Logging:**
+   - Add structured logging for authentication flow
+   - Include request IDs for tracking authentication attempts
+   - Log authentication method used for successful logins
+
+## Implementation Priority
+
+### Immediate Fixes (Day 1):
+1. Fix ReCAPTCHA configuration and integration
+2. Clear logout state conflicts in authentication middleware
+3. Remove debug bypass logic
+
+### Short-term Fixes (Day 2-3):
+1. Simplify authentication middleware
+2. Fix session management
+3. Debug password verification issues
+
+### Long-term Improvements (Week 1):
+1. Implement comprehensive error handling
+2. Add authentication monitoring and logging
+3. Create authentication testing suite
+
+## Files Requiring Modification
+
+### Critical Files:
+- `server/unified-auth.ts` - Simplify authentication logic
+- `client/src/components/LoginPromptModal.tsx` - Fix ReCAPTCHA handling
+- `client/src/components/RecaptchaProvider.tsx` - Improve error handling
+- `server/auth.ts` - Fix ReCAPTCHA verification
+- `client/src/lib/queryClient.ts` - Clean up logout state management
+
+### Supporting Files:
+- `server/routes.ts` - Improve login endpoint error handling
+- `client/src/hooks/use-auth.tsx` - Simplify authentication flow
+- `server/simple-auth.ts` - Debug password verification
+
+## Testing Strategy
+
+1. **Unit Tests:**
+   - Test ReCAPTCHA verification independently
+   - Test password hashing/comparison functions
+   - Test authentication middleware with different scenarios
+
+2. **Integration Tests:**
+   - Test complete login flow with valid credentials
+   - Test logout and subsequent login attempts
+   - Test session persistence across browser refreshes
+
+3. **Manual Testing:**
+   - Test login with different user accounts
+   - Test ReCAPTCHA in different browsers
+   - Test authentication state after logout
+
+## Success Criteria
+
+1. **ReCAPTCHA Success:** Users can complete ReCAPTCHA verification without errors
+2. **Login Success:** Valid credentials result in successful authentication
+3. **Session Persistence:** Users remain logged in across page refreshes
+4. **Logout Cleanup:** After logout, users can immediately log back in
+5. **Error Clarity:** Failed login attempts show clear, actionable error messages
+
+## Risk Assessment
+
+**High Risk:**
+- Authentication system complexity could introduce new bugs during simplification
+- Session management changes might affect existing logged-in users
+
+**Medium Risk:**
+- ReCAPTCHA configuration changes might affect verification rates
+- Password verification fixes might require database migration
+
+**Mitigation:**
+- Implement changes incrementally with rollback capability
+- Test thoroughly in development environment before production deployment
+- Maintain backward compatibility during transition period
