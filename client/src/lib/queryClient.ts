@@ -189,7 +189,7 @@ async function apiRequestFull(
   }
 
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
-  if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register') {
+  if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
     // Clear the logged out flag for login/register attempts
     setLoggedOutFlag(false);
   } 
