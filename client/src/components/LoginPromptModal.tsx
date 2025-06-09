@@ -149,17 +149,25 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       if (executeRecaptcha) {
         try {
           console.log('Executing reCAPTCHA for action:', isLogin ? 'login' : 'register');
-          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-          console.log('reCAPTCHA token generated successfully:', recaptchaToken ? 'Yes' : 'No');
+          console.log('executeRecaptcha function type:', typeof executeRecaptcha);
           
-          if (!recaptchaToken) {
-            throw new Error('reCAPTCHA token generation failed - empty token returned');
+          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+          console.log('reCAPTCHA token generated:', recaptchaToken);
+          console.log('reCAPTCHA token length:', recaptchaToken?.length || 0);
+          console.log('reCAPTCHA token type:', typeof recaptchaToken);
+          
+          if (!recaptchaToken || recaptchaToken.length < 10) {
+            throw new Error(`reCAPTCHA token generation failed - invalid token: ${recaptchaToken}`);
           }
         } catch (recaptchaError) {
+          console.error('reCAPTCHA detailed error:', recaptchaError);
           console.warn('reCAPTCHA failed:', recaptchaError);
+          
+          // Show user-friendly error with more details
+          const errorMessage = recaptchaError instanceof Error ? recaptchaError.message : 'Unknown error';
           toast({
             title: "Security Verification Failed",
-            description: "Unable to verify reCAPTCHA. Please refresh the page and try again.",
+            description: `reCAPTCHA error: ${errorMessage}. Please refresh the page and try again.`,
             variant: "destructive",
           });
           return;
