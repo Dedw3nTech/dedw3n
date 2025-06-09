@@ -15,6 +15,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 import { GPCProvider } from "@/components/GPCProvider";
+import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 
@@ -411,7 +412,8 @@ function App() {
     <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
       <RecaptchaProvider>
         <GPCProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <CookieConsentProvider>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <TooltipProvider>
               <AuthProvider>
                 <ViewProvider>
@@ -477,6 +479,7 @@ function App() {
               </AuthProvider>
             </TooltipProvider>
           </ThemeProvider>
+          </CookieConsentProvider>
         </GPCProvider>
       </RecaptchaProvider>
     </QueryClientProvider>
