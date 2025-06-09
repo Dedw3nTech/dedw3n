@@ -269,6 +269,12 @@ async function apiRequestFull(
     // Use our offline-aware fetch implementation
     const res = await offlineAwareFetch(url, requestOptions);
 
+    // Clear logout state on successful authentication
+    if (res.ok && (url.includes('/auth/login') || url.includes('/auth/register'))) {
+      console.log('Successful authentication - clearing logout state');
+      setLoggedOutFlag(false);
+    }
+
     await throwIfResNotOk(res);
     
     // If this was a successful mutation (non-GET request), invalidate related caches
@@ -479,6 +485,12 @@ export const getQueryFn: <T>(options: {
 
     // Use our offline-aware fetch implementation
     const res = await offlineAwareFetch(url, options);
+
+    // Clear logout state on successful authentication
+    if (res.ok && (url.includes('/auth/login') || url.includes('/auth/register'))) {
+      console.log('Successful authentication - clearing logout state');
+      setLoggedOutFlag(false);
+    }
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
