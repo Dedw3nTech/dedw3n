@@ -178,19 +178,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   
   // Additional logout state checks (logout headers already handled above for auth endpoints)
   
-  // Check for userLoggedOut flag in the session
-  // @ts-ignore: Property may not exist on session type
-  if (req.session && req.session.userLoggedOut === true && !isAuthEndpoint) {
-    console.log('[AUTH] Session logout flag detected, rejecting authentication');
-    return res.status(401).json({ message: 'Unauthorized - User logged out via session flag' });
-  }
-  
-  // Check for logout-related cookie that persists across requests
-  const cookies = req.headers.cookie || '';
-  if (cookies.includes('user_logged_out=true') && !isAuthEndpoint) {
-    console.log('[AUTH] Logout cookie detected, rejecting authentication');
-    return res.status(401).json({ message: 'Unauthorized - User logged out via cookie' });
-  }
+  // Skip additional logout checks - session/token authentication will handle authorization
   
   // No token found
   if (!token) {
