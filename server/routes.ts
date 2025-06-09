@@ -1049,52 +1049,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // User switch endpoint for testing perspectives
-    app.post('/api/auth/switch-perspective', async (req: Request, res: Response) => {
+    // Direct user authentication bypass for testing
+    app.post('/api/auth/direct-login', async (req: Request, res: Response) => {
       const { userId } = req.body;
       
       try {
         const targetUserId = userId || 6; // Default to Fernando (user 6)
-        const user = await storage.getUser(targetUserId);
+        const userResult = await db.select().from(users).where(eq(users.id, targetUserId)).limit(1);
         
-        if (!user) {
+        if (!userResult || userResult.length === 0) {
           return res.status(404).json({ 
             success: false, 
             message: "User not found" 
           });
         }
         
-        // Clear current session
-        req.logout(() => {
-          // Login as the target user
-          req.login(user, (err) => {
-            if (err) {
-              console.error('Perspective switch error:', err);
-              return res.status(500).json({ 
-                success: false, 
-                message: "Failed to switch perspective" 
-              });
-            }
-            
-            console.log(`[DEBUG] Switched perspective to user: ${user.username} (ID: ${user.id})`);
-            
-            res.json({ 
-              success: true, 
-              message: `Now viewing as ${user.username}`, 
-              user: {
-                id: user.id,
-                username: user.username,
-                name: user.name
-              }
+        const user = userResult[0];
+        
+        // Force login without password check
+        req.login(user, (err) => {
+          if (err) {
+            console.error('Direct login error:', err);
+            return res.status(500).json({ 
+              success: false, 
+              message: "Login failed" 
             });
+          }
+          
+          console.log(`[DEBUG] Direct login successful for: ${user.username} (ID: ${user.id})`);
+          
+          res.json({ 
+            success: true, 
+            message: `Logged in as ${user.username}`, 
+            user: {
+              id: user.id,
+              username: user.username,
+              name: user.name
+            }
           });
         });
         
       } catch (error) {
-        console.error('Perspective switch error:', error);
+        console.error('Direct login error:', error);
         res.status(500).json({ 
           success: false, 
-          message: "Switch failed" 
+          message: "Login failed" 
         });
       }
     });
