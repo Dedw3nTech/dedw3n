@@ -138,7 +138,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     "Account created!",
     "Welcome to Dedw3n! You can now enjoy all features."
   ], []);
-  const { translations } = useMasterBatchTranslation(stableModalTexts);
+  const { translations: t } = useMasterBatchTranslation(stableModalTexts);
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth: string) => {
@@ -202,8 +202,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       const age = calculateAge(formData.dateOfBirth);
       if (age < 18) {
         toast({
-          title: translations["Age Verification Failed"] || "Age Verification Failed",
-          description: translations["You must be at least 18 years old to create an account."] || "You must be at least 18 years old to create an account.",
+          title: t["Age Verification Failed"],
+          description: t["You must be at least 18 years old to create an account."],
           variant: "destructive",
         });
         return;
@@ -213,8 +213,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Email validation for signup
     if (!isLogin && emailTouched && emailIsValid === false) {
       toast({
-        title: translations["Email Validation Failed"] || "Email Validation Failed",
-        description: getValidationMessage() || translations["Please enter a valid email address."] || "Please enter a valid email address.",
+        title: t["Email Validation Failed"],
+        description: getValidationMessage() || t["Please enter a valid email address."],
         variant: "destructive"
       });
       return;
@@ -223,8 +223,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     // Prevent submission while email is being validated
     if (!isLogin && isValidating) {
       toast({
-        title: translations["Please wait"] || "Please wait",
-        description: translations["Email validation in progress..."] || "Email validation in progress...",
+        title: t["Please wait"],
+        description: t["Email validation in progress..."],
         variant: "default"
       });
       return;
@@ -234,8 +234,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       // Check if math CAPTCHA is completed
       if (!captchaValid || !captchaToken) {
         toast({
-          title: translations["Security Verification Required"] || "Security Verification Required", 
-          description: translations["Please complete the math problem to verify you are human."] || "Please complete the math problem to verify you are human.",
+          title: t["Security Verification Required"], 
+          description: t["Please complete the math problem to verify you are human."],
           variant: "default"
         });
         return;
@@ -252,8 +252,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified" // Math CAPTCHA already verified
         });
         toast({
-          title: translations["Welcome back!"] || "Welcome back!",
-          description: translations["You've successfully logged in."] || "You've successfully logged in.",
+          title: t["Welcome back!"],
+          description: t["You've successfully logged in."],
         });
       } else {
         await registerMutation.mutateAsync({
@@ -270,8 +270,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           captchaInput: "verified"
         });
         toast({
-          title: translations["Account created!"] || "Account created!",
-          description: translations["Welcome to Dedw3n! You can now enjoy all features."] || "Welcome to Dedw3n! You can now enjoy all features.",
+          title: t["Account created!"],
+          description: t["Welcome to Dedw3n! You can now enjoy all features."],
         });
       }
       onClose();
@@ -333,12 +333,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
         <div className="flex-shrink-0">
           <DialogHeader className="text-center">
             <DialogTitle className="text-2xl font-bold text-gray-900">
-              {translations["Join Dedw3n"] || "Join Dedw3n"}
+              {t["Join Dedw3n"]}
             </DialogTitle>
             <DialogDescription className="text-sm text-gray-600">
               {isLogin ? 
-                (translations["Welcome back! Sign in to your account."] || "Welcome back! Sign in to your account.") : 
-                (translations["Create your account to get started with Dedw3n."] || "Create your account to get started with Dedw3n.")
+                t["Welcome back! Sign in to your account."] : 
+                t["Create your account to get started with Dedw3n."]
               }
             </DialogDescription>
           </DialogHeader>
