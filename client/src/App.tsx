@@ -16,6 +16,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { RecaptchaProvider } from "@/components/RecaptchaProvider";
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 
@@ -462,6 +463,7 @@ function App() {
                             <MobileNavigation />
                           </SafeComponentWrapper>
                           <OfflineIndicator />
+                          <CookieConsentBanner />
 
                           <GlobalLoginHandler />
                           {/* Offline simulator hidden as requested */}
