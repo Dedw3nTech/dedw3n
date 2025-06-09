@@ -238,9 +238,7 @@ function Router() {
         <SEOHead title="Video Demo - Dedw3n" description="Watch our video demonstration of Dedw3n's features and capabilities." />
         <VideoDemo />
       </Route>
-      <Route path="/test-auth">
-        <TestAuthPage />
-      </Route>
+
       <Route path="/test-cookies">
         <TestCookiesPage />
       </Route>
