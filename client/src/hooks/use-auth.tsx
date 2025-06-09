@@ -283,13 +283,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
+    mutationFn: async (credentials: InsertUser & { recaptchaToken?: string }) => {
       try {
         // Add debugger statement before registration request
         debugger; // For Node.js debugging
         console.log('Registration attempt with credentials (username only):', credentials.username);
         
-        const res = await apiRequest("POST", "/api/register", credentials);
+        const res = await apiRequest("POST", "/api/auth/register-with-recaptcha", credentials);
         
         // Add debugger to inspect response
         debugger; // For Node.js debugging

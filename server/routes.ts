@@ -13,7 +13,7 @@ import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema } from "@shared/schema";
 
-import { setupAuth, hashPassword, verifyRecaptcha } from "./auth";
+import { setupAuth, hashPassword, verifyRecaptcha, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
 import { promisify } from "util";
 import { scrypt, randomBytes } from "crypto";
@@ -1086,8 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Verify password using the auth module's password comparison
-        const { comparePasswords } = await import('./auth');
+        // Verify password using the imported comparePasswords function
         const isPasswordValid = await comparePasswords(password, user.password);
         
         if (!isPasswordValid) {
