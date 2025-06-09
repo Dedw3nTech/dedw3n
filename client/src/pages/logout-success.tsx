@@ -133,17 +133,6 @@ export default function LogoutSuccess() {
               asChild
               className="w-full bg-black hover:bg-gray-900 text-white"
             >
-              <Link href="/auth">
-                Sign in again
-              </Link>
-            </Button>
-          </div>
-          
-          <div className="pt-2">
-            <Button 
-              asChild
-              className="w-full bg-black hover:bg-gray-900 text-white border-black"
-            >
               <Link href="/">
                 Back to home
               </Link>
