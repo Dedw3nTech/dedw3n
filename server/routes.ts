@@ -537,13 +537,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[RECAPTCHA] Login verification passed for user: ${username}`);
       
       // Proceed with normal authentication
+      console.log(`[AUTH] Looking up user: ${username}`);
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log(`[AUTH] User not found: ${username}`);
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
+      console.log(`[AUTH] User found: ${user.username} (ID: ${user.id})`);
+      
       // Check if account is locked
       if (user.isLocked) {
+        console.log(`[AUTH] Account locked: ${username}`);
         return res.status(423).json({ 
           message: "Account is locked. Please contact support.",
           code: "ACCOUNT_LOCKED"
@@ -551,9 +556,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password using the imported comparePasswords function
+      console.log(`[AUTH] Verifying password for user: ${username}`);
+      console.log(`[AUTH] Stored password hash length: ${user.password ? user.password.length : 'null'}`);
+      console.log(`[AUTH] Input password length: ${password ? password.length : 'null'}`);
+      
       const isPasswordValid = await comparePasswords(password, user.password);
+      console.log(`[AUTH] Password verification result: ${isPasswordValid}`);
       
       if (!isPasswordValid) {
+        console.log(`[AUTH] Password verification failed for user: ${username}`);
+        // Track failed login attempts
+        const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+        console.log(`[AUTH] Failed login attempt ${failedAttempts} for user: ${username}`);
+        
+        // Update failed attempts in database
+        try {
+          await storage.updateUser(user.id, { 
+            failedLoginAttempts: failedAttempts,
+            lastFailedLogin: new Date()
+          });
+        } catch (updateError) {
+          console.error('[AUTH] Error updating failed login attempts:', updateError);
+        }
+        
         return res.status(401).json({ message: "Invalid credentials" });
       }
       

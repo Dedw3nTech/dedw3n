@@ -38,7 +38,8 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   
   if (!siteKey) {
-    console.warn('VITE_RECAPTCHA_SITE_KEY not found in environment variables');
+    console.error('VITE_RECAPTCHA_SITE_KEY not found in environment variables - reCAPTCHA will not work');
+    // Still render children but without reCAPTCHA protection
     return <>{children}</>;
   }
 
@@ -50,6 +51,8 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
         async: true,
         defer: true,
         appendTo: 'head',
+        onLoad: () => console.log('[RECAPTCHA] Script loaded successfully'),
+        onError: (error) => console.error('[RECAPTCHA] Script failed to load:', error),
       }}
     >
       <RecaptchaInner>{children}</RecaptchaInner>

@@ -167,10 +167,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           }
         } catch (recaptchaError) {
           console.error('reCAPTCHA execution failed:', recaptchaError);
-          
-          // For debugging, let's bypass reCAPTCHA temporarily and see if login works
-          console.warn('Bypassing reCAPTCHA for debugging - this should be removed in production');
-          recaptchaToken = 'debug-bypass-token';
+          toast({
+            title: "Security Verification Failed",
+            description: "Please refresh the page and try again. If the problem persists, check your internet connection.",
+            variant: "destructive",
+          });
+          return;
         }
       } else {
         console.warn('executeRecaptcha function not available');

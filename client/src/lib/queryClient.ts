@@ -192,6 +192,12 @@ async function apiRequestFull(
   if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
     // Clear the logged out flag for login/register attempts
     setLoggedOutFlag(false);
+    // Remove logout headers for login attempts
+    if (requestOptions.headers && typeof requestOptions.headers === 'object') {
+      const headers = requestOptions.headers as Record<string, string>;
+      delete headers['X-User-Logged-Out'];
+      delete headers['X-Auth-Logged-Out'];
+    }
   } 
   // Add headers for logout state - but not for login/register endpoints
   else if (isUserLoggedOut()) {

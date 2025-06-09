@@ -17,15 +17,14 @@ import svgCaptcha from "svg-captcha";
 // reCAPTCHA verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
-    // Handle debug bypass token
-    if (token === 'debug-bypass-token') {
-      console.log(`[RECAPTCHA] Debug bypass token detected for action ${action} - allowing for debugging`);
-      return true;
-    }
-
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!secretKey) {
-      console.warn('[RECAPTCHA] Secret key not configured');
+      console.error('[RECAPTCHA] Secret key not configured - check RECAPTCHA_SECRET_KEY environment variable');
+      return false;
+    }
+
+    if (!token || token.length < 10) {
+      console.error('[RECAPTCHA] Invalid token provided:', token ? 'token too short' : 'no token');
       return false;
     }
 
