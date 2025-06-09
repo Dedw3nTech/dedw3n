@@ -161,10 +161,15 @@ export default function MessagesPage() {
   const responseOtherUser = messagesResponse?.otherUser;
   const responseCurrentUser = messagesResponse?.currentUser;
 
-  // Find the active conversation partner
-  const conversationPartner = activeApiConversation?.participants?.find(
-    (p: any) => p.id !== currentUser.id
-  );
+  // Find the active conversation partner - prioritize responseOtherUser from messages API
+  let conversationPartner = null;
+  if (responseOtherUser) {
+    conversationPartner = responseOtherUser;
+  } else if (activeApiConversation?.participants) {
+    conversationPartner = activeApiConversation.participants.find(
+      (p: any) => p.id !== currentUser.id
+    );
+  }
 
   // Create a user map for message senders (includes current user and conversation partner)
   const userMap = new Map();
@@ -753,6 +758,14 @@ export default function MessagesPage() {
                       
                       // Get the actual sender information
                       const senderInfo = getSenderInfo(message);
+                      
+                      // Debug logging to understand the display issue
+                      console.log(`Message ${index} from sender ${messageUserId}:`, {
+                        messageUserId,
+                        isCurrentUser,
+                        senderInfo,
+                        currentUserId: currentUser.id
+                      });
                       
                       return (
                         <div
