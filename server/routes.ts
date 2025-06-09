@@ -7486,48 +7486,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add comprehensive SEO and Search Console fixes
   
-  // Handle trailing slashes - redirect to remove trailing slash
+  // Consolidated redirect handler to prevent redirect chains
+  const redirectMap = new Map([
+    // Legacy HTML routes
+    ['/products.html', '/products'],
+    ['/community.html', '/community'],
+    ['/dating.html', '/dating'],
+    
+    // Case-sensitive variations
+    ['/Products', '/products'],
+    ['/Community', '/community'],
+    ['/Dating', '/dating'],
+    
+    // Marketplace redirects
+    ['/b2c', '/marketplace/b2c'],
+    ['/B2C', '/marketplace/b2c'],
+    ['/b2b', '/marketplace/b2b'],
+    ['/B2B', '/marketplace/b2b'],
+    ['/c2c', '/marketplace/c2c'],
+    ['/C2C', '/marketplace/c2c']
+  ]);
+
+  // Single redirect middleware to handle all redirects efficiently
   app.use((req: Request, res: Response, next: NextFunction) => {
+    // Skip API routes and static assets
+    if (req.path.startsWith('/api/') || req.path.startsWith('/assets/')) {
+      return next();
+    }
+
+    // Handle trailing slashes (except root)
     if (req.path.length > 1 && req.path.endsWith('/')) {
       const newPath = req.path.slice(0, -1);
-      return res.redirect(301, newPath + (req.url.includes('?') ? req.url.substring(req.path.length) : ''));
+      const queryString = req.url.includes('?') ? req.url.substring(req.path.length) : '';
+      return res.redirect(301, newPath + queryString);
     }
+
+    // Handle predefined redirects
+    const targetPath = redirectMap.get(req.path);
+    if (targetPath) {
+      const queryString = req.url.includes('?') ? req.url.substring(req.path.length) : '';
+      return res.redirect(301, targetPath + queryString);
+    }
+
     next();
-  });
-
-  // Handle old URL patterns and redirects to prevent "Page with redirect" issues
-  app.get('/products.html', (req: Request, res: Response) => {
-    res.redirect(301, '/products');
-  });
-  
-  app.get('/community.html', (req: Request, res: Response) => {
-    res.redirect(301, '/community');
-  });
-  
-  app.get('/dating.html', (req: Request, res: Response) => {
-    res.redirect(301, '/dating');
-  });
-
-  // Handle case-sensitive URL variations
-  app.get('/Products', (req: Request, res: Response) => {
-    res.redirect(301, '/products');
-  });
-  
-  app.get('/Community', (req: Request, res: Response) => {
-    res.redirect(301, '/community');
-  });
-  
-  app.get('/Dating', (req: Request, res: Response) => {
-    res.redirect(301, '/dating');
-  });
-
-  // Redirect B2C page to main B2C marketplace
-  app.get('/b2c', (req: Request, res: Response) => {
-    res.redirect(301, '/marketplace/b2c');
-  });
-  
-  app.get('/B2C', (req: Request, res: Response) => {
-    res.redirect(301, '/marketplace/b2c');
   });
 
   // Add canonical URL headers for API responses

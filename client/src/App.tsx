@@ -34,6 +34,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 import { CommunityNav } from "@/components/layout/CommunityNav";
 import { DatingNav } from "@/components/layout/DatingNav";
+import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
 
 // Community Navigation wrapper
 function CommunityNavWrapper() {
@@ -193,30 +194,92 @@ import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
 
 
+// SEO wrapper component for routing
+function SEORoute({ path, component: Component, seoConfig, children, ...props }: any) {
+  const [location] = useLocation();
+  const isActive = location === path || (typeof path === 'string' && location.startsWith(path + '/'));
+  
+  if (!isActive) return null;
+  
+  return (
+    <>
+      {seoConfig && <SEOHead {...seoConfig} />}
+      {Component ? <Component {...props} /> : children}
+    </>
+  );
+}
+
 function Router() {
+  const [location] = useLocation();
+  
   return (
     <Switch>
       <Route path="/video-demo">
+        <SEOHead title="Video Demo - Dedw3n" description="Watch our video demonstration of Dedw3n's features and capabilities." />
         <VideoDemo />
       </Route>
       <Route path="/test-auth">
         <TestAuthPage />
       </Route>
 
-      <Route path="/" component={Products} />
+      <Route path="/">
+        <SEOHead {...seoConfigs.home} />
+        <Products />
+      </Route>
 
-      <Route path="/logout-success" component={LogoutSuccess} />
-      <Route path="/marketplace/b2c" component={Products} />
-      <Route path="/marketplace/b2b" component={Products} />
-      <Route path="/marketplace/c2c" component={Products} />
-      <Route path="/marketplace" component={Products} />
-      <Route path="/products" component={Products} />
+      <Route path="/logout-success">
+        <SEOHead title="Logout Successful - Dedw3n" description="You have been successfully logged out from Dedw3n." />
+        <LogoutSuccess />
+      </Route>
+      
+      <Route path="/marketplace/b2c">
+        <SEOHead {...seoConfigs.products} title="B2C Marketplace - Dedw3n" description="Browse our Business-to-Consumer marketplace with thousands of products from verified vendors." />
+        <Products />
+      </Route>
+      
+      <Route path="/marketplace/b2b">
+        <SEOHead {...seoConfigs.products} title="B2B Marketplace - Dedw3n" description="Discover Business-to-Business solutions and wholesale products from trusted suppliers." />
+        <Products />
+      </Route>
+      
+      <Route path="/marketplace/c2c">
+        <SEOHead {...seoConfigs.products} title="C2C Marketplace - Dedw3n" description="Shop Consumer-to-Consumer marketplace for unique items and second-hand products." />
+        <Products />
+      </Route>
+      
+      <Route path="/marketplace">
+        <SEOHead {...seoConfigs.products} />
+        <Products />
+      </Route>
+      
+      <Route path="/products">
+        <SEOHead {...seoConfigs.products} />
+        <Products />
+      </Route>
+      
       <Route path="/product/:id" component={ProductDetail} />
-      <Route path="/vendors" component={VendorsPage} />
+      
+      <Route path="/vendors">
+        <SEOHead {...seoConfigs.vendors} />
+        <VendorsPage />
+      </Route>
+      
       <Route path="/vendor/:id" component={VendorDetailPage} />
-      <Route path="/government" component={GovernmentPage} />
-      <Route path="/search" component={SearchPage} />
-      <Route path="/dating" component={DatingPage} />
+      
+      <Route path="/government">
+        <SEOHead {...seoConfigs.government} />
+        <GovernmentPage />
+      </Route>
+      
+      <Route path="/search">
+        <SEOHead title="Search Results - Dedw3n" description="Search results for products, vendors, and content on Dedw3n marketplace." />
+        <SearchPage />
+      </Route>
+      
+      <Route path="/dating">
+        <SEOHead {...seoConfigs.dating} />
+        <DatingPage />
+      </Route>
       <Route path="/profile/:username" component={UserProfilePage} />
       <ProtectedRoute path="/checkout" component={Checkout} />
       <ProtectedRoute path="/checkout-new" component={CheckoutNew} />
