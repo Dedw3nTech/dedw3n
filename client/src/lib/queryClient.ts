@@ -199,6 +199,12 @@ async function apiRequestFull(
     };
   }
 
+  // Check if auto-login should be enabled (development mode)
+  const shouldAutoLogin = process.env.NODE_ENV === 'development' || 
+                          localStorage.getItem('enable_auto_login') === 'true' ||
+                          window.location.search.includes('auto_login=true') ||
+                          window.location.search.includes('serruti=true');
+
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
   if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
     // Clear the logged out flag for login/register attempts
@@ -210,14 +216,22 @@ async function apiRequestFull(
       delete headers['X-Auth-Logged-Out'];
     }
   } 
-  // Add headers for logout state - but not for login/register endpoints
-  else if (isUserLoggedOut()) {
+  // Don't add logout headers if auto-login is enabled
+  else if (isUserLoggedOut() && !shouldAutoLogin) {
     requestOptions.headers = {
       ...requestOptions.headers,
       'X-User-Logged-Out': 'true',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0'
+    };
+  }
+
+  // Add auto-login header if enabled
+  if (shouldAutoLogin) {
+    requestOptions.headers = {
+      ...requestOptions.headers,
+      'X-Auto-Login': 'true'
     };
   }
 

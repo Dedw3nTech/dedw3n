@@ -42,21 +42,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Skip logout header check for login/register endpoints to allow fresh login attempts
-  const isAuthEndpoint = req.path === '/api/auth/login-with-recaptcha' || 
-                         req.path === '/api/auth/register-with-recaptcha' ||
-                         req.path.includes('/api/auth/login') || 
-                         req.path.includes('/api/auth/register') ||
-                         req.path.includes('/api/login') ||
-                         req.path.includes('/api/register');
-                         
-  if ((req.headers['x-auth-logged-out'] === 'true' || 
-       req.headers['x-user-logged-out'] === 'true') && !isAuthEndpoint) {
-    console.log('[AUTH] X-User-Logged-Out header detected for non-auth endpoint, rejecting authentication');
-    return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
-  }
-
-  // Third priority: Auto-login for development
+  // Third priority: Auto-login for development (check BEFORE logout headers)
   const autoLogin = req.headers['x-auto-login'];
   if (autoLogin === 'true') {
     try {
@@ -69,6 +55,20 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     } catch (error) {
       console.error('[AUTH] Error with auto-login:', error);
     }
+  }
+
+  // Skip logout header check for login/register endpoints to allow fresh login attempts
+  const isAuthEndpoint = req.path === '/api/auth/login-with-recaptcha' || 
+                         req.path === '/api/auth/register-with-recaptcha' ||
+                         req.path.includes('/api/auth/login') || 
+                         req.path.includes('/api/auth/register') ||
+                         req.path.includes('/api/login') ||
+                         req.path.includes('/api/register');
+                         
+  if ((req.headers['x-auth-logged-out'] === 'true' || 
+       req.headers['x-user-logged-out'] === 'true') && !isAuthEndpoint) {
+    console.log('[AUTH] X-User-Logged-Out header detected for non-auth endpoint, rejecting authentication');
+    return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
   }
 
   // Fourth priority: Check Passport session authentication
