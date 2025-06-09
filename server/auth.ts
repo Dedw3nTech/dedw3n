@@ -24,6 +24,46 @@ const captchaStore = new Map<string, { text: string; expires: number }>();
 const ACCOUNT_LOCKOUT_ATTEMPTS = 5;
 const ACCOUNT_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 
+// Password security settings
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_PEPPER = process.env.PASSWORD_PEPPER || 'DedW3nSecurePepper2025!@#';
+
+// Password validation function
+function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  // Check for common weak patterns
+  const commonPasswords = ['password', '123456', 'qwerty', 'abc123', 'password123'];
+  if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+    errors.push('Password contains common weak patterns');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 function rateLimitAuth(ip: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): boolean {
   const now = Date.now();
   const attempt = authAttempts.get(ip);
@@ -129,15 +169,17 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-// Optimized password hashing for mobile performance
+// Enhanced password hashing with salt and pepper
 export async function hashPassword(password: string) {
-  // Reduced parameters for mobile performance while maintaining security
-  const salt = randomBytes(16).toString("hex"); // Reduced salt size
-  const keylen = 32; // Reduced output key length
+  // Add pepper to password before hashing for additional security layer
+  const pepperedPassword = password + PASSWORD_PEPPER;
+  
+  // Generate cryptographically secure salt
+  const salt = randomBytes(16).toString("hex");
+  const keylen = 32; // 256-bit output key
   
   try {
-    // Remove excessive debug logging that clutters mobile logs
-    const buf = (await scryptAsync(password, salt, keylen)) as Buffer;
+    const buf = (await scryptAsync(pepperedPassword, salt, keylen)) as Buffer;
     const hashedPassword = `${buf.toString("hex")}.${salt}`;
     return hashedPassword;
   } catch (error) {
@@ -160,11 +202,14 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
     
+    // Add pepper to supplied password for comparison
+    const pepperedSupplied = supplied + PASSWORD_PEPPER;
+    
     const hashedBuf = Buffer.from(hashed, "hex");
     const keylen = hashedBuf.length; // Use the actual length of the stored hash
     
     // Use same parameters as the hashing function
-    const suppliedBuf = (await scryptAsync(supplied, salt, keylen)) as Buffer;
+    const suppliedBuf = (await scryptAsync(pepperedSupplied, salt, keylen)) as Buffer;
     
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
