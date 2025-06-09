@@ -5599,10 +5599,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced email validation endpoint with retry logic and fallbacks
+  // Enhanced email validation endpoint with retry logic and app token support
   app.post('/api/validate-email', async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
+      const appToken = req.headers['x-clearout-app-token'] as string;
 
       if (!email || typeof email !== 'string') {
         return res.status(400).json({ 
@@ -5651,6 +5652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[EMAIL_VALIDATION] Validating email: ${email.substring(0, 3)}***`);
       console.log(`[EMAIL_VALIDATION] API Key present: ${clearoutApiKey ? 'Yes' : 'No'}`);
       console.log(`[EMAIL_VALIDATION] API Key length: ${clearoutApiKey?.length || 0}`);
+      console.log(`[EMAIL_VALIDATION] App Token present: ${appToken ? 'Yes' : 'No'}`);
 
       // Retry function with exponential backoff
       const makeRequest = async (attempt = 1) => {
@@ -5658,14 +5660,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-          // Try different Clearout API authentication formats
+          // Clearout API request with app token support
+          const headers: Record<string, string> = {
+            'Authorization': `Bearer ${clearoutApiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          };
+
+          // Add app token if provided
+          if (appToken) {
+            headers['X-App-Token'] = appToken;
+          }
+
           const response = await fetch(`https://api.clearout.io/v2/email_verify/instant`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${clearoutApiKey}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
+            headers,
             body: JSON.stringify({
               email: email.trim().toLowerCase()
             }),

@@ -76,6 +76,7 @@ export function useEmailValidation() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-Clearout-App-Token': 'b20cc2411ac31a7f06a5baaca774f378:93705c739c1e05a3014298e56d10b808959fe8becc75c12f80bfc8d30e0c86f8'
           },
           body: JSON.stringify({ email }),
           signal: abortControllerRef.current.signal
