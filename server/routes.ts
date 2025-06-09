@@ -6449,6 +6449,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global Privacy Control (GPC) API endpoint
+  app.get('/api/gpc/status', (req: Request & { gpc?: any }, res: Response) => {
+    try {
+      const gpcData = req.gpc || {
+        detected: false,
+        value: undefined,
+        source: 'none',
+        timestamp: new Date()
+      };
+
+      console.log('[GPC API] Status requested:', gpcData);
+
+      res.json({
+        detected: gpcData.detected,
+        value: gpcData.value,
+        source: gpcData.source,
+        timestamp: gpcData.timestamp,
+        hasOptedOut: gpcData.detected && gpcData.value === true,
+        appliedPreferences: {
+          analyticsDisabled: gpcData.detected && gpcData.value === true,
+          dataMinimization: gpcData.detected && gpcData.value === true,
+          thirdPartySharing: gpcData.detected && gpcData.value === true ? 'disabled' : 'enabled'
+        }
+      });
+    } catch (error) {
+      console.error('[GPC API] Error getting GPC status:', error);
+      res.status(500).json({ 
+        error: 'Failed to get GPC status',
+        detected: false,
+        value: undefined,
+        source: 'none'
+      });
+    }
+  });
+
   // Language code mapping for DeepL API (only supported languages)
   const deeplLanguageMap: Record<string, string> = {
     'EN': 'EN-US',
