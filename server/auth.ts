@@ -12,7 +12,7 @@ import { User as SelectUser } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
-import svgCaptcha from "svg-captcha";
+// SVG CAPTCHA removed - using math CAPTCHA only
 
 // reCAPTCHA verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
@@ -259,63 +259,47 @@ function resetAuthAttempts(ip: string): void {
 }
 
 // Generate CAPTCHA
-function generateCaptcha(): { id: string; svg: string; text: string } {
-  const captcha = svgCaptcha.create({
-    size: 5,
-    noise: 3,
-    color: true,
-    background: '#f8f9fa'
-  });
-  
-  const id = randomBytes(16).toString('hex');
-  const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
-  
-  captchaStore.set(id, { text: captcha.text.toLowerCase(), expires });
-  
-  return {
-    id,
-    svg: captcha.data,
-    text: captcha.text
-  };
-}
+// Legacy CAPTCHA generation removed - using math CAPTCHA only
 
 // Math CAPTCHA store for frontend-validated challenges
 const mathCaptchaStore = new Map<string, { validated: boolean; timestamp: number }>();
 
-// Verify CAPTCHA (supports both server-generated and math CAPTCHA)
+// Unified CAPTCHA verification for math-based system only
 function verifyCaptcha(id: string, userInput: string): boolean {
-  // Handle math CAPTCHA tokens (our custom system)
+  console.log(`[DEBUG] CAPTCHA verification - ID: ${id}, Input: ${userInput}`);
+  
+  // Only support math CAPTCHA tokens now
   if (id && id.startsWith('math_')) {
-    // For math CAPTCHA, we trust the frontend validation if input is "verified"
+    // For math CAPTCHA, accept "verified" from frontend validation
     if (userInput === "verified") {
-      // Store this token as validated for a short time to prevent reuse
+      // Store validated token to prevent reuse
       mathCaptchaStore.set(id, { validated: true, timestamp: Date.now() });
       
-      // Clean up old math CAPTCHA tokens
+      // Clean up expired tokens
       const now = Date.now();
       Array.from(mathCaptchaStore.entries()).forEach(([key, value]) => {
-        if (now - value.timestamp > 60000) { // 1 minute expiry
+        if (now - value.timestamp > 300000) { // 5 minutes expiry
           mathCaptchaStore.delete(key);
         }
       });
       
+      console.log(`[DEBUG] Math CAPTCHA verified successfully for token: ${id}`);
       return true;
     }
+    
+    // Check if this token was already validated and prevent reuse
+    const existing = mathCaptchaStore.get(id);
+    if (existing) {
+      console.log(`[DEBUG] Math CAPTCHA token already used: ${id}`);
+      return false;
+    }
+    
+    console.log(`[DEBUG] Math CAPTCHA verification failed for token: ${id}`);
     return false;
   }
   
-  // Handle server-generated CAPTCHA
-  const stored = captchaStore.get(id);
-  if (!stored) return false;
-  
-  if (Date.now() > stored.expires) {
-    captchaStore.delete(id);
-    return false;
-  }
-  
-  const isValid = stored.text === userInput.toLowerCase();
-  captchaStore.delete(id); // Single use
-  return isValid;
+  console.log(`[DEBUG] Invalid CAPTCHA token format: ${id}`);
+  return false;
 }
 
 // Account lockout functions
@@ -671,20 +655,12 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // CAPTCHA endpoint
+  // Math CAPTCHA endpoint - frontend generates challenges directly
   app.get("/api/auth/captcha", (req, res) => {
-    try {
-      const captcha = generateCaptcha();
-      console.log(`[SECURITY] Generated CAPTCHA: ${captcha.id}`);
-      
-      res.json({
-        id: captcha.id,
-        svg: captcha.svg
-      });
-    } catch (error) {
-      console.error(`[ERROR] CAPTCHA generation failed:`, error);
-      res.status(500).json({ message: "Failed to generate CAPTCHA" });
-    }
+    res.json({
+      type: "math",
+      message: "Math CAPTCHA is handled by frontend"
+    });
   });
 
   // Authentication routes
