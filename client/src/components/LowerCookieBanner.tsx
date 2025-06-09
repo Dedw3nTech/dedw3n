@@ -50,7 +50,9 @@ export function LowerCookieBanner() {
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-2">
               <div className="flex items-center mb-2">
-                <Cookie className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+                <div className="bg-black rounded-full p-1 mr-2 flex-shrink-0">
+                  <Cookie className="h-4 w-4 text-white" />
+                </div>
                 <h3 className="text-sm sm:text-base font-semibold text-gray-900">Cookie & Privacy Preferences</h3>
               </div>
               <p className="text-sm sm:text-xs text-gray-600 leading-relaxed">
@@ -74,7 +76,7 @@ export function LowerCookieBanner() {
             <Button 
               size="sm" 
               onClick={acceptAll}
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto text-sm py-2.5 sm:py-2"
+              className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto text-sm py-2.5 sm:py-2"
             >
               Accept All Cookies
             </Button>
@@ -83,9 +85,9 @@ export function LowerCookieBanner() {
                 size="sm" 
                 variant="outline"
                 onClick={handleManageCookies}
-                className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-1 sm:flex-none text-sm py-2.5 sm:py-2"
+                className="bg-black border-black text-white hover:bg-gray-800 flex-1 sm:flex-none text-sm py-2.5 sm:py-2"
               >
-                <Settings className="h-4 w-4 mr-1" />
+                <Settings className="h-4 w-4 mr-1 text-white" />
                 <span className="hidden xs:inline">Manage</span>
                 <span className="xs:hidden">Settings</span>
               </Button>
@@ -93,7 +95,7 @@ export function LowerCookieBanner() {
                 size="sm" 
                 variant="outline"
                 onClick={acceptNecessary}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 flex-1 sm:flex-none text-sm py-2.5 sm:py-2"
+                className="bg-black border-black text-white hover:bg-gray-800 flex-1 sm:flex-none text-sm py-2.5 sm:py-2"
               >
                 <span className="hidden xs:inline">Necessary Only</span>
                 <span className="xs:hidden">Essential</span>
@@ -206,7 +208,7 @@ export function LowerCookieBanner() {
             <Button
               variant="outline"
               onClick={() => setShowManageModal(false)}
-              className="text-gray-600"
+              className="bg-black border-black text-white hover:bg-gray-800"
             >
               Cancel
             </Button>
@@ -221,6 +223,7 @@ export function LowerCookieBanner() {
                     preferences: false,
                   });
                 }}
+                className="bg-black border-black text-white hover:bg-gray-800"
               >
                 Reject All
               </Button>
@@ -234,12 +237,13 @@ export function LowerCookieBanner() {
                     preferences: true,
                   });
                 }}
+                className="bg-black border-black text-white hover:bg-gray-800"
               >
                 Accept All
               </Button>
               <Button
                 onClick={handleSavePreferences}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 Save Preferences
               </Button>
