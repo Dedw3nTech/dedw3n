@@ -522,6 +522,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 id="remember-password"
                 checked={rememberPassword}
                 onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+                className="scale-75"
               />
               <Label 
                 htmlFor="remember-password" 
