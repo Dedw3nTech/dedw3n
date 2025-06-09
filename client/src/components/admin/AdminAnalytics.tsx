@@ -40,104 +40,19 @@ export default function AdminAnalytics() {
     },
   });
 
-  // If no real data exists yet, we'll show placeholder analytical UI
-  // This will automatically show real data when the API endpoint is implemented
-  const mockData = {
-    userRegistrations: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [
-        {
-          label: "User Registrations",
-          data: [32, 45, 28, 65, 53, 38, 47],
-          backgroundColor: "rgba(99, 102, 241, 0.5)",
-          borderColor: "rgb(99, 102, 241)",
-        },
-      ],
-    },
-    sales: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [
-        {
-          label: "Sales",
-          data: [421, 389, 475, 590, 671, 783, 819],
-          borderColor: "rgb(16, 185, 129)",
-          backgroundColor: "rgba(16, 185, 129, 0.1)",
-          fill: true,
-        },
-      ],
-    },
-    productCategories: {
-      labels: ["Electronics", "Fashion", "Home", "Beauty", "Sports", "Books"],
-      datasets: [
-        {
-          label: "Product Distribution",
-          data: [35, 25, 15, 10, 10, 5],
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.7)",
-            "rgba(54, 162, 235, 0.7)",
-            "rgba(255, 206, 86, 0.7)",
-            "rgba(75, 192, 192, 0.7)",
-            "rgba(153, 102, 255, 0.7)",
-            "rgba(255, 159, 64, 0.7)",
-          ],
-        },
-      ],
-    },
-    traffic: {
-      labels: ["Direct", "Organic", "Social", "Referral", "Email"],
-      datasets: [
-        {
-          label: "Traffic Sources",
-          data: [45, 25, 20, 5, 5],
-          backgroundColor: [
-            "rgba(54, 162, 235, 0.7)",
-            "rgba(16, 185, 129, 0.7)",
-            "rgba(99, 102, 241, 0.7)",
-            "rgba(245, 158, 11, 0.7)",
-            "rgba(239, 68, 68, 0.7)",
-          ],
-          borderWidth: 1,
-          borderColor: "#fff",
-        },
-      ],
-    },
-    orderStatus: {
-      labels: ["Completed", "Processing", "Shipped", "Cancelled"],
-      datasets: [
-        {
-          label: "Order Status",
-          data: [68, 15, 12, 5],
-          backgroundColor: [
-            "rgba(16, 185, 129, 0.7)",
-            "rgba(245, 158, 11, 0.7)",
-            "rgba(59, 130, 246, 0.7)",
-            "rgba(239, 68, 68, 0.7)",
-          ],
-          borderWidth: 1,
-          borderColor: "#fff",
-        },
-      ],
-    },
-    revenue: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      datasets: [
-        {
-          label: "Revenue",
-          data: [12500, 15800, 18200, 21400, 24500, 27800],
-          backgroundColor: "rgba(99, 102, 241, 0.5)",
-          borderColor: "rgb(99, 102, 241)",
-        },
-      ],
-    },
-  };
-
-  // Use real data if available, otherwise use mock data
-  const chartData = analyticsData || mockData;
-
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!analyticsData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <h3 className="text-lg font-medium mb-2">No Analytics Data Available</h3>
+        <p className="text-muted-foreground">Analytics data will appear here once there is sufficient user activity.</p>
       </div>
     );
   }
@@ -160,74 +75,166 @@ export default function AdminAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              User Registrations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChart className="h-[300px]" data={chartData.userRegistrations} />
-          </CardContent>
-        </Card>
+        {analyticsData.userRegistrations && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">
+                User Registrations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BarChart className="h-[300px]" data={analyticsData.userRegistrations} />
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Sales Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AreaChart className="h-[300px]" data={chartData.sales} />
-          </CardContent>
-        </Card>
+        {analyticsData.sales && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">
+                Sales Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AreaChart className="h-[300px]" data={analyticsData.sales} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Product Categories
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PieChart className="h-[300px]" data={chartData.productCategories} />
-          </CardContent>
-        </Card>
+        {analyticsData.productCategories && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">
+                Product Categories
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PieChart className="h-[300px]" data={analyticsData.productCategories} />
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Traffic Sources
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DonutChart className="h-[300px]" data={chartData.traffic} />
-          </CardContent>
-        </Card>
+        {analyticsData.traffic && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">
+                Traffic Sources
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DonutChart className="h-[300px]" data={analyticsData.traffic} />
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Order Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DonutChart className="h-[300px]" data={chartData.orderStatus} />
-          </CardContent>
-        </Card>
+        {analyticsData.orderStatus && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium">
+                Order Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DonutChart className="h-[300px]" data={analyticsData.orderStatus} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-medium">
-            Revenue Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LineChart className="h-[300px]" data={chartData.revenue} />
-        </CardContent>
-      </Card>
+      {analyticsData.revenue && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">
+              Revenue Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LineChart className="h-[300px]" data={analyticsData.revenue} />
+          </CardContent>
+        </Card>
+      )}
+
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-4">
+          {analyticsData.overview && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {analyticsData.overview.map((metric: any, index: number) => (
+                <Card key={index}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {metric.label}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{metric.value}</div>
+                    {metric.change && (
+                      <p className={`text-xs ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {metric.change > 0 ? '+' : ''}{metric.change}% from last period
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="products" className="space-y-4">
+          {analyticsData.productMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BarChart className="h-[300px]" data={analyticsData.productMetrics.topProducts} />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PieChart className="h-[300px]" data={analyticsData.productMetrics.categoryPerformance} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="users" className="space-y-4">
+          {analyticsData.userMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LineChart className="h-[300px]" data={analyticsData.userMetrics.activity} />
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Demographics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <DonutChart className="h-[300px]" data={analyticsData.userMetrics.demographics} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
