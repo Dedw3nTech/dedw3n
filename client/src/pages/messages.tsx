@@ -791,17 +791,14 @@ export default function MessagesPage() {
                       // Fix message content perspective based on who is viewing
                       let displayContent = message.content;
                       
-                      // Debug logging
-                      console.log("Message ID:", message.id, "SenderId:", message.senderId, "CurrentUser:", currentUser.id, "IsCurrentUser:", isCurrentUser);
-                      console.log("Original content:", message.content);
-                      
                       // For gift messages sent by current user - change perspective to "You sent"
                       if (isCurrentUser && message.content.includes("I've sent you a gift:")) {
-                        console.log("Transforming gift message for current user");
+                        console.log("🔧 TRANSFORMING: Current user gift message");
+                        console.log("Original:", message.content);
                         displayContent = message.content.replace("🎁 I've sent you a gift:", "🎁 You sent a gift:");
                         displayContent = displayContent.replace("Hope you like this gift!", "Hope they like it!");
                         displayContent = displayContent.replace("Hope you like it!", "Hope they like it!");
-                        console.log("Transformed content:", displayContent);
+                        console.log("Transformed:", displayContent);
                       }
                       // For gift responses from other users - change perspective 
                       else if (!isCurrentUser && message.content.includes("I've accepted your gift:")) {
