@@ -385,6 +385,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
+            {/* reCAPTCHA Security Indicator - Above Submit Button */}
+            <div className="flex items-center justify-center mb-3 mt-2 p-2 bg-gray-50 rounded-md border">
+              <Shield className="h-4 w-4 mr-2 text-green-600" />
+              <span className="text-sm text-gray-600 font-medium">Protected by reCAPTCHA v3</span>
+            </div>
+
             <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
@@ -397,12 +403,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   (translations["Create Account"] || "Create Account")
               }
             </Button>
-
-            {/* reCAPTCHA Security Indicator */}
-            <div className="flex items-center justify-center mt-2 text-xs text-gray-500">
-              <Shield className="h-3 w-3 mr-1" />
-              Protected by reCAPTCHA v3
-            </div>
           </form>
 
           <div className="text-center">
