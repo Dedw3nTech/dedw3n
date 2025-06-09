@@ -521,9 +521,14 @@ export default function MessagesPage() {
             <div className="flex-1 overflow-y-auto">
               {filteredConversations.map((conversation: any) => {
                 // Find the other participant (not current user)
-                const otherParticipant = conversation.participants.find(
+                const otherParticipant = conversation.participants?.find(
                   (p: any) => p.id !== currentUser.id
                 );
+
+                // Skip if no other participant found
+                if (!otherParticipant) {
+                  return null;
+                }
 
                 const isActive = conversation.id === activeConversationId;
 
@@ -537,12 +542,12 @@ export default function MessagesPage() {
                   >
                     <div className="flex gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={otherParticipant.avatar || ""} alt={otherParticipant.name} />
-                        <AvatarFallback>{getInitials(otherParticipant.name)}</AvatarFallback>
+                        <AvatarImage src={otherParticipant.avatar || ""} alt={otherParticipant.name || otherParticipant.username} />
+                        <AvatarFallback>{getInitials(otherParticipant.name || otherParticipant.username || "U")}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <h3 className="font-medium truncate">{otherParticipant.name}</h3>
+                          <h3 className="font-medium truncate">{otherParticipant.name || otherParticipant.username}</h3>
                           {conversation.lastMessage && (
                             <span className="text-xs text-muted-foreground">
                               {new Date(conversation.lastMessage.createdAt).toLocaleTimeString([], {
@@ -554,7 +559,7 @@ export default function MessagesPage() {
                         </div>
                         {conversation.lastMessage && (
                           <p className="text-sm text-muted-foreground truncate">
-                            {conversation.lastMessage.userId === currentUser.id && "You: "}
+                            {conversation.lastMessage.senderId === currentUser.id && "You: "}
                             {conversation.lastMessage.content}
                           </p>
                         )}
@@ -565,7 +570,7 @@ export default function MessagesPage() {
                     )}
                   </div>
                 );
-              })}
+              }).filter(Boolean)}
             </div>
           )}
         </div>
