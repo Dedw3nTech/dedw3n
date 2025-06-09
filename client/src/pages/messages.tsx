@@ -782,13 +782,6 @@ export default function MessagesPage() {
                       // Handle both senderId and userId for compatibility
                       const messageUserId = message.senderId || message.userId;
                       const isCurrentUser = messageUserId === currentUser.id;
-                      
-                      // Debug logging for each message
-                      console.log(`Message ${message.id}: senderId=${message.senderId}, currentUser=${currentUser.id}, isCurrentUser=${isCurrentUser}`);
-                      console.log(`Content: "${message.content}"`);
-                      console.log(`Contains gift text: ${message.content.includes("I've sent you a gift:")}`);
-                      console.log(`Should transform: ${isCurrentUser && message.content.includes("I've sent you a gift:")}`);
-                      console.log("---");
                       const showAvatar = index === 0 || 
                         (apiMessages[index - 1].senderId || apiMessages[index - 1].userId) !== messageUserId;
                       
@@ -800,12 +793,9 @@ export default function MessagesPage() {
                       
                       // For gift messages sent by current user - change perspective to "You sent"
                       if (isCurrentUser && message.content.includes("I've sent you a gift:")) {
-                        console.log("🔧 TRANSFORMING: Current user gift message");
-                        console.log("Original:", message.content);
                         displayContent = message.content.replace("🎁 I've sent you a gift:", "🎁 You sent a gift:");
                         displayContent = displayContent.replace("Hope you like this gift!", "Hope they like it!");
                         displayContent = displayContent.replace("Hope you like it!", "Hope they like it!");
-                        console.log("Transformed:", displayContent);
                       }
                       // For gift responses from other users - change perspective 
                       else if (!isCurrentUser && message.content.includes("I've accepted your gift:")) {
