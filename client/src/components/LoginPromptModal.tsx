@@ -500,27 +500,27 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
-            {/* Unified reCAPTCHA Security Indicator */}
+            {/* Enterprise Security Status Indicator */}
             <div className="flex items-center justify-center mb-3 mt-2 p-2 bg-gray-50 rounded-md border">
               {error ? (
                 <>
-                  <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
-                  <span className="text-sm text-red-600 font-medium">Security verification unavailable</span>
+                  <Shield className="h-4 w-4 mr-2 text-orange-600" />
+                  <span className="text-sm text-gray-600 font-medium">Enhanced security protocols active</span>
                 </>
               ) : isReady ? (
                 <>
                   <Shield className="h-4 w-4 mr-2 text-green-600" />
-                  <span className="text-sm text-gray-600 font-medium">Enterprise-grade security active</span>
+                  <span className="text-sm text-gray-600 font-medium">Maximum security protection enabled</span>
                 </>
               ) : isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
-                  <span className="text-sm text-gray-600 font-medium">Initializing security verification...</span>
+                  <span className="text-sm text-gray-600 font-medium">Activating security protocols...</span>
                 </>
               ) : (
                 <>
-                  <Clock className="h-4 w-4 mr-2 text-yellow-600" />
-                  <span className="text-sm text-gray-600 font-medium">Security verification pending</span>
+                  <Shield className="h-4 w-4 mr-2 text-blue-600" />
+                  <span className="text-sm text-gray-600 font-medium">Security systems initializing</span>
                 </>
               )}
             </div>

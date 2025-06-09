@@ -138,49 +138,53 @@ export function UnifiedRecaptchaProvider({ children }: UnifiedRecaptchaProviderP
 
   // Enhanced token execution with comprehensive validation
   const executeRecaptcha = useCallback(async (action: string): Promise<string> => {
-    if (!siteKey) {
-      throw new Error('reCAPTCHA site key not configured');
-    }
-
-    if (!isReady) {
-      throw new Error('reCAPTCHA not ready - please wait for initialization');
-    }
-
-    if (!window.grecaptcha) {
-      throw new Error('reCAPTCHA script not loaded');
-    }
-
-    if (!window.grecaptcha.ready || !window.grecaptcha.execute) {
-      throw new Error('reCAPTCHA functions not available');
-    }
-
+    console.log(`[UNIFIED-RECAPTCHA] Starting secure authentication verification...`);
     console.log(`[UNIFIED-RECAPTCHA] Executing for action: ${action}`);
-    console.log(`[UNIFIED-RECAPTCHA] Site key: ${siteKey.substring(0, 12)}...`);
+    console.log(`[UNIFIED-RECAPTCHA] Site key: ${siteKey?.substring(0, 12)}...`);
+    
+    if (!siteKey) {
+      const error = new Error('reCAPTCHA site key not configured');
+      console.error('[UNIFIED-RECAPTCHA] Configuration error:', error);
+      throw error;
+    }
 
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('reCAPTCHA execution timeout (20s)'));
-      }, 20000);
+    if (!isReady || !window.grecaptcha) {
+      const error = new Error('reCAPTCHA not ready - service unavailable');
+      console.error('[UNIFIED-RECAPTCHA] Readiness error:', error);
+      throw error;
+    }
 
-      window.grecaptcha.ready(async () => {
-        try {
-          const token = await window.grecaptcha.execute(siteKey, { action });
-          clearTimeout(timeoutId);
-          
-          // Validate token format
-          if (!token || typeof token !== 'string' || token.length < 20) {
-            throw new Error('Invalid reCAPTCHA token received');
+    try {
+      return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          const timeoutError = new Error('reCAPTCHA execution timeout');
+          console.error('[UNIFIED-RECAPTCHA] Timeout error:', timeoutError);
+          reject(timeoutError);
+        }, 15000);
+
+        window.grecaptcha.ready(async () => {
+          try {
+            console.log('[UNIFIED-RECAPTCHA] Executing reCAPTCHA...');
+            const token = await window.grecaptcha.execute(siteKey, { action });
+            clearTimeout(timeoutId);
+            
+            if (!token || typeof token !== 'string' || token.length < 20) {
+              throw new Error('Invalid token format received');
+            }
+            
+            console.log(`[UNIFIED-RECAPTCHA] Token generated successfully, length: ${token.length}`);
+            resolve(token);
+          } catch (executionError) {
+            clearTimeout(timeoutId);
+            console.error('[UNIFIED-RECAPTCHA] Execution failed:', executionError);
+            reject(new Error('Security verification failed'));
           }
-          
-          console.log(`[UNIFIED-RECAPTCHA] Token generated successfully for ${action}, length: ${token.length}`);
-          resolve(token);
-        } catch (executionError) {
-          clearTimeout(timeoutId);
-          console.error('[UNIFIED-RECAPTCHA] Execution failed:', executionError);
-          reject(executionError);
-        }
+        });
       });
-    });
+    } catch (generalError) {
+      console.error('[UNIFIED-RECAPTCHA] Security verification failed:', generalError);
+      throw new Error('Authentication verification unavailable');
+    }
   }, [siteKey, isReady]);
 
   const contextValue = {
