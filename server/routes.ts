@@ -506,6 +506,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // reCAPTCHA-protected login endpoint
+  app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
+    const { username, password, recaptchaToken } = req.body;
+    
+    try {
+      // Verify reCAPTCHA token
+      if (!recaptchaToken) {
+        return res.status(400).json({ 
+          message: "reCAPTCHA verification required",
+          code: "RECAPTCHA_REQUIRED"
+        });
+      }
+      
+      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'login');
+      if (!isRecaptchaValid) {
+        return res.status(400).json({ 
+          message: "reCAPTCHA verification failed. Please try again.",
+          code: "RECAPTCHA_FAILED"
+        });
+      }
+      
+      console.log(`[RECAPTCHA] Login verification passed for user: ${username}`);
+      
+      // Proceed with normal authentication
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Check if account is locked
+      if (user.isLocked) {
+        return res.status(423).json({ 
+          message: "Account is locked. Please contact support.",
+          code: "ACCOUNT_LOCKED"
+        });
+      }
+      
+      // Verify password using the imported comparePasswords function
+      const isPasswordValid = await comparePasswords(password, user.password);
+      
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Login the user
+      req.login(user, (err) => {
+        if (err) {
+          console.error('[ERROR] Login failed:', err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        
+        console.log(`[DEBUG] reCAPTCHA-protected login successful for: ${user.username}`);
+        
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
+      
+    } catch (error) {
+      console.error('[ERROR] reCAPTCHA login failed:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // reCAPTCHA-protected registration endpoint  
+  app.post('/api/auth/register-with-recaptcha', async (req: Request, res: Response) => {
+    const { username, email, password, name, recaptchaToken } = req.body;
+    
+    try {
+      // Verify reCAPTCHA token
+      if (!recaptchaToken) {
+        return res.status(400).json({ 
+          message: "reCAPTCHA verification required",
+          code: "RECAPTCHA_REQUIRED"
+        });
+      }
+      
+      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'register');
+      if (!isRecaptchaValid) {
+        return res.status(400).json({ 
+          message: "reCAPTCHA verification failed. Please try again.",
+          code: "RECAPTCHA_FAILED"
+        });
+      }
+      
+      console.log(`[RECAPTCHA] Registration verification passed for user: ${username}`);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      // Hash password using the auth module
+      const hashedPassword = await hashPassword(password);
+      
+      // Create user
+      const user = await storage.createUser({
+        username,
+        email,
+        password: hashedPassword,
+        name: name || username,
+        role: "user"
+      });
+      
+      // Login the user
+      req.login(user, (err) => {
+        if (err) {
+          console.error('[ERROR] Login after registration failed:', err);
+          return res.status(500).json({ message: "Registration successful but login failed" });
+        }
+        
+        console.log(`[DEBUG] reCAPTCHA-protected registration and login successful for: ${user.username}`);
+        
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
+      });
+      
+    } catch (error) {
+      console.error('[ERROR] reCAPTCHA registration failed:', error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
   // Configure Brevo API key
   app.post('/api/brevo/configure', async (req: Request, res: Response) => {
     try {
@@ -1049,136 +1180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // reCAPTCHA-protected login endpoint
-    app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
-      const { username, password, recaptchaToken } = req.body;
-      
-      try {
-        // Verify reCAPTCHA token
-        if (!recaptchaToken) {
-          return res.status(400).json({ 
-            message: "reCAPTCHA verification required",
-            code: "RECAPTCHA_REQUIRED"
-          });
-        }
-        
-        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'login');
-        if (!isRecaptchaValid) {
-          return res.status(400).json({ 
-            message: "reCAPTCHA verification failed. Please try again.",
-            code: "RECAPTCHA_FAILED"
-          });
-        }
-        
-        console.log(`[RECAPTCHA] Login verification passed for user: ${username}`);
-        
-        // Proceed with normal authentication
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return res.status(401).json({ message: "Invalid credentials" });
-        }
-        
-        // Check if account is locked
-        if (user.isLocked) {
-          return res.status(423).json({ 
-            message: "Account is locked. Please contact support.",
-            code: "ACCOUNT_LOCKED"
-          });
-        }
-        
-        // Verify password using the imported comparePasswords function
-        const isPasswordValid = await comparePasswords(password, user.password);
-        
-        if (!isPasswordValid) {
-          return res.status(401).json({ message: "Invalid credentials" });
-        }
-        
-        // Login the user
-        req.login(user, (err) => {
-          if (err) {
-            console.error('[ERROR] Login failed:', err);
-            return res.status(500).json({ message: "Login failed" });
-          }
-          
-          console.log(`[DEBUG] reCAPTCHA-protected login successful for: ${user.username}`);
-          
-          // Return user without password
-          const { password: _, ...userWithoutPassword } = user;
-          res.json(userWithoutPassword);
-        });
-        
-      } catch (error) {
-        console.error('[ERROR] reCAPTCHA login failed:', error);
-        res.status(500).json({ message: "Login failed" });
-      }
-    });
 
-    // reCAPTCHA-protected registration endpoint  
-    app.post('/api/auth/register-with-recaptcha', async (req: Request, res: Response) => {
-      const { username, email, password, name, recaptchaToken } = req.body;
-      
-      try {
-        // Verify reCAPTCHA token
-        if (!recaptchaToken) {
-          return res.status(400).json({ 
-            message: "reCAPTCHA verification required",
-            code: "RECAPTCHA_REQUIRED"
-          });
-        }
-        
-        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'register');
-        if (!isRecaptchaValid) {
-          return res.status(400).json({ 
-            message: "reCAPTCHA verification failed. Please try again.",
-            code: "RECAPTCHA_FAILED"
-          });
-        }
-        
-        console.log(`[RECAPTCHA] Registration verification passed for user: ${username}`);
-        
-        // Check if username already exists
-        const existingUser = await storage.getUserByUsername(username);
-        if (existingUser) {
-          return res.status(400).json({ message: "Username already exists" });
-        }
-        
-        // Check if email already exists
-        const existingEmail = await storage.getUserByEmail(email);
-        if (existingEmail) {
-          return res.status(400).json({ message: "Email already exists" });
-        }
-        
-        // Hash password using the auth module
-        const hashedPassword = await hashPassword(password);
-        
-        // Create user
-        const user = await storage.createUser({
-          username,
-          email,
-          password: hashedPassword,
-          name: name || username,
-          role: "user"
-        });
-        
-        // Login the user
-        req.login(user, (err) => {
-          if (err) {
-            console.error('[ERROR] Login after registration failed:', err);
-            return res.status(500).json({ message: "Registration successful but login failed" });
-          }
-          
-          console.log(`[DEBUG] reCAPTCHA-protected registration and login successful for: ${user.username}`);
-          
-          // Return user without password
-          const { password: _, ...userWithoutPassword } = user;
-          res.status(201).json(userWithoutPassword);
-        });
-        
-      } catch (error) {
-        console.error('[ERROR] reCAPTCHA registration failed:', error);
-        res.status(500).json({ message: "Registration failed" });
-      }
-    });
 
     // Direct user authentication bypass for testing
     app.post('/api/auth/direct-login', async (req: Request, res: Response) => {
