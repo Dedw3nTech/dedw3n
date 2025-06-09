@@ -792,13 +792,18 @@ export function setupAuth(app: Express) {
 
     // Verify CAPTCHA if provided
     if (req.body.captchaId && req.body.captchaInput) {
-      if (!verifyCaptcha(req.body.captchaId, req.body.captchaInput)) {
+      console.log(`[DEBUG] CAPTCHA verification - ID: ${req.body.captchaId}, Input: ${req.body.captchaInput}`);
+      const captchaResult = verifyCaptcha(req.body.captchaId, req.body.captchaInput);
+      console.log(`[DEBUG] CAPTCHA verification result: ${captchaResult}`);
+      
+      if (!captchaResult) {
         console.log(`[SECURITY] Invalid CAPTCHA for login attempt: ${req.body.username}`);
         return res.status(400).json({ 
           message: "Invalid CAPTCHA. Please try again.",
           code: "INVALID_CAPTCHA"
         });
       }
+      console.log(`[DEBUG] CAPTCHA verification passed for user: ${req.body.username}`);
     }
 
     // Check for account lockout first
