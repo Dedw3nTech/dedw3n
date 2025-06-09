@@ -5830,17 +5830,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const clearoutApiKey = process.env.CLEAROUT_API_KEY;
       if (!clearoutApiKey) {
-        console.warn('[EMAIL_VALIDATION] Clearout API key not configured, using basic validation');
-        return res.status(200).json({
-          valid: true,
-          reason: 'Basic validation passed',
+        console.error('[EMAIL_VALIDATION] Clearout API key not configured');
+        return res.status(503).json({
+          valid: false,
+          reason: 'Email validation service unavailable. Please try again later or contact customer service.',
           syntax_valid: true,
-          mx_valid: true,
+          mx_valid: false,
           disposable: false,
           free_provider: false,
-          deliverable: true,
+          deliverable: false,
           role_based: false,
-          confidence_score: 85
+          service_error: true
         });
       }
 
@@ -5861,17 +5861,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!clearoutResponse.ok) {
         console.error(`[EMAIL_VALIDATION] Clearout API error: ${clearoutResponse.status}`);
-        // Fallback to basic validation
-        return res.status(200).json({
-          valid: true,
-          reason: 'Validation service temporarily unavailable, basic validation passed',
+        return res.status(503).json({
+          valid: false,
+          reason: 'Email validation service temporarily unavailable. Please try again in a few moments or contact customer service for assistance.',
           syntax_valid: true,
-          mx_valid: true,
+          mx_valid: false,
           disposable: false,
           free_provider: false,
-          deliverable: true,
+          deliverable: false,
           role_based: false,
-          confidence_score: 75
+          service_error: true
         });
       }
 
@@ -5896,17 +5895,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[EMAIL_VALIDATION] Error:', error);
       
-      // Return fallback response on error
-      res.status(200).json({
-        valid: true,
-        reason: 'Validation service error, proceeding with basic validation',
+      // Return service error response
+      res.status(503).json({
+        valid: false,
+        reason: 'Email validation service is currently unavailable. Please try again later or contact customer service for assistance.',
         syntax_valid: true,
-        mx_valid: true,
+        mx_valid: false,
         disposable: false,
         free_provider: false,
-        deliverable: true,
+        deliverable: false,
         role_based: false,
-        confidence_score: 70
+        service_error: true
       });
     }
   });

@@ -6,11 +6,12 @@ interface EmailValidationResult {
   disposable: boolean;
   free_provider: boolean;
   mx_valid: boolean;
-  smtp_valid: boolean;
+  smtp_valid?: boolean;
   syntax_valid: boolean;
   role_based: boolean;
   deliverable: boolean;
   confidence_score?: number;
+  service_error?: boolean;
 }
 
 interface EmailValidationState {
@@ -80,11 +81,18 @@ export function useEmailValidation() {
           signal: abortControllerRef.current.signal
         });
 
-        if (!response.ok) {
-          throw new Error(`Validation failed: ${response.status}`);
-        }
-
         const result: EmailValidationResult = await response.json();
+
+        // Handle service errors (503 status)
+        if (!response.ok || result.service_error) {
+          setState({
+            isValidating: false,
+            isValid: false,
+            validationResult: result,
+            error: result.reason || 'Email validation service temporarily unavailable'
+          });
+          return;
+        }
 
         setState({
           isValidating: false,
@@ -140,6 +148,11 @@ export function useEmailValidation() {
     const result = state.validationResult;
 
     if (!result.valid) {
+      // Handle service errors first
+      if (result.service_error) {
+        return result.reason || 'Email validation service temporarily unavailable. Please try again later or contact customer service for assistance.';
+      }
+      
       if (!result.syntax_valid) {
         return 'Invalid email format';
       }
