@@ -1014,13 +1014,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.log("Using session-based WebSocket authentication");
       }
     } else {
-      console.warn("No user ID available for WebSocket connection");
-      // Return early as we can't authenticate without a user ID
-      reconnectAttempts++;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      reconnectTimer = setTimeout(() => {
-        connect();
-      }, Math.min(RECONNECT_INTERVAL * Math.pow(2, reconnectAttempts), MAX_RECONNECT_INTERVAL));
+      console.warn("No user ID available for WebSocket connection - stopping reconnection attempts");
+      // Don't reconnect if no user is available (user likely logged out)
+      setConnectionStatus('disconnected');
       return;
     }
     

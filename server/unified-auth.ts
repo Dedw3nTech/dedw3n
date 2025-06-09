@@ -138,7 +138,9 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
   
-  // Final fallback for specific endpoints - ONLY in development mode
+  // Development fallback authentication - DISABLED to prevent auto-login after logout
+  // This was causing automatic re-authentication of user Serruti after logout
+  /*
   if (process.env.NODE_ENV === 'development') {
     const isPostOrFeedRoute = req.path.includes('/api/posts') || req.path.includes('/api/feed');
     const isMessagingRoute = req.path.includes('/api/messages') || req.path === '/api/user';
@@ -160,6 +162,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       }
     }
   }
+  */
   
   // Extract JWT token from authorization header, query parameter, or cookies
   let token: string | undefined;
