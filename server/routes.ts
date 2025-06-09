@@ -2387,7 +2387,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Product not found" });
       }
       
-      res.json(product);
+      // Map database fields to expected frontend fields
+      const mappedProduct = {
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      };
+      
+      res.json(mappedProduct);
     } catch (error) {
       console.error("Error getting product:", error);
       res.status(500).json({ message: "Failed to get product" });
@@ -2434,7 +2440,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(20);
       
       console.log(`[DEBUG] Found ${searchResults.length} products matching "${query}"`);
-      res.json(searchResults);
+      
+      // Map database fields to expected frontend fields
+      const mappedSearchResults = searchResults.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      }));
+      
+      res.json(mappedSearchResults);
     } catch (error) {
       console.error('Error searching products:', error);
       res.status(500).json({ message: 'Failed to search products' });
@@ -3124,7 +3137,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = parseInt(req.query.limit as string) || 4;
       const trendingProducts = await storage.getTopSellingProducts(limit);
       
-      res.json(trendingProducts);
+      // Map database fields to expected frontend fields
+      const mappedTrendingProducts = trendingProducts.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      }));
+      
+      res.json(mappedTrendingProducts);
     } catch (error) {
       console.error('Error fetching trending products:', error);
       res.status(500).json({ message: 'Failed to fetch trending products' });
@@ -3238,7 +3257,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(inArray(products.vendorId, vendorIds))
         .orderBy(desc(products.createdAt));
 
-      res.json(vendorProducts);
+      // Map database fields to expected frontend fields
+      const mappedVendorProducts = vendorProducts.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      }));
+
+      res.json(mappedVendorProducts);
     } catch (error) {
       console.error('Error getting vendor products:', error);
       res.status(500).json({ message: 'Failed to get vendor products' });
@@ -4151,7 +4176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Map database fields to expected frontend fields
       const mappedPopularProducts = popularProducts.map(product => ({
         ...product,
-        imageUrl: product.image_url || product.imageUrl // Map image_url to imageUrl
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
       }));
       
       // Cache for 60 seconds
