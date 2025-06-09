@@ -100,7 +100,7 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
 
 // CAPTCHA store for verification
-const captchaStore = new Map<string, { text: string; expires: number }>();
+// Old CAPTCHA store removed - using math CAPTCHA only
 
 // Account lockout settings
 const ACCOUNT_LOCKOUT_ATTEMPTS = 5;
