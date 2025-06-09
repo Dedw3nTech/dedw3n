@@ -69,7 +69,7 @@ export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
         question = '5 + 3 = ?';
     }
 
-    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const token = 'math_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const timestamp = Date.now();
     
     // Store challenge with 5 minute expiry
