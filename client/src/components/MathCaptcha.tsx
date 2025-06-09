@@ -108,7 +108,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             size="sm"
             onClick={refreshChallenge}
             className="h-8 w-8 p-0 hover:bg-gray-800"
-            title={translations["New Problem"] || "Generate new problem"}
+            title={t["New Problem"]}
           >
             <RefreshCw className="h-4 w-4 text-white" />
           </Button>
@@ -131,7 +131,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             disabled={!userAnswer.trim() || isValidating}
             className="px-6 bg-black hover:bg-gray-800 text-white"
           >
-            {isValidating ? (translations["Verifying..."] || 'Checking...') : (translations["Verify"] || 'Verify')}
+            {isValidating ? t["Verifying..."] : t["Verify"]}
           </Button>
         </div>
 
