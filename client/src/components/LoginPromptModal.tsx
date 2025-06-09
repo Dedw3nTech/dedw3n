@@ -361,11 +361,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="username">{translations["Username"] || "Username"}</Label>
+            <Label htmlFor="username">{t["Username"]}</Label>
             <Input
               id="username"
               type="text"
-              placeholder={translations["Enter your username"] || "Enter your username"}
+              placeholder={t["Enter your username"]}
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               required
@@ -376,13 +376,13 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center">
                 <Mail className="mr-2 h-4 w-4" />
-                {translations["Email"] || "Email"}
+                {t["Email"]}
               </Label>
               <div className="relative">
                 <Input
                   id="email"
                   type="email"
-                  placeholder={translations["Enter your email"] || "Enter your email"}
+                  placeholder={t["Enter your email"]}
                   value={formData.email}
                   onChange={(e) => {
                     setFormData({ ...formData, email: e.target.value });
@@ -415,12 +415,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   {isValidating ? (
                     <p className="text-blue-600 flex items-center">
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      {translations["Validating email..."] || "Validating email..."}
+                      {t["Validating email..."]}
                     </p>
                   ) : emailIsValid === true ? (
                     <p className="text-green-600 flex items-center">
                       <CheckCircle className="mr-1 h-3 w-3" />
-                      {translations["Email is valid and deliverable"] || "Email is valid and deliverable"}
+                      {t["Email is valid and deliverable"]}
                     </p>
                   ) : emailIsValid === false ? (
                     <p className="text-red-500 flex items-center">
@@ -437,7 +437,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth" className="flex items-center">
                 <Calendar className="mr-2 h-4 w-4" />
-                {translations["Date of Birth"] || "Date of Birth"}
+                {t["Date of Birth"]}
               </Label>
               <Input
                 id="dateOfBirth"
@@ -459,15 +459,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="gender">{translations["Gender"] || "Gender"}</Label>
+              <Label htmlFor="gender">{t["Gender"]}</Label>
               <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder={translations["Select your gender"] || "Select your gender"} />
+                  <SelectValue placeholder={t["Select your gender"]} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="male">{translations["Male"] || "Male"}</SelectItem>
-                  <SelectItem value="female">{translations["Female"] || "Female"}</SelectItem>
-                  <SelectItem value="other">{translations["Other"] || "Other"}</SelectItem>
+                  <SelectItem value="male">{t["Male"]}</SelectItem>
+                  <SelectItem value="female">{t["Female"]}</SelectItem>
+                  <SelectItem value="other">{t["Other"]}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -477,7 +477,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <div className="space-y-2">
               <Label className="flex items-center">
                 <Globe className="mr-2 h-4 w-4" />
-                {translations["Location"] || "Location"}
+                {t["Location"]}
               </Label>
               <RegionSelector 
                 currentRegion={formData.region}
@@ -497,12 +497,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="password">{translations["Password"] || "Password"}</Label>
+            <Label htmlFor="password">{t["Password"]}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder={translations["Enter your password"] || "Enter your password"}
+                placeholder={t["Enter your password"]}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -542,10 +542,10 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
-                (translations["Please wait..."] || "Please wait...") : 
+                t["Please wait..."] : 
                 isLogin ? 
-                  (translations["Sign In"] || "Sign In") : 
-                  (translations["Create Account"] || "Create Account")
+                  t["Sign In"] : 
+                  t["Create Account"]
               }
             </Button>
           </form>
@@ -554,8 +554,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             <Separator className="my-4" />
             <p className="text-sm text-gray-600">
               {isLogin ? 
-                (translations["Don't have an account?"] || "Don't have an account?") : 
-                (translations["Already have an account?"] || "Already have an account?")
+                t["Don't have an account?"] : 
+                t["Already have an account?"]
               }{" "}
               <Button
                 variant="link"
@@ -563,8 +563,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 onClick={() => setIsLogin(!isLogin)}
               >
                 {isLogin ? 
-                  (translations["Sign up"] || "Sign up") : 
-                  (translations["Sign in"] || "Sign in")
+                  t["Sign up"] : 
+                  t["Sign in"]
                 }
               </Button>
             </p>
@@ -572,21 +572,21 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           <div className="text-center pt-2">
             <p className="text-xs text-gray-500">
-              {translations["By continuing, you agree to our"] || "By continuing, you agree to our"}{" "}
+              {t["By continuing, you agree to our"]}{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto text-xs text-blue-600 underline"
                 onClick={() => setLocation("/terms")}
               >
-                {translations["Terms of Service"] || "Terms of Service"}
+                {t["Terms of Service"]}
               </Button>{" "}
-              {translations["and"] || "and"}{" "}
+              {t["and"]}{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto text-xs text-blue-600 underline"
                 onClick={() => setLocation("/privacy")}
               >
-                {translations["Privacy Policy"] || "Privacy Policy"}
+                {t["Privacy Policy"]}
               </Button>
             </p>
           </div>
