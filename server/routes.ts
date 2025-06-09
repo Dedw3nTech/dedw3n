@@ -5693,6 +5693,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`[EMAIL_VALIDATION] Validating email: ${email.substring(0, 3)}***`);
+      console.log(`[EMAIL_VALIDATION] API Key present: ${clearoutApiKey ? 'Yes' : 'No'}`);
+      console.log(`[EMAIL_VALIDATION] API Key length: ${clearoutApiKey?.length || 0}`);
 
       // Retry function with exponential backoff
       const makeRequest = async (attempt = 1) => {
@@ -5700,16 +5702,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+          // Try different Clearout API authentication formats
           const response = await fetch(`https://api.clearout.io/v2/email_verify/instant`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${clearoutApiKey}`,
               'Content-Type': 'application/json',
-              'User-Agent': 'Dedw3n-Platform/1.0'
+              'Accept': 'application/json'
             },
             body: JSON.stringify({
-              email: email,
-              timeout: 30
+              email: email.trim().toLowerCase()
             }),
             signal: controller.signal
           });
