@@ -184,16 +184,12 @@ export default function MessagesPage() {
   userMap.set(currentUser.id, currentUserInfo);
   
   if (conversationPartner) {
-    console.log('Adding conversationPartner to userMap:', conversationPartner);
     userMap.set(conversationPartner.id, conversationPartner);
   }
   
   if (responseOtherUser) {
-    console.log('Adding responseOtherUser to userMap:', responseOtherUser);
     userMap.set(responseOtherUser.id, responseOtherUser);
   }
-  
-  console.log('Final userMap contents:', Array.from(userMap.entries()));
   
 
 
@@ -226,8 +222,7 @@ export default function MessagesPage() {
       };
     }
     
-    // Final fallback - this shouldn't happen if user map is correct
-    console.error('User not found anywhere, using fallback for sender:', senderId);
+    // Final fallback
     return {
       id: senderId,
       name: `User ${senderId}`,
