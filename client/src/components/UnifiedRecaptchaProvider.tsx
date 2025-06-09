@@ -76,11 +76,11 @@ export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
     challenges.set(token, { answer: answer.toString(), timestamp });
     
     // Clean up expired challenges
-    for (const [key, value] of challenges.entries()) {
+    Array.from(challenges.entries()).forEach(([key, value]) => {
       if (timestamp - value.timestamp > 300000) { // 5 minutes
         challenges.delete(key);
       }
-    }
+    });
     
     return { question, answer: answer.toString(), token };
   }, [challenges]);

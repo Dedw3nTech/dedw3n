@@ -158,7 +158,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   useEffect(() => {
     resetValidation();
     setEmailTouched(false);
+    setCaptchaValid(false);
+    setCaptchaToken("");
   }, [isLogin, resetValidation]);
+
+  // Handle CAPTCHA validation
+  const handleCaptchaValidation = (isValid: boolean, token?: string) => {
+    setCaptchaValid(isValid);
+    setCaptchaToken(token || "");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,34 +205,19 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
-      // Check reCAPTCHA readiness before proceeding
-      if (!isReady || !executeRecaptcha) {
+      // Check if math CAPTCHA is completed
+      if (!captchaValid || !captchaToken) {
         toast({
-          title: "Security Service Loading",
-          description: "Please wait a moment for security verification to initialize...",
+          title: "Security Verification Required", 
+          description: "Please complete the math problem to verify you are human.",
           variant: "default"
         });
         return;
       }
 
-      // Execute reCAPTCHA v3 verification - no bypass allowed
-      let recaptchaToken = '';
-      try {
-        console.log('[UNIFIED-RECAPTCHA] Starting secure authentication verification...');
-        recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-        console.log('[UNIFIED-RECAPTCHA] Security verification completed successfully');
-      } catch (recaptchaError) {
-        console.error('[UNIFIED-RECAPTCHA] Security verification failed:', recaptchaError);
-        
-        const errorMessage = recaptchaError instanceof Error ? recaptchaError.message : 'Security verification failed';
-        
-        toast({
-          title: "Security Verification Required",
-          description: `Authentication requires security verification. ${errorMessage}`,
-          variant: "destructive"
-        });
-        return;
-      }
+      // Use the math captcha token for security verification
+      console.log('[MATH-CAPTCHA] Using verified captcha token for authentication');
+      const recaptchaToken = captchaToken;
 
       if (isLogin) {
         await loginMutation.mutateAsync({
@@ -503,9 +496,13 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           </div>
 
+          {/* Math CAPTCHA Security Verification */}
+          <MathCaptcha 
+            onValidation={handleCaptchaValidation}
+            className="mt-4"
+          />
 
-
-            <Button 
+          <Button 
               type="submit" 
               className="w-full bg-black hover:bg-gray-900 text-white" 
               disabled={Boolean(
@@ -513,7 +510,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 registerMutation.isPending || 
                 (!isLogin && ageError) ||
                 (!isLogin && isValidating) ||
-                (!isLogin && emailTouched && emailIsValid === false)
+                (!isLogin && emailTouched && emailIsValid === false) ||
+                !captchaValid
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
