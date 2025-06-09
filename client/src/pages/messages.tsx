@@ -101,9 +101,14 @@ export default function MessagesPage() {
 
   // Find active conversation based on URL params
   const activeApiConversation = username && apiConversations
-    ? apiConversations.find((convo: any) => 
-        convo.participants.some((p: any) => p.username === username)
-      )
+    ? apiConversations.find((convo: any) => {
+        if (convo.participants && convo.participants.length > 0) {
+          return convo.participants.some((p: any) => p.username === username);
+        } else if (convo.otherUser) {
+          return convo.otherUser.username === username;
+        }
+        return false;
+      })
     : null;
 
   // Set active conversation ID
@@ -111,9 +116,25 @@ export default function MessagesPage() {
 
   // Find the active conversation partner from the username param
   const conversationUserId = username && apiConversations 
-    ? apiConversations.find((convo: any) => 
-        convo.participants.some((p: any) => p.username === username)
-      )?.participants.find((p: any) => p.username === username)?.id
+    ? (() => {
+        const conversation = apiConversations.find((convo: any) => {
+          if (convo.participants && convo.participants.length > 0) {
+            return convo.participants.some((p: any) => p.username === username);
+          } else if (convo.otherUser) {
+            return convo.otherUser.username === username;
+          }
+          return false;
+        });
+        
+        if (!conversation) return null;
+        
+        if (conversation.participants && conversation.participants.length > 0) {
+          return conversation.participants.find((p: any) => p.username === username)?.id;
+        } else if (conversation.otherUser) {
+          return conversation.otherUser.id;
+        }
+        return null;
+      })()
     : null;
 
   // Fetch messages for the active conversation
@@ -256,13 +277,20 @@ export default function MessagesPage() {
 
   // Filter conversations based on search term
   const filteredConversations = isSearching && searchTerm 
-    ? apiConversations?.filter((convo: any) => 
-        convo.participants.some((p: any) => 
-          p.id !== currentUser.id && 
-          (p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-           p.username.toLowerCase().includes(searchTerm.toLowerCase()))
-        )
-      )
+    ? apiConversations?.filter((convo: any) => {
+        // Handle both participants array and otherUser object structures
+        if (convo.participants && convo.participants.length > 0) {
+          return convo.participants.some((p: any) => 
+            p.id !== currentUser.id && 
+            (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+             p.username?.toLowerCase().includes(searchTerm.toLowerCase()))
+          );
+        } else if (convo.otherUser) {
+          return convo.otherUser.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                 convo.otherUser.username?.toLowerCase().includes(searchTerm.toLowerCase());
+        }
+        return false;
+      })
     : apiConversations;
 
   // Connect to WebSocket on component mount
@@ -521,9 +549,15 @@ export default function MessagesPage() {
             <div className="flex-1 overflow-y-auto">
               {filteredConversations.map((conversation: any) => {
                 // Find the other participant (not current user)
-                const otherParticipant = conversation.participants?.find(
-                  (p: any) => p.id !== currentUser.id
-                );
+                let otherParticipant;
+                
+                if (conversation.participants && conversation.participants.length > 0) {
+                  otherParticipant = conversation.participants.find(
+                    (p: any) => p.id !== currentUser.id
+                  );
+                } else if (conversation.otherUser) {
+                  otherParticipant = conversation.otherUser;
+                }
 
                 // Skip if no other participant found
                 if (!otherParticipant) {
