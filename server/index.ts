@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { registerImageRoutes } from "./image-handler";
 import { registerMediaRoutes } from "./media-handler";
 import { registerMulterRoutes } from "./multer-media-handler";
+import { gpcMiddleware, applyGPCHeaders } from "./gpc-middleware";
 
 // Extend Express Request type to include our custom properties
 declare global {
