@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Truck, Clock, AlertCircle } from "lucide-react";
+import { Loader2, Truck, Clock, AlertCircle, MapPin, Shield, Package, Zap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
@@ -19,6 +19,16 @@ export type ShippingRate = {
   carrier: string;
   carrierId: string;
   carrierLogo: string;
+  // Enhanced shipping properties
+  deliveryScope: 'local' | 'national' | 'international';
+  deliverySpeed: 'standard' | 'express' | 'overnight';
+  costMethod: 'flat_rate' | 'weight_based' | 'distance_based';
+  trackingIncluded: boolean;
+  insuranceAvailable: boolean;
+  pickupLocationAvailable: boolean;
+  vendorLocation?: string;
+  maxWeight?: number;
+  zones?: string[];
 };
 
 interface CartShippingSelectorProps {
@@ -93,7 +103,19 @@ export default function CartShippingSelector({
               guaranteedDelivery: method.id === "overnight",
               carrier: "Standard",
               carrierId: "standard",
-              carrierLogo: ""
+              carrierLogo: "",
+              // Enhanced properties with defaults
+              deliveryScope: method.id === "standard" ? "local" as const : 
+                           method.id === "express" ? "national" as const : "international" as const,
+              deliverySpeed: method.id === "overnight" ? "overnight" as const :
+                           method.id === "express" ? "express" as const : "standard" as const,
+              costMethod: "flat_rate" as const,
+              trackingIncluded: method.id !== "standard",
+              insuranceAvailable: method.id === "overnight",
+              pickupLocationAvailable: false,
+              vendorLocation: "Local Warehouse",
+              maxWeight: 50,
+              zones: ["Zone 1"]
             }));
             
             setShippingRates(convertedRates);
@@ -203,6 +225,29 @@ export default function CartShippingSelector({
                       <Label htmlFor={rate.id} className="font-medium cursor-pointer">
                         {rate.carrier} - {rate.name}
                       </Label>
+                      
+                      {/* Delivery Scope Badge */}
+                      <Badge variant="outline" className={`text-xs ${
+                        rate.deliveryScope === 'local' ? 'bg-green-50 text-green-700' :
+                        rate.deliveryScope === 'national' ? 'bg-blue-50 text-blue-700' :
+                        'bg-purple-50 text-purple-700'
+                      }`}>
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {translateText(rate.deliveryScope === 'local' ? 'Local' : 
+                                     rate.deliveryScope === 'national' ? 'National' : 'International')}
+                      </Badge>
+                      
+                      {/* Delivery Speed Badge */}
+                      <Badge variant="outline" className={`text-xs ${
+                        rate.deliverySpeed === 'overnight' ? 'bg-red-50 text-red-700' :
+                        rate.deliverySpeed === 'express' ? 'bg-orange-50 text-orange-700' :
+                        'bg-gray-50 text-gray-700'
+                      }`}>
+                        <Zap className="h-3 w-3 mr-1" />
+                        {translateText(rate.deliverySpeed === 'overnight' ? 'Overnight' :
+                                     rate.deliverySpeed === 'express' ? 'Express' : 'Standard')}
+                      </Badge>
+                      
                       {rate.guaranteedDelivery && (
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
                           {translateText('Guaranteed')}
@@ -215,11 +260,58 @@ export default function CartShippingSelector({
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">{rate.description}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {rate.estimatedDeliveryDays} {rate.estimatedDeliveryDays === 1 ? translateText('day') : translateText('days')}
-                      </span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            {rate.estimatedDeliveryDays} {rate.estimatedDeliveryDays === 1 ? translateText('day') : translateText('days')}
+                          </span>
+                        </div>
+                        {rate.vendorLocation && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{translateText('From')}: {rate.vendorLocation}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Cost Method & Optional Features */}
+                      <div className="flex items-center gap-2 text-xs">
+                        <Badge variant="secondary" className="text-xs">
+                          {translateText(
+                            rate.costMethod === 'flat_rate' ? 'Flat Rate' :
+                            rate.costMethod === 'weight_based' ? 'Weight Based' : 'Distance Based'
+                          )}
+                        </Badge>
+                        
+                        {rate.trackingIncluded && (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <Package className="h-3 w-3" />
+                            <span>{translateText('Tracking')}</span>
+                          </div>
+                        )}
+                        
+                        {rate.insuranceAvailable && (
+                          <div className="flex items-center gap-1 text-blue-600">
+                            <Shield className="h-3 w-3" />
+                            <span>{translateText('Insurance')}</span>
+                          </div>
+                        )}
+                        
+                        {rate.pickupLocationAvailable && (
+                          <div className="flex items-center gap-1 text-purple-600">
+                            <MapPin className="h-3 w-3" />
+                            <span>{translateText('Pickup')}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {rate.maxWeight && (
+                        <div className="text-xs text-muted-foreground">
+                          {translateText('Max weight')}: {rate.maxWeight}kg
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

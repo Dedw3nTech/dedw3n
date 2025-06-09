@@ -381,6 +381,15 @@ export default function Cart() {
             </div>
           )}
         </CardContent>
+        
+        {/* Shipping Service Selection */}
+        <div className="mt-6">
+          <CartShippingSelector
+            orderTotal={subtotal}
+            onShippingMethodChange={handleShippingMethodChange}
+            selectedMethod={selectedShippingMethod}
+          />
+        </div>
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
             variant="outline"
@@ -389,20 +398,36 @@ export default function Cart() {
           >
             {translateText('Continue Shopping')}
           </Button>
-          <Button
-            onClick={handleCheckout}
-            className="w-full sm:w-auto"
-            disabled={updateQuantityMutation.isPending || removeFromCartMutation.isPending}
-          >
-            {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {translateText('Processing...')}
-              </>
-            ) : (
-              translateText('Proceed to Checkout')
+          <div className="w-full sm:w-auto">
+            {!selectedShippingMethod && (
+              <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <p className="text-sm text-amber-800">
+                    {translateText('Please select a shipping method to continue')}
+                  </p>
+                </div>
+              </div>
             )}
-          </Button>
+            <Button
+              onClick={handleCheckout}
+              className="w-full sm:w-auto"
+              disabled={
+                !selectedShippingMethod || 
+                updateQuantityMutation.isPending || 
+                removeFromCartMutation.isPending
+              }
+            >
+              {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {translateText('Processing...')}
+                </>
+              ) : (
+                translateText('Proceed to Checkout')
+              )}
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

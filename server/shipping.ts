@@ -39,7 +39,16 @@ export const carriers = [
         description: "Delivery in 3-5 business days",
         basePrice: 8.99,
         freeShippingThreshold: 75,
-        estimatedDeliveryDays: 5
+        estimatedDeliveryDays: 5,
+        deliveryScope: "national",
+        deliverySpeed: "standard",
+        costMethod: "weight_based",
+        trackingIncluded: true,
+        insuranceAvailable: true,
+        pickupLocationAvailable: true,
+        vendorLocation: "FedEx Distribution Center",
+        maxWeight: 68,
+        zones: ["Zone 1", "Zone 2", "Zone 3"]
       },
       {
         id: "fedex_express",
@@ -47,7 +56,16 @@ export const carriers = [
         description: "Delivery in 2-3 business days",
         basePrice: 14.99,
         freeShippingThreshold: 120,
-        estimatedDeliveryDays: 3
+        estimatedDeliveryDays: 3,
+        deliveryScope: "national",
+        deliverySpeed: "express",
+        costMethod: "distance_based",
+        trackingIncluded: true,
+        insuranceAvailable: true,
+        pickupLocationAvailable: true,
+        vendorLocation: "FedEx Express Hub",
+        maxWeight: 68,
+        zones: ["Zone 1", "Zone 2", "Zone 3", "Zone 4"]
       },
       {
         id: "fedex_overnight",
@@ -55,7 +73,16 @@ export const carriers = [
         description: "Next business day delivery",
         basePrice: 29.99,
         freeShippingThreshold: 200,
-        estimatedDeliveryDays: 1
+        estimatedDeliveryDays: 1,
+        deliveryScope: "national",
+        deliverySpeed: "overnight",
+        costMethod: "flat_rate",
+        trackingIncluded: true,
+        insuranceAvailable: true,
+        pickupLocationAvailable: true,
+        vendorLocation: "FedEx Priority Hub",
+        maxWeight: 68,
+        zones: ["Zone 1", "Zone 2"]
       }
     ]
   },
