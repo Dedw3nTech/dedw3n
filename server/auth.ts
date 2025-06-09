@@ -50,11 +50,18 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
     
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const keylen = 64;
+    console.log(`[DEBUG] Password comparison - hashed length: ${hashed.length}, salt length: ${salt.length}`);
+    console.log(`[DEBUG] Password comparison - hashed: ${hashed.substring(0, 16)}..., salt: ${salt.substring(0, 16)}...`);
     
-    // Use standard parameters to match the hashing function
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const keylen = hashedBuf.length; // Use the actual length of the stored hash
+    
+    console.log(`[DEBUG] Password comparison - using keylen: ${keylen}`);
+    
+    // Use same parameters as the hashing function
     const suppliedBuf = (await scryptAsync(supplied, salt, keylen)) as Buffer;
+    
+    console.log(`[DEBUG] Password comparison - hashedBuf length: ${hashedBuf.length}, suppliedBuf length: ${suppliedBuf.length}`);
     
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
