@@ -40,6 +40,11 @@ export function registerMessageRoutes(app: Express) {
       if (currentUser) {
         const { password, ...safeCurrentUser } = currentUser;
         conversations.forEach(conversation => {
+          // Ensure participants array exists
+          if (!conversation.participants) {
+            conversation.participants = [];
+          }
+          
           // Add or update the current user's info in participants
           const participantIndex = conversation.participants.findIndex(
             (p: any) => p.id === userId

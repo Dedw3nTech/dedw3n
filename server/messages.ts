@@ -59,89 +59,110 @@ export async function getConversationMessages(userId1: number, userId2: number):
  * Returns an array of conversation objects with participant details and message stats
  */
 export async function getUserConversations(userId: number): Promise<any[]> {
-  // Get all messages where the user is either sender or receiver
-  const userMessages = await db
-    .select()
-    .from(messages)
-    .where(or(
-      eq(messages.senderId, userId),
-      eq(messages.receiverId, userId)
-    ))
-    .orderBy(messages.createdAt);
-
-  // Get unique user IDs that this user has conversed with
-  const conversationUserIds = new Set<number>();
-  userMessages.forEach(message => {
-    const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
-    conversationUserIds.add(otherUserId);
-  });
-
-  // Build conversations summary
-  const conversations: any[] = [];
-  for (const otherUserId of Array.from(conversationUserIds)) {
-    // Get the other user's information
-    const [otherUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, otherUserId));
-
-    if (!otherUser) continue;
-
-    // Get messages between these users
-    const conversationMessages = await db
+  try {
+    console.log(`[DEBUG] Getting conversations for user ${userId}`);
+    
+    // Get all messages where the user is either sender or receiver
+    const userMessages = await db
       .select()
       .from(messages)
-      .where(
-        or(
-          and(
-            eq(messages.senderId, userId),
-            eq(messages.receiverId, otherUserId)
-          ),
-          and(
-            eq(messages.senderId, otherUserId),
-            eq(messages.receiverId, userId)
+      .where(or(
+        eq(messages.senderId, userId),
+        eq(messages.receiverId, userId)
+      ))
+      .orderBy(messages.createdAt);
+
+    console.log(`[DEBUG] Found ${userMessages.length} messages for user ${userId}`);
+
+    // Get unique user IDs that this user has conversed with
+    const conversationUserIds = new Set<number>();
+    userMessages.forEach(message => {
+      const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+      conversationUserIds.add(otherUserId);
+    });
+
+    console.log(`[DEBUG] Conversation user IDs:`, Array.from(conversationUserIds));
+
+    // Build conversations summary
+    const conversations: any[] = [];
+    for (const otherUserId of Array.from(conversationUserIds)) {
+      // Get the other user's information
+      const [otherUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, otherUserId));
+
+      if (!otherUser) {
+        console.log(`[DEBUG] User ${otherUserId} not found, skipping conversation`);
+        continue;
+      }
+
+      console.log(`[DEBUG] Building conversation with user ${otherUserId} (${otherUser.username})`);
+
+      // Get messages between these users
+      const conversationMessages = await db
+        .select()
+        .from(messages)
+        .where(
+          or(
+            and(
+              eq(messages.senderId, userId),
+              eq(messages.receiverId, otherUserId)
+            ),
+            and(
+              eq(messages.senderId, otherUserId),
+              eq(messages.receiverId, userId)
+            )
           )
         )
-      )
-      .orderBy(messages.createdAt);
+        .orderBy(messages.createdAt);
+        
+      const latestMessage = conversationMessages.length > 0 
+        ? conversationMessages[conversationMessages.length - 1] 
+        : null;
+
+      // Count unread messages
+      const unreadCount = conversationMessages.filter(
+        msg => msg.receiverId === userId && !msg.isRead
+      ).length;
+
+      // Create a conversation summary
+      const { password, ...safeOtherUser } = otherUser;
       
-    const latestMessage = conversationMessages.length > 0 
-      ? conversationMessages[conversationMessages.length - 1] 
-      : null;
+      const conversation = {
+        id: otherUserId, // Using the other user's ID as the conversation ID
+        participants: [
+          { id: userId }, // Current user
+          { 
+            id: otherUserId,
+            username: safeOtherUser.username,
+            name: safeOtherUser.name,
+            avatar: safeOtherUser.avatar,
+            isOnline: false // We'll need to implement online status tracking
+          }
+        ],
+        lastMessage: latestMessage,
+        unreadCount,
+        updatedAt: latestMessage?.createdAt || new Date(),
+        messageCount: conversationMessages.length
+      };
+      
+      console.log(`[DEBUG] Created conversation:`, conversation);
+      conversations.push(conversation);
+    }
 
-    // Count unread messages
-    const unreadCount = conversationMessages.filter(
-      msg => msg.receiverId === userId && !msg.isRead
-    ).length;
+    console.log(`[DEBUG] Total conversations created: ${conversations.length}`);
 
-    // Create a conversation summary
-    const { password, ...safeOtherUser } = otherUser;
-    
-    conversations.push({
-      id: otherUserId, // Using the other user's ID as the conversation ID
-      participants: [
-        { id: userId }, // Current user
-        { 
-          id: otherUserId,
-          username: safeOtherUser.username,
-          name: safeOtherUser.name,
-          avatar: safeOtherUser.avatar,
-          isOnline: false // We'll need to implement online status tracking
-        }
-      ],
-      lastMessage: latestMessage,
-      unreadCount,
-      updatedAt: latestMessage?.createdAt || new Date(),
-      messageCount: conversationMessages.length
+    // Sort by latest message date
+    return conversations.sort((a, b) => {
+      const dateA = new Date(a.updatedAt).getTime();
+      const dateB = new Date(b.updatedAt).getTime();
+      return dateB - dateA; // Descending order (newest first)
     });
+  } catch (error) {
+    console.error('[DEBUG] Error in getUserConversations:', error);
+    return [];
   }
-
-  // Sort by latest message date
-  return conversations.sort((a, b) => {
-    const dateA = new Date(a.updatedAt).getTime();
-    const dateB = new Date(b.updatedAt).getTime();
-    return dateB - dateA; // Descending order (newest first)
-  });
 }
 
 /**
