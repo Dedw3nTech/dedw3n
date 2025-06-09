@@ -788,6 +788,14 @@ export default function MessagesPage() {
                       // Get the actual sender information
                       const senderInfo = getSenderInfo(message);
                       
+                      // Debug logging for sender info issues
+                      if (!isCurrentUser) {
+                        console.log(`Message ${message.id}: senderId=${message.senderId}, senderInfo=`, senderInfo);
+                        console.log(`UserMap contents:`, Array.from(userMap.entries()));
+                        console.log(`ResponseOtherUser:`, responseOtherUser);
+                        console.log(`ConversationPartner:`, conversationPartner);
+                      }
+                      
                       // Fix message content perspective based on who is viewing
                       let displayContent = message.content;
                       
