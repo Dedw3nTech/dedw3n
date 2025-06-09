@@ -148,11 +148,30 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       let recaptchaToken = '';
       if (executeRecaptcha) {
         try {
+          console.log('Executing reCAPTCHA for action:', isLogin ? 'login' : 'register');
           recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+          console.log('reCAPTCHA token generated successfully:', recaptchaToken ? 'Yes' : 'No');
+          
+          if (!recaptchaToken) {
+            throw new Error('reCAPTCHA token generation failed - empty token returned');
+          }
         } catch (recaptchaError) {
           console.warn('reCAPTCHA failed:', recaptchaError);
-          // Continue without reCAPTCHA if not available
+          toast({
+            title: "Security Verification Failed",
+            description: "Unable to verify reCAPTCHA. Please refresh the page and try again.",
+            variant: "destructive",
+          });
+          return;
         }
+      } else {
+        console.warn('executeRecaptcha function not available');
+        toast({
+          title: "Security System Unavailable",
+          description: "Security verification is currently unavailable. Please refresh the page and try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (isLogin) {
