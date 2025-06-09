@@ -109,7 +109,7 @@ export function MathCaptcha({ onValidation, className = "" }: MathCaptchaProps) 
             type="button"
             onClick={handleSubmit}
             disabled={!userAnswer.trim() || isValidating}
-            className="px-6"
+            className="px-6 bg-black hover:bg-gray-800 text-white"
           >
             {isValidating ? 'Checking...' : 'Verify'}
           </Button>
