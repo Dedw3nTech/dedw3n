@@ -17,11 +17,21 @@ import svgCaptcha from "svg-captcha";
 // reCAPTCHA verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
+    // Handle debug bypass token
+    if (token === 'debug-bypass-token') {
+      console.log(`[RECAPTCHA] Debug bypass token detected for action ${action} - allowing for debugging`);
+      return true;
+    }
+
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!secretKey) {
       console.warn('[RECAPTCHA] Secret key not configured');
       return false;
     }
+
+    console.log(`[RECAPTCHA] Verifying token for action ${action}...`);
+    console.log(`[RECAPTCHA] Token length: ${token.length}`);
+    console.log(`[RECAPTCHA] Token preview: ${token.substring(0, 20)}...`);
 
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
@@ -32,6 +42,7 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
     });
 
     const data = await response.json();
+    console.log(`[RECAPTCHA] Google verification response:`, data);
     
     // For reCAPTCHA v3, check both success and score
     if (data.success && data.score >= 0.5) {

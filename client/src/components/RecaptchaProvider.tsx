@@ -24,8 +24,7 @@ interface RecaptchaProviderProps {
 function RecaptchaInner({ children }: RecaptchaProviderProps) {
   const { executeRecaptcha } = useGoogleReCaptcha();
 
-  // Debug logging for reCAPTCHA initialization
-  console.log('RecaptchaInner: executeRecaptcha available:', !!executeRecaptcha);
+
 
   return (
     <RecaptchaContext.Provider value={{ executeRecaptcha }}>
@@ -38,14 +37,10 @@ export function RecaptchaProvider({ children }: RecaptchaProviderProps) {
   // Use environment variable for reCAPTCHA site key
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   
-  console.log('RecaptchaProvider: Site key available:', !!siteKey);
-  
   if (!siteKey) {
     console.warn('VITE_RECAPTCHA_SITE_KEY not found in environment variables');
     return <>{children}</>;
   }
-
-  console.log('RecaptchaProvider: Initializing Google reCAPTCHA with site key');
 
   return (
     <GoogleReCaptchaProvider 
