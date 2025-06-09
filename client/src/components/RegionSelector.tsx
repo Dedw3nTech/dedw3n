@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 const REGIONS = [
   'Africa',
@@ -64,6 +65,27 @@ export default function RegionSelector({
   const [selectedCountry, setSelectedCountry] = useState(currentCountry || '');
   const [selectedCity, setSelectedCity] = useState(currentCity || '');
 
+  // Translation strings for RegionSelector
+  const regionTexts = useMemo(() => [
+    "Select Your Region",
+    "Choose your region",
+    "Please select a region",
+    "Select Your Country", 
+    "Choose your country",
+    "Please select a country",
+    "Your City",
+    "Your city name",
+    "Please enter your city name"
+  ], []);
+  
+  const { translations } = useMasterBatchTranslation(regionTexts, 'high');
+  
+  // Create translation map for easy access
+  const t = regionTexts.reduce((acc, text, index) => {
+    acc[text] = translations[index] || text;
+    return acc;
+  }, {} as Record<string, string>);
+
   // Sync local state with props when they change
   useEffect(() => {
     setSelectedRegion(currentRegion || '');
@@ -95,11 +117,11 @@ export default function RegionSelector({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="region" className={`text-xs ${isRegionMissing ? 'text-red-600' : ''}`}>
-          Select Your Region {showErrors && <span className="text-red-600">*</span>}
+          {t["Select Your Region"]} {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Select value={selectedRegion} onValueChange={handleRegionChange} disabled={disabled}>
           <SelectTrigger className={isRegionMissing ? 'border-red-500 focus:border-red-500' : ''}>
-            <SelectValue placeholder="Choose your region" />
+            <SelectValue placeholder={t["Choose your region"]} />
           </SelectTrigger>
           <SelectContent>
             {REGIONS.map((region) => (
@@ -110,17 +132,17 @@ export default function RegionSelector({
           </SelectContent>
         </Select>
         {isRegionMissing && (
-          <p className="text-red-600 text-sm">Please select a region</p>
+          <p className="text-red-600 text-sm">{t["Please select a region"]}</p>
         )}
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="country" className={`text-xs ${isCountryMissing ? 'text-red-600' : ''}`}>
-          Select Your Country {showErrors && <span className="text-red-600">*</span>}
+          {t["Select Your Country"]} {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled}>
           <SelectTrigger className={isCountryMissing ? 'border-red-500 focus:border-red-500' : ''}>
-            <SelectValue placeholder="Choose your country" />
+            <SelectValue placeholder={t["Choose your country"]} />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto">
             {COUNTRIES.map((country) => (
@@ -131,26 +153,26 @@ export default function RegionSelector({
           </SelectContent>
         </Select>
         {isCountryMissing && (
-          <p className="text-red-600 text-sm">Please select a country</p>
+          <p className="text-red-600 text-sm">{t["Please select a country"]}</p>
         )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="city" className={`text-xs ${isCityMissing ? 'text-red-600' : 'text-black'}`}>
-          Your City {showErrors && <span className="text-red-600">*</span>}
+          {t["Your City"]} {showErrors && <span className="text-red-600">*</span>}
         </Label>
         <Input
           id="city"
           name="city"
           type="text"
-          placeholder="Your city name"
+          placeholder={t["Your city name"]}
           value={selectedCity}
           onChange={handleCityChange}
           disabled={disabled}
           className={isCityMissing ? 'border-red-500 focus:border-red-500 text-black' : 'text-black'}
         />
         {isCityMissing && (
-          <p className="text-red-600 text-sm">Please enter your city name</p>
+          <p className="text-red-600 text-sm">{t["Please enter your city name"]}</p>
         )}
       </div>
     </div>
