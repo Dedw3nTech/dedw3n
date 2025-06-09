@@ -222,15 +222,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             throw new Error('Invalid ReCAPTCHA token received');
           }
         } catch (recaptchaError) {
-          // For development/testing, allow bypass with clear logging
           console.error('reCAPTCHA execution failed:', recaptchaError);
-          recaptchaToken = 'recaptcha-bypass-dev-mode';
-          console.warn('Using development bypass token due to ReCAPTCHA failure');
+          throw new Error('reCAPTCHA verification failed. Please refresh the page and try again.');
         }
       } else {
-        console.warn('executeRecaptcha function not available');
-        recaptchaToken = 'recaptcha-bypass-dev-mode';
-        console.warn('Using development bypass token - executeRecaptcha not available');
+        throw new Error('reCAPTCHA service is not available. Please refresh the page and try again.');
       }
 
       if (isLogin) {

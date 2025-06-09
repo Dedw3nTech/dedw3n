@@ -23,11 +23,7 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
       return false; // Fail secure when not configured
     }
     
-    // Allow development bypass only in specific conditions
-    if (token === 'recaptcha-bypass-dev-mode' && process.env.NODE_ENV !== 'production') {
-      console.warn('[RECAPTCHA] Development bypass mode active');
-      return true;
-    }
+    // No bypasses allowed - strict validation only
     
     // Validate token format
     if (!token || token.length < 20) {

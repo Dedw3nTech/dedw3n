@@ -5679,18 +5679,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clearoutApiKey = process.env.CLEAROUT_API_KEY;
       if (!clearoutApiKey) {
         console.error('[EMAIL_VALIDATION] Clearout API key not configured');
-        // Fallback to basic validation when API key is missing
-        return res.status(200).json({
-          valid: true,
-          reason: 'Basic validation passed',
-          syntax_valid: true,
-          mx_valid: true,
+        return res.status(503).json({
+          valid: false,
+          reason: 'Email validation service not configured. Please contact support.',
+          syntax_valid: false,
+          mx_valid: false,
           disposable: false,
           free_provider: false,
-          deliverable: true,
+          deliverable: false,
           role_based: false,
-          service_error: false,
-          fallback_used: true
+          service_error: true
         });
       }
 
@@ -5734,26 +5732,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!clearoutResponse.ok) {
         console.error(`[EMAIL_VALIDATION] Clearout API error: ${clearoutResponse.status}`);
         
-        // For certain error codes, provide fallback validation
-        if (clearoutResponse.status >= 500 || clearoutResponse.status === 429) {
-          return res.status(200).json({
-            valid: true,
-            reason: 'Basic validation passed (service unavailable)',
-            syntax_valid: true,
-            mx_valid: true,
-            disposable: false,
-            free_provider: false,
-            deliverable: true,
-            role_based: false,
-            service_error: true,
-            fallback_used: true
-          });
-        }
-
         return res.status(503).json({
           valid: false,
           reason: 'Email validation service temporarily unavailable. Please try again in a few moments.',
-          syntax_valid: true,
+          syntax_valid: false,
           mx_valid: false,
           disposable: false,
           free_provider: false,
@@ -5786,18 +5768,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('[EMAIL_VALIDATION] Error:', error);
       
-      // Graceful fallback for network/service errors
-      res.status(200).json({
-        valid: true,
-        reason: 'Basic validation passed (service temporarily unavailable)',
-        syntax_valid: true,
-        mx_valid: true,
+      // Strict error handling - no fallbacks
+      res.status(503).json({
+        valid: false,
+        reason: 'Email validation service is currently unavailable. Please try again later.',
+        syntax_valid: false,
+        mx_valid: false,
         disposable: false,
         free_provider: false,
-        deliverable: true,
+        deliverable: false,
         role_based: false,
-        service_error: true,
-        fallback_used: true
+        service_error: true
       });
     }
   });
