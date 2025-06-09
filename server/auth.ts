@@ -17,7 +17,7 @@ import svgCaptcha from "svg-captcha";
 // reCAPTCHA verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
-    // Temporary bypass for testing authentication
+    // Temporary bypass for testing authentication (remove in production)
     if (token === "test-bypass-token") {
       console.log(`[RECAPTCHA] Using test bypass token for action ${action}`);
       return true;

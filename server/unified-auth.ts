@@ -43,13 +43,16 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
 
   // Skip logout header check for login/register endpoints to allow fresh login attempts
+  const isAuthEndpoint = req.path === '/api/auth/login-with-recaptcha' || 
+                         req.path === '/api/auth/register-with-recaptcha' ||
+                         req.path.includes('/api/auth/login') || 
+                         req.path.includes('/api/auth/register') ||
+                         req.path.includes('/api/login') ||
+                         req.path.includes('/api/register');
+                         
   if ((req.headers['x-auth-logged-out'] === 'true' || 
-       req.headers['x-user-logged-out'] === 'true') &&
-      !req.path.includes('/api/auth/login') && 
-      !req.path.includes('/api/auth/register') &&
-      !req.path.includes('/api/login') &&
-      !req.path.includes('/api/register')) {
-    console.log('[AUTH] X-User-Logged-Out header detected, rejecting authentication');
+       req.headers['x-user-logged-out'] === 'true') && !isAuthEndpoint) {
+    console.log('[AUTH] X-User-Logged-Out header detected for non-auth endpoint, rejecting authentication');
     return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
   }
 
@@ -165,24 +168,18 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     token = req.cookies.token;
   }
   
-  // Check for logout state indicators
-  
-  // Check for explicit "X-User-Logged-Out" header that the client sends after logout
-  if (req.headers['x-user-logged-out'] === 'true') {
-    console.log('[AUTH] X-User-Logged-Out header detected, rejecting authentication');
-    return res.status(401).json({ message: 'Unauthorized - User explicitly logged out' });
-  }
+  // Additional logout state checks (logout headers already handled above for auth endpoints)
   
   // Check for userLoggedOut flag in the session
   // @ts-ignore: Property may not exist on session type
-  if (req.session && req.session.userLoggedOut === true) {
+  if (req.session && req.session.userLoggedOut === true && !isAuthEndpoint) {
     console.log('[AUTH] Session logout flag detected, rejecting authentication');
     return res.status(401).json({ message: 'Unauthorized - User logged out via session flag' });
   }
   
   // Check for logout-related cookie that persists across requests
   const cookies = req.headers.cookie || '';
-  if (cookies.includes('user_logged_out=true')) {
+  if (cookies.includes('user_logged_out=true') && !isAuthEndpoint) {
     console.log('[AUTH] Logout cookie detected, rejecting authentication');
     return res.status(401).json({ message: 'Unauthorized - User logged out via cookie' });
   }
