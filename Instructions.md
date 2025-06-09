@@ -1,989 +1,490 @@
-# DATING PROFILE ENHANCED GIFTS SYSTEM - COMPREHENSIVE DEVELOPMENT PLAN
+# GIFT SYSTEM COMPREHENSIVE IMPLEMENTATION PLAN
 
-## PROJECT OVERVIEW
-Implement an advanced dating profile gifts system with intelligent search functionality, displaying only selected gifts from products and events, featuring real-time search suggestions with product images and enhanced user experience.
+## EXECUTIVE SUMMARY
 
-## CURRENT STATUS ANALYSIS
-The dating profile gift system is partially functional but has critical issues preventing proper display of selected gifts. The Plus (+) button successfully adds items to the database, but authentication issues prevent the frontend from displaying them correctly.
+The gift functionality is currently failing due to missing database schema, incomplete notification flow, and broken payment integration. This plan addresses all issues to create a complete gift sending system with proper recipient selection, notifications, and payment processing.
 
 ## ROOT CAUSE ANALYSIS
 
-### 1. Authentication Issues with Dating Profile Endpoint
-- **Issue**: Dating profile GET endpoint returns 401 unauthorized despite valid session
-- **Evidence**: Console logs show "Unauthorized - No valid authentication" errors
-- **Impact**: Selected gifts cannot be displayed in dating profile interface
+### 1. Database Schema Missing
+**Issue**: `gift_propositions` table doesn't exist in database
+**Evidence**: Database query shows no gift-related tables, causing "relation does not exist" errors
+**Impact**: Cannot store gift proposals, entire gift system non-functional
 
-### 2. Missing Selected Gifts Display Logic
-- **Issue**: Current GiftsSelection component shows all products, not user's selected gifts
-- **Evidence**: Component queries all products instead of user's dating profile gifts
-- **Impact**: Users cannot see their previously selected items
+### 2. Incomplete Notification System
+**Issue**: No notification creation when gifts are sent/received
+**Evidence**: Gift routes exist but don't trigger notifications to recipients
+**Impact**: Recipients unaware of incoming gifts
 
-### 3. Lack of Advanced Search Functionality
-- **Issue**: No search interface for products/events with real-time suggestions
-- **Evidence**: Static product grid without search or filtering capabilities
-- **Impact**: Poor user experience when selecting gifts from large catalogs
+### 3. Payment Integration Gaps
+**Issue**: No Stripe payment intent creation for accepted gifts
+**Evidence**: Gift acceptance flow missing payment processing
+**Impact**: Cannot complete gift transactions
 
-### 4. Events Integration Missing
-- **Issue**: System only handles products, not events as gift options
-- **Evidence**: No event-related gift functionality in current implementation
-- **Impact**: Limited gift selection options for users
+### 4. Missing Message System Integration
+**Issue**: No inbox messages for gift notifications
+**Evidence**: Gift notifications not appearing in user message feed
+**Impact**: Poor user experience for gift communication
 
-## COMPREHENSIVE EXECUTION PLAN
+## TECHNICAL ARCHITECTURE ANALYSIS
 
-### PHASE 1: AUTHENTICATION FIX & SELECTED GIFTS DISPLAY
+### Current Gift Flow (Broken)
+1. User clicks gift icon → Opens recipient search modal ✓
+2. User selects recipient → Frontend sends gift proposal ✗ (DB error)
+3. Recipient gets notification → ✗ (No notification system)
+4. Recipient accepts/declines → ✗ (No message integration)
+5. Payment processing → ✗ (No Stripe integration)
 
-#### Step 1.1: Fix Dating Profile Authentication
+### Required Components Analysis
+
+#### Database Layer
+- **Missing**: `gift_propositions` table
+- **Existing**: Schema definition in `/shared/schema.ts`
+- **Action Required**: Database migration
+
+#### API Layer
+- **Existing**: Gift routes in `/server/routes.ts`
+- **Missing**: Notification creation, message integration
+- **Action Required**: Enhanced route handlers
+
+#### Frontend Layer
+- **Existing**: Gift modal, recipient search
+- **Missing**: Gift inbox, payment flow, status updates
+- **Action Required**: New components and integration
+
+#### Notification System
+- **Existing**: Basic notification infrastructure
+- **Missing**: Gift-specific notification types
+- **Action Required**: Gift notification templates
+
+## DETAILED IMPLEMENTATION PLAN
+
+### PHASE 1: DATABASE FOUNDATION (Priority: Critical)
+
+#### Step 1.1: Create Gift Propositions Table
+```sql
+CREATE TABLE gift_propositions (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER NOT NULL REFERENCES users(id),
+  recipient_id INTEGER NOT NULL REFERENCES users(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  message TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  amount DOUBLE PRECISION NOT NULL,
+  currency VARCHAR(3) NOT NULL DEFAULT 'GBP',
+  payment_intent_id TEXT,
+  responded_at TIMESTAMP,
+  paid_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_gift_propositions_sender ON gift_propositions(sender_id);
+CREATE INDEX idx_gift_propositions_recipient ON gift_propositions(recipient_id);
+CREATE INDEX idx_gift_propositions_status ON gift_propositions(status);
+```
+
+#### Step 1.2: Add Gift Status Enum
+```sql
+CREATE TYPE gift_status AS ENUM ('pending', 'accepted', 'rejected', 'paid', 'shipped', 'delivered');
+ALTER TABLE gift_propositions ALTER COLUMN status TYPE gift_status USING status::gift_status;
+```
+
+### PHASE 2: API ENHANCEMENTS (Priority: High)
+
+#### Step 2.1: Enhanced Gift Proposal Route
+**File**: `/server/routes.ts`
+**Function**: `POST /api/gifts/propose`
+**Enhancements Needed**:
+- Add product price validation
+- Create notification for recipient
+- Send inbox message
+- Add error handling
+
 ```typescript
-// Update dating profile endpoint with proper fallback authentication
-app.get('/api/dating-profile', async (req: Request, res: Response) => {
+app.post('/api/gifts/propose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
   try {
-    // Use unified authentication with fallback
-    let authenticatedUser = null;
-    
-    if (req.user) {
-      authenticatedUser = req.user;
-    } else {
-      // Fallback session authentication
-      const sessionAuth = await getSessionAuth(req);
-      if (sessionAuth) {
-        authenticatedUser = sessionAuth;
-      }
-    }
-    
-    if (!authenticatedUser) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-    
-    const datingProfile = await storage.getDatingProfile(authenticatedUser.id);
-    if (!datingProfile) {
-      return res.status(404).json({ message: 'Dating profile not found' });
-    }
-    
-    return res.json(datingProfile);
-  } catch (error) {
-    console.error('Error fetching dating profile:', error);
-    res.status(500).json({ message: 'Failed to fetch dating profile' });
-  }
-});
-```
+    const { recipientId, productId, message } = req.body;
+    const senderId = req.user!.id;
 
-#### Step 1.2: Create Selected Gifts Display Component
-```typescript
-// New component: SelectedGiftsDisplay.tsx
-interface SelectedGiftsDisplayProps {
-  userId: number;
-  onRemoveGift: (giftId: number) => void;
-}
-
-function SelectedGiftsDisplay({ userId, onRemoveGift }: SelectedGiftsDisplayProps) {
-  const { data: selectedGifts, isLoading } = useQuery<Product[]>({
-    queryKey: ['/api/dating-profile/gifts', userId],
-    enabled: !!userId,
-  });
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center py-8">
-      <Loader2 className="h-6 w-6 animate-spin" />
-      <span className="ml-2">Loading your selected gifts...</span>
-    </div>;
-  }
-  
-  if (!selectedGifts || selectedGifts.length === 0) {
-    return <div className="text-center py-8">
-      <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-      <p className="text-gray-500">No gifts selected yet</p>
-      <p className="text-sm text-gray-400 mt-2">
-        Add gifts from the marketplace using the Plus (+) button
-      </p>
-    </div>;
-  }
-  
-  return <div className="space-y-4">
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-semibold">Your Selected Gifts ({selectedGifts.length}/20)</h3>
-      <Badge variant="secondary">{selectedGifts.length} selected</Badge>
-    </div>
-    
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {selectedGifts.map((gift) => (
-        <GiftCard 
-          key={gift.id} 
-          gift={gift} 
-          onRemove={() => onRemoveGift(gift.id)}
-          showRemoveButton={true}
-        />
-      ))}
-    </div>
-  </div>;
-}
-```
-
-#### Step 1.3: Integrate with Dating Profile Page
-```typescript
-// Replace existing GiftsSelection with dual-mode component
-const [viewMode, setViewMode] = useState<'selected' | 'browse'>('selected');
-
-// In dating profile render:
-<Card>
-  <CardHeader>
-    <div className="flex items-center justify-between">
-      <CardTitle className="flex items-center gap-2">
-        <Gift className="h-5 w-5" />
-        Gifts
-      </CardTitle>
-      <div className="flex gap-2">
-        <Button 
-          variant={viewMode === 'selected' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setViewMode('selected')}
-        >
-          Selected ({selectedGifts.length})
-        </Button>
-        <Button 
-          variant={viewMode === 'browse' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setViewMode('browse')}
-        >
-          Browse & Add
-        </Button>
-      </div>
-    </div>
-  </CardHeader>
-  <CardContent>
-    {viewMode === 'selected' ? (
-      <SelectedGiftsDisplay 
-        userId={user?.id || 0}
-        onRemoveGift={handleRemoveGift}
-      />
-    ) : (
-      <AdvancedGiftSearch 
-        selectedGifts={selectedGifts}
-        onAddGift={handleAddGift}
-      />
-    )}
-  </CardContent>
-</Card>
-```
-
-### PHASE 2: ADVANCED SEARCH SYSTEM WITH REAL-TIME SUGGESTIONS
-
-#### Step 2.1: Create Advanced Search Backend API
-```typescript
-// Add to server/routes.ts - Advanced search endpoint
-app.get('/api/search/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-  try {
-    const { q, type = 'all', limit = 10, offset = 0 } = req.query;
-    const userId = req.user!.id;
-    
-    if (!q || typeof q !== 'string' || q.trim().length < 2) {
-      return res.json({ results: [], total: 0, suggestions: [] });
+    // Validate inputs
+    if (!recipientId || !productId) {
+      return res.status(400).json({ message: 'Recipient and product are required' });
     }
-    
-    const searchTerm = q.trim().toLowerCase();
-    let results = [];
-    
-    // Search products if type is 'all' or 'products'
-    if (type === 'all' || type === 'products') {
-      const productResults = await db
-        .select({
-          id: products.id,
-          name: products.name,
-          description: products.description,
-          price: products.price,
-          imageUrl: products.imageUrl,
-          category: products.category,
-          type: sql<string>`'product'`,
-          vendor: {
-            id: vendors.id,
-            storeName: vendors.storeName,
-            rating: vendors.rating
-          }
-        })
-        .from(products)
-        .innerJoin(vendors, eq(products.vendorId, vendors.id))
-        .where(
-          or(
-            like(products.name, `%${searchTerm}%`),
-            like(products.description, `%${searchTerm}%`),
-            like(products.category, `%${searchTerm}%`)
-          )
-        )
-        .limit(parseInt(limit as string))
-        .offset(parseInt(offset as string));
-      
-      results.push(...productResults);
+
+    // Get product details for amount
+    const product = await storage.getProduct(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
-    
-    // Search events if type is 'all' or 'events'
-    if (type === 'all' || type === 'events') {
-      const eventResults = await db
-        .select({
-          id: eventsTable.id,
-          name: eventsTable.title,
-          description: eventsTable.description,
-          price: eventsTable.ticketPrice,
-          imageUrl: eventsTable.imageUrl,
-          category: eventsTable.category,
-          type: sql<string>`'event'`,
-          date: eventsTable.eventDate,
-          location: eventsTable.location
-        })
-        .from(eventsTable)
-        .where(
-          or(
-            like(eventsTable.title, `%${searchTerm}%`),
-            like(eventsTable.description, `%${searchTerm}%`),
-            like(eventsTable.category, `%${searchTerm}%`),
-            like(eventsTable.location, `%${searchTerm}%`)
-          )
-        )
-        .limit(parseInt(limit as string))
-        .offset(parseInt(offset as string));
-      
-      results.push(...eventResults);
+
+    // Get recipient details
+    const recipient = await storage.getUser(recipientId);
+    if (!recipient) {
+      return res.status(404).json({ message: 'Recipient not found' });
     }
-    
-    // Generate search suggestions based on popular terms
-    const suggestions = await generateSearchSuggestions(searchTerm);
-    
-    res.json({
-      results: results.slice(0, parseInt(limit as string)),
-      total: results.length,
-      suggestions,
-      searchTerm
+
+    // Create gift proposition
+    const giftData = {
+      senderId,
+      recipientId,
+      productId,
+      message: message || '',
+      amount: product.price,
+      currency: 'GBP',
+      status: 'pending' as const
+    };
+
+    const gift = await storage.createGiftProposition(giftData);
+
+    // Create notification for recipient
+    await storage.createNotification({
+      userId: recipientId,
+      type: 'gift_received',
+      title: 'New Gift Received',
+      message: `You received a gift from ${req.user!.name || req.user!.username}`,
+      actionUrl: `/gifts/${gift.id}`,
+      isRead: false
     });
-    
+
+    // Send inbox message
+    await storage.createMessage({
+      senderId,
+      recipientId,
+      content: `🎁 I've sent you a gift: ${product.name}. ${message || 'Hope you like it!'}`,
+      type: 'gift_proposal',
+      giftId: gift.id
+    });
+
+    res.json({ 
+      message: 'Gift proposal sent successfully', 
+      gift: {
+        id: gift.id,
+        status: gift.status,
+        recipient: {
+          id: recipient.id,
+          name: recipient.name,
+          username: recipient.username
+        },
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price
+        }
+      }
+    });
   } catch (error) {
-    console.error('Error in gift search:', error);
-    res.status(500).json({ message: 'Search failed' });
+    console.error('Error creating gift proposition:', error);
+    res.status(500).json({ message: 'Failed to send gift proposal' });
   }
 });
-
-// Helper function for search suggestions
-async function generateSearchSuggestions(searchTerm: string): Promise<string[]> {
-  try {
-    // Get popular product categories and names that match
-    const productSuggestions = await db
-      .select({ suggestion: products.category })
-      .from(products)
-      .where(like(products.category, `%${searchTerm}%`))
-      .groupBy(products.category)
-      .limit(5);
-    
-    const nameSuggestions = await db
-      .select({ suggestion: products.name })
-      .from(products)
-      .where(like(products.name, `%${searchTerm}%`))
-      .limit(5);
-    
-    const eventSuggestions = await db
-      .select({ suggestion: eventsTable.category })
-      .from(eventsTable)
-      .where(like(eventsTable.category, `%${searchTerm}%`))
-      .groupBy(eventsTable.category)
-      .limit(3);
-    
-    return [
-      ...productSuggestions.map(s => s.suggestion),
-      ...nameSuggestions.map(s => s.suggestion),
-      ...eventSuggestions.map(s => s.suggestion)
-    ].filter(Boolean).slice(0, 8);
-    
-  } catch (error) {
-    console.error('Error generating suggestions:', error);
-    return [];
-  }
-}
 ```
 
-#### Step 2.2: Create Advanced Search Frontend Component
+#### Step 2.2: Gift Response Route Enhancement
+**Function**: `POST /api/gifts/:id/respond`
+**Enhancements Needed**:
+- Add notification to sender
+- Create message thread
+- Integrate Stripe for accepted gifts
+
 ```typescript
-// New component: AdvancedGiftSearch.tsx
-interface SearchResult {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl?: string;
-  category: string;
-  type: 'product' | 'event';
-  vendor?: { id: number; storeName: string; rating: number };
-  date?: string;
-  location?: string;
-}
+app.post('/api/gifts/:id/respond', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const giftId = parseInt(req.params.id);
+    const { action } = req.body; // 'accept' or 'reject'
+    const userId = req.user!.id;
 
-interface AdvancedGiftSearchProps {
-  selectedGifts: number[];
-  onAddGift: (giftId: number, type: 'product' | 'event') => void;
-}
+    const gift = await storage.getGiftProposition(giftId);
+    if (!gift || gift.recipientId !== userId || gift.status !== 'pending') {
+      return res.status(400).json({ message: 'Invalid gift or already responded' });
+    }
 
-function AdvancedGiftSearch({ selectedGifts, onAddGift }: AdvancedGiftSearchProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchType, setSearchType] = useState<'all' | 'products' | 'events'>('all');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const { formatPriceFromGBP } = useCurrency();
-  
-  // Debounced search query
-  const { data: searchResults, isLoading } = useQuery<{
-    results: SearchResult[];
-    total: number;
-    suggestions: string[];
-  }>({
-    queryKey: ['/api/search/gifts', searchTerm, searchType],
-    enabled: searchTerm.length >= 2,
-    staleTime: 30000, // Cache for 30 seconds
-  });
-  
-  const handleSearchTermChange = useCallback(
-    debounce((term: string) => {
-      setSearchTerm(term);
-      setShowSuggestions(term.length >= 2);
-    }, 300),
-    []
-  );
-  
-  const selectSuggestion = (suggestion: string) => {
-    setSearchTerm(suggestion);
-    setShowSuggestions(false);
-  };
-  
-  return (
-    <div className="space-y-6">
-      {/* Search Header */}
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search for gifts, events, or categories..."
-            className="pl-10 pr-4"
-            onChange={(e) => handleSearchTermChange(e.target.value)}
-            onFocus={() => setShowSuggestions(searchTerm.length >= 2)}
-          />
-          
-          {/* Search Suggestions Dropdown */}
-          {showSuggestions && searchResults?.suggestions && searchResults.suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1">
-              <div className="py-2">
-                <div className="px-3 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Suggestions
-                </div>
-                {searchResults.suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => selectSuggestion(suggestion)}
-                    className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <Search className="h-3 w-3 text-gray-400" />
-                    <span className="text-sm">{suggestion}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Search Type Filter */}
-        <div className="flex gap-2">
-          <Button
-            variant={searchType === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSearchType('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={searchType === 'products' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSearchType('products')}
-          >
-            Products
-          </Button>
-          <Button
-            variant={searchType === 'events' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSearchType('events')}
-          >
-            Events
-          </Button>
-        </div>
-      </div>
+    if (action === 'reject') {
+      await storage.updateGiftStatus(giftId, 'rejected');
       
-      {/* Search Results */}
-      {searchTerm.length >= 2 && (
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Searching...</span>
-            </div>
-          ) : searchResults?.results && searchResults.results.length > 0 ? (
-            <>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">
-                  Search Results ({searchResults.total})
-                </h3>
-                <Badge variant="secondary">
-                  "{searchTerm}" in {searchType}
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {searchResults.results.map((result) => (
-                  <SearchResultCard
-                    key={`${result.type}-${result.id}`}
-                    result={result}
-                    isSelected={selectedGifts.includes(result.id)}
-                    onAdd={() => onAddGift(result.id, result.type)}
-                    formatPrice={formatPriceFromGBP}
-                  />
-                ))}
-              </div>
-            </>
-          ) : searchTerm.length >= 2 ? (
-            <div className="text-center py-8">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No results found for "{searchTerm}"</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Try different keywords or browse categories
-              </p>
-            </div>
-          ) : null}
-        </div>
-      )}
-      
-      {/* Quick Categories when no search */}
-      {searchTerm.length < 2 && (
-        <QuickCategories onCategorySelect={(category) => {
-          handleSearchTermChange(category);
-        }} />
-      )}
-    </div>
-  );
+      // Notify sender of rejection
+      await storage.createNotification({
+        userId: gift.senderId,
+        type: 'gift_rejected',
+        title: 'Gift Declined',
+        message: `Your gift was declined by ${req.user!.name || req.user!.username}`,
+        isRead: false
+      });
+
+      // Send message to sender
+      await storage.createMessage({
+        senderId: userId,
+        recipientId: gift.senderId,
+        content: `I appreciate the gift offer, but I have to decline this time.`,
+        type: 'gift_response'
+      });
+
+    } else if (action === 'accept') {
+      await storage.updateGiftStatus(giftId, 'accepted');
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(gift.amount * 100), // Convert to cents
+        currency: gift.currency.toLowerCase(),
+        metadata: {
+          giftId: gift.id,
+          senderId: gift.senderId,
+          recipientId: gift.recipientId
+        }
+      });
+
+      // Update gift with payment intent
+      await storage.updateGiftStatus(giftId, 'accepted', paymentIntent.id);
+
+      // Notify sender with payment link
+      await storage.createNotification({
+        userId: gift.senderId,
+        type: 'gift_accepted',
+        title: 'Gift Accepted!',
+        message: `${req.user!.name || req.user!.username} accepted your gift. Complete payment to send.`,
+        actionUrl: `/payment/${gift.id}`,
+        isRead: false
+      });
+
+      res.json({ 
+        message: 'Gift accepted', 
+        paymentUrl: `/payment/${gift.id}`,
+        clientSecret: paymentIntent.client_secret
+      });
+    }
+  } catch (error) {
+    console.error('Error responding to gift:', error);
+    res.status(500).json({ message: 'Failed to respond to gift' });
+  }
+});
+```
+
+### PHASE 3: FRONTEND IMPLEMENTATION (Priority: Medium)
+
+#### Step 3.1: Gift Inbox Component
+**File**: `/client/src/components/GiftInbox.tsx`
+**Purpose**: Display received gifts with accept/decline options
+
+```typescript
+interface GiftInboxProps {
+  gifts: GiftProposition[];
+  onGiftResponse: (giftId: number, action: 'accept' | 'reject') => void;
 }
 
-// Search Result Card Component
-interface SearchResultCardProps {
-  result: SearchResult;
-  isSelected: boolean;
-  onAdd: () => void;
-  formatPrice: (price: number) => string;
-}
-
-function SearchResultCard({ result, isSelected, onAdd, formatPrice }: SearchResultCardProps) {
-  return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden">
-        {result.imageUrl ? (
-          <img 
-            src={result.imageUrl} 
-            alt={result.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            {result.type === 'event' ? (
-              <Calendar className="h-8 w-8 text-gray-400" />
-            ) : (
-              <Gift className="h-8 w-8 text-gray-400" />
-            )}
-          </div>
-        )}
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-start justify-between">
-          <h4 className="font-medium text-sm leading-tight">{result.name}</h4>
-          <Badge variant="outline" className="text-xs">
-            {result.type}
-          </Badge>
-        </div>
-        
-        <p className="text-xs text-gray-600 line-clamp-2">
-          {result.description}
-        </p>
-        
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-sm">
-            {formatPrice(result.price)}
-          </span>
-          
-          <Button
-            size="sm"
-            variant={isSelected ? "secondary" : "default"}
-            onClick={onAdd}
-            disabled={isSelected}
-            className="h-8"
-          >
-            {isSelected ? (
-              <>
-                <Check className="h-3 w-3 mr-1" />
-                Added
-              </>
-            ) : (
-              <>
-                <Plus className="h-3 w-3 mr-1" />
-                Add
-              </>
-            )}
-          </Button>
-        </div>
-        
-        {/* Additional info for events */}
-        {result.type === 'event' && (result.date || result.location) && (
-          <div className="text-xs text-gray-500 space-y-1">
-            {result.date && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {new Date(result.date).toLocaleDateString()}
-              </div>
-            )}
-            {result.location && (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {result.location}
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Vendor info for products */}
-        {result.type === 'product' && result.vendor && (
-          <div className="text-xs text-gray-500">
-            By {result.vendor.storeName}
-            {result.vendor.rating && (
-              <span className="ml-1">⭐ {result.vendor.rating.toFixed(1)}</span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Quick Categories Component
-function QuickCategories({ onCategorySelect }: { onCategorySelect: (category: string) => void }) {
-  const categories = [
-    { name: "Electronics", icon: "💻" },
-    { name: "Fashion", icon: "👗" },
-    { name: "Home & Garden", icon: "🏠" },
-    { name: "Sports", icon: "⚽" },
-    { name: "Books", icon: "📚" },
-    { name: "Beauty", icon: "💄" },
-    { name: "Concerts", icon: "🎵" },
-    { name: "Dining", icon: "🍽️" }
-  ];
-  
+export function GiftInbox({ gifts, onGiftResponse }: GiftInboxProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Browse Categories</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {categories.map((category) => (
-          <button
-            key={category.name}
-            onClick={() => onCategorySelect(category.name)}
-            className="p-4 border rounded-lg hover:bg-gray-50 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">{category.icon}</div>
-            <div className="text-sm font-medium">{category.name}</div>
-          </button>
-        ))}
-      </div>
+      {gifts.map((gift) => (
+        <Card key={gift.id} className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage src={gift.sender?.avatar} />
+                <AvatarFallback>{gift.sender?.name?.[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{gift.sender?.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Sent you: {gift.product?.name}
+                </p>
+                <p className="text-sm text-green-600 font-medium">
+                  £{gift.amount.toFixed(2)}
+                </p>
+              </div>
+            </div>
+            
+            {gift.status === 'pending' && (
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => onGiftResponse(gift.id, 'reject')}
+                >
+                  Decline
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => onGiftResponse(gift.id, 'accept')}
+                >
+                  Accept
+                </Button>
+              </div>
+            )}
+            
+            {gift.status === 'accepted' && (
+              <Badge variant="secondary">Waiting for payment</Badge>
+            )}
+            
+            {gift.status === 'rejected' && (
+              <Badge variant="destructive">Declined</Badge>
+            )}
+          </div>
+          
+          {gift.message && (
+            <p className="mt-2 text-sm text-muted-foreground italic">
+              "{gift.message}"
+            </p>
+          )}
+        </Card>
+      ))}
     </div>
   );
 }
 ```
 
-#### Step 2.3: Update Dating Profile Gift Handlers
-```typescript
-// Enhanced gift management in dating profile page
-const handleAddGift = useMutation({
-  mutationFn: async ({ giftId, type }: { giftId: number; type: 'product' | 'event' }) => {
-    const endpoint = type === 'event' 
-      ? '/api/dating-profile/event-gifts' 
-      : '/api/dating-profile/gifts';
-    
-    const response = await apiRequest('POST', endpoint, {
-      [type === 'event' ? 'eventId' : 'productId']: giftId
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `Failed to add ${type} to dating profile`);
-    }
-    
-    return response.json();
-  },
-  onSuccess: (data, variables) => {
-    toast({
-      title: "Gift Added!",
-      description: `${variables.type === 'event' ? 'Event' : 'Product'} added to your dating profile`,
-    });
-    
-    // Update selected gifts state
-    setSelectedGifts(prev => [...prev, variables.giftId]);
-    
-    // Invalidate queries
-    queryClient.invalidateQueries({ queryKey: ['/api/dating-profile/gifts'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/dating-profile'] });
-  },
-  onError: (error: Error) => {
-    toast({
-      title: "Unable to Add Gift",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
-});
+#### Step 3.2: Payment Completion Page
+**File**: `/client/src/pages/payment.tsx`
+**Purpose**: Handle Stripe payment for accepted gifts
 
-const handleRemoveGift = useMutation({
-  mutationFn: async (giftId: number) => {
-    const response = await apiRequest('DELETE', `/api/dating-profile/gifts/${giftId}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to remove gift');
-    }
-    
-    return response.json();
-  },
-  onSuccess: (data, giftId) => {
-    toast({
-      title: "Gift Removed",
-      description: "Gift removed from your dating profile",
-    });
-    
-    // Update selected gifts state
-    setSelectedGifts(prev => prev.filter(id => id !== giftId));
-    
-    // Invalidate queries
-    queryClient.invalidateQueries({ queryKey: ['/api/dating-profile/gifts'] });
-  },
-  onError: (error: Error) => {
-    toast({
-      title: "Unable to Remove Gift",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
-});
-```
 ```typescript
-// Enhanced error catching in storage methods
-try {
-  const result = await db.operation();
-  return result;
-} catch (error) {
-  console.error('Detailed error context:', {
-    operation: 'addGiftToDatingProfile',
-    userId,
-    productId,
-    error: error.message,
-    stack: error.stack,
-    sqlState: error.code
+export function PaymentPage() {
+  const { giftId } = useParams();
+  const { data: gift } = useQuery({
+    queryKey: [`/api/gifts/${giftId}`],
+    enabled: !!giftId
   });
-  throw error;
+
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    // Update gift status to paid
+    await apiRequest('POST', `/api/gifts/${giftId}/payment-confirm`, {
+      paymentIntentId: paymentIntent.id
+    });
+    
+    // Show success message and redirect
+    toast({
+      title: "Payment Successful!",
+      description: "Your gift is being processed for delivery."
+    });
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Complete Gift Payment</CardTitle>
+          <CardDescription>
+            Paying for gift to {gift?.recipient?.name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Elements stripe={stripePromise}>
+            <PaymentForm 
+              clientSecret={gift?.paymentClientSecret}
+              onSuccess={handlePaymentSuccess}
+            />
+          </Elements>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 ```
 
-#### Step 2.2: API Response Improvement
+### PHASE 4: NOTIFICATION & MESSAGE INTEGRATION (Priority: Medium)
+
+#### Step 4.1: Enhanced Notification Types
+**File**: `/shared/schema.ts`
+**Addition**: Gift-specific notification types
+
 ```typescript
-// Better API error responses
-catch (error) {
-  console.error('API Error Details:', error);
-  res.status(500).json({ 
-    message: 'Database operation failed',
-    details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    timestamp: new Date().toISOString()
-  });
-}
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'message', 'like', 'follow', 'comment', 'mention', 'system',
+  'gift_received', 'gift_accepted', 'gift_rejected', 'gift_paid', 'gift_shipped'
+]);
 ```
 
-### PHASE 3: DATA VALIDATION & TYPE SAFETY
+#### Step 4.2: Message Type Extensions
+**File**: `/shared/schema.ts`
+**Addition**: Gift message types
 
-#### Step 3.1: Input Validation Layer
 ```typescript
-// Validate product ID format and existence
-const productIdNumber = parseInt(productId);
-if (isNaN(productIdNumber) || productIdNumber <= 0) {
-  return res.status(400).json({ message: 'Invalid product ID format' });
-}
-
-// Verify product exists before adding to gifts
-const product = await storage.getProduct(productIdNumber);
-if (!product) {
-  return res.status(404).json({ message: 'Product not found' });
-}
+export const messageTypeEnum = pgEnum('message_type', [
+  'text', 'image', 'video', 'audio', 'file',
+  'gift_proposal', 'gift_response', 'gift_payment'
+]);
 ```
 
-#### Step 3.2: Profile Data Structure Validation
-```typescript
-// Ensure selectedGifts array is properly initialized
-const profileData: InsertDatingProfile = {
-  userId,
-  selectedGifts: [productId], // Ensure array format
-  displayName: '',
-  age: 25, // Default minimum age
-  bio: '',
-  location: '',
-  interests: [],
-  lookingFor: '',
-  relationshipType: 'casual',
-  profileImages: [],
-  isActive: false
-};
+### PHASE 5: TESTING & VALIDATION (Priority: Low)
+
+#### Step 5.1: Database Migration Test
+```sql
+-- Test gift proposition creation
+INSERT INTO gift_propositions (sender_id, recipient_id, product_id, amount, currency)
+VALUES (9, 6, 1, 99.99, 'GBP');
+
+-- Verify table structure
+SELECT * FROM gift_propositions WHERE id = 1;
 ```
 
-### PHASE 4: AUTHENTICATION FORTIFICATION
+#### Step 5.2: API Endpoint Testing
+```bash
+# Test gift proposal
+curl -X POST "http://localhost:5000/api/gifts/propose" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: connect.sid=..." \
+  -d '{"recipientId": 6, "productId": 1, "message": "Hope you like this!"}'
 
-#### Step 4.1: User Context Validation
-```typescript
-// Robust user authentication check
-const handleAddToDatingProfile = async (req: Request, res: Response) => {
-  // Multiple authentication verification layers
-  const user = req.user;
-  if (!user || !user.id) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
-
-  // Verify user exists in database
-  const dbUser = await storage.getUser(user.id);
-  if (!dbUser) {
-    return res.status(401).json({ message: 'User not found' });
-  }
-  
-  // Continue with gift addition logic
-};
+# Test gift response
+curl -X POST "http://localhost:5000/api/gifts/1/respond" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: connect.sid=..." \
+  -d '{"action": "accept"}'
 ```
 
-#### Step 4.2: Session Persistence Check
-```typescript
-// Ensure session data is accessible
-if (!req.session || !req.session.passport) {
-  console.warn('Session data missing for user', user.id);
-}
-```
+## IMPLEMENTATION PRIORITY ORDER
 
-### PHASE 5: TRANSACTION SAFETY
+### Immediate (Day 1)
+1. Create `gift_propositions` table via database migration
+2. Fix gift proposal route to handle database properly
+3. Test basic gift sending functionality
 
-#### Step 5.1: Database Transaction Wrapper
-```typescript
-// Implement transaction for gift addition
-async addGiftToDatingProfile(userId: number, productId: number): Promise<boolean> {
-  return await db.transaction(async (tx) => {
-    // Get or create profile within transaction
-    let profile = await tx.select().from(datingProfiles).where(eq(datingProfiles.userId, userId)).limit(1);
-    
-    if (profile.length === 0) {
-      // Create new profile
-      const [newProfile] = await tx.insert(datingProfiles).values({
-        userId,
-        selectedGifts: [productId],
-        displayName: '',
-        age: 25,
-        bio: '',
-        location: '',
-        interests: [],
-        lookingFor: '',
-        relationshipType: 'casual',
-        profileImages: [],
-        isActive: false
-      }).returning();
-      return true;
-    } else {
-      // Update existing profile
-      const currentGifts = profile[0].selectedGifts || [];
-      if (currentGifts.includes(productId)) return false;
-      if (currentGifts.length >= 20) return false;
-      
-      await tx.update(datingProfiles)
-        .set({ selectedGifts: [...currentGifts, productId] })
-        .where(eq(datingProfiles.userId, userId));
-      return true;
-    }
-  });
-}
-```
+### Day 2
+1. Implement notification system for gifts
+2. Add message integration for gift communications
+3. Create gift inbox component
 
-### PHASE 6: FRONTEND ERROR HANDLING
+### Day 3
+1. Integrate Stripe payment processing
+2. Build payment completion flow
+3. Add shipping form for recipients
 
-#### Step 6.1: Enhanced Mutation Error Processing
-```typescript
-// Improved frontend error handling
-const addToDatingProfileMutation = useMutation({
-  mutationFn: async (productId: number) => {
-    const response = await apiRequest('POST', '/api/dating-profile/gifts', {
-      productId
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to add to dating profile');
-    }
-    
-    return response.json();
-  },
-  onSuccess: (data) => {
-    toast({
-      title: "Added to Dating Profile!",
-      description: `${data.productName} added to your gifts (${data.giftCount}/20)`,
-    });
-    
-    // Invalidate related queries
-    queryClient.invalidateQueries({ queryKey: ['/api/dating-profile/gifts'] });
-  },
-  onError: (error: Error) => {
-    console.error('Dating profile gift addition failed:', error);
-    toast({
-      title: "Unable to Add Gift",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
-});
-```
-
-### PHASE 7: TESTING & VALIDATION
-
-#### Step 7.1: Unit Test Coverage
-```typescript
-// Test cases for gift addition functionality
-describe('Dating Profile Gift System', () => {
-  test('should add first gift and create profile', async () => {
-    const result = await storage.addGiftToDatingProfile(userId, productId);
-    expect(result).toBe(true);
-    
-    const profile = await storage.getDatingProfile(userId);
-    expect(profile.selectedGifts).toContain(productId);
-  });
-  
-  test('should prevent duplicate gifts', async () => {
-    await storage.addGiftToDatingProfile(userId, productId);
-    const result = await storage.addGiftToDatingProfile(userId, productId);
-    expect(result).toBe(false);
-  });
-  
-  test('should enforce 20-gift limit', async () => {
-    // Add 20 gifts
-    for (let i = 1; i <= 20; i++) {
-      await storage.addGiftToDatingProfile(userId, i);
-    }
-    
-    // 21st gift should fail
-    const result = await storage.addGiftToDatingProfile(userId, 21);
-    expect(result).toBe(false);
-  });
-});
-```
-
-#### Step 7.2: Integration Testing
-```typescript
-// API endpoint testing
-describe('Dating Profile Gift API', () => {
-  test('POST /api/dating-profile/gifts', async () => {
-    const response = await request(app)
-      .post('/api/dating-profile/gifts')
-      .send({ productId: 1 })
-      .set('Authorization', `Bearer ${userToken}`);
-    
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-  });
-});
-```
-
-### PHASE 8: MONITORING & OBSERVABILITY
-
-#### Step 8.1: Performance Metrics
-```typescript
-// Add performance monitoring
-const startTime = Date.now();
-const result = await storage.addGiftToDatingProfile(userId, productId);
-const duration = Date.now() - startTime;
-
-console.log('Dating profile gift operation completed', {
-  userId,
-  productId,
-  duration,
-  success: result
-});
-```
-
-#### Step 8.2: Error Tracking
-```typescript
-// Comprehensive error tracking
-const trackError = (error: Error, context: any) => {
-  console.error('Dating Profile Error:', {
-    message: error.message,
-    stack: error.stack,
-    context,
-    timestamp: new Date().toISOString(),
-    userAgent: context.req?.headers['user-agent'],
-    userId: context.userId
-  });
-};
-```
-
-## EXECUTION PRIORITY
-
-### HIGH PRIORITY (Immediate)
-1. Fix schema import issues in storage.ts
-2. Add comprehensive error logging
-3. Implement transaction safety
-4. Validate authentication context
-
-### MEDIUM PRIORITY (Next iteration)
-1. Enhanced frontend error handling
-2. Input validation layer
-3. Unit test coverage
-4. Performance monitoring
-
-### LOW PRIORITY (Future enhancement)
-1. Advanced error tracking
-2. Integration tests
-3. Load testing
-4. Performance optimization
+### Day 4-5
+1. Comprehensive testing of entire flow
+2. Error handling and edge cases
+3. Performance optimization
 
 ## SUCCESS METRICS
 
 ### Technical Metrics
-- 0 dating profile gift addition failures
-- < 200ms API response time
-- 100% transaction success rate
-- 99.9% uptime for gift endpoints
+- Gift proposal success rate: >95%
+- Notification delivery: <2 seconds
+- Payment processing: <10 seconds
+- Database query performance: <100ms
 
 ### User Experience Metrics
-- < 3 clicks to add gift to profile
-- Clear error messages for all failure cases
-- Immediate feedback on successful additions
-- Seamless profile creation for new users
+- Gift sending completion rate: >80%
+- Payment abandonment rate: <20%
+- User satisfaction with gift flow: >4.5/5
 
-### Business Metrics
-- 40% increase in dating profile completions
-- 25% increase in marketplace-to-dating conversion
-- 80% adoption rate for gift functionality
-- < 5% user-reported errors
+## RISK MITIGATION
+
+### Database Risks
+- **Risk**: Migration failure
+- **Mitigation**: Test on staging, backup production data
+
+### Payment Risks
+- **Risk**: Stripe integration errors
+- **Mitigation**: Comprehensive error handling, webhook verification
+
+### Notification Risks
+- **Risk**: Notification delivery failure
+- **Mitigation**: Queue system with retry logic
 
 ## DEPLOYMENT STRATEGY
 
-### Phase 1: Schema Fix (Immediate)
-- Deploy schema corrections
-- Update import statements
-- Add error logging
+1. **Database Changes**: Deploy during low-traffic period
+2. **API Updates**: Rolling deployment with backward compatibility
+3. **Frontend Changes**: Feature flag controlled rollout
+4. **Testing**: Staged rollout to 10% → 50% → 100% of users
 
-### Phase 2: Enhanced Validation (Same day)
-- Add input validation
-- Implement transaction safety
-- Deploy authentication fixes
-
-### Phase 3: Frontend Polish (Next day)
-- Enhanced error handling
-- Improved user feedback
-- Query invalidation
-
-### Phase 4: Testing & Monitoring (Following week)
-- Comprehensive test suite
-- Performance monitoring
-- Error tracking system
-
-This plan addresses the root causes of the dating profile gift system failure and provides a comprehensive roadmap for implementation, testing, and deployment.
+This comprehensive plan addresses all identified issues and provides a complete roadmap for implementing a robust gift system with proper user notifications, payment processing, and message integration.
