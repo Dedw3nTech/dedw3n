@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import dedw3nLogo from "@assets/Dedw3n Logo.png";
 import {
@@ -19,6 +19,7 @@ import RegionSelector from "@/components/RegionSelector";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useRecaptcha } from "@/components/RecaptchaProvider";
+import { useEmailValidation } from "@/hooks/use-email-validation";
 import { 
   User, 
   Eye, 
@@ -30,7 +31,11 @@ import {
   Users,
   Globe,
   Calendar,
-  Shield
+  Shield,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Mail
 } from "lucide-react";
 
 interface LoginPromptModalProps {
@@ -46,6 +51,13 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
   const { executeRecaptcha } = useRecaptcha();
+  const { 
+    validateEmail, 
+    isValidating, 
+    isValid: emailIsValid, 
+    getValidationMessage,
+    resetValidation 
+  } = useEmailValidation();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -60,6 +72,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   });
 
   const [ageError, setAgeError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
 
   // Use stable modal texts to prevent infinite re-renders
   const stableModalTexts = useMemo(() => [
@@ -126,6 +139,21 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       setAgeError("");
     }
   };
+
+  // Email validation effect with debouncing
+  useEffect(() => {
+    if (formData.email && emailTouched && !isLogin) {
+      validateEmail(formData.email);
+    } else if (!formData.email || isLogin) {
+      resetValidation();
+    }
+  }, [formData.email, emailTouched, isLogin, validateEmail, resetValidation]);
+
+  // Reset email validation when switching between login/register
+  useEffect(() => {
+    resetValidation();
+    setEmailTouched(false);
+  }, [isLogin, resetValidation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

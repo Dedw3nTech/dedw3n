@@ -5795,6 +5795,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email validation endpoint using Clearout.io API
+  app.post('/api/validate-email', async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ 
+          valid: false,
+          reason: 'Email is required',
+          syntax_valid: false,
+          mx_valid: false,
+          disposable: false,
+          free_provider: false,
+          deliverable: false,
+          role_based: false
+        });
+      }
+
+      // Basic email format validation first
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(200).json({
+          valid: false,
+          reason: 'Invalid email format',
+          syntax_valid: false,
+          mx_valid: false,
+          disposable: false,
+          free_provider: false,
+          deliverable: false,
+          role_based: false
+        });
+      }
+
+      const clearoutApiKey = process.env.CLEAROUT_API_KEY;
+      if (!clearoutApiKey) {
+        console.warn('[EMAIL_VALIDATION] Clearout API key not configured, using basic validation');
+        return res.status(200).json({
+          valid: true,
+          reason: 'Basic validation passed',
+          syntax_valid: true,
+          mx_valid: true,
+          disposable: false,
+          free_provider: false,
+          deliverable: true,
+          role_based: false,
+          confidence_score: 85
+        });
+      }
+
+      console.log(`[EMAIL_VALIDATION] Validating email: ${email.substring(0, 3)}***`);
+
+      // Call Clearout.io API
+      const clearoutResponse = await fetch(`https://api.clearout.io/v2/email_verify/instant`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer:${clearoutApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          timeout: 10
+        })
+      });
+
+      if (!clearoutResponse.ok) {
+        console.error(`[EMAIL_VALIDATION] Clearout API error: ${clearoutResponse.status}`);
+        // Fallback to basic validation
+        return res.status(200).json({
+          valid: true,
+          reason: 'Validation service temporarily unavailable, basic validation passed',
+          syntax_valid: true,
+          mx_valid: true,
+          disposable: false,
+          free_provider: false,
+          deliverable: true,
+          role_based: false,
+          confidence_score: 75
+        });
+      }
+
+      const clearoutData = await clearoutResponse.json();
+      console.log(`[EMAIL_VALIDATION] Clearout response status: ${clearoutData.status}`);
+
+      // Map Clearout.io response to our format
+      const result = {
+        valid: clearoutData.status === 'valid',
+        reason: clearoutData.reason || '',
+        syntax_valid: clearoutData.status !== 'invalid' && clearoutData.status !== 'syntax_error',
+        mx_valid: clearoutData.status !== 'invalid' && clearoutData.status !== 'mx_error',
+        disposable: clearoutData.disposable === true,
+        free_provider: clearoutData.free_email === true,
+        deliverable: clearoutData.status === 'valid',
+        role_based: clearoutData.role === true,
+        confidence_score: clearoutData.confidence || 0
+      };
+
+      res.status(200).json(result);
+
+    } catch (error) {
+      console.error('[EMAIL_VALIDATION] Error:', error);
+      
+      // Return fallback response on error
+      res.status(200).json({
+        valid: true,
+        reason: 'Validation service error, proceeding with basic validation',
+        syntax_valid: true,
+        mx_valid: true,
+        disposable: false,
+        free_provider: false,
+        deliverable: true,
+        role_based: false,
+        confidence_score: 70
+      });
+    }
+  });
+
   // Helper function for search suggestions
   async function generateSearchSuggestions(searchTerm: string): Promise<string[]> {
     try {
