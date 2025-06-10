@@ -265,12 +265,12 @@ export default function CommunityPage() {
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to load community feed</h2>
             <p className="text-gray-600 mb-4">
-              {error?.message || "There was an error loading the community posts."}
+              {error?.message || getTranslation("Failed to fetch community feed")}
             </p>
           </div>
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
+            {getTranslation("Try Again")}
           </Button>
         </div>
       </Container>
@@ -425,7 +425,7 @@ export default function CommunityPage() {
             {isFetchingNextPage && (
               <div className="text-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-gray-600">{loadingMoreText}</p>
+                <p className="text-sm text-gray-600">{getTranslation("Loading more posts...")}</p>
               </div>
             )}
 
@@ -435,7 +435,7 @@ export default function CommunityPage() {
                 <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <h3 className="text-[14px] font-semibold text-gray-900">
-                      {reachedEndText}
+                      {getTranslation("You've reached the end!")}
                     </h3>
                     <Button 
                       onClick={handleRefresh}
@@ -444,11 +444,11 @@ export default function CommunityPage() {
                       className="inline-flex items-center gap-1 p-1 h-auto"
                     >
                       <RefreshCw className="h-4 w-4" />
-                      {refreshFeedText}
+                      {getTranslation("Refresh")}
                     </Button>
                   </div>
                   <p className="text-[12px] text-gray-600">
-                    {seenAllPostsText} {checkBackLaterText}
+                    {getTranslation("Check back later for new content or try refreshing to see if there are any updates.")}
                   </p>
                 </div>
               </div>
@@ -490,7 +490,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Bottom Community Advertisement */}
-        <CommunityBottomPromoSection altText={joinCommunityAltText} />
+        <CommunityBottomPromoSection altText={getTranslation("Join the Dedwen Community")} />
       </div>
       </Container>
     </>
