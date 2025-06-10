@@ -24,7 +24,7 @@ export default function MobileNavigation() {
   ], []);
 
   // Use optimized batch translation for optimal performance
-  const translations = useMasterBatchTranslation(mobileNavTexts);
+  const { translations } = useMasterBatchTranslation(mobileNavTexts, 'normal');
   
   // Get unread message count from API
   const { data: messageData } = useQuery<{ count: number }>({
