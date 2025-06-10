@@ -174,35 +174,37 @@ app.use((req, res, next) => {
       // Warm critical cache entries
       const warmingOperations = [];
       
-      // Core API responses
-      warmingOperations.push(
-        cacheMiddleware.cached('api:products:trending', async () => ({ products: [], count: 25, cached: true }), 'products', 2 * 60 * 60 * 1000),
-        cacheMiddleware.cached('api:categories:main', async () => ({ categories: [], count: 8, cached: true }), 'categories', 2 * 60 * 60 * 1000),
-        cacheMiddleware.cached('api:navigation:header', async () => ({ menu: [], cached: true }), 'navigation', 2 * 60 * 60 * 1000),
-        cacheMiddleware.cached('api:search:popular', async () => ({ searches: [], cached: true }), 'search', 2 * 60 * 60 * 1000)
-      );
+      // Core API responses - using direct cache manager operations
+      const coreData = [
+        { key: 'api:products:trending', data: { products: [], count: 25, cached: true }, category: 'products' },
+        { key: 'api:categories:main', data: { categories: [], count: 8, cached: true }, category: 'categories' },
+        { key: 'api:navigation:header', data: { menu: [], cached: true }, category: 'navigation' },
+        { key: 'api:search:popular', data: { searches: [], cached: true }, category: 'search' }
+      ];
+
+      for (const item of coreData) {
+        cacheManager.set(item.key, item.data, item.category, 2 * 60 * 60 * 1000);
+        warmingOperations.push(Promise.resolve());
+      }
 
       // User patterns
       for (let i = 1; i <= 50; i++) {
-        warmingOperations.push(
-          cacheMiddleware.cached(`user:profile:${i}`, async () => ({ userId: i, profile: {}, cached: true }), 'users', 2 * 60 * 60 * 1000),
-          cacheMiddleware.cached(`user:cart:${i}`, async () => ({ userId: i, items: [], cached: true }), 'carts', 2 * 60 * 60 * 1000)
-        );
+        cacheManager.set(`user:profile:${i}`, { userId: i, profile: {}, cached: true }, 'users', 2 * 60 * 60 * 1000);
+        cacheManager.set(`user:cart:${i}`, { userId: i, items: [], cached: true }, 'carts', 2 * 60 * 60 * 1000);
+        warmingOperations.push(Promise.resolve(), Promise.resolve());
       }
 
       // Product catalog
       for (let i = 1; i <= 100; i++) {
-        warmingOperations.push(
-          cacheMiddleware.cached(`product:details:${i}`, async () => ({ productId: i, details: {}, cached: true }), 'products', 2 * 60 * 60 * 1000)
-        );
+        cacheManager.set(`product:details:${i}`, { productId: i, details: {}, cached: true }, 'products', 2 * 60 * 60 * 1000);
+        warmingOperations.push(Promise.resolve());
       }
 
       // Search patterns
       const searchTerms = ['phone', 'laptop', 'clothing', 'shoes', 'electronics', 'books', 'furniture', 'tools'];
       for (const term of searchTerms) {
-        warmingOperations.push(
-          cacheMiddleware.cached(`search:${term}`, async () => ({ query: term, results: [], cached: true }), 'search', 2 * 60 * 60 * 1000)
-        );
+        cacheManager.set(`search:${term}`, { query: term, results: [], cached: true }, 'search', 2 * 60 * 60 * 1000);
+        warmingOperations.push(Promise.resolve());
       }
 
       // Execute warming operations
