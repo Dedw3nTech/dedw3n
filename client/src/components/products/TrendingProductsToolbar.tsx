@@ -60,47 +60,5 @@ export function TrendingProductsToolbar() {
   // Duplicate products for seamless scrolling
   const scrollingProducts = [...products, ...products];
 
-  return (
-    <div className="w-full bg-white text-black p-3 mb-4 rounded-lg overflow-hidden relative border border-gray-200">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span className="text-sm font-semibold text-black">Trending Products</span>
-      </div>
-      
-      <div className="relative overflow-hidden">
-        <div className="flex animate-scroll-left whitespace-nowrap">
-          {scrollingProducts.map((product, index) => (
-            <div
-              key={`${product.id}-${index}`}
-              className="flex items-center gap-2 mr-8 flex-shrink-0"
-            >
-              <span className="text-sm font-medium text-black truncate max-w-32">
-                {product.name}
-              </span>
-              
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold text-black">
-                  ${product.price.toFixed(2)}
-                </span>
-                
-                <div className={`flex items-center gap-1 ${
-                  product.priceChange >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {product.priceChange >= 0 ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  <span className="text-xs font-medium">
-                    {product.priceChange >= 0 ? '+' : ''}
-                    {product.changePercent.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
