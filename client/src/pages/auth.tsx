@@ -527,7 +527,10 @@ export default function AuthPage() {
                   </Button>
                 </div>
                 {!isLogin && formData.password && (
-                  <PasswordStrengthValidator password={formData.password} />
+                  <PasswordStrengthValidator 
+                    password={formData.password} 
+                    onPasswordChange={(password) => setFormData({ ...formData, password })}
+                  />
                 )}
               </div>
 
@@ -538,13 +541,9 @@ export default function AuthPage() {
                   {t["Security Verification"] || "Security Verification"}
                 </Label>
                 <MathCaptcha
-                  onVerified={(token) => {
-                    setCaptchaValid(true);
-                    setCaptchaToken(token);
-                  }}
-                  onError={() => {
-                    setCaptchaValid(false);
-                    setCaptchaToken("");
+                  onValidation={(isValid: boolean, token?: string) => {
+                    setCaptchaValid(isValid);
+                    setCaptchaToken(token || "");
                   }}
                 />
               </div>
@@ -554,7 +553,7 @@ export default function AuthPage() {
                   <Checkbox
                     id="remember"
                     checked={rememberPassword}
-                    onCheckedChange={setRememberPassword}
+                    onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
                     {t["Remember my login details"] || "Remember my login details"}
