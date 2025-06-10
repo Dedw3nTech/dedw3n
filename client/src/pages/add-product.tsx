@@ -249,7 +249,8 @@ export default function AddProduct() {
     // Shipping Price Types
     "Shipping Price Type",
     "Fixed Shipping Price",
-    "Variable Shipping Price"
+    "Variable Shipping Price",
+    "1.5% Dedw3n Shipping Fee will be applied"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -947,19 +948,33 @@ export default function AddProduct() {
                             <FormField
                               control={form.control}
                               name="shippingPrice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
-                                  <FormControl>
-                                    <CurrencyInput
-                                      value={field.value || 0}
-                                      onValueChange={field.onChange}
-                                      placeholder={t("0.00")}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
+                              render={({ field }) => {
+                                const basePrice = field.value || 0;
+                                const commission = basePrice * 0.015;
+                                const totalPrice = basePrice + commission;
+                                
+                                return (
+                                  <FormItem>
+                                    <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
+                                    <FormControl>
+                                      <CurrencyInput
+                                        value={basePrice}
+                                        onValueChange={field.onChange}
+                                        placeholder={t("0.00")}
+                                      />
+                                    </FormControl>
+                                    <div className="text-xs font-normal text-gray-600 mt-1">
+                                      {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                      {basePrice > 0 && (
+                                        <span className="ml-2 text-gray-800">
+                                          (Total: ${totalPrice.toFixed(2)})
+                                        </span>
+                                      )}
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }}
                             />
                           )}
 
@@ -968,20 +983,33 @@ export default function AddProduct() {
                             <FormField
                               control={form.control}
                               name="variableShippingPrice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t("Variable Shipping Price")}</FormLabel>
-                                  <FormControl>
-                                    <CurrencyInput
-                                      value={field.value || 0}
-                                      onValueChange={field.onChange}
-                                      placeholder={t("0.00")}
-                                      className={shippingPriceType !== 'variable' ? 'opacity-50' : ''}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
+                              render={({ field }) => {
+                                const basePrice = field.value || 0;
+                                const commission = basePrice * 0.015;
+                                const totalPrice = basePrice + commission;
+                                
+                                return (
+                                  <FormItem>
+                                    <FormLabel>{t("Variable Shipping Price")}</FormLabel>
+                                    <FormControl>
+                                      <CurrencyInput
+                                        value={basePrice}
+                                        onValueChange={field.onChange}
+                                        placeholder={t("0.00")}
+                                      />
+                                    </FormControl>
+                                    <div className="text-xs font-normal text-gray-600 mt-1">
+                                      {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                      {basePrice > 0 && (
+                                        <span className="ml-2 text-gray-800">
+                                          (Total: ${totalPrice.toFixed(2)})
+                                        </span>
+                                      )}
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }}
                             />
                           )}
 
@@ -995,6 +1023,9 @@ export default function AddProduct() {
                                 placeholder={t("0.00")}
                                 className="mt-1"
                               />
+                              <div className="text-xs font-normal text-gray-400 mt-1">
+                                {t("1.5% Dedw3n Shipping Fee will be applied")}
+                              </div>
                             </div>
                           )}
 
@@ -1007,6 +1038,9 @@ export default function AddProduct() {
                                 placeholder={t("0.00")}
                                 className="mt-1"
                               />
+                              <div className="text-xs font-normal text-gray-400 mt-1">
+                                {t("1.5% Dedw3n Shipping Fee will be applied")}
+                              </div>
                             </div>
                           )}
                         </div>
