@@ -136,8 +136,8 @@ class FinalTranslationEngine {
       
       // Collect all unique texts
       const allTexts = new Set([
-        ...textElements.keys(),
-        ...attributeElements.keys()
+        ...Array.from(textElements.keys()),
+        ...Array.from(attributeElements.keys())
       ]);
 
       if (allTexts.size === 0) return;
