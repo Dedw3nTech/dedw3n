@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Eye, Star, ExternalLink, Flame } from "lucide-react";
 import { Link } from "wouter";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useMemo } from "react";
 
 interface PopularProduct {
   id: number;
@@ -25,12 +27,33 @@ export function PopularProductsCard() {
     retry: false,
   });
 
+  // Master Translation System - PopularProductsCard (6 texts)
+  const popularProductsTexts = useMemo(() => [
+    "Popular Products", "No popular products yet", "Explore Products", 
+    "View Popular Products", "by", "views"
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(popularProductsTexts);
+  const [
+    titleText, noProductsText, exploreProductsText, 
+    viewPopularProductsText, byText, viewsText
+  ] = translations || popularProductsTexts;
+
+  // Dynamic translation for product names
+  const productNames = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    return products.slice(0, 3).map((product: PopularProduct) => product.name);
+  }, [products]);
+
+  const { translations: productTranslations } = useMasterBatchTranslation(productNames);
+  const translatedProductNames = productTranslations || productNames;
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="font-semibold tracking-tight flex items-center gap-2 text-[14px]">
           <Flame className="h-5 w-5 text-blue-600" />
-          Popular Products
+          {titleText}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -45,7 +68,7 @@ export function PopularProductsCard() {
         ) : !products || !Array.isArray(products) || products.length === 0 ? (
           <div className="text-center py-8">
             <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500" style={{ fontSize: '12px' }}>No popular products yet</p>
+            <p className="text-gray-500" style={{ fontSize: '12px' }}>{noProductsText}</p>
             <Button 
               asChild 
               variant="ghost" 
@@ -54,13 +77,15 @@ export function PopularProductsCard() {
             >
               <Link href="/products">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Explore Products
+                {exploreProductsText}
               </Link>
             </Button>
           </div>
         ) : (
           <>
-            {products.slice(0, 3).map((product: PopularProduct, index: number) => (
+            {products.slice(0, 3).map((product: PopularProduct, index: number) => {
+              const translatedName = translatedProductNames[index] || product.name;
+              return (
               <div key={product.id} className="relative flex gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                 {/* Ranking Badge */}
                 <div className="absolute -top-2 -left-2 w-6 h-6 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
@@ -71,7 +96,7 @@ export function PopularProductsCard() {
                   {product.image ? (
                     <img 
                       src={product.image} 
-                      alt={product.name}
+                      alt={translatedName}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
@@ -81,7 +106,7 @@ export function PopularProductsCard() {
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">
-                    {product.name}
+                    {translatedName}
                   </h4>
                   
                   <div className="flex items-center gap-2 mt-1">
@@ -100,7 +125,7 @@ export function PopularProductsCard() {
                     {product.views && (
                       <div className="flex items-center gap-1">
                         <Eye className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">{product.views}</span>
+                        <span className="text-xs text-gray-500">{product.views} {viewsText}</span>
                       </div>
                     )}
                     {product.category && (
@@ -112,7 +137,7 @@ export function PopularProductsCard() {
                   
                   {product.vendor && (
                     <p className="text-xs text-gray-500 mt-1">
-                      by {product.vendor.name}
+                      {byText} {product.vendor.name}
                     </p>
                   )}
                 </div>
@@ -128,7 +153,8 @@ export function PopularProductsCard() {
                   </Link>
                 </Button>
               </div>
-            ))}
+              );
+            })}
             
             <div className="pt-2">
               <Button 
