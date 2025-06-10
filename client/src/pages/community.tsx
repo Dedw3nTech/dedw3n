@@ -483,7 +483,7 @@ export default function CommunityPage() {
             {isFetchingNextPage && (
               <div className="text-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-gray-600">Loading more posts...</p>
+                <p className="text-sm text-gray-600">{loadingMoreText}</p>
               </div>
             )}
 
@@ -493,7 +493,7 @@ export default function CommunityPage() {
                 <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <h3 className="text-[14px] font-semibold text-gray-900">
-                      You've reached the end!
+                      {reachedEndText}
                     </h3>
                     <Button 
                       onClick={handleRefresh}
@@ -502,11 +502,11 @@ export default function CommunityPage() {
                       className="inline-flex items-center gap-1 p-1 h-auto"
                     >
                       <RefreshCw className="h-4 w-4" />
-                      Refresh Feed
+                      {refreshFeedText}
                     </Button>
                   </div>
                   <p className="text-[12px] text-gray-600">
-                    You've seen all available posts in the community feed. Check back later for new content or try refreshing to see if there are any updates.
+                    {seenAllPostsText} {checkBackLaterText}
                   </p>
                 </div>
               </div>
