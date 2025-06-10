@@ -99,11 +99,11 @@ export const demographicTypeEnum = pgEnum('demographic_type', ['age_group', 'gen
 // Define return status enum
 export const returnStatusEnum = pgEnum('return_status', ['requested', 'approved', 'rejected', 'processing', 'shipped', 'completed', 'cancelled']);
 
+// Define return reason enum
+export const returnReasonEnum = pgEnum('return_reason', ['defective', 'wrong_item', 'not_as_described', 'changed_mind', 'damaged_in_shipping', 'other']);
+
 // Define store user role enum
 export const storeUserRoleEnum = pgEnum('store_user_role', ['marketer', 'merchandiser', 'manager']);
-
-// Define return reason enum
-export const returnReasonEnum = pgEnum('return_reason', ['defective', 'wrong_item', 'not_as_described', 'damaged_in_transit', 'changed_mind', 'size_issue', 'quality_issue', 'other']);
 
 // User model
 export const users = pgTable("users", {
@@ -588,6 +588,20 @@ export const returns = pgTable("returns", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Regional shipping model for product-specific regional pricing
+export const regionalShipping = pgTable("regional_shipping", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  region: regionEnum("region").notNull(),
+  shippingPrice: doublePrecision("shipping_price").notNull(),
+  isEnabled: boolean("is_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Ensure one shipping price per product per region
+  uniqueProductRegion: unique().on(table.productId, table.region),
+}));
+
 // Community model for public, private, and secret communities
 export const communities = pgTable("communities", {
   id: serial("id").primaryKey(),
@@ -798,6 +812,12 @@ export const vendorUpdateSchema = z.object({
 
 export const insertProductSchema = createInsertSchema(products)
   .omit({ id: true, createdAt: true });
+
+export const insertRegionalShippingSchema = createInsertSchema(regionalShipping)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export type InsertRegionalShipping = z.infer<typeof insertRegionalShippingSchema>;
+export type RegionalShipping = typeof regionalShipping.$inferSelect;
 
 export const insertPostSchema = createInsertSchema(posts)
   .omit({ 

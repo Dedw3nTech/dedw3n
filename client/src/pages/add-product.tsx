@@ -91,6 +91,20 @@ export default function AddProduct() {
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
   const [shippingPriceType, setShippingPriceType] = useState<'fixed' | 'variable'>('fixed');
+  
+  // State for regional shipping
+  const [regionalShipping, setRegionalShipping] = useState<Record<string, { enabled: boolean; price: number }>>({
+    'Africa': { enabled: false, price: 0 },
+    'South Asia': { enabled: false, price: 0 },
+    'East Asia': { enabled: false, price: 0 },
+    'Oceania': { enabled: false, price: 0 },
+    'North America': { enabled: false, price: 0 },
+    'Central America': { enabled: false, price: 0 },
+    'South America': { enabled: false, price: 0 },
+    'Middle East': { enabled: false, price: 0 },
+    'Europe': { enabled: false, price: 0 },
+    'Central Asia': { enabled: false, price: 0 }
+  });
 
   // Comprehensive Add Product Page Text Collection for Translation
   const addProductTexts = [
