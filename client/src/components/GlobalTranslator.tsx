@@ -50,7 +50,7 @@ class DynamicContentObserver {
       }
       this.debounceTimer = setTimeout(() => {
         this.translateCallback();
-      }, 200);
+      }, 2000); // Increased debounce to 2 seconds
     }
   }
 }
@@ -261,7 +261,7 @@ export function GlobalTranslator() {
     if (translationInProgress.current) return;
     
     const now = Date.now();
-    if (now - lastTranslationTime.current < 100) return; // Prevent spam
+    if (now - lastTranslationTime.current < 1000) return; // Prevent spam - increased to 1 second
     
     translationInProgress.current = true;
     lastTranslationTime.current = now;
@@ -399,13 +399,11 @@ export function GlobalTranslator() {
       observerRef.current = new DynamicContentObserver(translatePageContent);
       observerRef.current.start();
 
-      // Progressive scans for dynamic content
+      // Progressive scans for dynamic content - reduced frequency
       const progressiveTimers = [
-        setTimeout(() => translatePageContent(), 200),   // Fast initial content
-        setTimeout(() => translatePageContent(), 500),   // React component updates
-        setTimeout(() => translatePageContent(), 1000),  // Lazy loaded content
-        setTimeout(() => translatePageContent(), 2000),  // Slow animations/transitions
-        setTimeout(() => translatePageContent(), 5000),  // Very slow async content
+        setTimeout(() => translatePageContent(), 1000),  // Initial content
+        setTimeout(() => translatePageContent(), 3000),  // React component updates
+        setTimeout(() => translatePageContent(), 8000),  // Lazy loaded content
       ];
 
       return () => {
