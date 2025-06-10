@@ -27,8 +27,9 @@ class SiteWideTranslator {
   }
 
   setLanguage(language: string) {
-    this.currentLanguage = language;
-    if (language === 'EN') {
+    console.log(`[Site Translator] Setting language to: ${language}`);
+    this.currentLanguage = language || 'EN';
+    if (this.currentLanguage === 'EN') {
       this.restoreOriginalText();
     } else {
       this.translateAllVisibleText();
@@ -143,16 +144,20 @@ class SiteWideTranslator {
 
       console.log(`[Site Translator] Sending ${validTexts.length} texts to API for ${this.currentLanguage}`);
 
+      const requestBody = {
+        texts: validTexts,
+        targetLanguage: this.currentLanguage,
+        priority: 'high'
+      };
+
+      console.log(`[Site Translator] Request body:`, requestBody);
+
       const response = await fetch('/api/translate/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          texts: validTexts,
-          targetLanguage: this.currentLanguage,
-          priority: 'high'
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -289,16 +294,18 @@ class SiteWideTranslator {
 }
 
 export function useSiteTranslator(pageId: string = 'default') {
-  const { language } = useLanguage();
+  const { currentLanguage, isLoading } = useLanguage();
   const translatorRef = useRef(SiteWideTranslator.getInstance());
   const currentPageRef = useRef(pageId);
 
-  // Handle language changes
+  // Handle language changes - only when loading is complete and language is valid
   useEffect(() => {
-    const translator = translatorRef.current;
-    translator.clearCache();
-    translator.setLanguage(language);
-  }, [language]);
+    if (!isLoading && currentLanguage) {
+      const translator = translatorRef.current;
+      translator.clearCache();
+      translator.setLanguage(currentLanguage);
+    }
+  }, [currentLanguage, isLoading]);
 
   // Start observing the page
   useEffect(() => {
@@ -313,21 +320,21 @@ export function useSiteTranslator(pageId: string = 'default') {
 
   // Translate immediately when component mounts
   useEffect(() => {
-    const translator = translatorRef.current;
-    if (language !== 'EN') {
+    if (!isLoading && currentLanguage && currentLanguage !== 'EN') {
+      const translator = translatorRef.current;
       // Small delay to ensure DOM is ready
       setTimeout(() => {
-        translator.setLanguage(language);
+        translator.setLanguage(currentLanguage);
       }, 100);
     }
-  }, [language]);
+  }, [currentLanguage, isLoading]);
 
   const translateNow = useCallback(() => {
     const translator = translatorRef.current;
-    if (language !== 'EN') {
-      translator.setLanguage(language);
+    if (currentLanguage && currentLanguage !== 'EN') {
+      translator.setLanguage(currentLanguage);
     }
-  }, [language]);
+  }, [currentLanguage]);
 
   return { translateNow };
 }
