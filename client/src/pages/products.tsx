@@ -187,7 +187,7 @@ export default function Products() {
             <Checkbox
               id="on-sale"
               checked={showSale}
-              onCheckedChange={setShowSale}
+              onCheckedChange={(checked) => setShowSale(checked === true)}
             />
             <Label htmlFor="on-sale" className="text-[12px] font-normal">On Sale</Label>
           </div>
@@ -195,7 +195,7 @@ export default function Products() {
             <Checkbox
               id="new-arrivals"
               checked={showNew}
-              onCheckedChange={setShowNew}
+              onCheckedChange={(checked) => setShowNew(checked === true)}
             />
             <Label htmlFor="new-arrivals" className="text-[12px] font-normal">New Arrivals</Label>
           </div>
