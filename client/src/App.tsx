@@ -116,7 +116,7 @@ import NotFound from "@/pages/not-found";
 import NotFoundPage from "@/pages/NotFoundPage";
 import Home from "@/pages/home";
 import Social from "@/pages/social";
-import Chatrooms from "@/pages/chatrooms";
+
 
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
@@ -354,7 +354,7 @@ function Router() {
         <SEOHead {...seoConfigs.community} />
         <CommunityPage />
       </Route>
-      <ProtectedRoute path="/community/chatrooms" component={Chatrooms} />
+
       <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/event/:id" component={EventDetailPage} />
       <ProtectedRoute path="/posts/:id" component={PostDetailPage} />

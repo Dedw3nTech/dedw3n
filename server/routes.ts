@@ -52,8 +52,7 @@ import {
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
   insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
-  insertVideoProductOverlaySchema, insertCommunityContentSchema,
-  chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
+  insertVideoProductOverlaySchema, insertCommunityContentSchema
 } from "@shared/schema";
 import { z } from "zod";
 
