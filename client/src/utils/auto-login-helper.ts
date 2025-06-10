@@ -1,81 +1,31 @@
 /**
- * Auto-login helper utilities for development and testing
+ * Auto-login helper utilities - DISABLED for security compliance
  */
 
-// Clear all logout flags and enable auto-login
+// Auto-login disabled for security - no longer functional
 export function enableAutoLogin(): void {
-  try {
-    // Clear logout flags from all possible storage locations
-    localStorage.removeItem('dedwen_logged_out');
-    sessionStorage.removeItem('dedwen_logged_out');
-    localStorage.removeItem('userData');
-    sessionStorage.removeItem('userData');
-    
-    // Clear auto-login disabled flag
-    localStorage.removeItem('auto_login_disabled');
-    
-    // Enable auto-login
-    localStorage.setItem('enable_auto_login', 'true');
-    
-    console.log('Auto-login enabled - clearing all logout state and refreshing');
-    
-    // Also clear any cookies that might persist logout state
-    document.cookie = 'user_logged_out=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-    
-    // Refresh the page to trigger auto-login
-    window.location.reload();
-  } catch (error) {
-    console.error('Error enabling auto-login:', error);
-  }
+  console.warn('[SECURITY] Auto-login functionality has been permanently disabled for security compliance');
 }
 
-// Disable auto-login
+// Auto-login disabled for security - no longer functional
 export function disableAutoLogin(): void {
-  try {
-    localStorage.removeItem('enable_auto_login');
-    console.log('Auto-login disabled');
-  } catch (error) {
-    console.error('Error disabling auto-login:', error);
-  }
+  console.warn('[SECURITY] Auto-login functionality has been permanently disabled for security compliance');
 }
 
-// Check if auto-login is enabled
+// Auto-login disabled for security - always returns false
 export function isAutoLoginEnabled(): boolean {
-  try {
-    // Check if auto-login has been explicitly disabled
-    if (localStorage.getItem('auto_login_disabled') === 'true') {
-      console.log('Auto-login explicitly disabled');
-      return false;
-    }
-    
-    // Check if user is currently logged out
-    if (localStorage.getItem('dedwen_logged_out') === 'true' || 
-        sessionStorage.getItem('dedwen_logged_out') === 'true') {
-      console.log('Auto-login blocked - user is logged out');
-      return false;
-    }
-    
-    return localStorage.getItem('enable_auto_login') === 'true' ||
-           window.location.search.includes('auto_login=true') ||
-           window.location.search.includes('serruti=true');
-  } catch (error) {
-    console.error('Error checking auto-login status:', error);
-    return false;
-  }
+  console.warn('[SECURITY] Auto-login functionality has been permanently disabled for security compliance');
+  return false;
 }
 
-// Add auto-login controls to window for debugging
+// Auto-login controls disabled for security
 if (typeof window !== 'undefined') {
   (window as any).autoLogin = {
-    enable: enableAutoLogin,
-    disable: disableAutoLogin,
-    isEnabled: isAutoLoginEnabled,
-    clearLogoutFlags: () => {
-      localStorage.removeItem('dedwen_logged_out');
-      sessionStorage.removeItem('dedwen_logged_out');
-      console.log('Logout flags cleared');
-    }
+    enable: () => console.warn('[SECURITY] Auto-login permanently disabled'),
+    disable: () => console.warn('[SECURITY] Auto-login permanently disabled'),
+    isEnabled: () => false,
+    status: () => 'DISABLED_FOR_SECURITY'
   };
   
-  console.log('Auto-login controls available via window.autoLogin');
+  console.log('[SECURITY] Auto-login controls disabled for security compliance');
 }

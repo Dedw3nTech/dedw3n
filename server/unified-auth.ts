@@ -42,21 +42,10 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Auto-login mechanism for development
+  // Auto-login mechanism - DISABLED for security
   const autoLogin = req.headers['x-auto-login'];
-  if (autoLogin === 'true' && process.env.NODE_ENV === 'development') {
-    try {
-      const user = await storage.getUser(9); // Use Serruti user for development
-      if (user) {
-        console.log(`[AUTH] Auto-login successful (DEV MODE): ${user.username} (ID: ${user.id})`);
-        req.user = user;
-        return next();
-      }
-    } catch (error) {
-      console.error('[AUTH] Error with auto-login:', error);
-    }
-  } else if (autoLogin === 'true' && process.env.NODE_ENV !== 'development') {
-    console.warn('[SECURITY] Auto-login attempt blocked in production environment');
+  if (autoLogin === 'true') {
+    console.warn('[SECURITY] Auto-login attempt blocked - feature disabled for security');
   }
 
   // Third priority: Check Passport session authentication first
