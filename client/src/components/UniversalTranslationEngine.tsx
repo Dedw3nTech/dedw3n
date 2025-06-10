@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { deepLTranslationService } from './DeepLMachineTranslator';
 
 // Universal translation engine for complete website coverage
-class UniversalTranslationEngine {
+class UniversalTranslationCore {
   private translationCache = new Map<string, Map<string, string>>();
   private elementRegistry = new WeakMap<Element, { original: string; translated: string; type: string }>();
   private isTranslating = false;
@@ -360,11 +360,11 @@ class UniversalTranslationEngine {
 export function UniversalTranslationEngine() {
   const [location] = useLocation();
   const { currentLanguage } = useLanguage();
-  const engineRef = useRef<UniversalTranslationEngine | null>(null);
+  const engineRef = useRef<UniversalTranslationCore | null>(null);
 
   // Initialize translation engine
   useEffect(() => {
-    engineRef.current = new UniversalTranslationEngine(currentLanguage);
+    engineRef.current = new UniversalTranslationCore(currentLanguage);
     
     return () => {
       if (engineRef.current) {
