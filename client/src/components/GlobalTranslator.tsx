@@ -33,10 +33,18 @@ export function GlobalTranslator() {
   const isTextTranslatable = (text: string): boolean => {
     if (!text || text.length === 0) return false;
     
-    // Only skip pure whitespace
+    // Only skip pure whitespace and technical patterns
     if (/^\s*$/.test(text)) return false;
+    if (/^[\{\}\[\]<>\/\\]+$/.test(text)) return false; // Only technical symbols
+    if (/^https?:\/\//.test(text)) return false; // URLs
+    if (/^[a-f0-9]{32,}$/i.test(text)) return false; // Hashes/IDs
     
-    // Allow EVERYTHING else - be maximally inclusive
+    // Accept EVERYTHING else including:
+    // - Numbers: "1", "2024", "$50"
+    // - Single chars: "A", "B", "€"
+    // - Symbols: "★", "♥", "✓"
+    // - Mixed content: "v1.2", "COVID-19"
+    
     return true;
   };
 
@@ -100,11 +108,37 @@ export function GlobalTranslator() {
                 const attributeName = nodeAny._attributeName;
                 
                 if (element && attributeName) {
-                  element.setAttribute(attributeName, translatedText);
-                  
-                  // Special handling for specific attributes
-                  if (attributeName === 'placeholder' && element.tagName === 'INPUT') {
-                    (element as HTMLInputElement).placeholder = translatedText;
+                  if (attributeName === 'textContent') {
+                    // Special case for option/optgroup text content
+                    element.textContent = translatedText;
+                  } else {
+                    element.setAttribute(attributeName, translatedText);
+                    
+                    // Special handling for specific attributes
+                    if (attributeName === 'placeholder' && element.tagName === 'INPUT') {
+                      (element as HTMLInputElement).placeholder = translatedText;
+                    } else if (attributeName === 'placeholder' && element.tagName === 'TEXTAREA') {
+                      (element as HTMLTextAreaElement).placeholder = translatedText;
+                    }
+                  }
+                }
+              } else if (nodeAny._isSVGText) {
+                // Handle SVG text elements
+                const element = nodeAny._sourceElement;
+                if (element && element.textContent === originalText) {
+                  element.textContent = translatedText;
+                }
+              } else if (nodeAny._isCSSContent) {
+                // Handle CSS generated content (can't directly modify, but log for awareness)
+                console.log(`[Global Translator] CSS content detected but cannot be translated: "${originalText}"`);
+              } else if (nodeAny._isCanvasText) {
+                // Handle canvas text data attributes
+                const element = nodeAny._sourceElement;
+                if (element) {
+                  if (element.getAttribute('data-text') === originalText) {
+                    element.setAttribute('data-text', translatedText);
+                  } else if (element.getAttribute('aria-label') === originalText) {
+                    element.setAttribute('aria-label', translatedText);
                   }
                 }
               } else {
@@ -159,38 +193,97 @@ export function GlobalTranslator() {
       textNodes.push(node as Text);
     }
     
-    // Method 2: Find text in input placeholders, alt texts, titles
-    const elementsWithText = document.querySelectorAll('input[placeholder], img[alt], [title], [aria-label]');
-    elementsWithText.forEach(element => {
-      const placeholder = element.getAttribute('placeholder');
-      const alt = element.getAttribute('alt');
-      const title = element.getAttribute('title');
-      const ariaLabel = element.getAttribute('aria-label');
-      
-      [placeholder, alt, title, ariaLabel].forEach(text => {
-        if (text && text.trim()) {
-          // Create a virtual text node for attribute text
-          const virtualTextNode = document.createTextNode(text);
-          (virtualTextNode as any)._isAttribute = true;
-          (virtualTextNode as any)._sourceElement = element;
-          (virtualTextNode as any)._attributeName = 
-            text === placeholder ? 'placeholder' :
-            text === alt ? 'alt' :
-            text === title ? 'title' : 'aria-label';
-          textNodes.push(virtualTextNode as Text);
+    // Method 2: Comprehensive attribute scanning
+    const attributeSelectors = [
+      'input[placeholder]',
+      'textarea[placeholder]',
+      'img[alt]',
+      '[title]',
+      '[aria-label]',
+      '[aria-describedby]',
+      '[data-tooltip]',
+      '[data-title]',
+      'option',
+      'optgroup[label]',
+      'input[value]:not([type="hidden"]):not([type="password"])',
+      'button[value]',
+      'meta[name="description"][content]',
+      'meta[name="keywords"][content]',
+      'link[title]'
+    ];
+    
+    attributeSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(element => {
+        const attributes = ['placeholder', 'alt', 'title', 'aria-label', 'aria-describedby', 'data-tooltip', 'data-title', 'label', 'value', 'content'];
+        
+        attributes.forEach(attr => {
+          const value = element.getAttribute(attr);
+          if (value && value.trim() && isTextTranslatable(value)) {
+            const virtualTextNode = document.createTextNode(value);
+            (virtualTextNode as any)._isAttribute = true;
+            (virtualTextNode as any)._sourceElement = element;
+            (virtualTextNode as any)._attributeName = attr;
+            textNodes.push(virtualTextNode as Text);
+          }
+        });
+        
+        // Special handling for option and optgroup text content
+        if (element.tagName === 'OPTION' || element.tagName === 'OPTGROUP') {
+          const textContent = element.textContent?.trim();
+          if (textContent && isTextTranslatable(textContent)) {
+            const virtualTextNode = document.createTextNode(textContent);
+            (virtualTextNode as any)._isAttribute = true;
+            (virtualTextNode as any)._sourceElement = element;
+            (virtualTextNode as any)._attributeName = 'textContent';
+            textNodes.push(virtualTextNode as Text);
+          }
         }
       });
     });
     
-    // Method 3: Find text in button values and form labels
-    const formElements = document.querySelectorAll('input[value], button[value], option, label');
-    formElements.forEach(element => {
-      const value = element.getAttribute('value') || (element as HTMLElement).innerText;
-      if (value && value.trim() && value !== 'Submit' && value !== 'Reset') {
-        const virtualTextNode = document.createTextNode(value);
-        (virtualTextNode as any)._isAttribute = true;
+    // Method 3: SVG text elements
+    const svgTextElements = document.querySelectorAll('text, tspan, textPath');
+    svgTextElements.forEach(element => {
+      const text = element.textContent?.trim();
+      if (text && isTextTranslatable(text)) {
+        const virtualTextNode = document.createTextNode(text);
+        (virtualTextNode as any)._isSVGText = true;
         (virtualTextNode as any)._sourceElement = element;
-        (virtualTextNode as any)._attributeName = 'value';
+        textNodes.push(virtualTextNode as Text);
+      }
+    });
+    
+    // Method 4: CSS generated content (::before and ::after)
+    try {
+      document.querySelectorAll('*').forEach(element => {
+        const beforeContent = window.getComputedStyle(element, '::before').content;
+        const afterContent = window.getComputedStyle(element, '::after').content;
+        
+        [beforeContent, afterContent].forEach((content, index) => {
+          if (content && content !== 'none' && content !== '""' && content !== "''") {
+            const cleanContent = content.replace(/^["']|["']$/g, '');
+            if (cleanContent && isTextTranslatable(cleanContent)) {
+              const virtualTextNode = document.createTextNode(cleanContent);
+              (virtualTextNode as any)._isCSSContent = true;
+              (virtualTextNode as any)._sourceElement = element;
+              (virtualTextNode as any)._pseudoElement = index === 0 ? 'before' : 'after';
+              textNodes.push(virtualTextNode as Text);
+            }
+          }
+        });
+      });
+    } catch (error) {
+      // Ignore CSS content errors - not critical
+    }
+    
+    // Method 5: Canvas and WebGL text (data attributes)
+    const canvasElements = document.querySelectorAll('canvas[data-text], canvas[aria-label]');
+    canvasElements.forEach(canvas => {
+      const textData = canvas.getAttribute('data-text') || canvas.getAttribute('aria-label');
+      if (textData && isTextTranslatable(textData)) {
+        const virtualTextNode = document.createTextNode(textData);
+        (virtualTextNode as any)._isCanvasText = true;
+        (virtualTextNode as any)._sourceElement = canvas;
         textNodes.push(virtualTextNode as Text);
       }
     });
