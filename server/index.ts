@@ -16,6 +16,7 @@ import { cacheManager } from "./cache-manager";
 import { queryBundler } from "./query-bundler";
 import { translationOptimizer } from "./translation-optimizer";
 import cachePerformanceRoutes from "./cache-performance-routes";
+import { advancedCacheOptimizer } from "./advanced-cache-optimizer";
 import { EventEmitter } from 'events';
 // Removed storage import to prevent errors
 
@@ -173,6 +174,7 @@ app.use((req, res, next) => {
         cache: cacheManager.getStats_internal(),
         queryBundler: queryBundler.getStats(),
         translations: translationOptimizer.getStats(),
+        advancedCache: advancedCacheOptimizer.getOptimizationStats(),
         server: {
           uptime: Math.round(process.uptime() / 60),
           nodeVersion: process.version,
