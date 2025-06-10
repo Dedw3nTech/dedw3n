@@ -58,6 +58,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 interface CreatePostProps {
   communityId?: number;
@@ -86,6 +87,55 @@ export default function CreatePost({
 }: CreatePostProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Translation setup
+  const textsToTranslate = [
+    "What's on your mind",
+    "Cancel",
+    "Post",
+    "Update",
+    "Posting...",
+    "Updating...",
+    "Add Photo",
+    "Add Video",
+    "Share Event",
+    "Event Tagged",
+    "Tag Product", 
+    "Product Tagged",
+    "Select an Event to Share",
+    "Share an event with your followers. They can view event details and purchase tickets directly from your post.",
+    "Search events...",
+    "No events found",
+    "Confirm Selection",
+    "Select a Product to Tag",
+    "Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.",
+    "Search products...",
+    "No products found"
+  ];
+
+  const { translations } = useMasterBatchTranslation(textsToTranslate);
+
+  const whatsOnYourMindText = translations[0] || "What's on your mind";
+  const cancelText = translations[1] || "Cancel";
+  const postText = translations[2] || "Post";
+  const updateText = translations[3] || "Update";
+  const postingText = translations[4] || "Posting...";
+  const updatingText = translations[5] || "Updating...";
+  const addPhotoText = translations[6] || "Add Photo";
+  const addVideoText = translations[7] || "Add Video";
+  const shareEventText = translations[8] || "Share Event";
+  const eventTaggedText = translations[9] || "Event Tagged";
+  const tagProductText = translations[10] || "Tag Product";
+  const productTaggedText = translations[11] || "Product Tagged";
+  const selectEventText = translations[12] || "Select an Event to Share";
+  const shareEventDescText = translations[13] || "Share an event with your followers. They can view event details and purchase tickets directly from your post.";
+  const searchEventsText = translations[14] || "Search events...";
+  const noEventsText = translations[15] || "No events found";
+  const confirmSelectionText = translations[16] || "Confirm Selection";
+  const selectProductText = translations[17] || "Select a Product to Tag";
+  const tagProductDescText = translations[18] || "Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.";
+  const searchProductsText = translations[19] || "Search products...";
+  const noProductsText = translations[20] || "No products found";
   const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -532,7 +582,7 @@ export default function CreatePost({
               </AvatarFallback>
             </Avatar>
             <div className="bg-accent px-4 py-2 rounded-full text-muted-foreground flex-1">
-              What's on your mind, {user.name?.split(" ")[0]}?
+              {whatsOnYourMindText}, {user.name?.split(" ")[0]}?
             </div>
           </div>
         )}
@@ -565,7 +615,7 @@ export default function CreatePost({
                 {/* Content textarea with emoji picker */}
                 <div className="relative">
                   <Textarea
-                    placeholder="What's on your mind?"
+                    placeholder={whatsOnYourMindText + "?"}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     rows={4}
