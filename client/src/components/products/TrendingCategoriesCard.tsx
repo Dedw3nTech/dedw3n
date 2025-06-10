@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, Hash, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useMemo } from "react";
 
 interface TrendingCategory {
   id: string;
@@ -20,12 +22,24 @@ export function TrendingCategoriesCard() {
     retry: false,
   });
 
+  // Master Translation System - TrendingCategoriesCard (5 texts)
+  const trendingCategoriesTexts = useMemo(() => [
+    "Trending Product Categories", "No trending categories yet", "Explore Products", 
+    "posts", "tags", "View All Categories"
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(trendingCategoriesTexts);
+  const [
+    titleText, noTrendingText, exploreProductsText, 
+    postsText, tagsText, viewAllCategoriesText
+  ] = translations || trendingCategoriesTexts;
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="font-semibold tracking-tight flex items-center gap-2 text-[15px]">
           <TrendingUp className="h-5 w-5 text-blue-600" />
-          Trending Product Categories
+          {titleText}
         </CardTitle>
       </CardHeader>
       
@@ -41,7 +55,7 @@ export function TrendingCategoriesCard() {
         ) : !categories || !Array.isArray(categories) || categories.length === 0 ? (
           <div className="text-center py-6">
             <Hash className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500" style={{ fontSize: '12px' }}>No trending categories yet</p>
+            <p className="text-gray-500" style={{ fontSize: '12px' }}>{noTrendingText}</p>
             <Button 
               asChild 
               variant="ghost" 
@@ -50,7 +64,7 @@ export function TrendingCategoriesCard() {
             >
               <Link href="/products">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Explore Products
+                {exploreProductsText}
               </Link>
             </Button>
           </div>
@@ -76,8 +90,8 @@ export function TrendingCategoriesCard() {
                   </div>
                   
                   <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-1 text-[10px] text-gray-500 flex-wrap">
-                    <span>{category.posts} posts</span>
-                    <span>{category.tags} tags</span>
+                    <span>{category.posts} {postsText}</span>
+                    <span>{category.tags} {tagsText}</span>
                   </div>
                 </div>
                 
@@ -102,7 +116,7 @@ export function TrendingCategoriesCard() {
               >
                 <Link href="/categories">
                   <Hash className="h-4 w-4 mr-2" />
-                  View All Categories
+                  {viewAllCategoriesText}
                 </Link>
               </Button>
             </div>
