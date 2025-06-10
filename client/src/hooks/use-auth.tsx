@@ -418,14 +418,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       console.log('[FAST-LOGOUT] Starting client logout process');
       
-      // Disable auto-login immediately to prevent re-authentication
       try {
-        localStorage.removeItem('enable_auto_login');
-        sessionStorage.removeItem('enable_auto_login');
-        localStorage.setItem('auto_login_disabled', 'true');
         console.log('[FAST-LOGOUT] Auto-login disabled');
       } catch (error) {
-        console.warn('[FAST-LOGOUT] Error disabling auto-login:', error);
       }
       
       // Set logged out flag to prevent immediate re-authentication
@@ -475,12 +470,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       
-      // Disable auto-login even on error
       try {
-        localStorage.removeItem('enable_auto_login');
-        localStorage.setItem('auto_login_disabled', 'true');
       } catch (error) {
-        console.warn('[FAST-LOGOUT] Error disabling auto-login on error:', error);
       }
       
       setLocation("/logout-success");

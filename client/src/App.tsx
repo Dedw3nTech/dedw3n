@@ -47,7 +47,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { LazyImage } from "@/components/ui/lazy-image";
-import "@/utils/auto-login-helper"; // Import auto-login helper to make it available globally
+// Auto-login helper removed for security compliance
 
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
 import { CommunityNav } from "@/components/layout/CommunityNav";

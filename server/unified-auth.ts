@@ -26,27 +26,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Second priority: Check for test user ID header  
-  const testUserId = req.headers['x-test-user-id'];
-  if (testUserId && typeof testUserId === 'string') {
-    try {
-      const userId = parseInt(testUserId);
-      const user = await storage.getUser(userId);
-      if (user) {
-        console.log(`[AUTH] Test user authenticated: ${user.username} (ID: ${user.id})`);
-        req.user = user;
-        return next();
-      }
-    } catch (error) {
-      console.error('[AUTH] Error with test user authentication:', error);
-    }
-  }
-
-  // Auto-login mechanism - DISABLED for security
-  const autoLogin = req.headers['x-auto-login'];
-  if (autoLogin === 'true') {
-    console.warn('[SECURITY] Auto-login attempt blocked - feature disabled for security');
-  }
+  // Test user authentication removed for security compliance
 
   // Third priority: Check Passport session authentication first
   if (req.isAuthenticated && req.isAuthenticated()) {
