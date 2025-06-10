@@ -6,14 +6,9 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { usePermanentTranslation } from '@/hooks/use-permanent-translation';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 
-import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
-import { VideoDisplayCard } from '@/components/products/VideoDisplayCard';
-
-import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
-import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
 import {
   Card,
   CardContent,
@@ -25,7 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Heart, ChevronDown, Plus } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -42,31 +37,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-
-// Simplified components that work with permanent translation system
-const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  return <span className="text-[12px] font-normal">{categoryName}</span>;
-};
-
-const RegionName = ({ regionName }: { regionName: string }) => {
-  return <span>{regionName}</span>;
-};
-
-const ProductName = ({ productName }: { productName: string }) => {
-  return <span className="line-clamp-2">{productName}</span>;
-};
 import { useToast } from '@/hooks/use-toast';
-
-
 
 export default function Products() {
   usePageTitle({ title: 'Products' });
@@ -74,867 +45,79 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const { formatPrice } = useCurrency();
-  const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
-  const [productsPerPage, setProductsPerPage] = useState<number>(30);
-  const [columnsPerRow, setColumnsPerRow] = useState<number>(4);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
-  // Use permanent translation system
-  const { translateNow } = usePermanentTranslation('products-page');
-  
-  // User authentication
-  const { data: user } = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/user');
-      return response.json();
-    }
-  });
-  
-  // All individual translation calls now consolidated in mega-batch above
-  
-  // Repost dialog state
-  const [repostDialogOpen, setRepostDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [repostMessage, setRepostMessage] = useState('');
 
-  // Send Offer dialog state
-  const [offerDialogOpen, setOfferDialogOpen] = useState(false);
-  const [selectedOfferProduct, setSelectedOfferProduct] = useState<any>(null);
-  const [offerAmount, setOfferAmount] = useState('');
-  const [offerMessage, setOfferMessage] = useState('');
 
-  // Gift functionality state
-  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
-  const [selectedGiftProduct, setSelectedGiftProduct] = useState<any>(null);
-  const [giftSearchQuery, setGiftSearchQuery] = useState('');
-  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
-
-  // Liked products functionality
-  const { data: likedProducts = [] } = useQuery({
-    queryKey: ['/api/liked-products'],
-    queryFn: () => apiRequest('/api/liked-products'),
-  });
-
-  const likeMutation = useMutation({
-    mutationFn: (productId: number) => 
-      fetch(`/api/products/${productId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to like product');
-        }
-        return res.json();
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
-      toast({
-        title: "Product Liked",
-        description: "Product added to your liked items!",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to like product. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const unlikeMutation = useMutation({
-    mutationFn: (productId: number) => 
-      fetch(`/api/products/${productId}/like`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to unlike product');
-        }
-        return res.json();
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
-      toast({
-        title: "Product Unliked",
-        description: "Product removed from your liked items.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error", 
-        description: "Failed to unlike product. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Check if a product is liked
-  const isProductLiked = (productId: number) => {
-    return likedProducts.some((likedProduct: any) => likedProduct.id === productId);
-  };
-
-  // Handle like/unlike toggle
-  const handleLikeToggle = (productId: number) => {
-    if (isProductLiked(productId)) {
-      unlikeMutation.mutate(productId);
-    } else {
-      likeMutation.mutate(productId);
-    }
-  };
-
-  // Add to cart mutation
-  const addToCartMutation = useMutation({
-    mutationFn: async (productId: number) => {
-      return await fetch('/api/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId,
-          quantity: 1
-        })
-      }).then(res => res.json());
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/cart/count'] });
-      toast({
-        title: "Added to Cart",
-        description: "Product has been added to your shopping bag!",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add product to cart. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Repost to feed mutation
-  const repostMutation = useMutation({
-    mutationFn: async ({ productId, text }: { productId: number; text?: string }) => {
-      return await fetch('/api/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: text || `Check out this product: ${selectedProduct?.name}`,
-          productId,
-          type: 'product_share'
-        })
-      }).then(res => res.json());
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
-      toast({
-        title: "Posted to Feed!",
-        description: "Product has been shared to your community feed.",
-      });
-      setRepostDialogOpen(false);
-      setRepostMessage('');
-      setSelectedProduct(null);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to post to feed. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Send offer mutation
-  const sendOfferMutation = useMutation({
-    mutationFn: ({ productId, amount, message }: { productId: number; amount: string; message: string }) => 
-      fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          receiverId: selectedOfferProduct?.vendorId,
-          content: `🎯 OFFER: ${formatPrice(parseFloat(amount))} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
-          category: 'marketplace'
-        })
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to send offer');
-        }
-        return res.json();
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Offer Sent!",
-        description: "Your offer has been sent to the product owner.",
-      });
-      setOfferDialogOpen(false);
-      setOfferAmount('');
-      setOfferMessage('');
-      setSelectedOfferProduct(null);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send offer. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // User search for gift recipients
-  const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery({
-    queryKey: ['/api/users/search', giftSearchQuery],
-    queryFn: async () => {
-      if (giftSearchQuery.length < 2) return [];
-      const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
-      return response.json();
-    },
-    enabled: giftSearchQuery.length >= 2,
-  });
-
-  // Gift sending mutation
-  const sendGiftMutation = useMutation({
-    mutationFn: async ({ productId, recipientId }: { productId: number; recipientId: number }) => {
-      const response = await apiRequest('POST', '/api/gifts/propose', {
-        productId,
-        recipientId
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Gift Sent!",
-        description: `Gift proposal sent to ${selectedRecipient?.username}`,
-      });
-      setGiftDialogOpen(false);
-      setGiftSearchQuery('');
-      setSelectedRecipient(null);
-      setSelectedGiftProduct(null);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send gift. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Add to dating profile mutation
-  const addToDatingProfileMutation = useMutation({
-    mutationFn: async (productId: number) => {
-      const response = await apiRequest('POST', '/api/dating-profile/gifts', {
-        productId
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Added to Dating Profile!",
-        description: `${data.productName} added to your gifts (${data.giftCount}/20)`,
-      });
-    },
-    onError: (error: any) => {
-      const errorMessage = error.message || "Failed to add to dating profile";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleAddToDatingProfile = (productId: number) => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to add items to your dating profile",
-        variant: "destructive"
-      });
-      return;
-    }
-    addToDatingProfileMutation.mutate(productId);
-  };
-  
-  // Force rerender when currency changes
-  useEffect(() => {
-    const handleCurrencyChange = () => {
-      console.log('Products page detected currency change');
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('currency-changed', handleCurrencyChange);
-    
-    return () => {
-      window.removeEventListener('currency-changed', handleCurrencyChange);
-    };
-  }, []);
-
-  // Fetch products with filters
-  const {
-    data: products = [],
-    isLoading: productsLoading,
-    error: productsError,
-  } = useQuery({
-    queryKey: ['/api/products', {
-      search: searchTerm,
-      categories: selectedCategories,
-      regions: selectedRegions,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      onSale: showSale,
-      isNew: showNew,
-      sortBy: sortBy
-    }],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      
-      if (searchTerm) params.append('search', searchTerm);
-      if (selectedCategories.length > 0) params.append('categories', selectedCategories.join(','));
-      if (selectedRegions.length > 0) params.append('regions', selectedRegions.join(','));
-      if (priceRange[0] > 0) params.append('minPrice', priceRange[0].toString());
-      if (priceRange[1] < 1000) params.append('maxPrice', priceRange[1].toString());
-      if (showSale) params.append('onSale', 'true');
-      if (showNew) params.append('isNew', 'true');
-      if (sortBy) params.append('sortBy', sortBy);
-      
-      const url = `/api/products${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await apiRequest('GET', url);
-      return response.json();
-    },
+  // Fetch products
+  const { data: products = [], isLoading: productsLoading } = useQuery({
+    queryKey: ['/api/products', { marketType, searchTerm, selectedCategories, selectedProductTypes, showSale, showNew, sortBy }],
+    queryFn: () => apiRequest('/api/products'),
   });
 
   // Fetch categories
-  const {
-    data: categories = [],
-    isLoading: categoriesLoading,
-  } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['/api/categories'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/categories');
-      return response.json();
-    },
+    queryFn: () => apiRequest('/api/categories'),
   });
 
-  // Filter and sort products based on criteria
-  const filteredAndSortedProducts = products
-    .filter((product: any) => {
-      // Filter by search term
-      if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-      
-      // Filter by price range
-      if (product.price < priceRange[0] || product.price > priceRange[1]) {
-        return false;
-      }
-      
-      // Filter by selected categories
-      if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
-        return false;
-      }
-      
-      // Filter by product type
-      if (selectedProductTypes.length > 0 && !selectedProductTypes.includes(product.productType || 'product')) {
-        return false;
-      }
-      
-      // Filter by sale status
-      if (showSale && !product.isOnSale) {
-        return false;
-      }
-      
-      // Filter by new status
-      if (showNew && !product.isNew) {
-        return false;
-      }
-      
-      return true;
-    })
-    .sort((a: any, b: any) => {
-      switch (sortBy) {
-        case 'trending':
-          // Sort by popularity/sales - assuming higher vendorId or newer products are trending
-          return (b.vendorId || 0) - (a.vendorId || 0);
-        case 'price-low-high':
-          return a.price - b.price;
-        case 'price-high-low':
-          return b.price - a.price;
-        case 'newest':
-          // Sort by ID (newer products have higher IDs)
-          return b.id - a.id;
-        case 'region':
-          // Sort by region - for now just alphabetical by category
-          return (a.category || '').localeCompare(b.category || '');
-        case 'country':
-          // Sort by country - for now just alphabetical by vendor
-          return (a.vendorId || 0) - (b.vendorId || 0);
-        default:
-          return 0;
-      }
-    });
-
-  // Determine highest product price for slider max
-  const maxPrice = Math.max(...products.map((p: any) => p.price), 1000);
-  
-  // Handle category checkbox toggle
-  const toggleCategory = (category: string) => {
+  // Toggle functions
+  const toggleCategory = (categoryId: string) => {
     setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
-  // Handle region checkbox toggle
-  const toggleRegion = (region: string) => {
-    setSelectedRegions(prev => 
-      prev.includes(region)
-        ? prev.filter(r => r !== region)
-        : [...prev, region]
-    );
-  };
-
-  const toggleProductType = (productType: string) => {
+  const toggleProductType = (type: string) => {
     setSelectedProductTypes(prev => 
-      prev.includes(productType)
-        ? prev.filter(pt => pt !== productType)
-        : [...prev, productType]
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
     );
   };
-  
-  // Reset all filters
+
   const resetFilters = () => {
     setSearchTerm('');
-    setPriceRange([0, maxPrice]);
+    setPriceRange([0, 1000]);
     setSelectedCategories([]);
-    setSelectedRegions([]);
     setSelectedProductTypes([]);
     setShowSale(false);
     setShowNew(false);
   };
 
-  // Count unique categories in the products
-  const categoryCount: Record<string, number> = {};
-  products.forEach((product: any) => {
-    if (product.category) {
-      categoryCount[product.category] = (categoryCount[product.category] || 0) + 1;
+  // Cart functionality
+  const addToCartMutation = useMutation({
+    mutationFn: (productId: number) => 
+      apiRequest('POST', '/api/cart', { body: { productId, quantity: 1 } }),
+    onSuccess: () => {
+      toast({
+        title: "Added to Cart",
+        description: "Product added to your shopping cart!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add product to cart.",
+        variant: "destructive",
+      });
     }
   });
 
-  // Update price range when max price changes
-  useEffect(() => {
-    setPriceRange([0, maxPrice]);
-  }, [maxPrice]);
-  
-  // Share functions
-  const shareByEmail = (product: any) => {
-    const productUrl = `${window.location.origin}/product/${product.id}`;
-    const emailBody = `I thought you might be interested in this: ${productUrl}\n\n${product.name}\n\n${product.description}`;
-    window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(emailBody)}`, '_blank');
-  };
-  
-  const copyLinkToClipboard = (product: any) => {
-    const productUrl = `${window.location.origin}/product/${product.id}`;
-    navigator.clipboard.writeText(productUrl)
-      .then(() => {
-        toast({
-          title: "Link Copied",
-          description: "Product link copied to clipboard",
-        });
-      })
-      .catch(() => {
-        toast({
-          variant: "destructive",
-          title: "Copy failed",
-          description: "Could not copy link to clipboard",
-        });
-      });
-  };
-  
-  const shareOnFeed = (product: any) => {
-    setSelectedProduct(product);
-    setRepostDialogOpen(true);
-  };
-
-  const handleRepost = (withText: boolean) => {
-    if (selectedProduct) {
-      if (withText) {
-        // Keep dialog open for text input
-        return;
-      } else {
-        // Repost without text
-        repostMutation.mutate({ productId: selectedProduct.id });
-      }
-    }
-  };
-
-  const handleRepostWithText = () => {
-    if (selectedProduct) {
-      repostMutation.mutate({ 
-        productId: selectedProduct.id, 
-        text: repostMessage.trim() 
-      });
-    }
-  };
-  
-  const shareViaMessage = (product: any) => {
-    // Navigate to messages with prefilled share content
-    const productUrl = `/product/${product.id}`;
-    setLocation(`/messages?share=${product.id}&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&content=${encodeURIComponent(`Check out this product: ${product.name}`)}`);
-  };
-
-  // Render product grid
-  const renderProductGrid = () => {
-    if (productsLoading) {
-      return (
-        <div className="col-span-full flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      );
-    }
-
-    if (productsError) {
-      return (
-        <div className="col-span-full py-12 text-center">
-          <div className="text-red-500 mb-4">Error loading products</div>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      );
-    }
-
-    if (filteredAndSortedProducts.length === 0) {
-      return (
-        <div className="col-span-full py-12 text-center">
-          <div className="text-gray-500 mb-4">No products found matching your criteria</div>
-          <Button variant="outline" onClick={resetFilters}>
-            Reset Filters
-          </Button>
-        </div>
-      );
-    }
-
-    // Limit products based on productsPerPage setting
-    const displayedProducts = filteredAndSortedProducts.slice(0, productsPerPage);
-    
-    return displayedProducts.map((product: any) => (
-      <Card 
-        key={product.id} 
-        className="overflow-hidden flex flex-col border-0 shadow-none hover:shadow-md transition-shadow duration-300"
-      >
-        <div 
-          className="aspect-[2/3] bg-gray-100 relative overflow-hidden group"
-          onClick={() => setLocation(`/product/${product.id}`)}
-        >
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                setLocation(`/product/${product.id}`);
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <ShoppingCart className="h-12 w-12" />
-            </div>
-          )}
-
-          {/* Hover overlay with Add to Shopping Bag button */}
-          {marketType !== 'c2c' && (
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addToCartMutation.mutate(product.id);
-                }}
-                disabled={addToCartMutation.isPending}
-                className="bg-black text-white hover:bg-gray-800 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
-                size="sm"
-              >
-                {addToCartMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                )}
-                {addToShoppingBagText}
-              </Button>
-            </div>
-          )}
-          
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {product.isNew && (
-              <Badge className={marketType === 'c2c' ? 'bg-blue-500' : marketType === 'b2c' ? 'bg-green-500' : 'bg-purple-500'}>
-                {newBadgeText}
-              </Badge>
-            )}
-            {product.isOnSale && (
-              <Badge className="bg-red-500">{saleBadgeText}</Badge>
-            )}
-            
-            {/* B2B badge for minimum quantities */}
-            {marketType === 'b2b' && (
-              <Badge className="bg-gray-700">{minQtyText}: 10</Badge>
-            )}
-
-            {/* Verified seller badge for B2C */}
-            {marketType === 'b2c' && product.vendorId % 2 === 0 && (
-              <Badge className="bg-green-600">{verifiedBadgeText}</Badge>
-            )}
-
-            {/* Friend indicator for C2C */}
-            {marketType === 'c2c' && product.vendorId % 3 === 0 && (
-              <Badge className="bg-blue-600">{friendText}</Badge>
-            )}
-          </div>
-        </div>
-        
-        <CardContent className="p-4 flex-grow">
-          <div className="font-medium text-sm leading-tight hover:text-primary cursor-pointer min-h-[2.5rem] flex items-center" onClick={() => setLocation(`/product/${product.id}`)}>
-            <ProductName productName={product.name} />
-          </div>
-          
-          {/* Price moved below title */}
-          <div className="flex items-center justify-between">
-            <div>
-              {product.discountPrice ? (
-                <div className="flex items-center">
-                  <div className="font-bold text-blue-600 text-sm">
-                    {formatPrice(product.discountPrice)}
-                    {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
-                  </div>
-                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
-                </div>
-              ) : (
-                <div className="font-bold text-blue-600 text-sm">
-                  {formatPrice(product.price)}
-                  {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
-                </div>
-              )}
-            </div>
-
-          </div>
-          
-          <div className="text-sm text-gray-500">
-            <CategoryName categoryName={product.category} />
-          </div>
-          
-          {/* Vendor/Store information */}
-          <div className="text-[12px] text-blue-600 mt-1">
-            {soldByText || "Sold by"} {product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
-          </div>
-          
-          {/* Additional info based on market type */}
-          {marketType === 'b2b' && (
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">{volumeDiscountText}</span>
-            </div>
-          )}
-          {marketType === 'c2c' && (
-            <div className="text-xs text-gray-500">
-              <span>{listedByText} User{product.vendorId}</span>
-            </div>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex flex-col gap-3">
-          {/* Buy button on its own line */}
-          <div className="w-full">
-            <Button 
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (marketType === 'c2c') {
-                  setLocation(`/product/${product.id}`);
-                } else {
-                  addToCartMutation.mutate(product.id);
-                }
-              }}
-              disabled={addToCartMutation.isPending}
-              className="bg-black text-white hover:bg-gray-800 font-bold w-full"
-              title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                buyText
-              )}
-            </Button>
-          </div>
-          
-          {/* Repost and Send Offer buttons on second line */}
-          <div className="flex justify-between items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => shareOnFeed(product)}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
-              title={shareOnFeedTooltipText}
-            >
-              {repostButtonText}
-            </Button>
-            <Button 
-              variant="ghost"
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedOfferProduct(product);
-                setOfferDialogOpen(true);
-              }}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
-              title={makeOfferTooltipText}
-            >
-              {sendOfferBtnText}
-            </Button>
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              title={sendGiftTooltipText}
-              onClick={() => {
-                setSelectedGiftProduct(product);
-                setGiftDialogOpen(true);
-              }}
-            >
-              <Gift className="h-5 w-5 text-blue-500" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => handleAddToDatingProfile(product.id)}
-              disabled={addToDatingProfileMutation.isPending}
-              title="Add to Dating Profile"
-            >
-              <Plus className="h-5 w-5 font-bold stroke-2" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => handleLikeToggle(product.id)}
-              disabled={likeMutation.isPending || unlikeMutation.isPending}
-              title={isProductLiked(product.id) ? removeFromFavoritesText : addToFavoritesText}
-            >
-              <Heart 
-                className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
-              />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9"
-                  title={shareProductTooltipText}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{shareProductText}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => shareByEmail(product)}>
-                <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                {shareViaEmailText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
-                <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-                {copyLinkText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => shareOnFeed(product)}>
-                <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
-                {shareOnFeedText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => shareViaMessage(product)}>
-                <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                {sendViaMessageText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
-                <Users className="h-4 w-4 mr-2 text-blue-600" />
-                {shareWithMemberText}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardFooter>
-      </Card>
-    ));
-  };
-
-  // Video content based on marketplace type
-  const getMarketplaceVideo = () => {
-    switch (marketType) {
-      case 'b2b':
-        return {
-          video: '/attached_assets/Cafe_1749419425062.mp4',
-          title: 'Business Networking & Solutions'
-        };
-      case 'b2c':
-        return {
-          video: '/attached_assets/Be yourself_1749419131578.mp4',
-          title: 'Be Yourself - Shop Your Style'
-        };
-      case 'c2c':
-        return {
-          video: '/attached_assets/car selling online  _1749419270298.mp4',
-          title: 'Sell Your Vehicle Online'
-        };
-      default:
-        return {
-          video: '/attached_assets/Cafe.mp4',
-          title: 'Marketplace Experience'
-        };
-    }
-  };
-
-  // Content for the filter sidebar
-  const FilterContent = () => (
-    <div className="space-y-6 text-[14px]">
-      {/* Video Display Component */}
-      <div className="mb-6">
-        <VideoDisplayCard
-          videoSource={getMarketplaceVideo().video}
-          title={getMarketplaceVideo().title}
-          marketType={marketType as 'b2b' | 'b2c' | 'c2c'}
-          autoPlay={true}
-          showControls={true}
-          onClose={() => {}}
-        />
-      </div>
-
+  const FilterSidebar = () => (
+    <div className="space-y-6 p-4">
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
         <div className="mb-4">
@@ -985,15 +168,11 @@ export default function Products() {
               <div key={category.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`category-${category.id}`}
-                  checked={selectedCategories.includes(category.name)}
-                  onCheckedChange={() => toggleCategory(category.name)}
+                  checked={selectedCategories.includes(category.id.toString())}
+                  onCheckedChange={() => toggleCategory(category.id.toString())}
                 />
-                <Label
-                  htmlFor={`category-${category.id}`}
-                  className="flex justify-between w-full text-sm"
-                >
-                  <CategoryName categoryName={category.name} />
-                  <span className="text-gray-500">({categoryCount[category.name] || 0})</span>
+                <Label htmlFor={`category-${category.id}`} className="text-[12px] font-normal">
+                  {category.name}
                 </Label>
               </div>
             ))
@@ -1002,127 +181,33 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{regionText}</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Product Status</h3>
         <div className="space-y-2">
-          {['Africa', 'South Asia', 'East Asia', 'Oceania', 'North America', 'Central America', 'South America', 'Middle East', 'Europe', 'Central Asia'].map((region) => (
-            <div key={region} className="flex items-center space-x-2">
-              <Checkbox
-                id={`region-${region}`}
-                checked={selectedRegions.includes(region)}
-                onCheckedChange={() => toggleRegion(region)}
-              />
-              <Label
-                htmlFor={`region-${region}`}
-                className="text-[12px] font-normal"
-              >
-                <RegionName regionName={region} />
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-medium mb-2 text-[14px]">{productStatusText}</h3>
-        <div className="space-y-2 font-normal text-[12px]">
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="show-sale"
+              id="on-sale"
               checked={showSale}
-              onCheckedChange={(checked) => setShowSale(checked === true)}
+              onCheckedChange={setShowSale}
             />
-            <Label htmlFor="show-sale" className="text-[12px] font-normal">{onSaleText}</Label>
+            <Label htmlFor="on-sale" className="text-[12px] font-normal">On Sale</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="show-new"
+              id="new-arrivals"
               checked={showNew}
-              onCheckedChange={(checked) => setShowNew(checked === true)}
+              onCheckedChange={setShowNew}
             />
-            <Label htmlFor="show-new" className="text-[12px] font-normal">{newArrivalsText}</Label>
+            <Label htmlFor="new-arrivals" className="text-[12px] font-normal">New Arrivals</Label>
           </div>
         </div>
       </div>
-
-      {/* Market-specific filters */}
-      {marketType === 'c2c' && (
-        <div>
-          <h3 className="font-medium mb-2 text-[14px]">{friendOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="friends-only"
-              />
-              <Label htmlFor="friends-only" className="text-[12px] font-normal">{friendsOnlyText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="local-only"
-              />
-              <Label htmlFor="local-only" className="text-[12px] font-normal">{localPickupText}</Label>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {marketType === 'b2c' && (
-        <div>
-          <h3 className="font-medium mb-2 text-[14px]">{storeOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="verified-only"
-              />
-              <Label htmlFor="verified-only" className="text-[12px] font-normal">{verifiedStoresText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="free-shipping"
-              />
-              <Label htmlFor="free-shipping" className="text-[12px] font-normal">{freeShippingText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="next-day-delivery"
-              />
-              <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">{nextDayDeliveryText}</Label>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {marketType === 'b2b' && (
-        <div>
-          <h3 className="font-medium mb-2 text-[14px]">{businessOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="bulk-discount"
-              />
-              <Label htmlFor="bulk-discount" className="text-[12px] font-normal">{volumeDiscountsText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="wholesale-only"
-              />
-              <Label htmlFor="wholesale-only" className="text-[12px] font-normal">{wholesaleOnlyText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="tax-exempt"
-              />
-              <Label htmlFor="tax-exempt" className="text-[12px] font-normal">{taxExemptText}</Label>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Button
         variant="outline"
         onClick={resetFilters}
         className="w-full"
       >
-        {resetFiltersText}
+        Reset Filters
       </Button>
       
       <Button
@@ -1137,511 +222,138 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
-
-      <div className="flex justify-end items-center mb-4">
-        {/* Mobile filter button */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="md:hidden">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              {filterText}
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>{filterProductsText}</SheetTitle>
-              <SheetDescription>
-                {narrowDownText}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-4">
-              <FilterContent />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar filters - desktop */}
-        <div className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-20">
-            <FilterContent />
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* Desktop Filter Sidebar */}
+          <div className="hidden md:block w-64 flex-shrink-0">
+            <FilterSidebar />
           </div>
-        </div>
 
-        {/* Main content */}
-        <div className="flex-1">
-          {/* Product count and active filters */}
-          <div className="flex flex-wrap justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500">
-                {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? productText : productsText} {productFoundText}
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {selectedCategories.map(category => (
-                <Badge variant="outline" key={category} className="flex items-center gap-1">
-                  <CategoryName categoryName={category} />
-                  <button
-                    onClick={() => toggleCategory(category)}
-                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-              
-              {selectedRegions.map(region => (
-                <Badge variant="outline" key={region} className="flex items-center gap-1">
-                  <RegionName regionName={region} />
-                  <button
-                    onClick={() => toggleRegion(region)}
-                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-              
-              {selectedProductTypes.length < 2 && selectedProductTypes.map(productType => (
-                <Badge key={productType} variant="outline" className="flex items-center gap-1">
-                  {productType === 'product' ? productsText : servicesText}
-                  <button
-                    onClick={() => toggleProductType(productType)}
-                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-              
-              {showSale && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  {onSaleText}
-                  <button
-                    onClick={() => setShowSale(false)}
-                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {showNew && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  {newArrivalsText}
-                  <button
-                    onClick={() => setShowNew(false)}
-                    className="ml-1 rounded-full h-4 w-4 inline-flex items-center justify-center bg-gray-200 text-gray-600 hover:bg-gray-300"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-                {(selectedCategories.length > 0 || selectedRegions.length > 0 || selectedProductTypes.length < 2 || showSale || showNew) && (
-                  <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
-                    {clearAllText}
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Mobile Filter Button */}
+            <div className="md:hidden mb-4">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Filter
                   </Button>
-                )}
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Filter Products</SheetTitle>
+                    <SheetDescription>
+                      Narrow down products based on your preferences
+                    </SheetDescription>
+                  </SheetHeader>
+                  <FilterSidebar />
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Results Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-sm text-gray-600">
+                {products.length} products found
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <span className="text-sm">Sort by</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="text-sm">
+                      Trending <ChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setSortBy('trending')}>
+                      Trending
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('price_low_high')}>
+                      Price: Low to High
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('price_high_low')}>
+                      Price: High to Low
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                      Newest Product
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-            
-            <div className="flex items-center gap-6">
-              {/* Products per page selector */}
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <span>{showText}</span>
-                <button
-                  onClick={() => setProductsPerPage(30)}
-                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 30 ? 'text-black font-medium' : ''}`}
-                >
-                  30
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => setProductsPerPage(60)}
-                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 60 ? 'text-black font-medium' : ''}`}
-                >
-                  60
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => setProductsPerPage(120)}
-                  className={`px-2 py-1 hover:text-black transition-colors ${productsPerPage === 120 ? 'text-black font-medium' : ''}`}
-                >
-                  120
-                </button>
+
+            {/* Products Grid */}
+            {productsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-
-              {/* Grid layout selector */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setColumnsPerRow(3)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 3 ? 'opacity-100' : 'opacity-50'}`}
-                  title="3 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
-                <button
-                  onClick={() => setColumnsPerRow(4)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 4 ? 'opacity-100' : 'opacity-50'}`}
-                  title="4 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
-                <button
-                  onClick={() => setColumnsPerRow(5)}
-                  className={`flex gap-1 p-2 hover:opacity-80 transition-opacity ${columnsPerRow === 5 ? 'opacity-100' : 'opacity-50'}`}
-                  title="5 columns"
-                >
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                  <div className="w-1 h-4 bg-black"></div>
-                </button>
-              </div>
-
-              {/* Sort by dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                    {sortByText}
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
-                  <DropdownMenuLabel>{sortOptionsText}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setSortBy('trending')}>
-                    {trendingText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
-                    {priceLowHighText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
-                    {priceHighLowText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                    {newestProductText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('region')}>
-                    {yourRegionText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('country')}>
-                    {yourCountryText}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Product grid */}
-          <div className={`grid gap-6 ${
-            columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-            columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
-            columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
-            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-          }`}>
-            {renderProductGrid()}
-          </div>
-        </div>
-      </div>
-
-      {/* Repost Dialog */}
-      <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{repostToCommunityText}</DialogTitle>
-            <DialogDescription>
-              {addMessageText}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedProduct && (
-            <div className="my-4">
-              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{selectedProduct.name}</h4>
-                  <p className="text-sm text-gray-600">
-                    {formatPrice(selectedProduct.price)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">{addYourMessageText}</label>
-              <Textarea
-                placeholder={whatDoYouThinkText}
-                value={repostMessage}
-                onChange={(e) => setRepostMessage(e.target.value)}
-                className="mt-2"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleRepost(false)}
-              disabled={repostMutation.isPending}
-            >
-              {postWithoutTextButton}
-            </Button>
-            <Button
-              onClick={handleRepostWithText}
-              disabled={repostMutation.isPending}
-              className="bg-black text-white hover:bg-gray-800"
-            >
-              {repostMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {postingText}
-                </>
-              ) : (
-                postToFeedButton
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Offer Dialog */}
-      <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{sendOfferTitle}</DialogTitle>
-            <DialogDescription>
-              {sendPriceOfferText}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedOfferProduct && (
-            <div className="my-4">
-              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{selectedOfferProduct.name}</h4>
-                  <p className="text-sm text-gray-600">
-                    {listedText}: {formatPrice(selectedOfferProduct.price)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="offer-amount" className="text-sm font-medium">{yourOfferAmountText}</Label>
-              <Input
-                id="offer-amount"
-                type="number"
-                placeholder={enterOfferAmountText}
-                value={offerAmount}
-                onChange={(e) => setOfferAmount(e.target.value)}
-                className="mt-2"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <Label htmlFor="offer-message" className="text-sm font-medium">{messageOptionalText}</Label>
-              <Textarea
-                id="offer-message"
-                placeholder={addMessageWithOfferText}
-                value={offerMessage}
-                onChange={(e) => setOfferMessage(e.target.value)}
-                className="mt-2"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOfferDialogOpen(false)}
-              disabled={sendOfferMutation.isPending}
-            >
-              {cancelText}
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedOfferProduct && offerAmount) {
-                  sendOfferMutation.mutate({
-                    productId: selectedOfferProduct.id,
-                    amount: offerAmount,
-                    message: offerMessage
-                  });
-                }
-              }}
-              disabled={sendOfferMutation.isPending || !offerAmount}
-              className="bg-black text-white hover:bg-gray-800"
-            >
-              {sendOfferMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {sendingText}
-                </>
-              ) : (
-                sendOfferText
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Gift Dialog */}
-      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{sendGiftTitle}</DialogTitle>
-            <DialogDescription>
-              {sendProductAsGiftText}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedGiftProduct && (
-            <div className="my-4">
-              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{selectedGiftProduct.name}</h4>
-                  <p className="text-sm text-gray-600">
-                    {formatPrice(selectedGiftProduct.price)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {byText} {selectedGiftProduct.vendorName || 'Vendor'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="gift-search" className="text-sm font-medium mb-2 block">
-                {searchForRecipientText}
-              </Label>
-              <Input
-                id="gift-search"
-                type="text"
-                placeholder={typeNameUsernameText}
-                value={giftSearchQuery}
-                onChange={(e) => setGiftSearchQuery(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            {userSearchLoading && giftSearchQuery.length >= 2 && (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            )}
-            
-            {Array.isArray(userSearchResults) && userSearchResults.length > 0 && (
-              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
-                {userSearchResults.map((user: any) => (
-                  <div
-                    key={user.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedRecipient?.id === user.id
-                        ? 'bg-blue-100 border border-blue-300'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                    onClick={() => setSelectedRecipient(user)}
-                  >
-                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200">
-                      {user.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt={`${user.name || user.username}'s profile`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling.style.display = 'flex';
-                          }}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product: any) => (
+                  <Card key={product.id} className="group relative overflow-hidden hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="relative mb-3">
+                        <img
+                          src={product.imageUrl || '/placeholder-product.jpg'}
+                          alt={product.name}
+                          className="w-full h-48 object-cover rounded-md"
                         />
-                      ) : null}
-                      <div 
-                        className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${user.avatar ? 'hidden' : 'flex'}`}
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          {product.isNew && (
+                            <Badge className="bg-green-500 text-white text-xs">New</Badge>
+                          )}
+                          {product.isOnSale && (
+                            <Badge className="bg-red-500 text-white text-xs">Sale</Badge>
+                          )}
+                        </div>
+                        <button className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Heart className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
+                      
+                      <h3 className="font-medium text-sm mb-2 line-clamp-2">
+                        {product.name}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-lg">
+                          {formatPrice(product.price)}
+                        </span>
+                        {product.originalPrice && product.originalPrice > product.price && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {formatPrice(product.originalPrice)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-xs text-gray-600 mb-3">
+                        Sold by Vendor {product.vendorId}
+                      </p>
+                    </CardContent>
+                    
+                    <CardFooter className="p-4 pt-0 flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => addToCartMutation.mutate(product.id)}
+                        disabled={addToCartMutation.isPending}
                       >
-                        {(user.name || user.username).charAt(0).toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{user.name || user.username}</p>
-                      <p className="text-xs text-gray-500 truncate">@{user.username}</p>
-                      {user.bio && (
-                        <p className="text-xs text-gray-400 truncate mt-1">{user.bio}</p>
-                      )}
-                    </div>
-                    {selectedRecipient?.id === user.id && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
+                        <ShoppingCart className="h-4 w-4 mr-1" />
+                        Add to Cart
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 ))}
               </div>
             )}
-            
-            {giftSearchQuery.length >= 2 && !userSearchLoading && Array.isArray(userSearchResults) && userSearchResults.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>{noUsersFoundText} "{giftSearchQuery}"</p>
-              </div>
-            )}
-            
-            {giftSearchQuery.length < 2 && giftSearchQuery.length > 0 && (
-              <div className="text-center py-4 text-gray-500 text-sm">
-                {typeAtLeastText}
-              </div>
-            )}
           </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGiftDialogOpen(false)}>
-              {cancelText}
-            </Button>
-            <Button
-              onClick={() => {
-                if (selectedRecipient && selectedGiftProduct) {
-                  sendGiftMutation.mutate({
-                    productId: selectedGiftProduct.id,
-                    recipientId: selectedRecipient.id
-                  });
-                }
-              }}
-              disabled={sendGiftMutation.isPending || !selectedRecipient}
-              className="bg-pink-500 text-white hover:bg-pink-600"
-            >
-              {sendGiftMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {sendingText}
-                </>
-              ) : (
-                sendGiftText
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-
-      
+        </div>
       </div>
     </div>
   );
