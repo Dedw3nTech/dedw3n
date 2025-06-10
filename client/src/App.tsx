@@ -235,17 +235,13 @@ function Router() {
       </Route>
 
       <Route path="/auth">
-        <Redirect to="/" />
+        <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
+        <AuthPage />
       </Route>
 
       <Route path="/">
         <SEOHead {...seoConfigs.home} />
         <Products />
-      </Route>
-
-      <Route path="/auth">
-        <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
-        <AuthPage />
       </Route>
 
       <Route path="/logout-success">
