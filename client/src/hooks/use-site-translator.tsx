@@ -87,11 +87,16 @@ class SiteWideTranslator {
           
           // Skip script, style, and other non-visible elements
           const tagName = parent.tagName.toLowerCase();
-          if (['script', 'style', 'noscript', 'textarea'].includes(tagName)) {
+          if (['script', 'style', 'noscript'].includes(tagName)) {
             return NodeFilter.FILTER_REJECT;
           }
           
-          // Skip if parent is hidden
+          // Skip elements with translation disabled
+          if (parent.dataset.noTranslate || parent.dataset.translate === 'no') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          
+          // Skip if parent is hidden (but allow off-screen elements)
           const style = window.getComputedStyle(parent);
           if (style.display === 'none' || style.visibility === 'hidden') {
             return NodeFilter.FILTER_REJECT;
@@ -103,8 +108,13 @@ class SiteWideTranslator {
             return NodeFilter.FILTER_REJECT;
           }
           
-          // Skip numeric-only content
-          if (/^\d+(\.\d+)?$/.test(text)) {
+          // More permissive filtering - only skip pure numbers/symbols
+          if (/^[\d\s.,;:!?]+$/.test(text) && text.length < 10) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          
+          // Skip very short non-word content
+          if (text.length === 1 && !/[a-zA-Z]/.test(text)) {
             return NodeFilter.FILTER_REJECT;
           }
           
