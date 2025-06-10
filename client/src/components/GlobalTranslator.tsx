@@ -33,34 +33,10 @@ export function GlobalTranslator() {
   const isTextTranslatable = (text: string): boolean => {
     if (!text || text.length === 0) return false;
     
-    // Skip URLs
-    if (/^https?:\/\//.test(text)) return false;
+    // Only skip pure whitespace
+    if (/^\s*$/.test(text)) return false;
     
-    // Skip email addresses
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return false;
-    
-    // Skip file paths
-    if (/^[\.\/]/.test(text) || text.includes('\\')) return false;
-    
-    // Skip CSS selectors and HTML attributes
-    if (/^[\.\#\[\]]/.test(text)) return false;
-    
-    // Skip JSON-like strings
-    if (/^\{.*\}$/.test(text) || /^\[.*\]$/.test(text)) return false;
-    
-    // Skip pure punctuation
-    if (/^[^\w\s]+$/.test(text)) return false;
-    
-    // Skip single characters that aren't letters (but allow meaningful single letters)
-    if (text.length === 1 && !/[a-zA-Z]/.test(text)) return false;
-    
-    // Skip pure numbers with currency/math symbols only
-    if (/^[\d\s\.\,\(\)\-\+\*\/\%\$\£\€\¥]+$/.test(text)) return false;
-    
-    // Skip version numbers and technical identifiers
-    if (/^v?\d+\.\d+/.test(text)) return false;
-    
-    // Allow everything else - be inclusive for user content
+    // Allow EVERYTHING else - be maximally inclusive
     return true;
   };
 
@@ -116,12 +92,34 @@ export function GlobalTranslator() {
           const nodes = nodeMap.get(originalText);
           if (nodes) {
             nodes.forEach(node => {
-              if (node.textContent === originalText) {
-                node.textContent = translatedText;
+              const nodeAny = node as any;
+              
+              if (nodeAny._isAttribute) {
+                // Handle attribute text nodes
+                const element = nodeAny._sourceElement;
+                const attributeName = nodeAny._attributeName;
+                
+                if (element && attributeName) {
+                  element.setAttribute(attributeName, translatedText);
+                  
+                  // Special handling for specific attributes
+                  if (attributeName === 'placeholder' && element.tagName === 'INPUT') {
+                    (element as HTMLInputElement).placeholder = translatedText;
+                  }
+                }
+              } else {
+                // Handle regular text nodes
+                if (node.textContent === originalText) {
+                  node.textContent = translatedText;
+                }
               }
             });
           }
         });
+        
+        console.log(`[Global Translator] Successfully translated ${data.translations?.length || 0} texts`);
+      } else {
+        console.error(`[Global Translator] Translation API error:`, response.status);
       }
     } catch (error) {
       console.error('Translation failed:', error);
@@ -129,8 +127,11 @@ export function GlobalTranslator() {
   };
 
   const getAllTextNodes = (): Text[] => {
+    const textNodes: Text[] = [];
+    
+    // Method 1: TreeWalker for all visible text nodes
     const walker = document.createTreeWalker(
-      document.body,
+      document.documentElement, // Start from html element to catch everything
       NodeFilter.SHOW_TEXT,
       {
         acceptNode: (node) => {
@@ -138,12 +139,8 @@ export function GlobalTranslator() {
           if (!parent) return NodeFilter.FILTER_REJECT;
           
           const tagName = parent.tagName.toLowerCase();
-          if (['script', 'style', 'noscript', 'code', 'pre'].includes(tagName)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          
-          // Skip if parent has data-no-translate attribute
-          if (parent.hasAttribute('data-no-translate') || parent.closest('[data-no-translate]')) {
+          // Only skip script and style - allow everything else
+          if (['script', 'style'].includes(tagName)) {
             return NodeFilter.FILTER_REJECT;
           }
           
@@ -152,34 +149,53 @@ export function GlobalTranslator() {
             return NodeFilter.FILTER_REJECT;
           }
           
-          // More inclusive filtering - only skip pure whitespace, pure numbers, or very short non-words
-          // Allow single characters if they're letters (like "A", "B" for grades, etc.)
-          if (/^\s*$/.test(text)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          
-          // Skip pure numbers with no letters, but allow mixed content like "2024", "v1.0", etc.
-          if (/^[\d\s\.\,\(\)\-\+\*\/\%\$\£\€\¥]+$/.test(text)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          
-          // Skip very short content that's likely not meaningful text (but allow single meaningful words)
-          if (text.length === 1 && !/[a-zA-Z]/.test(text)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          
           return NodeFilter.FILTER_ACCEPT;
         }
       }
     );
 
-    const textNodes: Text[] = [];
     let node;
     while (node = walker.nextNode()) {
       textNodes.push(node as Text);
     }
     
-    console.log(`[Global Translator] Found ${textNodes.length} text nodes in DOM`);
+    // Method 2: Find text in input placeholders, alt texts, titles
+    const elementsWithText = document.querySelectorAll('input[placeholder], img[alt], [title], [aria-label]');
+    elementsWithText.forEach(element => {
+      const placeholder = element.getAttribute('placeholder');
+      const alt = element.getAttribute('alt');
+      const title = element.getAttribute('title');
+      const ariaLabel = element.getAttribute('aria-label');
+      
+      [placeholder, alt, title, ariaLabel].forEach(text => {
+        if (text && text.trim()) {
+          // Create a virtual text node for attribute text
+          const virtualTextNode = document.createTextNode(text);
+          (virtualTextNode as any)._isAttribute = true;
+          (virtualTextNode as any)._sourceElement = element;
+          (virtualTextNode as any)._attributeName = 
+            text === placeholder ? 'placeholder' :
+            text === alt ? 'alt' :
+            text === title ? 'title' : 'aria-label';
+          textNodes.push(virtualTextNode as Text);
+        }
+      });
+    });
+    
+    // Method 3: Find text in button values and form labels
+    const formElements = document.querySelectorAll('input[value], button[value], option, label');
+    formElements.forEach(element => {
+      const value = element.getAttribute('value') || (element as HTMLElement).innerText;
+      if (value && value.trim() && value !== 'Submit' && value !== 'Reset') {
+        const virtualTextNode = document.createTextNode(value);
+        (virtualTextNode as any)._isAttribute = true;
+        (virtualTextNode as any)._sourceElement = element;
+        (virtualTextNode as any)._attributeName = 'value';
+        textNodes.push(virtualTextNode as Text);
+      }
+    });
+    
+    console.log(`[Global Translator] Found ${textNodes.length} text nodes in DOM (including attributes)`);
     return textNodes;
   };
 
