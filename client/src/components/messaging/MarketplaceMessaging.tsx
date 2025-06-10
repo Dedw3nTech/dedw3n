@@ -2,17 +2,10 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { 
-  Badge, 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  Button,
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/components/ui';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ArrowLeft, 
   Send, 

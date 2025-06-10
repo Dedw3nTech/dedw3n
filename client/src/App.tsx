@@ -24,17 +24,7 @@ import "@/utils/unified-logout-system"; // Initialize unified logout system
 
 import { useEffect, useState } from "react";
 
-// Only enable auto-login if explicitly requested via URL parameter (security measure)
-if (import.meta.env.DEV && (window.location.search.includes('auto_login=true') || window.location.search.includes('serruti=true'))) {
-  try {
-    localStorage.removeItem('dedwen_logged_out');
-    sessionStorage.removeItem('dedwen_logged_out');
-    localStorage.setItem('enable_auto_login', 'true');
-    console.log('Development mode: Auto-login enabled via URL parameter');
-  } catch (error) {
-    console.error('Error enabling auto-login:', error);
-  }
-}
+// Auto-login functionality completely removed for security compliance
 
 // Initialize advertisement preloader on app startup
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
@@ -194,7 +184,7 @@ import ProfilePage from "@/pages/profile-simple";
 import SettingsPage from "@/pages/settings";
 import ProfileSettingsPage from "@/pages/profile-settings";
 import WallPage from "@/pages/wall";
-import MessagesPage from "@/pages/messages";
+import MessagesPage from "@/pages/Messages";
 import ExplorePage from "@/pages/explore";
 import SearchPage from "@/pages/search";
 import SocialConsolePage from "@/pages/social-console";
@@ -825,7 +815,7 @@ function TestAuthPage() {
                 <div>
                   <div className="mb-2 flex items-center gap-2">
                     <span className="inline-block w-3 h-3 bg-green-500 rounded-full"></span>
-                    <span className="font-medium">Authenticated as: {user.username || user.email || `User ${user.id}`}</span>
+                    <span className="font-medium">Authenticated as: {(user as any)?.username || (user as any)?.email || `User ${(user as any)?.id}`}</span>
                   </div>
                   <pre className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">
                     {JSON.stringify(user, null, 2)}
