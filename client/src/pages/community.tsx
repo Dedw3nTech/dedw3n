@@ -26,7 +26,7 @@ import { useLocation } from "wouter";
 
 // Community-specific promotional images
 import communityTopPromo from "@assets/Dedw3n Business commHeader.png";
-import communityBottomPromo from "@assets/Dedw3n comm Footer.png";
+import communityBottomPromo from "@assets/_Dedw3n Business comm footer _1749580313800.png";
 import communityMidPromo from "@assets/Dedw3n Business II (1).png";
 
 interface Post {
@@ -111,12 +111,14 @@ export default function CommunityPage() {
   
   // Helper function to get translation safely
   const getTranslation = useCallback((text: string, fallback?: string) => {
-    if (coreTranslations && typeof coreTranslations === 'object' && !Array.isArray(coreTranslations)) {
-      const translationMap = coreTranslations as Record<string, string>;
-      return translationMap[text] || fallback || text;
+    if (coreTranslations && Array.isArray(coreTranslations)) {
+      const textIndex = coreTexts.indexOf(text);
+      if (textIndex !== -1 && coreTranslations[textIndex]) {
+        return coreTranslations[textIndex];
+      }
     }
     return fallback || text;
-  }, [coreTranslations]);
+  }, [coreTranslations, coreTexts]);
 
   // Track if we've reached the end of feed to prevent unnecessary calls
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
