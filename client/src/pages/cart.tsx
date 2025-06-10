@@ -161,10 +161,11 @@ export default function Cart() {
 
   // Proceed to checkout handler
   const handleCheckout = () => {
+    // If escrow is selected but no transaction created yet, create it first
     if (useEscrow && !escrowTransaction) {
       handleEscrowTransaction();
-      return;
     }
+    // Always proceed to checkout regardless of escrow status
     setLocation('/checkout-new');
   };
   
