@@ -921,13 +921,13 @@ export default function AddProduct() {
                             <RadioGroup
                               value={shippingPriceType}
                               onValueChange={(value: 'fixed' | 'variable') => setShippingPriceType(value)}
-                              className="flex flex-col space-y-2"
+                              className="flex flex-col space-y-2 black-radio"
                             >
                               <div className="flex items-center space-x-2">
                                 <RadioGroupItem 
                                   value="fixed" 
                                   id="fixed" 
-                                  className="border-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+                                  className="border-2 border-black data-[state=checked]:bg-black data-[state=checked]:border-black text-white data-[state=checked]:text-white"
                                 />
                                 <Label htmlFor="fixed" className="text-sm font-medium">{t("Fixed Shipping Price")}</Label>
                               </div>
@@ -935,7 +935,7 @@ export default function AddProduct() {
                                 <RadioGroupItem 
                                   value="variable" 
                                   id="variable" 
-                                  className="border-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+                                  className="border-2 border-black data-[state=checked]:bg-black data-[state=checked]:border-black text-white data-[state=checked]:text-white"
                                 />
                                 <Label htmlFor="variable" className="text-sm font-medium">{t("Variable Shipping Price")}</Label>
                               </div>
