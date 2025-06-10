@@ -6882,24 +6882,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const apiKey = apiKeys[i];
         
         try {
-          // Determine API endpoint based on key type
-          const apiUrl = apiKey?.includes(':fx') ? 
-            'https://api-free.deepl.com/v2/translate' : 
-            'https://api.deepl.com/v2/translate';
+          // Try both endpoints for maximum compatibility
+          const endpoints = [
+            'https://api-free.deepl.com/v2/translate',
+            'https://api.deepl.com/v2/translate'
+          ];
+          
+          let response = null;
+          let lastError = null;
+          
+          for (const apiUrl of endpoints) {
+            try {
+              const formData = new URLSearchParams();
+              formData.append('text', text);
+              formData.append('target_lang', deeplTargetLang);
+              formData.append('source_lang', 'EN');
 
-          const formData = new URLSearchParams();
-          formData.append('text', text);
-          formData.append('target_lang', deeplTargetLang);
-          formData.append('source_lang', 'EN');
+              response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `DeepL-Auth-Key ${apiKey}`,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData,
+              });
 
-          response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `DeepL-Auth-Key ${apiKey}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData,
-          });
+              // If successful, break from endpoint loop
+              if (response.ok) {
+                console.log(`[Translation] Successfully authenticated with ${apiUrl}`);
+                break;
+              }
+            } catch (error) {
+              lastError = error;
+              console.log(`[Translation] Endpoint ${apiUrl} failed: ${error.message}`);
+              continue;
+            }
+          }
 
           // If successful, break and use this response
           if (response.ok) {
@@ -7101,10 +7119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Try each API key until success
         for (const apiKey of apiKeys) {
           try {
-            // Determine API endpoint based on key type
-            const apiUrl = apiKey?.includes(':fx') ? 
-              'https://api-free.deepl.com/v2/translate' : 
-              'https://api.deepl.com/v2/translate';
+            // Determine API endpoint - try free endpoint first for most keys
+            const apiUrl = 'https://api-free.deepl.com/v2/translate';
 
             const formData = new URLSearchParams();
             batch.forEach(item => formData.append('text', item.text));
