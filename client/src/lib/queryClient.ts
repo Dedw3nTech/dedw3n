@@ -133,36 +133,9 @@ async function apiRequestFull(
     ...(typeof options === 'object' && options !== null ? options : {})
   };
 
-  // For development: handle test user ID query parameter
-  const urlObj = new URL(window.location.origin + url);
-  const testUserID = urlObj.searchParams.get('test_user_id');
-  const autoLogin = urlObj.searchParams.get('auto_login');
-  
-  if (testUserID) {
-    console.log(`Development mode - using test user ID: ${testUserID}`);
-    // Add test user ID to request for development/testing
-    requestOptions.headers = {
-      ...requestOptions.headers,
-      'X-Test-User-ID': testUserID
-    };
-  }
-  
-  if (autoLogin === 'true' && import.meta.env.DEV) {
-    console.log('Development mode - auto login enabled');
-    requestOptions.headers = {
-      ...requestOptions.headers,
-      'X-Auto-Login': 'true'
-    };
-  } else if (autoLogin === 'true' && !import.meta.env.DEV) {
-    console.warn('[SECURITY] Auto-login blocked in production environment');
-  }
+  // Removed auto-login functionality for security compliance
 
-  // Check if auto-login should be enabled (ONLY in development mode)
-  const shouldAutoLogin = import.meta.env.DEV && (
-                          localStorage.getItem('enable_auto_login') === 'true' ||
-                          window.location.search.includes('auto_login=true') ||
-                          window.location.search.includes('serruti=true')
-                        );
+  // Auto-login completely removed for security
 
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
   if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
@@ -179,22 +152,14 @@ async function apiRequestFull(
       delete headers['X-Auth-Logged-Out'];
     }
   } 
-  // Don't add logout headers if auto-login is enabled
-  else if (userLoggedOut && !shouldAutoLogin) {
+  // Add logout headers if user has logged out
+  else if (userLoggedOut) {
     requestOptions.headers = {
       ...requestOptions.headers,
       'X-User-Logged-Out': 'true',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0'
-    };
-  }
-
-  // Add auto-login header if enabled
-  if (shouldAutoLogin) {
-    requestOptions.headers = {
-      ...requestOptions.headers,
-      'X-Auto-Login': 'true'
     };
   }
 
@@ -406,11 +371,6 @@ export const getQueryFn: <T>(options: {
       }
     };
 
-    // For development: handle test user ID query parameter
-    const urlObj = new URL(window.location.origin + url);
-    const testUserID = urlObj.searchParams.get('test_user_id');
-    const autoLogin = urlObj.searchParams.get('auto_login');
-    
     // Get user ID from sessionStorage if present
     let userId = null;
     try {
@@ -422,29 +382,6 @@ export const getQueryFn: <T>(options: {
     } catch (e) {
       // Continue without user ID
     }
-    
-    if (testUserID) {
-      console.log(`Development mode - using test user ID: ${testUserID}`);
-      options.headers = {
-        ...options.headers,
-        'X-Test-User-ID': testUserID
-      };
-    }
-    
-    if (autoLogin === 'true' && import.meta.env.DEV) {
-      console.log('Development mode - auto login enabled');
-      options.headers = {
-        ...options.headers,
-        'X-Auto-Login': 'true'
-      };
-    }
-
-    // Check if auto-login should be enabled (ONLY in development mode)
-    const shouldAutoLogin = import.meta.env.DEV && (
-                            localStorage.getItem('enable_auto_login') === 'true' ||
-                            window.location.search.includes('auto_login=true') ||
-                            window.location.search.includes('serruti=true')
-                          );
 
     // Check if user is logged out via unified logout system
     let userLoggedOut = false;
@@ -454,22 +391,14 @@ export const getQueryFn: <T>(options: {
       // Continue with userLoggedOut = false
     }
 
-    // Add logout headers if user has logged out and auto-login is not enabled
-    if (userLoggedOut && !shouldAutoLogin) {
+    // Add logout headers if user has logged out
+    if (userLoggedOut) {
       options.headers = {
         ...options.headers,
         'X-User-Logged-Out': 'true',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
-      };
-    }
-
-    // Add auto-login header if enabled
-    if (shouldAutoLogin) {
-      options.headers = {
-        ...options.headers,
-        'X-Auto-Login': 'true'
       };
     }
 

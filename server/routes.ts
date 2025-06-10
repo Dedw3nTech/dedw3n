@@ -1294,54 +1294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
 
 
-    // Direct user authentication bypass for testing
-    app.post('/api/auth/direct-login', async (req: Request, res: Response) => {
-      const { userId } = req.body;
-      
-      try {
-        const targetUserId = userId || 6; // Default to Fernando (user 6)
-        const userResult = await db.select().from(users).where(eq(users.id, targetUserId)).limit(1);
-        
-        if (!userResult || userResult.length === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: "User not found" 
-          });
-        }
-        
-        const user = userResult[0];
-        
-        // Force login without password check
-        req.login(user, (err) => {
-          if (err) {
-            console.error('Direct login error:', err);
-            return res.status(500).json({ 
-              success: false, 
-              message: "Login failed" 
-            });
-          }
-          
-          console.log(`[DEBUG] Direct login successful for: ${user.username} (ID: ${user.id})`);
-          
-          res.json({ 
-            success: true, 
-            message: `Logged in as ${user.username}`, 
-            user: {
-              id: user.id,
-              username: user.username,
-              name: user.name
-            }
-          });
-        });
-        
-      } catch (error) {
-        console.error('Direct login error:', error);
-        res.status(500).json({ 
-          success: false, 
-          message: "Login failed" 
-        });
-      }
-    });
+    // Direct login route removed for security compliance
 
     // API connection test endpoint
     app.post('/api/posts/ping', unifiedIsAuthenticated, (req: Request, res: Response) => {
