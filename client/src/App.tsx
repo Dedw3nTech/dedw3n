@@ -433,6 +433,7 @@ function App() {
                               <div className="flex flex-col min-h-screen">
                                 <DeepLMachineTranslator />
                                 <FinalTranslationSystem />
+                                <TranslationManagementSystem />
                           <SafeComponentWrapper componentName="OptimizedNavigation">
                             <OptimizedNavigation />
                           </SafeComponentWrapper>
