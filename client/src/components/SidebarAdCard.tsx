@@ -31,11 +31,11 @@ export function SidebarAdCard() {
       
       <a href="/special-offers" className="block">
         <img 
-          src="/attached_assets/Copy of Pre Launch Be Different, Be You (1)_1749578490011.png"
-          alt={altText}
+          src="/attached_assets/_Pre Launch Be Different Black phone black man_1749579297498.png"
+          alt="Be Different - Premium Mobile Experience"
           className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
           onError={(e) => {
-            e.currentTarget.src = "/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
+            e.currentTarget.src = "/attached_assets/Copy of Pre Launch Be Different, Be You (1)_1749578490011.png";
           }}
         />
       </a>

@@ -17,6 +17,7 @@ import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
+import { CommunityUniqueAdCard } from "@/components/CommunityUniqueAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
 
@@ -99,82 +100,23 @@ export default function CommunityPage() {
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country' | 'city'>('new');
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Master Translation System - Community Page Mega-Batch (62 texts)
-  const communityTexts = useMemo(() => [
-    // Page Headers & Meta (4 texts)
-    "Dedwen Community - Connect and Share", "Join the Dedwen Community",
-    "Failed to fetch community feed", "Community Feed",
-    
-    // Navigation & Sorting (8 texts)
-    "New", "Trending", "Popular", "Following", "My Region", "My Country", "My City", "Try Again",
-    
-    // Loading States (6 texts)
-    "Loading community posts...", "Loading more posts...", "Refresh Feed",
-    "You've reached the end!", "Check back later for new content or try refreshing to see if there are any updates.",
-    "You've seen all available posts in the community feed.",
-    
-    // Empty States & CTAs (6 texts)
-    "No posts yet", "Be the first to share something with the community!",
-    "Create First Post", "Refresh", "Create Post", "Share your thoughts",
-    
-    // Post Actions & Interactions (12 texts)
-    "Like", "Comment", "Share", "Save", "Report", "Edit Post", "Delete Post",
-    "Copy Link", "Hide Post", "Follow", "Unfollow", "Block User",
-    
-    // Community Features (8 texts)
-    "Community Guidelines", "Events", "Groups", "Members", "Discussions",
-    "Announcements", "Local Posts", "Global Posts",
-    
-    // Status Messages (6 texts)
-    "Post created successfully", "Failed to create post", "Post deleted",
-    "Content reported", "User blocked", "Following user",
-    
-    // Advertisement Sections (4 texts)
-    "Sponsored Content", "Advertisement", "Promoted Post", "Featured Content",
-    
-    // Content Moderation (4 texts)
-    "Inappropriate Content", "Spam", "Harassment", "Submit Report",
-    
-    // Time & Date (4 texts)
-    "Just now", "minutes ago", "hours ago", "days ago"
-  ], []);
+  // Optimized Translation System - Split into smaller manageable batches
+  const coreTexts = [
+    "Community Feed", "New", "Trending", "Popular", "Following", 
+    "Loading community posts...", "No posts yet", "Create Post", 
+    "Refresh", "Try Again", "Failed to fetch community feed"
+  ];
 
-  const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(communityTexts);
+  const { translations: coreTranslations } = useMasterBatchTranslation(coreTexts, 'normal');
   
-  // Extract translations with descriptive variable names
-  const [
-    // Page Headers & Meta
-    communityAltText, joinCommunityAltText, fetchErrorText, communityFeedText,
-    
-    // Navigation & Sorting
-    newText, trendingText, popularText, followingText, myRegionText, myCountryText, myCityText, tryAgainText,
-    
-    // Loading States
-    loadingPostsText, loadingMoreText, refreshFeedText, reachedEndText, checkBackLaterText, seenAllPostsText,
-    
-    // Empty States & CTAs
-    noPostsText, firstPostPromptText, createFirstPostText, refreshText, createPostText, shareThoughtsText,
-    
-    // Post Actions & Interactions
-    likeText, commentText, shareText, saveText, reportText, editPostText, deletePostText,
-    copyLinkText, hidePostText, followText, unfollowText, blockUserText,
-    
-    // Community Features
-    guidelinesText, eventsText, groupsText, membersText, discussionsText,
-    announcementsText, localPostsText, globalPostsText,
-    
-    // Status Messages
-    postCreatedText, postFailedText, postDeletedText, contentReportedText, userBlockedText, followingUserText,
-    
-    // Advertisement Sections
-    sponsoredText, advertisementText, promotedPostText, featuredContentText,
-    
-    // Content Moderation
-    inappropriateText, spamText, harassmentText, submitReportText,
-    
-    // Time & Date
-    justNowText, minutesAgoText, hoursAgoText, daysAgoText
-  ] = translations || communityTexts;
+  // Helper function to get translation safely
+  const getTranslation = useCallback((text: string, fallback?: string) => {
+    if (coreTranslations && typeof coreTranslations === 'object' && !Array.isArray(coreTranslations)) {
+      const translationMap = coreTranslations as Record<string, string>;
+      return translationMap[text] || fallback || text;
+    }
+    return fallback || text;
+  }, [coreTranslations]);
 
   // Track if we've reached the end of feed to prevent unnecessary calls
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
@@ -340,7 +282,7 @@ export default function CommunityPage() {
       <Container className="py-6">
         <div className="max-w-7xl mx-auto">
           {/* Top Community Advertisement */}
-          <CommunityTopPromoSection altText={communityAltText} />
+          <CommunityTopPromoSection altText={getTranslation("Dedwen Community - Connect and Share")} />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -371,7 +313,7 @@ export default function CommunityPage() {
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
-                  {newText}
+                  {getTranslation("New")}
                   {sortBy === 'new' && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
@@ -384,7 +326,7 @@ export default function CommunityPage() {
                       : 'font-normal hover:text-blue-500'
                   }`}
                 >
-                  {trendingText}
+                  {getTranslation("Trending")}
                   {sortBy === 'trending' && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-1 bg-black"></div>
                   )}
@@ -403,7 +345,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  {popularText}
+                  {getTranslation("Popular")}
                 </button>
                 <button
                   onClick={() => setSortBy('following')}
@@ -413,7 +355,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  {followingText}
+                  {getTranslation("Following")}
                 </button>
                 <button
                   onClick={() => setSortBy('region')}
@@ -423,7 +365,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  {myRegionText}
+                  {getTranslation("My Region")}
                 </button>
                 <button
                   onClick={() => setSortBy('country')}
@@ -433,7 +375,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  {myCountryText}
+                  {getTranslation("My Country")}
                 </button>
                 <button
                   onClick={() => setSortBy('city')}
@@ -443,7 +385,7 @@ export default function CommunityPage() {
                       : 'hover:text-gray-800'
                   }`}
                 >
-                  {myCityText}
+                  {getTranslation("My City")}
                 </button>
               </div>
             </div>
@@ -539,7 +481,7 @@ export default function CommunityPage() {
                 showControls={true}
               />
               <TrendingCategoriesCard />
-              <SidebarAdCard />
+              <CommunityUniqueAdCard />
               <LatestProductsCard />
               <PopularProductsCard />
               <SidebarAdCard />
