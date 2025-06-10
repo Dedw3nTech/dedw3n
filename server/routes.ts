@@ -6982,11 +6982,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const apiKey = apiKeys[i];
         
         try {
-          // Try both endpoints for maximum compatibility
-          const endpoints = [
-            'https://api-free.deepl.com/v2/translate',
-            'https://api.deepl.com/v2/translate'
-          ];
+          // Determine correct endpoint based on API key type
+          const isFreeKey = apiKey.endsWith(':fx');
+          const endpoints = isFreeKey ? 
+            ['https://api-free.deepl.com/v2/translate'] : 
+            ['https://api.deepl.com/v2/translate'];
           
           let response = null;
           let lastError = null;
