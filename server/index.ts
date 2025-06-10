@@ -17,6 +17,9 @@ import { queryBundler } from "./query-bundler";
 import { translationOptimizer } from "./translation-optimizer";
 import cachePerformanceRoutes from "./cache-performance-routes";
 import { advancedCacheOptimizer } from "./advanced-cache-optimizer";
+import { phase3CacheExpansion } from "./phase3-cache-expansion";
+import { cacheStrategyOptimizer } from "./cache-strategy-optimizer";
+import { cacheAccelerationEngine } from "./cache-acceleration-engine";
 import { EventEmitter } from 'events';
 // Removed storage import to prevent errors
 
@@ -175,6 +178,8 @@ app.use((req, res, next) => {
         queryBundler: queryBundler.getStats(),
         translations: translationOptimizer.getStats(),
         advancedCache: advancedCacheOptimizer.getOptimizationStats(),
+        phase3Cache: phase3CacheExpansion.getPhase3Stats(),
+        cacheStrategy: cacheStrategyOptimizer.getOptimizationStats(),
         server: {
           uptime: Math.round(process.uptime() / 60),
           nodeVersion: process.version,
