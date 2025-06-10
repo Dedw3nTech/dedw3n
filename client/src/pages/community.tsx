@@ -17,7 +17,6 @@ import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
-import { CommunityAdCard } from "@/components/CommunityAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
 
@@ -540,7 +539,7 @@ export default function CommunityPage() {
                 showControls={true}
               />
               <TrendingCategoriesCard />
-              <CommunityAdCard />
+              <SidebarAdCard />
               <LatestProductsCard />
               <PopularProductsCard />
               <SidebarAdCard />
