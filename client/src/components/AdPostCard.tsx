@@ -1,9 +1,33 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InstantImage } from "@/hooks/use-ultra-instant-image";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import campaignImage from "@assets/Copy of Pre Launch Campaingn Notification_1749109720371.png";
 
 export function AdPostCard() {
+  // Translation setup
+  const textsToTranslate = [
+    "Advertisement",
+    "Sponsored",
+    "Remove ads",
+    "Special Campaign - Limited Time Offer",
+    "🎉 Special Launch Offer",
+    "Get 50% OFF on all premium products. Limited time exclusive deal - don't miss out on this incredible offer!",
+    "Learn More",
+    "Get Started"
+  ];
+
+  const { translations } = useMasterBatchTranslation(textsToTranslate);
+
+  const advertisementText = translations[0] || "Advertisement";
+  const sponsoredText = translations[1] || "Sponsored";
+  const removeAdsText = translations[2] || "Remove ads";
+  const campaignAltText = translations[3] || "Special Campaign - Limited Time Offer";
+  const specialOfferText = translations[4] || "🎉 Special Launch Offer";
+  const offerDescriptionText = translations[5] || "Get 50% OFF on all premium products. Limited time exclusive deal - don't miss out on this incredible offer!";
+  const learnMoreText = translations[6] || "Learn More";
+  const getStartedText = translations[7] || "Get Started";
+
   return (
     <Card className="bg-white border-2 border-blue-200">
       <CardContent className="p-4 bg-white">
