@@ -48,7 +48,7 @@ export function DeepLTranslationTest() {
   };
 
   const testLanguageSwitch = async (langCode: string) => {
-    changeLanguage(langCode);
+    setLanguage(langCode);
     // Auto-test after language change
     setTimeout(() => {
       testBatchTranslation();
