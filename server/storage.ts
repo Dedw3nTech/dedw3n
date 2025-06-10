@@ -503,50 +503,62 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
-    try {
-      const result = await db.execute(
-        sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
-            FROM notifications 
-            WHERE user_id = ${userId} 
-            ORDER BY created_at DESC 
-            LIMIT ${limit}`
-      );
-      
-      return result.rows.map(row => ({
-        id: row.id as number,
-        userId: row.user_id as number,
-        type: row.type as any,
-        title: row.title as string,
-        content: row.content as string,
-        isRead: row.is_read as boolean,
-        sourceId: row.source_id as number,
-        sourceType: row.source_type as string,
-        actorId: row.actor_id as number,
-        createdAt: row.created_at as Date
-      }));
-    } catch (error) {
-      console.error('Error getting notifications:', error);
-      return [];
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      `notifications:${userId}:${limit}`,
+      async () => {
+        try {
+          const result = await db.execute(
+            sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
+                FROM notifications 
+                WHERE user_id = ${userId} 
+                ORDER BY created_at DESC 
+                LIMIT ${limit}`
+          );
+          
+          return result.rows.map(row => ({
+            id: row.id as number,
+            userId: row.user_id as number,
+            type: row.type as any,
+            title: row.title as string,
+            content: row.content as string,
+            isRead: row.is_read as boolean,
+            sourceId: row.source_id as number,
+            sourceType: row.source_type as string,
+            actorId: row.actor_id as number,
+            createdAt: row.created_at as Date
+          }));
+        } catch (error) {
+          console.error('Error getting notifications:', error);
+          return [];
+        }
+      },
+      { ttl: 2 * 60 * 1000, category: 'user' }
+    );
   }
   
   async getUnreadNotificationCount(userId: number): Promise<number> {
-    try {
-      const [result] = await db
-        .select({ count: count() })
-        .from(notifications)
-        .where(
-          and(
-            eq(notifications.userId, userId),
-            eq(notifications.isRead, false)
-          )
-        );
-      
-      return result?.count || 0;
-    } catch (error) {
-      console.error('Error getting unread notification count:', error);
-      return 0;
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      `unread:notifications:${userId}`,
+      async () => {
+        try {
+          const [result] = await db
+            .select({ count: count() })
+            .from(notifications)
+            .where(
+              and(
+                eq(notifications.userId, userId),
+                eq(notifications.isRead, false)
+              )
+            );
+          
+          return result?.count || 0;
+        } catch (error) {
+          console.error('Error getting unread notification count:', error);
+          return 0;
+        }
+      },
+      { ttl: 30 * 1000, category: 'user' }
+    );
   }
   
   async markNotificationAsRead(id: number): Promise<Notification | undefined> {
@@ -556,6 +568,11 @@ export class DatabaseStorage implements IStorage {
         .set({ isRead: true })
         .where(eq(notifications.id, id))
         .returning();
+        
+      if (updatedNotification) {
+        // Invalidate related notification caches
+        cacheInvalidator.invalidateNotification(updatedNotification.userId);
+      }
         
       return updatedNotification;
     } catch (error) {
@@ -575,6 +592,9 @@ export class DatabaseStorage implements IStorage {
             eq(notifications.isRead, false)
           )
         );
+        
+      // Invalidate notification caches
+      cacheInvalidator.invalidateNotification(userId);
         
       return true;
     } catch (error) {
@@ -695,15 +715,20 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    // Use SQL LOWER function to perform case-insensitive email lookup
-    try {
-      const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
-      console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
-      return user;
-    } catch (error) {
-      console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
-      return undefined;
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      `user:email:${email.toLowerCase()}`,
+      async () => {
+        try {
+          const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
+          console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
+          return user;
+        } catch (error) {
+          console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
+          return undefined;
+        }
+      },
+      { ttl: 15 * 60 * 1000, category: 'user' }
+    );
   }
   
   async createUser(user: InsertUser): Promise<User> {
@@ -4121,12 +4146,18 @@ export class DatabaseStorage implements IStorage {
 
   // Add missing methods for API endpoints
   async getProducts(): Promise<Product[]> {
-    try {
-      return await db.select().from(products).orderBy(desc(products.createdAt));
-    } catch (error) {
-      console.error('Error getting products:', error);
-      return [];
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      'products:all',
+      async () => {
+        try {
+          return await db.select().from(products).orderBy(desc(products.createdAt));
+        } catch (error) {
+          console.error('Error getting products:', error);
+          return [];
+        }
+      },
+      { ttl: 5 * 60 * 1000, category: 'product' }
+    );
   }
 
   async getPopularProducts(): Promise<Product[]> {
