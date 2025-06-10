@@ -302,11 +302,22 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserConversations(userId: number): Promise<any[]> {
-    return messageHelpers.getUserConversations(userId);
+    return await cacheMiddleware.cacheOrFetch(
+      `conversations:${userId}`,
+      async () => {
+        return messageHelpers.getUserConversations(userId);
+      },
+      { ttl: 60 * 1000, category: 'user' }
+    );
   }
   
   async createMessage(message: InsertMessage): Promise<Message> {
-    return messageHelpers.createMessage(message);
+    const result = await messageHelpers.createMessage(message);
+    
+    // Invalidate message-related caches
+    cacheInvalidator.invalidateMessage(message.senderId, message.receiverId);
+    
+    return result;
   }
   
   async markMessageAsRead(id: number): Promise<Message | undefined> {
@@ -314,7 +325,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUnreadMessageCount(userId: number): Promise<number> {
-    return messageHelpers.getUnreadMessagesCount(userId);
+    return await cacheMiddleware.cacheOrFetch(
+      `unread:messages:${userId}`,
+      async () => {
+        return messageHelpers.getUnreadMessagesCount(userId);
+      },
+      { ttl: 30 * 1000, category: 'user' }
+    );
   }
   
   async deleteMessage(id: number): Promise<boolean> {
@@ -495,6 +512,10 @@ export class DatabaseStorage implements IStorage {
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     try {
       const [newNotification] = await db.insert(notifications).values(notificationData).returning();
+      
+      // Invalidate notification cache for the user
+      cacheInvalidator.invalidateNotification(notificationData.userId);
+      
       return newNotification;
     } catch (error) {
       console.error('Error creating notification:', error);
@@ -4161,15 +4182,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPopularProducts(): Promise<Product[]> {
-    try {
-      // Return products ordered by creation date since rating column may not exist
-      return await db.select().from(products)
-        .orderBy(desc(products.createdAt))
-        .limit(10);
-    } catch (error) {
-      console.error('Error getting popular products:', error);
-      return [];
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      'products:popular',
+      async () => {
+        try {
+          return await db.select().from(products)
+            .orderBy(desc(products.createdAt))
+            .limit(10);
+        } catch (error) {
+          console.error('Error getting popular products:', error);
+          return [];
+        }
+      },
+      { ttl: 10 * 60 * 1000, category: 'product' }
+    );
   }
 
   async deletePost(id: number, userId?: number): Promise<boolean> {

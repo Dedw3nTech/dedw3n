@@ -1,5 +1,6 @@
 import { cacheManager } from "./cache-manager";
 import { performanceMonitor } from "./performance-monitor";
+import { cachePerformanceTracker } from "./cache-performance-tracker";
 
 interface CacheOptions {
   ttl?: number;
