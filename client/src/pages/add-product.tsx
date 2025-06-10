@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -89,6 +90,7 @@ export default function AddProduct() {
   const [isVendor, setIsVendor] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
+  const [shippingPriceType, setShippingPriceType] = useState<'fixed' | 'variable'>('fixed');
 
   // Comprehensive Add Product Page Text Collection for Translation
   const addProductTexts = [
@@ -245,6 +247,7 @@ export default function AddProduct() {
     "g",
     
     // Shipping Price Types
+    "Shipping Price Type",
     "Fixed Shipping Price",
     "Variable Shipping Price"
   ];
@@ -911,41 +914,94 @@ export default function AddProduct() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="shippingPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
-                              <FormControl>
-                                <CurrencyInput
-                                  value={field.value || 0}
-                                  onValueChange={field.onChange}
-                                  placeholder={t("0.00")}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Shipping Price Type Selection */}
+                        <div className="space-y-4">
+                          <div className="space-y-3">
+                            <Label className="text-sm font-medium">{t("Shipping Price Type")}</Label>
+                            <RadioGroup
+                              value={shippingPriceType}
+                              onValueChange={(value: 'fixed' | 'variable') => setShippingPriceType(value)}
+                              className="flex flex-col space-y-2"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="fixed" id="fixed" />
+                                <Label htmlFor="fixed" className="text-sm">{t("Fixed Shipping Price")}</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="variable" id="variable" />
+                                <Label htmlFor="variable" className="text-sm">{t("Variable Shipping Price")}</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
 
-                        <FormField
-                          control={form.control}
-                          name="variableShippingPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("Variable Shipping Price")}</FormLabel>
-                              <FormControl>
-                                <CurrencyInput
-                                  value={field.value || 0}
-                                  onValueChange={field.onChange}
-                                  placeholder={t("0.00")}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                          {/* Fixed Shipping Price Field */}
+                          {shippingPriceType === 'fixed' && (
+                            <FormField
+                              control={form.control}
+                              name="shippingPrice"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
+                                  <FormControl>
+                                    <CurrencyInput
+                                      value={field.value || 0}
+                                      onValueChange={field.onChange}
+                                      placeholder={t("0.00")}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           )}
-                        />
+
+                          {/* Variable Shipping Price Field */}
+                          {shippingPriceType === 'variable' && (
+                            <FormField
+                              control={form.control}
+                              name="variableShippingPrice"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t("Variable Shipping Price")}</FormLabel>
+                                  <FormControl>
+                                    <CurrencyInput
+                                      value={field.value || 0}
+                                      onValueChange={field.onChange}
+                                      placeholder={t("0.00")}
+                                      className={shippingPriceType !== 'variable' ? 'opacity-50' : ''}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+
+                          {/* Grayed out field for the unselected option */}
+                          {shippingPriceType === 'variable' && (
+                            <div className="opacity-50 pointer-events-none">
+                              <Label className="text-sm font-medium text-gray-500">{t("Fixed Shipping Price")}</Label>
+                              <CurrencyInput
+                                value={0}
+                                onValueChange={() => {}}
+                                placeholder={t("0.00")}
+                                className="mt-1"
+                              />
+                            </div>
+                          )}
+
+                          {shippingPriceType === 'fixed' && (
+                            <div className="opacity-50 pointer-events-none">
+                              <Label className="text-sm font-medium text-gray-500">{t("Variable Shipping Price")}</Label>
+                              <CurrencyInput
+                                value={0}
+                                onValueChange={() => {}}
+                                placeholder={t("0.00")}
+                                className="mt-1"
+                              />
+                            </div>
+                          )}
+                        </div>
                       
                       <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>
                         <Plus className="mr-2 h-4 w-4" />
