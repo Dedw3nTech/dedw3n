@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Eye, Star, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useMemo } from "react";
 
 interface Product {
   id: number;
@@ -25,12 +27,33 @@ export function LatestProductsCard() {
     retry: false,
   });
 
+  // Master Translation System - LatestProductsCard (6 texts)
+  const latestProductsTexts = useMemo(() => [
+    "Latest Products", "No products available", "Browse Products", 
+    "View", "View All Products", "by"
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(latestProductsTexts);
+  const [
+    titleText, noProductsText, browseProductsText, 
+    viewText, viewAllProductsText, byText
+  ] = translations || latestProductsTexts;
+
+  // Dynamic translation for product names
+  const productNames = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    return products.slice(0, 4).map((product: Product) => product.name);
+  }, [products]);
+
+  const { translations: productTranslations } = useMasterBatchTranslation(productNames);
+  const translatedProductNames = productTranslations || productNames;
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="font-semibold tracking-tight flex items-center gap-2 text-[15px]">
           <ShoppingBag className="h-5 w-5 text-blue-600" />
-          Latest Products
+          {titleText}
         </CardTitle>
       </CardHeader>
       
@@ -46,7 +69,7 @@ export function LatestProductsCard() {
         ) : !products || !Array.isArray(products) || products.length === 0 ? (
           <div className="text-center py-8">
             <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No products available</p>
+            <p className="text-gray-500 text-sm">{noProductsText}</p>
             <Button 
               asChild 
               variant="outline" 
@@ -54,19 +77,21 @@ export function LatestProductsCard() {
             >
               <Link href="/products">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Browse Products
+                {browseProductsText}
               </Link>
             </Button>
           </div>
         ) : (
           <>
-            {products.slice(0, 4).map((product: Product) => (
+            {products.slice(0, 4).map((product: Product, index: number) => {
+              const translatedName = translatedProductNames[index] || product.name;
+              return (
               <div key={product.id} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0">
                   {product.image ? (
                     <img 
                       src={product.image} 
-                      alt={product.name}
+                      alt={translatedName}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (
@@ -76,7 +101,7 @@ export function LatestProductsCard() {
                 
                 <div className="flex-1 min-w-0 text-center sm:text-left">
                   <h4 className="font-bold text-xs leading-tight break-words line-clamp-2 h-8 overflow-hidden" style={{ fontSize: '12px' }}>
-                    {product.name}
+                    {translatedName}
                   </h4>
                   
                   <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-2 mt-1 flex-wrap">
@@ -93,7 +118,7 @@ export function LatestProductsCard() {
                   
                   {product.vendor && (
                     <p className="text-xs text-gray-500 break-words mt-1">
-                      by {product.vendor.name}
+                      {byText} {product.vendor.name}
                     </p>
                   )}
                 </div>
@@ -105,11 +130,12 @@ export function LatestProductsCard() {
                   asChild
                 >
                   <Link href={`/product/${product.id}`}>
-                    <span className="text-xs font-bold">View</span>
+                    <span className="text-xs font-bold">{viewText}</span>
                   </Link>
                 </Button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
             
             <div className="pt-2">
               <Button 
@@ -119,7 +145,7 @@ export function LatestProductsCard() {
               >
                 <Link href="/products">
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View All Products
+                  {viewAllProductsText}
                 </Link>
               </Button>
             </div>
