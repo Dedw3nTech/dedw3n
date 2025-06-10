@@ -395,7 +395,7 @@ export default function ShippingCostCalculator({
       
       <CardContent className="space-y-4">
         {/* Calculation Parameters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
           <div>
             <Label className="text-sm font-medium">{translateText('Order Total')}</Label>
             <div className="text-lg font-semibold">{formatPrice(orderTotal)}</div>
@@ -426,8 +426,8 @@ export default function ShippingCostCalculator({
         {/* Add Carrier Form */}
         {showCarrierForm && (
           <Card className="border-dashed">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Vendor Location Fields */}
                 <div>
                   <Label className="flex items-center gap-2">
@@ -602,7 +602,7 @@ export default function ShippingCostCalculator({
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-600 mb-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm text-gray-600 mb-2">
                           <div>
                             <span className="font-medium">{translateText('Base')}: </span>
                             {formatPrice(calculation.baseCost)}
@@ -680,23 +680,25 @@ export default function ShippingCostCalculator({
         )}
 
         {/* Escrow Payment Option */}
-        <Card className="mt-6 border-yellow-200 bg-yellow-50">
+        <Card className="mt-4 sm:mt-6 border-yellow-200 bg-yellow-50">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className="h-5 w-5 text-yellow-600" />
-              {translateText('Secure Payment with Escrow')}
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+            <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-base sm:text-lg">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-yellow-600" />
+                {translateText('Secure Payment with Escrow')}
+              </div>
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 w-fit">
                 {translateText('Recommended')}
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <p className="text-sm text-gray-600 leading-relaxed">
                 {translateText('Use Escrow.com for secure payment protection. Your payment is held safely until you receive and approve your purchase.')}
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-green-600" />
                   <span>{translateText('Buyer Protection')}</span>
@@ -713,8 +715,8 @@ export default function ShippingCostCalculator({
 
               <Separator />
 
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1">
                   <h4 className="font-medium text-sm mb-1">{translateText('Would you like to use Escrow.com for this transaction?')}</h4>
                   <p className="text-xs text-gray-500">{translateText('Small fee applies based on transaction amount')}</p>
                 </div>
@@ -722,13 +724,13 @@ export default function ShippingCostCalculator({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="border-gray-300"
+                    className="border-gray-300 flex-1 sm:flex-none"
                   >
                     {translateText('No, Skip')}
                   </Button>
                   <Button 
                     size="sm"
-                    className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white flex-1 sm:flex-none"
                     onClick={handleEscrowPayment}
                   >
                     {translateText('Use Escrow')}
