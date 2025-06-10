@@ -6320,6 +6320,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
+  // Local translation mapping for common UI terms
+  function getLocalTranslation(text: string, targetLanguage: string): string {
+    const translations: Record<string, Record<string, string>> = {
+      'DE': {
+        'Marketplace': 'Marktplatz',
+        'Community': 'Gemeinschaft',
+        'Dating': 'Partnersuche',
+        'Contact': 'Kontakt',
+        'Home': 'Startseite',
+        'Products': 'Produkte',
+        'Services': 'Dienstleistungen',
+        'Events': 'Veranstaltungen',
+        'Profile': 'Profil',
+        'Settings': 'Einstellungen',
+        'Messages': 'Nachrichten',
+        'Notifications': 'Benachrichtigungen',
+        'Search': 'Suchen',
+        'Login': 'Anmelden',
+        'Register': 'Registrieren',
+        'Logout': 'Abmelden',
+        'About': 'Über uns',
+        'FAQ': 'Häufige Fragen',
+        'Help': 'Hilfe',
+        'Support': 'Support',
+        'Privacy': 'Datenschutz',
+        'Terms': 'Nutzungsbedingungen'
+      },
+      'ES': {
+        'Marketplace': 'Mercado',
+        'Community': 'Comunidad',
+        'Dating': 'Citas',
+        'Contact': 'Contacto',
+        'Home': 'Inicio',
+        'Products': 'Productos',
+        'Services': 'Servicios',
+        'Events': 'Eventos',
+        'Profile': 'Perfil',
+        'Settings': 'Configuración',
+        'Messages': 'Mensajes',
+        'Notifications': 'Notificaciones',
+        'Search': 'Buscar',
+        'Login': 'Iniciar sesión',
+        'Register': 'Registrarse',
+        'Logout': 'Cerrar sesión',
+        'About': 'Acerca de',
+        'FAQ': 'Preguntas frecuentes',
+        'Help': 'Ayuda',
+        'Support': 'Soporte',
+        'Privacy': 'Privacidad',
+        'Terms': 'Términos'
+      },
+      'FR': {
+        'Marketplace': 'Marché',
+        'Community': 'Communauté',
+        'Dating': 'Rencontres',
+        'Contact': 'Contact',
+        'Home': 'Accueil',
+        'Products': 'Produits',
+        'Services': 'Services',
+        'Events': 'Événements',
+        'Profile': 'Profil',
+        'Settings': 'Paramètres',
+        'Messages': 'Messages',
+        'Notifications': 'Notifications',
+        'Search': 'Rechercher',
+        'Login': 'Se connecter',
+        'Register': 'S\'inscrire',
+        'Logout': 'Se déconnecter',
+        'About': 'À propos',
+        'FAQ': 'FAQ',
+        'Help': 'Aide',
+        'Support': 'Support',
+        'Privacy': 'Confidentialité',
+        'Terms': 'Conditions'
+      }
+    };
+
+    const targetTranslations = translations[targetLanguage];
+    if (targetTranslations && targetTranslations[text]) {
+      return targetTranslations[text];
+    }
+    
+    // Return original text if no translation found
+    return text;
+  }
+
   // DeepL-only translation - no fallback systems for data integrity
   async function handleUnsupportedLanguageBatch(batch: any[], targetLanguage: string) {
     console.log(`[Translation] Language ${targetLanguage} not supported by DeepL - returning original texts`);
@@ -6868,7 +6954,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Translation] Processing "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}" → ${targetLanguage}`);
 
       if (apiKeys.length === 0) {
-        return res.status(500).json({ message: 'DeepL API key not configured' });
+        console.log(`[Translation] No API keys configured - using local translation mapping`);
+        // Use local translation mapping as fallback
+        const localTranslation = getLocalTranslation(text, targetLanguage);
+        const result = {
+          translatedText: localTranslation,
+          detectedSourceLanguage: 'EN',
+          targetLanguage,
+          timestamp: Date.now()
+        };
+        translationCache.set(cacheKey, result);
+        return res.json({
+          translatedText: result.translatedText,
+          detectedSourceLanguage: result.detectedSourceLanguage,
+          targetLanguage: result.targetLanguage
+        });
       }
 
       // Map our language codes to DeepL format
@@ -6951,10 +7051,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const errorText = response ? await response.text() : 'No response received';
         console.error('DeepL API error:', response?.status || 'No status', errorText);
         
-        // If all API keys failed, return original text to maintain data integrity
-        console.log(`[Translation] All API keys failed - returning original text for data integrity`);
+        // If all API keys failed, use local translation mapping
+        console.log(`[Translation] All API keys failed - using local translation mapping`);
+        const localTranslation = getLocalTranslation(text, targetLanguage);
         const fallbackResult = {
-          translatedText: text, // Return original text
+          translatedText: localTranslation,
           detectedSourceLanguage: 'EN',
           targetLanguage,
           timestamp: Date.now()
@@ -7069,11 +7170,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ].filter(key => key); // Remove null/undefined keys
 
       if (apiKeys.length === 0) {
-        // Fallback to original texts
+        console.log(`[Batch Translation] No API keys configured - using local translation mapping`);
+        // Use local translation mapping as fallback
         return res.json({
           translations: texts.map(text => ({
             originalText: text,
-            translatedText: text,
+            translatedText: getLocalTranslation(text, targetLanguage),
             detectedSourceLanguage: 'EN'
           }))
         });
@@ -7238,7 +7340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           batchResults.find(r => r.text === originalText || r.originalText === originalText);
         
         const translatedText = translationResult ? 
-          (translationResult.text || translationResult.translatedText || originalText) : originalText;
+          (translationResult.text || translationResult.translatedText || getLocalTranslation(originalText, targetLanguage)) : getLocalTranslation(originalText, targetLanguage);
         const detectedLang = translationResult ? 
           (translationResult.detected_source_language || translationResult.detectedSourceLanguage || 'EN') : 'EN';
         
@@ -7264,11 +7366,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ translations });
     } catch (error) {
       console.error('Batch translation error:', error);
-      // Fallback to original texts
+      // Fallback to local translations
       res.json({
         translations: req.body.texts.map((text: string) => ({
           originalText: text,
-          translatedText: text,
+          translatedText: getLocalTranslation(text, req.body.targetLanguage),
           detectedSourceLanguage: 'EN'
         }))
       });
