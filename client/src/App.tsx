@@ -427,7 +427,7 @@ function App() {
                           <LanguageProvider>
                         <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
-                          <EnterpriseTranslator />
+                          <DeepLMachineTranslator />
                           <SafeComponentWrapper componentName="OptimizedNavigation">
                             <OptimizedNavigation />
                           </SafeComponentWrapper>
