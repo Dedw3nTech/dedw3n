@@ -180,6 +180,7 @@ app.use((req, res, next) => {
         advancedCache: advancedCacheOptimizer.getOptimizationStats(),
         phase3Cache: phase3CacheExpansion.getPhase3Stats(),
         cacheStrategy: cacheStrategyOptimizer.getOptimizationStats(),
+        cacheAcceleration: cacheAccelerationEngine.getAccelerationStats(),
         server: {
           uptime: Math.round(process.uptime() / 60),
           nodeVersion: process.version,

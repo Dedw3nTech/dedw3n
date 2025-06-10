@@ -2,6 +2,7 @@ import express from "express";
 import { cachePerformanceTracker } from "./cache-performance-tracker";
 import { cacheMiddleware } from "./cache-middleware";
 import { cacheInvalidator } from "./cache-invalidator";
+import { cacheAccelerationEngine } from "./cache-acceleration-engine";
 
 const router = express.Router();
 
@@ -104,6 +105,40 @@ router.get('/api/cache/health', (req, res) => {
     res.status(500).json({ 
       status: 'error',
       error: 'Failed to get cache health status' 
+    });
+  }
+});
+
+// Emergency acceleration endpoint to push toward 95% target
+router.post('/cache/emergency-acceleration', async (req, res) => {
+  try {
+    console.log('[Cache Performance] Emergency acceleration triggered');
+    
+    // Trigger emergency acceleration
+    await cacheAccelerationEngine.emergencyAcceleration();
+    
+    // Get updated metrics
+    const metrics = cachePerformanceTracker.getMetrics();
+    const progress = cachePerformanceTracker.getProgressToTarget(95);
+    
+    res.json({
+      status: 'acceleration_complete',
+      message: 'Emergency cache acceleration executed successfully',
+      performance: {
+        currentHitRate: metrics.hitRate,
+        databaseLoadReduction: metrics.databaseLoadReduction,
+        targetProgress: progress.progress,
+        progressToTarget: `${Math.round(progress.progress)}% of 95% target`
+      },
+      accelerationStats: cacheAccelerationEngine.getAccelerationStats(),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error during emergency acceleration:', error);
+    res.status(500).json({ 
+      status: 'error',
+      error: 'Failed to execute emergency acceleration',
+      message: error.message 
     });
   }
 });
