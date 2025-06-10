@@ -718,7 +718,7 @@ export default function CreatePost({
                     disabled={!!videoFile}
                   >
                     <ImageIcon className="h-3 w-3 mr-1 font-bold" />
-                    <span className="font-semibold">Add Photo</span>
+                    <span className="font-semibold">{addPhotoText}</span>
                   </Button>
                   
                   {/* Video upload button */}
@@ -729,7 +729,7 @@ export default function CreatePost({
                     disabled={!!imageFile}
                   >
                     <Video className="h-3 w-3 mr-1 font-bold" />
-                    <span className="font-semibold">Add Video</span>
+                    <span className="font-semibold">{addVideoText}</span>
                   </Button>
                   
                   {/* Events & Meetups button */}
@@ -740,21 +740,21 @@ export default function CreatePost({
                         className="bg-black text-white hover:bg-gray-800"
                       >
                         <Calendar className="h-3 w-3 mr-1 font-bold" />
-                        <span className="font-semibold">{selectedEvent ? "Event Tagged" : "Share Event"}</span>
+                        <span className="font-semibold">{selectedEvent ? eventTaggedText : shareEventText}</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
-                        <DialogTitle>Select an Event to Share</DialogTitle>
+                        <DialogTitle>{selectEventText}</DialogTitle>
                         <DialogDescription>
-                          Share an event with your followers. They can view event details and purchase tickets directly from your post.
+                          {shareEventDescText}
                         </DialogDescription>
                       </DialogHeader>
                       
                       <div className="my-4">
                         <div className="flex gap-2 mb-4">
                           <Input
-                            placeholder="Search events..."
+                            placeholder={searchEventsText}
                             value={eventSearchQuery}
                             onChange={(e) => setEventSearchQuery(e.target.value)}
                             className="flex-1"
@@ -805,7 +805,7 @@ export default function CreatePost({
                             </div>
                           ) : (
                             <div className="text-center py-10 text-muted-foreground">
-                              <p>No events found</p>
+                              <p>{noEventsText}</p>
                             </div>
                           )}
                         </ScrollArea>
@@ -819,7 +819,7 @@ export default function CreatePost({
                             setSelectedEvent(null);
                           }}
                         >
-                          Cancel
+                          {cancelText}
                         </Button>
                         <Button 
                           onClick={() => {
@@ -827,7 +827,7 @@ export default function CreatePost({
                           }}
                           disabled={!selectedEvent}
                         >
-                          Confirm Selection
+                          {confirmSelectionText}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -841,21 +841,21 @@ export default function CreatePost({
                         className="bg-black text-white hover:bg-gray-800"
                       >
                         <ShoppingBag className="h-3 w-3 mr-1 font-bold" />
-                        <span className="font-semibold">{selectedProduct ? "Product Tagged" : "Tag Product"}</span>
+                        <span className="font-semibold">{selectedProduct ? productTaggedText : tagProductText}</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
-                        <DialogTitle>Select a Product to Tag</DialogTitle>
+                        <DialogTitle>{selectProductText}</DialogTitle>
                         <DialogDescription>
-                          Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.
+                          {tagProductDescText}
                         </DialogDescription>
                       </DialogHeader>
                       
                       <div className="my-4">
                         <div className="flex gap-2 mb-4">
                           <Input
-                            placeholder="Search products..."
+                            placeholder={searchProductsText}
                             value={productSearchQuery}
                             onChange={(e) => setProductSearchQuery(e.target.value)}
                             className="flex-1"
