@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useMemo } from "react";
 
 export default function SocialNav() {
   const [location, setLocation] = useLocation();

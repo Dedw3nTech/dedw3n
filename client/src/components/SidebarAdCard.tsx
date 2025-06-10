@@ -2,9 +2,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState } from "react";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 export function SidebarAdCard() {
   const [isVisible, setIsVisible] = useState(true);
+  
+  // Batch translate all ad card text elements
+  const textsToTranslate = [
+    "Be Different, Be You - Dedw3n Campaign"
+  ];
+  
+  const { translations } = useMasterBatchTranslation(textsToTranslate, 'normal');
+  
+  const altText = translations["Be Different, Be You - Dedw3n Campaign"] || "Be Different, Be You - Dedw3n Campaign";
 
   if (!isVisible) return null;
 
@@ -21,11 +31,11 @@ export function SidebarAdCard() {
       
       <a href="/special-offers" className="block">
         <img 
-          src="/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png"
-          alt="Special Campaign Offers"
+          src="/attached_assets/Copy of Pre Launch Be Different, Be You (1)_1749578490011.png"
+          alt={altText}
           className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
           onError={(e) => {
-            e.currentTarget.src = "/attached_assets/Copy of Pre Launch Campaign  SELL.png";
+            e.currentTarget.src = "/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
           }}
         />
       </a>
