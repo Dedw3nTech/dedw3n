@@ -42,9 +42,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     }
   }
 
-  // Auto-login mechanism - DISABLED to prevent auto-login after logout
-  // This was causing automatic re-authentication of user Serruti after logout
-  /*
+  // Auto-login mechanism for development
   const autoLogin = req.headers['x-auto-login'];
   if (autoLogin === 'true' && process.env.NODE_ENV === 'development') {
     try {
@@ -60,7 +58,6 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   } else if (autoLogin === 'true' && process.env.NODE_ENV !== 'development') {
     console.warn('[SECURITY] Auto-login attempt blocked in production environment');
   }
-  */
 
   // Third priority: Check Passport session authentication first
   if (req.isAuthenticated && req.isAuthenticated()) {

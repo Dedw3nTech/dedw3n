@@ -120,8 +120,8 @@ async function apiRequestFull(
       'X-Use-Session': 'true',
       'X-Client-Auth': 'true',
       'X-Request-Time': new Date().toISOString(),
-      // Disable auto-login to show proper login screen
-      'X-Auto-Login': 'false',
+      // Enable auto-login for development
+      'X-Auto-Login': 'true',
       // Add logout header if user has logged out
       ...(userLoggedOut ? { 'X-Auth-Logged-Out': 'true' } : {}),
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),

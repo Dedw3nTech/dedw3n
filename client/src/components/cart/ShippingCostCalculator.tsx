@@ -93,7 +93,7 @@ export default function ShippingCostCalculator({
     try {
       // Calculate total transaction amount including shipping
       const selectedShipping = calculations.find(calc => calc.carrierId === selectedCalculation?.carrierId);
-      const shippingCost = selectedShipping?.cost || 0;
+      const shippingCost = selectedShipping?.totalCost || 0;
       const totalAmount = orderTotal + shippingCost;
 
       // Create escrow transaction via API
