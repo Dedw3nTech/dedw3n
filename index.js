@@ -1,0 +1,1 @@
+console.log('Fresh project started - all previous code and features deleted');
