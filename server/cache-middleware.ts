@@ -90,6 +90,20 @@ class UniversalCacheMiddleware {
     }
   }
 
+  // Alias for cacheOrFetch to maintain compatibility
+  async cached<T>(
+    cacheKey: string,
+    fetchFunction: () => Promise<T>,
+    category?: string,
+    ttl?: number
+  ): Promise<T> {
+    const options: CacheOptions = {
+      category: category as any || 'user',
+      ttl: ttl || 5 * 60 * 1000
+    };
+    return this.cacheOrFetch(cacheKey, fetchFunction, options);
+  }
+
   async batchCacheOrFetch<T>(
     requests: Array<{
       cacheKey: string;
