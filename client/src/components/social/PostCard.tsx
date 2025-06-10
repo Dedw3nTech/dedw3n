@@ -255,8 +255,8 @@ export default function PostCard({
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to like/unlike post",
+        title: errorText,
+        description: error.message || failedLikeText,
         variant: "destructive",
       });
     },
@@ -280,8 +280,8 @@ export default function PostCard({
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Post shared successfully",
+        title: sharedText,
+        description: sharedText,
       });
       
       // Invalidate query cache to refresh posts
@@ -315,7 +315,7 @@ export default function PostCard({
       return response.json();
     },
     onSuccess: () => {
-      setCommentText("");
+      setCommentInput("");
       setIsCommenting(false);
       
       // Refetch comments
@@ -1190,11 +1190,11 @@ export default function PostCard({
                           ) : (
                             <ShoppingBag className="h-4 w-4 mr-1" />
                           )}
-                          Shop Now
+                          {addToCartText}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Add to your cart</p>
+                        <p>{addToCartText}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -1211,7 +1211,7 @@ export default function PostCard({
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>View product details</p>
+                        <p>{viewProductText}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -1239,7 +1239,7 @@ export default function PostCard({
               ) : (
                 <ShoppingCart className="h-4 w-4" />
               )}
-              <span>{addToCartMutation.isPending ? "Adding..." : "Buy"}</span>
+              <span>{addToCartMutation.isPending ? "Adding..." : buyNowText}</span>
             </Button>
 
             <Button 
@@ -1251,7 +1251,7 @@ export default function PostCard({
               onClick={handleMakeOffer}
               disabled={!post.product && !post.isShoppable}
             >
-              <span>Make an Offer</span>
+              <span>{makeOfferText}</span>
             </Button>
           </div>
         </div>
@@ -1361,14 +1361,14 @@ export default function PostCard({
             </Avatar>
             <div className="flex-1 relative">
               <Textarea 
-                placeholder="Write a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                placeholder={writeMessageText}
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
                 className="pr-20 min-h-[80px]"
               />
               <div className="absolute right-12 bottom-2">
                 <EmojiPickerComponent
-                  onEmojiSelect={(emoji: string) => setCommentText((prev: string) => prev + emoji)}
+                  onEmojiSelect={(emoji: string) => setCommentInput((prev: string) => prev + emoji)}
                   className="text-muted-foreground hover:text-foreground"
                 />
               </div>
@@ -1377,7 +1377,7 @@ export default function PostCard({
                 variant="ghost"
                 className="absolute right-2 bottom-2"
                 onClick={handleSubmitComment}
-                disabled={commentMutation.isPending || !commentText.trim()}
+                disabled={commentMutation.isPending || !commentInput.trim()}
               >
                 {commentMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
