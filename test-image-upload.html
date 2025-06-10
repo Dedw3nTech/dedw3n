@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 20px;
+            border: 1px dashed #ccc;
+            display: none;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .tag-container {
+            margin: 10px 0;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e1e1e1;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+        }
+        .tag button {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .token-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Image Upload</h1>
+    
+    <div class="container">
+        <h2>1. Test Ping API</h2>
+        <button id="testPing">Test Ping API</button>
+        <div id="pingStatus" class="status"></div>
+        
+        <h2>2. Upload Image</h2>
+        <label for="token">JWT Token (optional):</label>
+        <input type="text" id="token" class="token-input" placeholder="Enter JWT token if you have one">
+        
+        <label for="fileInput">Select Image:</label>
+        <input type="file" id="fileInput" accept="image/*">
+        
+        <img id="preview" class="preview">
+        
+        <textarea id="description" placeholder="Image description"></textarea>
+        
+        <div>
+            <label for="tagInput">Add Tags:</label>
+            <input type="text" id="tagInput" placeholder="Add tag and press Enter">
+        </div>
+        
+        <div id="tags" class="tag-container"></div>
+        
+        <button id="upload">Upload Image</button>
+        
+        <div id="status"></div>
+        
+        <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const preview = document.getElementById('preview');
+            const description = document.getElementById('description');
+            const tagInput = document.getElementById('tagInput');
+            const tagsContainer = document.getElementById('tags');
+            const uploadButton = document.getElementById('upload');
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+            const pingButton = document.getElementById('testPing');
+            const pingStatus = document.getElementById('pingStatus');
+            const tokenInput = document.getElementById('token');
+            
+            let tags = [];
+            let base64Image = null;
+            
+            // Handle file selection and preview
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        base64Image = event.target.result;
+                        preview.src = base64Image;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Handle tag input
+            tagInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const tag = this.value.trim();
+                    if (tag && !tags.includes(tag)) {
+                        tags.push(tag);
+                        renderTags();
+                        this.value = '';
+                    }
+                }
+            });
+            
+            // Render tags
+            function renderTags() {
+                tagsContainer.innerHTML = '';
+                tags.forEach((tag, index) => {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag';
+                    tagElement.innerHTML = `${tag} <button data-index="${index}">×</button>`;
+                    tagsContainer.appendChild(tagElement);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.tag button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        tags.splice(index, 1);
+                        renderTags();
+                    });
+                });
+            }
+            
+            // Test the ping API
+            pingButton.addEventListener('click', async function() {
+                try {
+                    pingStatus.textContent = 'Testing connection...';
+                    pingStatus.className = 'status';
+                    pingStatus.style.display = 'block';
+                    
+                    const response = await fetch('/api/posts/ping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(tokenInput.value ? { 'Authorization': `Bearer ${tokenInput.value}` } : {})
+                        },
+                        body: JSON.stringify({ test: true })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        pingStatus.textContent = 'Connection successful: ' + JSON.stringify(data);
+                        pingStatus.className = 'status success';
+                    } else {
+                        pingStatus.textContent = 'Connection failed: ' + JSON.stringify(data);
+                        pingStatus.className = 'status error';
+                    }
+                } catch (error) {
+                    pingStatus.textContent = 'Error testing connection: ' + error.message;
+                    pingStatus.className = 'status error';
+                }
+            });
+            
+            // Handle image upload
+            uploadButton.addEventListener('click', async function() {
+                if (!base64Image) {
+                    alert('Please select an image');
+                    return;
+                }
+                
+                status.style.display = 'block';
+                status.textContent = 'Uploading...';
+                status.className = '';
+                
+                try {
+                    // First test connection with ping
+                    const pingResponse = await fetch('/api/posts/ping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(tokenInput.value ? { 'Authorization': `Bearer ${tokenInput.value}` } : {})
+                        },
+                        body: JSON.stringify({ test: true })
+                    });
+                    
+                    if (!pingResponse.ok) {
+                        status.textContent = 'API connection test failed. Please check your connection or authentication.';
+                        status.className = 'error';
+                        return;
+                    }
+                    
+                    // Proceed with image upload
+                    const response = await fetch('/api/social/upload-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(tokenInput.value ? { 'Authorization': `Bearer ${tokenInput.value}` } : {})
+                        },
+                        body: JSON.stringify({
+                            blob: base64Image,
+                            description: description.value,
+                            tags: tags
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    result.textContent = JSON.stringify(data, null, 2);
+                    
+                    if (response.ok) {
+                        status.textContent = 'Upload successful!';
+                        status.className = 'success';
+                    } else {
+                        status.textContent = 'Upload failed: ' + data.message;
+                        status.className = 'error';
+                    }
+                } catch (error) {
+                    status.textContent = 'Error uploading image: ' + error.message;
+                    status.className = 'error';
+                    console.error('Upload error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

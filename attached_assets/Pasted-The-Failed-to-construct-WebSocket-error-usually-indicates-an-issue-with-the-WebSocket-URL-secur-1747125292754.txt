@@ -1,0 +1,50 @@
+The "Failed to construct 'WebSocket'" error usually indicates an issue with the WebSocket URL, security, or configuration. Common causes include incorrect URL format, insecure connections from secure pages, or problems with server-side WebSocket setup. 
+Troubleshooting Steps:
+1. Verify the WebSocket URL:
+Ensure the URL is correctly formatted (e.g., ws://localhost:8080 or wss://yourserver.com/ws). 
+Check for any typos or incorrect port numbers. 
+If using wss://, ensure the server is configured for secure connections. 
+2. Check Security:
+Browsers prevent insecure WebSocket connections from secure pages (https://). 
+If your WebSocket server is running on the same domain as your web page, you may not need to change anything.
+If different domains, you'll need to configure CORS (Cross-Origin Resource Sharing) on the server. 
+3. Inspect Server-Side Configuration:
+Make sure your WebSocket server is running and accessible on the specified port. 
+Check for any errors or warnings in the server logs. 
+If using a web server (e.g., Nginx) with WebSocket, ensure it's configured correctly to handle WebSocket connections. 
+4. Disable Extensions (if applicable):
+Sometimes browser extensions can interfere with WebSocket connections. 
+Try disabling extensions one by one to see if one is the culprit. 
+5. Check for Browser Issues:
+If you're using a browser that is not fully compatible with WebSockets, try a different browser. 
+6. Inspect Code:
+Ensure your code correctly instantiates the WebSocket object:
+JavaScript
+
+     const ws = new WebSocket("ws://localhost:8080");
+Make sure you're handling the WebSocket events (e.g., onopen, onmessage, onclose, onerror) properly. 
+Example (Correct WebSocket URL):
+JavaScript
+
+const ws = new WebSocket("ws://localhost:8080");
+
+ws.onopen = () => {
+  console.log("Connected to WebSocket");
+  ws.send("Hello, server!");
+};
+
+ws.onmessage = (event) => {
+  console.log("Received: ", event.data);
+};
+
+ws.onclose = () => {
+  console.log("Disconnected from WebSocket");
+};
+
+ws.onerror = (error) => {
+  console.error("WebSocket error: ", error);
+};
+Example (Secure WebSocket URL):
+JavaScript
+
+const ws = new WebSocket("wss://yourserver.com/ws");

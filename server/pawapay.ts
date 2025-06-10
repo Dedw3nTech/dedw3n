@@ -1,0 +1,367 @@
+import { Request, Response } from 'express';
+import { storage } from './storage';
+import crypto from 'crypto';
+
+// Pawapay transaction types
+interface PawapayTransaction {
+  id: string;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING' | 'CANCELLED';
+  type: 'DEPOSIT' | 'PAYOUT' | 'REFUND';
+  amount: number;
+  currency: string;
+  phoneNumber: string;
+  provider: string;
+  userId?: number;
+  metadata?: any;
+  errorCode?: string;
+  errorMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// In-memory storage for Pawapay transactions (in production, use database)
+const pawapayTransactions = new Map<string, PawapayTransaction>();
+
+// Pawapay webhook signature verification
+const PAWAPAY_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEYZe9jhnaZKw9ykMBe2IwRg6AgVMx
+2JRE3RMIdf4YazZTaQaUO19uDI5UO0QsTG699UeI+emd63/GY1PyOpf1rw==
+-----END PUBLIC KEY-----`;
+
+const PAWAPAY_PUBLIC_KEY_ID = 'HTTP_EC_P256_KEY:1';
+
+function verifyWebhookSignature(payload: string, signature: string, keyId: string): boolean {
+  try {
+    if (keyId !== PAWAPAY_PUBLIC_KEY_ID) {
+      console.error('Invalid Pawapay public key ID:', keyId);
+      return false;
+    }
+
+    // Extract signature from base64
+    const signatureBuffer = Buffer.from(signature, 'base64');
+    
+    // Create verifier
+    const verifier = crypto.createVerify('SHA256');
+    verifier.update(payload);
+    
+    // Verify signature
+    return verifier.verify(PAWAPAY_PUBLIC_KEY, signatureBuffer);
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error);
+    return false;
+  }
+}
+
+// Process deposit callback from Pawapay
+export async function handleDepositCallback(req: Request, res: Response) {
+  try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
+    const {
+      transactionId,
+      status,
+      amount,
+      currency,
+      phoneNumber,
+      provider,
+      timestamp,
+      errorCode,
+      errorMessage
+    } = req.body;
+
+    if (!transactionId || !status) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Store/update transaction in memory (in production, save to database)
+    const transaction: PawapayTransaction = {
+      id: transactionId,
+      status,
+      type: 'DEPOSIT',
+      amount: parseFloat(amount) || 0,
+      currency: currency || 'USD',
+      phoneNumber: phoneNumber || '',
+      provider: provider || '',
+      errorCode,
+      errorMessage,
+      createdAt: new Date(timestamp || Date.now()),
+      updatedAt: new Date()
+    };
+
+    pawapayTransactions.set(transactionId, transaction);
+
+    // If successful, update user's wallet balance (implement wallet logic)
+    if (status === 'SUCCESS' && req.user?.id) {
+      // Add amount to user's wallet
+      console.log(`Deposit successful: ${amount} ${currency} for user ${req.user.id}`);
+      
+      // Create notification for user
+      await storage.createNotification({
+        userId: req.user.id,
+        type: 'payment',
+        content: `Your deposit of ${amount} ${currency} has been processed successfully.`
+      });
+    } else if (status === 'FAILED') {
+      console.log(`Deposit failed: ${errorMessage} (Code: ${errorCode})`);
+      
+      if (req.user?.id) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'payment',
+          content: `Your deposit could not be processed. ${errorMessage || 'Please try again.'}`
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      transaction,
+      message: 'Deposit callback processed successfully'
+    });
+
+  } catch (error) {
+    console.error('Deposit callback error:', error);
+    res.status(500).json({ error: 'Failed to process deposit callback' });
+  }
+}
+
+// Process payout callback from Pawapay
+export async function handlePayoutCallback(req: Request, res: Response) {
+  try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
+    const {
+      payoutId,
+      status,
+      amount,
+      currency,
+      recipientPhone,
+      provider,
+      timestamp,
+      errorCode,
+      errorMessage,
+      fee,
+      exchangeRate
+    } = req.body;
+
+    if (!payoutId || !status) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const transaction: PawapayTransaction = {
+      id: payoutId,
+      status,
+      type: 'PAYOUT',
+      amount: parseFloat(amount) || 0,
+      currency: currency || 'USD',
+      phoneNumber: recipientPhone || '',
+      provider: provider || '',
+      errorCode,
+      errorMessage,
+      metadata: { fee, exchangeRate },
+      createdAt: new Date(timestamp || Date.now()),
+      updatedAt: new Date()
+    };
+
+    pawapayTransactions.set(payoutId, transaction);
+
+    if (status === 'SUCCESS') {
+      console.log(`Payout successful: ${amount} ${currency} to ${recipientPhone}`);
+      
+      if (req.user?.id) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'payment',
+          content: `Your payout of ${amount} ${currency} has been sent successfully.`
+        });
+      }
+    } else if (status === 'FAILED') {
+      console.log(`Payout failed: ${errorMessage} (Code: ${errorCode})`);
+      
+      if (req.user?.id) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'payment',
+          content: `Your payout could not be sent. ${errorMessage || 'Please contact support.'}`
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      transaction,
+      message: 'Payout callback processed successfully'
+    });
+
+  } catch (error) {
+    console.error('Payout callback error:', error);
+    res.status(500).json({ error: 'Failed to process payout callback' });
+  }
+}
+
+// Process refund callback from Pawapay
+export async function handleRefundCallback(req: Request, res: Response) {
+  try {
+    // Verify webhook signature
+    const signature = req.headers['x-pawapay-signature'] as string;
+    const keyId = req.headers['x-pawapay-key-id'] as string;
+    const rawBody = JSON.stringify(req.body);
+
+    if (!signature || !keyId) {
+      console.error('Missing Pawapay webhook signature headers');
+      return res.status(401).json({ error: 'Unauthorized - Missing signature' });
+    }
+
+    if (!verifyWebhookSignature(rawBody, signature, keyId)) {
+      console.error('Invalid Pawapay webhook signature');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
+    }
+
+    const {
+      refundId,
+      status,
+      originalTransactionId,
+      amount,
+      currency,
+      recipientPhone,
+      provider,
+      timestamp,
+      errorCode,
+      errorMessage,
+      refundReason,
+      processingFee
+    } = req.body;
+
+    if (!refundId || !status) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const transaction: PawapayTransaction = {
+      id: refundId,
+      status,
+      type: 'REFUND',
+      amount: parseFloat(amount) || 0,
+      currency: currency || 'USD',
+      phoneNumber: recipientPhone || '',
+      provider: provider || '',
+      errorCode,
+      errorMessage,
+      metadata: { 
+        originalTransactionId, 
+        refundReason, 
+        processingFee 
+      },
+      createdAt: new Date(timestamp || Date.now()),
+      updatedAt: new Date()
+    };
+
+    pawapayTransactions.set(refundId, transaction);
+
+    if (status === 'SUCCESS') {
+      console.log(`Refund successful: ${amount} ${currency} for transaction ${originalTransactionId}`);
+      
+      if (req.user?.id) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'payment',
+          content: `Your refund of ${amount} ${currency} has been processed successfully.`
+        });
+      }
+    } else if (status === 'FAILED') {
+      console.log(`Refund failed: ${errorMessage} (Code: ${errorCode})`);
+      
+      if (req.user?.id) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'payment',
+          content: `Your refund could not be processed. ${errorMessage || 'Please contact support.'}`
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      transaction,
+      message: 'Refund callback processed successfully'
+    });
+
+  } catch (error) {
+    console.error('Refund callback error:', error);
+    res.status(500).json({ error: 'Failed to process refund callback' });
+  }
+}
+
+// Get transaction status
+export async function getTransactionStatus(req: Request, res: Response) {
+  try {
+    const { transactionId } = req.params;
+    
+    const transaction = pawapayTransactions.get(transactionId);
+    
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+    
+    res.json(transaction);
+  } catch (error) {
+    console.error('Get transaction status error:', error);
+    res.status(500).json({ error: 'Failed to get transaction status' });
+  }
+}
+
+// List user transactions
+export async function getUserTransactions(req: Request, res: Response) {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Filter transactions by userId (in production, query database)
+    const userTransactions = Array.from(pawapayTransactions.values())
+      .filter(tx => tx.userId === req.user?.id)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    res.json(userTransactions);
+  } catch (error) {
+    console.error('Get user transactions error:', error);
+    res.status(500).json({ error: 'Failed to get user transactions' });
+  }
+}
+
+// Register Pawapay routes
+export function registerPawapayRoutes(app: any) {
+  // Webhook endpoints (these receive calls from Pawapay)
+  app.post('/api/pawapay/deposit/callback', handleDepositCallback);
+  app.post('/api/pawapay/payout/callback', handlePayoutCallback);
+  app.post('/api/pawapay/refund/callback', handleRefundCallback);
+  
+  // API endpoints for transaction management
+  app.get('/api/pawapay/transaction/:transactionId', getTransactionStatus);
+  app.get('/api/pawapay/transactions', getUserTransactions);
+}
