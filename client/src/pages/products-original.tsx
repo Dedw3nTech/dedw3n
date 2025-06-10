@@ -346,7 +346,7 @@ export default function Products() {
         <div className="px-3">
           <Slider
             value={priceRange}
-            onValueChange={(value) => setPriceRange(value as [number, number])}
+            onValueChange={setPriceRange}
             max={1000}
             step={10}
             className="w-full"
@@ -384,9 +384,7 @@ export default function Products() {
         <div className="flex gap-6">
           {/* Left Sidebar - Desktop */}
           <div className="hidden lg:block w-64 bg-white rounded-lg shadow-sm h-fit">
-            <div className="p-4">
-              <FilterContent />
-            </div>
+            <FilterContent />
           </div>
 
           {/* Main Content */}
@@ -398,25 +396,10 @@ export default function Products() {
                   <span className="text-sm text-gray-600">
                     {products.length} products found
                   </span>
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="outline" size="sm" className="lg:hidden">
-                        <SlidersHorizontal className="h-4 w-4 mr-2" />
-                        Filters
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-80">
-                      <SheetHeader>
-                        <SheetTitle>Filters</SheetTitle>
-                        <SheetDescription>
-                          Refine your product search
-                        </SheetDescription>
-                      </SheetHeader>
-                      <div className="mt-6">
-                        <FilterContent />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
+                  <Button variant="outline" size="sm" className="lg:hidden">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -507,7 +490,7 @@ export default function Products() {
                             <Badge className="bg-red-500 text-white text-xs">Sale</Badge>
                           )}
                         </div>
-                        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-2 right-2 flex flex-col gap-1">
                           <Button 
                             size="sm" 
                             variant="outline" 
@@ -596,6 +579,26 @@ export default function Products() {
             )}
           </div>
         </div>
+
+        {/* Mobile Filter Sheet */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="lg:hidden fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg">
+              <Filter className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription>
+                Refine your product search
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6">
+              <FilterContent />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
