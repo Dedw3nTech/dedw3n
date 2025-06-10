@@ -7,6 +7,8 @@ import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-
 import { generateProductCode } from "./product-code-generator";
 import { cacheManager } from "./cache-manager";
 import { performanceMonitor } from "./performance-monitor";
+import { cacheMiddleware } from "./cache-middleware";
+import { cacheInvalidator } from "./cache-invalidator";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -665,21 +667,31 @@ export class DatabaseStorage implements IStorage {
   
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return await cacheMiddleware.cacheOrFetch(
+      `user:${id}`,
+      async () => {
+        const [user] = await db.select().from(users).where(eq(users.id, id));
+        return user;
+      },
+      { ttl: 10 * 60 * 1000, category: 'user' }
+    );
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // Use SQL LOWER function to perform case-insensitive username lookup
-    // This will help with login issues where username case doesn't match exactly
-    try {
-      const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
-      console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
-      return user;
-    } catch (error) {
-      console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
-      return undefined;
-    }
+    return await cacheMiddleware.cacheOrFetch(
+      `user:username:${username.toLowerCase()}`,
+      async () => {
+        try {
+          const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
+          console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
+          return user;
+        } catch (error) {
+          console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
+          return undefined;
+        }
+      },
+      { ttl: 15 * 60 * 1000, category: 'user' }
+    );
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
