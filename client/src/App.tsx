@@ -18,7 +18,7 @@ import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
 
-import { EnterpriseTranslator } from "@/components/EnterpriseTranslator";
+import { DeepLMachineTranslator } from "@/components/DeepLMachineTranslator";
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
