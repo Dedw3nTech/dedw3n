@@ -17,7 +17,7 @@ import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider"
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
-import { useSiteTranslator } from "@/hooks/use-site-translator";
+
 import { GlobalTranslator } from "@/components/GlobalTranslator";
 
 import { initializeOfflineDetection } from "@/lib/offline";
