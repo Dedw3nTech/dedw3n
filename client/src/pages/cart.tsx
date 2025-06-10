@@ -174,8 +174,9 @@ export default function Cart() {
   // Use dynamic shipping cost instead of calculated one
   const shippingCost = dynamicShippingCost;
   
-  // Calculate 1.5% transaction commission on subtotal
-  const transactionCommission = subtotal * 0.015;
+  // Calculate 1.5% transaction commission on subtotal with £2 minimum
+  const calculatedCommission = subtotal * 0.015;
+  const transactionCommission = subtotal > 0 ? Math.max(calculatedCommission, 2) : 0;
   
   // Recalculate total with commission
   const total = subtotal + shippingCost + tax + transactionCommission;
@@ -351,7 +352,7 @@ export default function Cart() {
                     <span className="font-medium">{formatPriceFromGBP(tax)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{translateText('Dedw3n 1.5%')}</span>
+                    <span className="text-gray-600">{translateText('Dedw3n 1.5%')} (min £2)</span>
                     <span className="font-medium">{formatPriceFromGBP(transactionCommission)}</span>
                   </div>
                   <div className="border-t pt-2 mt-2">
@@ -488,7 +489,7 @@ export default function Cart() {
                 </tr>
                 <tr>
                   <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
-                    {translateText('Dedw3n 1.5% Transaction Commission')}
+                    {translateText('Dedw3n 1.5% Transaction Commission')} (min £2)
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
                     {formatPriceFromGBP(transactionCommission)}
