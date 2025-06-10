@@ -69,6 +69,7 @@ const productSchema = z.object({
   requiresShipping: z.boolean().default(true),
   shippingCarrier: z.string().optional(),
   shippingPrice: z.coerce.number().nonnegative().optional(),
+  variableShippingPrice: z.coerce.number().nonnegative().optional(),
   shippingIncluded: z.boolean().default(false),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
@@ -241,7 +242,11 @@ export default function AddProduct() {
     "kg",
     "lb", 
     "oz",
-    "g"
+    "g",
+    
+    // Shipping Price Types
+    "Fixed Shipping Price",
+    "Variable Shipping Price"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -278,6 +283,8 @@ export default function AddProduct() {
       continueSellingWhenOutOfStock: false,
       requiresShipping: true,
       shippingCarrier: '',
+      shippingPrice: undefined,
+      variableShippingPrice: undefined,
       shippingIncluded: false,
       seoTitle: '',
       seoDescription: '',
@@ -910,6 +917,24 @@ export default function AddProduct() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
+                              <FormControl>
+                                <CurrencyInput
+                                  value={field.value || 0}
+                                  onValueChange={field.onChange}
+                                  placeholder={t("0.00")}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="variableShippingPrice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Variable Shipping Price")}</FormLabel>
                               <FormControl>
                                 <CurrencyInput
                                   value={field.value || 0}
