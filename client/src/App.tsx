@@ -20,7 +20,7 @@ import { LowerCookieBanner } from "@/components/LowerCookieBanner";
 
 import { DeepLMachineTranslator } from "@/components/DeepLMachineTranslator";
 import { DeepLTranslationProvider } from "@/components/DeepLTranslationProvider";
-import { ComprehensiveTranslationSystem } from "@/components/ComprehensiveTranslationSystem";
+import { OptimizedTranslationSystem } from "@/components/OptimizedTranslationSystem";
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
@@ -431,7 +431,7 @@ function App() {
                               <ErrorBoundary>
                               <div className="flex flex-col min-h-screen">
                                 <DeepLMachineTranslator />
-                                <ComprehensiveTranslationSystem />
+                                <OptimizedTranslationSystem />
                           <SafeComponentWrapper componentName="OptimizedNavigation">
                             <OptimizedNavigation />
                           </SafeComponentWrapper>

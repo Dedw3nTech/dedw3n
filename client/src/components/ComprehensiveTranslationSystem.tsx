@@ -61,6 +61,9 @@ class TranslationCore {
       const tagName = element.tagName?.toLowerCase();
       if (['script', 'style', 'noscript', 'meta', 'link'].includes(tagName)) return;
 
+      // Skip already translated elements
+      if (element.hasAttribute('data-translated')) return;
+
       // Text content
       if (element.children.length === 0) {
         const text = element.textContent?.trim();
@@ -76,6 +79,8 @@ class TranslationCore {
 
       // Attributes
       ['placeholder', 'alt', 'title', 'aria-label'].forEach(attr => {
+        if (element.hasAttribute(`data-${attr}-translated`)) return;
+        
         const value = element.getAttribute(attr);
         if (value && this.isValidText(value)) {
           if (!textMap.has(value)) textMap.set(value, []);
@@ -97,15 +102,17 @@ class TranslationCore {
 
     translations.forEach((translation, original) => {
       const elements = elementMap.get(original);
-      if (!elements) return;
+      if (!elements || translation === original) return;
 
       elements.forEach(({ element, type, attribute }) => {
         try {
           if (type === 'text' && element.textContent?.trim() === original) {
             element.textContent = translation;
+            element.setAttribute('data-translated', 'true');
             applied++;
           } else if (type === 'attribute' && attribute && element.getAttribute(attribute) === original) {
             element.setAttribute(attribute, translation);
+            element.setAttribute(`data-${attribute}-translated`, 'true');
             if (attribute === 'placeholder' && element instanceof HTMLInputElement) {
               element.placeholder = translation;
             }
@@ -181,6 +188,24 @@ class TranslationCore {
 
   updateLanguage(newLanguage: string): void {
     this.currentLang = newLanguage;
+    
+    // Clear translation markers when language changes
+    document.querySelectorAll('[data-translated]').forEach(el => {
+      el.removeAttribute('data-translated');
+    });
+    document.querySelectorAll('[data-placeholder-translated]').forEach(el => {
+      el.removeAttribute('data-placeholder-translated');
+    });
+    document.querySelectorAll('[data-alt-translated]').forEach(el => {
+      el.removeAttribute('data-alt-translated');
+    });
+    document.querySelectorAll('[data-title-translated]').forEach(el => {
+      el.removeAttribute('data-title-translated');
+    });
+    document.querySelectorAll('[data-aria-label-translated]').forEach(el => {
+      el.removeAttribute('data-aria-label-translated');
+    });
+    
     if (newLanguage !== 'EN') {
       setTimeout(() => this.translatePage(), 100);
     }
