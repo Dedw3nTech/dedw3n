@@ -330,6 +330,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Escrow.com API Integration
+  app.post('/api/escrow/create-transaction', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { amount, currency, description, buyerEmail, items } = req.body;
+      
+      if (!process.env.ESCROW_API_KEY) {
+        return res.status(500).json({ message: 'Escrow API key not configured' });
+      }
+
+      // Create escrow transaction using escrow.com API
+      const escrowResponse = await fetch('https://api.escrow.com/2017-09-01/transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.ESCROW_API_KEY}`
+        },
+        body: JSON.stringify({
+          parties: [
+            {
+              role: 'buyer',
+              customer: {
+                email: buyerEmail
+              }
+            }
+          ],
+          currency: currency || 'USD',
+          description: description || 'Marketplace Transaction',
+          items: items.map((item: any) => ({
+            title: item.name,
+            description: `Quantity: ${item.quantity}`,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        })
+      });
+
+      if (!escrowResponse.ok) {
+        const errorData = await escrowResponse.text();
+        console.error('Escrow API error:', errorData);
+        return res.status(400).json({ message: 'Failed to create escrow transaction' });
+      }
+
+      const escrowData = await escrowResponse.json();
+      
+      res.json({
+        id: escrowData.id,
+        status: escrowData.status,
+        amount: amount,
+        currency: currency,
+        escrow_url: escrowData.agreement_url
+      });
+    } catch (error) {
+      console.error('Error creating escrow transaction:', error);
+      res.status(500).json({ message: 'Failed to create escrow transaction' });
+    }
+  });
   // Apply fraud risk middleware to all routes
   app.use(fraudRiskMiddleware);
   

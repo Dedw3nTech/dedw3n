@@ -10,7 +10,7 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -26,7 +26,10 @@ export default function Cart() {
   const { formatPriceFromGBP } = useCurrency();
   const { translateText } = useMasterTranslation();
   
-
+  // Escrow state management
+  const [useEscrow, setUseEscrow] = useState(false);
+  const [escrowTransaction, setEscrowTransaction] = useState<any>(null);
+  const [escrowLoading, setEscrowLoading] = useState(false);
   
   // Show authentication message if not logged in
   if (!user) {
@@ -120,8 +123,48 @@ export default function Cart() {
   
 
 
+  // Escrow transaction handler
+  const handleEscrowTransaction = async () => {
+    if (escrowLoading) return;
+    
+    setEscrowLoading(true);
+    try {
+      const escrowData = {
+        amount: total,
+        currency: 'GBP',
+        description: `Marketplace purchase - ${cartItems.length} item(s)`,
+        buyerEmail: user?.email,
+        items: cartItems.map((item: any) => ({
+          name: item.product?.name || 'Product',
+          price: item.product?.price || 0,
+          quantity: item.quantity
+        }))
+      };
+
+      const response = await apiRequest('/api/escrow/create-transaction', 'POST', escrowData);
+
+      setEscrowTransaction(response);
+      toast({
+        title: translateText('Escrow Transaction Created'),
+        description: translateText('Your secure payment has been initialized'),
+      });
+    } catch (error: any) {
+      toast({
+        title: translateText('Error'),
+        description: error.message || translateText('Failed to create escrow transaction'),
+        variant: 'destructive',
+      });
+    } finally {
+      setEscrowLoading(false);
+    }
+  };
+
   // Proceed to checkout handler
   const handleCheckout = () => {
+    if (useEscrow && !escrowTransaction) {
+      handleEscrowTransaction();
+      return;
+    }
     setLocation('/checkout-new');
   };
   
@@ -489,6 +532,42 @@ export default function Cart() {
             </div>
           )}
         </CardContent>
+
+        {/* Escrow Payment Option */}
+        <div className="px-6 py-4 border-t">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-black" />
+              <span className="text-sm font-medium text-black">{translateText('Secure Payment')}</span>
+            </div>
+            <button
+              onClick={() => setUseEscrow(!useEscrow)}
+              className={`w-5 h-5 border border-black flex items-center justify-center transition-colors ${
+                useEscrow ? 'bg-black' : 'bg-white'
+              }`}
+            >
+              {useEscrow && <Check className="h-3 w-3 text-white" />}
+            </button>
+          </div>
+          
+          {useEscrow && (
+            <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded">
+              <p className="text-xs text-black mb-2">
+                {translateText('Payment held securely until delivery confirmed')}
+              </p>
+              {escrowTransaction && (
+                <div className="text-xs text-black">
+                  <span className="font-medium">{translateText('Transaction ID')}: </span>
+                  <span className="font-mono">{escrowTransaction.id}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <p className="text-xs text-gray-600">
+            {translateText('Use escrow.com for buyer protection and secure transactions')}
+          </p>
+        </div>
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
