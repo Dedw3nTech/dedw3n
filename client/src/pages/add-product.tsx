@@ -950,7 +950,8 @@ export default function AddProduct() {
                               name="shippingPrice"
                               render={({ field }) => {
                                 const basePrice = field.value || 0;
-                                const commission = basePrice * 0.015;
+                                const calculatedCommission = basePrice * 0.015;
+                                const commission = basePrice > 0 ? Math.max(calculatedCommission, 2) : 0; // Minimum £2 commission
                                 const totalPrice = basePrice + commission;
                                 
                                 return (
@@ -964,10 +965,10 @@ export default function AddProduct() {
                                       />
                                     </FormControl>
                                     <div className="text-xs font-normal text-gray-600 mt-1">
-                                      {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                      {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
                                       {basePrice > 0 && (
                                         <span className="ml-2 text-gray-800">
-                                          (Total: ${totalPrice.toFixed(2)})
+                                          (Fee: £{commission.toFixed(2)}, Total: £{totalPrice.toFixed(2)})
                                         </span>
                                       )}
                                     </div>
@@ -985,7 +986,8 @@ export default function AddProduct() {
                               name="variableShippingPrice"
                               render={({ field }) => {
                                 const basePrice = field.value || 0;
-                                const commission = basePrice * 0.015;
+                                const calculatedCommission = basePrice * 0.015;
+                                const commission = basePrice > 0 ? Math.max(calculatedCommission, 2) : 0; // Minimum £2 commission
                                 const totalPrice = basePrice + commission;
                                 
                                 return (
@@ -999,10 +1001,10 @@ export default function AddProduct() {
                                       />
                                     </FormControl>
                                     <div className="text-xs font-normal text-gray-600 mt-1">
-                                      {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                      {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
                                       {basePrice > 0 && (
                                         <span className="ml-2 text-gray-800">
-                                          (Total: ${totalPrice.toFixed(2)})
+                                          (Fee: £{commission.toFixed(2)}, Total: £{totalPrice.toFixed(2)})
                                         </span>
                                       )}
                                     </div>
@@ -1024,7 +1026,7 @@ export default function AddProduct() {
                                 className="mt-1"
                               />
                               <div className="text-xs font-normal text-gray-400 mt-1">
-                                {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
                               </div>
                             </div>
                           )}
@@ -1039,7 +1041,7 @@ export default function AddProduct() {
                                 className="mt-1"
                               />
                               <div className="text-xs font-normal text-gray-400 mt-1">
-                                {t("1.5% Dedw3n Shipping Fee will be applied")}
+                                {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
                               </div>
                             </div>
                           )}
