@@ -56,6 +56,16 @@ function removeConnection(userId: number, connection: WebSocket) {
       broadcastUserStatus(userId, false);
     }
   }
+  
+  // Enhanced cleanup to prevent memory leaks
+  if ((connection as any)._pingInterval) {
+    clearInterval((connection as any)._pingInterval);
+    (connection as any)._pingInterval = null;
+  }
+  
+  // Clear custom properties
+  (connection as any)._connectionInfo = null;
+  (connection as any)._userId = null;
 }
 
 function broadcastUserStatus(userId: number, isOnline: boolean) {

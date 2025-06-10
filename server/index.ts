@@ -11,6 +11,7 @@ import { registerImageRoutes } from "./image-handler";
 import { registerMediaRoutes } from "./media-handler";
 import { registerMulterRoutes } from "./multer-media-handler";
 import { gpcMiddleware, applyGPCHeaders } from "./gpc-middleware";
+import { performanceMonitor } from "./performance-monitor";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -22,6 +23,17 @@ declare global {
 }
 
 const app = express();
+
+// Global error handlers for performance and stability
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Log to monitoring system in production
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Log to monitoring system in production
+});
 
 // Add GPC middleware early in the chain
 app.use(gpcMiddleware);
