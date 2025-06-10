@@ -21,6 +21,8 @@ import { phase3CacheExpansion } from "./phase3-cache-expansion";
 import { cacheStrategyOptimizer } from "./cache-strategy-optimizer";
 import { cacheAccelerationEngine } from "./cache-acceleration-engine";
 import { finalCacheOptimization } from "./final-cache-optimization";
+import { cacheWarmupAccelerator } from "./cache-warmup-accelerator";
+import { cachePerformanceBooster } from "./cache-performance-booster";
 import { EventEmitter } from 'events';
 // Removed storage import to prevent errors
 
@@ -183,6 +185,8 @@ app.use((req, res, next) => {
         cacheStrategy: cacheStrategyOptimizer.getOptimizationStats(),
         cacheAcceleration: cacheAccelerationEngine.getAccelerationStats(),
         finalOptimization: finalCacheOptimization.getFinalOptimizationStats(),
+        warmupAccelerator: cacheWarmupAccelerator.getWarmupStats(),
+        performanceBooster: cachePerformanceBooster.getBoosterStats(),
         server: {
           uptime: Math.round(process.uptime() / 60),
           nodeVersion: process.version,
