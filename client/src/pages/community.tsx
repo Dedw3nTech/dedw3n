@@ -347,7 +347,6 @@ export default function CommunityPage() {
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
-              <TrendingProductsToolbar />
               <ProfileSideCard />
             </div>
           </div>
