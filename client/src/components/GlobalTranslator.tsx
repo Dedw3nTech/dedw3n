@@ -8,6 +8,7 @@ export function GlobalTranslator() {
 
   useEffect(() => {
     // Auto-translate all visible text when language or location changes
+    console.log(`[Global Translator] Language changed to: ${currentLanguage}, Location: ${location}`);
     if (currentLanguage !== 'EN') {
       const timer = setTimeout(() => {
         translatePageContent();
@@ -16,6 +17,18 @@ export function GlobalTranslator() {
       return () => clearTimeout(timer);
     }
   }, [location, currentLanguage]);
+
+  // Also trigger translation on mount
+  useEffect(() => {
+    if (currentLanguage !== 'EN') {
+      const timer = setTimeout(() => {
+        console.log('[Global Translator] Initial translation trigger');
+        translatePageContent();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const translatePageContent = async () => {
     if (currentLanguage === 'EN') return;
@@ -35,6 +48,8 @@ export function GlobalTranslator() {
         nodeMap.get(text)!.push(node);
       }
     });
+
+    console.log(`[Global Translator] Found ${textsToTranslate.length} texts to translate:`, textsToTranslate.slice(0, 10));
 
     if (textsToTranslate.length === 0) return;
 
@@ -83,7 +98,12 @@ export function GlobalTranslator() {
           }
           
           const text = node.textContent?.trim();
-          if (!text || text.length < 2) {
+          if (!text || text.length < 1) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          
+          // Skip pure numbers, symbols, and single characters
+          if (/^[\d\s\(\)]+$/.test(text) || text.length === 1) {
             return NodeFilter.FILTER_REJECT;
           }
           
@@ -98,6 +118,7 @@ export function GlobalTranslator() {
       textNodes.push(node as Text);
     }
     
+    console.log(`[Global Translator] Found ${textNodes.length} text nodes in DOM`);
     return textNodes;
   };
 
