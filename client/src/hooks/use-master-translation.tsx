@@ -495,35 +495,6 @@ class MasterTranslationManager {
     }
   }
 
-  // Language change cache invalidation
-  invalidateLanguageCache(newLanguage: string): void {
-    const keysToDelete: string[] = [];
-    
-    // Find all cached entries that are NOT for the new language
-    Array.from(this.cache.entries()).forEach(([key, entry]) => {
-      if (entry.language !== newLanguage) {
-        keysToDelete.push(key);
-      }
-    });
-    
-    // Remove outdated language entries
-    keysToDelete.forEach(key => {
-      this.cache.delete(key);
-    });
-    
-    // Clear localStorage cache for language change
-    localStorage.removeItem('masterTranslationCache');
-    
-    console.log(`[Master Translation] Cache cleared for language change. Removed ${keysToDelete.length} entries`);
-  }
-
-  // Clear all cache (for debugging/reset purposes)
-  clearAllCache(): void {
-    this.cache.clear();
-    localStorage.removeItem('masterTranslationCache');
-    console.log('[Master Translation] All cache cleared');
-  }
-
   // Analytics and monitoring
   getCacheStats(): {
     totalEntries: number;
@@ -646,9 +617,6 @@ export function useMasterBatchTranslation(
   }, []);
 
   useEffect(() => {
-    // Clear translation cache when language changes to force fresh translations
-    masterTranslationManager.invalidateLanguageCache(currentLanguage);
-    
     // Always reset translations when language changes to force refresh
     setTranslations(stableTexts);
     
@@ -823,13 +791,5 @@ export function useTypedTranslation() {
 
   return translationProxy;
 }
-
-// Export function for clearing cache from Language Context
-export function clearMasterTranslationCache() {
-  const manager = MasterTranslationManager.getInstance();
-  manager.clearAllCache();
-}
-
-
 
 export { type TranslationPriority };

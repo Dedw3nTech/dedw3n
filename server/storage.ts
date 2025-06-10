@@ -2,13 +2,9 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
-import { db } from "./db";
+import { pool, db } from "./db";
 import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-orm";
 import { generateProductCode } from "./product-code-generator";
-import { cacheManager } from "./cache-manager";
-import { performanceMonitor } from "./performance-monitor";
-import { cacheMiddleware } from "./cache-middleware";
-import { cacheInvalidator } from "./cache-invalidator";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -21,7 +17,7 @@ import {
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
-
+  chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
   datingProfiles, storeUsers,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
@@ -35,7 +31,8 @@ import {
   type LikedProduct, type InsertLikedProduct,
   type GiftProposition, type InsertGiftProposition,
   type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
-
+  type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
+  type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
   type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser
 } from "@shared/schema";
 
@@ -301,22 +298,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserConversations(userId: number): Promise<any[]> {
-    return await cacheMiddleware.cacheOrFetch(
-      `conversations:${userId}`,
-      async () => {
-        return messageHelpers.getUserConversations(userId);
-      },
-      { ttl: 60 * 1000, category: 'user' }
-    );
+    return messageHelpers.getUserConversations(userId);
   }
   
   async createMessage(message: InsertMessage): Promise<Message> {
-    const result = await messageHelpers.createMessage(message);
-    
-    // Invalidate message-related caches
-    cacheInvalidator.invalidateMessage(message.senderId, message.receiverId);
-    
-    return result;
+    return messageHelpers.createMessage(message);
   }
   
   async markMessageAsRead(id: number): Promise<Message | undefined> {
@@ -324,13 +310,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUnreadMessageCount(userId: number): Promise<number> {
-    return await cacheMiddleware.cacheOrFetch(
-      `unread:messages:${userId}`,
-      async () => {
-        return messageHelpers.getUnreadMessagesCount(userId);
-      },
-      { ttl: 30 * 1000, category: 'user' }
-    );
+    return messageHelpers.getUnreadMessagesCount(userId);
   }
   
   async deleteMessage(id: number): Promise<boolean> {
@@ -511,10 +491,6 @@ export class DatabaseStorage implements IStorage {
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     try {
       const [newNotification] = await db.insert(notifications).values(notificationData).returning();
-      
-      // Invalidate notification cache for the user
-      cacheInvalidator.invalidateNotification(notificationData.userId);
-      
       return newNotification;
     } catch (error) {
       console.error('Error creating notification:', error);
@@ -523,62 +499,50 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
-    return await cacheMiddleware.cacheOrFetch(
-      `notifications:${userId}:${limit}`,
-      async () => {
-        try {
-          const result = await db.execute(
-            sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
-                FROM notifications 
-                WHERE user_id = ${userId} 
-                ORDER BY created_at DESC 
-                LIMIT ${limit}`
-          );
-          
-          return result.rows.map(row => ({
-            id: row.id as number,
-            userId: row.user_id as number,
-            type: row.type as any,
-            title: row.title as string,
-            content: row.content as string,
-            isRead: row.is_read as boolean,
-            sourceId: row.source_id as number,
-            sourceType: row.source_type as string,
-            actorId: row.actor_id as number,
-            createdAt: row.created_at as Date
-          }));
-        } catch (error) {
-          console.error('Error getting notifications:', error);
-          return [];
-        }
-      },
-      { ttl: 2 * 60 * 1000, category: 'user' }
-    );
+    try {
+      const result = await db.execute(
+        sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
+            FROM notifications 
+            WHERE user_id = ${userId} 
+            ORDER BY created_at DESC 
+            LIMIT ${limit}`
+      );
+      
+      return result.rows.map(row => ({
+        id: row.id as number,
+        userId: row.user_id as number,
+        type: row.type as any,
+        title: row.title as string,
+        content: row.content as string,
+        isRead: row.is_read as boolean,
+        sourceId: row.source_id as number,
+        sourceType: row.source_type as string,
+        actorId: row.actor_id as number,
+        createdAt: row.created_at as Date
+      }));
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      return [];
+    }
   }
   
   async getUnreadNotificationCount(userId: number): Promise<number> {
-    return await cacheMiddleware.cacheOrFetch(
-      `unread:notifications:${userId}`,
-      async () => {
-        try {
-          const [result] = await db
-            .select({ count: count() })
-            .from(notifications)
-            .where(
-              and(
-                eq(notifications.userId, userId),
-                eq(notifications.isRead, false)
-              )
-            );
-          
-          return result?.count || 0;
-        } catch (error) {
-          console.error('Error getting unread notification count:', error);
-          return 0;
-        }
-      },
-      { ttl: 30 * 1000, category: 'user' }
-    );
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false)
+          )
+        );
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting unread notification count:', error);
+      return 0;
+    }
   }
   
   async markNotificationAsRead(id: number): Promise<Notification | undefined> {
@@ -588,11 +552,6 @@ export class DatabaseStorage implements IStorage {
         .set({ isRead: true })
         .where(eq(notifications.id, id))
         .returning();
-        
-      if (updatedNotification) {
-        // Invalidate related notification caches
-        cacheInvalidator.invalidateNotification(updatedNotification.userId);
-      }
         
       return updatedNotification;
     } catch (error) {
@@ -612,9 +571,6 @@ export class DatabaseStorage implements IStorage {
             eq(notifications.isRead, false)
           )
         );
-        
-      // Invalidate notification caches
-      cacheInvalidator.invalidateNotification(userId);
         
       return true;
     } catch (error) {
@@ -707,48 +663,33 @@ export class DatabaseStorage implements IStorage {
   
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return await cacheMiddleware.cacheOrFetch(
-      `user:${id}`,
-      async () => {
-        const [user] = await db.select().from(users).where(eq(users.id, id));
-        return user;
-      },
-      { ttl: 10 * 60 * 1000, category: 'user' }
-    );
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return await cacheMiddleware.cacheOrFetch(
-      `user:username:${username.toLowerCase()}`,
-      async () => {
-        try {
-          const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
-          console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
-          return user;
-        } catch (error) {
-          console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
-          return undefined;
-        }
-      },
-      { ttl: 15 * 60 * 1000, category: 'user' }
-    );
+    // Use SQL LOWER function to perform case-insensitive username lookup
+    // This will help with login issues where username case doesn't match exactly
+    try {
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
+      console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
+      return undefined;
+    }
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return await cacheMiddleware.cacheOrFetch(
-      `user:email:${email.toLowerCase()}`,
-      async () => {
-        try {
-          const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
-          console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
-          return user;
-        } catch (error) {
-          console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
-          return undefined;
-        }
-      },
-      { ttl: 15 * 60 * 1000, category: 'user' }
-    );
+    // Use SQL LOWER function to perform case-insensitive email lookup
+    try {
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
+      console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
+      return undefined;
+    }
   }
   
   async createUser(user: InsertUser): Promise<User> {
@@ -810,19 +751,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   async listCategories(): Promise<Category[]> {
-    const cacheKey = 'categories:all';
-    const cached = cacheManager.get(cacheKey);
-    if (cached) return cached;
-    
-    const result = await performanceMonitor.safeAsyncOperation(
-      () => db.select().from(categories),
-      'listCategories'
-    );
-    
-    if (result) {
-      cacheManager.set(cacheKey, result, 15 * 60 * 1000); // 15 minutes
-    }
-    return result || [];
+    return await db.select().from(categories);
   }
   
   // Vendor Sub-Account methods
@@ -993,36 +922,21 @@ export class DatabaseStorage implements IStorage {
   }
   
   async listCartItems(userId: number): Promise<(Cart & { product: Product })[]> {
-    const cacheKey = `cart:${userId}`;
-    const cached = cacheManager.get(cacheKey);
-    if (cached) return cached;
-    
     try {
-      const result = await performanceMonitor.safeAsyncOperation(
-        () => db
-          .select({
-            cart: carts,
-            product: products
-          })
-          .from(carts)
-          .innerJoin(products, eq(carts.productId, products.id))
-          .where(eq(carts.userId, userId))
-          .orderBy(desc(carts.createdAt)),
-        'listCartItems'
-      );
+      const cartItemsWithProducts = await db
+        .select({
+          cart: carts,
+          product: products
+        })
+        .from(carts)
+        .innerJoin(products, eq(carts.productId, products.id))
+        .where(eq(carts.userId, userId))
+        .orderBy(desc(carts.createdAt));
       
-      if (!result) return [];
-      
-      const cartItemsWithProducts = result;
-      
-      const finalResult = cartItemsWithProducts.map(({ cart, product }) => ({
+      return cartItemsWithProducts.map(({ cart, product }) => ({
         ...cart,
         product
       }));
-      
-      // Cache for 2 minutes
-      cacheManager.set(cacheKey, finalResult, 2 * 60 * 1000);
-      return finalResult;
     } catch (error) {
       console.error('Error listing cart items:', error);
       return [];
@@ -4166,35 +4080,24 @@ export class DatabaseStorage implements IStorage {
 
   // Add missing methods for API endpoints
   async getProducts(): Promise<Product[]> {
-    return await cacheMiddleware.cacheOrFetch(
-      'products:all',
-      async () => {
-        try {
-          return await db.select().from(products).orderBy(desc(products.createdAt));
-        } catch (error) {
-          console.error('Error getting products:', error);
-          return [];
-        }
-      },
-      { ttl: 5 * 60 * 1000, category: 'product' }
-    );
+    try {
+      return await db.select().from(products).orderBy(desc(products.createdAt));
+    } catch (error) {
+      console.error('Error getting products:', error);
+      return [];
+    }
   }
 
   async getPopularProducts(): Promise<Product[]> {
-    return await cacheMiddleware.cacheOrFetch(
-      'products:popular',
-      async () => {
-        try {
-          return await db.select().from(products)
-            .orderBy(desc(products.createdAt))
-            .limit(10);
-        } catch (error) {
-          console.error('Error getting popular products:', error);
-          return [];
-        }
-      },
-      { ttl: 10 * 60 * 1000, category: 'product' }
-    );
+    try {
+      // Return products ordered by creation date since rating column may not exist
+      return await db.select().from(products)
+        .orderBy(desc(products.createdAt))
+        .limit(10);
+    } catch (error) {
+      console.error('Error getting popular products:', error);
+      return [];
+    }
   }
 
   async deletePost(id: number, userId?: number): Promise<boolean> {

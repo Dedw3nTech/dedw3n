@@ -11,14 +11,6 @@ import { registerImageRoutes } from "./image-handler";
 import { registerMediaRoutes } from "./media-handler";
 import { registerMulterRoutes } from "./multer-media-handler";
 import { gpcMiddleware, applyGPCHeaders } from "./gpc-middleware";
-import { performanceMonitor } from "./performance-monitor";
-import { cacheManager } from "./cache-manager";
-import { queryBundler } from "./query-bundler";
-import { translationOptimizer } from "./translation-optimizer";
-import cachePerformanceRoutes from "./cache-performance-routes";
-import { optimizedCacheSystem } from "./optimized-cache-system";
-import { EventEmitter } from 'events';
-// Removed storage import to prevent errors
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -30,20 +22,6 @@ declare global {
 }
 
 const app = express();
-
-// Fix MaxListenersExceeded warning by increasing the limit
-EventEmitter.defaultMaxListeners = 20;
-
-// Global error handlers for performance and stability
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  performanceMonitor.trackError();
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  performanceMonitor.trackError();
-});
 
 // Add GPC middleware early in the chain
 app.use(gpcMiddleware);
@@ -158,199 +136,7 @@ app.use((req, res, next) => {
     req._handledByApi = true;
     next();
   });
-
-  // Cache performance monitoring routes
-  app.use(cachePerformanceRoutes);
-
-  // Cache warming endpoint for 95% database load reduction
-  app.post('/api/cache/warm', async (req, res) => {
-    console.log('[DEBUG] Cache warming endpoint called');
-    req._handledByApi = true;
-    res.setHeader('Content-Type', 'application/json');
-    
-    try {
-      const { target = 95, intensity = 'balanced' } = req.body;
-      
-      // Warm critical cache entries
-      const warmingOperations = [];
-      
-      // Core API responses - using direct cache manager operations
-      const coreData = [
-        { key: 'api:products:trending', data: { products: [], count: 25, cached: true }, category: 'products' },
-        { key: 'api:categories:main', data: { categories: [], count: 8, cached: true }, category: 'categories' },
-        { key: 'api:navigation:header', data: { menu: [], cached: true }, category: 'navigation' },
-        { key: 'api:search:popular', data: { searches: [], cached: true }, category: 'search' }
-      ];
-
-      for (const item of coreData) {
-        cacheManager.set(item.key, item.data, item.category, 2 * 60 * 60 * 1000);
-        warmingOperations.push(Promise.resolve());
-      }
-
-      // User patterns
-      for (let i = 1; i <= 50; i++) {
-        cacheManager.set(`user:profile:${i}`, { userId: i, profile: {}, cached: true }, 'users', 2 * 60 * 60 * 1000);
-        cacheManager.set(`user:cart:${i}`, { userId: i, items: [], cached: true }, 'carts', 2 * 60 * 60 * 1000);
-        warmingOperations.push(Promise.resolve(), Promise.resolve());
-      }
-
-      // Product catalog
-      for (let i = 1; i <= 100; i++) {
-        cacheManager.set(`product:details:${i}`, { productId: i, details: {}, cached: true }, 'products', 2 * 60 * 60 * 1000);
-        warmingOperations.push(Promise.resolve());
-      }
-
-      // Search patterns
-      const searchTerms = ['phone', 'laptop', 'clothing', 'shoes', 'electronics', 'books', 'furniture', 'tools'];
-      for (const term of searchTerms) {
-        cacheManager.set(`search:${term}`, { query: term, results: [], cached: true }, 'search', 2 * 60 * 60 * 1000);
-        warmingOperations.push(Promise.resolve());
-      }
-
-      // Execute warming operations
-      await Promise.all(warmingOperations);
-      
-      const metrics = cachePerformanceTracker.getMetrics();
-      const progress = cachePerformanceTracker.getProgressToTarget(target);
-      
-      res.json({
-        success: true,
-        message: 'Cache warming completed successfully',
-        operations: warmingOperations.length,
-        target: `${target}% database load reduction`,
-        currentPerformance: {
-          hitRate: metrics.hitRate,
-          databaseLoadReduction: metrics.databaseLoadReduction,
-          progressToTarget: progress.progress
-        }
-      });
-      
-    } catch (error) {
-      console.error('Cache warming error:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Cache warming failed',
-        error: error.message 
-      });
-    }
-  });
   
-  // Performance dashboard endpoint - bundles multiple API calls into one
-  app.get('/api/dashboard/performance', async (req, res) => {
-    console.log('[DEBUG] Performance dashboard endpoint called');
-    req._handledByApi = true;
-    res.setHeader('Content-Type', 'application/json');
-    
-    try {
-      const performanceStats = {
-        memory: performanceMonitor.getMetrics(),
-        cache: cacheManager.getStats_internal(),
-        queryBundler: queryBundler.getStats(),
-        translations: translationOptimizer.getStats(),
-        optimizedSystem: {
-          status: 'Optimized Cache System Active',
-          target: '75% Database Load Reduction',
-          approach: 'Balanced optimization with controlled execution'
-        },
-        server: {
-          uptime: Math.round(process.uptime() / 60),
-          nodeVersion: process.version,
-          platform: process.platform
-        }
-      };
-      
-      return res.json(performanceStats);
-    } catch (error) {
-      console.error('Error fetching performance stats:', error);
-      performanceMonitor.trackError();
-      return res.status(500).json({ message: 'Failed to fetch performance stats' });
-    }
-  });
-
-  // Comprehensive user dashboard - eliminates 10+ separate API calls  
-  app.get('/api/dashboard/user/:userId', async (req, res) => {
-    console.log('[DEBUG] User dashboard endpoint called');
-    req._handledByApi = true;
-    res.setHeader('Content-Type', 'application/json');
-    
-    try {
-      const userId = parseInt(req.params.userId);
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: 'Invalid user ID' });
-      }
-
-      // Use query bundler to preload all dashboard data in parallel
-      const dashboardData = await queryBundler.preloadDashboardData(userId);
-      
-      // Preload common translations for the user's preferred language
-      const userLanguage = req.headers['accept-language']?.split(',')[0]?.split('-')[0] || 'en';
-      await translationOptimizer.preloadCommonTranslations(userLanguage);
-      
-      return res.json(dashboardData);
-    } catch (error) {
-      console.error('Error fetching user dashboard:', error);
-      performanceMonitor.trackError();
-      return res.status(500).json({ message: 'Failed to fetch user dashboard' });
-    }
-  });
-
-  // Batch translation endpoint - eliminates 600+ individual translation calls
-  app.post('/api/translations/batch', async (req, res) => {
-    console.log('[DEBUG] Batch translation endpoint called');
-    req._handledByApi = true;
-    res.setHeader('Content-Type', 'application/json');
-    
-    try {
-      const { keys, language, namespace } = req.body;
-      
-      if (!keys || !Array.isArray(keys) || !language) {
-        return res.status(400).json({ message: 'Invalid request format' });
-      }
-
-      const translations = await translationOptimizer.getTranslations(keys, language, namespace);
-      return res.json({ translations });
-    } catch (error) {
-      console.error('Error fetching batch translations:', error as Error);
-      performanceMonitor.trackError();
-      return res.status(500).json({ message: 'Failed to fetch translations' });
-    }
-  });
-
-  // Marketplace overview - bundles products, categories, and vendor data
-  app.get('/api/marketplace/overview', async (req, res) => {
-    console.log('[DEBUG] Marketplace overview endpoint called');
-    req._handledByApi = true;
-    res.setHeader('Content-Type', 'application/json');
-    
-    try {
-      const cacheKey = 'marketplace:overview';
-      const cached = cacheManager.get(cacheKey);
-      if (cached) {
-        return res.json(cached);
-      }
-
-      // Get basic marketplace data with fallbacks
-      const marketplaceOverview = {
-        trendingProducts: [],
-        totalProducts: 0,
-        totalVendors: 0,
-        categories: [],
-        stats: {
-          totalOrders: 0,
-          avgRating: 0
-        }
-      };
-      
-      // Cache for 10 minutes
-      cacheManager.set(cacheKey, marketplaceOverview, 10 * 60 * 1000);
-      return res.json(marketplaceOverview);
-    } catch (error) {
-      console.error('Error fetching marketplace overview:', error as Error);
-      performanceMonitor.trackError();
-      return res.status(500).json({ message: 'Failed to fetch marketplace overview' });
-    }
-  });
-
   // Add critical API endpoints that need to be guaranteed to work
   app.post('/api/posts/ping', (req, res) => {
     console.log('[DEBUG] Direct API ping endpoint called');
@@ -501,7 +287,7 @@ app.use((req, res, next) => {
       console.log(`[DEBUG] Community feed request: limit=${limit}, offset=${offset}, sortBy=${sortBy}`);
       
       // Get user ID for location-based filtering
-      let userId: number | undefined = undefined;
+      let userId = null;
       if (req.session?.passport?.user) {
         userId = req.session.passport.user;
       }

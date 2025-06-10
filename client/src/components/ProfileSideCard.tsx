@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Calendar } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Globe, MapPin, Flag, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -211,7 +211,66 @@ export function ProfileSideCard() {
         </Button>
       </div>
       
-
+      {/* Chatroom Quick Access Card */}
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <svg className="h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+              {/* First talking cloud */}
+              <path d="M7 9c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5v-2.5h1c2.8 0 5-2.2 5-5s-2.2-5-5-5H7z" fill="currentColor" opacity="0.7"/>
+              {/* Second talking cloud */}
+              <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
+            </svg>
+            Chat Rooms
+          </h3>
+        </CardHeader>
+        <CardContent className="p-6 pt-0 space-y-2 text-[14px]">
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-10 text-[14px]"
+          >
+            <Link href="/community/chatrooms?room=global">
+              <Globe className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
+              Global Chat
+            </Link>
+          </Button>
+          
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-10 text-[14px]"
+          >
+            <Link href="/community/chatrooms?room=regional">
+              <MapPin className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
+              Regional Chat
+            </Link>
+          </Button>
+          
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="w-full justify-start h-10 text-[14px]"
+          >
+            <Link href="/community/chatrooms?room=country">
+              <Flag className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
+              Local Chat
+            </Link>
+          </Button>
+          
+          <div className="pt-2 border-t border-gray-100">
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
+            >
+              <Link href="/community/chatrooms">
+                View All Chat Rooms
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Trending Events & Meetups Card */}
       <Card className="mt-4">

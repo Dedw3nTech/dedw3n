@@ -40,10 +40,9 @@ import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
-import { translationOptimizer } from "./translation-optimizer";
+import TranslationOptimizer from "./translation-optimizer";
 import { queryCache } from "./query-cache";
 import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
-import { unifiedTranslationService, type TranslationRequest } from "./unified-translation-service";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -53,7 +52,8 @@ import {
   insertEventRegistrationSchema, insertPollSchema, insertPollVoteSchema,
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
   insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
-  insertVideoProductOverlaySchema, insertCommunityContentSchema
+  insertVideoProductOverlaySchema, insertCommunityContentSchema,
+  chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -4972,17 +4972,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all chatrooms
+  app.get('/api/chatrooms', async (req: Request, res: Response) => {
+    try {
+      const allChatrooms = await db.select().from(chatrooms).where(eq(chatrooms.isActive, true));
+      res.json(allChatrooms);
+    } catch (error) {
+      console.error('Error fetching chatrooms:', error);
+      res.status(500).json({ message: 'Failed to fetch chatrooms' });
+    }
+  });
 
+  // Create private room
+  app.post('/api/chatrooms/private', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { name, isAudioEnabled, invitedUsers } = req.body;
+      const userId = (req as any).userId;
 
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: 'Room name is required' });
+      }
 
+      // Create the private chatroom
+      const newChatroom = await db.insert(chatrooms).values({
+        name: name.trim(),
+        description: `Private room created by user ${userId}`,
+        type: 'private',
+        creatorId: userId,
+        isAudioEnabled: isAudioEnabled || false,
+        isVideoEnabled: false,
+        isActive: true,
+        maxUsers: 10
+      }).returning();
 
+      const chatroomId = newChatroom[0].id;
 
+      // Create invitations for selected friends
+      if (invitedUsers && invitedUsers.length > 0) {
+        const invitations = invitedUsers.map((invitedUserId: number) => ({
+          chatroomId,
+          invitedBy: userId,
+          invitedUser: invitedUserId,
+          status: 'pending'
+        }));
 
+        await db.insert(privateRoomInvitations).values(invitations);
+      }
 
+      // If audio is enabled, create an audio session
+      if (isAudioEnabled) {
+        const sessionId = `audio_${chatroomId}_${Date.now()}`;
+        await db.insert(audioSessions).values({
+          chatroomId,
+          sessionId,
+          hostId: userId,
+          isActive: true,
+          participantCount: 1,
+          maxParticipants: 10
+        });
+      }
 
+      res.json({ 
+        message: 'Private room created successfully', 
+        chatroom: newChatroom[0] 
+      });
+    } catch (error) {
+      console.error('Error creating private room:', error);
+      res.status(500).json({ message: 'Failed to create private room' });
+    }
+  });
 
+  // Get chatroom messages
+  app.get('/api/chatrooms/:id/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
 
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
 
+      const messages = await db
+        .select({
+          id: chatroomMessages.id,
+          content: chatroomMessages.content,
+          messageType: chatroomMessages.messageType,
+          createdAt: chatroomMessages.createdAt,
+          userId: chatroomMessages.userId,
+          username: users.username,
+          avatar: users.avatar
+        })
+        .from(chatroomMessages)
+        .leftJoin(users, eq(chatroomMessages.userId, users.id))
+        .where(eq(chatroomMessages.chatroomId, chatroomId))
+        .orderBy(sql`${chatroomMessages.createdAt} DESC`)
+        .limit(limit)
+        .offset(offset);
+
+      res.json(messages.reverse()); // Reverse to show chronological order
+    } catch (error) {
+      console.error('Error fetching chatroom messages:', error);
+      res.status(500).json({ message: 'Failed to fetch messages' });
+    }
+  });
+
+  // Send message to chatroom
+  app.post('/api/chatrooms/:id/messages', upload.single('file'), unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      let content = req.body.content || '';
+      let messageType = req.body.messageType || 'text';
+
+      // Handle file upload
+      if (req.file) {
+        const fileUrl = `/uploads/${req.file.filename}`;
+        content = fileUrl;
+        
+        // Determine message type based on file type
+        if (req.file.mimetype.startsWith('image/')) {
+          messageType = 'image';
+        } else if (req.file.mimetype.startsWith('video/')) {
+          messageType = 'video';
+        }
+      }
+
+      const messageData = insertChatroomMessageSchema.parse({
+        chatroomId,
+        userId,
+        content,
+        messageType
+      });
+
+      const [newMessage] = await db.insert(chatroomMessages).values(messageData).returning();
+
+      // Get the complete message with user info
+      const messageWithUser = await db
+        .select({
+          id: chatroomMessages.id,
+          content: chatroomMessages.content,
+          messageType: chatroomMessages.messageType,
+          createdAt: chatroomMessages.createdAt,
+          userId: chatroomMessages.userId,
+          username: users.username,
+          avatar: users.avatar
+        })
+        .from(chatroomMessages)
+        .leftJoin(users, eq(chatroomMessages.userId, users.id))
+        .where(eq(chatroomMessages.id, newMessage.id))
+        .limit(1);
+
+      res.status(201).json(messageWithUser[0]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+
+  // Join chatroom
+  app.post('/api/chatrooms/:id/join', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Check if already a member
+      const existingMember = await db
+        .select()
+        .from(chatroomMembers)
+        .where(eq(chatroomMembers.chatroomId, chatroomId))
+        .where(eq(chatroomMembers.userId, userId))
+        .limit(1);
+
+      if (existingMember.length > 0) {
+        return res.json({ message: 'Already a member of this chatroom' });
+      }
+
+      await db.insert(chatroomMembers).values({
+        chatroomId,
+        userId,
+        isOnline: true
+      });
+
+      res.json({ message: 'Successfully joined chatroom' });
+    } catch (error) {
+      console.error('Error joining chatroom:', error);
+      res.status(500).json({ message: 'Failed to join chatroom' });
+    }
+  });
+
+  // Get active users in chatroom
+  app.get('/api/chatrooms/:id/users', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const chatroomId = parseInt(req.params.id);
+
+      if (isNaN(chatroomId)) {
+        return res.status(400).json({ message: 'Invalid chatroom ID' });
+      }
+
+      const activeUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          lastSeen: chatroomMembers.lastSeenAt
+        })
+        .from(chatroomMembers)
+        .leftJoin(users, eq(chatroomMembers.userId, users.id))
+        .where(eq(chatroomMembers.chatroomId, chatroomId))
+        .where(eq(chatroomMembers.isOnline, true));
+
+      res.json(activeUsers);
+    } catch (error) {
+      console.error('Error fetching active users:', error);
+      res.status(500).json({ message: 'Failed to fetch active users' });
+    }
+  });
 
   // Dating profile endpoint - Enhanced authentication with fallback
   app.get('/api/dating-profile', async (req: Request, res: Response) => {
@@ -6321,92 +6544,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let lastTranslationRequest = 0;
   const TRANSLATION_RATE_LIMIT = 1000; // 1 second between requests
 
-  // Local translation mapping for common UI terms
-  function getLocalTranslation(text: string, targetLanguage: string): string {
-    const translations: Record<string, Record<string, string>> = {
-      'DE': {
-        'Marketplace': 'Marktplatz',
-        'Community': 'Gemeinschaft',
-        'Dating': 'Partnersuche',
-        'Contact': 'Kontakt',
-        'Home': 'Startseite',
-        'Products': 'Produkte',
-        'Services': 'Dienstleistungen',
-        'Events': 'Veranstaltungen',
-        'Profile': 'Profil',
-        'Settings': 'Einstellungen',
-        'Messages': 'Nachrichten',
-        'Notifications': 'Benachrichtigungen',
-        'Search': 'Suchen',
-        'Login': 'Anmelden',
-        'Register': 'Registrieren',
-        'Logout': 'Abmelden',
-        'About': 'Über uns',
-        'FAQ': 'Häufige Fragen',
-        'Help': 'Hilfe',
-        'Support': 'Support',
-        'Privacy': 'Datenschutz',
-        'Terms': 'Nutzungsbedingungen'
-      },
-      'ES': {
-        'Marketplace': 'Mercado',
-        'Community': 'Comunidad',
-        'Dating': 'Citas',
-        'Contact': 'Contacto',
-        'Home': 'Inicio',
-        'Products': 'Productos',
-        'Services': 'Servicios',
-        'Events': 'Eventos',
-        'Profile': 'Perfil',
-        'Settings': 'Configuración',
-        'Messages': 'Mensajes',
-        'Notifications': 'Notificaciones',
-        'Search': 'Buscar',
-        'Login': 'Iniciar sesión',
-        'Register': 'Registrarse',
-        'Logout': 'Cerrar sesión',
-        'About': 'Acerca de',
-        'FAQ': 'Preguntas frecuentes',
-        'Help': 'Ayuda',
-        'Support': 'Soporte',
-        'Privacy': 'Privacidad',
-        'Terms': 'Términos'
-      },
-      'FR': {
-        'Marketplace': 'Marché',
-        'Community': 'Communauté',
-        'Dating': 'Rencontres',
-        'Contact': 'Contact',
-        'Home': 'Accueil',
-        'Products': 'Produits',
-        'Services': 'Services',
-        'Events': 'Événements',
-        'Profile': 'Profil',
-        'Settings': 'Paramètres',
-        'Messages': 'Messages',
-        'Notifications': 'Notifications',
-        'Search': 'Rechercher',
-        'Login': 'Se connecter',
-        'Register': 'S\'inscrire',
-        'Logout': 'Se déconnecter',
-        'About': 'À propos',
-        'FAQ': 'FAQ',
-        'Help': 'Aide',
-        'Support': 'Support',
-        'Privacy': 'Confidentialité',
-        'Terms': 'Conditions'
-      }
-    };
-
-    const targetTranslations = translations[targetLanguage];
-    if (targetTranslations && targetTranslations[text]) {
-      return targetTranslations[text];
-    }
-    
-    // Return original text if no translation found
-    return text;
-  }
-
   // DeepL-only translation - no fallback systems for data integrity
   async function handleUnsupportedLanguageBatch(batch: any[], targetLanguage: string) {
     console.log(`[Translation] Language ${targetLanguage} not supported by DeepL - returning original texts`);
@@ -6955,21 +7092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Translation] Processing "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}" → ${targetLanguage}`);
 
       if (apiKeys.length === 0) {
-        console.log(`[Translation] No API keys configured - using local translation mapping`);
-        // Use local translation mapping as fallback
-        const localTranslation = getLocalTranslation(text, targetLanguage);
-        const result = {
-          translatedText: localTranslation,
-          detectedSourceLanguage: 'EN',
-          targetLanguage,
-          timestamp: Date.now()
-        };
-        translationCache.set(cacheKey, result);
-        return res.json({
-          translatedText: result.translatedText,
-          detectedSourceLanguage: result.detectedSourceLanguage,
-          targetLanguage: result.targetLanguage
-        });
+        return res.status(500).json({ message: 'DeepL API key not configured' });
       }
 
       // Map our language codes to DeepL format
@@ -6983,42 +7106,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const apiKey = apiKeys[i];
         
         try {
-          // Determine correct endpoint based on API key type
-          const isFreeKey = apiKey.endsWith(':fx');
-          const endpoints = isFreeKey ? 
-            ['https://api-free.deepl.com/v2/translate'] : 
-            ['https://api.deepl.com/v2/translate'];
-          
-          let response = null;
-          let lastError = null;
-          
-          for (const apiUrl of endpoints) {
-            try {
-              const formData = new URLSearchParams();
-              formData.append('text', text);
-              formData.append('target_lang', deeplTargetLang);
-              formData.append('source_lang', 'EN');
+          // Determine API endpoint based on key type
+          const apiUrl = apiKey?.includes(':fx') ? 
+            'https://api-free.deepl.com/v2/translate' : 
+            'https://api.deepl.com/v2/translate';
 
-              response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `DeepL-Auth-Key ${apiKey}`,
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData,
-              });
+          const formData = new URLSearchParams();
+          formData.append('text', text);
+          formData.append('target_lang', deeplTargetLang);
+          formData.append('source_lang', 'EN');
 
-              // If successful, break from endpoint loop
-              if (response.ok) {
-                console.log(`[Translation] Successfully authenticated with ${apiUrl}`);
-                break;
-              }
-            } catch (error) {
-              lastError = error;
-              console.log(`[Translation] Endpoint ${apiUrl} failed: ${error.message}`);
-              continue;
-            }
-          }
+          response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `DeepL-Auth-Key ${apiKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData,
+          });
 
           // If successful, break and use this response
           if (response.ok) {
@@ -7052,11 +7157,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const errorText = response ? await response.text() : 'No response received';
         console.error('DeepL API error:', response?.status || 'No status', errorText);
         
-        // If all API keys failed, use local translation mapping
-        console.log(`[Translation] All API keys failed - using local translation mapping`);
-        const localTranslation = getLocalTranslation(text, targetLanguage);
+        // If all API keys failed, return original text to maintain data integrity
+        console.log(`[Translation] All API keys failed - returning original text for data integrity`);
         const fallbackResult = {
-          translatedText: localTranslation,
+          translatedText: text, // Return original text
           detectedSourceLanguage: 'EN',
           targetLanguage,
           timestamp: Date.now()
@@ -7098,7 +7202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initialize translation optimizer
-  // Using imported translationOptimizer instance
+  const translationOptimizer = TranslationOptimizer.getInstance();
 
   // Enhanced batch translation API for website-wide high-performance translation
   app.post('/api/translate/batch', async (req: Request, res: Response) => {
@@ -7107,34 +7211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { texts, targetLanguage, priority = 'normal' } = req.body;
 
-      // Enhanced validation with detailed logging
-      console.log(`[Translation Debug] Request received:`, {
-        hasBody: !!req.body,
-        bodyKeys: req.body ? Object.keys(req.body) : [],
-        texts: texts ? `Array(${texts.length})` : 'undefined',
-        targetLanguage,
-        priority
-      });
-
-      // More robust validation
-      if (!req.body || typeof req.body !== 'object') {
-        console.log(`[Translation Debug] Invalid request body`);
-        return res.status(400).json({ message: 'Invalid request body' });
-      }
-
-      if (!texts || !Array.isArray(texts)) {
-        console.log(`[Translation Debug] Invalid texts array:`, { texts, type: typeof texts, isArray: Array.isArray(texts) });
-        return res.status(400).json({ message: 'Texts must be a valid array' });
-      }
-
-      if (texts.length === 0) {
-        console.log(`[Translation Debug] Empty texts array`);
-        return res.json({ translations: [] });
-      }
-
-      if (!targetLanguage || typeof targetLanguage !== 'string') {
-        console.log(`[Translation Debug] Invalid target language:`, { targetLanguage, type: typeof targetLanguage });
-        return res.status(400).json({ message: 'Target language must be a valid string' });
+      if (!texts || !Array.isArray(texts) || !targetLanguage) {
+        return res.status(400).json({ message: 'Texts array and target language are required' });
       }
 
       console.log(`[High-Performance Translation] Processing ${texts.length} texts for ${targetLanguage} (priority: ${priority})`);
@@ -7197,12 +7275,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ].filter(key => key); // Remove null/undefined keys
 
       if (apiKeys.length === 0) {
-        console.log(`[Batch Translation] No API keys configured - using local translation mapping`);
-        // Use local translation mapping as fallback
+        // Fallback to original texts
         return res.json({
           translations: texts.map(text => ({
             originalText: text,
-            translatedText: getLocalTranslation(text, targetLanguage),
+            translatedText: text,
             detectedSourceLanguage: 'EN'
           }))
         });
@@ -7248,8 +7325,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Try each API key until success
         for (const apiKey of apiKeys) {
           try {
-            // Determine API endpoint - try free endpoint first for most keys
-            const apiUrl = 'https://api-free.deepl.com/v2/translate';
+            // Determine API endpoint based on key type
+            const apiUrl = apiKey?.includes(':fx') ? 
+              'https://api-free.deepl.com/v2/translate' : 
+              'https://api.deepl.com/v2/translate';
 
             const formData = new URLSearchParams();
             batch.forEach(item => formData.append('text', item.text));
@@ -7367,7 +7446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           batchResults.find(r => r.text === originalText || r.originalText === originalText);
         
         const translatedText = translationResult ? 
-          (translationResult.text || translationResult.translatedText || getLocalTranslation(originalText, targetLanguage)) : getLocalTranslation(originalText, targetLanguage);
+          (translationResult.text || translationResult.translatedText || originalText) : originalText;
         const detectedLang = translationResult ? 
           (translationResult.detected_source_language || translationResult.detectedSourceLanguage || 'EN') : 'EN';
         
@@ -7393,11 +7472,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ translations });
     } catch (error) {
       console.error('Batch translation error:', error);
-      // Fallback to local translations
+      // Fallback to original texts
       res.json({
         translations: req.body.texts.map((text: string) => ({
           originalText: text,
-          translatedText: getLocalTranslation(text, req.body.targetLanguage),
+          translatedText: text,
           detectedSourceLanguage: 'EN'
         }))
       });
@@ -7415,79 +7494,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Performance stats error:', error);
       res.status(500).json({ message: 'Error retrieving performance statistics' });
-    }
-  });
-
-  // Unified Translation API with Text Wrapping Capabilities
-  app.post('/api/translate/unified', async (req: Request, res: Response) => {
-    try {
-      const request: TranslationRequest = req.body;
-
-      // Validate request structure
-      if (!request.texts || !Array.isArray(request.texts) || !request.targetLanguage) {
-        return res.status(400).json({ 
-          message: 'Invalid request structure. Required: texts (array), targetLanguage (string)' 
-        });
-      }
-
-      console.log(`[Unified Translation] Processing ${request.texts.length} texts for ${request.targetLanguage} with priority ${request.priority || 'normal'}`);
-
-      // Process the translation request
-      const response = await unifiedTranslationService.processTranslationRequest(request);
-
-      console.log(`[Unified Translation] Completed in ${response.processingTime}ms - Cache hit: ${response.cacheHit}`);
-
-      res.json(response);
-    } catch (error) {
-      console.error('[Unified Translation] Error processing request:', error);
-      res.status(500).json({ 
-        message: 'Translation processing failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Component-specific translation endpoint with intelligent text wrapping
-  app.post('/api/translate/component', async (req: Request, res: Response) => {
-    try {
-      const { texts, targetLanguage, componentType } = req.body;
-
-      if (!texts || !Array.isArray(texts) || !targetLanguage || !componentType) {
-        return res.status(400).json({ 
-          message: 'Required: texts (array), targetLanguage (string), componentType (string)' 
-        });
-      }
-
-      console.log(`[Component Translation] Processing ${texts.length} texts for ${componentType} component in ${targetLanguage}`);
-
-      const response = await unifiedTranslationService.processComponentText(
-        texts, 
-        targetLanguage, 
-        componentType as 'navigation' | 'button' | 'form' | 'content'
-      );
-
-      res.json(response);
-    } catch (error) {
-      console.error('[Component Translation] Error:', error);
-      res.status(500).json({ 
-        message: 'Component translation failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Translation service metrics endpoint
-  app.get('/api/translate/unified/metrics', (req: Request, res: Response) => {
-    try {
-      const metrics = unifiedTranslationService.getMetrics();
-      res.json({
-        service: 'unified-translation',
-        metrics,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('[Unified Translation Metrics] Error:', error);
-      res.status(500).json({ message: 'Failed to retrieve metrics' });
     }
   });
 

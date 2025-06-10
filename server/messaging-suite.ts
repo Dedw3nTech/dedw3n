@@ -56,16 +56,6 @@ function removeConnection(userId: number, connection: WebSocket) {
       broadcastUserStatus(userId, false);
     }
   }
-  
-  // Enhanced cleanup to prevent memory leaks
-  if ((connection as any)._pingInterval) {
-    clearInterval((connection as any)._pingInterval);
-    (connection as any)._pingInterval = null;
-  }
-  
-  // Clear custom properties
-  (connection as any)._connectionInfo = null;
-  (connection as any)._userId = null;
 }
 
 function broadcastUserStatus(userId: number, isOnline: boolean) {
@@ -73,7 +63,7 @@ function broadcastUserStatus(userId: number, isOnline: boolean) {
   const conversationPartners = new Set<number>();
   
   // For each user that has a connection
-  for (const [id, userConnections] of Array.from(connections.entries())) {
+  for (const [id, userConnections] of connections.entries()) {
     // Skip the user whose status changed
     if (id === userId) continue;
     
@@ -81,7 +71,7 @@ function broadcastUserStatus(userId: number, isOnline: boolean) {
     conversationPartners.add(id);
     
     // Send status update
-    for (const conn of Array.from(userConnections)) {
+    for (const conn of userConnections) {
       if (conn.readyState === WebSocket.OPEN) {
         conn.send(JSON.stringify({
           type: 'status_update',
@@ -102,7 +92,7 @@ function sendToUser(userId: number, data: any): boolean {
   
   // Send to all connections for this user
   let delivered = false;
-  for (const connection of Array.from(userConnections)) {
+  for (const connection of userConnections) {
     if (connection.readyState === WebSocket.OPEN) {
       connection.send(JSON.stringify(data));
       delivered = true;

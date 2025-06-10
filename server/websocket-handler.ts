@@ -271,34 +271,12 @@ export function setupWebSocket(server: Server) {
           console.log(`[WebSocket] Unexpected close code ${code} for user ${userId}`);
       }
       
-      // Enhanced cleanup to prevent memory leaks
       if (userId) {
         wsClients.delete(userId);
-        
-        // Clear any global connection tracking
-        if (typeof global !== 'undefined' && (global as any).connections) {
-          const userConnections = (global as any).connections.get(userId);
-          if (userConnections) {
-            userConnections.delete(ws);
-            if (userConnections.size === 0) {
-              (global as any).connections.delete(userId);
-            }
-          }
-        }
-      }
-      
-      // Clear ping intervals to prevent memory leaks
-      if ((ws as any)._pingInterval) {
-        clearInterval((ws as any)._pingInterval);
-        (ws as any)._pingInterval = null;
       }
       
       // Clean up heartbeat interval on connection close
       stopHeartbeat();
-      
-      // Clear custom properties
-      (ws as any)._connectionInfo = null;
-      (ws as any)._userId = null;
     });
 
     // Handle connection errors with persistent messaging
@@ -319,34 +297,12 @@ export function setupWebSocket(server: Server) {
         console.error('[WebSocket] Failed to send error message:', sendError);
       }
       
-      // Enhanced error cleanup to prevent memory leaks
       if (userId) {
         wsClients.delete(userId);
-        
-        // Clear any global connection tracking
-        if (typeof global !== 'undefined' && (global as any).connections) {
-          const userConnections = (global as any).connections.get(userId);
-          if (userConnections) {
-            userConnections.delete(ws);
-            if (userConnections.size === 0) {
-              (global as any).connections.delete(userId);
-            }
-          }
-        }
-      }
-      
-      // Clear ping intervals to prevent memory leaks
-      if ((ws as any)._pingInterval) {
-        clearInterval((ws as any)._pingInterval);
-        (ws as any)._pingInterval = null;
       }
       
       // Clean up heartbeat interval on error
       stopHeartbeat();
-      
-      // Clear custom properties
-      (ws as any)._connectionInfo = null;
-      (ws as any)._userId = null;
     });
 
     // Handle native WebSocket pong events
