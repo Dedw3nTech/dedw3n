@@ -74,7 +74,7 @@ export default function MobileNavigation() {
               </button>
             </Link>
 
-            <Link href="/profile">
+            <Link href={user ? "/profile" : "/auth"}>
               <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
                 {user?.avatar ? (
                   <img 
