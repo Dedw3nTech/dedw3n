@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { 
   Search, 
   Users, 
@@ -22,6 +23,14 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
   const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState<string>("general");
 
+  // Master Translation System - CommunityNav (2 texts)
+  const communityNavTexts = useMemo(() => [
+    "Search community...", "Explore"
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(communityNavTexts);
+  const [searchPlaceholderText, exploreText] = translations || communityNavTexts;
+
   const handleSectionChange = (section: string, path: string) => {
     setActiveSection(section);
     setLocation(path);
@@ -36,7 +45,7 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search community..."
+                placeholder={searchPlaceholderText}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm?.(e.target.value)}
                 className="pl-10 h-10"
@@ -49,7 +58,7 @@ export function CommunityNav({ searchTerm = "", setSearchTerm }: CommunityNavPro
               onClick={() => setLocation("/explore")}
             >
               <Compass className="h-4 w-4" />
-              <span className="text-sm font-medium">Explore</span>
+              <span className="text-sm font-medium">{exploreText}</span>
             </div>
           </div>
         </div>
