@@ -2242,132 +2242,17 @@ export const insertCampaignAnalyticsSchema = createInsertSchema(campaignAnalytic
 export type CampaignAnalytics = typeof campaignAnalytics.$inferSelect;
 export type InsertCampaignAnalytics = z.infer<typeof insertCampaignAnalyticsSchema>;
 
-// Chatroom type enum
-export const chatroomTypeEnum = pgEnum('chatroom_type', ['global', 'regional', 'country', 'private']);
 
-// Chatrooms table
-export const chatrooms = pgTable("chatrooms", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  type: chatroomTypeEnum("type").notNull(),
-  region: text("region"), // For regional chatrooms
-  country: text("country"), // For country chatrooms
-  creatorId: integer("creator_id").references(() => users.id), // For private rooms
-  isActive: boolean("is_active").default(true),
-  maxUsers: integer("max_users").default(1000),
-  isAudioEnabled: boolean("is_audio_enabled").default(false), // For audio conferencing
-  isVideoEnabled: boolean("is_video_enabled").default(false), // For video conferencing
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-// Chatroom messages table
-export const chatroomMessages = pgTable("chatroom_messages", {
-  id: serial("id").primaryKey(),
-  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  content: text("content").notNull(),
-  messageType: text("message_type").default("text"), // text, image, file, etc.
-  isDeleted: boolean("is_deleted").default(false),
-  editedAt: timestamp("edited_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => {
-  return {
-    chatroomIdx: index('idx_chatroom_messages_chatroom').on(table.chatroomId),
-    userIdx: index('idx_chatroom_messages_user').on(table.userId),
-    createdAtIdx: index('idx_chatroom_messages_created').on(table.createdAt),
-  };
-});
 
-// Chatroom members table (for tracking who's in which chatroom)
-export const chatroomMembers = pgTable("chatroom_members", {
-  id: serial("id").primaryKey(),
-  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  joinedAt: timestamp("joined_at").defaultNow(),
-  lastSeenAt: timestamp("last_seen_at").defaultNow(),
-  isModerator: boolean("is_moderator").default(false),
-  isOnline: boolean("is_online").default(false),
-}, (table) => {
-  return {
-    uniqueMember: unique().on(table.chatroomId, table.userId),
-    chatroomIdx: index('idx_chatroom_members_chatroom').on(table.chatroomId),
-    userIdx: index('idx_chatroom_members_user').on(table.userId),
-  };
-});
 
-// Chatroom schemas
-export const insertChatroomSchema = createInsertSchema(chatrooms).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertChatroomMessageSchema = createInsertSchema(chatroomMessages).omit({ id: true, createdAt: true });
-export const insertChatroomMemberSchema = createInsertSchema(chatroomMembers).omit({ id: true, joinedAt: true });
 
-// Private room invitations table
-export const privateRoomInvitations = pgTable("private_room_invitations", {
-  id: serial("id").primaryKey(),
-  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
-  invitedBy: integer("invited_by").notNull().references(() => users.id),
-  invitedUser: integer("invited_user").notNull().references(() => users.id),
-  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, accepted, declined
-  invitedAt: timestamp("invited_at").defaultNow(),
-  respondedAt: timestamp("responded_at"),
-}, (table) => {
-  return {
-    uniqueInvitation: unique().on(table.chatroomId, table.invitedUser),
-  };
-});
 
-// Audio session management for private rooms
-export const audioSessions = pgTable("audio_sessions", {
-  id: serial("id").primaryKey(),
-  chatroomId: integer("chatroom_id").notNull().references(() => chatrooms.id),
-  sessionId: text("session_id").notNull().unique(), // WebRTC session identifier
-  hostId: integer("host_id").notNull().references(() => users.id),
-  isActive: boolean("is_active").default(true),
-  participantCount: integer("participant_count").default(0),
-  maxParticipants: integer("max_participants").default(10),
-  startedAt: timestamp("started_at").defaultNow(),
-  endedAt: timestamp("ended_at"),
-});
 
-// Audio session participants
-export const audioSessionParticipants = pgTable("audio_session_participants", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").notNull().references(() => audioSessions.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  isMuted: boolean("is_muted").default(false),
-  isDeafened: boolean("is_deafened").default(false),
-  joinedAt: timestamp("joined_at").defaultNow(),
-  leftAt: timestamp("left_at"),
-}, (table) => {
-  return {
-    uniqueParticipant: unique().on(table.sessionId, table.userId),
-  };
-});
 
-// Chatroom schemas
-export const insertPrivateRoomInvitationSchema = createInsertSchema(privateRoomInvitations).omit({ id: true, invitedAt: true });
-export const insertAudioSessionSchema = createInsertSchema(audioSessions).omit({ id: true, startedAt: true });
-export const insertAudioSessionParticipantSchema = createInsertSchema(audioSessionParticipants).omit({ id: true, joinedAt: true });
 
-// Chatroom types
-export type Chatroom = typeof chatrooms.$inferSelect;
-export type InsertChatroom = z.infer<typeof insertChatroomSchema>;
 
-export type ChatroomMessage = typeof chatroomMessages.$inferSelect;
-export type InsertChatroomMessage = z.infer<typeof insertChatroomMessageSchema>;
 
-export type ChatroomMember = typeof chatroomMembers.$inferSelect;
-export type InsertChatroomMember = z.infer<typeof insertChatroomMemberSchema>;
-
-export type PrivateRoomInvitation = typeof privateRoomInvitations.$inferSelect;
-export type InsertPrivateRoomInvitation = z.infer<typeof insertPrivateRoomInvitationSchema>;
-
-export type AudioSession = typeof audioSessions.$inferSelect;
-export type InsertAudioSession = z.infer<typeof insertAudioSessionSchema>;
-
-export type AudioSessionParticipant = typeof audioSessionParticipants.$inferSelect;
-export type InsertAudioSessionParticipant = z.infer<typeof insertAudioSessionParticipantSchema>;
 
 // Gift status enum
 export const giftStatusEnum = pgEnum('gift_status', ['pending', 'accepted', 'rejected', 'paid']);

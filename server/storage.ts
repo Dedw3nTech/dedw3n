@@ -21,7 +21,7 @@ import {
   allowList, blockList, flaggedContent, flaggedImages, moderationReports,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
-  chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
+
   datingProfiles, storeUsers,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
@@ -35,8 +35,7 @@ import {
   type LikedProduct, type InsertLikedProduct,
   type GiftProposition, type InsertGiftProposition,
   type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
-  type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
-  type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
+
   type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser
 } from "@shared/schema";
 
