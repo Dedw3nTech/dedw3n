@@ -15,6 +15,7 @@ import { performanceMonitor } from "./performance-monitor";
 import { cacheManager } from "./cache-manager";
 import { queryBundler } from "./query-bundler";
 import { translationOptimizer } from "./translation-optimizer";
+import cachePerformanceRoutes from "./cache-performance-routes";
 import { EventEmitter } from 'events';
 // Removed storage import to prevent errors
 
@@ -156,6 +157,9 @@ app.use((req, res, next) => {
     req._handledByApi = true;
     next();
   });
+
+  // Cache performance monitoring routes
+  app.use(cachePerformanceRoutes);
   
   // Performance dashboard endpoint - bundles multiple API calls into one
   app.get('/api/dashboard/performance', async (req, res) => {

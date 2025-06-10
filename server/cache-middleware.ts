@@ -49,7 +49,7 @@ class UniversalCacheMiddleware {
     }
 
     if (cached) {
-      performanceMonitor.trackCacheHit(cacheKey);
+      cachePerformanceTracker.trackCacheHit(cacheKey);
       return cached;
     }
     
@@ -77,7 +77,7 @@ class UniversalCacheMiddleware {
           cacheManager.set(cacheKey, data, ttl);
       }
       
-      performanceMonitor.trackCacheMiss(cacheKey);
+      cachePerformanceTracker.trackCacheMiss(cacheKey);
       performanceMonitor.trackQuery(duration);
       
       return data;
