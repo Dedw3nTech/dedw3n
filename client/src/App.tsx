@@ -20,7 +20,7 @@ import { LowerCookieBanner } from "@/components/LowerCookieBanner";
 
 import { DeepLMachineTranslator } from "@/components/DeepLMachineTranslator";
 import { DeepLTranslationProvider } from "@/components/DeepLTranslationProvider";
-import { OptimizedTranslationSystem } from "@/components/OptimizedTranslationSystem";
+import { FinalTranslationSystem } from "@/components/FinalTranslationSystem";
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
