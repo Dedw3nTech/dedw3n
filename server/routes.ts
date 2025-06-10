@@ -40,7 +40,7 @@ import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
-import TranslationOptimizer from "./translation-optimizer";
+import { translationOptimizer } from "./translation-optimizer";
 import { queryCache } from "./query-cache";
 import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
 

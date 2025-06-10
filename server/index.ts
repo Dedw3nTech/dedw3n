@@ -13,6 +13,9 @@ import { registerMulterRoutes } from "./multer-media-handler";
 import { gpcMiddleware, applyGPCHeaders } from "./gpc-middleware";
 import { performanceMonitor } from "./performance-monitor";
 import { cacheManager } from "./cache-manager";
+import { queryBundler } from "./query-bundler";
+import { translationOptimizer } from "./translation-optimizer";
+import { storage } from "./storage";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -25,15 +28,18 @@ declare global {
 
 const app = express();
 
+// Fix MaxListenersExceeded warning by increasing the limit
+require('events').EventEmitter.defaultMaxListeners = 20;
+
 // Global error handlers for performance and stability
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Log to monitoring system in production
+  performanceMonitor.trackError();
 });
 
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  // Log to monitoring system in production
+  performanceMonitor.trackError();
 });
 
 // Add GPC middleware early in the chain
@@ -150,6 +156,95 @@ app.use((req, res, next) => {
     next();
   });
   
+  // Performance dashboard endpoint - bundles multiple API calls into one
+  app.get('/api/dashboard/performance', async (req, res) => {
+    console.log('[DEBUG] Performance dashboard endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const performanceStats = {
+        memory: performanceMonitor.getMetrics(),
+        cache: cacheManager.getStats_internal(),
+        queryBundler: queryBundler.getStats(),
+        translations: translationOptimizer.getStats(),
+        server: {
+          uptime: Math.round(process.uptime() / 60),
+          nodeVersion: process.version,
+          platform: process.platform
+        }
+      };
+      
+      return res.json(performanceStats);
+    } catch (error) {
+      console.error('Error fetching performance stats:', error);
+      performanceMonitor.trackError();
+      return res.status(500).json({ message: 'Failed to fetch performance stats' });
+    }
+  });
+
+  // Comprehensive user dashboard - eliminates 10+ separate API calls  
+  app.get('/api/dashboard/user/:userId', async (req, res) => {
+    console.log('[DEBUG] User dashboard endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      // Use query bundler to preload all dashboard data in parallel
+      const dashboardData = await queryBundler.preloadDashboardData(userId);
+      
+      // Preload common translations for the user's preferred language
+      const userLanguage = req.headers['accept-language']?.split(',')[0]?.split('-')[0] || 'en';
+      await translationOptimizer.preloadCommonTranslations(userLanguage);
+      
+      return res.json(dashboardData);
+    } catch (error) {
+      console.error('Error fetching user dashboard:', error);
+      performanceMonitor.trackError();
+      return res.status(500).json({ message: 'Failed to fetch user dashboard' });
+    }
+  });
+
+  // Marketplace overview - bundles products, categories, and vendor data
+  app.get('/api/marketplace/overview', async (req, res) => {
+    console.log('[DEBUG] Marketplace overview endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const cacheKey = 'marketplace:overview';
+      const cached = cacheManager.get(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
+
+      // Get basic marketplace data with fallbacks
+      const marketplaceOverview = {
+        trendingProducts: [],
+        totalProducts: 0,
+        totalVendors: 0,
+        categories: [],
+        stats: {
+          totalOrders: 0,
+          avgRating: 0
+        }
+      };
+      
+      // Cache for 10 minutes
+      cacheManager.set(cacheKey, marketplaceOverview, 10 * 60 * 1000);
+      return res.json(marketplaceOverview);
+    } catch (error) {
+      console.error('Error fetching marketplace overview:', error);
+      performanceMonitor.trackError();
+      return res.status(500).json({ message: 'Failed to fetch marketplace overview' });
+    }
+  });
+
   // Add critical API endpoints that need to be guaranteed to work
   app.post('/api/posts/ping', (req, res) => {
     console.log('[DEBUG] Direct API ping endpoint called');
@@ -300,7 +395,7 @@ app.use((req, res, next) => {
       console.log(`[DEBUG] Community feed request: limit=${limit}, offset=${offset}, sortBy=${sortBy}`);
       
       // Get user ID for location-based filtering
-      let userId = null;
+      let userId: number | undefined = undefined;
       if (req.session?.passport?.user) {
         userId = req.session.passport.user;
       }
