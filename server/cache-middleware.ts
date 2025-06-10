@@ -138,7 +138,7 @@ class UniversalCacheMiddleware {
       }
 
       if (cached) {
-        performanceMonitor.trackCacheHit(cacheKey);
+        performanceMonitor.recordCacheHit(cacheKey);
         results.push(cached);
       } else {
         uncachedRequests.push(request);
