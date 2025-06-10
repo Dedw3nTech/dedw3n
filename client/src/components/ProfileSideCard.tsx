@@ -328,7 +328,7 @@ export function ProfileSideCard() {
               className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
             >
               <Link href="/events">
-                View All Events
+                {translateText('View All Events')}
               </Link>
             </Button>
           </div>
@@ -340,27 +340,27 @@ export function ProfileSideCard() {
         <div className="space-y-3">
           {/* Quick Links */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 mb-2">Quick Links</h4>
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">{translateText('Quick Links')}</h4>
             <div className="grid grid-cols-2 gap-1 text-xs">
-              <Link href="/about" className="text-gray-600 hover:text-blue-500">About</Link>
-              <Link href="/help" className="text-gray-600 hover:text-blue-500">Help</Link>
-              <Link href="/privacy" className="text-gray-600 hover:text-blue-500">Privacy</Link>
-              <Link href="/terms" className="text-gray-600 hover:text-blue-500">Terms</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-blue-500">Contact</Link>
-              <Link href="/careers" className="text-gray-600 hover:text-blue-500">Careers</Link>
+              <Link href="/about" className="text-gray-600 hover:text-blue-500">{translateText('About')}</Link>
+              <Link href="/help" className="text-gray-600 hover:text-blue-500">{translateText('Help')}</Link>
+              <Link href="/privacy" className="text-gray-600 hover:text-blue-500">{translateText('Privacy')}</Link>
+              <Link href="/terms" className="text-gray-600 hover:text-blue-500">{translateText('Terms')}</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-blue-500">{translateText('Contact')}</Link>
+              <Link href="/careers" className="text-gray-600 hover:text-blue-500">{translateText('Careers')}</Link>
             </div>
           </div>
 
           {/* App Downloads */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 mb-2">Download App</h4>
+            <h4 className="text-xs font-semibold text-gray-900 mb-2">{translateText('Download App')}</h4>
             <div className="space-y-2">
               <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer"
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Download on the</text>
-                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">App Store</text>
+                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">{translateText('Download on the')}</text>
+                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{translateText('App Store')}</text>
                   {/* Apple Logo */}
                   <g transform="translate(15, 10)">
                     <path d="M12.5 2.5c0.8-1 1.3-2.4 1.2-3.8-1.2 0.1-2.6 0.8-3.5 1.8-0.7 0.9-1.4 2.3-1.2 3.7 1.3 0.1 2.6-0.7 3.5-1.7zm1.2 1.9c-1.9-0.1-3.6 1.1-4.5 1.1-0.9 0-2.3-1-3.8-1-1.9 0-3.7 1.1-4.7 2.8-2 3.5-0.5 8.7 1.4 11.5 0.9 1.4 2 2.9 3.4 2.8 1.4-0.1 1.9-0.9 3.6-0.9s2.1 0.9 3.6 0.9c1.5 0 2.4-1.3 3.3-2.7 1-1.6 1.4-3.1 1.4-3.2-0.1 0-2.7-1-2.7-4.2 0-2.8 2.3-4.1 2.4-4.2-1.3-1.9-3.3-2.1-4-2.1z" fill="white"/>
@@ -371,8 +371,8 @@ export function ProfileSideCard() {
                  className="block hover:opacity-80 transition-opacity">
                 <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
-                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">Get it on</text>
-                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Google Play</text>
+                  <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">{translateText('Get it on')}</text>
+                  <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{translateText('Google Play')}</text>
                   {/* Google Play Logo */}
                   <g transform="translate(15, 8)">
                     <defs>
@@ -414,7 +414,7 @@ export function ProfileSideCard() {
             <p className="text-xs text-gray-500 leading-relaxed mt-2">
               Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com.
             </p>
-            <p className="text-xs text-gray-400 mt-1">© 2025 Dedw3n Ltd. All rights reserved.</p>
+            <p className="text-xs text-gray-400 mt-1">© 2025 Dedw3n Ltd. {translateText('All rights reserved.')}</p>
           </div>
         </div>
       </div>
