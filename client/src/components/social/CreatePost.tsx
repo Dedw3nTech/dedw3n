@@ -916,7 +916,7 @@ export default function CreatePost({
                             </div>
                           ) : (
                             <div className="text-center py-10 text-muted-foreground">
-                              <p>No products found</p>
+                              <p>{noProductsText}</p>
                             </div>
                           )}
                         </ScrollArea>
@@ -930,7 +930,7 @@ export default function CreatePost({
                             setSelectedProduct(null);
                           }}
                         >
-                          Cancel
+                          {cancelText}
                         </Button>
                         <Button 
                           onClick={() => {
@@ -939,7 +939,7 @@ export default function CreatePost({
                           }}
                           disabled={!selectedProduct}
                         >
-                          Confirm Selection
+                          {confirmSelectionText}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -1031,7 +1031,7 @@ export default function CreatePost({
                     setIsPromoted(false);
                   }}
                 >
-                  Cancel
+                  {cancelText}
                 </Button>
                 
                 <Button
@@ -1042,10 +1042,10 @@ export default function CreatePost({
                   {postMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      {editingPost ? "Updating..." : "Posting..."}
+                      {editingPost ? updatingText : postingText}
                     </>
                   ) : (
-                    <>{editingPost ? "Update" : "Post"}</>
+                    <>{editingPost ? updateText : postText}</>
                   )}
                 </Button>
               </div>
