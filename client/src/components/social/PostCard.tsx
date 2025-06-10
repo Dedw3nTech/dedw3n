@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { LoginPromptModal } from "@/components/LoginPromptModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { 
   HoverCard,
   HoverCardContent,
@@ -144,7 +145,7 @@ export default function PostCard({
   const { isOpen, action, showLoginPrompt, closePrompt, requireAuth } = useLoginPrompt();
   const [, setLocation] = useLocation();
   const [isCommenting, setIsCommenting] = useState(false);
-  const [commentText, setCommentText] = useState("");
+  const [commentInput, setCommentInput] = useState("");
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
   const [offerMessage, setOfferMessage] = useState("");
@@ -155,6 +156,55 @@ export default function PostCard({
   const [friendRequestMessage, setFriendRequestMessage] = useState("Hi! I'd like to be friends.");
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostText, setRepostText] = useState("");
+
+  // Master Translation System - PostCard Mega-Batch (45 texts)
+  const postCardTexts = useMemo(() => [
+    // Post Actions (12 texts)
+    "Like", "Comment", "Share", "Save", "More options", "Delete Post", 
+    "Edit Post", "Report Post", "Copy Link", "Hide Post", "Follow", "Unfollow",
+    
+    // Status Messages (8 texts)
+    "Liked", "Saved", "Shared", "Deleted", "Reported", "Hidden", 
+    "Authentication required", "Please log in to continue",
+    
+    // Interaction Buttons (8 texts)
+    "Add to Cart", "Make Offer", "Send Message", "Add Friend", 
+    "Buy Now", "View Product", "Contact Seller", "View Profile",
+    
+    // Modal Titles & Actions (12 texts)
+    "Make an Offer", "Send", "Cancel", "Share Post", "Add Comment", 
+    "Send Friend Request", "Repost", "Select User", "Write message", 
+    "Offer amount", "Your message", "Are you sure?",
+    
+    // Error Messages (5 texts)
+    "Failed to like post", "Failed to save post", "Failed to share post", 
+    "Failed to delete post", "Something went wrong"
+  ], []);
+
+  const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(postCardTexts);
+  
+  // Extract translations with descriptive variable names
+  const [
+    // Post Actions
+    likeText, commentBtnText, shareText, saveText, moreOptionsText, deletePostText,
+    editPostText, reportPostText, copyLinkText, hidePostText, followText, unfollowText,
+    
+    // Status Messages
+    likedText, savedText, sharedText, deletedText, reportedText, hiddenText,
+    authRequiredText, loginPromptText,
+    
+    // Interaction Buttons
+    addToCartText, makeOfferText, sendMessageText, addFriendText,
+    buyNowText, viewProductText, contactSellerText, viewProfileText,
+    
+    // Modal Titles & Actions
+    makeOfferTitle, sendText, cancelText, sharePostTitle, addCommentTitle,
+    friendRequestTitle, repostTitle, selectUserText, writeMessageText,
+    offerAmountText, yourMessageText, confirmText,
+    
+    // Error Messages
+    failedLikeText, failedSaveText, failedShareText, failedDeleteText, errorText
+  ] = translations || postCardTexts;
 
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -616,8 +666,8 @@ export default function PostCard({
   };
 
   const handleSubmitComment = () => {
-    if (!commentText.trim()) return;
-    commentMutation.mutate(commentText);
+    if (!commentInput.trim()) return;
+    commentMutation.mutate(commentInput);
   };
 
   const handleMakeOffer = () => {
@@ -809,7 +859,7 @@ export default function PostCard({
                     onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
                   >
                     <Plus className="h-3 w-3" />
-                    <span style={{ fontSize: '16px' }}>Add Friend</span>
+                    <span style={{ fontSize: '16px' }}>{addFriendText}</span>
                   </Button>
                 )}
               </div>
