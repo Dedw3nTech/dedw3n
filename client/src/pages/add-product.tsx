@@ -924,12 +924,20 @@ export default function AddProduct() {
                               className="flex flex-col space-y-2"
                             >
                               <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="fixed" id="fixed" />
-                                <Label htmlFor="fixed" className="text-sm">{t("Fixed Shipping Price")}</Label>
+                                <RadioGroupItem 
+                                  value="fixed" 
+                                  id="fixed" 
+                                  className="border-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+                                />
+                                <Label htmlFor="fixed" className="text-sm font-medium">{t("Fixed Shipping Price")}</Label>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="variable" id="variable" />
-                                <Label htmlFor="variable" className="text-sm">{t("Variable Shipping Price")}</Label>
+                                <RadioGroupItem 
+                                  value="variable" 
+                                  id="variable" 
+                                  className="border-black data-[state=checked]:bg-black data-[state=checked]:border-black"
+                                />
+                                <Label htmlFor="variable" className="text-sm font-medium">{t("Variable Shipping Price")}</Label>
                               </div>
                             </RadioGroup>
                           </div>
