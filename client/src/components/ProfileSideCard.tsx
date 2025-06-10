@@ -22,7 +22,7 @@ export function ProfileSideCard() {
     retry: false,
   });
 
-  const t = useMasterTranslation();
+  const { translateText } = useMasterTranslation();
 
   if (isLoading) {
     return (
@@ -101,7 +101,7 @@ export function ProfileSideCard() {
             >
               <Link href="/messages">
                 <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {t('Messages')}
+                {translateText('Messages')}
               </Link>
             </Button>
             
@@ -117,7 +117,7 @@ export function ProfileSideCard() {
                   {/* Second talking cloud */}
                   <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
                 </svg>
-                Chatrooms
+                {translateText('Chatrooms')}
               </Link>
             </Button>
             
@@ -128,7 +128,7 @@ export function ProfileSideCard() {
             >
               <Link href="/events">
                 <Calendar className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Events
+                {translateText('Events')}
               </Link>
             </Button>
             
@@ -139,7 +139,7 @@ export function ProfileSideCard() {
             >
               <Link href="/settings">
                 <Settings className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Settings
+                {translateText('Settings')}
               </Link>
             </Button>
             
@@ -151,7 +151,7 @@ export function ProfileSideCard() {
             >
               <Link href="/vendor-dashboard">
                 <Store className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Vendor Panel
+                {translateText('Vendor Panel')}
               </Link>
             </Button>
             
@@ -162,7 +162,7 @@ export function ProfileSideCard() {
             >
               <Link href="/dating-dashboard">
                 <Heart className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Dating Panel
+                {translateText('Dating Panel')}
               </Link>
             </Button>
             
@@ -178,7 +178,7 @@ export function ProfileSideCard() {
               }}
             >
               <LogOut className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" />
-              Log Out
+              {translateText('Log Out')}
             </Button>
           </div>
 
@@ -191,7 +191,7 @@ export function ProfileSideCard() {
               className="w-full"
             >
               <Link href="/wall">
-                View Full Profile
+                {translateText('View Full Profile')}
               </Link>
             </Button>
           </div>
