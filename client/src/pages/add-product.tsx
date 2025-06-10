@@ -68,6 +68,7 @@ const productSchema = z.object({
   continueSellingWhenOutOfStock: z.boolean().default(false),
   requiresShipping: z.boolean().default(true),
   shippingCarrier: z.string().optional(),
+  shippingPrice: z.coerce.number().nonnegative().optional(),
   shippingIncluded: z.boolean().default(false),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
@@ -898,6 +899,24 @@ export default function AddProduct() {
                                   <SelectItem value="other">{t("Other")}</SelectItem>
                                 </SelectContent>
                               </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="shippingPrice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Shipping Price")}</FormLabel>
+                              <FormControl>
+                                <CurrencyInput
+                                  value={field.value || 0}
+                                  onValueChange={field.onChange}
+                                  placeholder={t("0.00")}
+                                />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
