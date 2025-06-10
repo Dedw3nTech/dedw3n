@@ -36,7 +36,9 @@ import {
   Building,
   Compass,
   TrendingUp,
+  LogOut,
 } from "lucide-react";
+import { performUnifiedLogout } from "@/utils/unified-logout-system";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/ui/logo";
@@ -64,7 +66,8 @@ export default function OptimizedNavigation() {
     "Currency",
     "Language",
     "Log in",
-    "Sign Up"
+    "Sign Up",
+    "Log Out"
   ], []);
 
   // Use master translation system for unified performance
@@ -79,7 +82,8 @@ export default function OptimizedNavigation() {
     currency: translatedHeaderTexts[4] || "Currency",
     language: translatedHeaderTexts[5] || "Language",
     login: translatedHeaderTexts[6] || "Log in",
-    signup: translatedHeaderTexts[7] || "Sign Up"
+    signup: translatedHeaderTexts[7] || "Sign Up",
+    logout: translatedHeaderTexts[8] || "Log Out"
   }), [translatedHeaderTexts]);
   
   // Unread counts
@@ -258,6 +262,14 @@ export default function OptimizedNavigation() {
                         </Link>
                       </DropdownMenuItem>
                     ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => performUnifiedLogout()}
+                      className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {translatedLabels.logout}
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
