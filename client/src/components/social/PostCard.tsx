@@ -187,7 +187,7 @@ export default function PostCard({
   // Extract translations with descriptive variable names
   const [
     // Post Actions
-    likeText, commentBtnText, shareText, saveText, moreOptionsText, deletePostText,
+    likeText, commentBtnText, shareText, saveText, reportText, moreOptionsText, deletePostText,
     editPostText, reportPostText, copyLinkText, hidePostText, followText, unfollowText,
     
     // Status Messages
@@ -944,7 +944,7 @@ export default function PostCard({
                     }}
                   >
                     <Flag className="mr-2 h-4 w-4 fill-current" />
-                    {reportPostText}
+                    {reportText}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
