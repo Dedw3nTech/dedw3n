@@ -291,8 +291,8 @@ export default function PostCard({
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to share post",
+        title: errorText,
+        description: error.message || failedShareText,
         variant: "destructive",
       });
     },
