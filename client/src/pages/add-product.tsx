@@ -909,7 +909,7 @@ export default function AddProduct() {
                           name="shippingPrice"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t("Shipping Price")}</FormLabel>
+                              <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
                               <FormControl>
                                 <CurrencyInput
                                   value={field.value || 0}
