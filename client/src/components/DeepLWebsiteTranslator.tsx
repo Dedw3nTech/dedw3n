@@ -32,27 +32,17 @@ class DeepLWebsiteIntegration {
   private extractWebsiteContent(): Map<string, Set<Element>> {
     const contentMap = new Map<string, Set<Element>>();
     
-    // Find all text-containing elements
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_ELEMENT,
-      {
-        acceptNode: (node) => {
-          const element = node as Element;
-          const tagName = element.tagName?.toLowerCase();
-          
-          // Skip non-content elements
-          if (['script', 'style', 'noscript', 'meta', 'link'].includes(tagName)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          
-          return NodeFilter.FILTER_ACCEPT;
-        }
+    // Find all text-containing elements using querySelectorAll for better type safety
+    const allElements = document.querySelectorAll('*');
+    
+    allElements.forEach((element: Element) => {
+      const tagName = element.tagName?.toLowerCase();
+      
+      // Skip non-content elements
+      if (['script', 'style', 'noscript', 'meta', 'link'].includes(tagName)) {
+        return;
       }
-    );
 
-    let element;
-    while (element = walker.nextNode() as Element) {
       // Process text content
       const textContent = this.getElementTextContent(element);
       if (textContent && this.isWebsiteContent(textContent)) {
@@ -75,7 +65,7 @@ class DeepLWebsiteIntegration {
           contentMap.get(key)!.add(element);
         }
       });
-    }
+    });
 
     return contentMap;
   }
