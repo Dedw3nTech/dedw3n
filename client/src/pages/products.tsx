@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useMasterBatchTranslation, useMasterTranslation } from '@/hooks/use-master-translation';
+import { usePermanentTranslation } from '@/hooks/use-permanent-translation';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
@@ -52,25 +52,17 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-// Component for translating category names using Master Translation
+// Simplified components that work with permanent translation system
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
-  const { translations } = useMasterBatchTranslation([categoryName]);
-  const [translatedText] = translations || [categoryName];
-  return <span className="text-[12px] font-normal">{translatedText}</span>;
+  return <span className="text-[12px] font-normal">{categoryName}</span>;
 };
 
-// Component for translating region names using Master Translation
 const RegionName = ({ regionName }: { regionName: string }) => {
-  const { translations } = useMasterBatchTranslation([regionName]);
-  const [translatedText] = translations || [regionName];
-  return <span>{translatedText}</span>;
+  return <span>{regionName}</span>;
 };
 
-// Component for translating product names using Master Translation
 const ProductName = ({ productName }: { productName: string }) => {
-  const { translations } = useMasterBatchTranslation([productName]);
-  const [translatedText] = translations || [productName];
-  return <span className="line-clamp-2">{translatedText}</span>;
+  return <span className="line-clamp-2">{productName}</span>;
 };
 import { useToast } from '@/hooks/use-toast';
 
@@ -97,6 +89,9 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
   
+  // Use permanent translation system
+  const { translateNow } = usePermanentTranslation('products-page');
+  
   // User authentication
   const { data: user } = useQuery({
     queryKey: ['/api/user'],
@@ -105,102 +100,6 @@ export default function Products() {
       return response.json();
     }
   });
-  
-  // Master Translation System - Single mega-batch call (34 → 1 API call)
-  const productTexts = [
-    // Filter & Search (7 texts)
-    "Filter", "Filter Products", "Narrow down products based on your preferences",
-    "product", "products", "found", "Clear All",
-    
-    // Sort & Display (7 texts)
-    "Show", "Sort by", "Sort Options", "Trending", "Price: Low to High", 
-    "Price: High to Low", "Newest Product",
-    
-    // Product Actions (8 texts)
-    "Add to Cart", "Add to shopping cart", "Share on community feed", "Make an offer",
-    "Send as gift", "Add to profile", "Share product", "View product details",
-    
-    // Additional Actions (12 texts)
-    "Add to Shopping Bag", "New", "Sale", "Verified", "Min qty", "Buy Now",
-    "Share", "View Product", "Cancel", "Sending...", "Posting...",
-    
-    // Gift & Messaging (12 texts) - Fixed count
-    "Search for recipient", "Type name or username...", "No users found matching",
-    "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
-    "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
-    "(incl. VAT)", // Added VAT text
-    
-    // Community & Sharing (10 texts)
-    "Services", "Your Region", "Your Country", "Repost to Community Feed",
-    "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Repost", "Repost", "Share on Feed",
-    
-    // Offers & Actions (10 texts)
-    "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
-    "Your Offer Amount", "Enter your offer amount", "Message (optional)",
-    "Add a message with your offer...", "Send via Message", "Send Offer",
-    
-    // Search & Filters (11 texts)
-    "Search for Products", "Search within", "Categories", "Region", "Reset Filters",
-    "On Sale", "New Arrivals", "Product or Service", "Product", "Service", "Product Status",
-    
-    // Friend & Store Options (10 texts)
-    "Friend Options", "Friends only", "Local pickup only", "Store Options",
-    "Verified stores only", "Free shipping", "Next day delivery", "Business Options",
-    
-    // Favorites Actions (2 texts)
-    "Add to Favorites", "Remove from Favorites",
-    
-    // Vendor Information (1 text)
-    "Sold by"
-  ];
-
-  const { translations: t } = useMasterBatchTranslation(productTexts);
-  
-  // Define VAT text for B2B market type
-  const vatText = t?.[121] || "(incl. VAT)";
-  
-  // Extract translations with descriptive variable names
-  const [
-    filterText, filterProductsText, narrowDownText, productText, productsText, 
-    productFoundText, clearAllText,
-    
-    showText, sortByText, sortOptionsText, trendingText, priceLowHighText,
-    priceHighLowText, newestProductText,
-    
-    addToCartText, addToCartTooltipText, shareOnFeedTooltipText, makeOfferTooltipText,
-    sendGiftTooltipText, addToProfileTooltipText, shareProductTooltipText, viewProductDetailsText,
-    
-    addToShoppingBagText, newBadgeText, saleBadgeText, verifiedBadgeText, minQtyText,
-    buyNowText, shareText, viewProductText, cancelText, sendingText, postingText,
-    
-    searchForRecipientText, typeNameUsernameText, noUsersFoundText, typeAtLeastText,
-    sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
-    
-    servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
-    addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText, shareOnFeedText,
-    
-    postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
-    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText, sendOfferBtnText,
-    
-    searchForProductsText, searchWithinText, categoriesText, regionText, resetFiltersText,
-    onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
-    
-    friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
-    freeShippingText, nextDayDeliveryText, businessOptionsText,
-    
-    addToFavoritesText, removeFromFavoritesText, soldByText
-  ] = t || [];
-  
-  // Fix for missing variables
-  const shareProductText = shareProductTooltipText;
-  const shareViaEmailText = "Share via Email";
-  const copyLinkText = "Copy Link";
-  const friendText = friendsOnlyText;
-  const volumeDiscountText = "Volume Discounts";
-  const volumeDiscountsText = "Volume Discounts";
-  const wholesaleOnlyText = "Wholesale Only";
-  const taxExemptText = "Tax Exempt";
   
   // All individual translation calls now consolidated in mega-batch above
   
@@ -1037,13 +936,13 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{searchForProductsText}</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
         <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder={`${searchWithinText} ${marketType.toUpperCase()}`}
+              placeholder={`Search within ${marketType.toUpperCase()}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 text-[12px]"
@@ -1053,7 +952,7 @@ export default function Products() {
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{productOrServiceText}</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Product or Service</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -1061,7 +960,7 @@ export default function Products() {
               checked={selectedProductTypes.includes('product')}
               onCheckedChange={() => toggleProductType('product')}
             />
-            <Label htmlFor="show-products" className="text-[12px] font-normal">{productFilterText}</Label>
+            <Label htmlFor="show-products" className="text-[12px] font-normal">Product</Label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -1069,13 +968,13 @@ export default function Products() {
               checked={selectedProductTypes.includes('service')}
               onCheckedChange={() => toggleProductType('service')}
             />
-            <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
+            <Label htmlFor="show-services" className="text-[12px] font-normal">Service</Label>
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{categoriesText}</h3>
+        <h3 className="font-medium mb-2 text-[14px]">Categories</h3>
         <div className="space-y-2">
           {categoriesLoading ? (
             <div className="flex justify-center py-2">
