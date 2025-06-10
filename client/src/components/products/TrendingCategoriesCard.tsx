@@ -22,7 +22,7 @@ export function TrendingCategoriesCard() {
     retry: false,
   });
 
-  // Master Translation System - TrendingCategoriesCard (5 texts)
+  // Master Translation System - TrendingCategoriesCard (6 texts)
   const trendingCategoriesTexts = useMemo(() => [
     "Trending Product Categories", "No trending categories yet", "Explore Products", 
     "posts", "tags", "View All Categories"
@@ -33,6 +33,15 @@ export function TrendingCategoriesCard() {
     titleText, noTrendingText, exploreProductsText, 
     postsText, tagsText, viewAllCategoriesText
   ] = translations || trendingCategoriesTexts;
+
+  // Dynamic translation for category names
+  const categoryNames = useMemo(() => {
+    if (!categories || !Array.isArray(categories)) return [];
+    return categories.slice(0, 5).map((category: TrendingCategory) => category.name);
+  }, [categories]);
+
+  const { translations: categoryTranslations } = useMasterBatchTranslation(categoryNames);
+  const translatedCategoryNames = categoryTranslations || categoryNames;
 
   return (
     <Card className="w-full">
@@ -70,12 +79,14 @@ export function TrendingCategoriesCard() {
           </div>
         ) : (
           <>
-            {categories.slice(0, 5).map((category: TrendingCategory, index: number) => (
-              <div key={category.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+            {categories.slice(0, 5).map((category: TrendingCategory, index: number) => {
+              const translatedName = translatedCategoryNames[index] || category.name;
+              return (
+                <div key={category.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex-1 min-w-0 text-center sm:text-left w-full">
                   <div className="space-y-1">
                     <h4 className="font-medium leading-tight text-center sm:text-left" style={{ fontSize: '10px', lineHeight: '1.2' }}>
-                      {category.name.split(' ').map((word, wordIndex) => (
+                      {translatedName.split(' ').map((word, wordIndex) => (
                         <div key={wordIndex} className="block">
                           {word}
                         </div>
@@ -105,8 +116,9 @@ export function TrendingCategoriesCard() {
                     <ExternalLink className="h-4 w-4" />
                   </Link>
                 </Button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
             
             <div className="pt-2">
               <Button 
