@@ -52,7 +52,14 @@ class SiteWideTranslator {
 
     textNodes.forEach(node => {
       const text = node.textContent?.trim();
-      if (text && text.length > 0 && !this.isAlreadyTranslated(text)) {
+      // Enhanced text validation
+      if (text && 
+          text.length >= 2 && 
+          text.length <= 500 && 
+          !/^\d+(\.\d+)?$/.test(text) && // Skip numbers only
+          !/^[^\w\s]+$/.test(text) && // Skip special characters only
+          !this.isAlreadyTranslated(text)) {
+        
         if (!nodeMap.has(text)) {
           nodeMap.set(text, []);
           textsToTranslate.push(text);
@@ -60,6 +67,8 @@ class SiteWideTranslator {
         nodeMap.get(text)!.push(node);
       }
     });
+
+    console.log(`[Site Translator] Found ${textsToTranslate.length} texts to translate`);
 
     if (textsToTranslate.length > 0) {
       await this.batchTranslate(textsToTranslate, nodeMap);
@@ -119,20 +128,36 @@ class SiteWideTranslator {
 
   private async batchTranslate(texts: string[], nodeMap: Map<string, Text[]>) {
     try {
+      // Filter and validate texts before sending
+      const validTexts = texts.filter(text => 
+        text && 
+        typeof text === 'string' && 
+        text.trim().length >= 2 && 
+        text.trim().length <= 500
+      );
+
+      if (validTexts.length === 0) {
+        console.log('[Site Translator] No valid texts to translate');
+        return;
+      }
+
+      console.log(`[Site Translator] Sending ${validTexts.length} texts to API for ${this.currentLanguage}`);
+
       const response = await fetch('/api/translate/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          texts,
+          texts: validTexts,
           targetLanguage: this.currentLanguage,
           priority: 'high'
         }),
       });
 
       if (!response.ok) {
-        console.error('[Site Translator] Batch translation failed:', response.status);
+        const errorText = await response.text();
+        console.error('[Site Translator] Batch translation failed:', response.status, errorText);
         return;
       }
 

@@ -7106,8 +7106,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { texts, targetLanguage, priority = 'normal' } = req.body;
 
-      if (!texts || !Array.isArray(texts) || !targetLanguage) {
-        return res.status(400).json({ message: 'Texts array and target language are required' });
+      // Enhanced validation with detailed logging
+      console.log(`[Translation Debug] Request received:`, {
+        hasBody: !!req.body,
+        bodyKeys: req.body ? Object.keys(req.body) : [],
+        texts: texts ? `Array(${texts.length})` : 'undefined',
+        targetLanguage,
+        priority
+      });
+
+      // More robust validation
+      if (!req.body || typeof req.body !== 'object') {
+        console.log(`[Translation Debug] Invalid request body`);
+        return res.status(400).json({ message: 'Invalid request body' });
+      }
+
+      if (!texts || !Array.isArray(texts)) {
+        console.log(`[Translation Debug] Invalid texts array:`, { texts, type: typeof texts, isArray: Array.isArray(texts) });
+        return res.status(400).json({ message: 'Texts must be a valid array' });
+      }
+
+      if (texts.length === 0) {
+        console.log(`[Translation Debug] Empty texts array`);
+        return res.json({ translations: [] });
+      }
+
+      if (!targetLanguage || typeof targetLanguage !== 'string') {
+        console.log(`[Translation Debug] Invalid target language:`, { targetLanguage, type: typeof targetLanguage });
+        return res.status(400).json({ message: 'Target language must be a valid string' });
       }
 
       console.log(`[High-Performance Translation] Processing ${texts.length} texts for ${targetLanguage} (priority: ${priority})`);
