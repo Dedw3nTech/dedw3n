@@ -173,7 +173,7 @@ class CachePerformanceTracker {
     return this.metrics.databaseLoadReduction >= targetPercentage;
   }
 
-  getProgressToTarget(targetPercentage: number = 95): {
+  getProgressToTarget(targetPercentage: number = 75): {
     current: number;
     target: number;
     progress: number;

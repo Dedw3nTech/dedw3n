@@ -249,7 +249,7 @@ app.use((req, res, next) => {
         translations: translationOptimizer.getStats(),
         optimizedSystem: {
           status: 'Optimized Cache System Active',
-          target: '95% Database Load Reduction',
+          target: '75% Database Load Reduction',
           approach: 'Balanced optimization with controlled execution'
         },
         server: {
