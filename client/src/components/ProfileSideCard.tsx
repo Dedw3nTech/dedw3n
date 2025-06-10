@@ -209,7 +209,7 @@ export function ProfileSideCard() {
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
             </svg>
-            <span className="text-white font-bold">Sell Product/Service</span>
+            <span className="text-white font-bold">{translateText('Sell Product/Service')}</span>
           </Link>
         </Button>
       </div>
@@ -224,7 +224,7 @@ export function ProfileSideCard() {
               {/* Second talking cloud */}
               <path d="M14 3c-2.8 0-5 2.2-5 5s2.2 5 5 5h1.5l2.5 2.5V13h1c2.8 0 5-2.2 5-5s-2.2-5-5-5h-4z" fill="currentColor"/>
             </svg>
-            Chat Rooms
+            {translateText('Chat Rooms')}
           </h3>
         </CardHeader>
         <CardContent className="p-6 pt-0 space-y-2 text-[14px]">
@@ -235,7 +235,7 @@ export function ProfileSideCard() {
           >
             <Link href="/community/chatrooms?room=global">
               <Globe className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
-              Global Chat
+              {translateText('Global Chat')}
             </Link>
           </Button>
           
@@ -246,7 +246,7 @@ export function ProfileSideCard() {
           >
             <Link href="/community/chatrooms?room=regional">
               <MapPin className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
-              Regional Chat
+              {translateText('Regional Chat')}
             </Link>
           </Button>
           
@@ -257,7 +257,7 @@ export function ProfileSideCard() {
           >
             <Link href="/community/chatrooms?room=country">
               <Flag className="h-4 w-4 mr-3 text-blue-600 flex-shrink-0" />
-              Local Chat
+              {translateText('Local Chat')}
             </Link>
           </Button>
           
@@ -268,7 +268,7 @@ export function ProfileSideCard() {
               className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
             >
               <Link href="/community/chatrooms">
-                View All Chat Rooms
+                {translateText('View All Chat Rooms')}
               </Link>
             </Button>
           </div>
@@ -282,40 +282,40 @@ export function ProfileSideCard() {
             <svg className="h-4 w-4 text-black" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
             </svg>
-            Trending Events
+            {translateText('Trending Events')}
           </h3>
         </CardHeader>
         <CardContent className="p-6 pt-0 space-y-3 text-[14px]">
           <div className="space-y-3">
             <div className="rounded-lg p-3 border border-gray-200">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Tech Startup Meetup</h4>
-                <p className="text-xs text-gray-600 mt-1">London • Tonight 7 PM</p>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{translateText('Tech Startup Meetup')}</h4>
+                <p className="text-xs text-gray-600 mt-1">{translateText('London • Tonight 7 PM')}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Free</span>
-                  <span className="text-xs text-gray-500">50+ attending</span>
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{translateText('Free')}</span>
+                  <span className="text-xs text-gray-500">50+ {translateText('attending')}</span>
                 </div>
               </div>
             </div>
 
             <div className="rounded-lg p-3 border border-gray-200">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Coffee & Code</h4>
-                <p className="text-xs text-gray-600 mt-1">Manchester • Tomorrow 10 AM</p>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{translateText('Coffee & Code')}</h4>
+                <p className="text-xs text-gray-600 mt-1">{translateText('Manchester • Tomorrow 10 AM')}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">£5</span>
-                  <span className="text-xs text-gray-500">25+ attending</span>
+                  <span className="text-xs text-gray-500">25+ {translateText('attending')}</span>
                 </div>
               </div>
             </div>
 
             <div className="rounded-lg p-3 border border-gray-200">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">Art Gallery Opening</h4>
-                <p className="text-xs text-gray-600 mt-1">Birmingham • This Weekend</p>
+                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{translateText('Art Gallery Opening')}</h4>
+                <p className="text-xs text-gray-600 mt-1">{translateText('Birmingham • This Weekend')}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">£15</span>
-                  <span className="text-xs text-gray-500">100+ attending</span>
+                  <span className="text-xs text-gray-500">100+ {translateText('attending')}</span>
                 </div>
               </div>
             </div>
