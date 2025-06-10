@@ -73,7 +73,7 @@ function broadcastUserStatus(userId: number, isOnline: boolean) {
   const conversationPartners = new Set<number>();
   
   // For each user that has a connection
-  for (const [id, userConnections] of connections.entries()) {
+  for (const [id, userConnections] of Array.from(connections.entries())) {
     // Skip the user whose status changed
     if (id === userId) continue;
     
@@ -81,7 +81,7 @@ function broadcastUserStatus(userId: number, isOnline: boolean) {
     conversationPartners.add(id);
     
     // Send status update
-    for (const conn of userConnections) {
+    for (const conn of Array.from(userConnections)) {
       if (conn.readyState === WebSocket.OPEN) {
         conn.send(JSON.stringify({
           type: 'status_update',
@@ -102,7 +102,7 @@ function sendToUser(userId: number, data: any): boolean {
   
   // Send to all connections for this user
   let delivered = false;
-  for (const connection of userConnections) {
+  for (const connection of Array.from(userConnections)) {
     if (connection.readyState === WebSocket.OPEN) {
       connection.send(JSON.stringify(data));
       delivered = true;

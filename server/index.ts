@@ -12,6 +12,7 @@ import { registerMediaRoutes } from "./media-handler";
 import { registerMulterRoutes } from "./multer-media-handler";
 import { gpcMiddleware, applyGPCHeaders } from "./gpc-middleware";
 import { performanceMonitor } from "./performance-monitor";
+import { cacheManager } from "./cache-manager";
 
 // Extend Express Request type to include our custom properties
 declare global {

@@ -5,6 +5,8 @@ import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
 import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-orm";
 import { generateProductCode } from "./product-code-generator";
+import { cacheManager } from "./cache-manager";
+import { performanceMonitor } from "./performance-monitor";
 
 import {
   users, vendors, products, categories, posts, comments,
@@ -751,7 +753,19 @@ export class DatabaseStorage implements IStorage {
   }
   
   async listCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+    const cacheKey = 'categories:all';
+    const cached = cacheManager.get(cacheKey);
+    if (cached) return cached;
+    
+    const result = await performanceMonitor.safeAsyncOperation(
+      () => db.select().from(categories),
+      'listCategories'
+    );
+    
+    if (result) {
+      cacheManager.set(cacheKey, result, 15 * 60 * 1000); // 15 minutes
+    }
+    return result || [];
   }
   
   // Vendor Sub-Account methods
@@ -922,21 +936,36 @@ export class DatabaseStorage implements IStorage {
   }
   
   async listCartItems(userId: number): Promise<(Cart & { product: Product })[]> {
+    const cacheKey = `cart:${userId}`;
+    const cached = cacheManager.get(cacheKey);
+    if (cached) return cached;
+    
     try {
-      const cartItemsWithProducts = await db
-        .select({
-          cart: carts,
-          product: products
-        })
-        .from(carts)
-        .innerJoin(products, eq(carts.productId, products.id))
-        .where(eq(carts.userId, userId))
-        .orderBy(desc(carts.createdAt));
+      const result = await performanceMonitor.safeAsyncOperation(
+        () => db
+          .select({
+            cart: carts,
+            product: products
+          })
+          .from(carts)
+          .innerJoin(products, eq(carts.productId, products.id))
+          .where(eq(carts.userId, userId))
+          .orderBy(desc(carts.createdAt)),
+        'listCartItems'
+      );
       
-      return cartItemsWithProducts.map(({ cart, product }) => ({
+      if (!result) return [];
+      
+      const cartItemsWithProducts = result;
+      
+      const finalResult = cartItemsWithProducts.map(({ cart, product }) => ({
         ...cart,
         product
       }));
+      
+      // Cache for 2 minutes
+      cacheManager.set(cacheKey, finalResult, 2 * 60 * 1000);
+      return finalResult;
     } catch (error) {
       console.error('Error listing cart items:', error);
       return [];
