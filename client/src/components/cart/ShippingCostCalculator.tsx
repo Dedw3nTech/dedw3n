@@ -351,17 +351,18 @@ export default function ShippingCostCalculator({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Calculator className="h-5 w-5" />
             {translateText('Shipping Cost Calculator')}
           </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowCarrierForm(!showCarrierForm)}
+              className="flex-1 sm:flex-none"
             >
               <Plus className="h-4 w-4 mr-1" />
               {translateText('Add Carrier')}
@@ -371,18 +372,19 @@ export default function ShippingCostCalculator({
               size="sm"
               onClick={exportCarriers}
               disabled={customCarriers.length === 0}
+              className="flex-1 sm:flex-none"
             >
               <Upload className="h-4 w-4 mr-1" />
               {translateText('Export')}
             </Button>
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-none">
               <input
                 type="file"
                 accept=".json"
                 onChange={importCarriers}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full">
                 <Upload className="h-4 w-4 mr-1" />
                 {translateText('Import')}
               </Button>

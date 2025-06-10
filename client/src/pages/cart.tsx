@@ -233,14 +233,140 @@ export default function Cart() {
   }
   
   return (
-    <div className="container max-w-4xl mx-auto py-12 px-4">
+    <div className="container max-w-4xl mx-auto py-6 px-3 sm:py-12 sm:px-4">
       <Card className="border-none">
         <CardHeader>
           <CardTitle className="text-xl">{translateText('Shopping Cart')}</CardTitle>
           <CardDescription>{cartItems.length} {cartItems.length === 1 ? translateText('item') : translateText('items')} {translateText('in your cart')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-md overflow-hidden">
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {cartItems.map((item: any) => (
+              <Card key={item.id} className="border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-4">
+                    {/* Product Image */}
+                    <div className="h-16 w-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                      {item.product?.imageUrl ? (
+                        <img
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-400">
+                          <ShoppingCart className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 pr-2">
+                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                            {translateText(item.product?.name || 'Product')}
+                          </h3>
+                          {item.product?.vendorId && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {translateText('Sold by')}: {translateText('Vendor')} #{item.product.vendorId}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Remove Button */}
+                        <button
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          disabled={removeFromCartMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      {/* Price and Quantity Row */}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm">
+                          <span className="text-gray-600">{translateText('Price')}: </span>
+                          <span className="font-medium text-gray-900">
+                            {formatPriceFromGBP(item.product?.price || 0)}
+                          </span>
+                        </div>
+                        
+                        {/* Quantity Controls */}
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                            className="text-gray-500 hover:text-gray-700 p-1"
+                            disabled={updateQuantityMutation.isPending}
+                          >
+                            <MinusCircle className="h-4 w-4" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                            className="text-gray-500 hover:text-gray-700 p-1"
+                            disabled={updateQuantityMutation.isPending}
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Subtotal */}
+                      <div className="mt-2 text-right">
+                        <span className="text-xs text-gray-600">{translateText('Subtotal')}: </span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatPriceFromGBP((item.product?.price || 0) * item.quantity)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {/* Mobile Order Summary */}
+            <Card className="border border-gray-200 bg-gray-50">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{translateText('Order Summary')}</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Subtotal')}</span>
+                    <span className="font-medium">{formatPriceFromGBP(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Shipping')}</span>
+                    <span className="font-medium">
+                      {shippingCost === 0 ? (
+                        <span className="text-green-600">{translateText('Free')}</span>
+                      ) : (
+                        formatPriceFromGBP(shippingCost)
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Tax (VAT)')}</span>
+                    <span className="font-medium">{formatPriceFromGBP(tax)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Dedw3n 1.5%')}</span>
+                    <span className="font-medium">{formatPriceFromGBP(transactionCommission)}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-base font-semibold">
+                      <span>{translateText('Total')}</span>
+                      <span>{formatPriceFromGBP(total)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden lg:block border rounded-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -393,7 +519,7 @@ export default function Cart() {
         </CardContent>
         
         {/* Shipping Cost Calculator */}
-        <div className="mt-6">
+        <div className="mt-4 lg:mt-6 px-2 sm:px-0">
           <ShippingCostCalculator
             orderTotal={subtotal}
             orderWeight={totalWeight}
