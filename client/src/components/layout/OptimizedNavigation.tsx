@@ -265,7 +265,7 @@ export default function OptimizedNavigation() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={() => performUnifiedLogout()}
-                      className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="flex items-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       {translatedLabels.logout}
