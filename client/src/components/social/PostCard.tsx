@@ -157,15 +157,16 @@ export default function PostCard({
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostText, setRepostText] = useState("");
 
-  // Master Translation System - PostCard Mega-Batch (45 texts)
+  // Master Translation System - PostCard Mega-Batch (49 texts)
   const postCardTexts = useMemo(() => [
-    // Post Actions (12 texts)
-    "Like", "Comment", "Share", "Save", "More options", "Delete Post", 
+    // Post Actions (13 texts)
+    "Like", "Comment", "Share", "Save", "Report", "More options", "Delete Post", 
     "Edit Post", "Report Post", "Copy Link", "Hide Post", "Follow", "Unfollow",
     
-    // Status Messages (8 texts)
+    // Status Messages (11 texts)
     "Liked", "Saved", "Shared", "Deleted", "Reported", "Hidden", 
-    "Authentication required", "Please log in to continue",
+    "Authentication required", "Please log in to continue", "Post saved",
+    "This post has been saved to your collection", "Thank you for helping keep our community safe",
     
     // Interaction Buttons (8 texts)
     "Add to Cart", "Make Offer", "Send Message", "Add Friend", 
@@ -191,7 +192,7 @@ export default function PostCard({
     
     // Status Messages
     likedText, savedText, sharedText, deletedText, reportedText, hiddenText,
-    authRequiredText, loginPromptText,
+    authRequiredText, loginPromptText, savedToastText, savedToCollectionText, thankYouReportText,
     
     // Interaction Buttons
     addToCartText, makeOfferText, sendMessageText, addFriendText,
@@ -894,7 +895,7 @@ export default function PostCard({
                     onClick={() => setLocation(`/posts/${post.id}/edit`)}
                   >
                     <i className="ri-edit-line mr-2"></i>
-                    Edit Post
+                    {editPostText}
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -908,7 +909,7 @@ export default function PostCard({
                     ) : (
                       <i className="ri-delete-bin-line mr-2"></i>
                     )}
-                    Delete Post
+                    {deletePostText}
                   </Button>
                 </div>
               </div>
@@ -926,24 +927,24 @@ export default function PostCard({
                   <DropdownMenuItem
                     onClick={() => {
                       toast({
-                        title: "Post saved",
-                        description: "This post has been saved to your collection",
+                        title: savedToastText,
+                        description: savedToCollectionText,
                       });
                     }}
                   >
                     <Bookmark className="mr-2 h-4 w-4 fill-current" />
-                    Save
+                    {saveText}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       toast({
-                        title: "Post reported",
-                        description: "Thank you for helping keep our community safe",
+                        title: reportedText,
+                        description: thankYouReportText,
                       });
                     }}
                   >
                     <Flag className="mr-2 h-4 w-4 fill-current" />
-                    Report
+                    {reportPostText}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
