@@ -264,7 +264,13 @@ export default function AddProduct() {
     "Shipping Price Type",
     "Fixed Shipping Price",
     "Variable Shipping Price",
-    "1.5% Dedw3n Shipping Fee will be applied"
+    "1.5% Dedw3n Shipping Fee will be applied",
+    
+    // Regional Shipping
+    "Regional Shipping",
+    "Select regions to ship to and set custom prices",
+    "Based on your profile location",
+    "Enable shipping to this region"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -431,6 +437,27 @@ export default function AddProduct() {
     ));
   };
 
+  // Regional shipping handlers
+  const toggleRegionalShipping = (region: string) => {
+    setRegionalShipping(prev => ({
+      ...prev,
+      [region]: {
+        ...prev[region],
+        enabled: !prev[region].enabled
+      }
+    }));
+  };
+
+  const updateRegionalShippingPrice = (region: string, price: number) => {
+    setRegionalShipping(prev => ({
+      ...prev,
+      [region]: {
+        ...prev[region],
+        price: price
+      }
+    }));
+  };
+
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
     // Check if user has isVendor flag set to true (system-level vendor status)
@@ -443,10 +470,15 @@ export default function AddProduct() {
       return;
     }
     
-    // Add custom fields to submission data
+    // Add custom fields and regional shipping to submission data
+    const enabledRegions = Object.entries(regionalShipping)
+      .filter(([_, settings]) => settings.enabled)
+      .map(([region, settings]) => ({ region, price: settings.price }));
+    
     const submitData = {
       ...values,
-      customFields: customFields.filter(field => field.name && field.value)
+      customFields: customFields.filter(field => field.name && field.value),
+      regionalShipping: enabledRegions
     };
     
     // If user has isVendor but no vendorId, we'll handle this on the server side
@@ -1059,6 +1091,58 @@ export default function AddProduct() {
                               </div>
                             </div>
                           )}
+                        </div>
+
+                        {/* Regional Shipping Selection */}
+                        <div className="space-y-4 border-t pt-4 mt-4">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900 mb-2">{t("Regional Shipping")}</h3>
+                            <p className="text-xs text-gray-600 mb-4">{t("Select regions to ship to and set custom prices")}</p>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-3">
+                            {Object.entries(regionalShipping).map(([region, settings]) => (
+                              <div key={region} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center">
+                                    <input
+                                      type="checkbox"
+                                      id={`region-${region}`}
+                                      checked={settings.enabled}
+                                      onChange={() => toggleRegionalShipping(region)}
+                                      className="h-4 w-4 border-2 border-gray-900 text-gray-900 focus:ring-gray-900 focus:ring-2 bg-white checked:bg-gray-900 checked:border-gray-900 rounded"
+                                      style={{
+                                        accentColor: '#000000',
+                                        backgroundColor: settings.enabled ? '#000000' : '#ffffff'
+                                      }}
+                                    />
+                                  </div>
+                                  <label htmlFor={`region-${region}`} className="text-sm font-medium text-gray-900 cursor-pointer">
+                                    {region}
+                                  </label>
+                                </div>
+                                
+                                {settings.enabled && (
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-xs text-gray-600">£</span>
+                                    <input
+                                      type="number"
+                                      value={settings.price}
+                                      onChange={(e) => updateRegionalShippingPrice(region, parseFloat(e.target.value) || 0)}
+                                      placeholder="0.00"
+                                      min="0"
+                                      step="0.01"
+                                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="text-xs text-gray-500 mt-2">
+                            {t("Based on your profile location")} - {t("Enable shipping to this region")}
+                          </div>
                         </div>
                       
                       <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>

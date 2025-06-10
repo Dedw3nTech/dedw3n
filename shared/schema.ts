@@ -266,6 +266,8 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+
+
 // Liked products model
 export const likedProducts = pgTable("liked_products", {
   id: serial("id").primaryKey(),
