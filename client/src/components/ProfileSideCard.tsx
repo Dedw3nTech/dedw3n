@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Globe, MapPin, Flag, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 interface User {
   id: number;
@@ -20,6 +21,8 @@ export function ProfileSideCard() {
     queryKey: ['/api/user'],
     retry: false,
   });
+
+  const t = useMasterTranslation();
 
   if (isLoading) {
     return (
@@ -98,7 +101,7 @@ export function ProfileSideCard() {
             >
               <Link href="/messages">
                 <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                Messages
+                {t('Messages')}
               </Link>
             </Button>
             
