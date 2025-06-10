@@ -15,7 +15,8 @@ import { performanceMonitor } from "./performance-monitor";
 import { cacheManager } from "./cache-manager";
 import { queryBundler } from "./query-bundler";
 import { translationOptimizer } from "./translation-optimizer";
-import { storage } from "./storage";
+import { EventEmitter } from 'events';
+// Removed storage import to prevent errors
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -29,7 +30,7 @@ declare global {
 const app = express();
 
 // Fix MaxListenersExceeded warning by increasing the limit
-require('events').EventEmitter.defaultMaxListeners = 20;
+EventEmitter.defaultMaxListeners = 20;
 
 // Global error handlers for performance and stability
 process.on('unhandledRejection', (reason, promise) => {
@@ -210,6 +211,28 @@ app.use((req, res, next) => {
     }
   });
 
+  // Batch translation endpoint - eliminates 600+ individual translation calls
+  app.post('/api/translations/batch', async (req, res) => {
+    console.log('[DEBUG] Batch translation endpoint called');
+    req._handledByApi = true;
+    res.setHeader('Content-Type', 'application/json');
+    
+    try {
+      const { keys, language, namespace } = req.body;
+      
+      if (!keys || !Array.isArray(keys) || !language) {
+        return res.status(400).json({ message: 'Invalid request format' });
+      }
+
+      const translations = await translationOptimizer.getTranslations(keys, language, namespace);
+      return res.json({ translations });
+    } catch (error) {
+      console.error('Error fetching batch translations:', error as Error);
+      performanceMonitor.trackError();
+      return res.status(500).json({ message: 'Failed to fetch translations' });
+    }
+  });
+
   // Marketplace overview - bundles products, categories, and vendor data
   app.get('/api/marketplace/overview', async (req, res) => {
     console.log('[DEBUG] Marketplace overview endpoint called');
@@ -239,7 +262,7 @@ app.use((req, res, next) => {
       cacheManager.set(cacheKey, marketplaceOverview, 10 * 60 * 1000);
       return res.json(marketplaceOverview);
     } catch (error) {
-      console.error('Error fetching marketplace overview:', error);
+      console.error('Error fetching marketplace overview:', error as Error);
       performanceMonitor.trackError();
       return res.status(500).json({ message: 'Failed to fetch marketplace overview' });
     }

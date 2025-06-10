@@ -7202,7 +7202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initialize translation optimizer
-  const translationOptimizer = TranslationOptimizer.getInstance();
+  // Using imported translationOptimizer instance
 
   // Enhanced batch translation API for website-wide high-performance translation
   app.post('/api/translate/batch', async (req: Request, res: Response) => {
