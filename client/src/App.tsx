@@ -174,6 +174,7 @@ import CommunityGuidelines from "@/pages/community-guidelines";
 import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
+import AuthPage from "@/pages/auth";
 import { SiteMap } from "@/components/layout/SiteMap";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
@@ -240,6 +241,11 @@ function Router() {
       <Route path="/">
         <SEOHead {...seoConfigs.home} />
         <Products />
+      </Route>
+
+      <Route path="/auth">
+        <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
+        <AuthPage />
       </Route>
 
       <Route path="/logout-success">
