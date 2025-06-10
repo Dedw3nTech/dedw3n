@@ -17,7 +17,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
-import ShippingCostCalculator, { type ShippingCalculation } from '@/components/cart/ShippingCostCalculator';
+
 
 export default function Cart() {
   const [, setLocation] = useLocation();
@@ -26,9 +26,7 @@ export default function Cart() {
   const { formatPriceFromGBP } = useCurrency();
   const { translateText } = useMasterTranslation();
   
-  // Shipping state management
-  const [selectedShippingCalculation, setSelectedShippingCalculation] = useState<ShippingCalculation | null>(null);
-  const [dynamicShippingCost, setDynamicShippingCost] = useState<number>(0);
+
   
   // Show authentication message if not logged in
   if (!user) {
@@ -120,22 +118,10 @@ export default function Cart() {
     removeFromCartMutation.mutate(id);
   };
   
-  // Shipping calculation change handler
-  const handleShippingCalculationChange = (calculation: ShippingCalculation | null, cost: number) => {
-    setSelectedShippingCalculation(calculation);
-    setDynamicShippingCost(cost);
-  };
+
 
   // Proceed to checkout handler
   const handleCheckout = () => {
-    if (!selectedShippingCalculation) {
-      toast({
-        title: translateText('Shipping Required'),
-        description: translateText('Please calculate shipping costs before proceeding to checkout.'),
-        variant: 'destructive',
-      });
-      return;
-    }
     setLocation('/checkout-new');
   };
   
@@ -153,26 +139,11 @@ export default function Cart() {
     // taxRate: vendor?.taxRate || 0.2
   };
   
-  // Calculate total weight and estimated distance for shipping
-  const totalWeight = cartItems.reduce((sum: number, item: any) => {
-    // Default weight per item if not specified (in kg)
-    const itemWeight = item.product?.weight || 0.5;
-    return sum + (itemWeight * item.quantity);
-  }, 0);
+
   
-  // Default estimated distance (in km) - this could be calculated based on user location
-  const estimatedDistance = 50; // Default 50km for local delivery
-  
-  // Calculate pricing using centralized system with dynamic shipping cost
-  const pricingConfigWithDynamicShipping = {
-    ...pricingConfig,
-    shippingCost: dynamicShippingCost
-  };
-  const pricing = calculatePricing(cartItems, pricingConfigWithDynamicShipping);
-  const { subtotal, tax } = pricing;
-  
-  // Use dynamic shipping cost instead of calculated one
-  const shippingCost = dynamicShippingCost;
+  // Calculate pricing using centralized system
+  const pricing = calculatePricing(cartItems, pricingConfig);
+  const { subtotal, shippingCost, tax } = pricing;
   
   // Calculate 1.5% transaction commission on subtotal with £2 minimum
   const calculatedCommission = subtotal * 0.015;
@@ -518,17 +489,7 @@ export default function Cart() {
             </div>
           )}
         </CardContent>
-        
-        {/* Shipping Cost Calculator */}
-        <div className="mt-4 lg:mt-6 px-2 sm:px-0">
-          <ShippingCostCalculator
-            orderTotal={subtotal}
-            orderWeight={totalWeight}
-            distance={estimatedDistance}
-            onCalculationComplete={handleShippingCalculationChange}
-            selectedCalculation={selectedShippingCalculation}
-          />
-        </div>
+
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
             variant="outline"
@@ -538,21 +499,10 @@ export default function Cart() {
             {translateText('Continue Shopping')}
           </Button>
           <div className="w-full sm:w-auto">
-            {!selectedShippingCalculation && (
-              <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <p className="text-sm text-amber-800">
-                    {translateText('Please calculate shipping costs to continue')}
-                  </p>
-                </div>
-              </div>
-            )}
             <Button
               onClick={handleCheckout}
               className="w-full sm:w-auto"
               disabled={
-                !selectedShippingCalculation || 
                 updateQuantityMutation.isPending || 
                 removeFromCartMutation.isPending
               }
