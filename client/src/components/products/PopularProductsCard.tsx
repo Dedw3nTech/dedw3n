@@ -165,7 +165,7 @@ export function PopularProductsCard() {
               >
                 <Link href="/products?sort=popular">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  View Popular Products
+                  {viewPopularProductsText}
                 </Link>
               </Button>
             </div>
