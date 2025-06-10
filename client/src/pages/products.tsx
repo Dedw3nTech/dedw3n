@@ -196,44 +196,62 @@ export default function Products() {
 
   // Filter sidebar content
   const FilterContent = () => (
-    <div className="space-y-6 text-[14px]">
+    <div className="space-y-4 text-[14px]">
       {/* Video Display Component */}
-      <div className="mb-6">
-        <VideoDisplayCard
-          videoSource={getMarketplaceVideo().video}
-          title={getMarketplaceVideo().title}
-          marketType={marketType as 'b2b' | 'b2c' | 'c2c'}
-          autoPlay={true}
-          showControls={true}
-          onClose={() => {}}
-        />
-      </div>
-
-      {/* Add Product/Service Button */}
-      <div className="mb-6">
-        <Button 
-          className="w-full"
-          onClick={() => setLocation('/add-product')}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product/Service
-        </Button>
+      <div className="mb-4">
+        <div className="relative">
+          <video
+            src={getMarketplaceVideo().video}
+            className="w-full h-32 object-cover rounded-md"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+          <div className="absolute top-2 left-2">
+            <Badge className="bg-green-600 text-white text-xs">{marketType.toUpperCase()}</Badge>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute top-2 right-2 h-6 w-6 p-0 bg-white/90 hover:bg-white"
+            onClick={() => likeProductMutation.mutate(1)}
+          >
+            <Heart className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute top-8 right-2 h-6 w-6 p-0 bg-white/90 hover:bg-white"
+            onClick={() => setLocation('/add-product')}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+        <div className="p-2">
+          <h4 className="text-sm font-medium text-gray-900">
+            {getMarketplaceVideo().title}
+          </h4>
+          <p className="text-xs text-gray-500">
+            {marketType === 'b2b' && 'Business Solutions & Networking'}
+            {marketType === 'b2c' && 'Consumer Products & Services'}
+            {marketType === 'c2c' && 'Peer-to-Peer Marketplace'}
+          </p>
+        </div>
       </div>
 
       {/* Search */}
       <div>
         <h3 className="font-medium mb-2 text-[14px]">Search for Products</h3>
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              type="text"
-              placeholder={`Search within ${marketType.toUpperCase()}`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 text-[12px]"
-            />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="text"
+            placeholder={`Search within ${marketType.toUpperCase()}`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 text-[12px]"
+          />
         </div>
       </div>
 
@@ -491,105 +509,75 @@ export default function Products() {
                 : "space-y-4"
               }>
                 {products.map((product: any) => (
-                  <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="relative mb-4">
-                        <img
-                          src={product.imageUrl || '/placeholder-product.jpg'}
-                          alt={product.name}
-                          className="w-full h-48 object-cover rounded-md"
-                        />
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          {product.isNew && (
-                            <Badge className="bg-green-500 text-white text-xs">New</Badge>
-                          )}
-                          {product.isOnSale && (
-                            <Badge className="bg-red-500 text-white text-xs">Sale</Badge>
-                          )}
-                        </div>
-                        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                            onClick={() => likeProductMutation.mutate(product.id)}
-                          >
-                            <Heart className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                            onClick={() => giftProductMutation.mutate(product.id)}
-                          >
-                            <Gift className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  <Card key={product.id} className="overflow-hidden">
+                    <div className="relative">
+                      <img
+                        src={product.imageUrl || '/placeholder-product.jpg'}
+                        alt={product.name}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute top-2 left-2">
+                        {product.isNew && (
+                          <Badge className="bg-green-500 text-white text-xs">New</Badge>
+                        )}
+                        {product.isOnSale && (
+                          <Badge className="bg-red-500 text-white text-xs">Sale</Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-xs text-gray-500">(1)</span>
                       </div>
                       
                       <WouterLink href={`/product/${product.id}`}>
-                        <h3 className="font-medium text-sm mb-2 line-clamp-2 hover:text-primary cursor-pointer">
+                        <h3 className="font-medium text-base mb-3 hover:text-blue-600 cursor-pointer">
                           {product.name}
                         </h3>
                       </WouterLink>
                       
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-lg">
-                          {currencyFormatPrice(product.price)}
-                        </span>
-                        {product.originalPrice && product.originalPrice > product.price && (
-                          <span className="text-sm text-gray-500 line-through">
-                            {currencyFormatPrice(product.originalPrice)}
+                      <div className="mb-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-lg text-blue-600">
+                            {currencyFormatPrice(product.price)}
                           </span>
-                        )}
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <span className="text-sm text-gray-400 line-through">
+                              {currencyFormatPrice(product.originalPrice)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {product.category || 'Home & Garden'}
+                        </p>
                       </div>
                       
-                      <p className="text-xs text-gray-600 mb-3">
+                      <p className="text-xs text-gray-500 mb-4">
                         Sold by Vendor {product.vendorId}
                       </p>
-                    </CardContent>
-                    
-                    <CardFooter className="p-4 pt-0 flex gap-2">
+                      
                       <Button 
-                        size="sm" 
-                        className="flex-1"
+                        className="w-full bg-black text-white hover:bg-gray-800 mb-2"
                         onClick={() => addToCartMutation.mutate(product.id)}
                         disabled={addToCartMutation.isPending}
                       >
                         {addToCartMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          'Buy'
                         )}
-                        Buy
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <Share2 className="h-4 w-4 mr-2" />
-                            Share
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Report
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Send Offer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardFooter>
+                      
+                      <div className="flex justify-between">
+                        <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-black">
+                          Report
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs text-gray-600 hover:text-black">
+                          Send Offer
+                        </Button>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
