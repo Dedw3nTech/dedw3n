@@ -133,8 +133,9 @@ class SiteWideTranslator {
       const validTexts = texts.filter(text => 
         text && 
         typeof text === 'string' && 
-        text.trim().length >= 2 && 
-        text.trim().length <= 500
+        text.trim().length >= 1 && 
+        text.trim().length <= 1000 &&
+        !/^\d+(\.\d+)?[%$£€]?$/.test(text.trim()) // Skip pure numbers/prices
       );
 
       if (validTexts.length === 0) {
@@ -142,17 +143,27 @@ class SiteWideTranslator {
         return;
       }
 
-      console.log(`[Site Translator] Sending ${validTexts.length} texts to API for ${this.currentLanguage}`);
+      console.log(`[Site Translator] Sending ${validTexts.length} texts to unified API for ${this.currentLanguage}`);
 
+      // Use unified translation system with text wrapping
       const requestBody = {
         texts: validTexts,
         targetLanguage: this.currentLanguage,
-        priority: 'high'
+        priority: 'instant',
+        wrapping: {
+          maxWidth: 300,
+          containerType: 'paragraph',
+          preserveFormatting: true
+        },
+        context: {
+          componentId: 'site-wide-translator',
+          pageId: window.location.pathname
+        }
       };
 
       console.log(`[Site Translator] Request body:`, requestBody);
 
-      const response = await fetch('/api/translate/batch', {
+      const response = await fetch('/api/translate/unified', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,42 +172,76 @@ class SiteWideTranslator {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Site Translator] Batch translation failed:', response.status, errorText);
+        console.error('[Site Translator] Unified translation failed, falling back to batch API');
+        // Fallback to original batch API
+        const fallbackResponse = await fetch('/api/translate/batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            texts: validTexts,
+            targetLanguage: this.currentLanguage,
+            priority: 'high'
+          }),
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          console.error('[Site Translator] Fallback translation failed:', fallbackResponse.status, errorText);
+          return;
+        }
+        
+        const fallbackData = await fallbackResponse.json();
+        const translations: Array<{originalText: string, translatedText: string}> = fallbackData.translations;
+        this.processTranslations(translations, nodeMap);
         return;
       }
 
       const data = await response.json();
-      const translations: Array<{originalText: string, translatedText: string}> = data.translations;
+      console.log(`[Site Translator] Unified translation completed in ${data.processingTime}ms - Cache hit: ${data.cacheHit}`);
+      
+      // Process unified translation results with text wrapping
+      const translations: Array<{originalText: string, translatedText: string, wrappedText?: string}> = data.translations;
+      this.processTranslations(translations, nodeMap, true);
 
-      // Cache translations
-      if (!this.translationCache.has(this.currentLanguage)) {
-        this.translationCache.set(this.currentLanguage, new Map());
-      }
-      const langCache = this.translationCache.get(this.currentLanguage)!;
-
-      // Apply translations to DOM
-      translations.forEach(({ originalText, translatedText }) => {
-        langCache.set(originalText, translatedText);
-        
-        const nodes = nodeMap.get(originalText);
-        if (nodes) {
-          nodes.forEach(node => {
-            if (node.textContent === originalText) {
-              // Store original text as data attribute for restoration
-              if (node.parentElement && !node.parentElement.dataset.originalText) {
-                node.parentElement.dataset.originalText = originalText;
-              }
-              node.textContent = translatedText;
-            }
-          });
-        }
-      });
-
-      console.log(`[Site Translator] Translated ${translations.length} text elements to ${this.currentLanguage}`);
     } catch (error) {
       console.error('[Site Translator] Translation error:', error);
     }
+  }
+
+  private processTranslations(translations: Array<{originalText: string, translatedText: string, wrappedText?: string}>, nodeMap: Map<string, Text[]>, useWrapping = false) {
+    // Cache translations
+    if (!this.translationCache.has(this.currentLanguage)) {
+      this.translationCache.set(this.currentLanguage, new Map());
+    }
+    const langCache = this.translationCache.get(this.currentLanguage)!;
+
+    // Apply translations to DOM
+    translations.forEach(({ originalText, translatedText, wrappedText }) => {
+      const finalText = useWrapping && wrappedText ? wrappedText : translatedText;
+      langCache.set(originalText, finalText);
+      
+      const nodes = nodeMap.get(originalText);
+      if (nodes) {
+        nodes.forEach(node => {
+          if (node.textContent === originalText) {
+            // Store original text as data attribute for restoration
+            if (node.parentElement && !node.parentElement.dataset.originalText) {
+              node.parentElement.dataset.originalText = originalText;
+            }
+            node.textContent = finalText;
+            
+            // Add wrapping indicator if text was wrapped
+            if (useWrapping && wrappedText && wrappedText !== translatedText) {
+              node.parentElement?.classList.add('text-wrapped');
+            }
+          }
+        });
+      }
+    });
+
+    console.log(`[Site Translator] Translated ${translations.length} text elements to ${this.currentLanguage}`);
   }
 
   private restoreOriginalText() {

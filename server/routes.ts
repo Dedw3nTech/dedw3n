@@ -43,6 +43,7 @@ import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from ".
 import { translationOptimizer } from "./translation-optimizer";
 import { queryCache } from "./query-cache";
 import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
+import { unifiedTranslationService, type TranslationRequest } from "./unified-translation-service";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -7414,6 +7415,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Performance stats error:', error);
       res.status(500).json({ message: 'Error retrieving performance statistics' });
+    }
+  });
+
+  // Unified Translation API with Text Wrapping Capabilities
+  app.post('/api/translate/unified', async (req: Request, res: Response) => {
+    try {
+      const request: TranslationRequest = req.body;
+
+      // Validate request structure
+      if (!request.texts || !Array.isArray(request.texts) || !request.targetLanguage) {
+        return res.status(400).json({ 
+          message: 'Invalid request structure. Required: texts (array), targetLanguage (string)' 
+        });
+      }
+
+      console.log(`[Unified Translation] Processing ${request.texts.length} texts for ${request.targetLanguage} with priority ${request.priority || 'normal'}`);
+
+      // Process the translation request
+      const response = await unifiedTranslationService.processTranslationRequest(request);
+
+      console.log(`[Unified Translation] Completed in ${response.processingTime}ms - Cache hit: ${response.cacheHit}`);
+
+      res.json(response);
+    } catch (error) {
+      console.error('[Unified Translation] Error processing request:', error);
+      res.status(500).json({ 
+        message: 'Translation processing failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Component-specific translation endpoint with intelligent text wrapping
+  app.post('/api/translate/component', async (req: Request, res: Response) => {
+    try {
+      const { texts, targetLanguage, componentType } = req.body;
+
+      if (!texts || !Array.isArray(texts) || !targetLanguage || !componentType) {
+        return res.status(400).json({ 
+          message: 'Required: texts (array), targetLanguage (string), componentType (string)' 
+        });
+      }
+
+      console.log(`[Component Translation] Processing ${texts.length} texts for ${componentType} component in ${targetLanguage}`);
+
+      const response = await unifiedTranslationService.processComponentText(
+        texts, 
+        targetLanguage, 
+        componentType as 'navigation' | 'button' | 'form' | 'content'
+      );
+
+      res.json(response);
+    } catch (error) {
+      console.error('[Component Translation] Error:', error);
+      res.status(500).json({ 
+        message: 'Component translation failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Translation service metrics endpoint
+  app.get('/api/translate/unified/metrics', (req: Request, res: Response) => {
+    try {
+      const metrics = unifiedTranslationService.getMetrics();
+      res.json({
+        service: 'unified-translation',
+        metrics,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[Unified Translation Metrics] Error:', error);
+      res.status(500).json({ message: 'Failed to retrieve metrics' });
     }
   });
 
