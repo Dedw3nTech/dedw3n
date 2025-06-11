@@ -126,5 +126,10 @@ export const seoConfigs = {
     title: "B2C Marketplace - Dedw3n",
     description: "Dedw3n Ltd. The all-in-one platform to buy, sell, and connect with a community of creators and shoppers.",
     keywords: "b2c, marketplace, buy, sell, creators, shoppers, community"
+  },
+  partnerships: {
+    title: "Partnerships - Dedw3n",
+    description: "We're always looking to partner with innovative companies that share our vision of creating the best marketplace experience. If you're interested in becoming a technology partner or have a service that could benefit our platform, we'd love to hear from you.",
+    keywords: "partnerships, collaboration, technology partners, innovation, marketplace"
   }
 };

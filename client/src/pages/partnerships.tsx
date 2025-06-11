@@ -1,4 +1,5 @@
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
 
 export default function Partnerships() {
   usePageTitle({ title: "Partnerships" });
@@ -46,8 +47,10 @@ export default function Partnerships() {
   const categories = Array.from(new Set(partners.map(p => p.category)));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <SEOHead {...seoConfigs.partnerships} />
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 text-left">Partnerships</h1>
         </div>
@@ -125,5 +128,6 @@ export default function Partnerships() {
         </div>
       </div>
     </div>
+    </>
   );
 }
