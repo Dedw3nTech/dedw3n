@@ -459,8 +459,8 @@ export default function ProfileSettingsPage() {
       invalidateUserRelatedQueries();
       
       toast({
-        title: t('profile.update_success') || 'Profile updated',
-        description: t('profile.update_success_desc') || 'Your profile has been updated successfully',
+        title: translatedLabels.updateSuccess,
+        description: translatedLabels.updateSuccess,
       });
       
       // Add timestamp to the already created updatedUserData 
@@ -733,10 +733,10 @@ export default function ProfileSettingsPage() {
                     {isUpdating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
+                        {translatedLabels.saving}
                       </>
                     ) : (
-                      "Update Profile"
+                      translatedLabels.saveChanges
                     )}
                   </Button>
                 </CardContent>
@@ -751,101 +751,101 @@ export default function ProfileSettingsPage() {
             <CardHeader>
               <CardTitle className="text-black flex items-center">
                 <Globe className="mr-2 h-5 w-5" />
-                Shipping Information
+                {translatedLabels.shippingInformation}
               </CardTitle>
               <CardDescription className="text-black">
-                Save your shipping details for faster checkout
+                {translatedLabels.updateShippingDetails}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="shippingFirstName" className="text-black">First Name</Label>
+                  <Label htmlFor="shippingFirstName" className="text-black">{translatedLabels.firstName}</Label>
                   <Input
                     id="shippingFirstName"
                     name="shippingFirstName"
                     value={formData.shippingFirstName}
                     onChange={handleInputChange}
-                    placeholder="Enter first name"
+                    placeholder={formData.shippingFirstName || "Enter first name"}
                     className="bg-white text-black"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="shippingLastName" className="text-black">Last Name</Label>
+                  <Label htmlFor="shippingLastName" className="text-black">{translatedLabels.lastName}</Label>
                   <Input
                     id="shippingLastName"
                     name="shippingLastName"
                     value={formData.shippingLastName}
                     onChange={handleInputChange}
-                    placeholder="Enter last name"
+                    placeholder={formData.shippingLastName || "Enter last name"}
                     className="bg-white text-black"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="shippingPhone" className="text-black">Phone Number</Label>
+                <Label htmlFor="shippingPhone" className="text-black">{translatedLabels.phoneNumber}</Label>
                 <Input
                   id="shippingPhone"
                   name="shippingPhone"
                   type="tel"
                   value={formData.shippingPhone}
                   onChange={handleInputChange}
-                  placeholder="Enter phone number"
+                  placeholder={formData.shippingPhone || "Enter phone number"}
                   className="bg-white text-black"
                 />
               </div>
 
               <div>
-                <Label htmlFor="shippingAddress" className="text-black">Address</Label>
+                <Label htmlFor="shippingAddress" className="text-black">{translatedLabels.address}</Label>
                 <Input
                   id="shippingAddress"
                   name="shippingAddress"
                   value={formData.shippingAddress}
                   onChange={handleInputChange}
-                  placeholder="Enter street address"
+                  placeholder={formData.shippingAddress || "Enter street address"}
                   className="bg-white text-black"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="shippingCity" className="text-black">City</Label>
+                  <Label htmlFor="shippingCity" className="text-black">{translatedLabels.city}</Label>
                   <Input
                     id="shippingCity"
                     name="shippingCity"
                     value={formData.shippingCity}
                     onChange={handleInputChange}
-                    placeholder="Enter city"
+                    placeholder={formData.shippingCity || "Enter city"}
                     className="bg-white text-black"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="shippingState" className="text-black">State/County</Label>
+                  <Label htmlFor="shippingState" className="text-black">{translatedLabels.stateProvince}</Label>
                   <Input
                     id="shippingState"
                     name="shippingState"
                     value={formData.shippingState}
                     onChange={handleInputChange}
-                    placeholder="Enter state/county"
+                    placeholder={formData.shippingState || "Enter state/province"}
                     className="bg-white text-black"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="shippingZipCode" className="text-black">Postal Code</Label>
+                  <Label htmlFor="shippingZipCode" className="text-black">{translatedLabels.zipPostalCode}</Label>
                   <Input
                     id="shippingZipCode"
                     name="shippingZipCode"
                     value={formData.shippingZipCode}
                     onChange={handleInputChange}
-                    placeholder="Enter postal code"
+                    placeholder={formData.shippingZipCode || "Enter postal code"}
                     className="bg-white text-black"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="shippingCountry" className="text-black">Country</Label>
+                <Label htmlFor="shippingCountry" className="text-black">{translatedLabels.country}</Label>
                 <Select 
                   value={formData.shippingCountry} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, shippingCountry: value }))}
