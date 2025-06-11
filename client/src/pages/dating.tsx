@@ -42,7 +42,7 @@ export default function DatingPage() {
   const [, setLocation] = useLocation();
   const { formatPrice, formatPriceFromGBP } = useCurrency();
 
-  // Dating Page Master Translation Mega-Batch (78 texts)
+  // Dating Page Master Translation Mega-Batch (95 texts)
   const datingTexts = useMemo(() => [
     // Page Headers & Navigation (12 texts)
     "Dating Rooms", "Find Your Perfect Match", "Connect with like-minded people", "Welcome to Premium Dating",
@@ -69,7 +69,14 @@ export default function DatingPage() {
     // Room Descriptions (12 texts)
     "Open to everyone", "Basic features included", "Enhanced matching", "Priority support", "Advanced filters",
     "Exclusive events", "Personal concierge", "Verified high earners", "Ultra-premium experience", 
-    "White-glove service", "Private events", "Elite community"
+    "White-glove service", "Private events", "Elite community",
+    
+    // Normal Room Specific Content (17 texts)
+    "Normal Dating Room", "FREE", "month limited, for unlimited upgrade", "Features Included", 
+    "Browse dating profiles", "Send and receive messages", "Basic matching algorithm", "Standard profile visibility",
+    "Community chat access", "There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for",
+    "Perfect For", "Anyone starting their dating journey", "Casual dating and friendships", "Exploring the platform features",
+    "Building connections", "Create Dating Profile", "Join Normal Room"
   ], []);
 
   // Use Master Translation System for optimal performance
@@ -102,7 +109,14 @@ export default function DatingPage() {
     // Room Descriptions (12 texts)
     openEveryoneText, basicFeaturesText, enhancedMatchingText, prioritySupportText, advancedFiltersText,
     exclusiveEventsText, personalConciergeText, verifiedEarnersText, ultraPremiumText,
-    whiteGloveText, privateEventsText, eliteCommunityText
+    whiteGloveText, privateEventsText, eliteCommunityText,
+    
+    // Normal Room Specific Content (17 texts)
+    normalDatingRoomText, freeText, monthLimitedText, featuresIncludedText,
+    browseDatingProfilesText, sendReceiveMessagesText, basicMatchingAlgorithmText, standardProfileVisibilityText,
+    communityChatAccessText, limitedGiftsUpgradeText,
+    perfectForText, startingJourneyText, casualDatingText, exploringFeaturesText,
+    buildingConnectionsText, createDatingProfileText, joinNormalRoomText
   ] = t || datingTexts;
 
   // Fetch current user
@@ -238,22 +252,22 @@ export default function DatingPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-4">Dating Rooms</h1>
+              <h1 className="text-3xl font-bold mb-4">{datingRoomsText}</h1>
             </div>
 
             <Tabs defaultValue="normal" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-8">
                 <TabsTrigger value="normal" className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
-                  Normal Room
+                  {normalRoomText}
                 </TabsTrigger>
                 <TabsTrigger value="vip" className="flex items-center gap-2">
                   <Crown className="h-4 w-4" />
-                  VIP Room
+                  {vipRoomText}
                 </TabsTrigger>
                 <TabsTrigger value="vvip" className="flex items-center gap-2">
                   <Gem className="h-4 w-4" />
-                  VVIP Room
+                  {vvipRoomText}
                 </TabsTrigger>
               </TabsList>
 
@@ -262,37 +276,37 @@ export default function DatingPage() {
                   <CardHeader className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Heart className="h-8 w-8 text-blue-500" />
-                      <CardTitle className="text-2xl">Normal Dating Room</CardTitle>
+                      <CardTitle className="text-2xl">{normalDatingRoomText}</CardTitle>
                     </div>
-                    <p className="text-3xl font-bold text-blue-600">FREE</p>
-                    <p className="text-sm text-gray-600">month limited, for unlimited upgrade {formatPrice(25.39)}</p>
+                    <p className="text-3xl font-bold text-blue-600">{freeText}</p>
+                    <p className="text-sm text-gray-600">{monthLimitedText} {formatPrice(25.39)}</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <Users className="h-5 w-5" />
-                          Features Included
+                          {featuresIncludedText}
                         </h3>
                         <ul className="space-y-2 text-sm">
-                          <li>• Browse dating profiles</li>
-                          <li>• Send and receive messages</li>
-                          <li>• Basic matching algorithm</li>
-                          <li>• Standard profile visibility</li>
-                          <li>• Community chat access</li>
-                          <li>• There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for {formatPrice(25.39)}</li>
+                          <li>• {browseDatingProfilesText}</li>
+                          <li>• {sendReceiveMessagesText}</li>
+                          <li>• {basicMatchingAlgorithmText}</li>
+                          <li>• {standardProfileVisibilityText}</li>
+                          <li>• {communityChatAccessText}</li>
+                          <li>• {limitedGiftsUpgradeText} {formatPrice(25.39)}</li>
                         </ul>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <Heart className="h-5 w-5" />
-                          Perfect For
+                          {perfectForText}
                         </h3>
                         <ul className="space-y-2 text-sm">
-                          <li>• Anyone starting their dating journey</li>
-                          <li>• Casual dating and friendships</li>
-                          <li>• Exploring the platform features</li>
-                          <li>• Building connections</li>
+                          <li>• {startingJourneyText}</li>
+                          <li>• {casualDatingText}</li>
+                          <li>• {exploringFeaturesText}</li>
+                          <li>• {buildingConnectionsText}</li>
                         </ul>
                       </div>
                     </div>
@@ -301,7 +315,7 @@ export default function DatingPage() {
                         onClick={() => user ? setLocation("/dating-profile") : showLoginPrompt()} 
                         className="bg-black text-white hover:bg-gray-800 px-8"
                       >
-                        {user ? "Create Dating Profile" : "Join Normal Room"}
+                        {user ? createDatingProfileText : joinNormalRoomText}
                       </Button>
                     </div>
                   </CardContent>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   Settings,
   Compass
 } from "lucide-react";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 interface DatingProfile {
   id?: number;
@@ -34,6 +35,15 @@ interface DatingNavProps {
 export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
   const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState<string>("discover");
+
+  // Dating Navigation Translation Batch (4 texts)
+  const datingNavTexts = useMemo(() => [
+    "Browse Profiles", "My Dating Profile", "Dating Dashboard", "Discover"
+  ], []);
+
+  // Use Master Translation System
+  const { translations: t } = useMasterBatchTranslation(datingNavTexts);
+  const [browseProfilesText, myDatingProfileText, datingDashboardText, discoverText] = t || datingNavTexts;
 
   // Fetch current user's dating profile to check if active
   const { data: datingProfile } = useQuery<DatingProfile>({
