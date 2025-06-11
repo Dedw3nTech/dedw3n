@@ -1,235 +1,270 @@
-# Shipping Service Tool Implementation Plan for Shopping Cart
+# Port 5000 Configuration Analysis and Fix Plan
 
-## Executive Summary
+## Problem Analysis
 
-This document outlines the comprehensive implementation plan for adding a shipping service selection tool to the shopping cart page. The tool will be positioned above the "Proceed to Checkout" button and will disable checkout functionality until users select a proper shipping method.
+### Core Issue
+The application is experiencing a critical `EADDRINUSE` error on port 5000, preventing server startup. Multiple HTTP and WebSocket servers are attempting to bind to the same port simultaneously.
 
-## Current State Analysis
+### Root Cause Identification
 
-### Existing Infrastructure
-1. **Shipping Backend (server/shipping.ts)**
-   - Multi-carrier shipping system with FedEx, UPS, USPS, DHL, and others
-   - Real-time rate calculation API endpoints
-   - Comprehensive shipping methods with pricing and delivery estimates
-   - Address validation functionality
-   - Free shipping threshold calculations
-
-2. **Shipping Components**
-   - `client/src/components/shipping/MultiCarrierShipping.tsx` - Full-featured shipping selector
-   - `client/src/components/shipping/ShippingOptions.tsx` - Basic shipping options
-   - Tab-based carrier selection interface
-   - Radio group selection with detailed shipping information
-
-3. **Cart Implementation (client/src/pages/cart.tsx)**
-   - Complete cart functionality with item management
-   - Pricing calculations with shipping, tax, and commission
-   - Current checkout flow redirects to `/checkout-new`
-   - Basic shipping cost display (currently hardcoded)
-
-4. **Pricing System (client/src/lib/pricing.ts)**
-   - `calculatePricing()` function for cart totals
-   - `amountNeededForFreeShipping()` function
-   - Configurable pricing thresholds and rates
-
-## Implementation Requirements
-
-### Core Features
-1. **Shipping Method Selection**
-   - Display available shipping carriers and methods
-   - Real-time rate calculation based on cart total and weight
-   - Visual indicators for free shipping eligibility
-   - Carrier logos and delivery time estimates
-
-2. **Checkout Control**
-   - Disable "Proceed to Checkout" button until shipping is selected
-   - Visual feedback showing shipping selection requirement
-   - Clear error messaging for missing shipping selection
-
-3. **Cost Integration**
-   - Update cart totals when shipping method changes
-   - Replace hardcoded shipping costs with selected method pricing
-   - Maintain existing tax and commission calculations
-
-4. **User Experience**
-   - Seamless integration with existing cart interface
-   - Mobile-responsive design
-   - Loading states during rate fetching
-   - Error handling for API failures
-
-## Technical Implementation Plan
-
-### Phase 1: Cart State Management
-
-#### 1.1 Add Shipping State to Cart Component
+#### 1. Multiple Server Creation Points
+**File: `server/routes.ts` (Line 2182)**
 ```typescript
-// Add to cart.tsx state
-const [selectedShippingMethod, setSelectedShippingMethod] = useState<ShippingRate | null>(null);
-const [shippingCost, setShippingCost] = useState<number>(0);
-const [isShippingRequired, setIsShippingRequired] = useState<boolean>(true);
+const httpServer = createServer(app);
+```
+This creates an HTTP server but doesn't immediately bind to a port.
+
+**File: `server/index.ts` (Lines 390-392)**
+```typescript
+const port = 5000;
+server.listen(port, "0.0.0.0", () => {
+  log(`serving on port ${port}`);
+});
+```
+This attempts to bind the server returned from routes.ts to port 5000.
+
+#### 2. Multiple WebSocket Server Implementations
+The codebase contains **THREE** separate WebSocket server implementations that can conflict:
+
+1. **`server/websocket-handler.ts`** - Primary WebSocket handler (Line 28)
+2. **`server/messaging-suite.ts`** - Full messaging suite (Line 436) 
+3. **`server/fixed-messaging-suite.ts`** - Alternative messaging implementation (Line 456)
+
+#### 3. Server Lifecycle Management Issues
+- The `registerRoutes()` function creates an HTTP server and attaches WebSocket handlers
+- The main `index.ts` then tries to call `.listen()` on this server
+- If any WebSocket server is already bound to port 5000, subsequent attempts fail
+
+### Affected Files and Functions
+
+#### Primary Files:
+1. **`server/index.ts`**
+   - Main application entry point
+   - Lines 339-393: Server setup and port binding
+   - Function: Main IIFE that orchestrates server startup
+
+2. **`server/routes.ts`**
+   - Lines 2182: `const httpServer = createServer(app)`
+   - Lines 10065-10068: WebSocket setup and server return
+   - Function: `registerRoutes()` - Creates HTTP server and attaches routes
+
+3. **`server/websocket-handler.ts`**
+   - Lines 24-331: `setupWebSocket()` function
+   - Creates WebSocketServer instance attached to HTTP server
+
+#### Secondary Conflict Sources:
+4. **`server/messaging-suite.ts`**
+   - Lines 436-937: Alternative WebSocket implementation
+   - Function: `setupWebSockets()` and `registerMessagingSuite()`
+
+5. **`server/fixed-messaging-suite.ts`**
+   - Lines 456-900: Another WebSocket implementation
+   - May be activated depending on imports
+
+### Why the Feature Isn't Working
+
+#### 1. **Server Creation Race Condition**
+- Multiple parts of the code attempt to create servers on the same port
+- No centralized server management
+- Inconsistent server lifecycle handling
+
+#### 2. **WebSocket Server Conflicts**
+- Three different WebSocket implementations may try to bind simultaneously
+- No mutex or singleton pattern to prevent conflicts
+- Import statements in routes.ts determine which WebSocket server loads
+
+#### 3. **Port Binding Timing Issues**
+- HTTP server created in routes.ts
+- WebSocket server attached to it
+- Main index.ts attempts to bind to port without checking if already bound
+
+#### 4. **Missing Error Handling**
+- No graceful handling of port conflicts
+- No automatic port fallback mechanism
+- No proper cleanup on startup failure
+
+## Comprehensive Fix Plan
+
+### Phase 1: Server Architecture Consolidation
+
+#### Step 1.1: Centralize Server Creation
+**Target File: `server/index.ts`**
+- Move HTTP server creation from routes.ts to index.ts
+- Ensure single point of server instantiation
+- Remove duplicate createServer calls
+
+#### Step 1.2: Implement Single WebSocket Handler
+**Action:**
+- Disable unused WebSocket implementations
+- Use only `server/websocket-handler.ts` as primary handler
+- Comment out imports for messaging-suite and fixed-messaging-suite
+
+#### Step 1.3: Server Lifecycle Management
+**Implementation:**
+```typescript
+// In server/index.ts
+const httpServer = createServer(app);
+await registerRoutes(app, httpServer); // Pass server instead of creating new one
+await setupWebSocket(httpServer);
+httpServer.listen(5000, "0.0.0.0", callback);
 ```
 
-#### 1.2 Update Pricing Calculations
-- Replace hardcoded shipping cost with selected method cost
-- Modify `calculatePricing()` call to use dynamic shipping cost
-- Update total calculations in real-time
+### Phase 2: Port Conflict Resolution
 
-### Phase 2: Shipping Service Integration
-
-#### 2.1 Create Cart-Specific Shipping Component
+#### Step 2.1: Port Availability Checking
+**Add to `server/index.ts`:**
 ```typescript
-// client/src/components/cart/CartShippingSelector.tsx
-interface CartShippingSelectorProps {
-  orderTotal: number;
-  onShippingMethodChange: (method: ShippingRate, cost: number) => void;
-  selectedMethod: ShippingRate | null;
+import { promisify } from 'util';
+import { createConnection } from 'net';
+
+async function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = createConnection(port, '127.0.0.1');
+    socket.on('connect', () => {
+      socket.destroy();
+      resolve(false); // Port is in use
+    });
+    socket.on('error', () => {
+      resolve(true); // Port is available
+    });
+  });
 }
 ```
 
-#### 2.2 API Integration
-- Fetch shipping rates using existing `/api/shipping/rates` endpoint
-- Calculate rates based on cart total and estimated package weight
-- Handle loading states and error scenarios
-- Implement fallback to legacy shipping methods if needed
-
-### Phase 3: Checkout Control Logic
-
-#### 3.1 Button State Management
+#### Step 2.2: Graceful Error Handling
+**Implementation:**
 ```typescript
-const isCheckoutDisabled = useMemo(() => {
-  return !selectedShippingMethod || 
-         updateQuantityMutation.isPending || 
-         removeFromCartMutation.isPending;
-}, [selectedShippingMethod, updateQuantityMutation.isPending, removeFromCartMutation.isPending]);
+const startServer = async () => {
+  try {
+    if (!(await isPortAvailable(5000))) {
+      console.error('Port 5000 is already in use. Checking for existing processes...');
+      process.exit(1);
+    }
+    httpServer.listen(5000, "0.0.0.0", () => {
+      log(`Server successfully started on port 5000`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
 ```
 
-#### 3.2 User Feedback
-- Show shipping selection requirement message
-- Display selected shipping method summary
-- Provide clear error states for missing selection
+### Phase 3: WebSocket Consolidation
 
-### Phase 4: UI/UX Enhancement
+#### Step 3.1: Disable Conflicting Implementations
+**Target Files:**
+- `server/routes.ts`: Comment out messaging-suite imports
+- `server/messaging-suite.ts`: Add export disable flag
+- `server/fixed-messaging-suite.ts`: Add export disable flag
 
-#### 4.1 Cart Layout Updates
-- Position shipping selector between cart items and totals
-- Maintain responsive design for mobile/tablet/desktop
-- Integrate with existing card-based layout
+#### Step 3.2: Standardize WebSocket Integration
+**Modify `server/routes.ts`:**
+```typescript
+// Remove this line:
+// const httpServer = createServer(app);
 
-#### 4.2 Visual Indicators
-- Highlight selected shipping method
-- Show free shipping progress bar
-- Display delivery estimates and carrier information
+// Change return statement:
+export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
+  // ... existing route logic ...
+  
+  if (httpServer) {
+    // Setup WebSocket on provided server
+    setupWebSocket(httpServer);
+    return httpServer;
+  } else {
+    throw new Error('HTTP server must be provided to registerRoutes');
+  }
+}
+```
 
-## File Modifications Required
+### Phase 4: Process Management Enhancement
 
-### Primary Files
-1. **client/src/pages/cart.tsx**
-   - Add shipping state management
-   - Integrate shipping selector component
-   - Update pricing calculations
-   - Modify checkout button behavior
+#### Step 4.1: Add Process Cleanup
+**Add to `server/index.ts`:**
+```typescript
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  httpServer.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
 
-2. **client/src/components/cart/CartShippingSelector.tsx** (NEW)
-   - Simplified version of MultiCarrierShipping component
-   - Optimized for cart page layout
-   - Focus on essential shipping selection functionality
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  httpServer.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+```
 
-### Supporting Files
-3. **client/src/lib/pricing.ts**
-   - Add dynamic shipping cost parameter to calculatePricing()
-   - Maintain backward compatibility
+#### Step 4.2: Add Startup Validation
+**Implementation:**
+```typescript
+const validateEnvironment = () => {
+  const requiredEnvVars = ['DATABASE_URL'];
+  const missing = requiredEnvVars.filter(env => !process.env[env]);
+  
+  if (missing.length > 0) {
+    console.error(`Missing required environment variables: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+};
+```
 
-4. **server/routes.ts**
-   - Ensure shipping rate endpoints are properly registered
-   - Verify authentication requirements
+### Phase 5: Testing and Verification
 
-## Potential Implementation Challenges
+#### Step 5.1: Startup Sequence Testing
+1. Verify single HTTP server creation
+2. Confirm WebSocket attachment to HTTP server
+3. Test port binding success
+4. Validate all endpoints functional
 
-### Technical Challenges
-1. **Rate Calculation Performance**
-   - Risk: API calls may slow down cart page loading
-   - Solution: Implement caching and loading states
+#### Step 5.2: Connection Stability Testing
+1. Test WebSocket connections
+2. Verify messaging functionality
+3. Test concurrent connections
+4. Validate error handling
 
-2. **State Synchronization**
-   - Risk: Shipping cost updates may not sync with cart totals
-   - Solution: Use useEffect hooks for proper state management
+## Implementation Priority
 
-3. **Mobile Responsiveness**
-   - Risk: Complex shipping selector may not fit mobile layout
-   - Solution: Simplified mobile view with collapsible details
+### High Priority (Immediate Fix)
+1. **Consolidate server creation** - Prevents immediate startup failure
+2. **Disable conflicting WebSocket servers** - Eliminates port conflicts
+3. **Add port availability checking** - Provides clear error messages
 
-### Data Integrity Issues
-1. **Missing Shipping Rates**
-   - Risk: API failures could prevent checkout entirely
-   - Solution: Fallback to default shipping methods
+### Medium Priority (Stability)
+1. **Implement graceful shutdown** - Prevents zombie processes
+2. **Add startup validation** - Catches configuration issues early
+3. **Enhance error logging** - Improves debugging capability
 
-2. **Address Dependency**
-   - Risk: Shipping rates typically require destination address
-   - Solution: Use default address or collect basic location info
+### Low Priority (Enhancement)
+1. **Add health check endpoints** - Monitoring capability
+2. **Implement server metrics** - Performance tracking
+3. **Add configuration management** - Environment-specific settings
 
-3. **Weight Calculations**
-   - Risk: Products may not have weight information
-   - Solution: Use default weight estimates per product type
+## Expected Outcomes
 
-## Implementation Steps
+### Immediate Results
+- Application starts successfully on port 5000
+- No more EADDRINUSE errors
+- Single, stable server instance
 
-### Step 1: Create Cart Shipping Component
-- Build simplified shipping selector based on MultiCarrierShipping
-- Focus on essential features: rate display, selection, cost calculation
-- Implement proper error handling and loading states
+### Long-term Benefits
+- Cleaner server architecture
+- Better error handling and debugging
+- Improved reliability and maintainability
+- Foundation for horizontal scaling
 
-### Step 2: Integrate with Cart Page
-- Add component to cart.tsx between cart items and checkout section
-- Implement state management for selected shipping method
-- Update pricing calculations to use dynamic shipping cost
+## Rollback Plan
 
-### Step 3: Modify Checkout Button Logic
-- Add shipping selection requirement to button disabled state
-- Implement user feedback for missing shipping selection
-- Test checkout flow with selected shipping method
+If implementation causes issues:
+1. Revert server/index.ts changes
+2. Restore original routes.ts server creation
+3. Re-enable original WebSocket handlers
+4. Return to previous working state
 
-### Step 4: Testing and Optimization
-- Test with various cart totals and shipping thresholds
-- Verify mobile responsiveness
-- Ensure proper error handling for API failures
-
-## Success Criteria
-
-### Functional Requirements
-- ✅ Users must select shipping method before checkout
-- ✅ Cart totals update dynamically with shipping costs
-- ✅ Multiple carriers and methods are available
-- ✅ Free shipping thresholds are properly calculated
-- ✅ Error handling for API failures
-
-### User Experience Requirements
-- ✅ Intuitive shipping method selection interface
-- ✅ Clear indication of shipping selection requirement
-- ✅ Mobile-optimized layout and interaction
-- ✅ Fast loading with proper loading states
-- ✅ Accessible design with proper labels and feedback
-
-### Technical Requirements
-- ✅ Integration with existing shipping API infrastructure
-- ✅ Backward compatibility with current cart functionality
-- ✅ Proper state management and data flow
-- ✅ Error resilience and fallback mechanisms
-- ✅ Performance optimization for API calls
-
-## Risk Mitigation
-
-### High Priority Risks
-1. **Checkout Blocking** - Ensure fallback shipping options always available
-2. **API Dependencies** - Implement proper error handling and retries
-3. **Performance Impact** - Use caching and optimized API calls
-4. **Mobile UX** - Thorough testing on various device sizes
-
-### Medium Priority Risks
-1. **State Management Complexity** - Use React patterns and proper dependency arrays
-2. **Pricing Calculation Errors** - Comprehensive testing of edge cases
-3. **Shipping Rate Accuracy** - Validate API responses and handle edge cases
-
-## Conclusion
-
-The shipping service tool implementation leverages existing robust infrastructure while adding essential user experience improvements to the cart page. The modular approach ensures backward compatibility while providing flexibility for future enhancements. The comprehensive error handling and fallback mechanisms ensure that users can always complete their checkout process, even in edge cases.
-
-The implementation plan prioritizes user experience while maintaining system reliability and performance. The phased approach allows for incremental testing and validation at each stage of development.
+This plan addresses the core architectural issues causing the port conflicts while maintaining all existing functionality.

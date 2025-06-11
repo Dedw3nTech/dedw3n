@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
@@ -336,8 +337,11 @@ app.use((req, res, next) => {
   const { registerPawapayRoutes } = await import('./pawapay.js');
   registerPawapayRoutes(app);
   
-  // Register all API routes first
-  const server = await registerRoutes(app);
+  // Create HTTP server first
+  const httpServer = createServer(app);
+  
+  // Register all API routes with the HTTP server
+  const server = await registerRoutes(app, httpServer);
   
   // Handler that terminates API requests already handled by our route handlers
   app.use('/api', (req, res, next) => {

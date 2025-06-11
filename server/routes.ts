@@ -301,7 +301,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
   // Setup authentication with passport FIRST - before any routes that need auth
   setupAuth(app);
   
@@ -2179,7 +2179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
+  // Use provided server or create new one
+  const server = httpServer || createServer(app);
   
   // Seed the database with initial data
   await seedDatabase();
@@ -10063,7 +10064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up WebSocket server for messaging
   console.log('Setting up WebSocket server for messaging...');
-  setupWebSocket(httpServer);
+  setupWebSocket(server);
 
-  return httpServer;
+  return server;
 }
