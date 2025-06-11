@@ -10062,9 +10062,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     });
   });
 
-  // Set up WebSocket server for messaging
-  console.log('Setting up WebSocket server for messaging...');
-  setupWebSocket(server);
+  // Set up WebSocket server for messaging - DISABLED to prevent port conflicts
+  console.log('[WebSocket] WebSocket server setup disabled to prevent port conflicts');
+  // setupWebSocket(server);
 
   return server;
 }
