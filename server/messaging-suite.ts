@@ -935,8 +935,8 @@ function setupWebSockets(server: Server) {
 
 // Main API routes registration
 export function registerMessagingSuite(app: Express, server: Server) {
-  // Set up WebSocket server
-  const wss = setupWebSockets(server);
+  // WebSocket server setup disabled - using unified websocket-handler.ts instead
+  console.log('[MESSAGING-SUITE] Skipping WebSocket setup - using unified handler');
   
   // Message APIs
   

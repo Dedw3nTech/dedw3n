@@ -898,8 +898,8 @@ function setupWebSockets(server: Server) {
 import { isAuthenticated as unifiedIsAuthenticated } from "./unified-auth";
 
 export function registerMessagingSuite(app: Express, server: Server) {
-  // Set up WebSocket server
-  const wss = setupWebSockets(server);
+  // WebSocket server setup disabled - using unified websocket-handler.ts instead
+  console.log('[FIXED-MESSAGING] Skipping WebSocket setup - using unified handler');
   
   // Message APIs
   
