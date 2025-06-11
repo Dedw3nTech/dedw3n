@@ -29,7 +29,8 @@ export function usePageTitle({ title, suffix = 'Dedw3n' }: PageTitleOptions) {
         'Messages': 'Access your private messages and conversations on Dedw3n.',
         'Notifications': 'View your notifications and updates from the Dedw3n community.',
         'Settings': 'Manage your Dedw3n account settings, preferences, and privacy options.',
-        'Profile': 'View and edit your Dedw3n profile information and preferences.'
+        'Profile': 'View and edit your Dedw3n profile information and preferences.',
+        'Partnerships': 'We\'re always looking to partner with innovative companies that share our vision of creating the best marketplace experience. If you\'re interested in becoming a technology partner or have a service that could benefit our platform, we\'d love to hear from you.'
       };
       
       const pageDescription = descriptions[title] || descriptions['Home'];
