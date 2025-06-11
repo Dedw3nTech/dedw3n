@@ -599,12 +599,12 @@ function DatingFooterPromoSection() {
   return (
     <div className="w-full" key="dating-footer-promo">
       <img 
-        src="/attached_assets/Copy of Dedw3n comm Footer (2)_1749623190383.png"
-        alt="Dating Platform Footer"
+        src="/attached_assets/image_1749623253262.png"
+        alt="Dedw3n Community - Creating connections among people worldwide"
         className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
         loading="lazy"
         onError={(e) => {
-          e.currentTarget.src = '/attached_assets/Dedw3n comm Footer.png';
+          e.currentTarget.src = '/attached_assets/Copy of Dedw3n comm Footer (2)_1749623190383.png';
         }}
       />
     </div>
