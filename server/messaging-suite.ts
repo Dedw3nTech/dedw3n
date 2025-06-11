@@ -431,8 +431,11 @@ function handleSignaling(userId: number, data: any) {
   }
 }
 
-// WebSocket server setup
+// WebSocket server setup - DISABLED to prevent port conflicts
 function setupWebSockets(server: Server) {
+  console.log('[MESSAGING-SUITE] WebSocket setup disabled to prevent port conflicts');
+  return null;
+  /* DISABLED CODE:
   const wss = new WebSocketServer({ 
     server: server, 
     path: '/ws',
