@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,9 @@ import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, LogOut, ChevronDown } from "lucide-react";
 import { performUnifiedLogout } from "@/utils/unified-logout-system";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +22,35 @@ export default function UserMenu() {
   const { user, logoutMutation } = useAuth();
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
+
+  // Define translatable texts for the user menu
+  const menuTexts = useMemo(() => [
+    "Your Profile",
+    "Settings", 
+    "Messages",
+    "Notifications",
+    "Dating Dashboard",
+    "Vendor Dashboard",
+    "Log Out",
+    "Log in",
+    "Logging out..."
+  ], []);
+
+  // Use master translation system for consistent auto-translation
+  const { translations: translatedTexts } = useMasterBatchTranslation(menuTexts, 'high');
+
+  // Memoize translated labels to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    yourProfile: translatedTexts[0] || "Your Profile",
+    settings: translatedTexts[1] || "Settings",
+    messages: translatedTexts[2] || "Messages", 
+    notifications: translatedTexts[3] || "Notifications",
+    datingDashboard: translatedTexts[4] || "Dating Dashboard",
+    vendorDashboard: translatedTexts[5] || "Vendor Dashboard",
+    logout: translatedTexts[6] || "Log Out",
+    login: translatedTexts[7] || "Log in",
+    loggingOut: translatedTexts[8] || "Logging out..."
+  }), [translatedTexts]);
 
   // Fetch unread message count
   const { data: unreadMessages } = useQuery<{ count: number }>({
@@ -54,10 +84,11 @@ export default function UserMenu() {
       <Button 
         variant="outline" 
         size="sm" 
-        className="ml-2"
+        className="ml-2 flex items-center gap-2"
         onClick={() => showLoginPrompt('login')}
       >
-        {t('auth.login')}
+        <User className="h-4 w-4" />
+        {translatedLabels.login}
       </Button>
     );
   }
@@ -83,77 +114,143 @@ export default function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      <div className="flex items-center space-x-1">
-        <Link href="/wall">
-          <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+      <div className="flex items-center">
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <Avatar className="h-8 w-8">
             {user?.avatar ? (
               <AvatarImage
                 src={sanitizeImageUrl(user.avatar, '/assets/default-avatar.png')}
                 alt={user.name || user.username}
               />
             ) : null}
-            <AvatarFallback>{getInitials(user?.name || user?.username || '')}</AvatarFallback>
+            <AvatarFallback className="bg-blue-600 text-white text-sm">
+              {getInitials(user?.name || user?.username || '')}
+            </AvatarFallback>
           </Avatar>
-        </Link>
-        <button onClick={() => setIsOpen(!isOpen)}>
-          <i className="ri-arrow-down-s-line text-gray-500 hover:text-gray-700 transition-colors"></i>
+          <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-          <Link href="/profile-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-user-settings-line mr-2"></i> {t('account.profile_settings') || 'Your Profile'}
-          </Link>
-          <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-settings-4-line mr-2"></i> {t('account.settings')}
-          </Link>
-          <Link href="/messages" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <div className="flex items-center">
-              <i className="ri-message-3-line mr-2"></i> Messages
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+          {/* Profile Header */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                {user?.avatar ? (
+                  <AvatarImage
+                    src={sanitizeImageUrl(user.avatar, '/assets/default-avatar.png')}
+                    alt={user.name || user.username}
+                  />
+                ) : null}
+                <AvatarFallback className="bg-blue-600 text-white">
+                  {getInitials(user?.name || user?.username || '')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user?.name || user?.username}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  @{user?.username}
+                </p>
+              </div>
             </div>
-            {(unreadMessages?.count || 0) > 0 && (
-              <Badge className="bg-blue-600 text-white text-xs ml-2">
-                {unreadMessages?.count || 0}
-              </Badge>
-            )}
-          </Link>
-          <Link href="/notifications" className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <div className="flex items-center">
-              <i className="ri-notification-3-line mr-2"></i> Notifications
-            </div>
-            {(unreadNotifications?.count || 0) > 0 && (
-              <Badge className="bg-red-600 text-white text-xs ml-2">
-                {unreadNotifications?.count || 0}
-              </Badge>
-            )}
-          </Link>
-          <Link href="/dating-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i className="ri-heart-3-line mr-2"></i> Dating Dashboard
-          </Link>
-          <button 
-            className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            onClick={handleSwitchToDashboard}
-          >
-            <i className="ri-store-2-line mr-2"></i> {t('vendor.dashboard')}
-          </button>
-          <div className="border-t border-gray-100"></div>
-          <button
-            className="w-full text-left block px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-50"
-            onClick={handleLogout}
-            disabled={logoutMutation.isPending}
-          >
-            {logoutMutation.isPending ? (
-              <>
-                <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin text-blue-600" /> 
-                {t('auth.logging_out') || 'Logging out...'}
-              </>
-            ) : (
-              <>
-                <i className="ri-logout-box-line mr-2 text-blue-600"></i> {t('auth.logout')}
-              </>
-            )}
-          </button>
+          </div>
+
+          {/* Menu Items */}
+          <div className="py-1">
+            <Link 
+              href="/profile-settings" 
+              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <User className="h-4 w-4 text-gray-500" />
+              {translatedLabels.yourProfile}
+            </Link>
+            
+            <Link 
+              href="/settings" 
+              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <Settings className="h-4 w-4 text-gray-500" />
+              {translatedLabels.settings}
+            </Link>
+            
+            <Link 
+              href="/messages" 
+              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-4 w-4 text-gray-500" />
+                {translatedLabels.messages}
+              </div>
+              {(unreadMessages?.count || 0) > 0 && (
+                <Badge className="bg-blue-600 text-white text-xs min-w-[20px] h-5 flex items-center justify-center">
+                  {(unreadMessages?.count || 0) > 99 ? "99+" : unreadMessages?.count}
+                </Badge>
+              )}
+            </Link>
+            
+            <Link 
+              href="/notifications" 
+              className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="flex items-center gap-3">
+                <Bell className="h-4 w-4 text-gray-500" />
+                {translatedLabels.notifications}
+              </div>
+              {(unreadNotifications?.count || 0) > 0 && (
+                <Badge className="bg-red-600 text-white text-xs min-w-[20px] h-5 flex items-center justify-center">
+                  {(unreadNotifications?.count || 0) > 99 ? "99+" : unreadNotifications?.count}
+                </Badge>
+              )}
+            </Link>
+            
+            <Link 
+              href="/dating-profile" 
+              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <Heart className="h-4 w-4 text-gray-500" />
+              {translatedLabels.datingDashboard}
+            </Link>
+            
+            <button 
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={handleSwitchToDashboard}
+            >
+              <Store className="h-4 w-4 text-gray-500" />
+              {translatedLabels.vendorDashboard}
+            </button>
+          </div>
+
+          {/* Logout Section */}
+          <div className="border-t border-gray-100 mt-1 pt-1">
+            <button
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+            >
+              {logoutMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {translatedLabels.loggingOut}
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4" />
+                  {translatedLabels.logout}
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </div>
