@@ -42,7 +42,7 @@ export default function DatingPage() {
   const [, setLocation] = useLocation();
   const { formatPrice, formatPriceFromGBP } = useCurrency();
 
-  // Dating Page Master Translation Mega-Batch (95 texts)
+  // Dating Page Master Translation Mega-Batch (115 texts)
   const datingTexts = useMemo(() => [
     // Page Headers & Navigation (12 texts)
     "Dating Rooms", "Find Your Perfect Match", "Connect with like-minded people", "Welcome to Premium Dating",
@@ -76,7 +76,14 @@ export default function DatingPage() {
     "Browse dating profiles", "Send and receive messages", "Basic matching algorithm", "Standard profile visibility",
     "Community chat access", "There is a limited number of gifts you can send; however, for an unlimited quantity, an upgrade is available for",
     "Perfect For", "Anyone starting their dating journey", "Casual dating and friendships", "Exploring the platform features",
-    "Building connections", "Create Dating Profile", "Join Normal Room"
+    "Building connections", "Create Dating Profile", "Join Normal Room",
+    
+    // VIP Room Specific Content (20 texts)
+    "VIP Dating Room", "For earners over", "Premium Features", "All Normal Room features", "Unlimited gifts",
+    "Priority profile visibility", "Advanced matching filters", "Verified income profiles", "Exclusive VIP events",
+    "Personal dating concierge", "Exclusive Access", "High-earning professionals", "Verified income verification",
+    "Quality over quantity matching", "Private VIP chat rooms", "Premium customer support", "Upgrade to VIP",
+    "Join VIP Room", "Elite Dating Experience", "Professionals only"
   ], []);
 
   // Use Master Translation System for optimal performance
@@ -116,7 +123,14 @@ export default function DatingPage() {
     browseDatingProfilesText, sendReceiveMessagesText, basicMatchingAlgorithmText, standardProfileVisibilityText,
     communityChatAccessText, limitedGiftsUpgradeText,
     perfectForText, startingJourneyText, casualDatingText, exploringFeaturesText,
-    buildingConnectionsText, createDatingProfileText, joinNormalRoomText
+    buildingConnectionsText, createDatingProfileText, joinNormalRoomText,
+    
+    // VIP Room Specific Content (20 texts)
+    vipDatingRoomText, forEarnersOverText, premiumFeaturesText, allNormalRoomFeaturesText, unlimitedGiftsText,
+    priorityProfileVisibilityText, advancedMatchingFiltersText, verifiedIncomeProfilesText, exclusiveVipEventsText,
+    personalDatingConciergeText, exclusiveAccessText, highEarningProfessionalsText, verifiedIncomeVerificationText,
+    qualityOverQuantityText, privateVipChatRoomsText, premiumCustomerSupportText, upgradeToVipText,
+    joinVipRoomText, eliteDatingExperienceText, professionalsOnlyText
   ] = t || datingTexts;
 
   // Fetch current user
@@ -327,39 +341,39 @@ export default function DatingPage() {
                   <CardHeader className="text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Crown className="h-8 w-8 text-yellow-600" />
-                      <CardTitle className="text-2xl">VIP Dating Room</CardTitle>
+                      <CardTitle className="text-2xl">{vipDatingRoomText}</CardTitle>
                     </div>
                     <p className="text-3xl font-bold text-yellow-600">{formatPriceFromGBP(199.99)}/month</p>
-                    <p className="text-sm text-gray-600">For earners over {formatPriceFromGBP(150000)} per year</p>
+                    <p className="text-sm text-gray-600">{forEarnersOverText} {formatPriceFromGBP(150000)} per year</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <Star className="h-5 w-5" />
-                          Premium Features
+                          {premiumFeaturesText}
                         </h3>
                         <ul className="space-y-2 text-sm">
-                          <li>• All Normal Room features</li>
-                          <li>• Unlimited gifts</li>
-                          <li>• Priority profile visibility</li>
-                          <li>• Advanced matching filters</li>
-                          <li>• Verified income profiles</li>
-                          <li>• Exclusive VIP events</li>
-                          <li>• Personal dating concierge</li>
+                          <li>• {allNormalRoomFeaturesText}</li>
+                          <li>• {unlimitedGiftsText}</li>
+                          <li>• {priorityProfileVisibilityText}</li>
+                          <li>• {advancedMatchingFiltersText}</li>
+                          <li>• {verifiedIncomeProfilesText}</li>
+                          <li>• {exclusiveVipEventsText}</li>
+                          <li>• {personalDatingConciergeText}</li>
                         </ul>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <Shield className="h-5 w-5" />
-                          Exclusive Access
+                          {exclusiveAccessText}
                         </h3>
                         <ul className="space-y-2 text-sm">
-                          <li>• High-earning professionals</li>
-                          <li>• Verified income verification</li>
-                          <li>• Quality over quantity matching</li>
-                          <li>• Private VIP chat rooms</li>
-                          <li>• Premium customer support</li>
+                          <li>• {highEarningProfessionalsText}</li>
+                          <li>• {verifiedIncomeVerificationText}</li>
+                          <li>• {qualityOverQuantityText}</li>
+                          <li>• {privateVipChatRoomsText}</li>
+                          <li>• {premiumCustomerSupportText}</li>
                         </ul>
                       </div>
                     </div>
@@ -368,7 +382,7 @@ export default function DatingPage() {
                         onClick={() => user ? setLocation("/dating-profile") : showLoginPrompt()} 
                         className="bg-yellow-600 text-white hover:bg-yellow-700 px-8"
                       >
-                        {user ? "Create Dating Profile" : "Join VIP Room"}
+                        {user ? createDatingProfileText : joinVipRoomText}
                       </Button>
                     </div>
                   </CardContent>
