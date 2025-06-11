@@ -75,7 +75,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
                 onClick={() => setLocation("/dating")}
               >
                 <Compass className="h-4 w-4" />
-                <span className="text-sm font-medium">Browse Profiles</span>
+                <span className="text-sm font-medium">{browseProfilesText}</span>
               </Button>
             )}
             
@@ -87,7 +87,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
                 onClick={() => setLocation(`/profile/${datingProfile.userId}`)}
               >
                 <User className="h-4 w-4" />
-                <span className="text-sm font-medium">My Dating Profile</span>
+                <span className="text-sm font-medium">{myDatingProfileText}</span>
               </Button>
             )}
             
@@ -97,7 +97,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               onClick={() => setLocation("/dating-profile")}
             >
               <Settings className="h-4 w-4" />
-              <span className="text-sm font-medium">Dating Dashboard</span>
+              <span className="text-sm font-medium">{datingDashboardText}</span>
             </Button>
           </div>
         </div>
