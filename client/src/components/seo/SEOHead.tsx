@@ -13,7 +13,7 @@ interface SEOHeadProps {
 
 export function SEOHead({
   title = "Dedw3n - Multi-Vendor Social Marketplace & Dating Platform",
-  description = "Comprehensive multi-vendor social marketplace and dating platform with advanced financial interactions, real-time messaging, and intelligent social experiences.",
+  description = "Dedw3n is a multi-vendor marketplace and social platform built with modern web technologies. The platform combines e-commerce capabilities with social networking features, creating an end-to-end transactional ecosystem where users can purchase products, interact socially, and access exclusive content. Dedw3n represents a comprehensive solution for online commerce with integrated social, financial and shipping features, designed to create meaningful digital connections while facilitating secure transactions in a multi-vendor environment.",
   keywords = "marketplace, social platform, dating, e-commerce, multi-vendor, online shopping, social networking",
   image = "/assets/og-image.png",
   url,
@@ -89,7 +89,7 @@ export function SEOHead({
 export const seoConfigs = {
   home: {
     title: "Dedw3n - Multi-Vendor Social Marketplace & Dating Platform",
-    description: "Discover products, connect with people, and build meaningful relationships on Dedw3n's comprehensive social marketplace and dating platform.",
+    description: "Dedw3n is a multi-vendor marketplace and social platform built with modern web technologies. The platform combines e-commerce capabilities with social networking features, creating an end-to-end transactional ecosystem where users can purchase products, interact socially, and access exclusive content. Dedw3n represents a comprehensive solution for online commerce with integrated social, financial and shipping features, designed to create meaningful digital connections while facilitating secure transactions in a multi-vendor environment.",
     keywords: "marketplace, social platform, dating, e-commerce, multi-vendor, online shopping"
   },
   products: {
