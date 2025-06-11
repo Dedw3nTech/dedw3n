@@ -938,6 +938,9 @@ export function registerMessagingSuite(app: Express, server: Server) {
   // WebSocket server setup disabled - using unified websocket-handler.ts instead
   console.log('[MESSAGING-SUITE] Skipping WebSocket setup - using unified handler');
   
+  // Explicitly disable WebSocket server creation to prevent port conflicts
+  return;
+  
   // Message APIs
   
   // Get messages between users
