@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProfilePictureUploader from '@/components/user/ProfilePictureUploader';
@@ -15,6 +15,7 @@ import { updateUserData } from '@/lib/userStorage';
 import { Loader2, Store, Heart, Globe, Calendar } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 // Calculate age from date of birth
 const calculateAge = (dateOfBirth: string): number => {
@@ -38,6 +39,107 @@ export default function ProfileSettingsPage() {
   const [, setLocation] = useLocation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  // Define translatable texts for the profile settings page
+  const profileTexts = useMemo(() => [
+    "User Settings",
+    "Profile",
+    "Shipping", 
+    "Billing",
+    "Profile Picture",
+    "Update your profile photo",
+    "Change Picture",
+    "Personal Information",
+    "Update your personal details",
+    "Profile Handle Name",
+    "This is your unique username used to identify you on the platform.",
+    "Full Name",
+    "Bio",
+    "Add Bio",
+    "Date of Birth",
+    "Gender",
+    "Select your gender",
+    "Male",
+    "Female", 
+    "Other",
+    "Location",
+    "Update your location information",
+    "Region",
+    "Country",
+    "City",
+    "Vendor Account",
+    "Not Active",
+    "Don't have a vendor account yet?",
+    "Click here to activate your account",
+    "Shipping Information",
+    "Update your shipping details",
+    "First Name",
+    "Last Name", 
+    "Phone Number",
+    "Address",
+    "State/Province",
+    "ZIP/Postal Code",
+    "Special Instructions",
+    "Billing Information",
+    "Update your billing details",
+    "Use shipping address as billing address",
+    "Save Changes",
+    "Saving...",
+    "Profile updated successfully!",
+    "Failed to update profile. Please try again."
+  ], []);
+
+  // Use master translation system for consistent auto-translation
+  const { translations: translatedTexts } = useMasterBatchTranslation(profileTexts, 'high');
+
+  // Memoize translated labels to prevent re-render loops
+  const translatedLabels = useMemo(() => ({
+    userSettings: translatedTexts[0] || "User Settings",
+    profile: translatedTexts[1] || "Profile",
+    shipping: translatedTexts[2] || "Shipping",
+    billing: translatedTexts[3] || "Billing",
+    profilePicture: translatedTexts[4] || "Profile Picture",
+    updateProfilePhoto: translatedTexts[5] || "Update your profile photo",
+    changePicture: translatedTexts[6] || "Change Picture",
+    personalInformation: translatedTexts[7] || "Personal Information",
+    updatePersonalDetails: translatedTexts[8] || "Update your personal details",
+    profileHandleName: translatedTexts[9] || "Profile Handle Name",
+    uniqueUsername: translatedTexts[10] || "This is your unique username used to identify you on the platform.",
+    fullName: translatedTexts[11] || "Full Name",
+    bio: translatedTexts[12] || "Bio",
+    addBio: translatedTexts[13] || "Add Bio",
+    dateOfBirth: translatedTexts[14] || "Date of Birth",
+    gender: translatedTexts[15] || "Gender",
+    selectGender: translatedTexts[16] || "Select your gender",
+    male: translatedTexts[17] || "Male",
+    female: translatedTexts[18] || "Female",
+    other: translatedTexts[19] || "Other",
+    location: translatedTexts[20] || "Location",
+    updateLocationInfo: translatedTexts[21] || "Update your location information",
+    region: translatedTexts[22] || "Region",
+    country: translatedTexts[23] || "Country",
+    city: translatedTexts[24] || "City",
+    vendorAccount: translatedTexts[25] || "Vendor Account",
+    notActive: translatedTexts[26] || "Not Active",
+    noVendorAccount: translatedTexts[27] || "Don't have a vendor account yet?",
+    clickToActivate: translatedTexts[28] || "Click here to activate your account",
+    shippingInformation: translatedTexts[29] || "Shipping Information",
+    updateShippingDetails: translatedTexts[30] || "Update your shipping details",
+    firstName: translatedTexts[31] || "First Name",
+    lastName: translatedTexts[32] || "Last Name",
+    phoneNumber: translatedTexts[33] || "Phone Number",
+    address: translatedTexts[34] || "Address",
+    stateProvince: translatedTexts[35] || "State/Province",
+    zipPostalCode: translatedTexts[36] || "ZIP/Postal Code",
+    specialInstructions: translatedTexts[37] || "Special Instructions",
+    billingInformation: translatedTexts[38] || "Billing Information",
+    updateBillingDetails: translatedTexts[39] || "Update your billing details",
+    useShippingAsBilling: translatedTexts[40] || "Use shipping address as billing address",
+    saveChanges: translatedTexts[41] || "Save Changes",
+    saving: translatedTexts[42] || "Saving...",
+    updateSuccess: translatedTexts[43] || "Profile updated successfully!",
+    updateError: translatedTexts[44] || "Failed to update profile. Please try again."
+  }), [translatedTexts]);
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -383,13 +485,13 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="container max-w-3xl pt-6 pb-16 text-black">
-      <h1 className="text-3xl font-bold mb-6 text-black">User Settings</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black">{translatedLabels.userSettings}</h1>
       
       <Tabs defaultValue="profile">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="profile" className="flex-1 text-black">Profile</TabsTrigger>
-          <TabsTrigger value="shipping" className="flex-1 text-black">Shipping</TabsTrigger>
-          <TabsTrigger value="billing" className="flex-1 text-black">Billing</TabsTrigger>
+          <TabsTrigger value="profile" className="flex-1 text-black">{translatedLabels.profile}</TabsTrigger>
+          <TabsTrigger value="shipping" className="flex-1 text-black">{translatedLabels.shipping}</TabsTrigger>
+          <TabsTrigger value="billing" className="flex-1 text-black">{translatedLabels.billing}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -397,9 +499,9 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-black">Profile Picture</CardTitle>
+                  <CardTitle className="text-black">{translatedLabels.profilePicture}</CardTitle>
                   <CardDescription className="text-black">
-                    Update your profile photo
+                    {translatedLabels.updateProfilePhoto}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
@@ -416,7 +518,7 @@ export default function ProfileSettingsPage() {
                 <CardHeader>
                   <CardTitle className="text-black flex items-center text-sm">
                     <Store className="mr-2 h-4 w-4" />
-                    Vendor Account
+                    {translatedLabels.vendorAccount}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -515,45 +617,45 @@ export default function ProfileSettingsPage() {
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-black">Personal Information</CardTitle>
+                  <CardTitle className="text-black">{translatedLabels.personalInformation}</CardTitle>
                   <CardDescription className="text-black">
-                    Update your personal details
+                    {translatedLabels.updatePersonalDetails}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-black font-bold">Profile Handle Name</Label>
+                    <Label htmlFor="username" className="text-black font-bold">{translatedLabels.profileHandleName}</Label>
                     <Input
                       id="username"
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
-                      placeholder="Your unique username"
+                      placeholder={formData.username || 'Your unique username'}
                       className="text-black font-medium border-2 border-gray-300"
                     />
-                    <p className="text-xs text-gray-600">This is your unique username used to identify you on the platform.</p>
+                    <p className="text-xs text-gray-600">{translatedLabels.uniqueUsername}</p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-black">Full Name</Label>
+                    <Label htmlFor="name" className="text-black">{translatedLabels.fullName}</Label>
                     <Input
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="Your full name"
+                      placeholder={formData.name || 'Your full name'}
                       className="text-black"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-black">Bio</Label>
+                    <Label htmlFor="bio" className="text-black">{translatedLabels.bio}</Label>
                     <Textarea
                       id="bio"
                       name="bio"
                       value={formData.bio || ''}
                       onChange={handleInputChange}
-                      placeholder="Add Bio"
+                      placeholder={translatedLabels.addBio}
                       rows={4}
                       className="text-black"
                     />
@@ -562,7 +664,7 @@ export default function ProfileSettingsPage() {
                   <div className="space-y-2">
                     <Label htmlFor="dateOfBirth" className="text-black flex items-center">
                       <Calendar className="mr-2 h-4 w-4" />
-                      Date of Birth
+                      {translatedLabels.dateOfBirth}
                     </Label>
                     <Input
                       id="dateOfBirth"
@@ -584,15 +686,15 @@ export default function ProfileSettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="gender" className="text-black">Gender</Label>
+                    <Label htmlFor="gender" className="text-black">{translatedLabels.gender}</Label>
                     <Select value={formData.gender || ''} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
                       <SelectTrigger className="text-black">
-                        <SelectValue placeholder="Select your gender" />
+                        <SelectValue placeholder={translatedLabels.selectGender} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{translatedLabels.male}</SelectItem>
+                        <SelectItem value="female">{translatedLabels.female}</SelectItem>
+                        <SelectItem value="other">{translatedLabels.other}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -601,7 +703,7 @@ export default function ProfileSettingsPage() {
                   <div className="space-y-2">
                     <Label className="text-black flex items-center">
                       <Globe className="mr-2 h-4 w-4" />
-                      My Region
+                      {translatedLabels.location}
                     </Label>
                     <RegionSelector 
                       currentRegion={formData.region}
