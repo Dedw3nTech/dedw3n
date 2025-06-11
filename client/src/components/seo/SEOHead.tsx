@@ -116,5 +116,15 @@ export const seoConfigs = {
     title: "Government Services - Dedw3n",
     description: "Access government services and official information through our secure platform.",
     keywords: "government, services, official, secure, platform"
+  },
+  contact: {
+    title: "Contact Us - Dedw3n",
+    description: "For any inquiries, please do not hesitate to contact us at info@dedw3n.com.",
+    keywords: "contact, support, help, inquiries, customer service"
+  },
+  b2c: {
+    title: "B2C Marketplace - Dedw3n",
+    description: "Dedw3n Ltd. The all-in-one platform to buy, sell, and connect with a community of creators and shoppers.",
+    keywords: "b2c, marketplace, buy, sell, creators, shoppers, community"
   }
 };
