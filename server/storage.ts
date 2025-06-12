@@ -94,6 +94,7 @@ export interface IStorage {
   checkConnection(userId1: number, userId2: number): Promise<boolean>;
   listUsers(): Promise<User[]>;
   searchUsers(query: string, limit?: number): Promise<User[]>;
+  getUsersForMessaging(currentUserId: number): Promise<Array<{id: number, username: string, name: string, avatar: string | null}>>
   
   // Follow operations
   followUser(followerId: number, followingId: number): Promise<boolean>;
@@ -737,6 +738,38 @@ export class DatabaseStorage implements IStorage {
       const { password, ...userData } = user;
       return userData as User;
     });
+  }
+
+  async getUsersForMessaging(currentUserId: number): Promise<Array<{id: number, username: string, name: string, avatar: string | null}>> {
+    try {
+      const usersForMessaging = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(
+          and(
+            // Exclude current user
+            sql`${users.id} != ${currentUserId}`,
+            // Only include active users (not necessarily filtering by role for now)
+            or(
+              eq(users.role, 'user'),
+              eq(users.role, 'vendor'),
+              eq(users.role, 'business')
+            )
+          )
+        )
+        .orderBy(users.name)
+        .limit(50);
+      
+      return usersForMessaging;
+    } catch (error) {
+      console.error('Error getting users for messaging:', error);
+      return [];
+    }
   }
   
   // Category methods

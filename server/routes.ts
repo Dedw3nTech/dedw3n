@@ -3713,6 +3713,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get users for messaging (excluding current user)
+  app.get('/api/messages/users', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const currentUserId = req.user.id;
+      const users = await storage.getUsersForMessaging(currentUserId);
+      res.json(users);
+    } catch (error) {
+      console.error('Error getting users for messaging:', error);
+      res.status(500).json({ message: 'Failed to get users' });
+    }
+  });
+
   // Category-specific messaging endpoints
   app.get('/api/messages/category/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

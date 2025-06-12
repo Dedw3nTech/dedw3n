@@ -3,11 +3,44 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Send } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MessageSquare, Send, Plus, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+
+interface MessagingUser {
+  id: number;
+  username: string;
+  name: string;
+  avatar: string | null;
+}
 
 export function UnifiedMessaging() {
   const { user } = useAuth();
-  const { conversations, messages, unreadCount, isConnected } = useMessaging();
+  const { conversations, messages, unreadCount, isConnected, sendMessage } = useMessaging();
+  const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<MessagingUser | null>(null);
+  const [messageText, setMessageText] = useState('');
+
+  // Fetch users for messaging
+  const { data: availableUsers = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/messages/users'],
+    enabled: !!user?.id,
+  });
+
+  const handleStartConversation = async (recipient: MessagingUser) => {
+    setSelectedUser(recipient);
+    setIsNewMessageOpen(false);
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedUser || !messageText.trim()) return;
+    
+    await sendMessage(String(selectedUser.id), messageText.trim());
+    setMessageText('');
+  };
 
   if (!user) {
     return (
@@ -31,14 +64,66 @@ export function UnifiedMessaging() {
     <div className="max-w-4xl mx-auto p-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Messages
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {unreadCount}
-              </span>
-            )}
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Messages
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+            <Dialog open={isNewMessageOpen} onOpenChange={setIsNewMessageOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" />
+                  New Message
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Start New Conversation</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground">
+                    Select a user to start messaging with:
+                  </div>
+                  <ScrollArea className="h-64 border rounded-md p-2">
+                    {usersLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="text-sm text-muted-foreground">Loading users...</div>
+                      </div>
+                    ) : availableUsers.length === 0 ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="text-sm text-muted-foreground">No users available</div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {availableUsers.map((availableUser: MessagingUser) => (
+                          <div
+                            key={availableUser.id}
+                            className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleStartConversation(availableUser)}
+                          >
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={availableUser.avatar || undefined} />
+                              <AvatarFallback>
+                                <User className="h-4 w-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm">{availableUser.name}</div>
+                              <div className="text-xs text-muted-foreground">@{availableUser.username}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardTitle>
         </CardHeader>
         <CardContent>
