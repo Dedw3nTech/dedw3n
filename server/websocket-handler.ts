@@ -333,21 +333,28 @@ export function setupWebSocket(server: Server) {
 // Handle chat messages
 async function handleChatMessage(message: WebSocketMessage, senderId: number, senderWs: WebSocket) {
   try {
-    if (!message.data?.content || !message.targetUserId) {
+    console.log('[WebSocket] Processing message:', JSON.stringify(message, null, 2));
+    const receiverId = message.data?.receiverId || message.targetUserId;
+    
+    console.log('[WebSocket] Extracted receiverId:', receiverId);
+    console.log('[WebSocket] Message content:', message.data?.content);
+    
+    if (!message.data?.content || !receiverId) {
+      console.log('[WebSocket] Missing required data - content:', !!message.data?.content, 'receiverId:', !!receiverId);
       throw new Error('Invalid message data');
     }
 
     // Save message to database
     const newMessage = await storage.createMessage({
       senderId,
-      receiverId: message.targetUserId,
+      receiverId: receiverId,
       content: message.data.content,
       attachmentUrl: message.data.attachmentUrl,
       attachmentType: message.data.attachmentType
     });
 
     // Send to target user if online
-    const targetWs = wsClients.get(message.targetUserId);
+    const targetWs = wsClients.get(receiverId);
     if (targetWs && targetWs.readyState === WebSocket.OPEN) {
       targetWs.send(JSON.stringify({
         type: 'message',
