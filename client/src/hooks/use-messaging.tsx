@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from './use-auth';
 
@@ -38,16 +38,128 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Simple messaging implementation - will be enhanced later
+  // WebSocket connection management
+  const connectWebSocket = () => {
+    if (!user?.id) {
+      console.log('[Messaging] No user ID available for WebSocket connection');
+      return;
+    }
+
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('[Messaging] WebSocket already connected');
+      return;
+    }
+
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
+      
+      console.log('[Messaging] Connecting to WebSocket:', wsUrl);
+      wsRef.current = new WebSocket(wsUrl);
+
+      wsRef.current.onopen = () => {
+        console.log('[Messaging] WebSocket connected successfully');
+        setIsConnected(true);
+        
+        // Clear any existing reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+      };
+
+      wsRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('[Messaging] Received WebSocket message:', data);
+          
+          if (data.type === 'connection_status' && data.data?.status === 'connected') {
+            setIsConnected(true);
+          } else if (data.type === 'message') {
+            // Handle incoming message
+            console.log('[Messaging] New message received:', data);
+          }
+        } catch (error) {
+          console.error('[Messaging] Error parsing WebSocket message:', error);
+        }
+      };
+
+      wsRef.current.onclose = (event) => {
+        console.log('[Messaging] WebSocket disconnected:', event.code, event.reason);
+        setIsConnected(false);
+        
+        // Attempt to reconnect after a delay if user is still logged in
+        if (user?.id && event.code !== 1000) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('[Messaging] Attempting to reconnect WebSocket...');
+            connectWebSocket();
+          }, 3000);
+        }
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('[Messaging] WebSocket error:', error);
+        setIsConnected(false);
+      };
+
+    } catch (error) {
+      console.error('[Messaging] Failed to create WebSocket connection:', error);
+      setIsConnected(false);
+    }
+  };
+
+  // Connect when user is available
+  useEffect(() => {
+    if (user?.id) {
+      connectWebSocket();
+    } else {
+      // Disconnect when user logs out
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'User logged out');
+        wsRef.current = null;
+      }
+      setIsConnected(false);
+    }
+
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Component unmounting');
+      }
+    };
+  }, [user?.id]);
+
   const sendMessage = async (receiverId: string, content: string) => {
-    // Placeholder implementation
-    console.log('Sending message:', { receiverId, content });
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.error('[Messaging] WebSocket not connected');
+      return;
+    }
+
+    try {
+      const message = {
+        type: 'message',
+        data: {
+          receiverId: parseInt(receiverId),
+          content,
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      wsRef.current.send(JSON.stringify(message));
+      console.log('[Messaging] Message sent:', message);
+    } catch (error) {
+      console.error('[Messaging] Failed to send message:', error);
+    }
   };
 
   const markAsRead = async (conversationId: string) => {
-    // Placeholder implementation
-    console.log('Marking as read:', conversationId);
+    console.log('[Messaging] Marking conversation as read:', conversationId);
+    // Implementation for marking messages as read
   };
 
   const value: MessagingContextType = {

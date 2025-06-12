@@ -3698,6 +3698,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Messaging API endpoints
 
+  // Simple unread message count endpoint (without category)
+  app.get('/api/messages/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const userId = req.user.id;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      res.status(500).json({ message: 'Failed to get unread message count' });
+    }
+  });
+
   // Category-specific messaging endpoints
   app.get('/api/messages/category/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -3899,19 +3914,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  app.get('/api/messages/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const userId = req.user.id;
-      const count = await storage.getUnreadMessageCount(userId);
-      res.json({ count });
-    } catch (error) {
-      console.error('Error getting unread count:', error);
-      res.status(500).json({ message: 'Failed to get unread count' });
-    }
-  });
+
 
   app.get('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -10062,9 +10065,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     });
   });
 
-  // Set up WebSocket server for messaging - DISABLED to prevent port conflicts
-  console.log('[WebSocket] WebSocket server setup disabled to prevent port conflicts');
-  // setupWebSocket(server);
+  // Set up WebSocket server for messaging
+  console.log('[WebSocket] Setting up WebSocket server for messaging');
+  setupWebSocket(server);
 
   return server;
 }
