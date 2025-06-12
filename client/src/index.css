@@ -92,3 +92,22 @@
   display: none !important;
 }
 
+/* Messaging Component Layout Isolation */
+[data-messaging-container] {
+  isolation: isolate;
+  contain: layout style;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+[data-messaging-container] .messaging-input-container {
+  position: relative !important;
+  z-index: 1 !important;
+  contain: layout;
+}
+
+[data-messaging-container] [data-radix-popper-content-wrapper] {
+  position: absolute !important;
+  z-index: 50 !important;
+}
+

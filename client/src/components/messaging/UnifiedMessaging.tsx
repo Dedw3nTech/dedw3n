@@ -105,8 +105,8 @@ export function UnifiedMessaging() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 relative z-10">
-      <Card>
+    <div className="max-w-4xl mx-auto p-4 relative z-10 min-h-screen" data-messaging-container>
+      <Card className="relative overflow-hidden bg-white shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -282,9 +282,9 @@ export function UnifiedMessaging() {
                     </ScrollArea>
                   </CardContent>
 
-                  {/* Message Input - Inside Card */}
-                  <div className="p-4 border-t flex-shrink-0">
-                    <div className="flex gap-2 relative">
+                  {/* Message Input - Inside Card with Strict Containment */}
+                  <CardContent className="p-4 border-t flex-shrink-0 bg-white relative messaging-input-container">
+                    <div className="flex gap-2 relative w-full max-w-full">
                       <div className="flex-1 relative">
                         <Input 
                           ref={inputRef}
@@ -296,7 +296,7 @@ export function UnifiedMessaging() {
                                 ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
                                 : "Select a user to start messaging..."
                           } 
-                          className="h-10 pr-12"
+                          className="h-10 pr-12 relative z-0"
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                           onKeyPress={(e) => {
@@ -307,44 +307,51 @@ export function UnifiedMessaging() {
                           }}
                           disabled={!selectedUser && !selectedConversation}
                         />
-                        {/* Emoji Button */}
-                        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-                              disabled={!selectedUser && !selectedConversation}
+                        {/* Emoji Button with Portal Prevention */}
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 hover:bg-gray-100 relative z-10"
+                                disabled={!selectedUser && !selectedConversation}
+                              >
+                                <Smile className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-auto p-0 border-0 shadow-lg relative z-50" 
+                              side="top" 
+                              align="end"
+                              container={document.querySelector('[data-messaging-container]')}
                             >
-                              <Smile className="h-4 w-4" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 border-0 shadow-lg" side="top" align="end">
-                            <EmojiPicker
-                              onEmojiClick={handleEmojiSelect}
-                              width={350}
-                              height={400}
-                              previewConfig={{
-                                showPreview: false
-                              }}
-                              skinTonesDisabled
-                              searchDisabled={false}
-                            />
-                          </PopoverContent>
-                        </Popover>
+                              <EmojiPicker
+                                onEmojiClick={handleEmojiSelect}
+                                width={350}
+                                height={400}
+                                previewConfig={{
+                                  showPreview: false
+                                }}
+                                skinTonesDisabled
+                                searchDisabled={false}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                       <Button 
                         type="button"
                         size="icon" 
                         onClick={handleSendMessage}
                         disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
-                        className="h-10 w-10"
+                        className="h-10 w-10 relative z-10"
                       >
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               )}
             </div>
