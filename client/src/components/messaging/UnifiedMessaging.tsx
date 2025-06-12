@@ -12,6 +12,22 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EmojiPicker from 'emoji-picker-react';
 
+// Helper function to format message timestamps
+function formatMessageTime(timestamp: string | Date): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  
+  if (diffInHours < 1) {
+    const diffInMinutes = Math.floor(diffInHours * 60);
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${Math.floor(diffInHours)}h ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+}
+
 interface MessagingUser {
   id: number;
   username: string;
@@ -28,6 +44,7 @@ export function UnifiedMessaging() {
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch users for messaging
   const { data: availableUsers = [], isLoading: usersLoading } = useQuery({
@@ -223,9 +240,9 @@ export function UnifiedMessaging() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="h-full flex flex-col">
+                <Card className="h-[600px] flex flex-col overflow-hidden">
                   {/* Chat Header */}
-                  <CardHeader className="pb-3 flex-shrink-0">
+                  <CardHeader className="pb-3 flex-shrink-0 border-b">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={
@@ -252,38 +269,49 @@ export function UnifiedMessaging() {
                     </div>
                   </CardHeader>
 
-                  {/* Messages Area with ScrollArea */}
-                  <CardContent className="flex-1 min-h-0 p-4">
-                    <ScrollArea className="h-full pr-4">
-                      {selectedUser && conversationMessages.length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">
-                          Start a conversation with {selectedUser.name}
-                        </div>
-                      ) : (
-                        <div className="space-y-3 pb-4">
-                          {(selectedConversation ? conversationMessages : messages).map((message: any) => (
-                            <div
-                              key={message.id}
-                              className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
-                            >
+                  {/* Messages Area - Scrollable with Fixed Height */}
+                  <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
+                      <div className="p-4">
+                        {selectedUser && conversationMessages.length === 0 ? (
+                          <div className="flex items-center justify-center h-96 text-muted-foreground">
+                            Start a conversation with {selectedUser.name}
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {(selectedConversation ? conversationMessages : messages).map((message: any) => (
                               <div
-                                className={`p-3 rounded-lg max-w-xs break-words ${
-                                  message.senderId === user.id
-                                    ? 'bg-blue-500 text-white rounded-br-sm'
-                                    : 'bg-gray-100 border rounded-bl-sm'
-                                }`}
+                                key={message.id}
+                                className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
                               >
-                                {message.content}
+                                <div
+                                  className={`p-3 rounded-lg max-w-[70%] break-words ${
+                                    message.senderId === user.id
+                                      ? 'bg-blue-500 text-white rounded-br-sm'
+                                      : 'bg-gray-100 border rounded-bl-sm'
+                                  }`}
+                                >
+                                  <div className="text-sm">{message.content}</div>
+                                  <div className={`text-xs mt-1 ${
+                                    message.senderId === user.id
+                                      ? 'text-blue-100'
+                                      : 'text-gray-500'
+                                  }`}>
+                                    {formatMessageTime(message.createdAt)}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                            ))}
+                            {/* Auto-scroll anchor */}
+                            <div ref={messagesEndRef} />
+                          </div>
+                        )}
+                      </div>
                     </ScrollArea>
-                  </CardContent>
+                  </div>
 
-                  {/* Message Input - Inside Card with Strict Containment */}
-                  <CardContent className="p-4 border-t flex-shrink-0 bg-white relative messaging-input-container">
+                  {/* Message Input - Fixed at Bottom */}
+                  <div className="border-t bg-white p-4 flex-shrink-0 messaging-input-container">
                     <div className="flex gap-2 relative w-full max-w-full">
                       <div className="flex-1 relative">
                         <Input 
