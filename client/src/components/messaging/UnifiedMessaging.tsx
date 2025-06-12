@@ -103,6 +103,13 @@ export function UnifiedMessaging() {
     }
   };
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [conversationMessages, messages]);
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -379,7 +386,7 @@ export function UnifiedMessaging() {
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               )}
             </div>
