@@ -1621,7 +1621,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Register news feed routes
   registerNewsFeedRoutes(app);
   
-  // Register message routes for direct messaging API
+  // Register message routes for direct messaging API - Disabled during infrastructure rebuild
 
   
   // Register shipping routes
