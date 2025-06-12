@@ -193,9 +193,9 @@ export function UnifiedMessaging() {
             </div>
 
             {/* Chat Area */}
-            <div className="col-span-2 flex flex-col">
+            <div className="col-span-2 flex flex-col h-full">
               {(selectedUser || selectedConversation) && (
-                <div className="border-b pb-2 mb-4">
+                <div className="border-b pb-2 mb-4 flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={
@@ -223,7 +223,8 @@ export function UnifiedMessaging() {
                 </div>
               )}
               
-              <div className="flex-1 border rounded p-4 mb-4 overflow-y-auto bg-gray-50">
+              {/* Messages Area */}
+              <div className="flex-1 border rounded p-4 mb-4 overflow-y-auto bg-gray-50 min-h-0">
                 {!selectedUser && !selectedConversation ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     Select a conversation or click "New Message" to start messaging
@@ -250,9 +251,10 @@ export function UnifiedMessaging() {
                 )}
               </div>
 
-              {/* Message Input */}
-              <div className="flex gap-2">
+              {/* Message Input - Fixed at bottom */}
+              <div className="flex gap-2 flex-shrink-0 mt-auto">
                 <Input 
+                  type="text"
                   placeholder={
                     selectedUser 
                       ? `Send ${selectedUser.name} a message...` 
@@ -260,7 +262,7 @@ export function UnifiedMessaging() {
                         ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
                         : "Select a user to start messaging..."
                   } 
-                  className="flex-1"
+                  className="flex-1 h-10"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   onKeyPress={(e) => {
@@ -272,9 +274,11 @@ export function UnifiedMessaging() {
                   disabled={!selectedUser && !selectedConversation}
                 />
                 <Button 
+                  type="button"
                   size="icon" 
                   onClick={handleSendMessage}
                   disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
+                  className="h-10 w-10"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
