@@ -35,7 +35,7 @@ import { registerAIInsightsRoutes } from "./ai-insights";
 import { registerNewsFeedRoutes } from "./news-feed";
 import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
-import { registerMessageRoutes } from "./message-routes";
+
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
 import { upload } from "./multer-config";
@@ -1622,7 +1622,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   registerNewsFeedRoutes(app);
   
   // Register message routes for direct messaging API
-  registerMessageRoutes(app);
+
   
   // Register shipping routes
   registerShippingRoutes(app);
