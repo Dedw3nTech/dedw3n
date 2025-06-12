@@ -333,14 +333,9 @@ export function setupWebSocket(server: Server) {
 // Handle chat messages
 async function handleChatMessage(message: WebSocketMessage, senderId: number, senderWs: WebSocket) {
   try {
-    console.log('[WebSocket] Processing message:', JSON.stringify(message, null, 2));
     const receiverId = message.data?.receiverId || message.targetUserId;
     
-    console.log('[WebSocket] Extracted receiverId:', receiverId);
-    console.log('[WebSocket] Message content:', message.data?.content);
-    
     if (!message.data?.content || !receiverId) {
-      console.log('[WebSocket] Missing required data - content:', !!message.data?.content, 'receiverId:', !!receiverId);
       throw new Error('Invalid message data');
     }
 

@@ -551,23 +551,7 @@ export default function Cart() {
             </button>
           </div>
           
-          {useEscrow && (
-            <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded">
-              <p className="text-xs text-black mb-2">
-                {translateText('Payment held securely until delivery confirmed')}
-              </p>
-              {escrowTransaction && (
-                <div className="text-xs text-black">
-                  <span className="font-medium">{translateText('Transaction ID')}: </span>
-                  <span className="font-mono">{escrowTransaction.id}</span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          <p className="text-xs text-gray-600">
-            {translateText('Use escrow.com for buyer protection and secure transactions')}
-          </p>
+
         </div>
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
