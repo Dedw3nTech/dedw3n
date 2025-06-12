@@ -19,7 +19,7 @@ interface MessagingUser {
 
 export function UnifiedMessaging() {
   const { user } = useAuth();
-  const { conversations, messages, unreadCount, isConnected, sendMessage, setActiveConversation, refreshConversations } = useMessaging();
+  const { conversations, messages, conversationMessages, unreadCount, isConnected, sendMessage, setActiveConversation, refreshConversations } = useMessaging();
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<MessagingUser | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -29,13 +29,6 @@ export function UnifiedMessaging() {
   const { data: availableUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/messages/users'],
     enabled: !!user?.id,
-  });
-
-  // Fetch messages for selected conversation
-  const { data: conversationMessages = [] } = useQuery({
-    queryKey: ['/api/messages/conversation', selectedConversation?.id],
-    enabled: !!selectedConversation?.id,
-    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   const handleStartConversation = async (recipient: MessagingUser) => {

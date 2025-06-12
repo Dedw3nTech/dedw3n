@@ -23,6 +23,7 @@ interface MessagingContextType {
   conversations: Conversation[];
   activeConversation: string | null;
   messages: Message[];
+  conversationMessages: Message[];
   unreadCount: number;
   isConnected: boolean;
   sendMessage: (receiverId: string, content: string) => Promise<void>;
@@ -51,12 +52,26 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Fetch messages for active conversation
+  const { data: conversationMessages = [] } = useQuery({
+    queryKey: ['/api/messages/conversation', activeConversation],
+    enabled: !!user?.id && !!activeConversation,
+    refetchInterval: 5000, // Refresh every 5 seconds for active conversation
+  });
+
   // Update conversations when data changes
   useEffect(() => {
     if (conversationsData && Array.isArray(conversationsData)) {
       setConversations(conversationsData);
     }
   }, [conversationsData]);
+
+  // Update messages when conversation messages change
+  useEffect(() => {
+    if (conversationMessages && Array.isArray(conversationMessages)) {
+      setMessages(conversationMessages);
+    }
+  }, [conversationMessages]);
 
   // WebSocket connection management
   const connectWebSocket = () => {
@@ -188,6 +203,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     conversations,
     activeConversation,
     messages,
+    conversationMessages,
     unreadCount,
     isConnected,
     sendMessage,
