@@ -61,7 +61,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     setActiveConversation,
   };
 
-  return { value, children } as any; // Temporary placeholder to fix import error
+  return (
+    <MessagingContext.Provider value={value}>
+      {children}
+    </MessagingContext.Provider>
+  );
 }
 
 export function useMessaging() {

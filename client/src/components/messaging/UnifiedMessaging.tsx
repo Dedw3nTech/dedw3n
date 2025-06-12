@@ -80,7 +80,7 @@ export function UnifiedMessaging() {
                       <div
                         key={message.id}
                         className={`p-2 rounded max-w-xs ${
-                          message.senderId === user.id
+                          message.senderId === String(user.id)
                             ? 'bg-blue-500 text-white ml-auto'
                             : 'bg-white border'
                         }`}
