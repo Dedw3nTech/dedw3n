@@ -47,7 +47,18 @@ export function UnifiedMessaging() {
     if (!selectedUser && !selectedConversation) return;
     if (!messageText.trim()) return;
     
-    const receiverId = selectedUser ? String(selectedUser.id) : String(selectedConversation.id);
+    let receiverId: string;
+    if (selectedUser) {
+      receiverId = String(selectedUser.id);
+    } else if (selectedConversation) {
+      // Find the other participant in the conversation
+      const otherParticipant = selectedConversation.participants.find((p: any) => p.id !== user?.id);
+      if (!otherParticipant) return;
+      receiverId = String(otherParticipant.id);
+    } else {
+      return;
+    }
+    
     await sendMessage(receiverId, messageText.trim());
     setMessageText('');
     refreshConversations();
@@ -242,7 +253,13 @@ export function UnifiedMessaging() {
               {/* Message Input */}
               <div className="flex gap-2">
                 <Input 
-                  placeholder={selectedUser ? `Message ${selectedUser.name}...` : "Select a user to start messaging..."} 
+                  placeholder={
+                    selectedUser 
+                      ? `Send ${selectedUser.name} a message...` 
+                      : selectedConversation 
+                        ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
+                        : "Select a user to start messaging..."
+                  } 
                   className="flex-1"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
@@ -252,12 +269,12 @@ export function UnifiedMessaging() {
                       handleSendMessage();
                     }
                   }}
-                  disabled={!selectedUser}
+                  disabled={!selectedUser && !selectedConversation}
                 />
                 <Button 
                   size="icon" 
                   onClick={handleSendMessage}
-                  disabled={!selectedUser || !messageText.trim()}
+                  disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
                 >
                   <Send className="h-4 w-4" />
                 </Button>

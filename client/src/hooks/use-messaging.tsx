@@ -52,10 +52,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Get the other participant's ID from the active conversation
+  const activeConversationData = conversations.find(conv => String(conv.id) === activeConversation);
+  const otherParticipantId = activeConversationData?.participants.find(p => p.id !== user?.id)?.id;
+
   // Fetch messages for active conversation
   const { data: conversationMessages = [] } = useQuery({
-    queryKey: ['/api/messages/conversation', activeConversation],
-    enabled: !!user?.id && !!activeConversation,
+    queryKey: [`/api/messages/conversation/${otherParticipantId}`],
+    enabled: !!user?.id && !!otherParticipantId,
     refetchInterval: 5000, // Refresh every 5 seconds for active conversation
   });
 
