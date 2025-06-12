@@ -215,125 +215,138 @@ export function UnifiedMessaging() {
             </div>
 
             {/* Chat Area */}
-            <div className="col-span-2 flex flex-col h-full">
-              {(selectedUser || selectedConversation) && (
-                <div className="border-b pb-2 mb-4 flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={
-                        selectedUser?.avatar || 
-                        selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.avatar || 
-                        undefined
-                      } />
-                      <AvatarFallback>
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium text-sm">
-                        {selectedUser?.name || 
-                         selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.name || 
-                         'Unknown User'}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        @{selectedUser?.username || 
-                          selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.username || 
-                          'unknown'}
+            <div className="col-span-2">
+              {!selectedUser && !selectedConversation ? (
+                <Card className="h-full">
+                  <CardContent className="flex items-center justify-center h-full text-muted-foreground">
+                    Select a conversation or click "New Message" to start messaging
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="h-full flex flex-col">
+                  {/* Chat Header */}
+                  <CardHeader className="pb-3 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={
+                          selectedUser?.avatar || 
+                          selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.avatar || 
+                          undefined
+                        } />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-sm">
+                          {selectedUser?.name || 
+                           selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.name || 
+                           'Unknown User'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          @{selectedUser?.username || 
+                            selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.username || 
+                            'unknown'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Messages Area */}
-              <div className="flex-1 border rounded p-4 mb-4 overflow-y-auto bg-gray-50 min-h-0">
-                {!selectedUser && !selectedConversation ? (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Select a conversation or click "New Message" to start messaging
-                  </div>
-                ) : selectedUser && conversationMessages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Start a conversation with {selectedUser.name}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {(selectedConversation ? conversationMessages : messages).map((message: any) => (
-                      <div
-                        key={message.id}
-                        className={`p-2 rounded max-w-xs ${
-                          message.senderId === user.id
-                            ? 'bg-blue-500 text-white ml-auto'
-                            : 'bg-white border'
-                        }`}
-                      >
-                        {message.content}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  </CardHeader>
 
-              {/* Message Input - Fixed at bottom */}
-              <div className="flex gap-2 flex-shrink-0 mt-auto relative">
-                <div className="flex-1 relative">
-                  <Input 
-                    ref={inputRef}
-                    type="text"
-                    placeholder={
-                      selectedUser 
-                        ? `Send ${selectedUser.name} a message...` 
-                        : selectedConversation 
-                          ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
-                          : "Select a user to start messaging..."
-                    } 
-                    className="h-10 pr-12"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    disabled={!selectedUser && !selectedConversation}
-                  />
-                  {/* Emoji Button */}
-                  <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-                    <PopoverTrigger asChild>
-                      <Button
+                  {/* Messages Area with ScrollArea */}
+                  <CardContent className="flex-1 min-h-0 p-4">
+                    <ScrollArea className="h-full pr-4">
+                      {selectedUser && conversationMessages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          Start a conversation with {selectedUser.name}
+                        </div>
+                      ) : (
+                        <div className="space-y-3 pb-4">
+                          {(selectedConversation ? conversationMessages : messages).map((message: any) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`p-3 rounded-lg max-w-xs break-words ${
+                                  message.senderId === user.id
+                                    ? 'bg-blue-500 text-white rounded-br-sm'
+                                    : 'bg-gray-100 border rounded-bl-sm'
+                                }`}
+                              >
+                                {message.content}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+
+                  {/* Message Input - Inside Card */}
+                  <div className="p-4 border-t flex-shrink-0">
+                    <div className="flex gap-2 relative">
+                      <div className="flex-1 relative">
+                        <Input 
+                          ref={inputRef}
+                          type="text"
+                          placeholder={
+                            selectedUser 
+                              ? `Send ${selectedUser.name} a message...` 
+                              : selectedConversation 
+                                ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
+                                : "Select a user to start messaging..."
+                          } 
+                          className="h-10 pr-12"
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          disabled={!selectedUser && !selectedConversation}
+                        />
+                        {/* Emoji Button */}
+                        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                              disabled={!selectedUser && !selectedConversation}
+                            >
+                              <Smile className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 border-0 shadow-lg" side="top" align="end">
+                            <EmojiPicker
+                              onEmojiClick={handleEmojiSelect}
+                              width={350}
+                              height={400}
+                              previewConfig={{
+                                showPreview: false
+                              }}
+                              skinTonesDisabled
+                              searchDisabled={false}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <Button 
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-                        disabled={!selectedUser && !selectedConversation}
+                        size="icon" 
+                        onClick={handleSendMessage}
+                        disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
+                        className="h-10 w-10"
                       >
-                        <Smile className="h-4 w-4" />
+                        <Send className="h-4 w-4" />
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 border-0 shadow-lg" side="top" align="end">
-                      <EmojiPicker
-                        onEmojiClick={handleEmojiSelect}
-                        width={350}
-                        height={400}
-                        previewConfig={{
-                          showPreview: false
-                        }}
-                        skinTonesDisabled
-                        searchDisabled={false}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <Button 
-                  type="button"
-                  size="icon" 
-                  onClick={handleSendMessage}
-                  disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
-                  className="h-10 w-10"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
 
