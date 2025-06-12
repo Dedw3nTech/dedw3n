@@ -63,19 +63,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     refetchInterval: 5000, // Refresh every 5 seconds for active conversation
   });
 
-  // Update conversations when data changes
+  // Update conversations when data changes (with deep comparison to prevent infinite loops)
   useEffect(() => {
     if (conversationsData && Array.isArray(conversationsData)) {
-      setConversations(conversationsData);
+      const currentConversationsJson = JSON.stringify(conversations);
+      const newConversationsJson = JSON.stringify(conversationsData);
+      if (currentConversationsJson !== newConversationsJson) {
+        setConversations(conversationsData);
+      }
     }
-  }, [conversationsData]);
+  }, [conversationsData, conversations]);
 
-  // Update messages when conversation messages change
+  // Update messages when conversation messages change (with deep comparison to prevent infinite loops)
   useEffect(() => {
     if (conversationMessages && Array.isArray(conversationMessages)) {
-      setMessages(conversationMessages);
+      const currentMessagesJson = JSON.stringify(messages);
+      const newMessagesJson = JSON.stringify(conversationMessages);
+      if (currentMessagesJson !== newMessagesJson) {
+        setMessages(conversationMessages);
+      }
     }
-  }, [conversationMessages]);
+  }, [conversationMessages, messages]);
 
   // WebSocket connection management
   const connectWebSocket = () => {
@@ -171,25 +179,48 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   const sendMessage = async (receiverId: string, content: string) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[Messaging] WebSocket not connected');
-      return;
-    }
-
     try {
-      const message = {
-        type: 'message',
-        data: {
+      // Send message via HTTP API first
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           receiverId: parseInt(receiverId),
           content,
-          timestamp: new Date().toISOString()
-        }
-      };
+          messageType: 'text',
+          category: 'marketplace'
+        }),
+      });
 
-      wsRef.current.send(JSON.stringify(message));
-      console.log('[Messaging] Message sent:', message);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newMessage = await response.json();
+      console.log('[Messaging] Message sent successfully:', newMessage);
+
+      // Optionally broadcast via WebSocket for real-time updates
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const wsMessage = {
+          type: 'message',
+          data: {
+            receiverId: parseInt(receiverId),
+            content,
+            timestamp: new Date().toISOString()
+          }
+        };
+        wsRef.current.send(JSON.stringify(wsMessage));
+      }
+
+      // Refresh conversations and messages to show the new message
+      refreshConversations();
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/conversation/${receiverId}`] });
+
     } catch (error) {
       console.error('[Messaging] Failed to send message:', error);
+      throw error;
     }
   };
 
