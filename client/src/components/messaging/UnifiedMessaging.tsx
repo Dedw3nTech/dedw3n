@@ -19,10 +19,11 @@ interface MessagingUser {
 
 export function UnifiedMessaging() {
   const { user } = useAuth();
-  const { conversations, messages, unreadCount, isConnected, sendMessage } = useMessaging();
+  const { conversations, messages, unreadCount, isConnected, sendMessage, setActiveConversation, refreshConversations } = useMessaging();
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<MessagingUser | null>(null);
   const [messageText, setMessageText] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
 
   // Fetch users for messaging
   const { data: availableUsers = [], isLoading: usersLoading } = useQuery({

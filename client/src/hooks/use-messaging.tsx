@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from './use-auth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Message {
   id: string;
@@ -27,12 +28,14 @@ interface MessagingContextType {
   sendMessage: (receiverId: string, content: string) => Promise<void>;
   markAsRead: (conversationId: string) => Promise<void>;
   setActiveConversation: (conversationId: string | null) => void;
+  refreshConversations: () => void;
 }
 
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
 
 export function MessagingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,6 +43,20 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch conversations
+  const { data: conversationsData, refetch: refetchConversations } = useQuery({
+    queryKey: ['/api/messages/conversations'],
+    enabled: !!user?.id,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Update conversations when data changes
+  useEffect(() => {
+    if (conversationsData && Array.isArray(conversationsData)) {
+      setConversations(conversationsData);
+    }
+  }, [conversationsData]);
 
   // WebSocket connection management
   const connectWebSocket = () => {
@@ -162,6 +179,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     // Implementation for marking messages as read
   };
 
+  const refreshConversations = () => {
+    refetchConversations();
+    queryClient.invalidateQueries({ queryKey: ['/api/messages/conversations'] });
+  };
+
   const value: MessagingContextType = {
     conversations,
     activeConversation,
@@ -171,6 +193,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
     sendMessage,
     markAsRead,
     setActiveConversation,
+    refreshConversations,
   };
 
   return (
