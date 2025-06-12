@@ -534,25 +534,7 @@ export default function Cart() {
           )}
         </CardContent>
 
-        {/* Escrow Payment Option */}
-        <div className="px-6 py-4 border-t">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-black" />
-              <span className="text-sm font-medium text-black">{translateText('Secure Payment')}</span>
-            </div>
-            <button
-              onClick={() => setUseEscrow(!useEscrow)}
-              className={`w-5 h-5 border border-black flex items-center justify-center transition-colors ${
-                useEscrow ? 'bg-black' : 'bg-white'
-              }`}
-            >
-              {useEscrow && <Check className="h-3 w-3 text-white" />}
-            </button>
-          </div>
-          
 
-        </div>
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
