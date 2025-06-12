@@ -154,10 +154,31 @@ export function UnifiedMessaging() {
 
             {/* Chat Area */}
             <div className="col-span-2 flex flex-col">
+              {selectedUser && (
+                <div className="border-b pb-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={selectedUser.avatar || undefined} />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-sm">{selectedUser.name}</div>
+                      <div className="text-xs text-muted-foreground">@{selectedUser.username}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex-1 border rounded p-4 mb-4 overflow-y-auto bg-gray-50">
-                {messages.length === 0 ? (
+                {!selectedUser && messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Select a conversation to start messaging
+                    Select a conversation or click "New Message" to start messaging
+                  </div>
+                ) : selectedUser && messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Start a conversation with {selectedUser.name}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -179,8 +200,24 @@ export function UnifiedMessaging() {
 
               {/* Message Input */}
               <div className="flex gap-2">
-                <Input placeholder="Type a message..." className="flex-1" />
-                <Button size="icon">
+                <Input 
+                  placeholder={selectedUser ? `Message ${selectedUser.name}...` : "Select a user to start messaging..."} 
+                  className="flex-1"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={!selectedUser}
+                />
+                <Button 
+                  size="icon" 
+                  onClick={handleSendMessage}
+                  disabled={!selectedUser || !messageText.trim()}
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
