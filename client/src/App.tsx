@@ -414,15 +414,15 @@ function App() {
         <GPCProvider>
           <CookieConsentProvider>
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <TooltipProvider>
-              <AuthProvider>
-                <ViewProvider>
-                  <MarketTypeProvider>
-                    <SubscriptionProvider>
-                      <MessagingProvider>
-                        <CurrencyProvider>
-                          <LanguageProvider>
-                        <ErrorBoundary>
+              <TooltipProvider>
+                <AuthProvider>
+                  <ViewProvider>
+                    <MarketTypeProvider>
+                      <SubscriptionProvider>
+                        <MessagingProvider>
+                          <CurrencyProvider>
+                            <LanguageProvider>
+                              <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <SafeComponentWrapper componentName="OptimizedNavigation">
                             <OptimizedNavigation />
@@ -469,17 +469,17 @@ function App() {
                           {/* Chatbot will be implemented later when API key is available */}
                           {/* <ChatbotWindow /> */}
                         </div>
-                        </ErrorBoundary>
-                        <Toaster />
-                          </LanguageProvider>
-                        </CurrencyProvider>
-                      </MessagingProvider>
-                    </SubscriptionProvider>
-                  </MarketTypeProvider>
-                </ViewProvider>
-              </AuthProvider>
-            </TooltipProvider>
-          </ThemeProvider>
+                              </ErrorBoundary>
+                              <Toaster />
+                            </LanguageProvider>
+                          </CurrencyProvider>
+                        </MessagingProvider>
+                      </SubscriptionProvider>
+                    </MarketTypeProvider>
+                  </ViewProvider>
+                </AuthProvider>
+              </TooltipProvider>
+            </ThemeProvider>
           </CookieConsentProvider>
         </GPCProvider>
       </UnifiedRecaptchaProvider>
