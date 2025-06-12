@@ -3929,6 +3929,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get messages for a specific conversation
+  app.get('/api/messages/conversation/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      const currentUserId = req.user.id;
+      const otherUserId = parseInt(req.params.userId);
+
+      if (isNaN(otherUserId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const messages = await storage.getConversationMessages(currentUserId, otherUserId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error getting conversation messages:', error);
+      res.status(500).json({ message: 'Failed to get conversation messages' });
+    }
+  });
+
 
 
   app.get('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {

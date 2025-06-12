@@ -45,6 +45,7 @@ export interface IStorage {
   getMessage(id: number): Promise<Message | undefined>;
   getUserMessages(userId: number): Promise<Message[]>;
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
+  getConversationMessages(userId1: number, userId2: number): Promise<Message[]>;
   getUserConversations(userId: number): Promise<any[]>;
   getConversations(userId: number): Promise<any[]>;
   getUnreadMessageCount(userId: number): Promise<number>;
@@ -295,6 +296,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
+    return messageHelpers.getConversationMessages(userId1, userId2);
+  }
+
+  async getConversationMessages(userId1: number, userId2: number): Promise<Message[]> {
     return messageHelpers.getConversationMessages(userId1, userId2);
   }
   

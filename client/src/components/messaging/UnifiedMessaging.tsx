@@ -31,16 +31,33 @@ export function UnifiedMessaging() {
     enabled: !!user?.id,
   });
 
+  // Fetch messages for selected conversation
+  const { data: conversationMessages = [] } = useQuery({
+    queryKey: ['/api/messages/conversation', selectedConversation?.id],
+    enabled: !!selectedConversation?.id,
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   const handleStartConversation = async (recipient: MessagingUser) => {
     setSelectedUser(recipient);
+    setSelectedConversation(null);
     setIsNewMessageOpen(false);
   };
 
+  const handleSelectConversation = (conversation: any) => {
+    setSelectedConversation(conversation);
+    setSelectedUser(null);
+    setActiveConversation(String(conversation.id));
+  };
+
   const handleSendMessage = async () => {
-    if (!selectedUser || !messageText.trim()) return;
+    if (!selectedUser && !selectedConversation) return;
+    if (!messageText.trim()) return;
     
-    await sendMessage(String(selectedUser.id), messageText.trim());
+    const receiverId = selectedUser ? String(selectedUser.id) : String(selectedConversation.id);
+    await sendMessage(receiverId, messageText.trim());
     setMessageText('');
+    refreshConversations();
   };
 
   if (!user) {
@@ -136,58 +153,88 @@ export function UnifiedMessaging() {
                 <p className="text-muted-foreground text-sm">No conversations yet</p>
               ) : (
                 <div className="space-y-2">
-                  {conversations.map((conversation) => (
-                    <div
-                      key={conversation.id}
-                      className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
-                    >
-                      <div className="font-medium">Conversation {conversation.id}</div>
-                      {conversation.lastMessage && (
-                        <div className="text-sm text-muted-foreground truncate">
-                          {conversation.lastMessage.content}
+                  {conversations.map((conversation) => {
+                    const otherParticipant = conversation.participants.find((p: any) => p.id !== user.id);
+                    const isSelected = selectedConversation?.id === conversation.id;
+                    
+                    return (
+                      <div
+                        key={conversation.id}
+                        onClick={() => handleSelectConversation(conversation)}
+                        className={`p-3 border rounded cursor-pointer transition-colors ${
+                          isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={otherParticipant?.avatar || undefined} />
+                            <AvatarFallback>
+                              <User className="h-3 w-3" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="font-medium text-sm truncate">
+                            {otherParticipant?.name || otherParticipant?.username || 'Unknown User'}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {conversation.lastMessage && (
+                          <div className="text-xs text-muted-foreground truncate ml-8">
+                            {conversation.lastMessage.content}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Chat Area */}
             <div className="col-span-2 flex flex-col">
-              {selectedUser && (
+              {(selectedUser || selectedConversation) && (
                 <div className="border-b pb-2 mb-4">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={selectedUser.avatar || undefined} />
+                      <AvatarImage src={
+                        selectedUser?.avatar || 
+                        selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.avatar || 
+                        undefined
+                      } />
                       <AvatarFallback>
                         <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium text-sm">{selectedUser.name}</div>
-                      <div className="text-xs text-muted-foreground">@{selectedUser.username}</div>
+                      <div className="font-medium text-sm">
+                        {selectedUser?.name || 
+                         selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.name || 
+                         'Unknown User'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        @{selectedUser?.username || 
+                          selectedConversation?.participants?.find((p: any) => p.id !== user.id)?.username || 
+                          'unknown'}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
               
               <div className="flex-1 border rounded p-4 mb-4 overflow-y-auto bg-gray-50">
-                {!selectedUser && messages.length === 0 ? (
+                {!selectedUser && !selectedConversation ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     Select a conversation or click "New Message" to start messaging
                   </div>
-                ) : selectedUser && messages.length === 0 ? (
+                ) : selectedUser && conversationMessages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     Start a conversation with {selectedUser.name}
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {messages.map((message) => (
+                    {(selectedConversation ? conversationMessages : messages).map((message: any) => (
                       <div
                         key={message.id}
                         className={`p-2 rounded max-w-xs ${
-                          message.senderId === String(user.id)
+                          message.senderId === user.id
                             ? 'bg-blue-500 text-white ml-auto'
                             : 'bg-white border'
                         }`}
