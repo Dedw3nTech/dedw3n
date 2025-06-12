@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Send, Plus, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { MessageSquare, Send, Plus, User, Smile } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import EmojiPicker from 'emoji-picker-react';
 
 interface MessagingUser {
   id: number;
@@ -24,6 +26,8 @@ export function UnifiedMessaging() {
   const [selectedUser, setSelectedUser] = useState<MessagingUser | null>(null);
   const [messageText, setMessageText] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch users for messaging
   const { data: availableUsers = [], isLoading: usersLoading } = useQuery({
@@ -61,7 +65,25 @@ export function UnifiedMessaging() {
     
     await sendMessage(receiverId, messageText.trim());
     setMessageText('');
+    setShowEmojiPicker(false);
     refreshConversations();
+  };
+
+  const handleEmojiSelect = (emojiData: any) => {
+    const emoji = emojiData.emoji;
+    const newText = messageText + emoji;
+    setMessageText(newText);
+    
+    // Focus back to input after emoji selection
+    if (inputRef.current) {
+      inputRef.current.focus();
+      // Set cursor position to end
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newText.length, newText.length);
+        }
+      }, 0);
+    }
   };
 
   if (!user) {
@@ -252,27 +274,56 @@ export function UnifiedMessaging() {
               </div>
 
               {/* Message Input - Fixed at bottom */}
-              <div className="flex gap-2 flex-shrink-0 mt-auto">
-                <Input 
-                  type="text"
-                  placeholder={
-                    selectedUser 
-                      ? `Send ${selectedUser.name} a message...` 
-                      : selectedConversation 
-                        ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
-                        : "Select a user to start messaging..."
-                  } 
-                  className="flex-1 h-10"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled={!selectedUser && !selectedConversation}
-                />
+              <div className="flex gap-2 flex-shrink-0 mt-auto relative">
+                <div className="flex-1 relative">
+                  <Input 
+                    ref={inputRef}
+                    type="text"
+                    placeholder={
+                      selectedUser 
+                        ? `Send ${selectedUser.name} a message...` 
+                        : selectedConversation 
+                          ? `Send ${selectedConversation.participants?.find((p: any) => p.id !== user?.id)?.name || 'user'} a message...`
+                          : "Select a user to start messaging..."
+                    } 
+                    className="h-10 pr-12"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    disabled={!selectedUser && !selectedConversation}
+                  />
+                  {/* Emoji Button */}
+                  <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                        disabled={!selectedUser && !selectedConversation}
+                      >
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 border-0 shadow-lg" side="top" align="end">
+                      <EmojiPicker
+                        onEmojiClick={handleEmojiSelect}
+                        width={350}
+                        height={400}
+                        previewConfig={{
+                          showPreview: false
+                        }}
+                        skinTonesDisabled
+                        searchDisabled={false}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Button 
                   type="button"
                   size="icon" 
