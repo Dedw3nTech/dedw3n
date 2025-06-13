@@ -80,10 +80,17 @@ export function UnifiedMessaging() {
       return;
     }
     
-    await sendMessage(receiverId, messageText.trim());
-    setMessageText('');
-    setShowEmojiPicker(false);
-    refreshConversations();
+    try {
+      console.log('[UnifiedMessaging] Sending message to:', receiverId, 'Content:', messageText);
+      await sendMessage(receiverId, messageText.trim());
+      setMessageText('');
+      setShowEmojiPicker(false);
+      refreshConversations();
+      console.log('[UnifiedMessaging] Message sent successfully');
+    } catch (error) {
+      console.error('[UnifiedMessaging] Failed to send message:', error);
+      // Keep the message text so user can retry
+    }
   };
 
   const handleEmojiSelect = (emojiData: any) => {

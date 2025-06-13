@@ -180,12 +180,20 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = async (receiverId: string, content: string) => {
     try {
+      // Get auth token from localStorage
+      const authToken = localStorage.getItem('authToken');
+      
       // Send message via HTTP API first
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : '',
+          'x-use-session': 'true',
+          'x-auth-method': 'session',
+          'x-client-auth': 'true',
         },
+        credentials: 'include',
         body: JSON.stringify({
           receiverId: parseInt(receiverId),
           content,
@@ -195,7 +203,9 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.text();
+        console.error('[Messaging] API Error:', response.status, errorData);
+        throw new Error(`Failed to send message: ${response.status} - ${errorData}`);
       }
 
       const newMessage = await response.json();
