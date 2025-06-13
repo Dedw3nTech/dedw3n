@@ -44,10 +44,13 @@ export function PersonalizedRecommendations() {
       interactionType: string;
       metadata?: any;
     }) => {
-      return apiRequest('/api/track-interaction', {
+      const response = await fetch('/api/track-interaction', {
         method: 'POST',
-        body: { productId, interactionType, metadata }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, interactionType, metadata })
       });
+      if (!response.ok) throw new Error('Failed to track interaction');
+      return response.json();
     },
     onSuccess: () => {
       // Optionally refresh recommendations after interactions
@@ -61,10 +64,13 @@ export function PersonalizedRecommendations() {
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return apiRequest('/api/cart', {
+      const response = await fetch('/api/cart', {
         method: 'POST',
-        body: { productId, quantity: 1 }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: 1 })
       });
+      if (!response.ok) throw new Error('Failed to add to cart');
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -90,10 +96,13 @@ export function PersonalizedRecommendations() {
   // Like product mutation
   const likeMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return apiRequest('/api/like', {
+      const response = await fetch('/api/like', {
         method: 'POST',
-        body: { productId }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId })
       });
+      if (!response.ok) throw new Error('Failed to like product');
+      return response.json();
     },
     onSuccess: () => {
       toast({

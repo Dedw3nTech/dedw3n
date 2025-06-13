@@ -7827,7 +7827,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             .where(
               and(
                 inArray(products.category, preferredCategories),
-                excludeProductIds.length > 0 ? notInArray(products.id, excludeProductIds) : undefined
+                excludeProductIds.length > 0 ? sql`${products.id} NOT IN (${excludeProductIds.join(',')})` : sql`1=1`
               )
             )
             .orderBy(desc(products.createdAt))
@@ -7846,7 +7846,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             .select()
             .from(products)
             .where(
-              excludeProductIds.length > 0 ? notInArray(products.id, excludeProductIds) : undefined
+              excludeProductIds.length > 0 ? sql`${products.id} NOT IN (${excludeProductIds.join(',')})` : sql`1=1`
             )
             .orderBy(desc(products.createdAt))
             .limit(limit - recommendations.length);
@@ -7899,7 +7899,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   const aiPersonalizationEngine = new AIPersonalizationEngine();
 
   // Get personalized product recommendations for logged-in users
-  app.get("/api/recommendations", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/recommendations", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -7919,7 +7919,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Track user interactions for AI learning
-  app.post("/api/track-interaction", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/track-interaction", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       const { productId, interactionType, metadata } = req.body;
@@ -7938,7 +7938,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get user's browsing analytics (for dashboard)
-  app.get("/api/user-analytics", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/user-analytics", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       
