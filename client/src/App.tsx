@@ -17,6 +17,7 @@ import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider"
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
+import { useCanonicalUrl } from "@/hooks/useCanonicalUrl";
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
@@ -383,6 +384,9 @@ function Router() {
 function App() {
   // Force refresh state to update all components when language changes
   const [forceRefresh, setForceRefresh] = useState(0);
+  
+  // Initialize canonical URL for SEO optimization
+  useCanonicalUrl();
   
   // Initialize offline detection, language, and advertisement preloader
   useEffect(() => {
