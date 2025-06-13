@@ -7,10 +7,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MessageSquare, Send, Plus, User, Smile, Image, Video, Paperclip } from 'lucide-react';
+import { MessageSquare, Send, Plus, User, Smile, Image, Video, Paperclip, X, Upload, FileText, Music, FileSpreadsheet } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EmojiPicker from 'emoji-picker-react';
+
+// Helper function to determine file type category
+const getFileType = (mimeType: string): string => {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('video/')) return 'video';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  if (mimeType.includes('pdf') || mimeType.includes('document') || 
+      mimeType.includes('sheet') || mimeType.includes('presentation') ||
+      mimeType.includes('text') || mimeType === 'application/rtf') {
+    return 'document';
+  }
+  return 'file';
+};
+
+// Helper function to get file icon based on type
+const getFileIcon = (mimeType: string) => {
+  const fileType = getFileType(mimeType);
+  switch (fileType) {
+    case 'image':
+      return <Image className="h-6 w-6 text-blue-500" />;
+    case 'video':
+      return <Video className="h-6 w-6 text-purple-500" />;
+    case 'audio':
+      return <Music className="h-6 w-6 text-green-500" />;
+    case 'document':
+      return mimeType.includes('sheet') ? 
+        <FileSpreadsheet className="h-6 w-6 text-green-600" /> : 
+        <FileText className="h-6 w-6 text-red-500" />;
+    default:
+      return <FileText className="h-6 w-6 text-gray-500" />;
+  }
+};
 
 // Helper function to format message timestamps
 function formatMessageTime(timestamp: string | Date): string {
@@ -114,8 +146,20 @@ export function UnifiedMessaging() {
     }
   };
 
-  const handleFileSelect = (type: 'image' | 'video' | 'file') => {
+  const handleFileSelect = (type: 'image' | 'video' | 'audio' | 'document' | 'spreadsheet' | 'file') => {
     if (fileInputRef.current) {
+      // Set appropriate file type filters based on selection
+      const acceptMap = {
+        image: 'image/jpeg,image/jpg,image/png,image/gif,image/webp',
+        video: 'video/mp4,video/avi,video/mov,video/wmv',
+        audio: 'audio/mp3,audio/wav,audio/aac',
+        document: 'application/pdf,.doc,.docx,text/plain,application/rtf',
+        spreadsheet: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xls,.xlsx',
+        file: '*/*'
+      };
+      
+      fileInputRef.current.accept = acceptMap[type];
+      fileInputRef.current.click();
       fileInputRef.current.accept = type === 'image' ? 'image/*' : 
                                    type === 'video' ? 'video/*' : 
                                    '*/*';
@@ -151,8 +195,11 @@ export function UnifiedMessaging() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       
+      // Determine file type for upload endpoint
+      const fileType = getFileType(selectedFile.type);
+      
       const authToken = localStorage.getItem('authToken');
-      const uploadResponse = await fetch('/api/upload', {
+      const uploadResponse = await fetch(`/api/messages/upload?type=${fileType}`, {
         method: 'POST',
         headers: {
           'Authorization': authToken ? `Bearer ${authToken}` : '',
@@ -165,7 +212,8 @@ export function UnifiedMessaging() {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.message || 'Failed to upload file');
       }
 
       const uploadResult = await uploadResponse.json();
@@ -183,9 +231,33 @@ export function UnifiedMessaging() {
       }
 
       // Send message with attachment URL
-      const messageContent = messageText.trim() || `Sent ${selectedFile.type.startsWith('image/') ? 'an image' : selectedFile.type.startsWith('video/') ? 'a video' : 'a file'}`;
+      const fileCategory = getFileType(selectedFile.type);
+      const messageContent = messageText.trim() || `Sent ${fileCategory === 'image' ? 'an image' : fileCategory === 'video' ? 'a video' : fileCategory === 'audio' ? 'an audio file' : 'a file'}`;
       
-      await sendMessage(receiverId, messageContent);
+      // Send message via API with attachment
+      const sendResponse = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : '',
+          'x-use-session': 'true',
+          'x-auth-method': 'session',
+          'x-client-auth': 'true',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId,
+          content: messageContent,
+          attachmentUrl: uploadResult.file.url,
+          attachmentType: uploadResult.file.category,
+          category: 'marketplace',
+        }),
+      });
+
+      if (!sendResponse.ok) {
+        const errorData = await sendResponse.json();
+        throw new Error(errorData.message || 'Failed to send message');
+      }
       
       // Clear attachment
       setSelectedFile(null);
@@ -512,8 +584,9 @@ export function UnifiedMessaging() {
                         </div>
                       </div>
                       
-                      {/* Attachment Buttons */}
+                      {/* Comprehensive File Upload Buttons */}
                       <div className="flex gap-1">
+                        {/* Image Upload */}
                         <Button
                           type="button"
                           variant="ghost"
@@ -521,31 +594,72 @@ export function UnifiedMessaging() {
                           onClick={() => handleFileSelect('image')}
                           disabled={!selectedUser && !selectedConversation}
                           className="h-10 w-10 text-gray-500 hover:text-blue-500"
-                          title="Add Image"
+                          title="Upload Image (JPG, PNG, GIF, WebP)"
                         >
                           <Image className="h-4 w-4" />
                         </Button>
                         
+                        {/* Video Upload */}
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => handleFileSelect('video')}
                           disabled={!selectedUser && !selectedConversation}
-                          className="h-10 w-10 text-gray-500 hover:text-green-500"
-                          title="Add Video"
+                          className="h-10 w-10 text-gray-500 hover:text-purple-500"
+                          title="Upload Video (MP4, AVI, MOV, WMV)"
                         >
                           <Video className="h-4 w-4" />
                         </Button>
                         
+                        {/* Audio Upload */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('audio')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-green-500"
+                          title="Upload Audio (MP3, WAV, AAC)"
+                        >
+                          <Music className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* Document Upload */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('document')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-red-500"
+                          title="Upload Document (PDF, DOC, DOCX, TXT)"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* Excel/Spreadsheet Upload */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('spreadsheet')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-green-600"
+                          title="Upload Spreadsheet (XLS, XLSX)"
+                        >
+                          <FileSpreadsheet className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* General File Upload */}
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => handleFileSelect('file')}
                           disabled={!selectedUser && !selectedConversation}
-                          className="h-10 w-10 text-gray-500 hover:text-purple-500"
-                          title="Add File"
+                          className="h-10 w-10 text-gray-500 hover:text-gray-700"
+                          title="Upload Any File"
                         >
                           <Paperclip className="h-4 w-4" />
                         </Button>
