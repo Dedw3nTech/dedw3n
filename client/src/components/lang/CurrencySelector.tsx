@@ -22,6 +22,7 @@ export function CurrencySelector() {
       INR: 'Indian Rupee',
       BRL: 'Brazilian Real',
       JMD: 'Jamaican Dollar',
+      AUD: 'Australian Dollar',
     };
     return names[code];
   };

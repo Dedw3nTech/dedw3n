@@ -1,7 +1,7 @@
-export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL' | 'JMD';
+export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'CNY' | 'INR' | 'BRL' | 'JMD' | 'AUD';
 
 // List of supported currencies
-export const supportedCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL', 'JMD'];
+export const supportedCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'CNY', 'INR', 'BRL', 'JMD', 'AUD'];
 
 // Symbol lookup for different currencies
 export const currencySymbols: Record<CurrencyCode, string> = {
@@ -12,6 +12,7 @@ export const currencySymbols: Record<CurrencyCode, string> = {
   INR: '₹',
   BRL: 'R$',
   JMD: 'J$',
+  AUD: 'A$',
 };
 
 // Exchange rates with GBP as the base currency
@@ -24,6 +25,7 @@ export const exchangeRates: Record<CurrencyCode, number> = {
   INR: 104.43,   // 1 GBP = 104.43 INR
   BRL: 6.35,     // 1 GBP = 6.35 BRL
   JMD: 195.50,   // 1 GBP = 195.50 JMD
+  AUD: 1.88,     // 1 GBP = 1.88 AUD
 };
 
 /**
@@ -111,6 +113,7 @@ export function formatCurrency(
     INR: "hi-IN",
     BRL: "pt-BR",
     JMD: "en-JM",
+    AUD: "en-AU",
   };
   
   const locale = currencyLocales[currencyCode] || "en-GB";
@@ -180,6 +183,7 @@ export function getFormattedExchangeRate(
     INR: '₹',
     BRL: 'R$',
     JMD: 'J$',
+    AUD: 'A$',
   };
 
   return `1 ${symbols[fromCurrency]} = ${rate.toFixed(4)} ${symbols[toCurrency]}`;
