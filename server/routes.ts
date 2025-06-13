@@ -3124,6 +3124,52 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get vendor details with user information for shipping
+  app.get('/api/vendors/details', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const vendorsWithUsers = await db
+        .select({
+          vendorId: vendors.id,
+          vendorName: vendors.businessName,
+          vendorType: vendors.vendorType,
+          location: vendors.location,
+          address: vendors.address,
+          city: vendors.city,
+          country: vendors.country,
+          postalCode: vendors.postalCode,
+          userId: users.id,
+          userName: users.name,
+          userEmail: users.email,
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id));
+
+      const vendorDetails = vendorsWithUsers.reduce((acc: any, vendor) => {
+        acc[vendor.vendorId] = {
+          id: vendor.vendorId,
+          name: vendor.vendorName,
+          type: vendor.vendorType,
+          location: vendor.location,
+          address: vendor.address,
+          city: vendor.city,
+          country: vendor.country,
+          postalCode: vendor.postalCode,
+          user: {
+            id: vendor.userId,
+            name: vendor.userName,
+            email: vendor.userEmail,
+          }
+        };
+        return acc;
+      }, {});
+
+      res.json(vendorDetails);
+    } catch (error) {
+      console.error("Error fetching vendor details:", error);
+      res.status(500).json({ message: "Failed to fetch vendor details" });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {

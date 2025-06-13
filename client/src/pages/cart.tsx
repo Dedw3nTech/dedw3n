@@ -10,7 +10,7 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check } from 'lucide-react';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -68,6 +68,16 @@ export default function Cart() {
       return response.json();
     },
     enabled: !!user,
+  });
+
+  // Fetch vendor details for shipping info
+  const { data: vendorDetails = {} } = useQuery({
+    queryKey: ['/api/vendors/details'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/vendors/details');
+      return response.json();
+    },
+    enabled: !!cartItems.length,
   });
   
   // Update quantity mutation
@@ -524,6 +534,124 @@ export default function Cart() {
             </table>
           </div>
           
+          {/* Shipping Information Card */}
+          {cartItems.length > 0 && (
+            <Card className="mt-6 border border-blue-200 bg-blue-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Package className="h-5 w-5 text-blue-600" />
+                  {translateText('Shipping Information')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {cartItems.map((item: any) => {
+                    const vendor = vendorDetails[item.product?.vendorId];
+                    const totalWeight = (item.product?.weight || 0) * item.quantity;
+                    const totalPrice = (item.product?.price || 0) * item.quantity;
+                    
+                    return (
+                      <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="h-12 w-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            {item.product?.imageUrl ? (
+                              <img
+                                src={item.product.imageUrl}
+                                alt={item.product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-gray-400">
+                                <Package className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">
+                              {translateText(item.product?.name || 'Product')}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                              {translateText('Quantity')}: {item.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          {/* Location Seller */}
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Seller Location')}:</span>
+                            <span className="font-medium text-gray-900">
+                              {vendor?.city && vendor?.country 
+                                ? `${vendor.city}, ${vendor.country}`
+                                : vendor?.location || translateText('Location not specified')
+                              }
+                            </span>
+                          </div>
+                          
+                          {/* Location Buyer */}
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Buyer Location')}:</span>
+                            <span className="font-medium text-gray-900">
+                              {user?.location || user?.city 
+                                ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
+                                : translateText('Set in profile')
+                              }
+                            </span>
+                          </div>
+                          
+                          {/* Weight Product */}
+                          <div className="flex items-center gap-2">
+                            <Weight className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Total Weight')}:</span>
+                            <span className="font-medium text-gray-900">
+                              {totalWeight > 0 
+                                ? `${totalWeight} ${item.product?.weightUnit || 'kg'}`
+                                : translateText('Weight not specified')
+                              }
+                            </span>
+                          </div>
+                          
+                          {/* Price */}
+                          <div className="flex items-center gap-2">
+                            <ShoppingCart className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Item Total')}:</span>
+                            <span className="font-semibold text-gray-900">
+                              {formatPriceFromGBP(totalPrice)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Shipping Summary */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Estimated Shipping')}:</span>
+                    <span className="font-medium">
+                      {shippingCost === 0 ? (
+                        <span className="text-green-600">{translateText('Free')}</span>
+                      ) : (
+                        formatPriceFromGBP(shippingCost)
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-600">{translateText('Total Weight')}:</span>
+                    <span className="font-medium">
+                      {cartItems.reduce((total: number, item: any) => 
+                        total + ((item.product?.weight || 0) * item.quantity), 0
+                      ).toFixed(2)} kg
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Free shipping notification */}
           {amountNeededForFreeShipping(subtotal, pricingConfig) > 0 && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
