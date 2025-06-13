@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MessageSquare, Send, Plus, User, Smile } from 'lucide-react';
+import { MessageSquare, Send, Plus, User, Smile, Image, Video, Paperclip } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EmojiPicker from 'emoji-picker-react';
@@ -43,8 +43,12 @@ export function UnifiedMessaging() {
   const [messageText, setMessageText] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch users for messaging
   const { data: availableUsers = [], isLoading: usersLoading } = useQuery({
@@ -108,6 +112,98 @@ export function UnifiedMessaging() {
         }
       }, 0);
     }
+  };
+
+  const handleFileSelect = (type: 'image' | 'video' | 'file') => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = type === 'image' ? 'image/*' : 
+                                   type === 'video' ? 'video/*' : 
+                                   '*/*';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleSendWithAttachment = async () => {
+    if (!selectedFile) return;
+    
+    setIsUploading(true);
+    
+    try {
+      // Upload file first
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const authToken = localStorage.getItem('authToken');
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': authToken ? `Bearer ${authToken}` : '',
+          'x-use-session': 'true',
+          'x-auth-method': 'session',
+          'x-client-auth': 'true',
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const uploadResult = await uploadResponse.json();
+      
+      // Send message with attachment
+      let receiverId: string;
+      if (selectedUser) {
+        receiverId = String(selectedUser.id);
+      } else if (selectedConversation) {
+        const otherParticipant = selectedConversation.participants.find((p: any) => p.id !== user?.id);
+        if (!otherParticipant) return;
+        receiverId = String(otherParticipant.id);
+      } else {
+        return;
+      }
+
+      // Send message with attachment URL
+      const messageContent = messageText.trim() || `Sent ${selectedFile.type.startsWith('image/') ? 'an image' : selectedFile.type.startsWith('video/') ? 'a video' : 'a file'}`;
+      
+      await sendMessage(receiverId, messageContent);
+      
+      // Clear attachment
+      setSelectedFile(null);
+      setFilePreview(null);
+      setMessageText('');
+      setShowEmojiPicker(false);
+      refreshConversations();
+      
+    } catch (error) {
+      console.error('Failed to send attachment:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeAttachment = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
   };
 
   // Auto-scroll to bottom when messages change
@@ -326,6 +422,38 @@ export function UnifiedMessaging() {
 
                   {/* Message Input - Fixed at Bottom */}
                   <div className="border-t bg-white p-4 flex-shrink-0 messaging-input-container">
+                    {/* File Preview */}
+                    {selectedFile && (
+                      <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {filePreview ? (
+                              <img src={filePreview} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                            ) : (
+                              <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center">
+                                <Paperclip className="h-6 w-6 text-gray-500" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{selectedFile.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={removeAttachment}
+                            className="text-gray-500 hover:text-red-500"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2 relative w-full max-w-full">
                       <div className="flex-1 relative">
                         <Input 
@@ -383,16 +511,69 @@ export function UnifiedMessaging() {
                           </Popover>
                         </div>
                       </div>
+                      
+                      {/* Attachment Buttons */}
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('image')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-blue-500"
+                          title="Add Image"
+                        >
+                          <Image className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('video')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-green-500"
+                          title="Add Video"
+                        >
+                          <Video className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileSelect('file')}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-purple-500"
+                          title="Add File"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                      </div>
+
                       <Button 
                         type="button"
                         size="icon" 
-                        onClick={handleSendMessage}
-                        disabled={(!selectedUser && !selectedConversation) || !messageText.trim()}
+                        onClick={selectedFile ? handleSendWithAttachment : handleSendMessage}
+                        disabled={(!selectedUser && !selectedConversation) || (!messageText.trim() && !selectedFile) || isUploading}
                         className="h-10 w-10 relative z-10"
                       >
-                        <Send className="h-4 w-4" />
+                        {isUploading ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
+                    
+                    {/* Hidden File Input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="*/*"
+                    />
                   </div>
                 </Card>
               )}
