@@ -1,11 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { db } from './db';
 import { messages, users, products } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-// the newest Anthropic model is "claude-sonnet-4-20250514" which was released May 14, 2025. Use this by default unless user has already selected claude-3-7-sonnet-20250219
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export interface AIMessageResponse {
@@ -83,13 +83,14 @@ export async function generateSmartReply(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       suggestedReply: result.suggestedReply,
       tone: result.tone,
@@ -144,13 +145,14 @@ export async function summarizeConversation(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       summary: result.summary,
       keyPoints: result.keyPoints || [],
@@ -196,13 +198,14 @@ export async function generateSmartCompose(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       subject: result.subject,
       message: result.message,
@@ -241,13 +244,14 @@ export async function translateMessage(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       translatedText: result.translatedText,
       detectedLanguage: result.detectedLanguage,
