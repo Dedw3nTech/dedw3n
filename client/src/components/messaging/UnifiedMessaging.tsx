@@ -160,10 +160,6 @@ export function UnifiedMessaging() {
       
       fileInputRef.current.accept = acceptMap[type];
       fileInputRef.current.click();
-      fileInputRef.current.accept = type === 'image' ? 'image/*' : 
-                                   type === 'video' ? 'video/*' : 
-                                   '*/*';
-      fileInputRef.current.click();
     }
   };
 
@@ -494,22 +490,28 @@ export function UnifiedMessaging() {
 
                   {/* Message Input - Fixed at Bottom */}
                   <div className="border-t bg-white p-4 flex-shrink-0 messaging-input-container">
-                    {/* File Preview */}
+                    {/* Comprehensive File Preview */}
                     {selectedFile && (
                       <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            {filePreview ? (
+                            {/* Dynamic File Preview */}
+                            {getFileType(selectedFile.type) === 'image' && filePreview ? (
                               <img src={filePreview} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                            ) : getFileType(selectedFile.type) === 'video' && filePreview ? (
+                              <video src={filePreview} className="h-12 w-12 object-cover rounded" muted />
                             ) : (
                               <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center">
-                                <Paperclip className="h-6 w-6 text-gray-500" />
+                                {getFileIcon(selectedFile.type)}
                               </div>
                             )}
                             <div>
                               <div className="text-sm font-medium text-gray-900">{selectedFile.name}</div>
-                              <div className="text-xs text-gray-500">
-                                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                              <div className="text-xs text-gray-500 flex items-center gap-2">
+                                <span>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                  {getFileType(selectedFile.type).toUpperCase()}
+                                </span>
                               </div>
                             </div>
                           </div>
