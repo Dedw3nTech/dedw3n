@@ -446,6 +446,10 @@ export default function VendorDashboard() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="ai-upload">
+          <AIProductUpload />
+        </TabsContent>
+
         <TabsContent value="dashboard" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Quick Actions */}
