@@ -44,6 +44,14 @@ import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from ".
 import TranslationOptimizer from "./translation-optimizer";
 import { queryCache } from "./query-cache";
 import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
+import {
+  generateSmartReply,
+  summarizeConversation,
+  generateSmartCompose,
+  translateMessage,
+  moderateMessage,
+  generateSupportResponse
+} from './ai-messaging';
 import { 
   analyzeProductImage, 
   generateProductDescription, 
@@ -4567,6 +4575,224 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error('Error creating AI-assisted listing:', error);
       res.status(500).json({ 
         message: "Failed to create AI-assisted listing",
+        error: error.message 
+      });
+    }
+  });
+
+  // ===== AI MESSAGING API ENDPOINTS =====
+  
+  // Generate smart reply suggestions for messages
+  app.post('/api/ai/messages/smart-reply', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { conversationId, lastMessages, context } = req.body;
+      
+      if (!conversationId || !lastMessages || !Array.isArray(lastMessages)) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const smartReply = await generateSmartReply(userId, conversationId, lastMessages, context);
+      
+      res.json({
+        success: true,
+        reply: smartReply,
+        message: "Smart reply generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating smart reply:', error);
+      res.status(500).json({ 
+        message: "Failed to generate smart reply",
+        error: error.message 
+      });
+    }
+  });
+
+  // Summarize conversation with AI insights
+  app.post('/api/ai/messages/summarize', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { otherUserId } = req.body;
+      
+      if (!otherUserId) {
+        return res.status(400).json({ message: "Missing otherUserId" });
+      }
+
+      const summary = await summarizeConversation(userId, otherUserId);
+      
+      res.json({
+        success: true,
+        summary,
+        message: "Conversation summarized successfully"
+      });
+    } catch (error: any) {
+      console.error('Error summarizing conversation:', error);
+      res.status(500).json({ 
+        message: "Failed to summarize conversation",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI-powered smart message composition
+  app.post('/api/ai/messages/compose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { purpose, recipient, productContext, tone } = req.body;
+      
+      if (!purpose || !recipient) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const composition = await generateSmartCompose(purpose, recipient, productContext, tone);
+      
+      res.json({
+        success: true,
+        composition,
+        message: "Message composed successfully"
+      });
+    } catch (error: any) {
+      console.error('Error composing message:', error);
+      res.status(500).json({ 
+        message: "Failed to compose message",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI message translation
+  app.post('/api/ai/messages/translate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { text, targetLanguage, sourceLanguage } = req.body;
+      
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const translation = await translateMessage(text, targetLanguage, sourceLanguage);
+      
+      res.json({
+        success: true,
+        translation,
+        message: "Message translated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error translating message:', error);
+      res.status(500).json({ 
+        message: "Failed to translate message",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI content moderation for messages
+  app.post('/api/ai/messages/moderate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { content, context } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Missing content to moderate" });
+      }
+
+      const moderation = await moderateMessage(content, context);
+      
+      res.json({
+        success: true,
+        moderation,
+        message: "Content moderated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error moderating content:', error);
+      res.status(500).json({ 
+        message: "Failed to moderate content",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI customer support response generation
+  app.post('/api/ai/messages/support', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { userQuery, category, userHistory } = req.body;
+      
+      if (!userQuery || !category) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const supportResponse = await generateSupportResponse(userQuery, category, userHistory);
+      
+      res.json({
+        success: true,
+        supportResponse,
+        message: "Support response generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating support response:', error);
+      res.status(500).json({ 
+        message: "Failed to generate support response",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI-powered message enhancement with context awareness
+  app.post('/api/ai/messages/enhance', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { message, context, targetTone, recipientType } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ message: "Missing message to enhance" });
+      }
+
+      // Use smart compose to enhance the message
+      const enhancement = await generateSmartCompose(
+        `Enhance this message: "${message}"`,
+        recipientType || "customer",
+        context,
+        targetTone || "professional"
+      );
+      
+      res.json({
+        success: true,
+        enhancement,
+        message: "Message enhanced successfully"
+      });
+    } catch (error: any) {
+      console.error('Error enhancing message:', error);
+      res.status(500).json({ 
+        message: "Failed to enhance message",
         error: error.message 
       });
     }

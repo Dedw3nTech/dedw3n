@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MessageSquare, Send, Plus, User, Smile, Image, Video, Paperclip, X, Upload, FileText, Music, FileSpreadsheet } from 'lucide-react';
+import { MessageSquare, Send, Plus, User, Smile, Image, Video, Paperclip, X, Upload, FileText, Music, FileSpreadsheet, Bot } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EmojiPicker from 'emoji-picker-react';
+import { AIMessageAssistant } from './AIMessageAssistant';
 
 // Helper function to determine file type category
 const getFileType = (mimeType: string): string => {
