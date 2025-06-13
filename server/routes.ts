@@ -4762,6 +4762,339 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // AI Community Tools Routes
+  
+  // Content Creation and Management
+  app.post('/api/ai/community/content-ideas', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateContentIdeas } = await import('./ai-community');
+      const { topic, platform, targetAudience } = req.body;
+      
+      if (!topic || !platform || !targetAudience) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const ideas = await generateContentIdeas(topic, platform, targetAudience);
+      res.json({ success: true, ideas });
+    } catch (error: any) {
+      console.error('Content idea generation error:', error);
+      res.status(500).json({ message: 'Failed to generate content ideas', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/caption-variations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateCaptionVariations } = await import('./ai-community');
+      const { content, platforms } = req.body;
+      
+      if (!content || !platforms?.length) {
+        return res.status(400).json({ message: "Missing content or platforms" });
+      }
+
+      const variations = await generateCaptionVariations(content, platforms);
+      res.json({ success: true, variations });
+    } catch (error: any) {
+      console.error('Caption variation generation error:', error);
+      res.status(500).json({ message: 'Failed to generate caption variations', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/visual-suggestions', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateVisualSuggestions } = await import('./ai-community');
+      const { contentType, brand, message } = req.body;
+      
+      if (!contentType || !brand || !message) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const suggestions = await generateVisualSuggestions(contentType, brand, message);
+      res.json({ success: true, suggestions });
+    } catch (error: any) {
+      console.error('Visual suggestion generation error:', error);
+      res.status(500).json({ message: 'Failed to generate visual suggestions', error: error.message });
+    }
+  });
+
+  // Personalization
+  app.get('/api/ai/community/user-preferences', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeUserPreferences } = await import('./ai-community');
+      const preferences = await analyzeUserPreferences(userId);
+      res.json({ success: true, preferences });
+    } catch (error: any) {
+      console.error('User preference analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze user preferences', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/personalized-feed', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generatePersonalizedFeed } = await import('./ai-community');
+      const { preferences } = req.body;
+      
+      if (!preferences) {
+        return res.status(400).json({ message: "Missing user preferences" });
+      }
+
+      const feed = await generatePersonalizedFeed(userId, preferences);
+      res.json({ success: true, feed });
+    } catch (error: any) {
+      console.error('Personalized feed generation error:', error);
+      res.status(500).json({ message: 'Failed to generate personalized feed', error: error.message });
+    }
+  });
+
+  // Advertising
+  app.post('/api/ai/community/analyze-audience', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeTargetAudience } = await import('./ai-community');
+      const { product, budget, goals } = req.body;
+      
+      if (!product || !budget || !goals?.length) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const audience = await analyzeTargetAudience(product, budget, goals);
+      res.json({ success: true, audience });
+    } catch (error: any) {
+      console.error('Target audience analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze target audience', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/optimize-ad', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { optimizeAdCampaign } = await import('./ai-community');
+      const { adContent, audience, performance } = req.body;
+      
+      if (!adContent || !audience || !performance) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const optimization = await optimizeAdCampaign(adContent, audience, performance);
+      res.json({ success: true, optimization });
+    } catch (error: any) {
+      console.error('Ad campaign optimization error:', error);
+      res.status(500).json({ message: 'Failed to optimize ad campaign', error: error.message });
+    }
+  });
+
+  // Content Moderation
+  app.post('/api/ai/community/moderate-content', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { moderateContent } = await import('./ai-community');
+      const { content, contentType } = req.body;
+      
+      if (!content || !contentType) {
+        return res.status(400).json({ message: "Missing content or content type" });
+      }
+
+      const moderation = await moderateContent(content, contentType);
+      res.json({ success: true, moderation });
+    } catch (error: any) {
+      console.error('Content moderation error:', error);
+      res.status(500).json({ message: 'Failed to moderate content', error: error.message });
+    }
+  });
+
+  // Sentiment Analysis
+  app.post('/api/ai/community/analyze-sentiment', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeSentiment } = await import('./ai-community');
+      const { content, brand } = req.body;
+      
+      if (!content?.length) {
+        return res.status(400).json({ message: "Missing content array" });
+      }
+
+      const sentiment = await analyzeSentiment(content, brand);
+      res.json({ success: true, sentiment });
+    } catch (error: any) {
+      console.error('Sentiment analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze sentiment', error: error.message });
+    }
+  });
+
+  // Social Media Listening
+  app.post('/api/ai/community/analyze-listening', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeListeningData } = await import('./ai-community');
+      const { mentions, brand, timeframe } = req.body;
+      
+      if (!mentions?.length || !brand || !timeframe) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const insights = await analyzeListeningData(mentions, brand, timeframe);
+      res.json({ success: true, insights });
+    } catch (error: any) {
+      console.error('Listening data analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze listening data', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/detect-mentions', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { detectBrandMentions } = await import('./ai-community');
+      const { content, brands } = req.body;
+      
+      if (!content || !brands?.length) {
+        return res.status(400).json({ message: "Missing content or brands" });
+      }
+
+      const mentions = await detectBrandMentions(content, brands);
+      res.json({ success: true, mentions });
+    } catch (error: any) {
+      console.error('Brand mention detection error:', error);
+      res.status(500).json({ message: 'Failed to detect brand mentions', error: error.message });
+    }
+  });
+
+  // Automated Tasks
+  app.post('/api/ai/community/generate-scheduled-posts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateScheduledPosts } = await import('./ai-community');
+      const { brand, contentThemes, platforms, postFrequency, timeframe } = req.body;
+      
+      if (!brand || !contentThemes?.length || !platforms?.length || !postFrequency || !timeframe) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const posts = await generateScheduledPosts(brand, contentThemes, platforms, postFrequency, timeframe);
+      res.json({ success: true, posts });
+    } catch (error: any) {
+      console.error('Scheduled post generation error:', error);
+      res.status(500).json({ message: 'Failed to generate scheduled posts', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/generate-automated-responses', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateAutomatedResponses } = await import('./ai-community');
+      const { brand, businessType, commonQuestions } = req.body;
+      
+      if (!brand || !businessType || !commonQuestions?.length) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const responses = await generateAutomatedResponses(brand, businessType, commonQuestions);
+      res.json({ success: true, responses });
+    } catch (error: any) {
+      console.error('Automated response generation error:', error);
+      res.status(500).json({ message: 'Failed to generate automated responses', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/setup-ad-automation', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { setupAdCampaignAutomation } = await import('./ai-community');
+      const { product, budget, duration, objectives } = req.body;
+      
+      if (!product || !budget || !duration || !objectives?.length) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const automation = await setupAdCampaignAutomation(product, budget, duration, objectives);
+      res.json({ success: true, automation });
+    } catch (error: any) {
+      console.error('Ad campaign automation setup error:', error);
+      res.status(500).json({ message: 'Failed to setup ad campaign automation', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/community/execute-automated-tasks', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { executeAutomatedTasks } = await import('./ai-community');
+      const { taskTypes } = req.body;
+      
+      if (!taskTypes?.length) {
+        return res.status(400).json({ message: "Missing task types" });
+      }
+
+      const result = await executeAutomatedTasks(userId, taskTypes);
+      res.json({ success: true, result });
+    } catch (error: any) {
+      console.error('Automated task execution error:', error);
+      res.status(500).json({ message: 'Failed to execute automated tasks', error: error.message });
+    }
+  });
+
   // AI-powered message enhancement with context awareness
   app.post('/api/ai/messages/enhance', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
