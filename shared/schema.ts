@@ -28,6 +28,9 @@ export const datingSubscriptionEnum = pgEnum('dating_subscription', ['normal', '
 // Define message category enum for different message sections
 export const messageCategoryEnum = pgEnum('message_category', ['marketplace', 'community', 'dating']);
 
+// Define interaction type enum for AI personalization
+export const interactionTypeEnum = pgEnum('interaction_type', ['view', 'search', 'purchase', 'like', 'cart', 'share', 'compare']);
+
 // Define regions enum
 export const regionEnum = pgEnum('region', [
   'Africa', 
@@ -2095,6 +2098,193 @@ export const insertVendorPaymentMethodSchema = createInsertSchema(vendorPaymentM
 
 export const insertVendorAccountActionSchema = createInsertSchema(vendorAccountActions)
   .omit({ id: true, createdAt: true });
+
+// AI Personalization Tables
+
+// User interactions tracking for AI learning
+export const userInteractions = pgTable("user_interactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  
+  // Interaction details
+  interactionType: interactionTypeEnum("interaction_type").notNull(),
+  metadata: json("metadata"), // Store additional data like search terms, time spent, etc.
+  
+  // Contextual information
+  sessionId: varchar("session_id", { length: 255 }),
+  userAgent: text("user_agent"),
+  referrer: text("referrer"),
+  
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_interactions_user').on(table.userId),
+    productIdx: index('idx_interactions_product').on(table.productId),
+    typeIdx: index('idx_interactions_type').on(table.interactionType),
+    timestampIdx: index('idx_interactions_timestamp').on(table.timestamp),
+    userProductIdx: index('idx_interactions_user_product').on(table.userId, table.productId),
+  };
+});
+
+// User preferences learned from AI analysis
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  
+  // Category preferences (JSON array of category IDs with weights)
+  preferredCategories: json("preferred_categories").default([]),
+  
+  // Price preferences
+  priceRangeMin: decimal("price_range_min", { precision: 10, scale: 2 }).default("0"),
+  priceRangeMax: decimal("price_range_max", { precision: 10, scale: 2 }).default("1000"),
+  
+  // Brand preferences (JSON array of brand names)
+  preferredBrands: json("preferred_brands").default([]),
+  
+  // Behavioral patterns
+  preferredTimeOfDay: varchar("preferred_time_of_day", { length: 20 }), // "morning", "afternoon", "evening", "night"
+  shoppingFrequency: varchar("shopping_frequency", { length: 20 }), // "daily", "weekly", "monthly", "occasional"
+  
+  // AI-computed preference scores
+  noveltySeeker: doublePrecision("novelty_seeker").default(0.5), // 0-1 scale
+  brandLoyal: doublePrecision("brand_loyal").default(0.5),
+  priceConsciousness: doublePrecision("price_consciousness").default(0.5),
+  qualityFocused: doublePrecision("quality_focused").default(0.5),
+  
+  // Seasonal patterns (JSON object)
+  seasonalPatterns: json("seasonal_patterns").default({}),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdx: unique('unique_user_preferences').on(table.userId),
+  };
+});
+
+// Product similarity matrix for content-based filtering
+export const productSimilarity = pgTable("product_similarity", {
+  id: serial("id").primaryKey(),
+  productId1: integer("product_id_1").notNull().references(() => products.id, { onDelete: "cascade" }),
+  productId2: integer("product_id_2").notNull().references(() => products.id, { onDelete: "cascade" }),
+  
+  // Similarity scores
+  categorySimilarity: doublePrecision("category_similarity").default(0),
+  priceSimilarity: doublePrecision("price_similarity").default(0),
+  brandSimilarity: doublePrecision("brand_similarity").default(0),
+  overallSimilarity: doublePrecision("overall_similarity").notNull(),
+  
+  // Metadata
+  computedAt: timestamp("computed_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    product1Idx: index('idx_similarity_product1').on(table.productId1),
+    product2Idx: index('idx_similarity_product2').on(table.productId2),
+    overallSimilarityIdx: index('idx_similarity_overall').on(table.overallSimilarity),
+    uniquePair: unique('unique_product_pair').on(table.productId1, table.productId2),
+  };
+});
+
+// User similarity matrix for collaborative filtering
+export const userSimilarity = pgTable("user_similarity", {
+  id: serial("id").primaryKey(),
+  userId1: integer("user_id_1").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId2: integer("user_id_2").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Similarity metrics
+  behavioralSimilarity: doublePrecision("behavioral_similarity").default(0),
+  preferenceSimilarity: doublePrecision("preference_similarity").default(0),
+  overallSimilarity: doublePrecision("overall_similarity").notNull(),
+  
+  // Confidence and metadata
+  confidence: doublePrecision("confidence").default(0.5),
+  computedAt: timestamp("computed_at").notNull().defaultNow(),
+}, (table) => {
+  return {
+    user1Idx: index('idx_user_similarity_user1').on(table.userId1),
+    user2Idx: index('idx_user_similarity_user2').on(table.userId2),
+    overallSimilarityIdx: index('idx_user_similarity_overall').on(table.overallSimilarity),
+    uniqueUserPair: unique('unique_user_pair').on(table.userId1, table.userId2),
+  };
+});
+
+// Recommendation cache to improve performance
+export const recommendationCache = pgTable("recommendation_cache", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Cached recommendations (JSON array of product IDs with scores)
+  recommendations: json("recommendations").notNull(),
+  
+  // Cache metadata
+  algorithm: varchar("algorithm", { length: 50 }).notNull(), // "collaborative", "content", "hybrid", "popular"
+  expiresAt: timestamp("expires_at").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_recommendation_cache_user').on(table.userId),
+    expiresIdx: index('idx_recommendation_cache_expires').on(table.expiresAt),
+    algorithmIdx: index('idx_recommendation_cache_algorithm').on(table.algorithm),
+  };
+});
+
+// A/B testing for recommendation algorithms
+export const recommendationExperiments = pgTable("recommendation_experiments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  
+  // Experiment details
+  experimentName: varchar("experiment_name", { length: 100 }).notNull(),
+  algorithmVariant: varchar("algorithm_variant", { length: 50 }).notNull(),
+  
+  // Performance metrics
+  clickThroughRate: doublePrecision("click_through_rate").default(0),
+  conversionRate: doublePrecision("conversion_rate").default(0),
+  engagementScore: doublePrecision("engagement_score").default(0),
+  
+  // Experiment period
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  endedAt: timestamp("ended_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('idx_experiment_user').on(table.userId),
+    experimentIdx: index('idx_experiment_name').on(table.experimentName),
+    variantIdx: index('idx_experiment_variant').on(table.algorithmVariant),
+  };
+});
+
+// AI Personalization Schemas
+export const insertUserInteractionSchema = createInsertSchema(userInteractions)
+  .omit({ id: true, timestamp: true });
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertProductSimilaritySchema = createInsertSchema(productSimilarity)
+  .omit({ id: true, computedAt: true });
+
+export const insertUserSimilaritySchema = createInsertSchema(userSimilarity)
+  .omit({ id: true, computedAt: true });
+
+export const insertRecommendationCacheSchema = createInsertSchema(recommendationCache)
+  .omit({ id: true, createdAt: true });
+
+export const insertRecommendationExperimentSchema = createInsertSchema(recommendationExperiments)
+  .omit({ id: true, createdAt: true });
+
+// Type exports
+export type UserInteraction = typeof userInteractions.$inferSelect;
+export type InsertUserInteraction = z.infer<typeof insertUserInteractionSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type ProductSimilarity = typeof productSimilarity.$inferSelect;
+export type UserSimilarity = typeof userSimilarity.$inferSelect;
+export type RecommendationCache = typeof recommendationCache.$inferSelect;
+export type RecommendationExperiment = typeof recommendationExperiments.$inferSelect;
 
 // Commission tracking types
 export type VendorCommissionPeriod = typeof vendorCommissionPeriods.$inferSelect;

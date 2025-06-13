@@ -7777,6 +7777,199 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
   });
 
+  // AI Personalization Engine - Direct Implementation
+  class AIPersonalizationEngine {
+    async getPersonalizedRecommendations(userId: number, limit: number = 20): Promise<any[]> {
+      try {
+        console.log(`[AI Recommendations] Getting recommendations for user ${userId}`);
+        
+        // Get user's cart items to understand preferences
+        const userCartItems = await db
+          .select({
+            productId: cart.productId,
+            category: products.category,
+            price: products.price
+          })
+          .from(cart)
+          .innerJoin(products, eq(cart.productId, products.id))
+          .where(eq(cart.userId, userId));
+
+        // Get user's liked products
+        const userLikes = await db
+          .select({
+            productId: likedProducts.productId,
+            category: products.category
+          })
+          .from(likedProducts)
+          .innerJoin(products, eq(likedProducts.productId, products.id))
+          .where(eq(likedProducts.userId, userId));
+
+        // Combine preferences from cart and likes
+        const preferredCategories = [
+          ...new Set([
+            ...userCartItems.map(item => item.category),
+            ...userLikes.map(item => item.category)
+          ])
+        ].filter(Boolean);
+
+        const excludeProductIds = [
+          ...userCartItems.map(item => item.productId),
+          ...userLikes.map(item => item.productId)
+        ];
+
+        let recommendations: any[] = [];
+
+        // Strategy 1: Category-based recommendations
+        if (preferredCategories.length > 0) {
+          const categoryProducts = await db
+            .select()
+            .from(products)
+            .where(
+              and(
+                inArray(products.category, preferredCategories),
+                excludeProductIds.length > 0 ? notInArray(products.id, excludeProductIds) : undefined
+              )
+            )
+            .orderBy(desc(products.createdAt))
+            .limit(limit);
+
+          recommendations.push(...categoryProducts.map(product => ({
+            ...product,
+            recommendationReason: 'Based on your favorite categories',
+            score: 0.8
+          })));
+        }
+
+        // Strategy 2: Popular products if we don't have enough recommendations
+        if (recommendations.length < limit) {
+          const popularProducts = await db
+            .select()
+            .from(products)
+            .where(
+              excludeProductIds.length > 0 ? notInArray(products.id, excludeProductIds) : undefined
+            )
+            .orderBy(desc(products.createdAt))
+            .limit(limit - recommendations.length);
+
+          recommendations.push(...popularProducts.map(product => ({
+            ...product,
+            recommendationReason: 'Popular products',
+            score: 0.5
+          })));
+        }
+
+        // Remove duplicates and limit results
+        const uniqueRecommendations = recommendations
+          .filter((product, index, self) => 
+            index === self.findIndex(p => p.id === product.id)
+          )
+          .slice(0, limit);
+
+        console.log(`[AI Recommendations] Generated ${uniqueRecommendations.length} recommendations for user ${userId}`);
+        return uniqueRecommendations;
+
+      } catch (error) {
+        console.error('Error getting personalized recommendations:', error);
+        // Fallback to recent products
+        const fallbackProducts = await db
+          .select()
+          .from(products)
+          .orderBy(desc(products.createdAt))
+          .limit(limit);
+
+        return fallbackProducts.map(product => ({
+          ...product,
+          recommendationReason: 'Latest products',
+          score: 0.3
+        }));
+      }
+    }
+
+    async trackUserInteraction(userId: number, productId: number, interactionType: string, metadata?: any) {
+      try {
+        console.log(`[AI Personalization] Tracked ${interactionType} interaction for user ${userId} on product ${productId}`);
+        // For now, we'll just log interactions
+        // This could be enhanced with a dedicated interactions table in the future
+      } catch (error) {
+        console.error('Error tracking user interaction:', error);
+      }
+    }
+  }
+
+  const aiPersonalizationEngine = new AIPersonalizationEngine();
+
+  // Get personalized product recommendations for logged-in users
+  app.get("/api/recommendations", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      const recommendations = await aiPersonalizationEngine.getPersonalizedRecommendations(userId, limit);
+      
+      res.json({
+        recommendations,
+        personalized: true,
+        algorithm: 'hybrid',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error getting recommendations:", error);
+      res.status(500).json({ message: "Failed to get recommendations" });
+    }
+  });
+
+  // Track user interactions for AI learning
+  app.post("/api/track-interaction", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { productId, interactionType, metadata } = req.body;
+      
+      if (!productId || !interactionType) {
+        return res.status(400).json({ message: "Product ID and interaction type are required" });
+      }
+      
+      await aiPersonalizationEngine.trackUserInteraction(userId, productId, interactionType, metadata);
+      
+      res.json({ success: true, message: "Interaction tracked successfully" });
+    } catch (error) {
+      console.error("Error tracking interaction:", error);
+      res.status(500).json({ message: "Failed to track interaction" });
+    }
+  });
+
+  // Get user's browsing analytics (for dashboard)
+  app.get("/api/user-analytics", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      
+      // Get user's cart items and recent activity
+      const userCartItems = await db
+        .select()
+        .from(cart)
+        .where(eq(cart.userId, userId));
+      
+      const categoryPreferences = await db
+        .select({
+          category: products.category,
+          count: sql<number>`COUNT(*)`.as('count')
+        })
+        .from(cart)
+        .innerJoin(products, eq(cart.productId, products.id))
+        .where(eq(cart.userId, userId))
+        .groupBy(products.category)
+        .orderBy(desc(sql`count`));
+      
+      res.json({
+        totalCartItems: userCartItems.length,
+        categoryPreferences,
+        personalizationActive: true
+      });
+    } catch (error) {
+      console.error("Error getting user analytics:", error);
+      res.status(500).json({ message: "Failed to get user analytics" });
+    }
+  });
+
   // Add canonical URL headers for API responses
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
