@@ -2216,8 +2216,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Use provided server or create new one
-  const server = httpServer || createServer(app);
+  // Use provided server - don't create a new one to avoid port conflicts
+  const server = httpServer;
   
   // Seed the database with initial data
   await seedDatabase();

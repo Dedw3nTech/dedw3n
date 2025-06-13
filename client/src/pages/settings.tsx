@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useTranslation } from "react-i18next";
 import {
   Settings as SettingsIcon,
   User as UserIcon,
