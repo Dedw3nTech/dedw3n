@@ -291,13 +291,14 @@ export async function moderateMessage(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 512,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       isAppropriate: result.isAppropriate,
       confidence: Math.max(0, Math.min(1, result.confidence)),
@@ -339,13 +340,14 @@ export async function generateSupportResponse(
     }
     `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = JSON.parse(response.choices[0].message.content || '{}');
     return {
       response: result.response,
       escalate: result.escalate,
