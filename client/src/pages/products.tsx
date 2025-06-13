@@ -4,6 +4,7 @@ import { useLocation, Link as WouterLink } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { formatPrice } from '@/lib/utils';
 import { useMarketType } from '@/hooks/use-market-type';
+import { PersonalizedRecommendations } from '@/components/PersonalizedRecommendations';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useMasterBatchTranslation, useMasterTranslation } from '@/hooks/use-master-translation';

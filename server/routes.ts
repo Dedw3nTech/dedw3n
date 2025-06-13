@@ -7945,17 +7945,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Get user's cart items and recent activity
       const userCartItems = await db
         .select()
-        .from(cart)
-        .where(eq(cart.userId, userId));
+        .from(carts)
+        .where(eq(carts.userId, userId));
       
       const categoryPreferences = await db
         .select({
           category: products.category,
           count: sql<number>`COUNT(*)`.as('count')
         })
-        .from(cart)
-        .innerJoin(products, eq(cart.productId, products.id))
-        .where(eq(cart.userId, userId))
+        .from(carts)
+        .innerJoin(products, eq(carts.productId, products.id))
+        .where(eq(carts.userId, userId))
         .groupBy(products.category)
         .orderBy(desc(sql`count`));
       

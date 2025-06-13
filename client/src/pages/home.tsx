@@ -12,6 +12,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice, formatCurrency } from "@/lib/utils";
 import { Product } from "@shared/schema";
+import { PersonalizedRecommendations } from "@/components/PersonalizedRecommendations";
 
 import {
   Dialog,
@@ -332,6 +333,14 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map(renderProductCard)}
           </div>
+        </div>
+      )}
+
+      {/* AI Personalized Recommendations Section */}
+      {user && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">{t("Recommended for You") || "Recommended for You"}</h2>
+          <PersonalizedRecommendations />
         </div>
       )}
 
