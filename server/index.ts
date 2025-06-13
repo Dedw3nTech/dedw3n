@@ -174,23 +174,57 @@ app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     
     try {
-      // Get user ID from session or headers
+      // Import storage first for authentication
+      const { storage } = await import('./storage.js');
+      
+      // Enhanced authentication for post creation - mirror messaging authentication pattern
       let userId = req.body.userId;
       
-      // If no userId in body, try to get from authenticated session
+      // Try authentication using the same pattern as messaging
+      if (!userId) {
+        // First check client headers (enhanced auth pattern)
+        const clientUserId = req.headers['x-client-user-id'];
+        if (clientUserId && typeof clientUserId === 'string') {
+          try {
+            const testUserId = parseInt(clientUserId);
+            const user = await storage.getUser(testUserId);
+            if (user) {
+              userId = user.id;
+              console.log(`[DEBUG] Client user authenticated for posts: ${user.username} (ID: ${user.id})`);
+            }
+          } catch (error) {
+            console.error('[DEBUG] Error with client user authentication:', error);
+          }
+        }
+      }
+      
+      // Check session passport data
+      if (!userId && req.session?.passport?.user) {
+        try {
+          const sessionUserId = req.session.passport.user;
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            userId = user.id;
+            console.log(`[DEBUG] Session user authenticated for posts: ${user.username} (ID: ${user.id})`);
+          }
+        } catch (error) {
+          console.error('[DEBUG] Error with session authentication:', error);
+        }
+      }
+      
+      // Check authenticated session from req.user
       if (!userId && req.user) {
         userId = (req.user as any).id;
+        console.log(`[DEBUG] Request user authenticated for posts: ${userId}`);
       }
       
       if (!userId) {
+        console.log('[DEBUG] No valid authentication found for post creation');
         return res.status(401).json({ message: "User authentication required" });
       }
 
       console.log('[DEBUG] Creating post for user:', userId);
       console.log('[DEBUG] Post data received:', req.body);
-
-      // Import storage and create the post
-      const { storage } = await import('./storage.js');
       
       const postData = {
         userId: parseInt(userId),
