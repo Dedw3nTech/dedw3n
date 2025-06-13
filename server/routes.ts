@@ -33,6 +33,7 @@ import { registerAdminRoutes } from "./admin";
 // import { registerMessagingSuite } from "./messaging-suite"; // Disabled to prevent WebSocket conflicts
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { registerNewsFeedRoutes } from "./news-feed";
+import { registerFileUploadRoutes } from "./file-upload";
 import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 
@@ -3725,6 +3726,71 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('Error getting users for messaging:', error);
       res.status(500).json({ message: 'Failed to get users' });
+    }
+  });
+
+  // Send message endpoint with attachment support
+  app.post('/api/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    console.log('[DEBUG] Send message endpoint called');
+    
+    try {
+      const { receiverId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
+      const senderId = req.user!.id;
+
+      console.log('[DEBUG] Message send request:', {
+        senderId,
+        receiverId,
+        content: content?.substring(0, 50) + '...',
+        attachmentUrl,
+        attachmentType,
+        category
+      });
+
+      if (!receiverId) {
+        return res.status(400).json({ message: 'Receiver ID is required' });
+      }
+
+      if (!content && !attachmentUrl) {
+        return res.status(400).json({ message: 'Message content or attachment is required' });
+      }
+
+      // Validate receiver exists
+      const receiver = await storage.getUser(parseInt(receiverId));
+      if (!receiver) {
+        return res.status(404).json({ message: 'Receiver not found' });
+      }
+
+      // Create message with attachment support
+      const messageData = {
+        senderId,
+        receiverId: parseInt(receiverId),
+        content: content || '',
+        attachmentUrl: attachmentUrl || null,
+        attachmentType: attachmentType || null,
+        category: category as 'marketplace' | 'community' | 'dating',
+        messageType: attachmentUrl ? 'attachment' : 'text',
+        isRead: false
+      };
+
+      console.log('[DEBUG] Creating message with data:', messageData);
+
+      const message = await storage.createMessage(messageData);
+
+      console.log('[DEBUG] Message created successfully:', message.id);
+
+      // Broadcast to WebSocket if available
+      try {
+        const { broadcastMessage } = await import('./websocket-handler');
+        broadcastMessage(message, parseInt(receiverId));
+        console.log('[DEBUG] Message broadcasted via WebSocket');
+      } catch (wsError) {
+        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError.message);
+      }
+
+      res.status(201).json(message);
+    } catch (error) {
+      console.error('[ERROR] Failed to send message:', error);
+      res.status(500).json({ message: 'Failed to send message' });
     }
   });
 
@@ -10100,6 +10166,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       path: req.path
     });
   });
+
+  // Register file upload routes for messaging
+  registerFileUploadRoutes(app);
 
   // Set up WebSocket server for messaging
   console.log('[WebSocket] Setting up WebSocket server for messaging');
