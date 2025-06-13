@@ -45,6 +45,9 @@ import {
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 import VendorProductManagement from "@/components/vendor/VendorProductManagement";
 import VendorOrderManagement from "@/components/vendor/VendorOrderManagement";
+import VendorAnalytics from "@/components/vendor/VendorAnalytics";
+import VendorMarketingTools from "@/components/vendor/VendorMarketingTools";
+import VendorSettings from "@/components/vendor/VendorSettings";
 import { AIProductUpload } from "@/components/AIProductUpload";
 
 export default function VendorDashboard() {
@@ -528,19 +531,7 @@ export default function VendorDashboard() {
         </TabsContent>
 
         <TabsContent value="marketing">
-          <Card>
-            <CardHeader>
-              <CardTitle>{marketingText}</CardTitle>
-              <CardDescription>
-                Create promotions and marketing campaigns
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Marketing tools will be available here.
-              </p>
-            </CardContent>
-          </Card>
+          <VendorMarketingTools vendorId={vendorId!} />
         </TabsContent>
 
         <TabsContent value="commission">
@@ -548,19 +539,7 @@ export default function VendorDashboard() {
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>{settingsText}</CardTitle>
-              <CardDescription>
-                Configure your store settings and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Store settings will be available here.
-              </p>
-            </CardContent>
-          </Card>
+          <VendorSettings vendorId={vendorId!} />
         </TabsContent>
       </Tabs>
     </div>
