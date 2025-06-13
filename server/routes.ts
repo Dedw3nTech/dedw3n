@@ -5095,6 +5095,243 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // AI Dating Tools Routes
+  
+  // Matchmaking and Compatibility
+  app.post('/api/ai/dating/analyze-compatibility', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeCompatibility } = await import('./ai-dating');
+      const { userProfile, candidateProfile } = req.body;
+      
+      if (!userProfile || !candidateProfile) {
+        return res.status(400).json({ message: "Missing profile data" });
+      }
+
+      const compatibility = await analyzeCompatibility(userProfile, candidateProfile);
+      res.json({ success: true, compatibility });
+    } catch (error: any) {
+      console.error('Compatibility analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze compatibility', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/dating/personality-insights', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generatePersonalityInsights } = await import('./ai-dating');
+      const { profile } = req.body;
+      
+      if (!profile) {
+        return res.status(400).json({ message: "Missing profile data" });
+      }
+
+      const insights = await generatePersonalityInsights(profile);
+      res.json({ success: true, insights });
+    } catch (error: any) {
+      console.error('Personality insights error:', error);
+      res.status(500).json({ message: 'Failed to generate personality insights', error: error.message });
+    }
+  });
+
+  // Profile Creation and Optimization
+  app.post('/api/ai/dating/profile-suggestions', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateProfileSuggestions } = await import('./ai-dating');
+      const { userInfo } = req.body;
+      
+      if (!userInfo || !userInfo.age || !userInfo.interests) {
+        return res.status(400).json({ message: "Missing user information" });
+      }
+
+      const suggestions = await generateProfileSuggestions(userInfo);
+      res.json({ success: true, suggestions });
+    } catch (error: any) {
+      console.error('Profile suggestions error:', error);
+      res.status(500).json({ message: 'Failed to generate profile suggestions', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/dating/analyze-photos', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeProfilePhotos } = await import('./ai-dating');
+      const { photoDescriptions } = req.body;
+      
+      if (!photoDescriptions?.length) {
+        return res.status(400).json({ message: "Missing photo descriptions" });
+      }
+
+      const recommendations = await analyzeProfilePhotos(photoDescriptions);
+      res.json({ success: true, recommendations });
+    } catch (error: any) {
+      console.error('Photo analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze photos', error: error.message });
+    }
+  });
+
+  // Conversation Assistance
+  app.post('/api/ai/dating/conversation-starters', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateConversationStarters } = await import('./ai-dating');
+      const { matchProfile, context } = req.body;
+      
+      if (!matchProfile || !context) {
+        return res.status(400).json({ message: "Missing match profile or context" });
+      }
+
+      const starters = await generateConversationStarters(matchProfile, context);
+      res.json({ success: true, starters });
+    } catch (error: any) {
+      console.error('Conversation starters error:', error);
+      res.status(500).json({ message: 'Failed to generate conversation starters', error: error.message });
+    }
+  });
+
+  app.post('/api/ai/dating/message-response', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateMessageResponse } = await import('./ai-dating');
+      const { receivedMessage, conversationHistory, userPersonality } = req.body;
+      
+      if (!receivedMessage) {
+        return res.status(400).json({ message: "Missing received message" });
+      }
+
+      const responses = await generateMessageResponse(
+        receivedMessage, 
+        conversationHistory || [], 
+        userPersonality || "friendly and genuine"
+      );
+      res.json({ success: true, responses });
+    } catch (error: any) {
+      console.error('Message response error:', error);
+      res.status(500).json({ message: 'Failed to generate message responses', error: error.message });
+    }
+  });
+
+  // Date Planning
+  app.post('/api/ai/dating/personalized-dates', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generatePersonalizedDateIdeas } = await import('./ai-dating');
+      const { userProfile, matchProfile, preferences } = req.body;
+      
+      if (!userProfile || !matchProfile || !preferences) {
+        return res.status(400).json({ message: "Missing profile data or preferences" });
+      }
+
+      const dateIdeas = await generatePersonalizedDateIdeas(userProfile, matchProfile, preferences);
+      res.json({ success: true, dateIdeas });
+    } catch (error: any) {
+      console.error('Date ideas error:', error);
+      res.status(500).json({ message: 'Failed to generate date ideas', error: error.message });
+    }
+  });
+
+  // Virtual Wingman
+  app.post('/api/ai/dating/wingman-advice', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateWingmanAdvice } = await import('./ai-dating');
+      const { userProfile, situation } = req.body;
+      
+      if (!userProfile || !situation) {
+        return res.status(400).json({ message: "Missing profile or situation data" });
+      }
+
+      const advice = await generateWingmanAdvice(userProfile, situation);
+      res.json({ success: true, advice });
+    } catch (error: any) {
+      console.error('Wingman advice error:', error);
+      res.status(500).json({ message: 'Failed to generate wingman advice', error: error.message });
+    }
+  });
+
+  // Emotional Analysis
+  app.post('/api/ai/dating/emotional-analysis', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { analyzeEmotionalCompatibility } = await import('./ai-dating');
+      const { conversationHistory, userProfile, matchProfile } = req.body;
+      
+      if (!conversationHistory?.length || !userProfile || !matchProfile) {
+        return res.status(400).json({ message: "Missing conversation history or profiles" });
+      }
+
+      const analysis = await analyzeEmotionalCompatibility(conversationHistory, userProfile, matchProfile);
+      res.json({ success: true, analysis });
+    } catch (error: any) {
+      console.error('Emotional analysis error:', error);
+      res.status(500).json({ message: 'Failed to analyze emotional compatibility', error: error.message });
+    }
+  });
+
+  // Virtual Partner
+  app.post('/api/ai/dating/virtual-partner', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { generateVirtualPartnerResponse } = await import('./ai-dating');
+      const { message, partnerPersonality, relationshipContext } = req.body;
+      
+      if (!message || !partnerPersonality) {
+        return res.status(400).json({ message: "Missing message or partner personality" });
+      }
+
+      const response = await generateVirtualPartnerResponse(
+        message, 
+        partnerPersonality, 
+        relationshipContext || "casual conversation"
+      );
+      res.json({ success: true, response });
+    } catch (error: any) {
+      console.error('Virtual partner error:', error);
+      res.status(500).json({ message: 'Failed to generate virtual partner response', error: error.message });
+    }
+  });
+
   // AI-powered message enhancement with context awareness
   app.post('/api/ai/messages/enhance', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

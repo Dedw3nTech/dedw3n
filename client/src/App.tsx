@@ -46,6 +46,7 @@ import { DatingNav } from "@/components/layout/DatingNav";
 import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
 import { GPCBanner } from "@/components/GPCBanner";
 import AICommunityTools from "@/components/AICommunityTools";
+import AIDatingTools from "@/components/AIDatingTools";
 
 // Community Navigation wrapper
 function CommunityNavWrapper() {
@@ -356,6 +357,7 @@ function Router() {
         <CommunityPage />
       </Route>
       <ProtectedRoute path="/community/ai-tools" component={AICommunityTools} />
+      <ProtectedRoute path="/dating/ai-tools" component={AIDatingTools} />
 
       <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/event/:id" component={EventDetailPage} />
