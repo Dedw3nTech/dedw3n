@@ -586,7 +586,7 @@ export function UnifiedMessaging() {
                         </div>
                       </div>
                       
-                      {/* Comprehensive File Upload Buttons */}
+                      {/* File Upload Buttons */}
                       <div className="flex gap-1">
                         {/* Image Upload */}
                         <Button
@@ -614,46 +614,7 @@ export function UnifiedMessaging() {
                           <Video className="h-4 w-4" />
                         </Button>
                         
-                        {/* Audio Upload */}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleFileSelect('audio')}
-                          disabled={!selectedUser && !selectedConversation}
-                          className="h-10 w-10 text-gray-500 hover:text-green-500"
-                          title="Upload Audio (MP3, WAV, AAC)"
-                        >
-                          <Music className="h-4 w-4" />
-                        </Button>
-                        
-                        {/* Document Upload */}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleFileSelect('document')}
-                          disabled={!selectedUser && !selectedConversation}
-                          className="h-10 w-10 text-gray-500 hover:text-red-500"
-                          title="Upload Document (PDF, DOC, DOCX, TXT)"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        
-                        {/* Excel/Spreadsheet Upload */}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleFileSelect('spreadsheet')}
-                          disabled={!selectedUser && !selectedConversation}
-                          className="h-10 w-10 text-gray-500 hover:text-green-600"
-                          title="Upload Spreadsheet (XLS, XLSX)"
-                        >
-                          <FileSpreadsheet className="h-4 w-4" />
-                        </Button>
-                        
-                        {/* General File Upload */}
+                        {/* Universal File Upload - includes audio, documents, spreadsheets, and all other files */}
                         <Button
                           type="button"
                           variant="ghost"
@@ -661,7 +622,7 @@ export function UnifiedMessaging() {
                           onClick={() => handleFileSelect('file')}
                           disabled={!selectedUser && !selectedConversation}
                           className="h-10 w-10 text-gray-500 hover:text-gray-700"
-                          title="Upload Any File"
+                          title="Upload File (Audio, Documents, PDFs, Spreadsheets, and more)"
                         >
                           <Paperclip className="h-4 w-4" />
                         </Button>
