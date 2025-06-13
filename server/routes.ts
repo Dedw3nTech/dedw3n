@@ -2410,6 +2410,34 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Popular products endpoint - MUST be before /:id route
+  app.get('/api/products/popular', async (req: Request, res: Response) => {
+    try {
+      // Check cache first
+      const cached = queryCache.get('products:popular');
+      if (cached) {
+        console.log('[DEBUG] Returning cached popular products');
+        return res.json(cached);
+      }
+
+      const popularProducts = await storage.getPopularProducts();
+      
+      // Map database fields to expected frontend fields
+      const mappedPopularProducts = popularProducts.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+      }));
+      
+      // Cache for 60 seconds
+      queryCache.set('products:popular', mappedPopularProducts, 60 * 1000);
+      
+      res.json(mappedPopularProducts);
+    } catch (error) {
+      console.error('Error fetching popular products:', error);
+      res.status(500).json({ message: 'Failed to fetch popular products' });
+    }
+  });
+
   // Individual product endpoint
   app.get('/api/products/:id', async (req: Request, res: Response) => {
     try {
@@ -3939,16 +3967,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  app.get('/api/products/popular', async (req: Request, res: Response) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 4;
-      const popularProducts = await storage.getTopSellingProducts(limit);
-      res.json(popularProducts);
-    } catch (error) {
-      console.error('Error fetching popular products:', error);
-      res.status(500).json({ message: 'Failed to fetch popular products' });
-    }
-  });
+
 
   // Categories API endpoint
   app.get('/api/categories', async (req: Request, res: Response) => {
@@ -4341,32 +4360,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  app.get('/api/products/popular', async (req: Request, res: Response) => {
-    try {
-      // Check cache first
-      const cached = queryCache.get('products:popular');
-      if (cached) {
-        console.log('[DEBUG] Returning cached popular products');
-        return res.json(cached);
-      }
 
-      const popularProducts = await storage.getPopularProducts();
-      
-      // Map database fields to expected frontend fields
-      const mappedPopularProducts = popularProducts.map(product => ({
-        ...product,
-        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
-      }));
-      
-      // Cache for 60 seconds
-      queryCache.set('products:popular', mappedPopularProducts, 60 * 1000);
-      
-      res.json(mappedPopularProducts);
-    } catch (error) {
-      console.error('Error fetching popular products:', error);
-      res.status(500).json({ message: 'Failed to fetch popular products' });
-    }
-  });
 
   // Subscription status endpoint
   app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
