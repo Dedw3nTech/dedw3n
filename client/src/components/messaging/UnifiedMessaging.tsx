@@ -413,8 +413,9 @@ export function UnifiedMessaging() {
             <div className="col-span-2">
               {!selectedUser && !selectedConversation ? (
                 <Card className="h-full">
-                  <CardContent className="flex items-center justify-center h-full text-muted-foreground">
-                    Select a conversation or click "New Message" to start messaging
+                  <CardContent className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+                    <div className="text-lg font-medium mb-2">Welcome to your messages.</div>
+                    <div>Please select a conversation or click 'New Message' to begin messaging.</div>
                   </CardContent>
                 </Card>
               ) : (
