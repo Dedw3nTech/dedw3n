@@ -570,10 +570,12 @@ export function UnifiedMessaging() {
                           className="h-10 pr-12 relative z-0"
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey && !isSending) {
                               e.preventDefault();
-                              handleSendMessage();
+                              if (messageText.trim() || selectedFile) {
+                                selectedFile ? handleSendWithAttachment() : handleSendMessage();
+                              }
                             }
                           }}
                           disabled={!selectedUser && !selectedConversation}
