@@ -233,6 +233,8 @@ app.use((req, res, next) => {
         contentType: req.body.contentType || "text",
         imageUrl: req.body.imageUrl !== "none" ? req.body.imageUrl : null,
         videoUrl: req.body.videoUrl || null,
+        productId: req.body.productId ? parseInt(req.body.productId) : null,
+        eventId: req.body.eventId ? parseInt(req.body.eventId) : null,
         tags: req.body.tags || null,
         isPublished: true,
         likes: 0,
@@ -240,6 +242,8 @@ app.use((req, res, next) => {
         shares: 0,
         views: 0
       };
+      
+      console.log('[DEBUG] Final postData to be saved:', postData);
 
       const newPost = await storage.createPost(postData);
       console.log('[DEBUG] Post created successfully:', newPost.id);
