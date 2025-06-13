@@ -1113,110 +1113,93 @@ export default function PostCard({
           </div>
         )}
         
-        {/* Product card for embedded commerce */}
+        {/* Enhanced Product card for embedded commerce - Full card display for product reposts */}
         {post.product && (
-          <div className="border rounded-lg p-3 mb-4 bg-muted/30 hover:bg-muted/50 transition duration-200">
-            <div className="flex gap-3">
-              <div 
-                className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0 cursor-pointer" 
-                onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
-              >
-                <img 
-                  src={post.product.imageUrl} 
-                  alt={post.product.name} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 
-                      className="font-medium text-base hover:underline cursor-pointer"
-                      onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
-                    >
-                      {post.product.name}
-                    </h4>
-                    {post.product.vendorName && (
-                      <p className="text-xs text-muted-foreground flex items-center mt-1">
-                        <Users className="h-3 w-3 mr-1" />
-                        {post.product.vendorName}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1">
-                      {post.product.discountPrice !== null && (
-                        <span className="text-sm line-through text-muted-foreground">
-                          £{post.product.price.toFixed(2)}
-                        </span>
-                      )}
-                      <span className="font-semibold text-primary">
-                        £{(post.product.discountPrice ?? post.product.price).toFixed(2)}
+          <div className="border rounded-lg p-6 mb-4 bg-white shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="flex flex-col gap-4">
+              {/* Product image and basic info */}
+              <div className="flex gap-4">
+                <div 
+                  className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border" 
+                  onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
+                >
+                  <img 
+                    src={post.product.imageUrl} 
+                    alt={post.product.name} 
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h4 
+                    className="font-semibold text-lg hover:underline cursor-pointer text-gray-900 mb-1"
+                    onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
+                  >
+                    {post.product.name}
+                  </h4>
+                  {post.product.vendorName && (
+                    <p className="text-sm text-gray-600 flex items-center mb-2">
+                      <Users className="h-3 w-3 mr-1" />
+                      {post.product.vendorName}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {post.product.discountPrice !== null && post.product.discountPrice < post.product.price && (
+                      <span className="text-sm text-gray-500 line-through">
+                        £{post.product.price.toFixed(2)}
                       </span>
-                    </div>
-                    {post.product.discountPrice !== null && (
-                      <Badge className="bg-green-500 hover:bg-green-600 mt-1">
-                        {post.product.discountPrice !== null && Math.round((1 - (post.product.discountPrice || 0) / post.product.price) * 100)}% OFF
-                      </Badge>
                     )}
+                    <span className="font-bold text-xl text-green-600">
+                      £{(post.product.discountPrice ?? post.product.price).toFixed(2)}
+                    </span>
                   </div>
+                  {post.product.discountPrice !== null && post.product.discountPrice < post.product.price && (
+                    <Badge className="bg-red-500 hover:bg-red-600 mt-2 text-white">
+                      {Math.round((1 - (post.product.discountPrice || 0) / post.product.price) * 100)}% OFF
+                    </Badge>
+                  )}
                 </div>
-                <div className="flex mt-3 gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => {
-                            if (!currentUser) {
-                              toast({
-                                title: "Authentication required",
-                                description: "Please log in to add items to cart",
-                                variant: "destructive",
-                              });
-                              setLocation("/auth");
-                              return;
-                            }
-                            
-                            if (post.product?.id) {
-                              addToCartMutation.mutate();
-                            }
-                          }}
-                          disabled={addToCartMutation.isPending}
-                        >
-                          {addToCartMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                          ) : (
-                            <ShoppingBag className="h-4 w-4 mr-1" />
-                          )}
-                          {addToCartText}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{addToCartText}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
-                        >
-                          <Maximize className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{viewProductText}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+              </div>
+              
+              {/* Prominent action buttons - styled like your image */}
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium h-12 text-base rounded-lg"
+                  onClick={() => {
+                    if (!currentUser) {
+                      toast({
+                        title: "Authentication required",
+                        description: "Please log in to add items to cart",
+                        variant: "destructive",
+                      });
+                      setLocation("/auth");
+                      return;
+                    }
+                    
+                    if (post.product?.id) {
+                      addToCartMutation.mutate();
+                    }
+                  }}
+                  disabled={addToCartMutation.isPending}
+                >
+                  {addToCartMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  ) : (
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                  )}
+                  Buy Now
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-medium h-12 text-base rounded-lg hover:bg-gray-50"
+                  onClick={handleMakeOffer}
+                  disabled={!post.product}
+                >
+                  Make Offer
+                </Button>
               </div>
             </div>
           </div>
