@@ -2669,18 +2669,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get current user's vendor account endpoint
-  app.get('/api/vendors/me', async (req: Request, res: Response) => {
+  app.get('/api/vendors/me', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use the same authentication pattern as working endpoints
-      let userId = (req.user as any)?.id;
-      
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // No fallback authentication - require proper login
+      const userId = (req as any).user?.id;
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
