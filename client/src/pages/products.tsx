@@ -338,17 +338,33 @@ export default function Products() {
   // Repost to feed mutation
   const repostMutation = useMutation({
     mutationFn: async ({ productId, text }: { productId: number; text?: string }) => {
+      // Get auth token for authentication
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      
       return await fetch('/api/posts', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          // Include auth token if available for JWT auth
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+          // Add session cookie support flag
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Client-User-ID': user?.id?.toString() || '',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           content: text || `Check out this product: ${selectedProduct?.name}`,
           productId,
-          type: 'product_share'
+          contentType: 'product_share'
         })
-      }).then(res => res.json());
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to post: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/feed'] });
