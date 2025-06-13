@@ -43,6 +43,8 @@ import {
 } from "lucide-react";
 
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
+import VendorProductManagement from "@/components/vendor/VendorProductManagement";
+import VendorOrderManagement from "@/components/vendor/VendorOrderManagement";
 import { AIProductUpload } from "@/components/AIProductUpload";
 
 export default function VendorDashboard() {
@@ -514,52 +516,15 @@ export default function VendorDashboard() {
         </TabsContent>
 
         <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("Product Management")}</CardTitle>
-              <CardDescription>
-                Manage your product listings and inventory
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => setLocation('/products/new')}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {t("Add New Product")}
-              </Button>
-            </CardContent>
-          </Card>
+          <VendorProductManagement vendorId={vendorId!} />
         </TabsContent>
 
         <TabsContent value="orders">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("Order Management")}</CardTitle>
-              <CardDescription>
-                View and manage your orders and shipping
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Order management functionality will be available here.
-              </p>
-            </CardContent>
-          </Card>
+          <VendorOrderManagement vendorId={vendorId!} />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("Sales Analytics")}</CardTitle>
-              <CardDescription>
-                View detailed analytics and performance metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Analytics dashboard will be available here.
-              </p>
-            </CardContent>
-          </Card>
+          <VendorAnalytics vendorId={vendorId!} />
         </TabsContent>
 
         <TabsContent value="marketing">
