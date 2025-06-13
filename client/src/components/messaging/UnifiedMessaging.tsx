@@ -78,6 +78,7 @@ export function UnifiedMessaging() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,12 +104,14 @@ export function UnifiedMessaging() {
   const handleSendMessage = async () => {
     if (!selectedUser && !selectedConversation) return;
     if (!messageText.trim()) return;
+    if (isSending) return; // Prevent multiple clicks
     
+    const messageContent = messageText.trim();
     let receiverId: string;
+    
     if (selectedUser) {
       receiverId = String(selectedUser.id);
     } else if (selectedConversation) {
-      // Find the other participant in the conversation
       const otherParticipant = selectedConversation.participants.find((p: any) => p.id !== user?.id);
       if (!otherParticipant) return;
       receiverId = String(otherParticipant.id);
@@ -116,16 +119,39 @@ export function UnifiedMessaging() {
       return;
     }
     
+    // Immediate UI feedback - clear input and show sending state
+    setIsSending(true);
+    setMessageText('');
+    setShowEmojiPicker(false);
+    
     try {
-      console.log('[UnifiedMessaging] Sending message to:', receiverId, 'Content:', messageText);
-      await sendMessage(receiverId, messageText.trim());
-      setMessageText('');
-      setShowEmojiPicker(false);
-      refreshConversations();
-      console.log('[UnifiedMessaging] Message sent successfully');
+      // Send message with timeout
+      const messagePromise = Promise.race([
+        sendMessage(receiverId, messageContent),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Message send timeout')), 10000)
+        )
+      ]);
+      
+      // Send in background with immediate UI response
+      messagePromise
+        .then(() => {
+          console.log('[UnifiedMessaging] Message sent successfully');
+          refreshConversations();
+        })
+        .catch((error) => {
+          console.error('[UnifiedMessaging] Failed to send message:', error);
+          setMessageText(messageContent);
+        })
+        .finally(() => {
+          // Reset sending state after 500ms minimum for visual feedback
+          setTimeout(() => setIsSending(false), 500);
+        });
+        
     } catch (error) {
       console.error('[UnifiedMessaging] Failed to send message:', error);
-      // Keep the message text so user can retry
+      setMessageText(messageContent);
+      setIsSending(false);
     }
   };
 
@@ -633,10 +659,12 @@ export function UnifiedMessaging() {
                         type="button"
                         size="icon" 
                         onClick={selectedFile ? handleSendWithAttachment : handleSendMessage}
-                        disabled={(!selectedUser && !selectedConversation) || (!messageText.trim() && !selectedFile) || isUploading}
-                        className="h-10 w-10 relative z-10"
+                        disabled={(!selectedUser && !selectedConversation) || (!messageText.trim() && !selectedFile) || isUploading || isSending}
+                        className={`h-10 w-10 relative z-10 transition-all duration-200 ${
+                          isSending ? 'bg-green-500 hover:bg-green-600' : ''
+                        }`}
                       >
-                        {isUploading ? (
+                        {isUploading || isSending ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         ) : (
                           <Send className="h-4 w-4" />

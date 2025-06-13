@@ -180,18 +180,12 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = async (receiverId: string, content: string) => {
     try {
-      // Get auth token from localStorage
-      const authToken = localStorage.getItem('authToken');
-      
-      // Send message via HTTP API first
+      // Streamlined headers for faster requests
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': authToken ? `Bearer ${authToken}` : '',
           'x-use-session': 'true',
-          'x-auth-method': 'session',
-          'x-client-auth': 'true',
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -209,24 +203,30 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       }
 
       const newMessage = await response.json();
-      console.log('[Messaging] Message sent successfully:', newMessage);
 
-      // Optionally broadcast via WebSocket for real-time updates
+      // Send WebSocket message for instant real-time updates
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         const wsMessage = {
-          type: 'message',
+          type: 'message_sent',
           data: {
+            id: newMessage.id,
+            senderId: newMessage.senderId,
             receiverId: parseInt(receiverId),
             content,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            messageType: 'text'
           }
         };
         wsRef.current.send(JSON.stringify(wsMessage));
       }
 
-      // Refresh conversations and messages to show the new message
-      refreshConversations();
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/conversation/${receiverId}`] });
+      // Async refresh - don't block UI
+      setTimeout(() => {
+        refreshConversations();
+        queryClient.invalidateQueries({ queryKey: [`/api/messages/conversation/${receiverId}`] });
+      }, 50);
+
+      return true;
 
     } catch (error) {
       console.error('[Messaging] Failed to send message:', error);
