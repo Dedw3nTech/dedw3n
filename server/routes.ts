@@ -1875,6 +1875,26 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get current user's communities - MUST be before /:username route
+  app.get('/api/users/communities', unifiedIsAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      console.log(`[DEBUG] Getting communities for user: ${userId}`);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Get user's communities from storage
+      const communities = await storage.getUserCommunities(userId);
+      console.log(`[DEBUG] Found ${communities.length} communities for user ${userId}`);
+      res.json(communities);
+    } catch (error) {
+      console.error('Error getting user communities:', error);
+      res.status(500).json({ message: 'Failed to get user communities' });
+    }
+  });
+
   // Search users endpoint with authentication - MUST be before /:username route
   app.get('/api/users/search', async (req: Request, res: Response) => {
     try {
@@ -2369,13 +2389,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get current user's communities
-  app.get('/api/users/communities', async (req, res) => {
+  app.get('/api/users/communities', unifiedIsAuthenticated, async (req: any, res) => {
     try {
-      console.log(`[DEBUG] Getting communities for current user`);
+      const userId = req.user?.id;
+      console.log(`[DEBUG] Getting communities for user: ${userId}`);
       
-      // For now, return empty array as communities aren't fully implemented
-      const communities: any[] = [];
-      console.log(`[DEBUG] Found ${communities.length} communities for current user`);
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Get user's communities from storage
+      const communities = await storage.getUserCommunities(userId);
+      console.log(`[DEBUG] Found ${communities.length} communities for user ${userId}`);
       res.json(communities);
     } catch (error) {
       console.error('Error getting user communities:', error);

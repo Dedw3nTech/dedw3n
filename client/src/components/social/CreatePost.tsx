@@ -172,7 +172,16 @@ export default function CreatePost({
   const { data: userCommunities, isLoading: isLoadingCommunities } = useQuery({
     queryKey: ["/api/users/communities"],
     queryFn: async () => {
-      const response = await fetch("/api/users/communities");
+      const response = await fetch("/api/users/communities", {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Request-Time': new Date().toISOString(),
+          'X-Client-User-ID': user?.id?.toString() || '',
+          'Accept': 'application/json',
+        }
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch user communities");
       }
@@ -188,13 +197,24 @@ export default function CreatePost({
       const url = productSearchQuery 
         ? `/api/products?search=${encodeURIComponent(productSearchQuery)}`
         : "/api/products";
-      const response = await fetch(url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Request-Time': new Date().toISOString(),
+          'X-Client-User-ID': user?.id?.toString() || '',
+          'Accept': 'application/json',
+        }
+      });
+      
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
       return response.json();
     },
-    enabled: isProductDialogOpen
+    enabled: isProductDialogOpen && !!user
   });
 
   // Fetch events for tagging
