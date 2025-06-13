@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
+import { AIProductUpload } from "@/components/AIProductUpload";
 
 export default function VendorDashboard() {
   // Master Translation mega-batch for Vendor Dashboard (60+ texts)
@@ -410,10 +411,14 @@ export default function VendorDashboard() {
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="dashboard">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             {t("Overview")}
+          </TabsTrigger>
+          <TabsTrigger value="ai-upload">
+            <Star className="mr-2 h-4 w-4" />
+            AI Upload
           </TabsTrigger>
           <TabsTrigger value="products">
             <Package className="mr-2 h-4 w-4" />

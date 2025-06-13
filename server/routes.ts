@@ -44,6 +44,14 @@ import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from ".
 import TranslationOptimizer from "./translation-optimizer";
 import { queryCache } from "./query-cache";
 import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
+import { 
+  analyzeProductImage, 
+  generateProductDescription, 
+  generateProductTitle, 
+  suggestPriceRange, 
+  generateSEOKeywords, 
+  createAIAssistedProduct 
+} from './ai-product-upload';
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -4386,6 +4394,181 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('Error deleting post:', error);
       res.status(500).json({ message: 'Failed to delete post' });
+    }
+  });
+
+  // ===== AI PRODUCT UPLOAD API ENDPOINTS =====
+  
+  // Analyze product image for automatic listing generation
+  app.post('/api/ai/analyze-image', unifiedIsAuthenticated, upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "Image file is required" });
+      }
+
+      // Convert image to base64
+      const imageBase64 = req.file.buffer.toString('base64');
+      
+      const analysis = await analyzeProductImage(imageBase64);
+      
+      res.json({
+        success: true,
+        analysis,
+        message: "Image analyzed successfully"
+      });
+    } catch (error: any) {
+      console.error('Error analyzing product image:', error);
+      res.status(500).json({ 
+        message: "Failed to analyze image",
+        error: error.message 
+      });
+    }
+  });
+
+  // Generate AI-assisted product description
+  app.post('/api/ai/generate-description', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const specs = req.body;
+      
+      const description = await generateProductDescription(specs);
+      
+      res.json({
+        success: true,
+        description,
+        message: "Description generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating description:', error);
+      res.status(500).json({ 
+        message: "Failed to generate description",
+        error: error.message 
+      });
+    }
+  });
+
+  // Generate AI-optimized product title
+  app.post('/api/ai/generate-title', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const specs = req.body;
+      
+      const title = await generateProductTitle(specs);
+      
+      res.json({
+        success: true,
+        title,
+        message: "Title generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating title:', error);
+      res.status(500).json({ 
+        message: "Failed to generate title",
+        error: error.message 
+      });
+    }
+  });
+
+  // Suggest price range based on product specs
+  app.post('/api/ai/suggest-price', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { specs, category } = req.body;
+      
+      const priceRange = await suggestPriceRange(specs, category);
+      
+      res.json({
+        success: true,
+        priceRange,
+        message: "Price range suggested successfully"
+      });
+    } catch (error: any) {
+      console.error('Error suggesting price:', error);
+      res.status(500).json({ 
+        message: "Failed to suggest price range",
+        error: error.message 
+      });
+    }
+  });
+
+  // Generate SEO keywords for product listing
+  app.post('/api/ai/generate-keywords', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { title, description, category } = req.body;
+      
+      const keywords = await generateSEOKeywords(title, description, category);
+      
+      res.json({
+        success: true,
+        keywords,
+        message: "SEO keywords generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating keywords:', error);
+      res.status(500).json({ 
+        message: "Failed to generate keywords",
+        error: error.message 
+      });
+    }
+  });
+
+  // Create complete AI-assisted product listing
+  app.post('/api/ai/create-listing', unifiedIsAuthenticated, upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get vendor account
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "Vendor account required" });
+      }
+
+      const vendor = vendorAccounts[0];
+      const specs = JSON.parse(req.body.specs || '{}');
+      
+      let imageBase64;
+      if (req.file) {
+        imageBase64 = req.file.buffer.toString('base64');
+      }
+
+      const aiAssisted = await createAIAssistedProduct(vendor.id, specs, imageBase64);
+      
+      res.json({
+        success: true,
+        ...aiAssisted,
+        message: "AI-assisted listing created successfully"
+      });
+    } catch (error: any) {
+      console.error('Error creating AI-assisted listing:', error);
+      res.status(500).json({ 
+        message: "Failed to create AI-assisted listing",
+        error: error.message 
+      });
     }
   });
 
