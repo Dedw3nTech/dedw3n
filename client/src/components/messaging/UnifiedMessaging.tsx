@@ -80,6 +80,7 @@ export function UnifiedMessaging() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -299,6 +300,27 @@ export function UnifiedMessaging() {
   const removeAttachment = () => {
     setSelectedFile(null);
     setFilePreview(null);
+  };
+
+  // AI Assistant callback functions
+  const handleAIReplyApply = (reply: string) => {
+    setMessageText(reply);
+    setShowAIAssistant(false);
+  };
+
+  const handleAICompositionApply = (composition: { subject: string; message: string }) => {
+    setMessageText(composition.message);
+    setShowAIAssistant(false);
+  };
+
+  const handleAITranslationApply = (translation: string) => {
+    setMessageText(translation);
+    setShowAIAssistant(false);
+  };
+
+  const handleAIEnhancementApply = (enhancement: string) => {
+    setMessageText(enhancement);
+    setShowAIAssistant(false);
   };
 
   // Auto-scroll to bottom when messages change
@@ -618,6 +640,19 @@ export function UnifiedMessaging() {
                       
                       {/* File Upload Buttons */}
                       <div className="flex gap-1">
+                        {/* AI Assistant Button */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowAIAssistant(true)}
+                          disabled={!selectedUser && !selectedConversation}
+                          className="h-10 w-10 text-gray-500 hover:text-purple-500"
+                          title="AI Message Assistant"
+                        >
+                          <Bot className="h-5 w-5" />
+                        </Button>
+                        
                         {/* Image Upload */}
                         <Button
                           type="button"
@@ -695,6 +730,28 @@ export function UnifiedMessaging() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Message Assistant Dialog */}
+      {showAIAssistant && (
+        <Dialog open={showAIAssistant} onOpenChange={setShowAIAssistant}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-purple-500" />
+                AI Message Assistant
+              </DialogTitle>
+            </DialogHeader>
+            <AIMessageAssistant
+              conversationHistory={conversationMessages}
+              currentMessage={messageText}
+              onReplyApply={handleAIReplyApply}
+              onCompositionApply={handleAICompositionApply}
+              onTranslationApply={handleAITranslationApply}
+              onEnhancementApply={handleAIEnhancementApply}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
