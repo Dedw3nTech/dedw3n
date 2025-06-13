@@ -662,7 +662,12 @@ export default function Cart() {
           )}
         </CardContent>
 
-
+        {/* Disclaimer text above checkout button */}
+        <div className="px-6 pb-2">
+          <p className="text-gray-600" style={{ fontSize: '10px' }}>
+            {translateText('We would like to inform you that, although we are unable to provide direct advice, we will ensure you have all the necessary information to make informed decisions on your own.')}
+          </p>
+        </div>
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
           <Button
