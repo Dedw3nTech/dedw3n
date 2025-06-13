@@ -7723,14 +7723,23 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     ['/C2C', '/marketplace/c2c']
   ]);
 
-  // Single redirect middleware to handle all redirects efficiently
+  // Enhanced SEO and canonical URL middleware
   app.use((req: Request, res: Response, next: NextFunction) => {
-    // Skip API routes and static assets
-    if (req.path.startsWith('/api/') || req.path.startsWith('/assets/')) {
+    // Skip API routes, static assets, and uploads
+    if (req.path.startsWith('/api/') || req.path.startsWith('/assets/') || 
+        req.path.startsWith('/uploads/') || req.path.startsWith('/attached_assets/')) {
       return next();
     }
 
-    // Handle trailing slashes (except root)
+    const host = req.get('host') || 'dedw3n.com';
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+    
+    // Force HTTPS in production
+    if (protocol === 'http' && process.env.NODE_ENV === 'production') {
+      return res.redirect(301, `https://${host}${req.url}`);
+    }
+
+    // Handle trailing slashes (except root) - 301 redirect for SEO
     if (req.path.length > 1 && req.path.endsWith('/')) {
       const newPath = req.path.slice(0, -1);
       const queryString = req.url.includes('?') ? req.url.substring(req.path.length) : '';
@@ -7744,10 +7753,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.redirect(301, targetPath + queryString);
     }
 
+    // Set canonical URL header for search engines
+    const canonicalUrl = `https://dedw3n.com${req.path}`;
+    res.set('Link', `<${canonicalUrl}>; rel="canonical"`);
+    
+    // Add SEO-friendly headers
+    res.set({
+      'X-Robots-Tag': 'index, follow',
+      'Vary': 'Accept-Encoding',
+    });
+
     next();
   });
 
-  // Serve SEO files
+  // Serve SEO files for Search Console
   app.get('/robots.txt', (req: Request, res: Response) => {
     res.type('text/plain');
     res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));

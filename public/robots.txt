@@ -1,32 +1,26 @@
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://d7e2c77e-31e2-4ebb-8dc2-54c5a9909834-00-2fqleetycs13f.picard.replit.dev/sitemap.xml
-
-# Disallow admin and private areas
-Disallow: /admin/
-Disallow: /api/
-Disallow: /auth/
-Disallow: /checkout/
-Disallow: /payment/
-Disallow: /vendor-dashboard/
-Disallow: /profile-settings/
-Disallow: /settings/
-
-# Allow important pages
+# High priority pages
 Allow: /products
-Allow: /vendors
-Allow: /community
+Allow: /wall
 Allow: /dating
-Allow: /government
-Allow: /marketplace
-Allow: /faq
+Allow: /about
 Allow: /contact
-Allow: /privacy
-Allow: /terms
-Allow: /shipping
-Allow: /partnerships
+Allow: /faq
 
-# Crawl delay
+# Block sensitive pages
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /messages
+Disallow: /vendor-dashboard
+Disallow: /admin
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /attached_assets/
+
+# Sitemap location
+Sitemap: https://dedw3n.com/sitemap.xml
+
+# Crawl delay for polite crawling
 Crawl-delay: 1
