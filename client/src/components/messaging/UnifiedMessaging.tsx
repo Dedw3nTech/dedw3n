@@ -258,6 +258,18 @@ export function UnifiedMessaging() {
       const fileCategory = getFileType(selectedFile.type);
       const messageContent = messageText.trim() || `Sent ${fileCategory === 'image' ? 'an image' : fileCategory === 'video' ? 'a video' : fileCategory === 'audio' ? 'an audio file' : 'a file'}`;
       
+      // Get user ID for authentication
+      let userId = null;
+      try {
+        const userDataString = localStorage.getItem('userData');
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          userId = userData.id;
+        }
+      } catch (e) {
+        console.error('Error retrieving user data:', e);
+      }
+
       // Send message via API with attachment
       const sendResponse = await fetch('/api/messages', {
         method: 'POST',
@@ -267,6 +279,7 @@ export function UnifiedMessaging() {
           'x-use-session': 'true',
           'x-auth-method': 'session',
           'x-client-auth': 'true',
+          ...(userId ? { 'x-client-user-id': userId.toString() } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({

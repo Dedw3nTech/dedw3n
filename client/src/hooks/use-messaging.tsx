@@ -180,12 +180,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = async (receiverId: string, content: string) => {
     try {
-      // Streamlined headers for faster requests
+      // Get user ID from current user context for authentication
+      let userId = null;
+      try {
+        const userDataString = localStorage.getItem('userData');
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          userId = userData.id;
+        }
+      } catch (e) {
+        console.error('Error retrieving user data:', e);
+      }
+
+      // Enhanced headers for authentication compatibility
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-use-session': 'true',
+          'x-client-auth': 'true',
+          'x-auth-method': 'session',
+          ...(userId ? { 'x-client-user-id': userId.toString() } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({
