@@ -28,6 +28,68 @@ export interface SmartCompose {
   suggestions: string[];
 }
 
+export interface MessageTranslation {
+  originalText: string;
+  translatedText: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  detectedLanguage?: string;
+  confidence: number;
+}
+
+// AI-powered message translation
+export async function translateMessage(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage?: string
+): Promise<MessageTranslation> {
+  try {
+    const prompt = `Translate the following message ${sourceLanguage ? `from ${sourceLanguage}` : ''} to ${targetLanguage}. 
+    
+    Message: "${text}"
+    
+    Please respond with a JSON object containing:
+    - originalText: the original message
+    - translatedText: the translated message
+    - sourceLanguage: detected or provided source language
+    - targetLanguage: the target language
+    - detectedLanguage: auto-detected language if not provided
+    - confidence: confidence score from 0-1
+    
+    Ensure the translation maintains the original tone and meaning.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional translator. Provide accurate translations while preserving tone and context. Always respond with valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    return {
+      originalText: text,
+      translatedText: result.translatedText || text,
+      sourceLanguage: sourceLanguage || result.detectedLanguage || 'auto',
+      targetLanguage,
+      detectedLanguage: result.detectedLanguage,
+      confidence: result.confidence || 0.8
+    };
+  } catch (error) {
+    console.error('Translation error:', error);
+    throw new Error('Failed to translate message');
+  }
+}
+
 // AI-powered message reply suggestions
 export async function generateSmartReply(
   userId: number,
@@ -214,52 +276,6 @@ export async function generateSmartCompose(
   } catch (error) {
     console.error('Smart compose error:', error);
     throw new Error('Failed to generate smart compose');
-  }
-}
-
-// AI-powered message translation and language detection
-export async function translateMessage(
-  text: string,
-  targetLanguage: string,
-  sourceLanguage?: string
-): Promise<{ translatedText: string; detectedLanguage: string; confidence: number }> {
-  try {
-    const prompt = `
-    Translate the following message for marketplace communication.
-    
-    Original text: "${text}"
-    Target language: ${targetLanguage}
-    ${sourceLanguage ? `Source language: ${sourceLanguage}` : 'Detect source language automatically'}
-    
-    Provide accurate translation that maintains:
-    1. Original meaning and context
-    2. Appropriate tone for marketplace communication
-    3. Cultural sensitivity
-    
-    Respond in JSON format:
-    {
-      "translatedText": "translated message",
-      "detectedLanguage": "detected or provided source language code",
-      "confidence": 0.95
-    }
-    `;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      translatedText: result.translatedText,
-      detectedLanguage: result.detectedLanguage,
-      confidence: Math.max(0, Math.min(1, result.confidence))
-    };
-  } catch (error) {
-    console.error('Message translation error:', error);
-    throw new Error('Failed to translate message');
   }
 }
 

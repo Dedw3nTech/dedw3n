@@ -4642,6 +4642,68 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // AI smart reply generation
+  app.post('/api/ai/messages/smart-reply', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { conversationId, lastMessages, context } = req.body;
+      
+      if (!conversationId || !lastMessages) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const { generateSmartReply } = await import('./ai-messaging');
+      const reply = await generateSmartReply(userId, conversationId, lastMessages, context);
+      
+      res.json({
+        success: true,
+        reply,
+        message: "Smart reply generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error generating smart reply:', error);
+      res.status(500).json({ 
+        message: "Failed to generate smart reply",
+        error: error.message 
+      });
+    }
+  });
+
+  // AI message translation
+  app.post('/api/ai/messages/translate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { text, targetLanguage, sourceLanguage } = req.body;
+      
+      if (!text || !targetLanguage) {
+        return res.status(400).json({ message: "Missing text or target language" });
+      }
+
+      const { translateMessage } = await import('./ai-messaging');
+      const translation = await translateMessage(text, targetLanguage, sourceLanguage);
+      
+      res.json({
+        success: true,
+        translation,
+        message: "Message translated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error translating message:', error);
+      res.status(500).json({ 
+        message: "Failed to translate message",
+        error: error.message 
+      });
+    }
+  });
+
   // AI-powered smart message composition
   app.post('/api/ai/messages/compose', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
