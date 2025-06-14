@@ -2002,15 +2002,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async deletePost(id: number): Promise<boolean> {
-    try {
-      await db.delete(posts).where(eq(posts.id, id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      return false;
-    }
-  }
+
   
   async getFeedPosts(userId?: number, sortBy: string = 'recent', limit: number = 10, offset: number = 0): Promise<Post[]> {
     try {
@@ -4838,24 +4830,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateGiftStatus(giftId: string, status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'shipped' | 'delivered'): Promise<any> {
-    try {
-      const [updatedGift] = await db
-        .update(giftPropositions)
-        .set({ 
-          status,
-          respondedAt: status === 'accepted' || status === 'rejected' ? new Date() : undefined,
-          updatedAt: new Date()
-        })
-        .where(eq(giftPropositions.id, parseInt(giftId)))
-        .returning();
-      
-      return updatedGift;
-    } catch (error) {
-      console.error('Error updating gift status:', error);
-      throw error;
-    }
-  }
+
 }
 
 export const storage = new DatabaseStorage();
