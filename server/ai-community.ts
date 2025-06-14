@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { db } from './db';
-import { posts, users, communities, postEngagement, userInteractions } from '@shared/schema';
+import { posts, users, communities, userInteractions } from '@shared/schema';
 import { eq, and, desc, sql, like, ilike } from 'drizzle-orm';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -242,16 +242,11 @@ export async function analyzeUserPreferences(userId: number): Promise<UserPrefer
       .where(eq(userInteractions.userId, userId))
       .limit(100);
 
-    const engagementData = await db
-      .select()
-      .from(postEngagement)
-      .where(eq(postEngagement.userId, userId))
-      .limit(50);
+    // Note: postEngagement table removed - using interactions data instead
 
     const prompt = `
     Analyze user behavior data to determine preferences:
     Interactions: ${JSON.stringify(interactions.slice(0, 10))}
-    Engagement: ${JSON.stringify(engagementData.slice(0, 10))}
     
     Determine user interests, content preferences, and optimal posting times.
     

@@ -319,15 +319,7 @@ export class DatabaseStorage implements IStorage {
     return messageHelpers.getUnreadMessagesCount(userId);
   }
   
-  async deleteMessage(id: number): Promise<boolean> {
-    try {
-      await db.delete(messages).where(eq(messages.id, id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting message:', error);
-      return false;
-    }
-  }
+
   
   // Call operations implementation
   async createCallSession(callData: any): Promise<any> {
@@ -1655,34 +1647,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Get comments for a specific post
-  async getPostComments(postId: number): Promise<any[]> {
-    try {
-      const postComments = await db
-        .select({
-          id: comments.id,
-          userId: comments.userId,
-          postId: comments.postId,
-          content: comments.content,
-          createdAt: comments.createdAt,
-          user: {
-            id: users.id,
-            username: users.username,
-            name: users.name,
-            avatar: users.avatar
-          }
-        })
-        .from(comments)
-        .leftJoin(users, eq(comments.userId, users.id))
-        .where(eq(comments.postId, postId))
-        .orderBy(desc(comments.createdAt));
 
-      return postComments;
-    } catch (error) {
-      console.error('Error getting post comments:', error);
-      throw error;
-    }
-  }
 
   // Add a comment to a post
   async addComment(commentData: { postId: number; userId: number; content: string }): Promise<any> {
