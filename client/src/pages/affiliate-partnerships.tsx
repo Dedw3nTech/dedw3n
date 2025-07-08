@@ -164,7 +164,7 @@ export default function AffiliatePartnerships() {
           </div>
           
           <div className="flex justify-center">
-            <div className="relative max-w-2xl">
+            <div className="relative max-w-xl">
               <img 
                 src={professionalImage} 
                 alt="Professional with phone representing innovation and future technology"
