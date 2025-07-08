@@ -342,6 +342,136 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date('2025-07-08')
   },
+  "affiliate-partnerships": {
+    id: "affiliate-partnerships",
+    title: "Affiliate Partnerships",
+    content: `
+      <div class="affiliate-partnerships-content">
+        <div class="header-section">
+          <h2>DEDW3N LTD.</h2>
+          <h3>Affiliate Partnerships</h3>
+          <p><strong>Version 08-07-2025</strong></p>
+          <p><strong>WELCOME TO DEDW3N</strong><br>Join our partner network and grow together!</p>
+        </div>
+
+        <div class="intro-section">
+          <h3>Partner with Dedw3n</h3>
+          <p>At Dedw3n, we believe in the power of partnerships to drive mutual growth and success. Our affiliate partnership program is designed to create meaningful collaborations that benefit both our partners and our community of users.</p>
+        </div>
+
+        <div class="partnership-types-section">
+          <h3>Partnership Opportunities</h3>
+          
+          <h4>Affiliate Marketing Partners</h4>
+          <p>Join our affiliate program and earn competitive commissions by promoting Dedw3n's services to your audience. Perfect for content creators, influencers, and marketing professionals.</p>
+          <ul>
+            <li>Competitive commission rates</li>
+            <li>Real-time tracking and analytics</li>
+            <li>Marketing materials and support</li>
+            <li>Monthly payouts</li>
+          </ul>
+
+          <h4>Technology Partners</h4>
+          <p>Integrate your services with our platform to provide enhanced value to our users while expanding your reach to our growing community.</p>
+          <ul>
+            <li>API integration opportunities</li>
+            <li>Co-marketing initiatives</li>
+            <li>Technical support and documentation</li>
+            <li>Revenue sharing models</li>
+          </ul>
+
+          <h4>Content Partners</h4>
+          <p>Collaborate with us to create valuable content for our community while showcasing your expertise and building your brand.</p>
+          <ul>
+            <li>Guest posting opportunities</li>
+            <li>Webinar partnerships</li>
+            <li>Educational content collaboration</li>
+            <li>Brand exposure and recognition</li>
+          </ul>
+        </div>
+
+        <div class="benefits-section">
+          <h3>Partnership Benefits</h3>
+          <ul>
+            <li><strong>Revenue Generation:</strong> Multiple income streams through commissions, revenue sharing, and collaborative opportunities</li>
+            <li><strong>Brand Exposure:</strong> Access to our growing user base and marketing channels</li>
+            <li><strong>Professional Support:</strong> Dedicated partnership manager and technical support</li>
+            <li><strong>Marketing Resources:</strong> Access to promotional materials, brand assets, and marketing tools</li>
+            <li><strong>Performance Tracking:</strong> Comprehensive analytics and reporting tools</li>
+            <li><strong>Flexible Terms:</strong> Customizable partnership agreements to suit your business needs</li>
+          </ul>
+        </div>
+
+        <div class="requirements-section">
+          <h3>Partnership Requirements</h3>
+          
+          <h4>General Requirements</h4>
+          <ul>
+            <li>Alignment with Dedw3n's values and community guidelines</li>
+            <li>Professional online presence and reputation</li>
+            <li>Commitment to quality and user experience</li>
+            <li>Compliance with applicable laws and regulations</li>
+          </ul>
+
+          <h4>Affiliate Partner Requirements</h4>
+          <ul>
+            <li>Established audience or customer base</li>
+            <li>Content creation capabilities</li>
+            <li>Active engagement on social media or other platforms</li>
+            <li>Understanding of digital marketing best practices</li>
+          </ul>
+
+          <h4>Technology Partner Requirements</h4>
+          <ul>
+            <li>Proven technical capabilities and reliability</li>
+            <li>API integration experience</li>
+            <li>Commitment to data security and privacy</li>
+            <li>Ongoing technical support capabilities</li>
+          </ul>
+        </div>
+
+        <div class="application-process-section">
+          <h3>How to Apply</h3>
+          <p>Ready to become a Dedw3n partner? Follow these simple steps:</p>
+          
+          <ol>
+            <li><strong>Submit Application:</strong> Complete our partnership application form with details about your business and partnership goals</li>
+            <li><strong>Review Process:</strong> Our partnership team will review your application and assess alignment with our program</li>
+            <li><strong>Interview & Discussion:</strong> Qualified candidates will be invited for a discussion to explore partnership opportunities</li>
+            <li><strong>Agreement & Onboarding:</strong> Successful applicants will receive partnership agreements and onboarding materials</li>
+            <li><strong>Launch & Support:</strong> Begin your partnership with full support from our dedicated team</li>
+          </ol>
+        </div>
+
+        <div class="support-section">
+          <h3>Partner Support</h3>
+          <p>We're committed to your success. Our partnership team provides:</p>
+          <ul>
+            <li>Dedicated partnership manager</li>
+            <li>Regular performance reviews and optimization strategies</li>
+            <li>Marketing material updates and new promotional opportunities</li>
+            <li>Technical support for integrations and implementations</li>
+            <li>Training resources and best practice guidance</li>
+            <li>Regular communication and feedback sessions</li>
+          </ul>
+        </div>
+
+        <div class="contact-section">
+          <h3>Get Started Today</h3>
+          <p>Ready to explore partnership opportunities with Dedw3n? We'd love to hear from you!</p>
+          <p>Contact our partnership team at: <a href="mailto:partnerships@dedw3n.com" class="text-primary hover:underline">partnerships@dedw3n.com</a></p>
+          <p>For general inquiries: <a href="mailto:love@dedw3n.com" class="text-primary hover:underline">love@dedw3n.com</a></p>
+          
+          <div class="call-to-action mt-6 p-4 bg-gray-50 rounded-lg">
+            <h4>Ready to Partner with Us?</h4>
+            <p>Join the Dedw3n partner network and unlock new opportunities for growth and success.</p>
+            <p class="text-sm text-gray-600 mt-2">Partnership applications are reviewed within 5-7 business days.</p>
+          </div>
+        </div>
+      </div>
+    `,
+    lastUpdated: new Date('2025-07-08')
+  },
   "faq": {
     id: "faq",
     title: "Frequently Asked Questions",

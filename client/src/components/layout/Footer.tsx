@@ -7,6 +7,7 @@ function FooterContent() {
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
     "All rights reserved.",
+    "Affiliate Partnerships",
     "Privacy Policy",
     "Terms of Service", 
     "Cookie Policy",
@@ -31,7 +32,7 @@ function FooterContent() {
 
   // Extract individual translations from array using Master Translation System
   const [
-    allRightsReservedText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
+    allRightsReservedText, affiliatePartnershipsText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
     communityGuidelinesText, contactUsText, faqText, catalogueRulesText, tipsTricksText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
@@ -45,6 +46,7 @@ function FooterContent() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
             <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2">
+              <Link href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</Link>
               <Link href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</Link>
               <Link href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</Link>
               <Link href="/cookies" className="text-xs text-gray-600 hover:text-primary">{cookiePolicyText}</Link>
