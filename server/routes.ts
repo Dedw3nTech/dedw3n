@@ -198,7 +198,7 @@ const pageContents: Record<string, PageContent> = {
         </div>
 
         <div class="dating-title-section">
-          <h2 style="text-align: center; font-size: 2.5rem; font-weight: bold; color: #1f2937; margin: 2rem 0;">DATING</h2>
+          <h2 style="text-align: left; font-size: 2.5rem; font-weight: bold; color: #1f2937; margin: 2rem 0;">DATING</h2>
         </div>
 
         <div class="intro-section">

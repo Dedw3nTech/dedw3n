@@ -104,7 +104,7 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Tips & Tricks Page Cleanup** - Removed entire header section including "Tips & Tricks" title and descriptive subtitle
   - Tips & tricks page now displays only the PageContent component for streamlined layout
   - **COMPLETED: Dating Title Addition** - Added prominent "DATING" title above Tips & Tricks content
-  - Dating title is styled with large, bold formatting and centered alignment for visual emphasis
+  - Dating title is styled with large, bold formatting and left alignment for visual emphasis
   - Simplified page layouts for cleaner content presentation across all legal and policy pages
 - **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance and robots.txt blocking errors
 - **2025-07-08**: Resolved contact form authentication and email functionality issues
