@@ -52,6 +52,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Removed shipping text from footer translations array
   - Removed /shipping from valid routes in server/index.ts
   - Footer navigation now properly excludes the shipping/catalogue rules link
+- **2025-07-08**: Page Removal - Completely removed partnerships page as requested
+  - **COMPLETED: Partnerships Page Removal** - Deleted partnerships page and all references
+  - Removed client/src/pages/partnerships.tsx file completely
+  - Removed partnerships page import from App.tsx
+  - Removed partnerships route from App.tsx routing configuration
+  - Removed partnerships link from footer navigation
+  - Removed partnerships text from footer translations array
+  - Footer navigation now properly excludes the partnerships link
 - **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)
