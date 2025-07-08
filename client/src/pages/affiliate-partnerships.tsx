@@ -39,35 +39,35 @@ export default function AffiliatePartnerships() {
 
             {/* Right Visual */}
             <div className="relative lg:ml-8">
-              <div className="relative bg-white rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+              <div className="relative bg-black rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
                 <div className="flex items-center justify-between mb-6">
                   <DollarSign className="h-8 w-8 text-green-600" />
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">£2,847</div>
-                    <div className="text-sm text-gray-500">This month</div>
+                    <div className="text-2xl font-bold text-white">£2,847</div>
+                    <div className="text-sm text-gray-400">This month</div>
                   </div>
                 </div>
                 
                 <div className="space-y-3">
-                  <div className="h-3 bg-green-200 rounded-full">
+                  <div className="h-3 bg-gray-700 rounded-full">
                     <div className="h-3 bg-green-500 rounded-full w-3/4"></div>
                   </div>
-                  <div className="h-3 bg-blue-200 rounded-full">
+                  <div className="h-3 bg-gray-700 rounded-full">
                     <div className="h-3 bg-blue-500 rounded-full w-1/2"></div>
                   </div>
-                  <div className="h-3 bg-purple-200 rounded-full">
+                  <div className="h-3 bg-gray-700 rounded-full">
                     <div className="h-3 bg-purple-500 rounded-full w-5/6"></div>
                   </div>
                 </div>
                 
                 <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="font-semibold text-gray-900">47</div>
-                    <div className="text-gray-500">Referrals</div>
+                    <div className="font-semibold text-white">47</div>
+                    <div className="text-gray-400">Referrals</div>
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">23</div>
-                    <div className="text-gray-500">Conversions</div>
+                    <div className="font-semibold text-white">23</div>
+                    <div className="text-gray-400">Conversions</div>
                   </div>
                 </div>
               </div>
@@ -132,17 +132,17 @@ export default function AffiliatePartnerships() {
               color: "bg-indigo-100 text-indigo-600"
             }
           ].map((benefit, index) => (
-            <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-black">
               <CardHeader className="text-center pb-4">
                 <div className={`inline-flex p-3 rounded-full ${benefit.color} mb-4`}>
                   <benefit.icon className="h-6 w-6" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-gray-900">
+                <CardTitle className="text-xl font-semibold text-white">
                   {benefit.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-center leading-relaxed">
+                <p className="text-gray-300 text-center leading-relaxed">
                   {benefit.description}
                 </p>
               </CardContent>
@@ -229,7 +229,7 @@ export default function AffiliatePartnerships() {
                 ]
               }
             ].map((type, index) => (
-              <Card key={index} className={`relative border-2 hover:border-blue-500 transition-colors duration-300 ${index === 0 ? 'border-blue-500 shadow-lg' : 'border-gray-200'}`}>
+              <Card key={index} className={`relative border-2 hover:border-blue-500 transition-colors duration-300 bg-black ${index === 0 ? 'border-blue-500 shadow-lg' : 'border-gray-600'}`}>
                 {type.highlight && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
@@ -238,17 +238,17 @@ export default function AffiliatePartnerships() {
                   </div>
                 )}
                 <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                  <CardTitle className="text-2xl font-bold text-white mb-2">
                     {type.title}
                   </CardTitle>
-                  <p className="text-gray-600">{type.description}</p>
+                  <p className="text-gray-300">{type.description}</p>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
                     {type.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start">
                         <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                        <span className="text-gray-700">{feature}</span>
+                        <span className="text-gray-300">{feature}</span>
                       </li>
                     ))}
                   </ul>
