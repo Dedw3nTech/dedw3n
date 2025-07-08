@@ -278,10 +278,10 @@ export default function AffiliatePartnerships() {
             </Button>
             <Button 
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200"
+              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200"
               size="lg"
             >
-              Learn More
+              Resources
             </Button>
           </div>
           
