@@ -166,9 +166,9 @@ export default function AffiliatePartnerships() {
             </p>
           </div>
           
-          <div className="flex flex-col lg:flex-row justify-center items-center gap-8">
-            {/* Main professional image - Large */}
-            <div className="relative max-w-xl">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Main professional image - Large, spans 2 columns */}
+            <div className="relative lg:col-span-2">
               <img 
                 src={professionalImage} 
                 alt="Professional with phone representing innovation and future technology"
@@ -186,10 +186,10 @@ export default function AffiliatePartnerships() {
               </div>
             </div>
             
-            {/* Smaller images stacked vertically */}
+            {/* Smaller images stacked vertically in single column */}
             <div className="flex flex-col gap-6">
               {/* Business woman image - smaller */}
-              <div className="relative max-w-xs">
+              <div className="relative">
                 <img 
                   src={businessWomanImage} 
                   alt="Business woman representing professional success and growth"
@@ -208,7 +208,7 @@ export default function AffiliatePartnerships() {
               </div>
 
               {/* Active woman image - smaller */}
-              <div className="relative max-w-xs">
+              <div className="relative">
                 <img 
                   src={activeWomanImage} 
                   alt="Active lifestyle woman representing vitality and success"
