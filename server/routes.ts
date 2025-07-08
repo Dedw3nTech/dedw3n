@@ -8707,7 +8707,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.redirect(301, targetPath + queryString);
     }
 
-    // Set canonical URL header for search engines
+    // Set canonical URL header for search engines - ensure consistency
     const canonicalUrl = `https://dedw3n.com${req.path}`;
     res.set('Link', `<${canonicalUrl}>; rel="canonical"`);
     
@@ -8715,6 +8715,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.set({
       'X-Robots-Tag': 'index, follow',
       'Vary': 'Accept-Encoding',
+      'X-Canonical-URL': canonicalUrl // Debug header to verify canonical URL
     });
 
     next();

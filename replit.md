@@ -20,6 +20,10 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **SOLVED: Soft 404 errors** - Implemented proper 404 detection middleware that returns correct HTTP status codes
   - Invalid routes now return HTTP 404 with "noindex, nofollow" headers instead of HTTP 200 (soft 404)
   - Added beautiful styled 404 error pages for better user experience
+  - **SOLVED: Duplicate canonical URL conflicts** - Unified canonical URL management through SEOHead component
+  - Removed conflicting static canonical URLs from HTML template
+  - Implemented proper trailing slash redirects (301) to prevent duplicate content
+  - Deprecated conflicting canonical URL hooks to prevent multiple canonical declarations
   - Updated meta tags and caching headers for better search engine optimization
   - All SEO files (robots.txt, sitemap.xml, security.txt, .well-known/security.txt) now working correctly
 

@@ -46,14 +46,18 @@ export function SEOHead({
       meta.content = content;
     };
     
-    // Update canonical link
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.rel = 'canonical';
-      document.head.appendChild(canonical);
-    }
+    // Update canonical link - ensure only one canonical URL exists
+    // Remove all existing canonical links first to prevent conflicts
+    const existingCanonicals = document.querySelectorAll('link[rel="canonical"]');
+    existingCanonicals.forEach(link => link.remove());
+    
+    // Create new canonical link
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
     canonical.href = currentUrl;
+    document.head.appendChild(canonical);
+    
+    console.log(`[SEO] Set canonical URL: ${currentUrl}`);
     
     // Basic meta tags
     updateMetaTag('description', description);

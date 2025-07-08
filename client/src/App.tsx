@@ -17,7 +17,7 @@ import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider"
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
-import { useCanonicalUrl } from "@/hooks/useCanonicalUrl";
+// import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"; // Deprecated - using SEOHead instead
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
@@ -389,8 +389,7 @@ function App() {
   // Force refresh state to update all components when language changes
   const [forceRefresh, setForceRefresh] = useState(0);
   
-  // Initialize canonical URL for SEO optimization
-  useCanonicalUrl();
+  // Canonical URLs now managed by SEOHead component to prevent conflicts
   
   // Initialize offline detection, language, and advertisement preloader
   useEffect(() => {
