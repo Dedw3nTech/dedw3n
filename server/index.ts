@@ -423,19 +423,141 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Create a middleware to completely prevent Vite from handling any API requests
+  // CRITICAL: Add 404 detection before Vite to fix soft 404 errors in Search Console
   app.use((req, res, next) => {
-    // Skip Vite middleware for API routes
+    // Skip API routes - handle them separately
     if (req.path.startsWith('/api/') || req._handledByApi) {
       // Respond with 404 if not already handled - this prevents Vite from handling API routes
       if (!res.headersSent) {
         console.log(`[DEBUG] Intercepted API route by catch-all middleware: ${req.method} ${req.path}`);
         return res.status(404).json({ message: "API endpoint not found" });
       }
-      // If headers already sent, route was handled correctly
       return next();
     }
-    // Continue to Vite middleware for non-API routes
+
+    // Skip Vite development assets and tooling routes
+    if (req.path.startsWith('/@') || 
+        req.path.startsWith('/src/') || 
+        req.path.startsWith('/node_modules/') ||
+        req.path.endsWith('.js') || 
+        req.path.endsWith('.css') || 
+        req.path.endsWith('.ts') || 
+        req.path.endsWith('.tsx') ||
+        req.path === '/sw.js' ||
+        req.path.includes('vite') ||
+        req.path.includes('hot-update')) {
+      return next();
+    }
+
+    // Define known valid routes that should return 200
+    const validRoutes = [
+      '/', '/login', '/register', '/products', '/wall', '/dating', 
+      '/about', '/contact', '/faq', '/business', '/privacy', '/terms',
+      '/profile', '/settings', '/messages', '/notifications', '/cart',
+      '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
+      '/feed', '/explore', '/search', '/favorites', '/liked-products',
+      '/subscriptions', '/verify', '/reset-password', '/help'
+    ];
+    
+    // Check for dynamic routes patterns that are valid
+    const dynamicPatterns = [
+      /^\/user\/[^/]+$/, // /user/username
+      /^\/profile\/[^/]+$/, // /profile/username
+      /^\/category\/[^/]+$/, // /category/electronics
+      /^\/search\/[^/]+$/, // /search/query
+      /^\/business\/[^/]+$/, // /business/category
+      /^\/wall\/[^/]+$/, // /wall/category
+      /^\/dating\/[^/]+$/, // /dating/category
+    ];
+    
+    // Remove query parameters and hash for route checking
+    const cleanPath = req.path;
+    
+    // Special handling for product routes - validate they exist
+    const productMatch = cleanPath.match(/^\/products\/(\d+)$/);
+    if (productMatch) {
+      // For now, allow all product routes to pass through
+      // The React app will handle showing 404 if product doesn't exist
+      // This prevents blocking valid product URLs that might exist
+      return next();
+    }
+    
+    // Check if it's a valid route
+    const isValidRoute = validRoutes.includes(cleanPath) || 
+                        dynamicPatterns.some(pattern => pattern.test(cleanPath));
+    
+    // If route is not valid, return proper 404 BEFORE Vite processes it
+    if (!isValidRoute) {
+      console.log(`[SEO] Returning 404 for invalid route: ${cleanPath}`);
+      return res.status(404)
+        .set({ 
+          "Content-Type": "text/html",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "X-Robots-Tag": "noindex, nofollow"
+        })
+        .send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>404 - Page Not Found | Dedw3n</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      text-align: center; 
+      padding: 50px 20px; 
+      background: #f8fafc;
+      color: #334155;
+      margin: 0;
+    }
+    .error { 
+      max-width: 500px; 
+      margin: 0 auto; 
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    h1 { 
+      color: #1e293b; 
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    p { 
+      color: #64748b; 
+      margin: 20px 0; 
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    a { 
+      color: #1F2937; 
+      text-decoration: none; 
+      background: #1F2937;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 20px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    a:hover { background: #374151; }
+  </style>
+</head>
+<body>
+  <div class="error">
+    <h1>404</h1>
+    <p>The page you're looking for doesn't exist.</p>
+    <p>It may have been moved, deleted, or you entered the wrong URL.</p>
+    <a href="/">Return to Homepage</a>
+  </div>
+</body>
+</html>`);
+    }
+
+    // Continue to Vite middleware for valid routes
     next();
   });
 
