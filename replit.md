@@ -60,6 +60,16 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Removed partnerships link from footer navigation
   - Removed partnerships text from footer translations array
   - Footer navigation now properly excludes the partnerships link
+- **2025-07-08**: Page Creation - Added new Catalogue Rules page with comprehensive content
+  - **COMPLETED: Catalogue Rules Page Creation** - Created new page with comprehensive marketplace guidelines
+  - Added client/src/pages/catalogue-rules.tsx with proper page structure and SEO
+  - Added catalogue rules content to server/routes.ts pageContents with Version 08-07-2025 content
+  - Updated footer navigation to include Catalogue Rules link after FAQ
+  - Added catalogue rules text to footer translations array
+  - Added /catalogue-rules route to App.tsx routing configuration
+  - Added /catalogue-rules to valid routes in server/index.ts for proper SEO handling
+  - Page includes comprehensive sections: allowed items, prohibited items, general guidelines, photo requirements, intellectual property policy, commercial activities, and sanctions
+  - Content matches provided DEDW3N LTD. Catalogue Rules Version 08-07-2025 document
 - **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)

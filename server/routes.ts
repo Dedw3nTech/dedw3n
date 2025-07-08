@@ -84,6 +84,107 @@ interface PageContent {
 
 // Store static page content
 const pageContents: Record<string, PageContent> = {
+  "catalogue-rules": {
+    id: "catalogue-rules",
+    title: "Catalogue Rules",
+    content: `
+      <div class="catalogue-rules-content">
+        <div class="header-section">
+          <h2>DEDW3N LTD.</h2>
+          <h3>Catalogue Rules</h3>
+          <p><strong>Version 08-07-2025</strong></p>
+          <p><strong>WELCOME TO DEDW3N</strong><br>Thank you for choosing our platform!</p>
+        </div>
+
+        <div class="intro-section">
+          <h3>Catalogue Rules</h3>
+          <p>At Dedw3n, we are committed to fostering a friendly and safe environment for trading second-hand items. Consequently, all members are required to adhere to the following Catalogue rules when uploading their items. Please be aware that these rules are an integral part of our Terms & Conditions. By creating an account on Dedw3n, you consent to comply with these rules as well as our Terms & Conditions.</p>
+        </div>
+
+        <div class="allowed-items-section">
+          <h3>ALLOWED ITEMS</h3>
+          <p>You may sell any service or product that is legally permitted within the buyer's/seller's jurisdiction. If an item comes with usage instructions, manuals, or safety warnings, it is essential to include these materials when sending the item to the buyer. If your electronics include accessories that are not part of the sale, please clearly indicate this in the description, as it may affect the item's price. Ensure that all listed electronics are safe for use.</p>
+          <p>We reserve the right to reassess which items are permitted to be listed on Dedw3n. If we identify items that violate our terms or present any risk to our members, we may remove those items, regardless of whether they are explicitly listed below.</p>
+        </div>
+
+        <div class="prohibited-items-section">
+          <h3>PROHIBITED ITEMS</h3>
+          <p>The following items are prohibited from being sold on Dedw3n (this list is not exhaustive and should be considered a guideline):</p>
+          <ul>
+            <li><strong>Illegal Items:</strong> Any goods or materials whose possession, trade, sale, posting, carriage, or production is prohibited by applicable laws, rules, or regulations.</li>
+            <li><strong>Unsafe Items:</strong> Items that fail to meet hygiene standards or may pose health or safety risks.</li>
+          </ul>
+        </div>
+
+        <div class="general-guidelines-section">
+          <h3>General Guidelines</h3>
+          
+          <h4>Item Uploading:</h4>
+          <p>Each item must be uploaded individually under its corresponding category, with the exception of bundles and applicable brands. Only one listing per item is permitted. Ensure that an appropriate condition is assigned to each item. The item description should detail any defects, alterations, or missing components.</p>
+          
+          <h4>Materials Selection:</h4>
+          <p>You may select up to three primary materials when uploading an item. Additionally, provide a detailed description that includes information about any other materials beyond the three selected.</p>
+          
+          <h4>External Website References:</h4>
+          <p>Your listing or profile description must not reference external websites. However, while we do not recommend it for privacy reasons, you may share a link to your social media page, provided it is not associated with commercial activities.</p>
+          
+          <h4>Item Availability:</h4>
+          <p>It is prohibited to upload items that are unavailable or have already been sold. Listings should not be created merely to search for an item, nor can they feature non-physical items (e.g., for trolling purposes). If your listing has been hidden or deleted, please investigate the reason.</p>
+          
+          <h4>Personal Data and Device Resetting:</h4>
+          <p>All personal data must be removed, and personal accounts should be disconnected from electronic devices. Devices should be reset to their original factory settings, fully powered off, and, if applicable, deregistered (e.g., drones) before shipping. Remember to remove personal belongings, such as SIM cards.</p>
+        </div>
+
+        <div class="photo-requirements-section">
+          <h3>Requirements for Item Photos</h3>
+          <p>The photographs used in your listing must adhere to the following criteria:</p>
+          <ul>
+            <li>They should accurately represent the item as it is, including any defects, scratches, or signs of wear.</li>
+            <li>Photos must be sharp and clear.</li>
+            <li>Images must be taken by you specifically for use on Dedw3n.</li>
+            <li>Watermarked images are not acceptable substitutes.</li>
+            <li>The primary photo must clearly depict the entire item or bundle; collages are not permitted. You are welcome to showcase your item in various ways through additional photos, with a limit of up to 21 photos per listing. It is important to ensure that all items within a bundle are visible so that members understand what they are purchasing.</li>
+            <li>For products that are subject to age restrictions, such as adult items, the appropriate age rating label must be prominently displayed.</li>
+          </ul>
+        </div>
+
+        <div class="intellectual-property-section">
+          <h3>Intellectual Property Policy</h3>
+          <p>It is strictly prohibited to upload counterfeit items to our platform. Counterfeit items typically imitate or replicate a company's trademark—such as the brand name, product name, or logo—without authorization. They may also mimic distinctive features of a company's products, such as the shape of a perfume bottle or the design and pattern of a handbag. Please note that the sale of counterfeit items may expose sellers to civil and criminal liability.</p>
+          <p>Members may only upload items they are certain are authentic. Adding a disclaimer to a listing indicating uncertainty regarding the item's authenticity is not permitted.</p>
+          <p>Members must upload images that clearly demonstrate the authenticity of their items.</p>
+          <p>It is forbidden to use unrelated brands in the brand category, title, description, or as hashtags in your listing.</p>
+          <p>The use of phrases such as "inspired by" followed by a brand name is generally prohibited on our platform.</p>
+          <p>It is strictly prohibited to upload and sell items that have been reproduced without the consent of the intellectual property rights holder, including copied books, individualized diet plans, and pirated video games on blank media.</p>
+        </div>
+
+        <div class="commercial-activities-section">
+          <h3>Commercial Activities</h3>
+          <p>Individual users are not permitted to list items intended for commercial sale. You may be considered to be acting on a commercial basis if you meet one or more of the following criteria (this list is not exhaustive):</p>
+          <ul>
+            <li>Selling a significant number of cosmetic items or products within the beauty category.</li>
+            <li>Holding a retail status or legal standing that enables commercial selling activities.</li>
+            <li>Acting on behalf of a trader or through another individual and receiving compensation or incentives.</li>
+          </ul>
+        </div>
+
+        <div class="sanctions-section">
+          <h3>Sanctions</h3>
+          <p>If members violate our catalogue rules, we may implement the following measures:</p>
+          <p>If a reported listing requires amendments, it will be rendered invisible in the member's closet, and the member will be notified of the necessary actions within 24 hours. Failure to comply will result in the item remaining hidden.</p>
+          <ul>
+            <li>If a reported listing contains prohibited items, we will remove it from the member's closet and inform them of the reason for removal.</li>
+            <li>Repeated uploads of prohibited items, commercially-oriented items, or other violations of our Terms and Conditions or catalogue rules may lead to account suspension (e.g., for a period of seven days) or permanent blockage, depending on the severity of the infraction. Members will receive a notification regarding this action. For further details, please refer to our Terms and Conditions.</li>
+          </ul>
+          <p>Please ensure that your listings and items adhere to our catalogue rules. Other members may flag listings that appear non-compliant for review by Dedw3n. If an item is found to be non-compliant, it may be removed or hidden by our team. Additionally, you may face other actions, such as account suspension or blocking. Sending messages to other members promoting sales of items on the Prohibited Items list may result in similar consequences. For more information, please consult our Terms and Conditions.</p>
+          <p>Please note that if you promote a listing that violates our catalogue rules, and we are required to remove or hide it, we will not be able to refund any associated costs.</p>
+          <p>We reserve the right to amend these rules at our discretion without prior notice. If you have any questions regarding these regulations, please contact our team, and we will be happy to assist you.</p>
+          <p>Should you encounter an item that appears to violate these rules, please report it to us without hesitation.</p>
+        </div>
+      </div>
+    `,
+    lastUpdated: new Date('2025-07-08')
+  },
   "faq": {
     id: "faq",
     title: "Frequently Asked Questions",

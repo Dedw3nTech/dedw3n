@@ -166,7 +166,7 @@ import OrdersReturnsPage from "@/pages/orders-returns";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";
-
+import CatalogueRulesPage from "@/pages/catalogue-rules";
 
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
@@ -315,7 +315,7 @@ function Router() {
       
       {/* Footer pages - publicly accessible */}
       <Route path="/faq" component={FAQPage} />
-
+      <Route path="/catalogue-rules" component={CatalogueRulesPage} />
 
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
