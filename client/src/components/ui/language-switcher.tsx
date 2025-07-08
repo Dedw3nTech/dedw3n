@@ -115,7 +115,7 @@ export function LanguageSwitcher({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                {selectedLanguage.code}
+                <span className="text-blue-600">{selectedLanguage.code}</span>
                 <ChevronDown className="h-3 w-3" />
               </>
             )}

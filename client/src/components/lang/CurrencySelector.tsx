@@ -31,7 +31,7 @@ export function CurrencySelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <span className="text-xs font-medium cursor-pointer flex items-center gap-1" style={{ fontSize: '12px' }}>
-          {currency}
+          <span className="text-blue-600">{currency}</span>
           <ChevronDown className="h-3 w-3 text-gray-600" />
         </span>
       </DropdownMenuTrigger>

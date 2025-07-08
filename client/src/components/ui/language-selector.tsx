@@ -33,7 +33,7 @@ export function LanguageSelector() {
               <Globe className="h-3 w-3" />
             )}
             <span className="hidden sm:inline">{selectedLanguage.flag}</span>
-            <span className="hidden md:inline">{selectedLanguage.code}</span>
+            <span className="hidden md:inline text-blue-600">{selectedLanguage.code}</span>
             <ChevronDown className="h-3 w-3 opacity-50" />
           </div>
         </Button>
