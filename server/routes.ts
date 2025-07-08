@@ -266,6 +266,78 @@ const pageContents: Record<string, PageContent> = {
           <h4>If you feel uncomfortable, leave</h4>
           <p>It is perfectly acceptable to end the date early if you feel uncomfortable. In fact, it is recommended. And if your instincts tell you that something is wrong or you feel unsafe, ask the bartender or wait staff for help.</p>
         </div>
+
+        <div class="marketplace-section">
+          <h2>MARKETPLACE</h2>
+          
+          <h3>For Sellers:</h3>
+          <h4>Craft Compelling Listings:</h4>
+          <ul>
+            <li><strong>High-Quality Photos:</strong> Utilize good lighting and a clean background to effectively showcase your items.</li>
+            <li><strong>Detailed Descriptions:</strong> Provide all pertinent information, including dimensions, materials, and any unique features.</li>
+            <li><strong>Competitive Pricing:</strong> Conduct research on similar items to ensure your pricing is appropriate.</li>
+            <li><strong>Keywords:</strong> Incorporate relevant keywords within your title and description to enhance discoverability for buyers.</li>
+            <li><strong>Be Responsive:</strong> Promptly address inquiries in a courteous manner.</li>
+          </ul>
+          
+          <h4>Build Trust and Reputation:</h4>
+          <ul>
+            <li><strong>Respond to Inquiries Promptly:</strong> This demonstrates reliability and attentiveness to potential buyers.</li>
+            <li><strong>Be Honest and Transparent:</strong> Disclose any flaws or imperfections present in your items.</li>
+            <li><strong>Encourage Reviews:</strong> After a successful transaction, kindly request that buyers leave a review.</li>
+          </ul>
+          
+          <h4>Optimize for Success:</h4>
+          <ul>
+            <li><strong>Consider Boosting Your Listings:</strong> This strategy may enhance visibility and attract more potential buyers.</li>
+            <li><strong>Utilize Social Media:</strong> Promote your listings through your personal and relevant social media platforms.</li>
+            <li><strong>Negotiate Fairly:</strong> Be open to reasonable offers while standing firm on your pricing when necessary.</li>
+            <li><strong>Ensure Safe Transactions:</strong> Opt to meet in public locations or utilize secure payment methods.</li>
+          </ul>
+
+          <h3>Carpooling:</h3>
+          <ul>
+            <li><strong>Verify Reliability:</strong> Look for a Verified Profile badge and Super Driver profiles when seeking a ride. Members committed to fostering a trustworthy community have verified their ID, email, and phone number.</li>
+            <li><strong>Check Ratings:</strong> Ratings are essential for establishing trust among members and for making informed decisions. Review them when selecting travel companions.</li>
+            <li><strong>Communicate through Dedw3n only:</strong> Use our messaging system to share ride details and report any inappropriate or suspicious messages.</li>
+            <li><strong>Confirm the Meeting Point:</strong> Familiarize yourself with the meeting location, ensuring it is a public and easily accessible site, such as a train station, airport, or shopping centre. Dedw3n provides a list of suggested meeting points near departure and arrival locations.</li>
+            <li><strong>Keep an Eye Out for Women-Only Rides:</strong> To promote trust and safety, Dedw3n offers an option to display rides exclusively for women wishing to travel with other women, creating a more inclusive environment.</li>
+          </ul>
+
+          <h3>Dedw3n Carpool:</h3>
+          <ul>
+            <li><strong>Charge Your Phone:</strong> It is advisable to have a fully charged phone and keep it on during the ride. Take screenshots of essential ride details in case of low battery.</li>
+            <li><strong>Consider Sharing Your Trip Details:</strong> Inform a trusted individual of your itinerary before departure and provide updates throughout the journey.</li>
+          </ul>
+
+          <h3>At the Meeting Point:</h3>
+          <ul>
+            <li><strong>Verify Fellow Car-poolers:</strong> Ensure that the individuals match their profile descriptions to prevent misunderstandings.</li>
+            <li><strong>Check the Car:</strong> Confirm that the driver's vehicle corresponds with the make and model listed in the ride details.</li>
+          </ul>
+
+          <h3>For Buyers:</h3>
+          <h4>Being a Smart Buyer:</h4>
+          <ul>
+            <li><strong>Haggle Respectfully:</strong> Don't hesitate to negotiate, particularly on items that have been listed for an extended period.</li>
+            <li><strong>Be Proactive:</strong> If you are interested in an item, message the seller promptly, especially for in-demand items.</li>
+            <li><strong>Use Keywords Effectively:</strong> Employ specific keywords to refine your search and locate precisely what you seek.</li>
+            <li><strong>Pay Attention to Details:</strong> Carefully review photos and descriptions before contacting the seller.</li>
+            <li><strong>Utilize Escrow Services:</strong> Consider using escrow services before receiving the goods to ensure a secure transaction.</li>
+          </ul>
+
+          <h3>Community Platform</h3>
+          <h4>Being a Responsible User:</h4>
+          <ul>
+            <li><strong>Be Mindful of Your Online Presence:</strong> Your posts serve as a reflection of your character; therefore, it is essential to maintain professionalism and respect in all interactions.</li>
+            <li><strong>Exercise Caution When Sharing Personal Information:</strong> Refrain from disclosing sensitive information online to protect your privacy.</li>
+            <li><strong>Establish Boundaries and Limits:</strong> Develop healthy habits regarding social media usage, and avoid excessive scrolling to maintain a balanced relationship with technology.</li>
+            <li><strong>Remain Vigilant Against Misinformation and Scams:</strong> Approach online information critically, and steer clear of engaging with dubious content.</li>
+            <li><strong>Take Breaks When Necessary:</strong> Given the potential overwhelming nature of social media, it is vital to disconnect and recharge periodically.</li>
+            <li><strong>Understand Algorithms:</strong> Social media platforms utilize algorithms to curate user content. Stay informed about changes to these algorithms and their implications for your posts.</li>
+            <li><strong>Monitor Your Engagement:</strong> Track the performance of your posts, analyse what resonates with your audience, and adjust your strategy accordingly.</li>
+          </ul>
+        </div>
       </div>
     `,
     lastUpdated: new Date('2025-07-08')
