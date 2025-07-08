@@ -17,9 +17,9 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
-// Import events advertisement images
-import eventsHeaderPromo from '@assets/Dedw3n Business commHeader.png';
-import eventsFooterPromo from '@assets/Dedw3n comm Footer_1749108826266.png';
+// Use server-served static asset paths for production compatibility
+const eventsHeaderPromo = '/attached_assets/Dedw3n Business commHeader.png';
+const eventsFooterPromo = '/attached_assets/Dedw3n comm Footer_1749108826266.png';
 
 interface Event {
   id: number;

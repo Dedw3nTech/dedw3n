@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import campaignImage from '@assets/Pre Launch Campaingn Car Drive_1751997729010.png';
+// Use server-served static asset path for production compatibility
+const campaignImage = '/attached_assets/Pre Launch Campaingn Car Drive_1751997729010.png';
 
 export default function Resources() {
   // Set document title on mount

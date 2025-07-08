@@ -13,8 +13,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
 import { VideoDisplayCard } from '@/components/products/VideoDisplayCard';
 
-import luxuryB2CImage from '@assets/Dedw3n Marketplace (1).png';
-import bottomPromoImage from '@assets/Copy of Dedw3n Marketplace III.png';
+// Use server-served static asset paths for production compatibility
+const luxuryB2CImage = '/attached_assets/Dedw3n Marketplace (1).png';
+const bottomPromoImage = '/attached_assets/Copy of Dedw3n Marketplace III.png';
 import {
   Card,
   CardContent,

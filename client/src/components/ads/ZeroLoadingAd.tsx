@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { InstantImage, preloadCriticalImages, initializeImagePreloader } from '@/hooks/use-ultra-instant-image';
 
-// Import all advertisement images
-import luxuryMarketplaceAd from '@assets/Dedw3n Marketplace (1).png';
-import businessB2BAd from '@assets/Dedw3n Business B2B.png';
-import businessB2CAd from '@assets/Copy of Dedw3n Business B2C Header.png';
-import communityAd from '@assets/Dedw3n comm Footer.png';
-import marketplaceHeaderAd from '@assets/Copy of Dedw3n Marketplace II.png';
-import campaignAd from '@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png';
-import marketplaceFooterAd from '@assets/Copy of Dedw3n Marketplace III.png';
+// Use server-served static asset paths for production compatibility
+const luxuryMarketplaceAd = '/attached_assets/Dedw3n Marketplace (1).png';
+const businessB2BAd = '/attached_assets/Dedw3n Business B2B.png';
+const businessB2CAd = '/attached_assets/Copy of Dedw3n Business B2C Header.png';
+const communityAd = '/attached_assets/Dedw3n comm Footer.png';
+const marketplaceHeaderAd = '/attached_assets/Copy of Dedw3n Marketplace II.png';
+const campaignAd = '/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png';
+const marketplaceFooterAd = '/attached_assets/Copy of Dedw3n Marketplace III.png';
 
 // Critical advertisements to preload immediately
 const CRITICAL_ADS = [
