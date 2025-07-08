@@ -218,7 +218,7 @@ export default function AffiliatePartnerships() {
                 {/* Optional overlay text */}
                 <div className="absolute bottom-4 left-4 text-white">
                   <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
-                    <p className="text-xs font-medium">Lifestyle • Health • Success</p>
+                    <p className="text-xs font-medium">Lifestyle • Freedom • Success</p>
                   </div>
                 </div>
               </div>
