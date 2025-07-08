@@ -157,15 +157,6 @@ export default function AffiliatePartnerships() {
       {/* Professional Image Section */}
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Building Software Today That Will Transform The World We Live In Tomorrow
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join us in creating innovative solutions that shape the future of digital commerce and social interaction.
-            </p>
-          </div>
-          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Main professional image - Large, spans 2 columns */}
             <div className="relative lg:col-span-2">
@@ -177,6 +168,18 @@ export default function AffiliatePartnerships() {
               
               {/* Overlay gradient for better visual appeal */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
+              
+              {/* Text overlay positioned next to the image */}
+              <div className="absolute inset-0 flex items-center justify-end pr-8">
+                <div className="bg-black/70 backdrop-blur-sm rounded-xl p-6 max-w-md">
+                  <h2 className="text-2xl font-bold text-white mb-3">
+                    Building Software Today That Will Transform The World We Live In Tomorrow
+                  </h2>
+                  <p className="text-lg text-gray-200">
+                    Join us in creating innovative solutions that shape the future of digital commerce and social interaction.
+                  </p>
+                </div>
+              </div>
               
               {/* Optional overlay text */}
               <div className="absolute bottom-6 left-6 text-white">
