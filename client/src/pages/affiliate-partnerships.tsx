@@ -195,7 +195,7 @@ export default function AffiliatePartnerships() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="flex justify-center">
             {[
               {
                 title: "Affiliate Marketing Partners",
@@ -207,29 +207,9 @@ export default function AffiliatePartnerships() {
                   "Monthly payouts"
                 ],
                 highlight: "Most Popular"
-              },
-              {
-                title: "Technology Partners",
-                description: "Integrate your services with our platform to expand your reach.",
-                features: [
-                  "API integration opportunities",
-                  "Co-marketing initiatives",
-                  "Technical support and documentation",
-                  "Revenue sharing models"
-                ]
-              },
-              {
-                title: "Content Partners",
-                description: "Collaborate to create valuable content while building your brand.",
-                features: [
-                  "Guest posting opportunities",
-                  "Webinar partnerships",
-                  "Educational content collaboration",
-                  "Brand exposure and recognition"
-                ]
               }
             ].map((type, index) => (
-              <Card key={index} className={`relative border-2 hover:border-blue-500 transition-colors duration-300 ${index === 0 ? 'border-blue-500 shadow-lg' : 'border-gray-200'}`}>
+              <Card key={index} className="relative border-2 border-blue-500 shadow-lg hover:border-blue-500 transition-colors duration-300 max-w-md w-full">
                 {type.highlight && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
