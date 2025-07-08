@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, DollarSign, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
+import professionalImage from '@assets/Building software today that will transform the world we live in tomorrow. II_1751993584729.png';
 
 export default function AffiliatePartnerships() {
   // Set document title on mount
@@ -147,6 +148,40 @@ export default function AffiliatePartnerships() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+
+      {/* Professional Image Section */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Building Software Today That Will Transform The World We Live In Tomorrow
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Join us in creating innovative solutions that shape the future of digital commerce and social interaction.
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="relative max-w-2xl">
+              <img 
+                src={professionalImage} 
+                alt="Professional with phone representing innovation and future technology"
+                className="w-full h-auto rounded-2xl shadow-2xl"
+              />
+              
+              {/* Overlay gradient for better visual appeal */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
+              
+              {/* Optional overlay text */}
+              <div className="absolute bottom-6 left-6 text-white">
+                <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4">
+                  <p className="text-sm font-medium">Innovation • Technology • Future</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
