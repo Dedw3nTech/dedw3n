@@ -929,40 +929,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // NOTE: Dynamic sitemap removed to avoid conflicts with static sitemap.xml file
   // Using static sitemap.xml in public folder for consistency and SEO optimization
 
-  // Contact form API endpoint
-  app.post('/api/contact', (req: Request, res: Response) => {
-    try {
-      const { name, email, subject, message } = req.body;
-      
-      // Basic validation
-      if (!name || !email || !subject || !message) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-      
-      // Store the submission
-      const submission: ContactFormSubmission = {
-        id: submissionId++,
-        name,
-        email,
-        subject,
-        message,
-        submittedAt: new Date(),
-        status: 'new'
-      };
-      
-      contactSubmissions.push(submission);
-      
-      // In a real application, we would also send an email notification here
-      
-      return res.status(201).json({ 
-        message: "Your message has been received. We'll get back to you soon.",
-        submissionId: submission.id
-      });
-    } catch (error) {
-      console.error("Error submitting contact form:", error);
-      return res.status(500).json({ message: "An error occurred while submitting your message" });
-    }
-  });
+  // Duplicate contact endpoint removed - using the full-featured one above with file upload support
   
   // Admin-only endpoint to view contact submissions (would add proper authentication in production)
   app.get('/api/admin/contact-submissions', (req: Request, res: Response) => {
