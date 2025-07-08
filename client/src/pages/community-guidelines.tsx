@@ -10,92 +10,154 @@ export default function CommunityGuidelines() {
               <Link href="/" className="text-primary hover:underline text-sm mb-4 inline-block">
                 ← Back to Home
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Community Guidelines</h1>
-              <p className="text-gray-600">
-                Welcome to Dedw3n! These guidelines help ensure our community remains a safe, inclusive, and positive space for everyone.
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">DEDW3N LTD. Community Guidelines</h1>
+              <p className="text-lg font-semibold text-gray-800 mb-2">Version 08-07-2025</p>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">WELCOME TO DEDW3N</h2>
+                <p className="text-gray-700 mb-4">
+                  At Dedw3n we are a multi-vendor marketplace and social platform built with modern web technologies. This platform integrates e-commerce capabilities with social networking features, creating a comprehensive transactional ecosystem where users can purchase products, engage socially, and access exclusive content. Dedw3n represents a holistic solution for online commerce, incorporating social, financial, and shipping features to foster meaningful digital connections while facilitating transactions.
+                </p>
+                <p className="text-gray-700 mb-4">
+                  We have established Community Guidelines to foster a welcoming, safe, and engaging experience for all users. These guidelines are applicable to everyone and encompass all content on our platform. They delineate the rules governing acceptable behaviour on Dedw3n. In response to emerging risks and concerns, these guidelines are continually updated.
+                </p>
+                <p className="text-gray-700 mb-4">
+                  To facilitate your understanding, we categorize the guidelines by topic and emphasize each rule in bold. Within each section, you can click on "More Information" for definitions, examples, and clarifications of common queries. Please note that the examples provided are not exhaustive; we mention this to avoid the repetitive phrase "including, but not limited to." If you ever find yourself uncertain about what to share, we encourage you to embody kindness and treat others as you would wish to be treated.
+                </p>
+                <p className="text-gray-700 font-medium">
+                  Thank you for contributing to the creation of a welcoming environment for everyone on Dedw3n!
+                </p>
+              </div>
             </div>
 
             <div className="space-y-8">
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Respectful Communication</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• Treat all community members with respect and kindness</p>
-                  <p>• Use appropriate language and avoid offensive content</p>
-                  <p>• Respect different perspectives and engage in constructive dialogue</p>
-                  <p>• No harassment, bullying, or discriminatory behavior</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Content Moderation</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    To maintain a safe, trustworthy, and dynamic platform, we must balance creative expression with the necessity of preventing harm. Our approach to safety involves a combination of strategies to achieve this equilibrium:
+                  </p>
+                  <div className="ml-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">1. Removal of Prohibited Content</h3>
+                    <p className="mb-4">
+                      Every individual who joins Dedw3n is granted the freedom to share content on our platform. However, we will remove any content, whether public or private, that violates our established guidelines.
+                    </p>
+                    
+                    <h3 className="font-semibold text-gray-900 mb-2">2. Empowering Our Community with Information and Resources</h3>
+                    <p className="mb-4">
+                      We are committed to ensuring you have the necessary information to manage your experience on Dedw3n effectively. To this end, we may implement labels, "opt-in" screens, or warnings to provide additional context.
+                    </p>
+                    
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-2">Our 3 Mission Points:</h4>
+                      <ul className="list-disc list-inside text-blue-800 space-y-1">
+                        <li>Balancing harm prevention with freedom of expression</li>
+                        <li>Upholding human dignity</li>
+                        <li>Ensuring fairness in our actions</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Marketplace Ethics</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• Provide accurate descriptions and images of products or services</p>
-                  <p>• Honor your commitments and complete transactions as agreed</p>
-                  <p>• Report any fraudulent or suspicious activity immediately</p>
-                  <p>• Respect intellectual property rights</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Safety and Civility</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    Physical and psychological safety are fundamental to individual well-being, while civility is essential for fostering a thriving community. Practicing civility does not require agreement; instead, it involves recognizing each person's inherent dignity and engaging with respect in both words and tone.
+                  </p>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Content Standards</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• Share content that is relevant and valuable to the community</p>
-                  <p>• No spam, excessive self-promotion, or duplicate posts</p>
-                  <p>• Respect privacy and do not share personal information without consent</p>
-                  <p>• Report inappropriate content using our reporting tools</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Violent and Criminal Behaviour</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>We are dedicated to fostering an environment that discourages physical conflict.</strong> We acknowledge that online content pertaining to violence can have real-world repercussions. Therefore, we prohibit any threats of violence, promotion of violence, incitement to violence, or advocacy of criminal activities that may endanger individuals, animals, or property.
+                  </p>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Dating & Social Interactions</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• Be genuine and honest in your profile and interactions</p>
-                  <p>• Respect boundaries and consent in all communications</p>
-                  <p>• Report any inappropriate behavior or harassment</p>
-                  <p>• No solicitation for commercial purposes in dating sections</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Hate Speech and Hateful Behaviour</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>Dedw3n thrives on the diversity of its community.</strong> Our differences should be celebrated rather than serve as a basis for division. We do not tolerate hate speech, hateful behaviour, or the promotion of hateful ideologies. This encompasses both explicit and implicit content that targets protected groups.
+                  </p>
+                  <p>
+                    In discussions about social issues on Dedw3n, we encourage respectful dialogue.
+                  </p>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Prohibited Activities</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• No illegal activities or content</p>
-                  <p>• No hate speech, threats, or violent content</p>
-                  <p>• No impersonation of others or false identities</p>
-                  <p>• No unauthorized access or attempts to breach security</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Sexual/Physical Abuse</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>We are dedicated to fostering an environment that champions gender equity, promotes healthy relationships, and upholds intimate privacy.</strong> Any actions that undermine these values can result in trauma and may lead to both physical and psychological harm. We do not allow showing, promoting, or engaging in adult sexual or physical abuse or exploitation. This includes non-consensual sexual acts, image-based sexual abuse, sextortion, physical abuse, and sexual harassment.
+                  </p>
+                  <p className="italic text-gray-600">
+                    If you or someone you know has experienced abuse or exploitation, support is available.
+                  </p>
                 </div>
               </section>
 
               <section>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Enforcement</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>• Violations may result in content removal, warnings, or account suspension</p>
-                  <p>• Repeated violations may lead to permanent account termination</p>
-                  <p>• Appeals can be submitted through our support channels</p>
-                  <p>• We reserve the right to modify these guidelines as needed</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Human Smuggling and Trafficking</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>We are dedicated to upholding individual human dignity and ensuring that Dedw3n is not utilized to exploit vulnerable individuals.</strong> We do not allow human trafficking and smuggling. We understand how important it is for survivors of human trafficking and smuggling to share their stories, and for migrants to be able to document their journeys, so we provide a space to do so.
+                  </p>
                 </div>
               </section>
 
-              <section className="bg-gray-50 p-6 rounded-lg">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Need Help?</h2>
-                <p className="text-gray-700 mb-4">
-                  If you have questions about these guidelines or need to report a violation, please contact our support team.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/contact" className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors text-center">
-                    Contact Support
-                  </Link>
-                  <Link href="/faq" className="bg-white text-black border border-black px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors text-center">
-                    View FAQ
-                  </Link>
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Harassment and Bullying</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>We encourage the respectful expression of diverse viewpoints and strive to create an environment where individuals can voice their opinions without fear of degradation or bullying.</strong> Harassing, degrading, or bullying behaviour is strictly prohibited, including any retaliatory harassment in response to such actions.
+                  </p>
+                  <p>
+                    We acknowledge that public figures often attract public scrutiny and have means to address negative commentary. Therefore, we permit certain negative or critical comments and images related to public figures, provided they do not violate our other policies. Content that includes violent threats, hate speech, sexual exploitation, or severe forms of harassment—such as doxxing or wishing serious physical harm upon others—will be removed without exception.
+                  </p>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Suicide and Self-Harm</h2>
+                <div className="space-y-4 text-gray-700">
+                  <p>
+                    <strong>At Dedw3n, our aim is to create a safe space for discussing emotionally complex topics in a supportive environment, while minimizing the risk of harm.</strong> We do not permit the promotion or sharing of plans related to suicide or self-harm.
+                  </p>
+                  <div className="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                    <p className="text-red-800">
+                      <strong>If you or someone you know is experiencing thoughts of suicide or self-harm, please seek support.</strong> We encourage you to reach out to a local suicide prevention helpline or your emergency services. Furthermore, we reserve the right to contact local emergency services if there is a specific and credible threat to safety or imminent threat to human life or serious physical injury, such as sharing details about a plan to harm yourself.
+                    </p>
+                  </div>
+                  <p>
+                    Visit our <Link href="/terms" className="text-blue-600 hover:underline">Terms of Service</Link> for more information.
+                  </p>
                 </div>
               </section>
             </div>
 
+            <div className="mt-12 p-6 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Questions or Concerns?</h3>
+              <p className="text-blue-800 mb-4">
+                If you have questions about these guidelines or need to report a violation, please contact our support team.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/contact" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
+                  Contact Support
+                </Link>
+                <Link href="/faq" className="bg-white text-blue-600 border border-blue-300 px-6 py-2 rounded-lg hover:bg-blue-50 transition-colors text-center">
+                  View FAQ
+                </Link>
+              </div>
+            </div>
+
             <div className="mt-8 pt-6 border-t border-gray-200">
               <p className="text-sm text-gray-500">
-                Last updated: January 2025
+                Last updated: July 8, 2025
               </p>
             </div>
           </div>

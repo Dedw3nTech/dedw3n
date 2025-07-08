@@ -12,6 +12,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-08**: Updated Community Guidelines with comprehensive new content (Version 08-07-2025)
+  - **COMPLETED: Community Guidelines Content Update** - Replaced entire community guidelines with new comprehensive document
+  - Updated to DEDW3N LTD. Community Guidelines Version 08-07-2025 with detailed safety and moderation policies
+  - Added comprehensive sections for content moderation, safety protocols, and community standards
+  - Included specific provisions for preventing violence, hate speech, harassment, abuse, and harmful content
+  - Enhanced suicide prevention resources and emergency contact protocols
+  - Added clear enforcement guidelines and reporting mechanisms
+  - Updated last modified date to 2025-07-08 to reflect current version
 - **2025-07-08**: Updated Cookie Policy with comprehensive new content (Version 08-07-2025)
   - **COMPLETED: Cookie Policy Content Update** - Replaced entire cookie policy with new comprehensive document
   - Updated to DEDW3N LTD. Cookie Policy Version 08-07-2025 with detailed tracking and privacy controls
