@@ -62,7 +62,6 @@ export default function OptimizedNavigation() {
     "Marketplace",
     "Community", 
     "Dating",
-    "Contact",
     "Currency",
     "Language",
     "Log in",
@@ -78,12 +77,11 @@ export default function OptimizedNavigation() {
     marketplace: translatedHeaderTexts[0] || "Marketplace",
     community: translatedHeaderTexts[1] || "Community",
     dating: translatedHeaderTexts[2] || "Dating",
-    contact: translatedHeaderTexts[3] || "Contact",
-    currency: translatedHeaderTexts[4] || "Currency",
-    language: translatedHeaderTexts[5] || "Language",
-    login: translatedHeaderTexts[6] || "Log in",
-    signup: translatedHeaderTexts[7] || "Sign Up",
-    logout: translatedHeaderTexts[8] || "Log Out"
+    currency: translatedHeaderTexts[3] || "Currency",
+    language: translatedHeaderTexts[4] || "Language",
+    login: translatedHeaderTexts[5] || "Log in",
+    signup: translatedHeaderTexts[6] || "Sign Up",
+    logout: translatedHeaderTexts[7] || "Log Out"
   }), [translatedHeaderTexts]);
   
   // Unread counts
@@ -116,12 +114,6 @@ export default function OptimizedNavigation() {
       href: "/dating",
       icon: Heart,
       isActive: location.startsWith("/dating"),
-    },
-    {
-      title: translatedLabels.contact,
-      href: "/contact",
-      icon: MessageSquare,
-      isActive: location.startsWith("/contact"),
     },
   ], [translatedLabels, location]);
 
