@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, DollarSign, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
+import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import professionalImage from '@assets/Building software today that will transform the world we live in tomorrow. II_1751993584729.png';
 import businessWomanImage from '@assets/We are developing software today that will facilitate business operations in the world of tomorrow._1751996823481.png';
 import activeWomanImage from '@assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
@@ -43,7 +43,7 @@ export default function AffiliatePartnerships() {
             <div className="relative lg:ml-8">
               <div className="relative bg-white rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
                 <div className="flex items-center justify-between mb-6">
-                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <PoundSterling className="h-8 w-8 text-green-600" />
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">£2,847</div>
                     <div className="text-sm text-gray-500">This month</div>
@@ -98,7 +98,7 @@ export default function AffiliatePartnerships() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
-              icon: DollarSign,
+              icon: PoundSterling,
               title: "Competitive Commissions",
               description: "Earn up to 25% commission on every successful referral with transparent tracking.",
               color: "bg-green-100 text-green-600"

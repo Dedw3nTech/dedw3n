@@ -127,6 +127,10 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Changed from "Earn commission when you refer new merchants to select Dedw3n plans or Dedw3n Point of Sale (POS Pro)" 
   - Updated to "Earn up to 30% commission for life by referring new merchants to Dedw3n"
   - Simplified and more compelling commission messaging for affiliate partners
+  - **COMPLETED: Currency Icon Update** - Changed $ (DollarSign) to £ (PoundSterling) symbol
+  - Updated dashboard mockup icon from DollarSign to PoundSterling in earnings display
+  - Updated benefits section icon from DollarSign to PoundSterling for competitive commissions
+  - Consistent with UK currency formatting throughout the affiliate partnerships page
 - **2025-07-08**: Content Enhancement - Added comprehensive cookie and tracker transparency section to cookies page
   - **COMPLETED: Cookie Tracker Documentation** - Added detailed "Comprehensive List of Cookies and Trackers Used on the Platform" section
   - Positioned above Contact Us section on cookies page with complete breakdown of all tracking technologies
