@@ -565,6 +565,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       // Send email using Brevo
+      console.log('[CONTACT] Attempting to send contact email for submission:', submission.id);
       const emailSent = await sendContactEmail({
         name: submission.name,
         email: submission.email,
@@ -573,6 +574,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
       if (emailSent) {
+        console.log('[CONTACT] Email sent successfully for submission:', submission.id);
         return res.json({ 
           success: true, 
           message: 'Your message has been sent successfully. We\'ll get back to you soon!',
@@ -582,8 +584,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
         });
       } else {
-        return res.status(500).json({ 
-          message: 'There was an issue sending your message. Please try again or contact us directly.' 
+        console.log('[CONTACT] Email sending failed for submission:', submission.id);
+        // Even if email fails, we still saved the submission, so return success
+        return res.json({ 
+          success: true, 
+          message: 'Your message has been saved. We\'ll review it and get back to you soon!',
+          note: 'Email notification temporarily unavailable',
+          filesUploaded: {
+            titleUpload: titleFileInfo ? titleFileInfo.originalName : null,
+            textUpload: textFileInfo ? textFileInfo.originalName : null
+          }
         });
       }
     } catch (error) {
@@ -594,6 +604,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
   
+  // Admin endpoint to update Brevo API key
+  app.post('/api/admin/update-brevo-key', async (req: Request, res: Response) => {
+    const { apiKey } = req.body;
+    
+    if (!apiKey) {
+      return res.status(400).json({ message: "API key is required" });
+    }
+    
+    try {
+      const success = setBrevoApiKey(apiKey);
+      if (success) {
+        console.log('[ADMIN] Brevo API key updated successfully');
+        return res.json({ message: "Brevo API key updated successfully" });
+      } else {
+        return res.status(500).json({ message: "Failed to update API key" });
+      }
+    } catch (error) {
+      console.error('[ADMIN] Error updating Brevo API key:', error);
+      return res.status(500).json({ message: "Error updating API key" });
+    }
+  });
+
   // Temporary test endpoint for password verification (remove in production)
   app.post('/api/auth/test-password', async (req: Request, res: Response) => {
     const { username, password } = req.body;

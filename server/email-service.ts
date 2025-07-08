@@ -4,14 +4,19 @@ let apiInstance: brevo.TransactionalEmailsApi | null = null;
 let brevoApiKey: string | null = process.env.BREVO_API_KEY || null;
 
 function initializeBrevo(apiKey: string) {
+  console.log('[EMAIL] Initializing Brevo with API key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'null');
   brevoApiKey = apiKey;
   apiInstance = new brevo.TransactionalEmailsApi();
   apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+  console.log('[EMAIL] Brevo API instance created successfully');
 }
 
 // Initialize if API key is available
+console.log('[EMAIL] Environment BREVO_API_KEY:', brevoApiKey ? `${brevoApiKey.substring(0, 20)}...` : 'not found');
 if (brevoApiKey) {
   initializeBrevo(brevoApiKey);
+} else {
+  console.log('[EMAIL] No BREVO_API_KEY found in environment variables');
 }
 
 export function setBrevoApiKey(apiKey: string): boolean {
