@@ -101,7 +101,10 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Linked Resources button on affiliate partnerships page to navigate to /resources
   - Page includes comprehensive sections: About Dedw3n, Mission & Goals, Affiliate Benefits, 24/7 Support, and Strong Community
   - Content covers general information about Dedw3n, mission, goals, benefits, support services, and community features
-  - Provides detailed affiliate guide with colorful cards and professional design
+  - **COMPLETED: Resources Page Layout Update** - Changed from card-based design to plain text layout
+  - Updated page layout to use single header image (Pre Launch Campaign Car Drive) and clean typography
+  - Removed colorful cards and gradients in favor of simple, readable text format
+  - Maintained all content sections with improved readability and clean white background
 - **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)
