@@ -32,16 +32,7 @@ export default function PrivacyPage() {
 
   return (
     <>
-      <div className="bg-gradient-to-b from-gray-50 to-white">
-        <Container className="py-10">
-          <h1 className="text-4xl font-extrabold tracking-tight text-center">
-            {t("Privacy Policy")}
-          </h1>
-          <p className="mt-4 text-lg text-gray-600 text-center max-w-2xl mx-auto">
-            {t("How we collect, use, and protect your personal information.")}
-          </p>
-        </Container>
-      </div>
+
       <PageContent pageId="privacy" />
     </>
   );
