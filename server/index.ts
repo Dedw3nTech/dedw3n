@@ -456,7 +456,7 @@ app.use((req, res, next) => {
       '/profile', '/settings', '/messages', '/notifications', '/cart',
       '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
-      '/subscriptions', '/verify', '/reset-password', '/help'
+      '/subscriptions', '/verify', '/reset-password', '/help', '/shipping'
     ];
     
     // Check for dynamic routes patterns that are valid

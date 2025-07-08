@@ -43,6 +43,13 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Included specific California Privacy Policy section with CCPA compliance information
   - Enhanced contact information with legal@dedw3n.com for privacy inquiries
   - Updated last modified date to 2025-07-08 to reflect current version
+- **2025-07-08**: Page Renaming - Changed shipping page to "Catalogue Rules"
+  - **COMPLETED: Shipping Page Update** - Renamed shipping page to "Catalogue Rules" as requested
+  - Updated page title from "Shipping & Returns" to "Catalogue Rules"
+  - Changed page description to focus on marketplace catalogue guidelines and rules
+  - Updated component name from ShippingPage to CatalogueRulesPage
+  - Changed PageContent pageId from "shipping" to "catalogue-rules"
+  - Footer link text already updated to "Catalogue Rules" in previous changes
 - **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)
