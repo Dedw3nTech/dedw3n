@@ -68,6 +68,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     username: "",
     email: "",
     password: "",
+    affiliatePartner: "",
     region: "",
     country: "",
     city: "",
@@ -253,6 +254,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           email: formData.email,
           password: formData.password,
           name: formData.name,
+          affiliatePartner: formData.affiliatePartner,
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender as "male" | "female" | "other" | null,
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
@@ -514,6 +516,20 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               </Button>
             </div>
           </div>
+
+          {/* Affiliate Partner Field - Only show for registration */}
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="affiliatePartner">{t["Affiliate Partner"] || "Affiliate Partner"}</Label>
+              <Input
+                id="affiliatePartner"
+                type="text"
+                placeholder={t["Enter affiliate partner code (optional)"] || "Enter affiliate partner code (optional)"}
+                value={formData.affiliatePartner}
+                onChange={(e) => setFormData({ ...formData, affiliatePartner: e.target.value })}
+              />
+            </div>
+          )}
 
           {/* Remember Password Checkbox - Only show for login */}
           {isLogin && (
