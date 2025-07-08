@@ -109,12 +109,13 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)
   - Applied changes to all relevant header components (language-switcher, currency-selector variants)
-- **2025-07-08**: UI Enhancement - Added third image to affiliate partnerships page
-  - **COMPLETED: Active Woman Image Addition** - Added new active lifestyle woman image below business woman image
-  - Image shows woman in athletic wear with healthy lifestyle theme
-  - Same styling and size constraints as business woman image (2x smaller than main professional image)
+- **2025-07-08**: UI Enhancement - Added third image to affiliate partnerships page and reverted layout
+  - **COMPLETED: Active Woman Image Addition** - Added new active lifestyle woman image 
+  - **COMPLETED: Layout Revert** - Changed layout to one large image and two smaller images stacked vertically
+  - Large image: Innovation/Technology/Future themed professional image (left side)
+  - Two smaller images stacked vertically on right: Business woman and Active lifestyle woman
   - Added overlay gradient and text "Lifestyle • Health • Success" for visual consistency
-  - Maintains clean side-by-side layout with professional and business woman images
+  - Responsive design works on both desktop and mobile with proper flex layout
 - **2025-07-08**: Content Enhancement - Added comprehensive cookie and tracker transparency section to cookies page
   - **COMPLETED: Cookie Tracker Documentation** - Added detailed "Comprehensive List of Cookies and Trackers Used on the Platform" section
   - Positioned above Contact Us section on cookies page with complete breakdown of all tracking technologies

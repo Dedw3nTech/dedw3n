@@ -166,8 +166,8 @@ export default function AffiliatePartnerships() {
             </p>
           </div>
           
-          <div className="flex justify-center items-center gap-8">
-            {/* Main professional image */}
+          <div className="flex flex-col lg:flex-row justify-center items-center gap-8">
+            {/* Main professional image - Large */}
             <div className="relative max-w-xl">
               <img 
                 src={professionalImage} 
@@ -186,40 +186,43 @@ export default function AffiliatePartnerships() {
               </div>
             </div>
             
-            {/* Secondary business woman image - 2x smaller */}
-            <div className="relative max-w-xs">
-              <img 
-                src={businessWomanImage} 
-                alt="Business woman representing professional success and growth"
-                className="w-full h-auto rounded-2xl shadow-xl"
-              />
-              
-              {/* Overlay gradient for better visual appeal */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
-              
-              {/* Optional overlay text */}
-              <div className="absolute bottom-4 left-4 text-white">
-                <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
-                  <p className="text-xs font-medium">Success • Growth • Partnership</p>
+            {/* Smaller images stacked vertically */}
+            <div className="flex flex-col gap-6">
+              {/* Business woman image - smaller */}
+              <div className="relative max-w-xs">
+                <img 
+                  src={businessWomanImage} 
+                  alt="Business woman representing professional success and growth"
+                  className="w-full h-auto rounded-2xl shadow-xl"
+                />
+                
+                {/* Overlay gradient for better visual appeal */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
+                
+                {/* Optional overlay text */}
+                <div className="absolute bottom-4 left-4 text-white">
+                  <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
+                    <p className="text-xs font-medium">Success • Growth • Partnership</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Active woman image - 2x smaller */}
-            <div className="relative max-w-xs">
-              <img 
-                src={activeWomanImage} 
-                alt="Active lifestyle woman representing vitality and success"
-                className="w-full h-auto rounded-2xl shadow-xl"
-              />
-              
-              {/* Overlay gradient for better visual appeal */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
-              
-              {/* Optional overlay text */}
-              <div className="absolute bottom-4 left-4 text-white">
-                <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
-                  <p className="text-xs font-medium">Lifestyle • Health • Success</p>
+              {/* Active woman image - smaller */}
+              <div className="relative max-w-xs">
+                <img 
+                  src={activeWomanImage} 
+                  alt="Active lifestyle woman representing vitality and success"
+                  className="w-full h-auto rounded-2xl shadow-xl"
+                />
+                
+                {/* Overlay gradient for better visual appeal */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
+                
+                {/* Optional overlay text */}
+                <div className="absolute bottom-4 left-4 text-white">
+                  <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
+                    <p className="text-xs font-medium">Lifestyle • Health • Success</p>
+                  </div>
                 </div>
               </div>
             </div>
