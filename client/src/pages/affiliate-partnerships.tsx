@@ -26,8 +26,7 @@ export default function AffiliatePartnerships() {
                   Become a Dedw3n Affiliate
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Earn commission when you refer new merchants to select Dedw3n 
-                  plans or Dedw3n Point of Sale (POS Pro).
+                  Earn up to 30% commission for life by referring new merchants to Dedw3n.
                 </p>
               </div>
               
