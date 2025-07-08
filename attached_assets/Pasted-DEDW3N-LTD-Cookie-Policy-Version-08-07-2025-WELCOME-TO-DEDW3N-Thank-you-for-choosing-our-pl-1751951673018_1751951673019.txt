@@ -1,0 +1,55 @@
+DEDW3N LTD.
+Cookie Policy
+Version 08-07-2025 
+
+WELCOME TO DEDW3N 
+Thank you for choosing our platform!
+When you utilize the Dedw3n Website or App (collectively referred to as the “Platform”), we, along with our partners, may automatically store and/or access information on your device through cookies and similar technologies. This data processing is crucial for the operation of the Platform, managing behavioural advertising presented to you on both the Platform and third-party sites, and analysing your engagement with the Platform. This Cookie Policy outlines what cookies are, their usage on our Platform, and how you can manage them.
+For general information regarding Dedw3n's data practices, please refer to our Privacy Policy. The capitalized terms used in this Cookie Policy carry the same meaning as those in the Privacy Policy.
+ What Are Cookies?
+Cookies are small text files that your browser stores on your device (e.g., computer, mobile phone, tablet) while browsing websites. Other technologies, such as data storage methods on your web browser or device, identifiers linked to your device, and various software solutions, serve similar purposes. These technologies are commonly employed to enhance website functionality and efficiency. In this Cookie Policy, we refer to all these technologies collectively as “cookies.”
+Unless otherwise specified, the cookies we utilize are essential for the Platform's functionality and performance. This includes cookies that allow you to register for protected areas of the Platform, make purchases, or utilize electronic payment systems. Some cookies are deleted from your device after your browsing session ends (session cookies). The information stored in necessary cookies is solely used to provide the requested services and functionalities.
+Why Do You Use Cookies?
+We employ cookies to:
+1. Ensure the Platform operates as expected.
+2. Enhance the speed and security of the Platform.
+3. Recognize you upon revisiting the Platform, allowing us to personalize content and note your preferences (referred to as “functional cookies”).
+4. Track visitor behaviour to improve platform functionality (referred to as “analytical/performance cookies”).
+5. Monitor your interactions with the Platform, including pages viewed and links clicked, to tailor content and advertising to your interests (referred to as “targeting or advertising cookies”).
+6. Enable content sharing with social networks such as Facebook or Instagram (often categorized under targeting cookies).
+7. Store and/or access information on your device for the aforementioned purposes.
+8. Personalize ads and content, evaluate their performance, and provide audience insights for product development.
+9. Utilize precise geolocation data for specified purposes.
+10. Actively scan device characteristics for identification.
+11. Ensure security, prevent fraud, and debug systems to maintain proper functionality.
+12. Technically deliver ads or content for interaction.
+13. Match and combine offline data sources.
+14. Link various devices as belonging to you or your household.
+15. Receive and utilize information automatically sent from your device, such as IP address or browser type, to distinguish your device from others.
+
+What Information Do Cookies Facilitate Collecting?
+The information collected through cookies may include unique identification tokens to enable features, as well as details about your browsing session, such as IP addresses, browser type, internet service provider, referring/exit pages, operating system, website usage, date/time stamps, and clickstream data.
+
+How Can I Manage Cookies?
+Upon your first visit to the Platform, or after a significant period, you will see a cookie notice at the bottom of the window, allowing you to accept all cookies or set your cookie preferences. You can also modify your cookie settings at any time in the App by navigating to Profile ▸ Cookie Settings or by clicking Cookie Settings at the bottom of our website.
+You may configure your browser to decline some or all cookies or to request permission before accepting them. Please note that deleting or disabling cookies may restrict your access to certain areas or features of our Platform. For more information on adjusting your browser settings, please visit www.aboutcookies.org or www.allaboutcookies.org.
+You can deactivate certain third-party cookies through the Network Advertising Initiative’s opt-out page at www.networkadvertising.org/managing/opt_out.asp. 
+If you use multiple devices to access our Platform, it is essential to ensure that each browser on each device is configured according to your cookie preferences. Adjusting cookie settings will also affect your experience on other websites.
+
+ What Cookies Do You Use?
+
+A cookie is a small data file that a website requests your browser to store on your device to remember information about you, such as your language preference or login credentials. We utilize both first-party cookies (set by us) and third-party cookies (set by domains other than the one you are visiting) for advertising and marketing purposes. Specifically, we implement cookies and tracking technologies for the following objectives:
+Strictly Necessary Cookies: Essential for website functionality, these cookies cannot be disabled in our systems. They are typically set in response to actions you take, such as setting privacy preferences or logging in. You may set your browser to block or alert you about these cookies, but some site features may not function properly.
+Sale of Personal Data:  Under the California Consumer Privacy Act, you have the right to opt-out of the sale of your personal information to third parties. These cookies collect data for analytics and to personalize your experience with targeted ads. You may exercise your right to opt-out using the provided toggle switch. However, opting out may limit our ability to offer personalized ads and share your information with third parties. For more details on your rights as a California consumer, please contact our legal department via the Exercise My Rights link. 
+Targeting Cookies:  These cookies may be placed on our site by advertising partners and help build a profile of your interests to display relevant ads on other sites. While they do not store personal information directly, they are based on uniquely identifying your browser and device.
+
+Performance Cookies: These cookies allow us to count visits and traffic sources, helping us measure and enhance site performance. All information collected is aggregated and anonymous. Without these cookies, we cannot track site visits or monitor performance.
+Functional Cookies: These cookies enable enhanced functionality and personalization on the website. They may be set by us or by third-party providers whose services we have integrated. If you do not permit these cookies, some services may not function correctly.
+
+Do You Use Partners to Place Ads on the Platform?
+To deliver more relevant advertisements, Dedw3n's advertising partners utilize various cookies and mobile trackers. We permit personalized ads to be displayed upon receiving your consent. Third-party advertising cookies and mobile trackers may be employed for contextual advertising or targeting campaigns. Based on your consent for cookie placement, we evaluate user profiles pseudonymously, ensuring no personal identification occurs. The use of these third-party tracking technologies is not under our control. Our advertising partners are bound by confidentiality agreements and/or legal restrictions. Third-party cookies are governed by the respective privacy policies of those parties. We communicate your consent or refusal regarding cookie usage and the associated processing of personal data for ad personalization to our advertising partners. 
+Please note that your consent or refusal regarding personalized advertising on Dedw3n applies across all platforms (Android, iOS, Web, etc.).
+ How Can I Refuse Ad Personalization Trackers?
+Mobile Device Trackers: You can disable ad personalization in the App by navigating to Profile ▸ Cookie Settings and unchecking the relevant cookie types.
+Web Browser Trackers: You may decline further tracking for ad personalization by clicking Cookie Settings at the bottom of the page and unchecking the previously selected cookie types. If you are not a registered user, your consent withdrawal will be recorded by installing an opt-out cookie, preventing future data capture for ad personalization on this website. If you are registered, your decision to withdraw consent will apply to all Dedw3n platforms across all devices. Please note that if you delete all cookies in your browser, the opt-out cookie will also be deleted. Additionally, your updated settings may take time to take effect on mobile devices.
+For any inquiries, please contact us at legal@dedw3n.com.

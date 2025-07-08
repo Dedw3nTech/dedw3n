@@ -12,6 +12,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-08**: Updated Cookie Policy with comprehensive new content (Version 08-07-2025)
+  - **COMPLETED: Cookie Policy Content Update** - Replaced entire cookie policy with new comprehensive document
+  - Updated to DEDW3N LTD. Cookie Policy Version 08-07-2025 with detailed tracking and privacy controls
+  - Added comprehensive sections for cookie types, data collection, and user control mechanisms
+  - Included specific provisions for targeting cookies, performance tracking, and CCPA compliance
+  - Enhanced ad personalization controls and opt-out procedures for all platforms
+  - Updated contact information to legal@dedw3n.com for cookie-related inquiries
+  - Updated last modified date to 2025-07-08 to reflect current version
 - **2025-07-08**: Updated Terms of Service with comprehensive new content (Version 08-07-2025)
   - **COMPLETED: Terms of Service Content Update** - Replaced entire terms of service with new comprehensive document
   - Updated to DEDW3N LTD. Terms Of Service Version 08-07-2025 with detailed marketplace and community guidelines
