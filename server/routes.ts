@@ -448,41 +448,366 @@ const pageContents: Record<string, PageContent> = {
     id: "terms",
     title: "Terms of Service",
     content: `
-      <h2>Terms of Service</h2>
-      <p><strong>Last Updated:</strong> April 10, 2025</p>
+      <h2>DEDW3N LTD. Terms Of Service</h2>
+      <p><strong>Version 08-07-2025</strong></p>
       
-      <h3>Overview</h3>
-      <p>This website is operated by Dedw3n. Throughout the site, the terms "we", "us" and "our" refer to Dedw3n. Dedw3n offers this website, including all information, tools and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.</p>
+      <h2>WELCOME TO DEDW3N</h2>
+      <p>Thank you for choosing our platform!</p>
       
-      <h3>Online Marketplace Terms</h3>
-      <p>By visiting our site and/or purchasing something from us, you engage in our "Service" and agree to be bound by the following terms and conditions ("Terms of Service", "Terms"), including those additional terms and conditions and policies referenced herein and/or available by hyperlink.</p>
+      <h3>I. About</h3>
+      <p>Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com. We also refer to Dedw3n Affiliates, which are all companies within our group.</p>
       
-      <h3>User Account</h3>
-      <p>When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our site.</p>
+      <h4>What we do</h4>
+      <p>We manage websites, applications and other platforms (altogether, our Site) where we provide the following Services:</p>
+      <ul>
+        <li>Hosting, where we act as an intermediary between Buyers and Sellers - we don't buy or sell Items on the Catalogue and aren't a party to any Transactions</li>
+        <li>Community & Dating services facilitate user interaction and engagement with one another</li>
+        <li>Escrow services, which is applied for a fee in every Transaction and which ensures their payments are made safely and allows to get a refund if their Item is lost, damaged or significantly not as described with the assistance of our customer support team</li>
+        <li>Other optional services for our Buyers and Sellers which are described below</li>
+      </ul>
       
-      <p>You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password, whether your password is with our service or a third-party service.</p>
+      <p>We are responsible for the Services we provide, within the limits of applicable laws and our commitments, and under the conditions set out in these Terms.</p>
       
-      <h3>Products and Services</h3>
-      <p>We have made every effort to display as accurately as possible the colors and images of our products. We cannot guarantee that your computer monitor's display of any color will be accurate.</p>
+      <h4>About you and our Users</h4>
+      <p>You are one of our Users who:</p>
+      <ul>
+        <li>Is at least 18 years old</li>
+        <li>Has an Account</li>
+        <li>Uses our Services for personal and business purposes</li>
+        <li>Has the capacity and rights to be able to carry out Transactions on the Site, and agrees to these Terms and the Catalogue Rules</li>
+        <li>You are legally qualified to have a binding contract with Dedw3n</li>
+        <li>You are seeking meaningful relationships (Only for Dedw3n Dating services)</li>
+        <li>You have not committed, been convicted of, or pled no contest to a felony or indictable offense (or crime of similar severity), a sex crime, or any crime involving violence or a threat of violence, unless you have received clemency for a non-violent crime and we have determined that you are not likely to pose a threat to other users of our Services</li>
+        <li>You are not required to register as a sex offender with any state, federal or local sex offender registry</li>
+        <li>You do not have more than one account on our Services</li>
+        <li>You have not previously been removed from our Services or our affiliates' services by us or our affiliates, unless you have our express written permission to create a new account</li>
+      </ul>
       
-      <p>We reserve the right, but are not obligated, to limit the sales of our products or Services to any person, geographic region or jurisdiction.</p>
+      <p>Should you fail to meet these requirements at any time, your authorization to access our services or systems will be automatically revoked. You are then required to delete your account immediately. Furthermore, we reserve the right to revoke your access to our services without prior notice.</p>
       
-      <h3>Vendor Terms</h3>
-      <p>If you register as a vendor on our platform, you agree to provide accurate product information, maintain fair pricing, and fulfill orders promptly. We reserve the right to remove products or suspend vendor accounts that violate our policies.</p>
+      <h4>Your choice</h4>
+      <p>Users can be:</p>
+      <ul>
+        <li>A Seller, who lists goods and items to sell (each, an Item) on an electronic catalogue on our Site (the Catalogue)</li>
+        <li>A Buyer, who can view, search and buy an Item or multiple Items as part of a bundle on the Catalogue by clicking the buying button, providing their payment details and clicking the "Pay" button (a Transaction)</li>
+        <li>A Community member, who possesses the ability to interact with other users, send messages, send gifts, and engage in any activities that comply with our community guidelines</li>
+        <li>A Dating service user, who can send gifts to other users to facilitate matches; once a match is established, users can interact with one another</li>
+      </ul>
       
-      <h3>Social Features and User Content</h3>
-      <p>When you create or make available any content on our platform, you represent and warrant that you own or have the necessary licenses, rights, consents, and permissions to use such content.</p>
+      <h4>Buying from Businesses</h4>
+      <p>Depending on which country you are registered in, you could buy an Item from a professional seller who is identified by the "Business" tag next to their name and Item they're selling (a Business Seller). That transaction will be governed by our Dedw3n Business Terms and Conditions, which you will need to read and accept before each purchase from a Business Seller. British consumer protection laws apply for all transactions with Business Sellers.</p>
       
-      <h3>Termination</h3>
-      <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+      <h3>II. Regarding these Terms</h3>
+      <h4>Regarding these Terms</h4>
+      <p>These Terms and Conditions (hereinafter referred to as "the Terms") constitute a legal agreement between you and us, governing your use of our Site and Services. By clicking the acceptance button during the registration process for your personal Dedw3n account (referred to as "an Account") or upon receiving notifications regarding updates to these Terms, you agree to be bound by them.</p>
       
-      <h3>Limitation of Liability</h3>
-      <p>In no case shall Dedw3n, our directors, officers, employees, affiliates, agents, contractors, interns, suppliers, service providers or licensors be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind.</p>
+      <h4>Regarding Catalogue Rules</h4>
+      <p>The rules governing the Catalogue, which outline the permissible items for listing (hereinafter referred to as the Catalogue Rules), constitute a fundamental aspect of these Terms. In the event of any discrepancies between these Terms and the Catalogue Rules, the provisions stated in the Catalogue Rules shall prevail.</p>
       
-      <h3>Governing Law</h3>
-      <p>These Terms shall be governed and construed in accordance with the laws of England and Wales, without regard to its conflict of law provisions.</p>
+      <h4>Additional important information</h4>
+      <p>We provide links to essential resources within these Terms, including access to our Help Centre, where you can find answers to many frequently asked questions from our users. If you are unable to locate the information you seek in our regularly updated Help Centre, please do not hesitate to contact us using any of the methods outlined below.</p>
+      
+      <h3>III. How to contact us</h3>
+      <h4>To report issues</h4>
+      <p>If you discover that another user has engaged in illegal activity, infringed upon someone else's rights, or violated these Terms, please notify us by:</p>
+      <ul>
+        <li>Following the reporting procedure outlined here, or</li>
+        <li>Completing this form if you are specifically reporting illegal items, such as those that infringe on intellectual property rights</li>
+      </ul>
+      <p>We will make every effort to assist the affected party and will cooperate with local authorities if necessary.</p>
+      
+      <h4>To address a dispute</h4>
+      <p>While we hope you enjoy utilizing our services, should a disagreement arise between you and us, please complete our dispute form so we can work towards a swift resolution.</p>
+      
+      <h4>For additional inquiries</h4>
+      <p>If you have any questions or require further assistance, please reach out to us via the provided email addresses.</p>
+      
+      <h3>IV. Becoming a Dedw3n User</h3>
+      <h4>Creating an Account</h4>
+      <p>To establish your account and ensure its security, you will need to provide your email address, as well as select a unique username and password. Please note that disposable or masked email addresses cannot be utilized for account creation.</p>
+      
+      <h4>Verification and Security Actions</h4>
+      <p>During the account registration process, as well as throughout your use of our services, we may request that you:</p>
+      <ul>
+        <li>Assist us in verifying information associated with your account (such as your phone number, email address, or payment method)</li>
+        <li>Provide additional pertinent information</li>
+        <li>Correct any inaccuracies or incomplete information on your account</li>
+        <li>Respond to security questions</li>
+      </ul>
+      
+      <p>These measures are intended to confirm your identity as the individual accessing your account and/or conducting transactions on our site. Such requests will be commensurate with the security concerns we aim to address. Should the information you provide be incomplete or inaccurate, or should you fail to comply with our requests, we reserve the right to implement corrective measures or restrict access to your account, as outlined further below.</p>
+      
+      <h4>Account Restrictions</h4>
+      <p>Users are permitted to maintain only one account. However, if your original account is blocked due to unauthorized access, you may create a new account for yourself. Additionally, you may hold one regular account and one Business account simultaneously (provided Dedw3n Businesses is available in your country), but these accounts must be associated with different email addresses and maintained as distinctly separate entities.</p>
+      
+      <h4>Promotions</h4>
+      <p>We may inform you about special offers, competitions, games, or other types of promotions (collectively referred to as "Promotions") based on the eligibility criteria we establish. Please note that certain features or functionalities of the site may be temporarily altered or unavailable during the duration of a Promotion.</p>
+      
+      <h4>Third-Party Websites and Content</h4>
+      <p>Some features on our site utilize tools and services provided by third parties, which are subject to their respective terms and conditions. We will supply links to these third parties' terms and conditions for your review and acceptance prior to utilizing these features.</p>
+      
+      <h4>Information Presentation</h4>
+      <p>To enhance user experience, we may reorganize the catalogue, advertising spaces, or other information on the site. These modifications will not impact the content you provide or our obligations under these terms. Additional information regarding how to access details about advertisements can be found here.</p>
+      
+      <h3>V. Using information you share with us</h3>
+      <h4>How We Utilize Your Personal Data</h4>
+      <p>We will process your personal data to fulfil our obligations and uphold our rights under these Terms, as well as to provide you with our Services. For comprehensive details regarding the collection, storage, usage, and protection of your personal data, please refer to our Privacy Policy. While we implement robust security measures to safeguard your personal data, it is important to note that no system is completely impervious to cyberattacks, and unauthorized third parties may sometimes gain access to personal information.</p>
+      
+      <h4>How We May Use Your Content</h4>
+      <p>To the extent permitted by law, you grant us and Dedw3n Affiliates a non-exclusive, worldwide right to use your Content without compensation for the duration of the applicable rights. This authorization allows us to copy, display, and adapt your Content for operational, commercial, advertising, or other internal business purposes across various platforms and media, including television, print, the Internet (such as banners and articles on other websites), and social media networks.</p>
+      
+      <h3>VI. User Responsibilities</h3>
+      <p>To ensure a safe, trusted, and secure environment for all users browsing our web app / mobile app, it is essential that individual actions and behaviours do not undermine this objective. By utilizing our Site and Services, you agree to adhere to the following guidelines:</p>
+      <ul>
+        <li>Comply with these Terms and all applicable laws</li>
+        <li>Provide truthful, accurate, and up-to-date information about yourself, and promptly update your Account if any of your information changes (such as your home address)</li>
+        <li>Maintain the confidentiality of your Account login details and password, and notify us immediately if you suspect any unauthorized access to your Account</li>
+        <li>Share information from the Site with third parties, including on social media, only if permitted by the Site's "Share" button</li>
+        <li>Accept full responsibility for and retain all rights to any information, photographs, or other content you upload to our Site (referred to as your Content)</li>
+      </ul>
+      
+      <p>You are prohibited from the following actions when creating an account or using the Site and Services:</p>
+      <ul>
+        <li>Engaging in any illegal or unethical behaviour, actions that compromise public safety, or activities that infringe upon our rights or those of others, including violations of privacy, confidential information, or intellectual property rights</li>
+        <li>Utilizing any external software tools, such as bots, scraping programs, crawling programs, or spiders, during the registration process or while using the Site and/or Services, unless such usage is explicitly authorized or permitted by us</li>
+        <li>Employing any external software tool that may disrupt the normal operation of the Site or Services or that could potentially infect or damage another user's computer</li>
+        <li>Adapt, copy, edit, distribute or commercialise any content on the Site without our prior written consent</li>
+        <li>Data mine, screen scrape, crawl, disassemble, decompile or reverse engineer any part of the Site</li>
+        <li>Please publish content that does not praise, promote, encourage, or incite terrorism, racism, revisionism, xenophobia, homophobia, sexism, hate speech, discrimination, human trafficking, organized crime, illegal organizations, self-injury, suicide, torture, cruelty to animals, the apology of war crimes, sexual exploitation of children and/or adults, cults, or other unlawful content</li>
+        <li>Additionally, please avoid deleting and relisting the same item multiple times, or listing multiple items in bulk</li>
+        <li>Furthermore, it is important that you do not collect, hold, or disclose information obtained illegally that relates to other users, their content, or their actions on the site. You should also refrain from disclosing any information appearing on our site if it might affect the rights of other users</li>
+        <li>Finally, we ask that you do not promote other websites or companies through advertisements on our site</li>
+      </ul>
+      
+      <h3>VII. Our Rights to Address Concerns</h3>
+      <p>We reserve the right to take corrective actions if we discover that you are engaging in behaviors that violate the rules outlined in these Terms or are otherwise unlawful. The corrective measures we may implement include, but are not limited to:</p>
+      <ul>
+        <li>Issuing a warning notification regarding adherence to these Terms</li>
+        <li>Removing or automatically correcting your items listed in the Catalogue</li>
+        <li>Demoting, hiding, or removing your content from the Site</li>
+        <li>Concealing private messages you have sent to ensure they are not visible to the intended recipient</li>
+        <li>Restricting your Account by blocking access to certain features, such as sending private messages or limiting the visibility of your items to other users</li>
+        <li>Reporting your activities to local authorities if there is a threat to an individual's life or safety</li>
+      </ul>
+      
+      <h4>Blocking Your Account</h4>
+      <p>We may temporarily or permanently block your Account under certain circumstances if:</p>
+      <ul>
+        <li>Concerns have been raised by a payment provider regarding your account, either due to its compromise or to protect legitimate interests</li>
+        <li>Corrective actions have been taken, and if you continue to violate these Terms</li>
+        <li>A serious breach of these Terms may occur if you provide incorrect, false, or misleading information on your account, or fail to keep your information up to date</li>
+        <li>You do not cooperate with us when verifying the information you provide</li>
+        <li>You misuse the functionalities of the site</li>
+        <li>Suspicion identified by us or the payment processor</li>
+        <li>Issues with transactions</li>
+        <li>Safety and legal concerns</li>
+        <li>Involvement of minors</li>
+        <li>Security threats</li>
+      </ul>
+      
+      <p>When we indicate that we will "block" your account, this entails the following consequences:</p>
+      <ul>
+        <li>You will be unable to use the site except for contacting our customer support team</li>
+        <li>Your items will be removed from the site and delisted from the catalog</li>
+        <li>We will not issue refunds for any seller services you have purchased and are currently utilizing</li>
+        <li>You may complete any pending transactions and payouts; however, if your account is blocked due to security or fraud concerns, your pending transactions may be canceled, and all fees paid by buyers will be refunded</li>
+        <li>Your ability to make a payout may be restricted</li>
+        <li>We may deny any compensation claims if the account blocking resulted from fraudulent activities or violations of our compensation policies</li>
+        <li>We may prevent you from creating a new account on the site</li>
+      </ul>
+      
+      <h4>Your options for recourse</h4>
+      <p>You can challenge our decision to take any corrective action by:</p>
+      <ul>
+        <li>Submitting an appeal through our system. To do this, click the link in the statement of reasons we sent you (if we blocked your Account or took a corrective action listed above) or other communication we sent you (if you had notified us about a non-compliant Content or Account). We'll review your appeal as soon as we can under the supervision of qualified staff</li>
+        <li>Bringing an action before national courts under applicable laws</li>
+      </ul>
+      
+      <h3>VIII. Payment Procedures</h3>
+      <h4>Payment Options on Our Site</h4>
+      <p>We strive to make the payment process for items and services as seamless as possible. You can complete your payment using the following methods:</p>
+      <ul>
+        <li><strong>Credit or Debit Card:</strong> Payments can also be made using your credit or debit card. Amex, Klarna</li>
+        <li><strong>Other Payment Methods:</strong> Mobile Money for African Markets, PayPal</li>
+      </ul>
+      <p>We may introduce additional payment options in the future.</p>
+      
+      <h4>Payment Processing</h4>
+      <p>We collaborate with authorized third-party payment service providers (Payment Processors) to facilitate online transactions for the purchase of items or optional services on our site. Additionally, we engage third-party providers to securely store your payment method information. While we offer assistance in using our Payment Processors, we do not handle payments directly.</p>
+      
+      <h4>Secure Money Holding</h4>
+      <p>When you purchase an item, all funds will be directed to a separate escrow account managed by a Dedw3n Wallet Provider until the transaction is finalized. Upon completion, the item price, along with any shipping costs you have paid (excluding prepaid shipping fees), will be released to the seller's Dedw3n Wallet.</p>
+      
+      <h4>Safety and Security</h4>
+      <p>To ensure the security of your transactions, please verify that your payment details are accurate. Inaccurate information may lead to payment cancellations or require you to authenticate your payment method if our automated systems suspect it may have been compromised.</p>
+      
+      <h4>Currency Conversion</h4>
+      <p>We offer a Currency Conversion service through our Payment Processors or Dedw3n Wallet Provider, enabling buyers to pay for items in their local currency even when those items are priced in a different currency. This service is available in select countries. If Currency Conversion is accessible in your registered country, a fee of either 1.2% or 3% of the item price will be applied by the Payment Processor or Dedw3n Wallet Provider, depending on the currencies involved.</p>
+      
+      <h3>IX. Sending messages & leaving reviews</h3>
+      <h4>Private Messages</h4>
+      <p>Users may send private messages to one another solely for the purpose of exchanging information regarding an item. It is strictly prohibited to send private messages for any other reasons, particularly including:</p>
+      <ul>
+        <li>Advertisements</li>
+        <li>Malware</li>
+        <li>Unsolicited or mass messages directed to five or more users</li>
+        <li>Messages that may be deemed illegal, obscene, harmful, unethical, threatening to public security, inappropriate, or otherwise inconsistent with the best interests of Dedw3n and our users</li>
+      </ul>
+      
+      <h4>Leaving a Review</h4>
+      <p>Upon the completion of a transaction, you have the option to write and publish a review regarding the transaction and the other user on our site. All published reviews must be fair and honest. Please note that we do not provide any form of compensation for leaving a review, and we do not review or verify reviews prior to their publication on our site.</p>
+      
+      <h3>X. Ending our relationship</h3>
+      <p>You may terminate your relationship with us at any time, free of charge, by either deleting your account or contacting us via the provided email addresses.</p>
+      <p>Additionally, we reserve the right to terminate these Terms at any time and for any reason, with a prior written notice of 15 days.</p>
+      <p><strong>What follows this termination?</strong> These Terms will remain in effect until all pending transactions and payouts are successfully completed.</p>
+      
+      <h3>XI. Selling an Item on Dedw3n</h3>
+      <h4>Eligibility to Sell Items</h4>
+      <p>To sell an item, you must possess the right to transfer ownership to the buyer. The item you wish to sell must also adhere to the following conditions:</p>
+      <ul>
+        <li>It must comply with the Catalogue Rules</li>
+        <li>It must align with the restrictions and requirements set forth by the Payment Processor regarding prohibited items, if applicable</li>
+      </ul>
+      
+      <h4>Listing an Item for Sale</h4>
+      <p>To list an item on the site, you are required to upload a photograph and compose a description that accurately represents the quality and appearance of the item, including any defects or modifications. Please ensure that neither the photo nor the description is sourced from the internet. Once your item is listed in the Catalogue and published on the site, it signifies that you have officially made an offer for sale, which can be accepted by a buyer.</p>
+      
+      <h4>Buyer's Decision</h4>
+      <p>If a buyer submits a counteroffer proposing a new price for your item, the item is not considered sold upon acceptance of that counteroffer. The buyer retains the option to decline the purchase even after the counteroffer is accepted. Ownership of the item is only transferred once the buyer completes the purchase by clicking the buy button and their payment is successfully processed.</p>
+      
+      <h4>Withdrawing Your Listing</h4>
+      <p>You have the option to withdraw your listing at any time prior to a buyer purchasing the item.</p>
+      
+      <h4>Ranking and Recommendation Information</h4>
+      <p>We utilize automated tools to analyse, rank, and recommend relevant information to users browsing our site. For further information on how we leverage automation for recommendations on the "Dedw3n feed," please visit our Help Centre.</p>
+      
+      <h3>XII. Purchasing an Item on Dedw3n</h3>
+      <h4>How to Purchase an Item</h4>
+      <p>To acquire an item from the catalogue, please follow these steps:</p>
+      <ol>
+        <li>Click the "Buy" button</li>
+        <li>Select your preferred payment method and delivery option</li>
+        <li>Click the "Pay" button on the checkout page</li>
+      </ol>
+      
+      <h4>Cost Breakdown</h4>
+      <p>For each transaction, you will incur the following fees, which will be held in escrow:</p>
+      <ul>
+        <li>Item price</li>
+        <li>Shipping fee</li>
+        <li>Dedw3n Commission 1.5% (Shipping and Transactions)</li>
+        <li>Any applicable fees for optional services</li>
+      </ul>
+      
+      <h4>Subsequent Steps</h4>
+      <p>Once your purchase is completed, we will receive updates from the carrier and will inform you of the expected delivery date or if the item appears to be lost. For further details, please refer to the chapter below.</p>
+      
+      <h4>Purchasing Outside Our Site</h4>
+      <p>Please note that if you purchase an item offline or from a source outside our site, we will not be responsible for that transaction. Such purchases are made at your own risk and will not be eligible for any protections offered for transactions conducted on our site.</p>
+      
+      <h3>XIII. Refund policy</h3>
+      <h4>Eligibility for Refunds</h4>
+      <p>You may request a refund for an item under the following conditions:</p>
+      <ul>
+        <li>The item is confirmed as lost or damaged during shipping</li>
+        <li>The item is significantly not as described (SNAD), meaning there is a substantial discrepancy between the received item and its description or image in the catalog. This includes differences in size, color, or severe damage (such as stains, odors, or holes), or if an item is missing from a bundle</li>
+        <li>The item is identified as a counterfeit SNAD</li>
+      </ul>
+      
+      <h4>Reporting Issues</h4>
+      <p>If you encounter any issues with the item, you must report it by clicking the "Contact Us" page within two calendar days from the date you are notified of delivery or if the item appears to be lost (the "Refund Request Period"). Reporting within this timeframe will suspend the transaction, and all funds will remain in escrow until the issue is resolved. Failure to report an issue within the Refund Request Period will result in the transaction being marked as completed.</p>
+      
+      <h4>Handling SNAD Items (excluding counterfeit items)</h4>
+      <p>We recommend discussing the issue with the seller first to reach a mutually agreeable resolution. If a resolution cannot be achieved, you may escalate the matter to us. If you report an item as SNAD within the Refund Request Period, we will notify the seller. The seller may choose to:</p>
+      <ul>
+        <li>Grant a refund without requiring the return of the item, or</li>
+        <li>Request the item's return within five business days in order to issue a refund. You will be responsible for return shipping costs unless otherwise agreed with the seller</li>
+      </ul>
+      
+      <h4>Exclusions from Refunds</h4>
+      <p>You will not be eligible for a refund if you:</p>
+      <ul>
+        <li>Report an issue claiming an item is SNAD but it is determined not to be</li>
+        <li>Have previously confirmed that the item was satisfactory upon receipt</li>
+        <li>Fail to report the issue within the Refund Request Period</li>
+        <li>Do not provide customer support with proof of damage or SNAD status within the communicated timelines</li>
+        <li>Use, wash, or alter the item in any manner before returning it</li>
+        <li>Are under investigation for suspected abuse or misuse of buyer protection by claiming a refund</li>
+      </ul>
+      
+      <h3>XIV. Shipping</h3>
+      <h4>Seller Responsibilities</h4>
+      <p>When utilizing shipping services to send an item, you must adhere to Dedw3n's Packaging Rules and the Forbidden Item list. Failure to comply with these guidelines, the Terms, or the Catalogue Rules may result in your ineligibility for a refund or compensation in the event that a parcel is lost or damaged during transit.</p>
+      
+      <h4>Lost or Damaged Parcels</h4>
+      <p>In the event of a dispute regarding the loss or damage of an item during transit, the information provided by Dedw3n or the carrier will be deemed accurate unless you can present evidence to the contrary before the transaction is finalized. If an item was packaged correctly but is lost or damaged during transit:</p>
+      <ul>
+        <li>The Buyer will receive a refund in accordance with our Refund Policy, which is supported by Buyer Protection</li>
+        <li>The Seller will be eligible for compensation for the lost or damaged item on Dedw3n, with the amount contingent upon the carrier used</li>
+      </ul>
+      
+      <h4>Alternative Shipping Methods</h4>
+      <p>If a shipping method other than proposed on Dedw3n is employed for an item purchased on the Site, the Seller assumes responsibility for any lost or damaged parcels and must claim compensation directly from the carrier.</p>
+      
+      <h3>XV. Dedw3n</h3>
+      <h4>Ownership of the Site</h4>
+      <p>The Site is owned by Dedw3n and/or our licensors, who retain all intellectual property rights, including system architecture, layout, software, trademarks, and domain names.</p>
+      
+      <h4>Guarantee of Conformity</h4>
+      <p>Residents of the European Union are entitled to a legal guarantee of conformity for our digital services. This means we are liable for any lack of conformity present at the time of delivery, provided that it is reported within two years or becomes evident during the ongoing provision of the digital service. To initiate a claim, please refer to the process outlined in the "How Disputes Will Be Handled" section below.</p>
+      
+      <h4>Site Availability</h4>
+      <p>We are not liable for interruptions in the availability of our Site due to maintenance or unforeseen circumstances beyond our reasonable control. In consideration of the legitimate interests of our Users, we will endeavour to:</p>
+      <ul>
+        <li>Notify you of planned or existing availability restrictions</li>
+        <li>Schedule downtime outside peak usage hours</li>
+        <li>Limit regular maintenance downtime to a duration consistent with industry standards</li>
+      </ul>
+      
+      <h3>XVI. Responsibilities of Users</h3>
+      <h4>Accountability</h4>
+      <p>When utilizing our Site and Services, you are responsible for the following:</p>
+      <ul>
+        <li>Your Content and any actions conducted on the Site under your Account</li>
+        <li>All Items that you list, sell, or transfer to Buyers, including any representations you make regarding these Items</li>
+        <li>Any published reviews</li>
+        <li>Any disputes arising from your actions</li>
+      </ul>
+      
+      <h4>Tax Obligations</h4>
+      <p>We disclaim any responsibility for tax liabilities or reporting requirements that may arise from your activities on the Site.</p>
+      
+      <h4>Hosting Services</h4>
+      <p>As we provide Hosting services for you and other Users, we do not conduct general monitoring of Content or Items listed on the Site. To the fullest extent permitted by law, we bear no liability for any loss or damage you may incur related to a Transaction, except as explicitly covered by Buyer Protection, our commitments outlined in these Terms, or our legal obligations.</p>
+      
+      <h3>XVII. Disputes</h3>
+      <h4>Disputes</h4>
+      <p>In the event of a disagreement between you and our organization that cannot be resolved through our dispute resolution form, or if you are dissatisfied with the outcome, you may contact the national consumer bodies for alternative dispute resolution services. Additionally, if you have a dispute with us, you retain the right to submit a claim to the courts in your habitual residence.</p>
+      
+      <h4>Governing Law</h4>
+      <p>These Terms are governed by the national laws of the country in which you reside (your habitual residence).</p>
+      
+      <h3>XVIII. Other information</h3>
+      <h4>Updates to These Terms</h4>
+      <p>We may need to revise these Terms in the future. Depending on the nature of the changes, we will provide notification.</p>
+      
+      <h4>Non-Retroactive Changes</h4>
+      <p>Any modifications made will not apply retroactively and will not impact any Transactions you have already completed on the Site.</p>
+      
+      <h4>Disagreement with Changes</h4>
+      <p>If you do not agree with the amendments made to these Terms, you are entitled to terminate our relationship without incurring any charges, provided that all pending Transactions are completed.</p>
+      
+      <h4>Assignment</h4>
+      <p>We reserve the right to transfer our rights and obligations under these Terms to another organization, with a 15-day advance notice. Should you disagree with this transfer, you may terminate these Terms immediately by closing your Account. You are not permitted to transfer your rights and obligations under these Terms to another individual.</p>
+      
+      <h4>No Partnership</h4>
+      <p>These Terms do not establish a partnership or agency relationship between you and us. Neither party has the authority to enter into agreements on behalf of the other or to legally bind the other in any capacity.</p>
+      
+      <h4>Severability</h4>
+      <p>In the event that a court or relevant authority deems any section of these Terms to be illegal, the remaining provisions will continue to be in full force and effect.</p>
     `,
-    lastUpdated: new Date("2025-04-10")
+    lastUpdated: new Date("2025-07-08")
   },
   "cookies": {
     id: "cookies",

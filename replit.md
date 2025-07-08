@@ -12,6 +12,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-08**: Updated Terms of Service with comprehensive new content (Version 08-07-2025)
+  - **COMPLETED: Terms of Service Content Update** - Replaced entire terms of service with new comprehensive document
+  - Updated to DEDW3N LTD. Terms Of Service Version 08-07-2025 with detailed marketplace and community guidelines
+  - Added comprehensive sections for user responsibilities, payment procedures, refund policies, and shipping terms
+  - Included specific provisions for business sellers, community features, dating services, and escrow transactions
+  - Enhanced dispute resolution processes and account management procedures
+  - Updated contact information and legal framework to reflect current company structure
+  - Updated last modified date to 2025-07-08 to reflect current version
 - **2025-07-08**: Updated Privacy Policy with comprehensive new content (Version 08-07-2025)
   - **COMPLETED: Privacy Policy Content Update** - Replaced entire privacy policy with new comprehensive document
   - Updated to DEDW3N LTD. Privacy Policy Version 08-07-2025 with detailed GDPR and CCPA compliance
