@@ -111,8 +111,8 @@ export default function AffiliatePartnerships() {
             },
             {
               icon: TrendingUp,
-              title: "Real-time Analytics",
-              description: "Track your performance with comprehensive analytics and reporting tools.",
+              title: "Life Time Earnings",
+              description: "Keep earning monthly commissions for life.",
               color: "bg-purple-100 text-purple-600"
             },
             {
