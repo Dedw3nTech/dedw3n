@@ -10,16 +10,7 @@ export default function CatalogueRulesPage() {
 
   return (
     <>
-      <div className="bg-gradient-to-b from-gray-50 to-white">
-        <Container className="py-10">
-          <h1 className="text-4xl font-extrabold tracking-tight text-center">
-            Catalogue Rules
-          </h1>
-          <p className="mt-4 text-lg text-gray-600 text-center max-w-2xl mx-auto">
-            Guidelines and rules for listing products and services in our marketplace catalogue.
-          </p>
-        </Container>
-      </div>
+
       <PageContent pageId="catalogue-rules" />
     </>
   );
