@@ -1072,6 +1072,85 @@ const pageContents: Record<string, PageContent> = {
       <h4>Web Browser Trackers</h4>
       <p>You may decline further tracking for ad personalization by clicking Cookie Settings at the bottom of the page and unchecking the previously selected cookie types. If you are not a registered user, your consent withdrawal will be recorded by installing an opt-out cookie, preventing future data capture for ad personalization on this website. If you are registered, your decision to withdraw consent will apply to all Dedw3n platforms across all devices. Please note that opting out may affect the relevance of advertisements displayed to you.</p>
       
+      <h3>Comprehensive List of Cookies and Trackers Used on the Platform</h3>
+      
+      <h4>Essential/Necessary Cookies</h4>
+      <p>These cookies are always active and cannot be disabled:</p>
+      <ul>
+        <li><strong>dedwen_cookie_consent</strong> - Stores user's cookie consent preferences</li>
+        <li><strong>dedwen_first_visit</strong> - Tracks if user is a first-time visitor</li>
+        <li><strong>Session cookies</strong> - For user authentication and login state</li>
+        <li><strong>CSRF tokens</strong> - Security cookies for form submissions</li>
+      </ul>
+      
+      <h4>Analytics Cookies (Optional - User Consent Required)</h4>
+      <p>Google Analytics cookies (when enabled):</p>
+      <ul>
+        <li><strong>_ga, _gid, _gat</strong> - Standard Google Analytics tracking</li>
+        <li>These are disabled when analytics: false in consent</li>
+      </ul>
+      
+      <h4>Marketing/Advertising Cookies (Optional - User Consent Required)</h4>
+      <ul>
+        <li><strong>_fbp, _fbc</strong> - Facebook Pixel tracking cookies</li>
+        <li><strong>_hjid, _hjFirstSeen</strong> - Hotjar user session tracking</li>
+        <li><strong>IDE, test_cookie</strong> - Google advertising cookies</li>
+        <li><strong>Targeting cookies</strong> - For personalized ads and content</li>
+      </ul>
+      
+      <h4>Performance Cookies (Optional)</h4>
+      <ul>
+        <li><strong>Performance tracking cookies</strong> - Monitor site performance and user interactions</li>
+        <li><strong>Cache optimization cookies</strong> - Improve page load times</li>
+      </ul>
+      
+      <h4>Functional Cookies (Optional)</h4>
+      <ul>
+        <li><strong>Language preference cookies</strong> - Store user's language selection</li>
+        <li><strong>UI preference cookies</strong> - Remember user interface settings</li>
+        <li><strong>Social media cookies</strong> - Enable content sharing with Facebook, Instagram</li>
+      </ul>
+      
+      <h4>Cookie Consent Management System</h4>
+      <p>The platform implements a comprehensive GDPR/CCPA compliant cookie management system:</p>
+      <ul>
+        <li><strong>Global Privacy Control (GPC) Support</strong> - Automatically respects browser privacy signals</li>
+        <li><strong>Granular Control</strong> - Users can accept/reject specific cookie categories</li>
+        <li><strong>California Privacy Rights</strong> - Special provisions for CCPA compliance</li>
+        <li><strong>Automatic Cookie Clearing</strong> - Removes tracking cookies when consent is withdrawn</li>
+      </ul>
+      
+      <h4>Third-Party Services That May Set Cookies</h4>
+      <ul>
+        <li><strong>Google Services</strong> - Analytics, advertising, fonts</li>
+        <li><strong>Facebook/Meta</strong> - Social sharing, advertising pixels</li>
+        <li><strong>Hotjar</strong> - User experience analytics</li>
+        <li><strong>CDN providers</strong> - Content delivery optimization</li>
+      </ul>
+      
+      <h4>Data Collection Purposes</h4>
+      <p>The cookies facilitate collecting:</p>
+      <ul>
+        <li>User behavior and interaction patterns</li>
+        <li>Device and browser information</li>
+        <li>Geolocation data (with consent)</li>
+        <li>Marketing attribution data</li>
+        <li>Performance metrics</li>
+        <li>Security and fraud prevention data</li>
+      </ul>
+      
+      <h4>User Control Options</h4>
+      <p>Users can:</p>
+      <ul>
+        <li>Accept all cookies</li>
+        <li>Accept only necessary cookies</li>
+        <li>Customize preferences by category</li>
+        <li>Withdraw consent at any time</li>
+        <li>View detailed information about each cookie type</li>
+      </ul>
+      
+      <p>The platform provides transparent cookie management with clear opt-out mechanisms and respects user privacy choices through its advanced consent management system.</p>
+      
       <h3>Contact Us</h3>
       <p>For any inquiries, please contact us at <a href="mailto:legal@dedw3n.com">legal@dedw3n.com</a>.</p>
     `,

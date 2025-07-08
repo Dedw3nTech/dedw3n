@@ -1,0 +1,54 @@
+Dedw3n Cookie and Tracker Overview
+Essential/Necessary Cookies
+These cookies are always active and cannot be disabled:
+
+dedwen_cookie_consent - Stores user's cookie consent preferences
+dedwen_first_visit - Tracks if user is a first-time visitor
+Session cookies - For user authentication and login state
+CSRF tokens - Security cookies for form submissions
+Analytics Cookies (Optional - User Consent Required)
+Google Analytics cookies (when enabled):
+_ga, _gid, _gat - Standard Google Analytics tracking
+These are disabled when analytics: false in consent
+Marketing/Advertising Cookies (Optional - User Consent Required)
+_fbp, _fbc - Facebook Pixel tracking cookies
+_hjid, _hjFirstSeen - Hotjar user session tracking
+IDE, test_cookie - Google advertising cookies
+Targeting cookies - For personalized ads and content
+Performance Cookies (Optional)
+Performance tracking cookies - Monitor site performance and user interactions
+Cache optimization cookies - Improve page load times
+Functional Cookies (Optional)
+Language preference cookies - Store user's language selection
+UI preference cookies - Remember user interface settings
+Social media cookies - Enable content sharing with Facebook, Instagram
+Cookie Consent Management System
+The platform implements a comprehensive GDPR/CCPA compliant cookie management system:
+
+Global Privacy Control (GPC) Support - Automatically respects browser privacy signals
+Granular Control - Users can accept/reject specific cookie categories
+California Privacy Rights - Special provisions for CCPA compliance
+Automatic Cookie Clearing - Removes tracking cookies when consent is withdrawn
+Third-Party Services That May Set Cookies
+Google Services - Analytics, advertising, fonts
+Facebook/Meta - Social sharing, advertising pixels
+Hotjar - User experience analytics
+CDN providers - Content delivery optimization
+Data Collection Purposes
+The cookies facilitate collecting:
+
+User behavior and interaction patterns
+Device and browser information
+Geolocation data (with consent)
+Marketing attribution data
+Performance metrics
+Security and fraud prevention data
+User Control Options
+Users can:
+
+Accept all cookies
+Accept only necessary cookies
+Customize preferences by category
+Withdraw consent at any time
+View detailed information about each cookie type
+The platform provides transparent cookie management with clear opt-out mechanisms and respects user privacy choices through its advanced consent management system.
