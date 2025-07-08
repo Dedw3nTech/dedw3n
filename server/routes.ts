@@ -319,6 +319,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
+  const server = httpServer || createServer(app);
+
+  // SEO routes moved to server/index.ts to be absolutely first
+
+  // Store server instance globally for WebSocket setup
+  global.httpServer = server;
+
   // Setup authentication with passport FIRST - before any routes that need auth
   setupAuth(app);
   
@@ -887,94 +894,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.json(pageContent);
   });
   
-  // XML Sitemap route for search engines (must be before other routes to avoid conflicts)
-  app.get('/sitemap.xml', (req: Request, res: Response) => {
-    try {
-      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-      
-      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/products</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/wall</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/dating</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/vendors</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/contact</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/login</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/register</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/sitemap</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/faq</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/privacy</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${req.protocol}://${req.get('host')}/terms</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-</urlset>`;
-      
-      res.send(sitemap);
-    } catch (error) {
-      console.error('Error generating sitemap:', error);
-      res.status(500).send('Error generating sitemap');
-    }
-  });
+  // NOTE: Dynamic sitemap removed to avoid conflicts with static sitemap.xml file
+  // Using static sitemap.xml in public folder for consistency and SEO optimization
 
   // Contact form API endpoint
   app.post('/api/contact', (req: Request, res: Response) => {
@@ -2217,7 +2138,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Use provided server - don't create a new one to avoid port conflicts
-  const server = httpServer;
+  // const server = httpServer; // Removed duplicate declaration
   
   // Seed the database with initial data
   await seedDatabase();
@@ -8799,16 +8720,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     next();
   });
 
-  // Serve SEO files for Search Console
-  app.get('/robots.txt', (req: Request, res: Response) => {
-    res.type('text/plain');
-    res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));
-  });
-
-  app.get('/sitemap.xml', (req: Request, res: Response) => {
-    res.type('application/xml');
-    res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
-  });
+  // SEO routes moved to the very beginning of registerRoutes function
 
   // AI Personalization Engine - Direct Implementation
   class AIPersonalizationEngine {

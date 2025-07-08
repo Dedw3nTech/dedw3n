@@ -24,6 +24,29 @@ declare global {
 
 const app = express();
 
+// CRITICAL: SEO routes must be absolutely first - before ANY middleware
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
+});
+
+app.get('/security.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(process.cwd(), 'public', 'security.txt'));
+});
+
+app.get('/.well-known/security.txt', (req, res) => {
+  res.redirect(301, '/security.txt');
+});
+
 // Add GPC middleware early in the chain
 app.use(gpcMiddleware);
 app.use(applyGPCHeaders);

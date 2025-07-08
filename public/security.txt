@@ -4,3 +4,8 @@ Encryption: https://dedw3n.com/pgp-key.txt
 Preferred-Languages: en
 Canonical: https://dedw3n.com/.well-known/security.txt
 Policy: https://dedw3n.com/security-policy
+Acknowledgments: https://dedw3n.com/security-acknowledgments
+Hiring: https://dedw3n.com/careers
+
+# Please report security vulnerabilities responsibly
+# Do not test on production systems without permission
