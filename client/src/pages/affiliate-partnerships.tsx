@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, DollarSign, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import professionalImage from '@assets/Building software today that will transform the world we live in tomorrow. II_1751993584729.png';
+import businessWomanImage from '@assets/We are developing software today that will facilitate business operations in the world of tomorrow._1751996823481.png';
 
 export default function AffiliatePartnerships() {
   // Set document title on mount
@@ -163,7 +164,8 @@ export default function AffiliatePartnerships() {
             </p>
           </div>
           
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-8">
+            {/* Main professional image */}
             <div className="relative max-w-xl">
               <img 
                 src={professionalImage} 
@@ -178,6 +180,25 @@ export default function AffiliatePartnerships() {
               <div className="absolute bottom-6 left-6 text-white">
                 <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4">
                   <p className="text-sm font-medium">Innovation • Technology • Future</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Secondary business woman image - 2x smaller */}
+            <div className="relative max-w-xs">
+              <img 
+                src={businessWomanImage} 
+                alt="Business woman representing professional success and growth"
+                className="w-full h-auto rounded-2xl shadow-xl"
+              />
+              
+              {/* Overlay gradient for better visual appeal */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
+              
+              {/* Optional overlay text */}
+              <div className="absolute bottom-4 left-4 text-white">
+                <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
+                  <p className="text-xs font-medium">Success • Growth • Partnership</p>
                 </div>
               </div>
             </div>
