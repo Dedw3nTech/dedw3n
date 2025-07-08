@@ -91,11 +91,13 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Documents Cookie Consent Management System with GDPR/CCPA compliance information
   - Lists all third-party services and data collection purposes with user control options
   - Provides transparent cookie management information for enhanced user privacy awareness
-- **2025-07-08**: UI Cleanup - Removed header section from privacy page and updated main heading
+- **2025-07-08**: UI Cleanup - Removed header sections from privacy and terms pages with heading updates
   - **COMPLETED: Privacy Page Cleanup** - Removed entire header section including "Privacy Policy" title and descriptive subtitle
   - Privacy page now displays only the PageContent component without additional styling or header text
   - **COMPLETED: Privacy Page Heading Update** - Changed main content heading from "DEDW3N LTD. Privacy Policy" to "Dedw3n Ltd"
-  - Simplified page layout for cleaner content presentation with updated company name formatting
+  - **COMPLETED: Terms Page Cleanup** - Removed entire header section including "Terms of Service" title and descriptive subtitle
+  - Terms page now displays only the PageContent component for simplified presentation
+  - Simplified page layouts for cleaner content presentation across legal pages
 - **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance and robots.txt blocking errors
 - **2025-07-08**: Resolved contact form authentication and email functionality issues
   - **SOLVED: "Blocked by robots.txt" errors** - Restructured robots.txt using "allow by default, block specific paths" approach
