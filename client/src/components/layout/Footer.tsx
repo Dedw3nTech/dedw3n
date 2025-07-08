@@ -13,7 +13,7 @@ function FooterContent() {
     "Community Guidelines",
     "Contact Us",
     "FAQ",
-    "Shipping",
+    "Catalogue Rules",
     "Partnerships",
     "Download our mobile app",
     "Download on the",
