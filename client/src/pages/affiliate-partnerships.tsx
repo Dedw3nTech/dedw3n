@@ -181,12 +181,7 @@ export default function AffiliatePartnerships() {
                 </div>
               </div>
               
-              {/* Optional overlay text */}
-              <div className="absolute bottom-6 left-6 text-white">
-                <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4">
-                  <p className="text-sm font-medium">Innovation • Technology • Future</p>
-                </div>
-              </div>
+
             </div>
             
             {/* Smaller images stacked vertically in single column */}
