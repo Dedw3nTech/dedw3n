@@ -366,7 +366,7 @@ const pageContents: Record<string, PageContent> = {
     id: "privacy",
     title: "Privacy Policy",
     content: `
-      <h2>DEDW3N LTD. Privacy Policy</h2>
+      <h2>DEDW3N LTD.</h2>
       <p><strong>Version 08-07-2025</strong></p>
       
       <h2>WELCOME TO DEDW3N</h2>
