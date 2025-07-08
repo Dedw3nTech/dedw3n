@@ -73,7 +73,7 @@ export async function sendContactEmail(formData: ContactFormData): Promise<boole
     };
     
     sendSmtpEmail.to = [{
-      email: "help@dedw3n.com",
+      email: "love@dedw3n.com",
       name: "Dedw3n Support"
     }];
     

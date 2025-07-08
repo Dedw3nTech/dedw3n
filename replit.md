@@ -107,7 +107,7 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **SOLVED: Contact form authentication issues** - Removed duplicate contact endpoints that were causing conflicts
   - Contact form is now properly public (no authentication required) for visitor accessibility
   - Fixed email functionality with updated Brevo API key integration
-  - Contact form submissions now send emails successfully to help@dedw3n.com
+  - Contact form submissions now send emails successfully to love@dedw3n.com
   - Implemented graceful fallback handling for email service failures
   - Added admin API key management endpoint for email service configuration
 
