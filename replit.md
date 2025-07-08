@@ -93,6 +93,15 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - Added /affiliate-partnerships to valid routes in server/index.ts for proper SEO handling
   - Page includes comprehensive sections: partnership types, benefits, requirements, application process, and support information
   - Content covers affiliate marketing, technology partnerships, content partnerships, and partner support services
+- **2025-07-08**: Page Creation - Added new Resources page for affiliate partners
+  - **COMPLETED: Resources Page Creation** - Created comprehensive affiliate resources page with detailed information
+  - Added client/src/pages/resources.tsx with complete affiliate guide and information
+  - Added /resources route to App.tsx routing configuration
+  - Added /resources to valid routes in server/index.ts for proper SEO handling
+  - Linked Resources button on affiliate partnerships page to navigate to /resources
+  - Page includes comprehensive sections: About Dedw3n, Mission & Goals, Affiliate Benefits, 24/7 Support, and Strong Community
+  - Content covers general information about Dedw3n, mission, goals, benefits, support services, and community features
+  - Provides detailed affiliate guide with colorful cards and professional design
 - **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
   - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
   - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)

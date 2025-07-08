@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, DollarSign, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
@@ -277,13 +278,15 @@ export default function AffiliatePartnerships() {
             >
               Apply Now
             </Button>
-            <Button 
-              variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200"
-              size="lg"
-            >
-              Resources
-            </Button>
+            <Link href="/resources">
+              <Button 
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200"
+                size="lg"
+              >
+                Resources
+              </Button>
+            </Link>
           </div>
           
           <div className="mt-8 text-blue-100 text-sm">
