@@ -184,45 +184,265 @@ const pageContents: Record<string, PageContent> = {
     id: "privacy",
     title: "Privacy Policy",
     content: `
-      <h2>Privacy Policy</h2>
-      <p><strong>Last Updated:</strong> April 10, 2025</p>
+      <h2>DEDW3N LTD. Privacy Policy</h2>
+      <p><strong>Version 08-07-2025</strong></p>
       
-      <p>This Privacy Policy describes how Dedw3n ("we", "our", or "us") collects, uses, and shares your personal information when you visit or make a purchase from our platform.</p>
+      <h2>WELCOME TO DEDW3N</h2>
+      <p>When it comes to your personal data, safety and transparency take top priority here at Dedw3n. To help you understand what information we collect about you, how we use it and what rights you have, we've prepared this detailed Privacy Policy.</p>
       
-      <h3>Information We Collect</h3>
-      <p>When you visit the site, we automatically collect certain information about your device, including information about your web browser, IP address, time zone, and some of the cookies that are installed on your device.</p>
+      <h3>General</h3>
+      <p>This Privacy Policy pertains to the online platform Dedw3n ("Website") and its associated application ("App"), collectively referred to as the "Platform," intended for users in the United States.</p>
       
-      <p>When you make a purchase or attempt to make a purchase through the site, we collect certain information from you, including your name, billing address, shipping address, payment information, email address, and phone number.</p>
+      <p>The data controller of your personal data is Dedw3n Ltd., a British company registered in England, Wales, and Scotland under registration number 15930281, with its registered office located at 50 Essex Street, London, England, WC2R 3JF. The data controller will be referred to as "We," "Us," or "Dedw3n." For further inquiries, please contact us at <a href="mailto:legal@dedw3n.com">legal@dedw3n.com</a>.</p>
       
-      <h3>How We Use Your Information</h3>
-      <p>We use the information that we collect to:</p>
+      <p>We take your privacy very seriously. All personal data will be collected, stored, and used in accordance with the European Union General Data Protection Regulation No. 2016/679 ("GDPR") and any other applicable statutory regulations. Additionally, if you are a California resident, your personal data will be managed in compliance with the California Privacy Rights Act (CPRA), also known as Proposition 24.</p>
+      
+      <p>Our services, provided through the Website and/or App, require the collection, storage, transfer, deletion, and/or other use ("collect and use") of specific data related to you ("personal data" or "data"). Personal data encompasses all information that relates to an identified or identifiable natural person, such as your name, date of birth, address, or email address.</p>
+      
+      <p>This Privacy Policy outlines the types of data we collect from you, the purposes for which we collect and utilize this data when you engage with our services on the Platform, and essential information regarding the protection of your data, particularly the statutory rights you possess in relation to it.</p>
+      
+      <p>Certain services offered on our platform may be provided by third-party suppliers. When you utilize these services, the data protection regulations governing those suppliers will apply. Prior to using such services, these third-party suppliers may require your consent in accordance with data protection laws.</p>
+      
+      <p>Under applicable data protection laws, Dedw3n is obligated to inform you about data processing, a responsibility we fulfill within this Privacy Policy. It is important to note that this Privacy Policy, in its entirety or in parts, does not constitute contractual clauses and is not part of the Terms of Service (TOS) established with registered users. Under relevant data protection laws, Dedw3n may process data necessary for fulfilling a contract with you or for taking steps at your request prior to entering into a contract (Article 6(1)(b) GDPR). References to the TOS should always be interpreted as information on data processing (Articles 13 and 14 GDPR) and should never be construed as clauses that form part of the TOS. By using the platform and our services, you enter into a legally binding contract with Dedw3n, the terms of which are outlined in the TOS.</p>
+      
+      <h3>Why and How Do We Collect and Use Your Personal Data?</h3>
+      <p>We collect and utilize your personal data to facilitate your use of the platform, deliver our services, and fulfil our contractual obligations (TOS). This includes enabling commercial transactions via the platform, utilizing the electronic payment system, and facilitating reviews and communication with other members. To access these services, you must create a Dedw3n account by registering as a member on our website or app.</p>
+      
+      <p>Most of the personal data we collect is essential for fulfilling our contractual obligations (TOS) with you. Without this information, we would be unable to enter into or fulfil a contract (TOS) with you. Additionally, certain data is necessary for us to comply with legal obligations as a member of our platform. Failing to provide this personal data would hinder our ability to meet legal requirements or deliver our services.</p>
+      
+      <p>We also utilize your data to enhance and improve the platform, ultimately enriching the user experience for our members. We will retain and use your personal data for these purposes until your Dedw3n account is deactivated or remains inactive for a period of five (5) years. Furthermore, we collect your personal data for the following reasons:</p>
+      
       <ul>
-        <li>Fulfill orders and process transactions</li>
-        <li>Communicate with you about your orders, products, and services</li>
-        <li>Screen our orders for potential risk or fraud</li>
-        <li>Improve and optimize our site</li>
-        <li>Provide personalized experiences and recommendations</li>
+        <li>To facilitate user registration on the Platform</li>
+        <li>To allow you to set up your profile information</li>
+        <li>To provide other members with relevant information regarding your activity on the Platform</li>
+        <li>To enable you to list your items</li>
+        <li>To provide notifications on the Platform</li>
+        <li>To facilitate communication with other members</li>
+        <li>To allow you to post on the General Feed</li>
+        <li>To enable you to leave reviews for other members on the Platform</li>
+        <li>To receive reviews from other members</li>
+        <li>To accept gifts from other members</li>
+        <li>To allow participation in the forum and discussions within our community</li>
+        <li>To address your public feedback about our services</li>
+        <li>To send you important communications regarding the Platform</li>
+        <li>To deliver offers through the Platform's messaging system</li>
+        <li>To provide customer support services</li>
+        <li>To resolve any purchase-related disputes between members</li>
+        <li>To temporarily retain your deactivated account</li>
+        <li>To enhance your overall experience while using the Platform</li>
       </ul>
       
-      <h3>Sharing Your Information</h3>
-      <p>We share your personal information with service providers to help us provide our services and fulfill our contracts with you. For example, we use payment processors to securely handle payment information.</p>
+      <p>We collect and utilize your personal data to enhance your experience on the Platform. This includes enabling the personalization of your feed and search results, providing relevant suggestions, storing your previous searches, sending notifications, and generally making your interaction with the Platform more enjoyable.</p>
       
-      <h3>Behavioral Advertising</h3>
-      <p>We use your personal information to provide you with targeted advertisements or marketing communications we believe may be of interest to you.</p>
+      <p>The specific legal basis for the collection and use of your data is outlined in the sections below, which detail the following purposes:</p>
       
-      <h3>Data Retention</h3>
-      <p>We will maintain your order information for our records unless and until you ask us to delete this information.</p>
+      <ul>
+        <li>To customize your feed and search results according to your preferences</li>
+        <li>To prioritize high-value items for sale from reputable sellers</li>
+        <li>To recommend relevant items tailored to your interests</li>
+        <li>To suggest appropriate item descriptions</li>
+        <li>To enhance search results on the Platform</li>
+        <li>To retain records of your recent searches</li>
+        <li>To increase visibility for your listings</li>
+        <li>To propose a price during the creation of an item listing</li>
+        <li>To facilitate notifications about your favourite items</li>
+        <li>To inform sellers when you add their items to your favourites</li>
+        <li>To enable you to follow other members</li>
+        <li>To improve our Platform continuously</li>
+        <li>To conduct surveys and interviews to gather feedback</li>
+        <li>To allow you to share your user journey</li>
+        <li>To enable automatic content translation</li>
+        <li>To ensure the security of your account and the overall Platform</li>
+      </ul>
       
-      <h3>Your Rights</h3>
-      <p>If you are a resident of the EU, UK, or California, you have specific rights regarding access to your personal data, correction of your personal data, deletion of your personal data, and objection to processing.</p>
+      <h3>Security</h3>
+      <p>Dedw3n is committed to safeguarding our member accounts and the Platform from cyber threats, unauthorized access, and other similar risks. Our security measures include:</p>
       
-      <h3>Changes to This Privacy Policy</h3>
-      <p>We may update this privacy policy from time to time in order to reflect changes to our practices or for other operational, legal, or regulatory reasons.</p>
+      <ul>
+        <li>Monitoring visits to the Platform for security purposes</li>
+        <li>Assisting you in avoiding the use of compromised passwords</li>
+        <li>Facilitating password resets</li>
+        <li>Verifying accounts in response to suspicious activities</li>
+        <li>Conducting phone number and two-step verifications</li>
+        <li>Implementing security checks for payment sources</li>
+        <li>Performing security checks for PayPal accounts</li>
+        <li>Preventing fraudulent transactions</li>
+        <li>Ensuring compliance with our Authenticity Policy for listings</li>
+        <li>Conducting ownership verifications for accounts</li>
+        <li>Providing a mechanism for reporting inappropriate behaviour or content</li>
+        <li>Addressing reports of suicidal posts</li>
+        <li>Supervising compliance with and enforcing our Terms of Service (TOS)</li>
+        <li>Calculate the trust score</li>
+        <li>Identify and prevent malicious accounts and activities</li>
+        <li>Enforce spam filtering measures</li>
+        <li>Moderate user activity on the platform</li>
+        <li>Issue and enforce warnings as necessary</li>
+        <li>Remove or conceal content that is illegal or violates our Terms of Service</li>
+        <li>Detect and lock compromised accounts</li>
+        <li>Suspend members when appropriate</li>
+        <li>Enforce bans as required</li>
+        <li>Implement IP blocks to mitigate abuse</li>
+        <li>Restrict fraudulent use of payment instruments</li>
+        <li>Verify the ownership of accounts suspected to belong to minors</li>
+      </ul>
+      
+      <h3>Payment Processing</h3>
+      <p>Payments made on the Platform are carried out via payment service providers that offer payment processing and escrow services. The majority of your personal data is essential for fulfilling our contractual obligations with you, as outlined in our Terms of Service (TOS). Failure to provide this information will hinder our ability to enter into and execute the contract (Art. 6 (1) (b) of the GDPR). Additionally, certain data is necessary to meet our legal obligations, as well as those of our payment service providers, while you are a member of our platform (Art. 6 (1) (c) of The General Data Protection Regulation (GDPR)).</p>
+      
+      <p>This data serves multiple purposes, including:</p>
+      <ul>
+        <li>Facilitating purchases and enabling the addition of payment cards</li>
+        <li>Allowing the addition of bank accounts for withdrawal purposes</li>
+        <li>Enabling payment processing and receipt of payments on our platform, including Dedw3n.com</li>
+        <li>Supporting donation transactions</li>
+        <li>Implementing Know Your Customer (KYC) checks on both our Platform and the previous version at Dedw3n.com</li>
+        <li>Processing refunds and maintaining accurate financial records</li>
+        <li>Ensuring the shipment of items purchased through the platform</li>
+      </ul>
+      
+      <h3>Shipping</h3>
+      <p>Dedw3n is committed to providing a seamless shipping experience by offering various shipping methods. Most personal data is essential for fulfilling our Terms of Service (TOS) contract; without it, we cannot enter into or fulfil this agreement.</p>
+      
+      <p>Additionally, this information is utilized to enhance the platform, ultimately improving the overall experience for our members. Other uses of your data include:</p>
+      <ul>
+        <li>Enabling you to ship or receive items and track your parcels</li>
+      </ul>
+      
+      <h3>Marketing</h3>
+      <p>We conduct marketing activities that engage our members and provide relevant information:</p>
+      <ul>
+        <li>Sending marketing emails and personalizing marketing communications to better suit your preferences</li>
+        <li>To contact you for publicity and/or earning opportunities</li>
+        <li>To conduct advertisement campaigns involving you</li>
+        <li>To feature your items in marketing campaigns</li>
+        <li>To allow you to see personalized advertisements</li>
+        <li>To evaluate efficiency of promotional campaigns</li>
+        <li>To manage our social media profiles</li>
+        <li>To enable you to participate in Dedw3n's referrals program</li>
+      </ul>
+      
+      <p>Information is collected for advertising purposes by advertising service partners and is not stored by Dedw3n.</p>
+      
+      <h3>Legal Purposes</h3>
+      <ul>
+        <li>To handle your requests related to personal data</li>
+        <li>To provide information to law enforcement and other state institutions</li>
+        <li>To defend our rights against chargebacks</li>
+        <li>To defend the rights and interests of Dedw3n</li>
+      </ul>
+      
+      <h3>Personal Data Recipients</h3>
+      <p>Dedw3n transfers or shares personal data with service providers only to the extent necessary and permitted in accordance with applicable laws. The specific service providers to whom your personal data is transferred or shared for particular purposes are outlined above. Additionally, we engage the following service providers, who act as data recipients and receive personal data:</p>
+      
+      <p>We conduct ongoing technical maintenance and upgrades to the Platform to safeguard the security and confidentiality of the personal data we process. This also facilitates various business-related functions that enhance the availability and functionality of our services. Consequently, we transfer your profile data to service providers offering cloud and hosting services, IT security, maintenance, technical services, and communications services.</p>
+      
+      <p>The following service provider is located outside the European Economic Area (EEA), which may result in your data being transferred internationally. In such cases, personal data is protected through the service provider's adherence to the EU standard contractual clauses for data transfer as approved by the European Commission:</p>
+      <ol>
+        <li>Cloudflare, Inc. (USA)</li>
+      </ol>
+      
+      <p>We may also transfer personal data to attorneys, legal assistants, notaries, bailiffs, auditors, accountants, bookkeepers, debt collectors, consultants, translation agencies, IT service providers, insurance companies, and archiving services that support Dedw3n. Furthermore, we share data within the Dedw3n group. Data processed within the group is transferred to Dedw3n, UAB (Lithuania) as necessary for group management.</p>
+      
+      <p>Dedw3n is legally required to provide personal and/or usage data to investigative, criminal prosecution, or supervisory authorities when necessary to mitigate public risk or to prosecute criminal activities.</p>
+      
+      <p>Additionally, Dedw3n may share your data with third parties when transferring rights and obligations related to our contractual relationship, in accordance with the Terms of Service (TOS). This includes scenarios such as business sector transfers, mergers resulting in the establishment of a new company, mergers via absorption, de-mergers, or any changes in control affecting Dedw3n.</p>
+      
+      <h3>Use of Cookies</h3>
+      <p>Dedw3n uses cookies and similar technologies on the Platform. You can find out more by visiting our Cookie Policy.</p>
+      
+      <h3>Right of Amendment</h3>
+      <p>As our services are constantly evolving, we reserve the right to change this Privacy Policy at any time subject to the applicable regulations. Any changes will be published promptly on this page. You should, nevertheless, check this page regularly for any updates.</p>
+      
+      <h3>Your Statutory Rights Regarding Personal Data</h3>
+      <p>In accordance with the statutory data protection provisions, you possess certain rights related to your personal data, subject to specific conditions, limitations, and exceptions. These rights include:</p>
+      
+      <h4>Right to Access</h4>
+      <p>You have the right to be informed about the data we collect and utilize, as well as to request access to or a copy of such data. You can access any information you have actively provided on the Platform (sections 2.1, 2.5, and 2.6) at any time through your Dedw3n account.</p>
+      
+      <h4>Right to Rectification</h4>
+      <p>You may demand the correction of any inaccurate data and, depending on the nature of the data collection and use, the completion of incomplete data. You can amend any information you have actively provided on the Platform at any time through your Dedw3n account, with the exception of sent messages and any forum posts or reviews.</p>
+      
+      <h4>Right to Deletion</h4>
+      <p>You may request the deletion of your data, provided there is just cause for such a request.</p>
+      
+      <h4>Right to Restrict Processing</h4>
+      <p>You can demand that the collection and use of your data be restricted, provided that the legal criteria are met.</p>
+      
+      <h4>Right to Data Portability</h4>
+      <p>Subject to legal criteria, you have the right to receive the data you have provided in a structured, current, and machine-readable format. Additionally, you may transfer this data to another data controller or, when technically feasible, request Dedw3n to facilitate this transfer.</p>
+      
+      <h4>Right to Object</h4>
+      <p>You have the right to object to the collection and use of your data, particularly if such actions are based on the performance of a task carried out in the public interest or in the exercise of official authority (Art. 6 (1)(e) of GDPR) or legitimate interest (Art. 6 (1)(f) of GDPR). This includes profiling based on the same data collection and use grounds outlined in other sections of this statement. You also have the right to object to the collection of your personal data for direct marketing purposes at any time.</p>
+      
+      <h4>Right to Withdraw Consent</h4>
+      <p>You may revoke any permissions granted to us at any time. Such revocation will not affect the legality of data collection and use conducted prior to the revocation based on the granted permission. To revoke your consent to receive our newsletter, you may adjust your Dedw3n account settings to block further marketing emails, or alternatively, click "Unsubscribe" at the end of any marketing email.</p>
+      
+      <h4>Protection Against Discrimination</h4>
+      <p>You have the right not to be subjected to discriminatory treatment while exercising any of the aforementioned rights. To exercise any of these rights, please contact Dedw3n using the contact information provided below.</p>
+      
+      <h3>California Privacy Policy</h3>
+      <p><strong>Effective Date:</strong> June 25, 2025 | <strong>Last Updated:</strong> June 25, 2025</p>
+      
+      <p>This Privacy Policy pertains to the online platform Dedw3n.com ("Website") and the associated application ("App") (collectively referred to as the "Platform") operated by Dedw3n, Inc. ("Us", "We," or "Dedw3n"). We are committed to upholding your confidence and trust regarding the privacy of your information. This policy is specifically designed for our members, users, and visitors to the website who are residents of California (this "California Privacy Policy") and serves as a supplement to the information outlined in our general Privacy Policy.</p>
+      
+      <h4>Overview of this California Privacy Policy</h4>
+      <p>The California Consumer Privacy Act of 2018 ("CCPA") and other relevant privacy laws provide California consumers with specific rights concerning their personal information. These rights are in addition to any privacy rights described in the Dedw3n Privacy Policy. This California Privacy Policy outlines the rights that California consumers may possess under the CCPA.</p>
+      
+      <h4>What is "personal information"?</h4>
+      <p>For the purposes of this California Privacy Policy, "personal information" is defined as any information that identifies, relates to, describes, or could reasonably be linked, directly or indirectly, to a specific California consumer or household. Personal information does not encompass:</p>
+      <ol>
+        <li>Publicly available information from government records</li>
+        <li>De-identified or aggregated information</li>
+      </ol>
+      
+      <h4>What are "California consumers"?</h4>
+      <p>A "California consumer" is defined as a natural person who resides in California. For the purposes of this California Privacy Policy, this term does not include individuals acting in the capacity of an employee, owner, director, officer, or contractor of a business entity, partnership, sole proprietorship, nonprofit, or government agency that engages in business with Dedw3n, nor individuals who are job applicants, employees, owners, directors, officers, medical staff members, or contractors of Dedw3n.</p>
+      
+      <h4>How We Collect, Use, and Share Personal Information</h4>
+      <p>Dedw3n may collect personal information from you through various methods and for distinct purposes. It is important to recognize that the types of personal information we gather will vary based on your interactions with us, including the specific products or services you utilize. This section outlines the categories of personal information we may have collected over the past 12 months, along with the categories of third parties with whom this information is shared or sold for business purposes:</p>
+      
+      <ul>
+        <li><strong>Identifiers:</strong> This includes your name, postal address, unique personal identifier, online identifier, email address, account name, and other similar identifiers.</li>
+        <li><strong>Demographic Information:</strong> This encompasses characteristics protected by law, such as gender or age.</li>
+        <li><strong>Commercial Information:</strong> This includes details regarding your purchasing and shipping history.</li>
+        <li><strong>Internet or Other Electronic Network Activity Information:</strong> This refers to the data we collect when you interact with our website.</li>
+        <li><strong>Audio, Electronic, Visual, or Similar Information:</strong> This includes photographs or voice recordings.</li>
+        <li><strong>Geolocation Data:</strong> This consists of information regarding your device's location, such as that derived from your IP address.</li>
+      </ul>
+      
+      <p>We obtain the categories of personal information listed above from the following sources:</p>
+      <ol>
+        <li><strong>Directly from You:</strong> For example, when you register as a member on the platform, enter your Google or Facebook login details, list items, communicate with other members, or submit queries, requests, or complaints.</li>
+        <li><strong>Information Generated About You:</strong> This includes data collected through cookies and similar technologies, as described in our Cookie Policy.</li>
+        <li><strong>Your Activity on the Platform:</strong> Automatically collected usage information related to your interactions on the platform.</li>
+        <li><strong>Third-Party Suppliers:</strong> Information obtained from third-party suppliers that engage with us in connection with the services they provide.</li>
+        <li><strong>Affiliated Businesses:</strong> Information sourced from our affiliated businesses.</li>
+      </ol>
+      
+      <h4>Sale of Personal Information to Third Parties</h4>
+      <p>We may have sold the following categories of personal information about you to third parties in the prior twelve (12) months: Internet or other electronic network activity information such as consumer online activity, for example, browser type, IP address, device ID, advertising identifiers and cookie numbers, to online advertising service and analytics providers.</p>
+      
+      <p>We do not knowingly sell the personal information of minors under the age of 16.</p>
+      
+      <h4>CCPA Rights for California Consumers</h4>
+      <p>The California Consumer Privacy Act (CCPA) grants California residents specific rights concerning their personal information. This section outlines those rights. If you are a California consumer and wish to exercise any of these rights, please refer to the "How to Submit a Request" section below for detailed instructions.</p>
+      
+      <ol>
+        <li>Right to Know about and Access Your Personal Information</li>
+        <li>Right to Delete Your Personal Information</li>
+        <li>Right to Opt-Out of the Sale of Your Personal Information</li>
+        <li>Right to Non-Discrimination</li>
+        <li>How to Submit a Request</li>
+        <li>Submitting a Request through Your Authorized Agent</li>
+        <li>How We Verify Your Request</li>
+      </ol>
       
       <h3>Contact Us</h3>
-      <p>For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please contact us by e-mail at privacy@dedw3n.com.</p>
+      <p>If you have any questions or concerns regarding this Privacy Policy or our privacy practices, please reach out to us using one of the following methods:</p>
+      <p>Email: <a href="mailto:legal@dedw3n.com">legal@dedw3n.com</a></p>
     `,
-    lastUpdated: new Date("2025-04-10")
+    lastUpdated: new Date("2025-07-08")
   },
   "terms": {
     id: "terms",

@@ -12,6 +12,17 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-08**: Updated Privacy Policy with comprehensive new content (Version 08-07-2025)
+  - **COMPLETED: Privacy Policy Content Update** - Replaced entire privacy policy with new comprehensive document
+  - Updated to DEDW3N LTD. Privacy Policy Version 08-07-2025 with detailed GDPR and CCPA compliance
+  - Added comprehensive sections for data collection, security measures, payment processing, and user rights
+  - Included specific California Privacy Policy section with CCPA compliance information
+  - Enhanced contact information with legal@dedw3n.com for privacy inquiries
+  - Updated last modified date to 2025-07-08 to reflect current version
+- **2025-07-08**: UI Enhancement - Changed header language and currency text colors to blue
+  - **COMPLETED: Header Color Update** - Language selector "EN" text now displays in blue (text-blue-600)
+  - Currency selector "GBP" text and "£" symbol now display in blue (text-blue-600)
+  - Applied changes to all relevant header components (language-switcher, currency-selector variants)
 - **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance and robots.txt blocking errors
 - **2025-07-08**: Resolved contact form authentication and email functionality issues
   - **SOLVED: "Blocked by robots.txt" errors** - Restructured robots.txt using "allow by default, block specific paths" approach
