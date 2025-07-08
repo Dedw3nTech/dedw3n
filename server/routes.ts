@@ -344,7 +344,7 @@ const pageContents: Record<string, PageContent> = {
   },
   "affiliate-partnerships": {
     id: "affiliate-partnerships",
-    title: "Affiliate Partnerships",
+    title: "Affiliate Partnership",
     content: `
       <div class="affiliate-partnerships-content">
         <div class="header-section">

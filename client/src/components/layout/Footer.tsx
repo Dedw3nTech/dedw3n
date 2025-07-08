@@ -7,7 +7,7 @@ function FooterContent() {
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
     "All rights reserved.",
-    "Affiliate Partnerships",
+    "Affiliate Partnership",
     "Privacy Policy",
     "Terms of Service", 
     "Cookie Policy",
