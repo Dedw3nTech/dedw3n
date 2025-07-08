@@ -185,6 +185,87 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date('2025-07-08')
   },
+  "tips-tricks": {
+    id: "tips-tricks",
+    title: "Tips & Tricks",
+    content: `
+      <div class="tips-tricks-content">
+        <div class="header-section">
+          <h2>DEDW3N LTD.</h2>
+          <h3>Tips & Tricks</h3>
+          <p><strong>Version 08-07-2025</strong></p>
+          <p><strong>WELCOME TO DEDW3N</strong><br>Thank you for choosing our platform!</p>
+        </div>
+
+        <div class="intro-section">
+          <h3>Tips and Tricks</h3>
+          <p>Meeting new people is exciting, but you should always be cautious when communicating with someone you don't know. Use common sense and put your safety first, whether you're exchanging initial messages or meeting in person. While you can't control the actions of others, there are things you can do to stay safe during your Dedw3n experience.</p>
+        </div>
+
+        <div class="personal-info-section">
+          <h3>Protect your personal information</h3>
+          <p>Never share personal information, such as your social security number, home or work address, or details about your daily routine (e.g., that you go to a certain gym every Monday) with people you don't know. If you have children, limit the information you share about them on your profile and in initial conversations. Don't give details such as your children's names, where they go to school, or their age or gender.</p>
+        </div>
+
+        <div class="financial-safety-section">
+          <h3>Never send money or share financial information</h3>
+          <p>Never send money, especially via bank transfer, even if the person claims to be in an emergency situation. Transferring money is like sending cash. It is almost impossible to reverse the transaction or trace where the money has gone. Never share information that could be used to access your financial accounts. If another user asks you for money, report it to us immediately.</p>
+        </div>
+
+        <div class="platform-safety-section">
+          <h3>Stay on the platform</h3>
+          <p>Conduct your conversations on the Dedw3n platform when you are just getting to know someone. Because exchanges on Dedw3n must comply with our secure message filters (more information here), users with malicious intentions often try to move the conversation immediately to text, messaging apps, email or phone.</p>
+        </div>
+
+        <div class="distance-relationships-section">
+          <h3>Be wary of long-distance relationships</h3>
+          <p>Watch out for scammers who claim to be from your country but are stuck somewhere else, especially if they ask for financial help to return home. Be wary of anyone who does not want to meet in person or talk on the phone/video chat. They may not be who they say they are. If someone avoids your questions or insists on a serious relationship without first meeting you or getting to know you, be careful. This is usually a red flag.</p>
+        </div>
+
+        <div class="reporting-section">
+          <h3>Report any suspicious or offensive behaviour</h3>
+          <p>You know when someone crosses the line, and when they do, we want to know about it. Block and report anyone who violates our terms and conditions. Here are some examples of violations:</p>
+          <ul>
+            <li>Requests for money or donations</li>
+            <li>Underage users</li>
+            <li>Harassment, threats and offensive messages</li>
+            <li>Inappropriate or negative behaviour during or after a personal meeting</li>
+            <li>Fraudulent profiles</li>
+            <li>Spam or requests including links to commercial websites or attempts to sell products or services</li>
+          </ul>
+          <p>You can report suspicious behaviour via any profile page or message window, or by sending an email to love@Dedw3n.com.</p>
+        </div>
+
+        <div class="account-security-section">
+          <h3>Secure your account</h3>
+          <p>Make sure you choose a strong password and always be careful when logging into your account from a public or shared computer. Dedw3n will never send you an email asking for your username and password. If you receive an email asking for account information, report it immediately. If you log in with your phone number, do not share your SMS code with anyone. Any website that asks for this code to verify your identity is in no way affiliated with Dedw3n.</p>
+        </div>
+
+        <div class="meeting-person-section">
+          <h3>Meeting in person</h3>
+          
+          <h4>Don't rush</h4>
+          <p>Take your time and get to know the other person before meeting them or chatting outside the Dedw3n platform. Don't be afraid to ask questions to screen for red flags or personal deal-breakers. After moving the conversation outside the Dedw3n platform, a phone call or video chat can be a useful screening tool before meeting someone in person.</p>
+          
+          <h4>Meet in a public place and stay in a public place</h4>
+          <p>For the first few times, meet in a busy, public place. Never meet at home, at your date's house, or at any other private location. If your date pressures you to go to a private location, end the date.</p>
+          
+          <h4>Tell friends and family about your plans</h4>
+          <p>Tell a friend or family member about your plans. Also tell them when you are leaving and where you are going. Make sure you always have a charged phone with you.</p>
+          
+          <h4>Know your limits</h4>
+          <p>Be aware of the effects that drugs or alcohol have on you. They can affect your judgement and alertness. If your date tries to pressure you into using drugs or drinking more than you feel comfortable with, stand your ground and end the date.</p>
+          
+          <h4>Do not leave drinks or personal items unattended</h4>
+          <p>Know where your drink comes from and keep it with you. Only accept drinks that are poured or served directly by the bartender or wait staff. Many substances added to drinks to facilitate sexual assault are odourless, colourless and tasteless. Also, always keep your phone, handbag, wallet and anything containing personal information with you.</p>
+          
+          <h4>If you feel uncomfortable, leave</h4>
+          <p>It is perfectly acceptable to end the date early if you feel uncomfortable. In fact, it is recommended. And if your instincts tell you that something is wrong or you feel unsafe, ask the bartender or wait staff for help.</p>
+        </div>
+      </div>
+    `,
+    lastUpdated: new Date('2025-07-08')
+  },
   "faq": {
     id: "faq",
     title: "Frequently Asked Questions",

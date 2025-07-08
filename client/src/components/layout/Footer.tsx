@@ -14,6 +14,7 @@ function FooterContent() {
     "Contact Us",
     "FAQ",
     "Catalogue Rules",
+    "Tips & Tricks",
 
     "Download our mobile app",
     "Download on the",
@@ -31,7 +32,7 @@ function FooterContent() {
   // Extract individual translations from array using Master Translation System
   const [
     allRightsReservedText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
-    communityGuidelinesText, contactUsText, faqText, catalogueRulesText,
+    communityGuidelinesText, contactUsText, faqText, catalogueRulesText, tipsTricksText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
   ] = translations || footerTexts;
@@ -51,6 +52,7 @@ function FooterContent() {
               <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</Link>
               <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</Link>
               <Link href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">{catalogueRulesText}</Link>
+              <Link href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</Link>
 
             </div>
           </div>
