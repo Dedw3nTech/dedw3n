@@ -197,6 +197,10 @@ const pageContents: Record<string, PageContent> = {
           <p><strong>WELCOME TO DEDW3N</strong><br>Thank you for choosing our platform!</p>
         </div>
 
+        <div class="dating-title-section">
+          <h2 style="text-align: center; font-size: 2.5rem; font-weight: bold; color: #1f2937; margin: 2rem 0;">DATING</h2>
+        </div>
+
         <div class="intro-section">
           <h3>Tips and Tricks</h3>
           <p>Meeting new people is exciting, but you should always be cautious when communicating with someone you don't know. Use common sense and put your safety first, whether you're exchanging initial messages or meeting in person. While you can't control the actions of others, there are things you can do to stay safe during your Dedw3n experience.</p>
