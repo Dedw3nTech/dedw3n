@@ -33,11 +33,12 @@ interface ContactFormData {
 
 export async function sendContactEmail(formData: ContactFormData): Promise<boolean> {
   if (!apiInstance || !brevoApiKey) {
-    console.log('Brevo API not configured - email functionality disabled');
+    console.log('[EMAIL] Brevo API not configured - storing message locally');
     return false;
   }
 
   try {
+    console.log('[EMAIL] Attempting to send contact form email via Brevo');
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     
     sendSmtpEmail.subject = `Contact Form: ${formData.subject}`;
@@ -76,10 +77,21 @@ export async function sendContactEmail(formData: ContactFormData): Promise<boole
       name: formData.name
     };
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('[EMAIL] Successfully sent email via Brevo:', response);
     return true;
-  } catch (error) {
-    console.error('Brevo email error:', error);
+  } catch (error: any) {
+    console.error('[EMAIL] Brevo email error:', {
+      message: error.message,
+      status: error.statusCode || error.status,
+      response: error.response?.body || error.body
+    });
+    
+    // Check if it's an authentication error
+    if (error.statusCode === 401 || error.status === 401) {
+      console.error('[EMAIL] Authentication failed - API key may be invalid or expired');
+    }
+    
     return false;
   }
 }
