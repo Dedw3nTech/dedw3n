@@ -1,27 +1,54 @@
 User-agent: *
-Allow: /
-
-# Allow public pages
-Allow: /products
-Allow: /wall
-Allow: /dating
-Allow: /about
-Allow: /contact
-Allow: /faq
-Allow: /privacy-policy
-Allow: /terms-of-service
-Allow: /vendor-register
-
-# Block private/sensitive pages
+# Block private/sensitive areas that should not be indexed
 Disallow: /dashboard/
-Disallow: /profile/
-Disallow: /messages/
-Disallow: /vendor-dashboard/
 Disallow: /admin/
+Disallow: /moderator/
+Disallow: /vendor-dashboard/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /messages/
+Disallow: /notifications/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /orders/
+Disallow: /login/
+Disallow: /register/
+Disallow: /verify/
+Disallow: /reset-password/
+Disallow: /auth/
+Disallow: /logout-success
+Disallow: /payment-success
+Disallow: /payment-gateway
+
+# Block API endpoints and backend resources
 Disallow: /api/
 Disallow: /uploads/
 Disallow: /attached_assets/
-Disallow: /cart/
+
+# Block search with parameters to avoid duplicate content
+Disallow: /*?sort=
+Disallow: /*?filter=
+Disallow: /*?page=
+Disallow: /*?search=
+Disallow: /*?category=
+Disallow: /*?tab=
+Disallow: /*?ref=
+
+# Block AI training bots from content scraping
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
 
 # Sitemap location
 Sitemap: https://dedw3n.com/sitemap.xml

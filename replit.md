@@ -12,7 +12,12 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
-- **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance
+- **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance and robots.txt blocking errors
+  - **SOLVED: "Blocked by robots.txt" errors** - Restructured robots.txt using "allow by default, block specific paths" approach
+  - Removed redundant explicit Allow rules that were causing conflicts with Search Console crawling
+  - Simplified robots.txt to only block sensitive areas (dashboards, APIs, user accounts) while allowing all public content
+  - Enhanced parameter blocking (sort, filter, page, category, tab, ref) to prevent duplicate content indexing
+  - Added comprehensive AI training bot blocking (GPTBot, Google-Extended, CCBot, anthropic-ai, Claude-Web)
   - Resolved robots.txt blocking issue that was preventing proper indexing
   - Fixed conflicts between robots.txt and sitemap.xml (removed private pages from sitemap)
   - Enhanced security.txt with comprehensive security policy information
