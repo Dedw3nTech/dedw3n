@@ -299,7 +299,7 @@ export default function NetworkPartnerships() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-12 text-center text-white">
+        <div className="bg-black rounded-3xl p-12 text-center text-white">
           <h2 className="text-3xl lg:text-4xl font-bold mb-6">
             Ready to Expand Your Global Network?
           </h2>
