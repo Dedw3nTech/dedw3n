@@ -232,7 +232,7 @@ export default function NetworkPartnerships() {
             }
           ].map((step, index) => (
             <div key={index} className="text-center">
-              <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
+              <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
                 {step.step}
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
