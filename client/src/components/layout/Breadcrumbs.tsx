@@ -138,6 +138,13 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
+    // Special handling for network partnership resources to show network partnership hierarchy
+    if (path === '/network-partnership-resources') {
+      breadcrumbs.push({ label: translatedLabels.networkPartnerships, path: '/network-partnerships' });
+      breadcrumbs.push({ label: translatedLabels.resources });
+      return breadcrumbs;
+    }
+    
     // Special handling for affiliate partnerships
     if (path === '/affiliate-partnerships') {
       breadcrumbs.push({ label: translatedLabels.affiliatePartnerships });
