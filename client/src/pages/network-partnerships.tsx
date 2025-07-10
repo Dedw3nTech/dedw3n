@@ -160,9 +160,6 @@ export default function NetworkPartnerships() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
                 <div className="absolute bottom-8 left-8 right-8">
-                  <h3 className="text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
-                    Building Software Today That Will Transform The World We Live In Tomorrow
-                  </h3>
                   <div className="w-20 h-1 bg-blue-500 rounded-full"></div>
                 </div>
               </div>
