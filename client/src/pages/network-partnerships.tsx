@@ -174,13 +174,6 @@ export default function NetworkPartnerships() {
                 alt="Innovation and Technology"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                <div className="absolute bottom-6 left-6 right-6">
-                  <span className="inline-flex items-center bg-white/95 text-gray-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    Innovation • Technology • Future
-                  </span>
-                </div>
-              </div>
             </div>
             
             <div className="relative h-[240px] overflow-hidden rounded-2xl shadow-xl group">
@@ -189,13 +182,6 @@ export default function NetworkPartnerships() {
                 alt="Supply Chain Success"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
-                <div className="absolute bottom-6 left-6 right-6">
-                  <span className="inline-flex items-center bg-white/95 text-gray-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    Supply Chain • Freedom • Success
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
