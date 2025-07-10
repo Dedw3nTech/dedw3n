@@ -29,7 +29,7 @@ export function Breadcrumbs() {
     'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
     'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
     'Privacy Policy', 'Terms of Service', 'Shipping Info', 'Cookie Policy',
-    'Community Guidelines', 'Site Map', 'Affiliate Partnerships', 'Resources'
+    'Community Guidelines', 'Site Map', 'Network Partnerships', 'Affiliate Partnerships', 'Resources'
   ], []);
 
   // Use master translation system for unified performance
@@ -76,8 +76,9 @@ export function Breadcrumbs() {
     cookiePolicy: translatedTexts[36] || "Cookie Policy",
     communityGuidelines: translatedTexts[37] || "Community Guidelines",
     siteMap: translatedTexts[38] || "Site Map",
-    affiliatePartnerships: translatedTexts[39] || "Affiliate Partnerships",
-    resources: translatedTexts[40] || "Resources"
+    networkPartnerships: translatedTexts[39] || "Network Partnerships",
+    affiliatePartnerships: translatedTexts[40] || "Affiliate Partnerships",
+    resources: translatedTexts[41] || "Resources"
   }), [translatedTexts]);
 
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
@@ -128,6 +129,12 @@ export function Breadcrumbs() {
     if (path === '/orders-returns') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
       breadcrumbs.push({ label: translatedLabels.ordersReturns });
+      return breadcrumbs;
+    }
+    
+    // Special handling for network partnerships
+    if (path === '/network-partnerships') {
+      breadcrumbs.push({ label: translatedLabels.networkPartnerships });
       return breadcrumbs;
     }
     
@@ -205,6 +212,7 @@ export function Breadcrumbs() {
       'cookies': translatedLabels.cookiePolicy,
       'community-guidelines': translatedLabels.communityGuidelines,
       'sitemap': translatedLabels.siteMap,
+      'network-partnerships': translatedLabels.networkPartnerships,
       'affiliate-partnerships': translatedLabels.affiliatePartnerships,
       'resources': translatedLabels.resources
     };

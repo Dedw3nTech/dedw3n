@@ -172,6 +172,7 @@ import TipsTricksPage from "@/pages/tips-tricks";
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
 import CookiesPage from "@/pages/cookies";
+import NetworkPartnerships from "@/pages/network-partnerships";
 import AffiliatePartnerships from "@/pages/affiliate-partnerships";
 import Resources from "@/pages/resources";
 import ContactPage from "@/pages/contact";
@@ -321,6 +322,7 @@ function Router() {
       <Route path="/catalogue-rules" component={CatalogueRulesPage} />
       <Route path="/tips-tricks" component={TipsTricksPage} />
 
+      <Route path="/network-partnerships" component={NetworkPartnerships} />
       <Route path="/affiliate-partnerships" component={AffiliatePartnerships} />
       <Route path="/resources" component={Resources} />
       <Route path="/privacy" component={PrivacyPage} />
