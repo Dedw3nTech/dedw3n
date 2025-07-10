@@ -310,7 +310,7 @@ export default function NetworkPartnerships() {
               <Button 
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-semibold"
+                className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg font-semibold"
               >
                 Resources
               </Button>
