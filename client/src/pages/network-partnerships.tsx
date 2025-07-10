@@ -6,7 +6,7 @@ import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight, Truck
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/Copy of  Pre Launch Building the software of tomorrow_1752126375828.png';
 const businessWomanImage = '/attached_assets/Pre Launch Campaign  Couple Palm Oil_1752126449403.png';
-const activeWomanImage = '/attached_assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
+const activeWomanImage = '/attached_assets/_Pre Launch Campaingn Speak language (1)_1752126583125.png';
 
 export default function NetworkPartnerships() {
   // Set document title on mount
