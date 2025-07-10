@@ -165,6 +165,30 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Dating Title Addition** - Added prominent "DATING" title above Tips & Tricks content
   - Dating title is styled with large, bold formatting and left alignment for visual emphasis
   - Simplified page layouts for cleaner content presentation across all legal and policy pages
+- **2025-07-10**: Breadcrumb Navigation Enhancement - Added affiliate partnership hierarchy
+  - **COMPLETED: Breadcrumb Hierarchy Update** - Resources page now shows proper navigation path
+  - Added "Affiliate Partnerships" and "Resources" to translatable breadcrumb texts
+  - Implemented special handling for affiliate partnerships page showing: Home > Affiliate Partnerships
+  - Implemented special handling for resources page showing: Home > Affiliate Partnerships > Resources
+  - Updated route labels mapping to include both new pages with proper parent-child relationship
+- **2025-07-10**: Resources Page Content Replacement - Complete affiliate program documentation
+  - **COMPLETED: Comprehensive Content Update** - Replaced entire resources page content with detailed affiliate program information
+  - Added complete "About Dedw3n" section with groundbreaking social marketplace platform description
+  - Added comprehensive commission structure (30% lifetime commission for all referrals)
+  - Added detailed commission timeline with 28-day locking period and payment processing information
+  - Added extensive compliance guidelines including prohibited promotion methods (trademark bidding, ad hijacking, cookie stuffing)
+  - Added sub-affiliate relationship rules and regulatory compliance guidelines
+  - Added comprehensive FAQ section covering program details, promotion strategies, and payout information
+  - Added detailed support and resources section with contact information (sales@dedw3n.com, legal@dedw3n.com)
+  - Added promotional guidelines and program policies including account termination conditions
+  - Expanded page layout to max-w-6xl for better content readability and comprehensive documentation display
+- **2025-07-10**: Asset Import Production Fix - Resolved broken images on deployed site
+  - **COMPLETED: Production Asset Path Resolution** - Fixed all broken images and icons affecting deployed site
+  - Changed from @assets alias imports to server-served static paths (/attached_assets/) for production compatibility
+  - Fixed affiliate partnerships page asset imports for proper deployment
+  - Fixed logo component, products page, events page, and advertisement component asset imports
+  - Updated all components to use /attached_assets/ paths instead of @assets alias to ensure proper loading in production builds
+  - All images now display correctly on deployed site with proper static file serving configuration
 - **2025-07-08**: Fixed critical SEO/indexing issues for Search Console compliance and robots.txt blocking errors
 - **2025-07-08**: Resolved contact form authentication and email functionality issues
   - **SOLVED: "Blocked by robots.txt" errors** - Restructured robots.txt using "allow by default, block specific paths" approach
