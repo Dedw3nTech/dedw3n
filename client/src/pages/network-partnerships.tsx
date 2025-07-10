@@ -340,12 +340,6 @@ export default function NetworkPartnerships() {
               >
                 Contact Sales Team
               </a>
-              <a 
-                href="mailto:legal@dedw3n.com" 
-                className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Legal Inquiries
-              </a>
             </div>
           </div>
         </div>
