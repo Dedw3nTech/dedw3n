@@ -29,7 +29,7 @@ export function Breadcrumbs() {
     'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
     'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
     'Privacy Policy', 'Terms of Service', 'Shipping Info', 'Cookie Policy',
-    'Community Guidelines', 'Site Map'
+    'Community Guidelines', 'Site Map', 'Affiliate Partnerships', 'Resources'
   ], []);
 
   // Use master translation system for unified performance
@@ -75,7 +75,9 @@ export function Breadcrumbs() {
     shippingInfo: translatedTexts[35] || "Shipping Info",
     cookiePolicy: translatedTexts[36] || "Cookie Policy",
     communityGuidelines: translatedTexts[37] || "Community Guidelines",
-    siteMap: translatedTexts[38] || "Site Map"
+    siteMap: translatedTexts[38] || "Site Map",
+    affiliatePartnerships: translatedTexts[39] || "Affiliate Partnerships",
+    resources: translatedTexts[40] || "Resources"
   }), [translatedTexts]);
 
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
@@ -126,6 +128,19 @@ export function Breadcrumbs() {
     if (path === '/orders-returns') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
       breadcrumbs.push({ label: translatedLabels.ordersReturns });
+      return breadcrumbs;
+    }
+    
+    // Special handling for affiliate partnerships
+    if (path === '/affiliate-partnerships') {
+      breadcrumbs.push({ label: translatedLabels.affiliatePartnerships });
+      return breadcrumbs;
+    }
+    
+    // Special handling for resources to show affiliate partnership hierarchy
+    if (path === '/resources') {
+      breadcrumbs.push({ label: translatedLabels.affiliatePartnerships, path: '/affiliate-partnerships' });
+      breadcrumbs.push({ label: translatedLabels.resources });
       return breadcrumbs;
     }
 
@@ -189,7 +204,9 @@ export function Breadcrumbs() {
       'shipping': translatedLabels.shippingInfo,
       'cookies': translatedLabels.cookiePolicy,
       'community-guidelines': translatedLabels.communityGuidelines,
-      'sitemap': translatedLabels.siteMap
+      'sitemap': translatedLabels.siteMap,
+      'affiliate-partnerships': translatedLabels.affiliatePartnerships,
+      'resources': translatedLabels.resources
     };
     
     let currentPath = '';
