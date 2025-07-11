@@ -1,32 +1,41 @@
-import * as brevo from '@getbrevo/brevo';
+import nodemailer from 'nodemailer';
 
-let apiInstance: brevo.TransactionalEmailsApi | null = null;
-let brevoApiKey: string | null = process.env.BREVO_API_KEY || null;
+let transporter: nodemailer.Transporter | null = null;
 
-function initializeBrevo(apiKey: string) {
-  console.log('[EMAIL] Initializing Brevo with API key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'null');
-  brevoApiKey = apiKey;
-  apiInstance = new brevo.TransactionalEmailsApi();
-  apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
-  console.log('[EMAIL] Brevo API instance created successfully');
+// SMTP Configuration
+const smtpConfig = {
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: '8e7c36001@smtp-brevo.com',
+    pass: '2txLA0d4vNUbYgZj'
+  }
+};
+
+function initializeSmtp() {
+  console.log('[EMAIL] Initializing SMTP with Brevo relay:', smtpConfig.host);
+  transporter = nodemailer.createTransport(smtpConfig);
+  console.log('[EMAIL] SMTP transporter created successfully');
+  
+  // Verify connection configuration
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('[EMAIL] SMTP connection error:', error);
+    } else {
+      console.log('[EMAIL] SMTP server is ready to take our messages');
+    }
+  });
 }
 
-// Initialize if API key is available
-console.log('[EMAIL] Environment BREVO_API_KEY:', brevoApiKey ? `${brevoApiKey.substring(0, 20)}...` : 'not found');
-if (brevoApiKey) {
-  initializeBrevo(brevoApiKey);
-} else {
-  console.log('[EMAIL] No BREVO_API_KEY found in environment variables');
-}
+// Initialize SMTP on startup
+initializeSmtp();
 
 export function setBrevoApiKey(apiKey: string): boolean {
-  try {
-    initializeBrevo(apiKey);
-    return true;
-  } catch (error) {
-    console.error('Failed to initialize Brevo:', error);
-    return false;
-  }
+  // For backward compatibility with existing admin interface
+  // SMTP credentials are now hardcoded, so this just returns true
+  console.log('[EMAIL] SMTP configuration is now hardcoded, API key setting ignored');
+  return true;
 }
 
 interface ContactFormData {
@@ -37,17 +46,15 @@ interface ContactFormData {
 }
 
 export async function sendContactEmail(formData: ContactFormData): Promise<boolean> {
-  if (!apiInstance || !brevoApiKey) {
-    console.log('[EMAIL] Brevo API not configured - storing message locally');
+  if (!transporter) {
+    console.log('[EMAIL] SMTP transporter not configured - storing message locally');
     return false;
   }
 
   try {
-    console.log('[EMAIL] Attempting to send contact form email via Brevo');
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    console.log('[EMAIL] Attempting to send contact form email via SMTP');
     
-    sendSmtpEmail.subject = `Contact Form: ${formData.subject}`;
-    sendSmtpEmail.htmlContent = `
+    const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">New Contact Form Submission</h2>
         <div style="background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
@@ -66,36 +73,34 @@ export async function sendContactEmail(formData: ContactFormData): Promise<boole
         </p>
       </div>
     `;
-    
-    sendSmtpEmail.sender = {
-      name: "Dedw3n Contact Form",
-      email: "noreply@dedw3n.com"
-    };
-    
-    sendSmtpEmail.to = [{
-      email: "love@dedw3n.com",
-      name: "Dedw3n Support"
-    }];
-    
-    sendSmtpEmail.replyTo = {
-      email: formData.email,
-      name: formData.name
+
+    const mailOptions = {
+      from: {
+        name: 'Dedw3n Contact Form',
+        address: 'noreply@dedw3n.com'
+      },
+      to: {
+        name: 'Dedw3n Support',
+        address: 'love@dedw3n.com'
+      },
+      replyTo: {
+        name: formData.name,
+        address: formData.email
+      },
+      subject: `Contact Form: ${formData.subject}`,
+      html: htmlContent,
+      text: `New Contact Form Submission\n\nName: ${formData.name}\nEmail: ${formData.email}\nSubject: ${formData.subject}\n\nMessage:\n${formData.message}`
     };
 
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('[EMAIL] Successfully sent email via Brevo:', response);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[EMAIL] Successfully sent email via SMTP:', info.messageId);
     return true;
   } catch (error: any) {
-    console.error('[EMAIL] Brevo email error:', {
+    console.error('[EMAIL] SMTP email error:', {
       message: error.message,
-      status: error.statusCode || error.status,
-      response: error.response?.body || error.body
+      code: error.code,
+      response: error.response
     });
-    
-    // Check if it's an authentication error
-    if (error.statusCode === 401 || error.status === 401) {
-      console.error('[EMAIL] Authentication failed - API key may be invalid or expired');
-    }
     
     return false;
   }
