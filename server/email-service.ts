@@ -38,6 +38,53 @@ export function setBrevoApiKey(apiKey: string): boolean {
   return true;
 }
 
+// Enhanced SMTP diagnostics function
+export async function testSMTPConnection(): Promise<{
+  success: boolean;
+  details: any;
+  message: string;
+}> {
+  if (!transporter) {
+    return {
+      success: false,
+      details: null,
+      message: 'SMTP transporter not initialized'
+    };
+  }
+
+  try {
+    console.log('[EMAIL] Testing SMTP connection and authentication...');
+    const result = await transporter.verify();
+    
+    return {
+      success: true,
+      details: {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        user: smtpConfig.auth.user,
+        timestamp: new Date().toISOString()
+      },
+      message: 'SMTP server is ready and authentication successful'
+    };
+  } catch (error: any) {
+    console.error('[EMAIL] SMTP connection test failed:', error);
+    
+    return {
+      success: false,
+      details: {
+        error: error.message,
+        code: error.code,
+        response: error.response,
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        timestamp: new Date().toISOString()
+      },
+      message: `SMTP connection failed: ${error.message}`
+    };
+  }
+}
+
 interface ContactFormData {
   name: string;
   email: string;

@@ -12429,6 +12429,37 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // SMTP diagnostic endpoint for testing authentication
+  app.get('/api/smtp/test', async (req: Request, res: Response) => {
+    try {
+      const { testSMTPConnection } = await import('./email-service.js');
+      const result = await testSMTPConnection();
+      
+      if (result.success) {
+        console.log('[EMAIL] SMTP diagnostic test passed');
+        return res.json({
+          status: 'success',
+          message: result.message,
+          details: result.details
+        });
+      } else {
+        console.log('[EMAIL] SMTP diagnostic test failed');
+        return res.status(500).json({
+          status: 'error',
+          message: result.message,
+          details: result.details
+        });
+      }
+    } catch (error: any) {
+      console.error('[EMAIL] SMTP diagnostic error:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to test SMTP connection',
+        error: error.message
+      });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
