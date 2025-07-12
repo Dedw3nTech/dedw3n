@@ -3,6 +3,22 @@ import { useMemo } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
+// Custom Link component that scrolls to top on navigation
+function ScrollToTopLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
+  const handleClick = () => {
+    // Small delay to ensure navigation happens first
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
+  return (
+    <Link href={href} className={className} onClick={handleClick}>
+      {children}
+    </Link>
+  );
+}
+
 function FooterContent() {
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
@@ -47,16 +63,16 @@ function FooterContent() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
             <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2">
-              <Link href="/network-partnerships" className="text-xs text-gray-600 hover:text-primary">{networkPartnershipsText}</Link>
-              <Link href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</Link>
-              <Link href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</Link>
-              <Link href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</Link>
-              <Link href="/cookies" className="text-xs text-gray-600 hover:text-primary">{cookiePolicyText}</Link>
-              <Link href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">{communityGuidelinesText}</Link>
-              <Link href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">{catalogueRulesText}</Link>
-              <Link href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</Link>
-              <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</Link>
-              <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</Link>
+              <ScrollToTopLink href="/network-partnerships" className="text-xs text-gray-600 hover:text-primary">{networkPartnershipsText}</ScrollToTopLink>
+              <ScrollToTopLink href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</ScrollToTopLink>
+              <ScrollToTopLink href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</ScrollToTopLink>
+              <ScrollToTopLink href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</ScrollToTopLink>
+              <ScrollToTopLink href="/cookies" className="text-xs text-gray-600 hover:text-primary">{cookiePolicyText}</ScrollToTopLink>
+              <ScrollToTopLink href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">{communityGuidelinesText}</ScrollToTopLink>
+              <ScrollToTopLink href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">{catalogueRulesText}</ScrollToTopLink>
+              <ScrollToTopLink href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</ScrollToTopLink>
+              <ScrollToTopLink href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</ScrollToTopLink>
+              <ScrollToTopLink href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</ScrollToTopLink>
             </div>
           </div>
           
