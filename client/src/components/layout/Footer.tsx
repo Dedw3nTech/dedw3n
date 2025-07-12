@@ -49,15 +49,14 @@ function FooterContent() {
             <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2">
               <Link href="/network-partnerships" className="text-xs text-gray-600 hover:text-primary">{networkPartnershipsText}</Link>
               <Link href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</Link>
-              <Link href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</Link>
               <Link href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</Link>
+              <Link href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</Link>
               <Link href="/cookies" className="text-xs text-gray-600 hover:text-primary">{cookiePolicyText}</Link>
               <Link href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">{communityGuidelinesText}</Link>
-              <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</Link>
-              <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</Link>
               <Link href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">{catalogueRulesText}</Link>
               <Link href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</Link>
-
+              <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</Link>
+              <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</Link>
             </div>
           </div>
           
