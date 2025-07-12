@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Container } from "@/components/ui/container";
 import { format } from "date-fns";
+import { Link } from "wouter";
 
 interface PageContentProps {
   pageId: string;
@@ -63,6 +64,13 @@ export default function PageContent({ pageId, showLastUpdated = true }: PageCont
     <Container className="py-16">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">{page?.title}</h1>
+        {pageId === "terms" && (
+          <div className="mb-6">
+            <Link href="/business-terms" className="text-blue-600 hover:underline text-lg">
+              Visit our Business Terms Of Service
+            </Link>
+          </div>
+        )}
         <div 
           className="prose prose-lg max-w-none text-gray-700 mb-8"
           dangerouslySetInnerHTML={{ __html: page?.content || "" }}

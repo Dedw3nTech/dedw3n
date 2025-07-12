@@ -1362,6 +1362,246 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date("2025-07-08")
   },
+  "business-terms": {
+    id: "business-terms",
+    title: "Business Terms of Service",
+    content: `
+      <div class="business-terms-content">
+        <h2>DEDW3N LTD.<br>Terms Of Service<br>Version 08-07-2025</h2>
+        
+        <h3>WELCOME TO DEDW3N</h3>
+        <p>Thank you for choosing our platform!</p>
+        
+        <h3>About</h3>
+        <p>Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com .We also refer to Dedw3n Affiliates, which are all companies within our group.</p>
+        
+        <p><strong>What we do.</strong> We manage websites, applications and other platforms (altogether, our Site) where we provide the following Services:</p>
+        <ul>
+          <li>Hosting, where we act as an intermediary between Buyers and Vendors - we don't buy or sell Items on the Catalogue and aren't a party to any Transactions,</li>
+          <li>Community & Dating services facilitate user interaction and engagement with one another.</li>
+          <li>Escrow services, which is applied for a fee in every Transaction and which ensures their payments are made safely and allows to get a refund if their Item is lost, damaged or significantly not as described with the assistance of our customer support team, and</li>
+          <li>other optional services for our Buyers and Vendors which are described below.</li>
+        </ul>
+        <p>We are responsible for the Services we provide, within the limits of applicable laws and our commitments, and under the conditions set out in these Terms.</p>
+        
+        <h3>Who You Are</h3>
+        <p>You are either a Business Seller or a Buyer purchasing an item from a Business Seller, as outlined in further detail below.</p>
+        
+        <h3>About Business Vendors</h3>
+        <p>A Business Seller:</p>
+        <ul>
+          <li>Is a professional seller identified by the "Business" tag.</li>
+          <li>Meets the eligibility criteria specified in our Business Terms.</li>
+          <li>Lists services and products for sale (each referred to as an "Item") in an electronic catalogue on our site (the Catalogue).</li>
+          <li>Agrees to and complies with our Terms and Conditions (T&C), these Business Terms, and the Dedw3n Catalogue Rules (Catalogue Rules).</li>
+        </ul>
+        
+        <h3>About Buyers</h3>
+        <p>A Buyer:</p>
+        <ul>
+          <li>Is a User as defined under our User Terms.</li>
+          <li>Can view, search for, and purchase an Item from a Business Seller on the Catalogue by clicking the buying button, providing payment details, and clicking the payment button (a Transaction).</li>
+          <li>Agrees to these Business Terms each time they purchase an Item from a Business Seller.</li>
+        </ul>
+        
+        <h3>About These Business Terms</h3>
+        <p><strong>These Business Terms.</strong> The Dedw3n Business Terms and Conditions (Business Terms) constitute a legal agreement between you and us, governing your use of our Site and Services. The title of each section indicates whether it pertains specifically to a Business Seller, a Buyer, or applies to all users.</p>
+        
+        <h3>In Case of Conflicts in Our Agreements</h3>
+        <p>If there is a conflict between these Business Terms and the:</p>
+        <ul>
+          <li>T&C, the provisions in these Business Terms will take precedence for transactions involving Business Vendors.</li>
+          <li>Catalogue Rules, the Catalogue Rules will take precedence.</li>
+        </ul>
+        
+        <h3>Other Important Information</h3>
+        <p>We provide links to essential and helpful information within these Business Terms, including our FAQ, where you will find answers to frequently asked questions from our Users. If you cannot find what you need in our Help Centre (which we update regularly), please do not hesitate to reach out to us using the contact methods outlined below.</p>
+        
+        <h3>Let's Stay in Touch</h3>
+        <h4>How We Will Contact You?</h4>
+        <p>If we need to reach you, we will email the address associated with your Business Account or send you a direct message.</p>
+        
+        <h4>Reporting Issues</h4>
+        <p>If you discover that another User or Business Seller has engaged in illegal activity, violated someone's rights, or breached these Business Terms, you can notify us by:</p>
+        <ul>
+          <li>Following the reporting procedure outlined in the T&C, or</li>
+          <li>Completing the contact form specifically for reporting illegal Items (such as those infringing intellectual property rights).</li>
+        </ul>
+        <p>We will endeavor to assist the affected party and will cooperate with local authorities as necessary.</p>
+        
+        <h4>Raising a Dispute with Us</h4>
+        <p>While we hope you enjoy our Services, if you encounter a disagreement with us, please inform us by completing our dispute form so we can address the issue promptly.</p>
+        
+        <h4>For Other Questions</h4>
+        <p>To send us a question or notice, you may email us at one of the addresses provided (love@dedw3n.com) or send a letter to our specified address.</p>
+        
+        <h3>Using Our Services</h3>
+        <h4>Promotions</h4>
+        <p>We may notify you about special offers, competitions, games, or other promotions available to some or all of our Users (a Promotion), based on eligibility criteria we establish. Please note that certain features or functionalities of the Site may be temporarily modified or unavailable during a Promotion.</p>
+        
+        <h4>Third-Party Websites and Content</h4>
+        <p>Certain features on our Site utilize tools and services provided by third parties, governed by their respective terms and conditions. We will provide links to these terms so you can review and accept the agreements before using such features.</p>
+        
+        <h4>Beta Tests</h4>
+        <p>We may allow you to try new versions of the Site or Services still in development. Participation in a Beta test is subject to these Business Terms and any additional terms and conditions we provide.</p>
+        
+        <h3>Ranking Items & Information</h3>
+        <h4>Default Ranking Criteria</h4>
+        <p>Items will appear in a Buyer's search results based on specific "relevance" criteria to enhance the search experience. Listings that appear higher in the results align more closely with the Buyer's search criteria. Factors influencing this tailored list include:</p>
+        <ul>
+          <li>The proximity of an Item to a Buyer's search query.</li>
+          <li>A Buyer's Account preferences (categories, sizes, etc.).</li>
+          <li>Historical data regarding a Buyer's browsing habits (such as size, price range, condition, brands, etc.).</li>
+          <li>The date the Item was uploaded to the Catalogue.</li>
+        </ul>
+        
+        <h4>Specific Ranking Criteria</h4>
+        <p>In the Catalogue, Buyers may choose to sort Items by price or listing date. Their sorting preferences will be remembered and applied to future listings.</p>
+        
+        <h4>How We Rank & Recommend Information</h4>
+        <p>We employ automation tools to understand, rank, and recommend relevant information to Users. For further details on how we utilize automation to recommend information on the "Dedw3n feed," please refer to our FAQ Centre.</p>
+        
+        <h4>Leaving a Review</h4>
+        <p>Upon completion of a transaction, you have the option to write and publish a review regarding the transaction and the Business Vendors on our site. All published reviews must be fair and honest. Please note that we do not offer any form of compensation for leaving a review, and we do not review or verify reviews prior to their publication.</p>
+        
+        <h3>Payment Procedures</h3>
+        <h4>Payment Methods</h4>
+        <p>Buyers can pay for items, and Business Vendors can pay for our services using:</p>
+        <ul>
+          <li>Debit or credit cards</li>
+          <li>PayPal</li>
+          <li>Mobile Money</li>
+          <li>Any additional payment methods that may be introduced on our site.</li>
+        </ul>
+        <p>We collaborate with third-party providers to securely store your payment information. Although we assist with payment processing, we do not handle payments directly.</p>
+        
+        <h4>Safety and Security</h4>
+        <p>Please ensure your payment details are accurate to guarantee the safety and security of transactions on our site. Inaccurate information may result in payment cancellations or require proof of authorization for a payment if our automated systems suspect it was unauthorized.</p>
+        
+        <h4>Currency Conversion</h4>
+        <p>We offer a Currency Conversion service through our Payment Processors or Dedw3n Wallet Provider, allowing buyers to pay for items in their local currency when priced differently. This service is available in specific countries. If currency conversion is applicable in the buyer's registered country, a fee of either 1.2% or 3% of the item price will be charged, depending on the currencies involved.</p>
+        
+        <h3>General Information about Transactions</h3>
+        <h4>Buyer Costs</h4>
+        <p>For every transaction, the buyer is responsible for the total price, which includes:</p>
+        <ul>
+          <li>The item price</li>
+          <li>Shipping fees</li>
+          <li>Fees for optional services (if applicable)</li>
+          <li>Any applicable taxes</li>
+        </ul>
+        
+        <h4>Escrow Account</h4>
+        <p>The total price will be held in a separate escrow account managed by a Dedw3n Wallet Provider until the transaction is completed. Upon completion, the item price will be released to the Business Vendor's Dedw3n Wallet, allowing them to initiate a payout. We will retain the Buyer Protection Pro fee and prepaid shipping fee.</p>
+        
+        <h4>Currency Display</h4>
+        <p>The total price will be displayed in the buyer's local currency.</p>
+        
+        <h3>Dedw3n Shipping</h3>
+        <h4>Overview</h4>
+        <p>You can purchase a prepaid shipping label during a transaction, facilitated by Dedw3n, which collaborates with carriers for item transport and delivery. The provided label must be utilized to send or return an item within five business days of purchase; otherwise, the transaction will be automatically cancelled or completed (in the case of a return).</p>
+        
+        <h4>Carrier Responsibility</h4>
+        <p>The carriers will manage the delivery of the item. Please note that we do not function as a carrier or postal service and do not physically handle, sort, or deliver items purchased on the site.</p>
+        
+        <h4>Shipping Costs</h4>
+        <p>The buyer will incur prepaid shipping fees for sending and returning items, unless otherwise agreed upon with the Business Vendor. Fees will vary based on parcel size, shipping route, and carrier, and will be communicated to the buyer prior to checkout.</p>
+        
+        <h4>Tracking Parcel Status</h4>
+        <p>You can track the status of the item on our site based on information provided by the carrier. To the extent permitted by law, we Dedw3n disclaim any liability for inaccurate, incomplete, or outdated tracking information. Delivery times will vary based on the carrier selected. We retain the right to add, suspend, or remove carriers at any time.</p>
+        
+        <h4>Lost or Damaged Parcels</h4>
+        <p>In the event of a dispute regarding the loss or damage of an item during transit, information provided by Dedw3n or the carrier will be deemed accurate unless you can provide contrary evidence before the transaction is complete. If an item is properly packaged but lost or damaged in transit:</p>
+        <ul>
+          <li>The buyer will receive a refund, covered by Buyer Protection Law.</li>
+          <li>The Business Vendor will receive compensation for the lost or damaged item from Dedw3n, dependent on the carrier used (refer to the FAQ center for further details).</li>
+        </ul>
+        
+        <h4>Packaging Compliance</h4>
+        <p>If an item is sent using prepaid shipping, Business Vendors must adhere to the Dedw3n Packaging Rules and Forbidden Item list, available in our Catalogue. Non-compliance with these Business Terms or Catalogue Rules may render a Business Vendor ineligible for compensation in the event of a lost or damaged parcel.</p>
+        
+        <h3>Your Business Account</h3>
+        <h4>Eligibility</h4>
+        <p>Only professional Vendors are permitted to create a Business Account. In some cases, Dedw3n Affiliates may qualify as Business Vendors. Regular Vendors that have generated an average of £2,000 per month over the last six months will be considered as Business.</p>
+        
+        <h4>Creating a Business Account</h4>
+        <p>To establish a Business account and ensure its security, you must first create a Business Vendor Account. The following information is required:</p>
+        <ul>
+          <li><strong>Legal Information:</strong> Provide your legal name, entity type, business registration number, and details from the trade register where your business is established.</li>
+          <li><strong>Legal Representative:</strong> Include the full name, date of birth, nationality, country of residence, address, and email of the legal representative.</li>
+          <li><strong>Financial Details:</strong> Submit your bank account information, VAT registration number, or an equivalent identification document.</li>
+          <li><strong>Address:</strong> Offer your primary business address, as well as the address of your registered office if it differs. This address will be used for item returns in the event that buyers exercise their right to return (refer to Section 19 for more information).</li>
+          <li><strong>Contact Information:</strong> Include a phone number and email address, ensuring that you do not use disposable or masked email addresses.</li>
+        </ul>
+        
+        <h4>Verification and Security Protocols</h4>
+        <p>During the Business Account registration process, and at any point during your use of our services, we may request that you:</p>
+        <ul>
+          <li>Assist in verifying the information associated with your Business Account, including your business name, number, address, trade register details, phone number, email, VAT registration number, or other identification documents, as well as your payment details (such as bank account or credit/debit card information).</li>
+          <li>Provide additional relevant information.</li>
+          <li>Correct any inaccuracies or incomplete information in your Business Account.</li>
+          <li>Respond to security questions.</li>
+        </ul>
+        <p>These measures are in place to confirm that you are the legitimate entity accessing your Business Account and conducting transactions on the site. Such requests will be proportional to the security concerns we aim to address. Should we have reasonable grounds to believe that the information you provide is incorrect or incomplete, or if you do not cooperate with our requests, we reserve the right to block your Business account as outlined below.</p>
+        
+        <h4>Business Account Restrictions</h4>
+        <p>Each entity is permitted only one Business Account. However, if we block your original Business Account due to unauthorized access, you may create a new Business Account for yourself.</p>
+        
+        <h3>Your Content</h3>
+        <p><strong>What You Can Upload:</strong> You are allowed to upload information, photos, and other data to our site while utilizing our services (referred to as "Your Content").</p>
+        <p><strong>Your Responsibilities:</strong> You represent and warrant that you:</p>
+        <ul>
+          <li>Remain accountable for all content uploaded.</li>
+          <li>Ensure that any content you submit is objective, accurate, comprehensive, and detailed.</li>
+          <li>Hold all rights, licenses, and authorizations pertaining to the content.</li>
+          <li>Are legally able to grant us specific intellectual property rights to your content, as described below.</li>
+        </ul>
+        <p><strong>How We Can Use Your Content:</strong> To the extent permitted by law, Business Vendors grant us and Dedw3n Affiliates a non-exclusive license to use your content globally, without compensation, for the duration of applicable rights. This allows us to copy, display, and adapt your content for operational, commercial, advertising, or other internal business purposes across various platforms and media, including television, print, the internet (in banners, articles, and other websites), and social networks (such as TikTok, Facebook, X (formerly Twitter), Instagram, etc.). You may withdraw our permission to use your content for advertising purposes at any time by adjusting your Business account settings.</p>
+        <p><strong>Hosting Provider:</strong> As our services facilitate hosting between buyers and Business Vendors, we do not conduct general monitoring of content or items listed on the site. To the extent permitted by law, we assume no liability for any losses or damages you may incur related to a transaction, unless explicitly covered by Buyer Protection Pro, our commitments outlined in these Business Terms, or our legal obligations.</p>
+        
+        <h3>Obligations: What You Must and Must Not Do</h3>
+        <p>To provide a safe, trusted, and secure environment for all users of the site, you agree to the following when utilizing our services:</p>
+        <ul>
+          <li>Comply with these Business Terms and applicable laws, including legal obligations regarding consumer transactions, and conduct yourself in good faith.</li>
+          <li>Adhere to the requirement to use the Integrated Payment and Shipping System when buyers are not Business Users.</li>
+          <li>Provide truthful, accurate, and up-to-date information, immediately updating your Business Account if any of your information changes.</li>
+          <li>Maintain the confidentiality of your Business Account login details and password, notifying us if you suspect that your account has been unlawfully accessed.</li>
+          <li>Assume responsibility for all actions taken on the site under your Business Account and any resulting disputes.</li>
+          <li>Fulfil all obligations and liabilities associated with being a seller and acting as a professional trader towards buyers, including accountability for all items sold.</li>
+          <li>Only list items for sale that comply with the Catalogue Rules and applicable laws; other types of transactions are prohibited.</li>
+          <li>Include VAT in the total price if applicable.</li>
+          <li>Inform us immediately if any of your contact information changes.</li>
+        </ul>
+        
+        <h3>Data Protection and Privacy</h3>
+        <p><strong>Joint Data Controllers:</strong> Business Vendors and Dedw3n function as joint controllers when processing personal data, which includes any information that can identify an individual, such as name, date of birth, address, or email address. The handling of this personal data and our respective responsibilities are detailed in the Joint Controllership Agreement attached to these Business Terms.</p>
+        <p><strong>Independent Data Processing Activities:</strong> Both Business Vendors and Dedw3n may engage in data processing activities independent of one another. Each party is responsible for complying with data protection laws (particularly the General Data Protection Regulation) when conducting these independent activities, and Business Vendors agree to refrain from processing personal data in a manner that violates Dedw3n's Terms & Conditions or these Business Terms.</p>
+        <p><strong>Privacy Policies:</strong> If required by applicable data protection or privacy laws, Business Vendors must maintain their own privacy policy, detailing how Users can reach them with privacy-related inquiries or concerns. Any terms regarding data protection within Business Vendor Policies must clearly differentiate between Dedw3n's personal data processing activities and the Vendor's independent activities. If we conduct independent data processing activities, we will adhere to our Privacy Policy.</p>
+        
+        <h3>Ending Our Relationship</h3>
+        <p><strong>Termination by Business Vendors and Buyers:</strong> Business Vendors may terminate their relationship with Dedw3n and cease using our Services at any time, free of charge, by deleting their Business account or emailing us at love@dedw3n.com.</p>
+        <p><strong>Termination by Dedw3n:</strong> We reserve the right to terminate these Business Terms at any time and for any reason, providing you with 30 days' written notice.</p>
+        <p><strong>Assignment of Rights:</strong> We may transfer our rights and obligations under these Business Terms to another organization, with a 30-day prior notification. Should you disagree with this transfer, you may terminate these Business Terms immediately by deleting your Business account. If you wish to assign your rights and obligations under these Business Terms to a third party, and such assignment may impact Users' rights, both parties must inform Users in a timely manner before the assignment takes effect.</p>
+        <p><strong>Continuation of Terms After Termination:</strong> Upon termination of these Business Terms, they will remain in effect until all pending Transactions and Payouts are completed.</p>
+        
+        <h3>Dispute Resolution</h3>
+        <p><strong>Resolving Disputes with Dedw3n:</strong> If you are a Business Vendor and Customer Support does not respond to your complaint within one month of submission through our complaint form, or if you are dissatisfied with the outcome, we may work to resolve the issue or utilize a mediation service prior to escalating to court.</p>
+        <p><strong>Dispute Resolution Between Buyers and Business Vendors:</strong> Buyers should refer to the Business Vendor Policy (if provided) and first attempt to resolve any disagreements directly with the Business Vendor.</p>
+        <p><strong>Governing Law:</strong> Our relationship with Business Vendors is governed by the national laws of the Business Vendor, while the relationship between us and/or the Business Vendor and Buyer is governed by the national laws of the Buyer's country of residence.</p>
+        
+        <h3>Final Considerations</h3>
+        <p><strong>Updates to Business Terms:</strong> We may update these Business Terms in the future. Depending on the nature of the changes, Business Vendors will be notified. These changes will not apply retroactively and will not affect Transactions already completed on the Site.</p>
+        <p><strong>Disagreement with Changes:</strong> If you disagree with any changes made to these Business Terms:</p>
+        <ul>
+          <li>As a Business Vendor, you may terminate the relationship free of charge after completing any pending Transactions.</li>
+          <li>As a Buyer, refrain from purchasing items from Business Vendors. You may still acquire items from non-Business Vendors under our Terms & Conditions or choose to end your relationship with us.</li>
+        </ul>
+        <p><strong>No Partnership:</strong> These Business Terms do not create a partnership or agency relationship between you and us. Neither party has the authority to enter into agreements on behalf of the other or legally bind the other in any capacity.</p>
+        <p><strong>Severability:</strong> Should a court or relevant authority determine that any section of these Business Terms is illegal, the remaining sections shall remain in full effect.</p>
+      </div>
+    `,
+    lastUpdated: new Date("2025-07-12")
+  },
 };
 
 // FAQ, contact form submissions, etc.

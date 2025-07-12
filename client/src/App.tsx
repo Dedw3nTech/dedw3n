@@ -171,6 +171,7 @@ import TipsTricksPage from "@/pages/tips-tricks";
 
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
+import BusinessTermsPage from "@/pages/business-terms";
 import CookiesPage from "@/pages/cookies";
 import NetworkPartnerships from "@/pages/network-partnerships";
 import NetworkPartnershipResources from "@/pages/network-partnership-resources";
@@ -329,6 +330,10 @@ function Router() {
       <Route path="/resources" component={Resources} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
+      <Route path="/business-terms">
+        <SEOHead title="Business Terms of Service - Dedw3n" description="Business Terms and Conditions for Dedw3n marketplace platform. Comprehensive legal agreement governing business vendor and buyer relationships." />
+        <BusinessTermsPage />
+      </Route>
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/admin/email" component={AdminEmail} />

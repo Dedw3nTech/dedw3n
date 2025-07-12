@@ -1,0 +1,302 @@
+DEDW3N LTD.
+Terms Of Service
+Version 08-07-2025 
+
+WELCOME TO DEDW3N 
+Thank you for choosing our platform!
+About 
+Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com .We also refer to Dedw3n Affiliates, which are all companies within our group. 
+What we do. We manage websites, applications and other platforms (altogether, our Site) where we provide the following Services:
+•	Hosting, where we act as an intermediary between Buyers and Vendors - we don’t buy or sell Items on the Catalogue and aren’t a party to any Transactions, 
+•	Community & Dating services facilitate user interaction and engagement with one another.
+•	Escrow services, which is applied for a fee in every Transaction and which ensures their payments are made safely and allows to get a refund if their Item is lost, damaged or significantly not as described with the assistance of our customer support team, and
+•	other optional services for our Buyers and Vendors which are described below. 
+We are responsible for the Services we provide, within the limits of applicable laws and our commitments, and under the conditions set out in these Terms.
+Who You Are
+You are either a Business Seller or a Buyer purchasing an item from a Business Seller, as outlined in further detail below.
+About Business Vendors
+A Business Seller:
+- Is a professional seller identified by the “Business” tag.
+- Meets the eligibility criteria specified in our Business Terms.
+- Lists services and products for sale (each referred to as an "Item") in an electronic catalogue on our site (the Catalogue).
+- Agrees to and complies with our Terms and Conditions (T&C), these Business Terms, and the Dedw3n Catalogue Rules (Catalogue Rules).
+About Buyers
+A Buyer:
+- Is a User as defined under our User Terms.
+- Can view, search for, and purchase an Item from a Business Seller on the Catalogue by clicking the buying button, providing payment details, and clicking the payment button (a Transaction).
+- Agrees to these Business Terms each time they purchase an Item from a Business Seller.
+About These Business Terms
+These Business Terms. The Dedw3n Business Terms and Conditions (Business Terms) constitute a legal agreement between you and us, governing your use of our Site and Services. The title of each section indicates whether it pertains specifically to a Business Seller, a Buyer, or applies to all users.
+In Case of Conflicts in Our Agreements
+If there is a conflict between these Business Terms and the:
+- T&C, the provisions in these Business Terms will take precedence for transactions involving Business Vendors.
+- Catalogue Rules, the Catalogue Rules will take precedence.
+Other Important Information
+We provide links to essential and helpful information within these Business Terms, including our FAQ, where you will find answers to frequently asked questions from our Users. If you cannot find what you need in our Help Centre (which we update regularly), please do not hesitate to reach out to us using the contact methods outlined below.
+Let’s Stay in Touch
+How We Will Contact You?
+If we need to reach you, we will email the address associated with your Business Account or send you a direct message.
+Reporting Issues
+If you discover that another User or Business Seller has engaged in illegal activity, violated someone's rights, or breached these Business Terms, you can notify us by:
+- Following the reporting procedure outlined in the T&C, or
+- Completing the contact form specifically for reporting illegal Items (such as those infringing intellectual property rights).
+We will endeavor to assist the affected party and will cooperate with local authorities as necessary.
+Raising a Dispute with Us
+While we hope you enjoy our Services, if you encounter a disagreement with us, please inform us by completing our dispute form so we can address the issue promptly.
+For Other Questions
+To send us a question or notice, you may email us at one of the addresses provided (love@dedw3n.com) or send a letter to our specified address.
+Using Our  Services
+Promotions
+We may notify you about special offers, competitions, games, or other promotions available to some or all of our Users (a Promotion), based on eligibility criteria we establish. Please note that certain features or functionalities of the Site may be temporarily modified or unavailable during a Promotion.
+Third-Party Websites and Content
+Certain features on our Site utilize tools and services provided by third parties, governed by their respective terms and conditions. We will provide links to these terms so you can review and accept the agreements before using such features.
+Beta Tests
+We may allow you to try new versions of the Site or Services still in development. Participation in a Beta test is subject to these Business Terms and any additional terms and conditions we provide.
+Ranking Items & Information
+Default Ranking Criteria
+Items will appear in a Buyer’s search results based on specific “relevance” criteria to enhance the search experience. Listings that appear higher in the results align more closely with the Buyer’s search criteria. Factors influencing this tailored list include:
+- The proximity of an Item to a Buyer’s search query.
+- A Buyer's Account preferences (categories, sizes, etc.).
+- Historical data regarding a Buyer's browsing habits (such as size, price range, condition, brands, etc.).
+- The date the Item was uploaded to the Catalogue.
+Specific Ranking Criteria
+In the Catalogue, Buyers may choose to sort Items by price or listing date. Their sorting preferences will be remembered and applied to future listings.
+How We Rank & Recommend Information
+We employ automation tools to understand, rank, and recommend relevant information to Users. For further details on how we utilize automation to recommend information on the “Dedw3n feed,” please refer to our FAQ Centre.
+Leaving a Review
+Upon completion of a transaction, you have the option to write and publish a review regarding the transaction and the Business Vendors on our site. All published reviews must be fair and honest. Please note that we do not offer any form of compensation for leaving a review, and we do not review or verify reviews prior to their publication.
+Payment Procedures
+Payment Methods  
+Buyers can pay for items, and Business Vendors can pay for our services using:
+- Debit or credit cards
+- PayPal
+- Mobile Money
+- Any additional payment methods that may be introduced on our site.
+We collaborate with third-party providers to securely store your payment information. Although we assist with payment processing, we do not handle payments directly.
+Safety and Security
+Please ensure your payment details are accurate to guarantee the safety and security of transactions on our site. Inaccurate information may result in payment cancellations or require proof of authorization for a payment if our automated systems suspect it was unauthorized.
+Currency Conversion
+We offer a Currency Conversion service through our Payment Processors or Dedw3n Wallet Provider, allowing buyers to pay for items in their local currency when priced differently. This service is available in specific countries. If currency conversion is applicable in the buyer's registered country, a fee of either 1.2% or 3% of the item price will be charged, depending on the currencies involved.
+General Information about Transactions
+Buyer Costs
+For every transaction, the buyer is responsible for the total price, which includes:
+- The item price
+- Shipping fees
+- Fees for optional services (if applicable)
+- Any applicable taxes
+Escrow Account
+The total price will be held in a separate escrow account managed by a Dedw3n Wallet Provider until the transaction is completed. Upon completion, the item price will be released to the Business Vendor’s Dedw3n Wallet, allowing them to initiate a payout. We will retain the Buyer Protection Pro fee and prepaid shipping fee.
+Currency Display
+The total price will be displayed in the buyer’s local currency.
+Dedw3n Shipping
+Overview
+You can purchase a prepaid shipping label during a transaction, facilitated by Dedw3n, which collaborates with carriers for item transport and delivery. The provided label must be utilized to send or return an item within five business days of purchase; otherwise, the transaction will be automatically cancelled or completed (in the case of a return).
+Carrier Responsibility
+The carriers will manage the delivery of the item. Please note that we do not function as a carrier or postal service and do not physically handle, sort, or deliver items purchased on the site.
+Shipping Costs
+The buyer will incur prepaid shipping fees for sending and returning items, unless otherwise agreed upon with the Business Vendor. Fees will vary based on parcel size, shipping route, and carrier, and will be communicated to the buyer prior to checkout.
+
+Tracking Parcel Status
+You can track the status of the item on our site based on information provided by the carrier. To the extent permitted by law, we Dedw3n disclaim any liability for inaccurate, incomplete, or outdated tracking information. Delivery times will vary based on the carrier selected. We retain the right to add, suspend, or remove carriers at any time.
+Lost or Damaged Parcels
+In the event of a dispute regarding the loss or damage of an item during transit, information provided by Dedw3n or the carrier will be deemed accurate unless you can provide contrary evidence before the transaction is complete. If an item is properly packaged but lost or damaged in transit:
+- The buyer will receive a refund, covered by Buyer Protection Law.
+- The Business Vendor will receive compensation for the lost or damaged item from Dedw3n, dependent on the carrier used (refer to the FAQ center for further details).
+Packaging Compliance
+If an item is sent using prepaid shipping, Business Vendors must adhere to the Dedw3n Packaging Rules and Forbidden Item list, available in our Catalogue. Non-compliance with these Business Terms or Catalogue Rules may render a Business Vendor ineligible for compensation in the event of a lost or damaged parcel.
+Your Business Account
+Eligibility
+Only professional Vendors are permitted to create a Business Account. In some cases, Dedw3n Affiliates may qualify as Business Vendors. Regular Vendors that  have generated an average of £2,000 per month over the last six months will be considered as Business.
+Creating a Business Account
+To establish a Business account and ensure its security, you must first create a Business Vendor Account. The following information is required:
+Legal Information: Provide your legal name, entity type, business registration number, and details from the trade register where your business is established.
+Legal Representative: Include the full name, date of birth, nationality, country of residence, address, and email of the legal representative.
+Financial Details: Submit your bank account information, VAT registration number, or an equivalent identification document.
+Address: Offer your primary business address, as well as the address of your registered office if it differs. This address will be used for item returns in the event that buyers exercise their right to return (refer to Section 19 for more information).
+Contact Information: Include a phone number and email address, ensuring that you do not use disposable or masked email addresses.
+Verification and Security Protocols
+During the Business Account registration process, and at any point during your use of our services, we may request that you:
+- Assist in verifying the information associated with your Business Account, including your business name, number, address, trade register details, phone number, email, VAT registration number, or other identification documents, as well as your payment details (such as bank account or credit/debit card information).
+- Provide additional relevant information.
+- Correct any inaccuracies or incomplete information in your Business Account.
+- Respond to security questions.
+These measures are in place to confirm that you are the legitimate entity accessing your Business Account and conducting transactions on the site. Such requests will be proportional to the security concerns we aim to address. Should we have reasonable grounds to believe that the information you provide is incorrect or incomplete, or if you do not cooperate with our requests, we reserve the right to block your Business account as outlined below.
+Business Account Restrictions
+Each entity is permitted only one Business Account. However, if we block your original Business Account due to unauthorized access, you may create a new Business Account for yourself.
+Your Content
+What You Can Upload: You are allowed to upload information, photos, and other data to our site while utilizing our services (referred to as "Your Content").
+Your Responsibilities: You represent and warrant that you:
+- Remain accountable for all content uploaded.
+- Ensure that any content you submit is objective, accurate, comprehensive, and detailed.
+- Hold all rights, licenses, and authorizations pertaining to the content.
+- Are legally able to grant us specific intellectual property rights to your content, as described below.
+How We Can Use Your Content: To the extent permitted by law, Business Vendors grant us and Dedw3n Affiliates a non-exclusive license to use your content globally, without compensation, for the duration of applicable rights. This allows us to copy, display, and adapt your content for operational, commercial, advertising, or other internal business purposes across various platforms and media, including television, print, the internet (in banners, articles, and other websites), and social networks (such as TikTok, Facebook, X (formerly Twitter), Instagram, etc.). You may withdraw our permission to use your content for advertising purposes at any time by adjusting your Business account settings.
+Hosting Provider: As our services facilitate hosting between buyers and Business Vendors, we do not conduct general monitoring of content or items listed on the site. To the extent permitted by law, we assume no liability for any losses or damages you may incur related to a transaction, unless explicitly covered by Buyer Protection Pro, our commitments outlined in these Business Terms, or our legal obligations.
+Obligations: What You Must and Must Not Do**
+To provide a safe, trusted, and secure environment for all users of the site, you agree to the following when utilizing our services:
+- Comply with these Business Terms and applicable laws, including legal obligations regarding consumer transactions, and conduct yourself in good faith.
+- Adhere to the requirement to use the Integrated Payment and Shipping System when buyers are not Business Users.
+- Provide truthful, accurate, and up-to-date information, immediately updating your Business Account if any of your information changes.
+- Maintain the confidentiality of your Business Account login details and password, notifying us if you suspect that your account has been unlawfully accessed.
+- Assume responsibility for all actions taken on the site under your Business Account and any resulting disputes.
+- Fulfil all obligations and liabilities associated with being a seller and acting as a professional trader towards buyers, including accountability for all items sold.
+- Only list items for sale that comply with the Catalogue Rules and applicable laws; other types of transactions are prohibited.
+- Include VAT in the total price if applicable.
+- Inform us immediately if a buyer exercises their right of withdrawal, understanding that there may be circumstances where we can exempt a buyer from returning the item (e.g., strong evidence of counterfeiting).
+- Only offer items that you have in stock.
+- Register your organization or professional activity with the relevant authorities and comply with all applicable legal obligations and registration requirements, including maintaining necessary licenses or permits to complete a transaction.
+Prohibited
+When creating a Business Account or using the Site or Services, you agree you will not:
+•	use your Content, the Site or our Services to carry out fraud or fraudulent Transactions, 
+•	do anything illegal, unethical, contrary to public security or that infringes our or someone else’s rights (like their privacy, confidential information or intellectual property),
+•	use any kind of external software tools (including but not limited to: bots, scraping programs, crawling programs, spiders) when registering on the Site and/or when using the Site and/or Services (including but not limited to: for the purpose of promoting Items, adding Items to favourite) unless such a use is authorised, offered or in any other way allowed by us,
+•	use any external software tool that could disrupt the normal operation of the Site or Services or infect or damage another User’s computer,
+•	publish Content that praise, promote, encourage or incite terrorism, racism, revisionism, xenophobia, homophobia, sexism, hate speech, discrimination, human trafficking, organised crime, illegal organisations, self-injury, suicide, torture, cruelty to animals, apology of war crimes, sexual exploitation of children and/or adults, cults or be unlawful,
+•	infringe someone else’s intellectual property or image rights,
+•	use your Content for an unfair, abusive, deceptive or aggressive commercial practice,
+•	data mine, screen scrape, crawl, disassemble, decompile or reverse engineer any part of the Site,
+•	delete and re-list the same Item multiple times or multiple Items in bulk, 
+•	collect, hold or disclose information you obtained illegally that relates to other Users, their content or their actions on the Site, or any information appearing on our Site if it might affect the rights of other Users, or
+•	promote other websites or companies via advertisements on our Site. 
+Rights to Address Concerns**
+Taking Corrective Actions:
+To ensure the safety and security of both Users and Business Vendors on the Site, we may implement various actions if we determine that your Content, Items, Business account, or activities are evidently unlawful, unethical, threatening to public security, or in violation of these Business Terms or the Catalogue Rules. Potential actions include:
+- Issuing a warning message reminding you to adhere to these Business Terms.
+- Removing or automatically correcting your Items listed in the Catalogue.
+- Demoting, hiding, or removing your Content from the Site.
+- Concealing private messages you have sent so that the intended recipient cannot view them.
+- Restricting your Business account by blocking access to certain features (such as sending private messages or limiting the visibility of your Items to other Users).
+- Notifying local authorities regarding your activity if it poses a threat to someone's life or safety.
+Automated Means and Notifications: 
+We may utilize automated software or algorithms to detect violations and execute the corrective actions mentioned above or to block your Business account. Additionally, we may act upon receiving notifications from competent authorities.
+Proportionality of Corrective Actions:  
+It is important to clarify that the corrective actions taken will be proportionate to the nature of your violation, while also considering the legitimate interests of Users.
+Blocking Your Business Account: 
+We may temporarily or permanently block your Account under the following circumstances:
+
+- If we take an action listed in the "Taking Corrective Actions" section and you persist in breaching these Terms.
+- If you commit a serious breach of these Business Terms, which may include:
+  - Providing incorrect, false, or misleading information on your Account or failing to keep your information current.
+  - Not cooperating with us during the verification of the information provided on your Account.
+  - Abusing the functionalities of the Site.
+- If suspicions arise from a Dedw3n Wallet Provider or Payment Processor, or if there are issues related to Transactions, safety, legal concerns, or threats involving minors.
+
+When we refer to "blocking" your Account, it implies:
+- You will only be able to access the Site to contact our Customer Support team.
+- Your Items will be delisted and removed from the Catalogue.
+- There will be no refunds for any additional services purchased from us that you may still be using.
+- You may complete any pending Transactions and Payouts; however, if your Business account is blocked due to security or fraud concerns raised by a Dedw3n Wallet Provider, or if your Account has been compromised, the following consequences may apply:
+  - Pending Transactions may be cancelled, and all fees paid by the Buyer will be refunded.
+  - Your ability to initiate a Payout may be restricted.
+- We may prevent you from creating a new Business account on the Site.
+Statement of Reasons:
+If we take a corrective action or block your Business account, we will inform you of:
+- The reasons for our actions.
+- The restrictions applied to your Content or Business Account.
+- The facts and legal grounds upon which our decision is based.
+- Information regarding the use of automated means in our decision-making process.
+- Details about your options for recourse (discussed in further detail in the section titled "Your Options for Recourse").
+However, we will withhold this information if disclosing it would violate the law or a legal authority's directive, put us or a Dedw3n Affiliate at risk, disrupt a fraud investigation, allow fraud to continue, or constitute a serious breach of these Business Terms or the terms and conditions of a Dedw3n Payment  Provider.
+Please be advised. Please be advised that we will provide a minimum of 30 days' notice before taking corrective action or blocking your business account. However, we will not provide advance notification and will only issue a statement of reason at the time we take action if one of the below scenarios occurs:
+- Suspicions identified from a Dedw3n Payment Processor: A Dedw3n Wallet Provider or Payment Processor reports a suspicion to us that you violated the law, breached their terms and conditions, or misused the Site when using their payment and/or wallet services (including illegal sales on the Site, money laundering, terrorist financing, scamming, identity theft, or use of false documents).
+- Issues with Transactions: Should you wish to initiate a dispute resolution procedure regarding a transaction, you may do so through a payment processor. There must be objective and legitimate reasons to believe that, in this context, you violated the law, breached these business terms, or misused the site.
+- Safety and legal concerns: Your Content or use of the Services could result in a violation of the law, regulations, or rules of public security. It could also pose a serious threat to the health, safety, or legitimate economic interests of us, our Users, other business vendors, or third parties. This could be:
+Please note that the following information is subject to change.
+The uploading of content that condones crimes against humanity, incites racial hatred or violence, concerns child pornography, or constitutes other forms of sexual harassment, or that seriously threatens other users, is strictly prohibited.
+Individuals found to be engaging in the following activities are subject to disciplinary action:
+- Committing identity theft or any other type of fraud
+The misuse of the site in a way that poses a threat to the safety of users or other business vendors, or the security of the site, is strictly prohibited. This includes, but is not limited to, logging in from suspicious IP addresses, engaging in scamming or spamming activities, or any other actions that could compromise the integrity of the site. If you are using a business account and are under the age of 18, please indicate as such.
+
+- Notification is prohibited by law. In accordance with applicable regulations and directives from legal enforcement authorities, providing advance notice would constitute a violation.
+- There is a risk for Dedw3n that could potentially impact us or Dedw3n Affiliates.
+- Security threats: There is a potential risk to the security or smooth operation of our IT system.
+In the event of repeated or serious breaches of these Business Terms, the following consequences will apply:
+Recourse Options 
+You have several options for recourse regarding our decision to take corrective action:  
+I. Appeals Process: You may challenge our decision by submitting an appeal through our system. To initiate this, click the link included in the statement of reasons we provided (if your Business account was blocked or if corrective action was taken) or in any other communication we sent you (if you reported non-compliant content related to another Business Vendor or User). We will review your appeal promptly under the supervision of qualified staff.  
+II. Legal Action: You may also bring an action before national courts in accordance with applicable laws.  
+Selling an Item/service  on Dedw3n  
+**What You Can Sell**: You are permitted to sell new and second-hand items  and services on the Site, provided you have the authority to transfer ownership to the Buyer. You bear responsibility for all items and services listed, sold, and transferred to Buyers, including any declarations you make about them. All items listed for sale must:  
+- Comply with binding laws and not infringe upon third-party rights (including intellectual property rights).  
+- Adhere to the Catalogue Rules.  
+- Meet product safety legal and compliance requirements.  
+- Align with the Payment Processor's list of prohibited items, if applicable.  
+Listing an Item: To list an item for sale on the Site, you must take and upload a photograph and provide a description (neither of which may be sourced from the internet) that accurately represents the item's quality and appearance, including any defects or alterations. This must also comply with applicable laws regarding product safety and compliance, including mandatory information about the manufacturer or economic operator, labelling, and marking of products. Once your item is listed in the Catalogue and published on the Site, it constitutes an official offer for sale, which a Buyer may accept.  
+Buyer's Choice: If a Buyer submits a counteroffer with a new price for an item, the item is not considered sold upon your acceptance of that counteroffer. The Buyer retains the option not to purchase your item even after you agree to the counteroffer. An item is officially sold only when a Buyer clicks the purchase button and their payment is accepted.  
+Withdrawing Your Listing: You may withdraw a listing at any time prior to a Buyer purchasing the item.  
+Hidden Mode: You have the option to apply a “Hidden” mode to your Business account, which will conceal your items from Users.  
+Business Vendor Additional Policies: You may establish additional rules for Buyers, such as after-sales services or extra commercial warranties (Business Vendor Policies) prior to a Buyer purchasing an item. Your Business Vendor Policies must:  
+- Be compatible with these Business Terms and not derogate from them unless more favourable to the Buyer.  
+- Include all legally required information regarding pre-sale and sale, unless this information is provided to the Buyer in another appropriate manner.  
+- Provide complete and accurate information concerning your address, professional references, and contact details.  
+In the event of a contradiction between your Business Vendor Policies and these Business Terms, the stipulations in these Business Terms will prevail.  
+Invoices: You are responsible for issuing an invoice to the Buyer for the item sold and any shipping services resold to them through the Site.  
+Additional Services: You may opt to purchase other optional services (such as those designed to enhance your item’s visibility to Buyers). We will inform you of the costs associated with each service and the duration of access prior to purchase. Each optional service is a one-time automated service and cannot be transferred between items or Users. Payment can be made using one of the methods outlined under “How to Pay on Our Site.” An email confirmation will be sent following your purchase.  
+Buying an Item from a Business Vendor  
+How to Purchase an Item: To acquire an item from a Business Vendor, you must:  
+
+- Click the purchase button.  
+- Select a payment method and delivery option.  
+- Review and understand the Business Vendor Policies (if applicable).  
+- Click the payment button on the checkout page.  
+
+Upon clicking the” payment” button, you:  
+- Enter into a contract with the Business Vendor and a separate contract with us for Buyer Protection Pro.  
+- Agree to make full payment and may be required to reimburse us or the Business Vendor for any losses incurred if payment is not made.  
+- Acknowledge that the information on your account is accurate.  
+Order Confirmation: You will receive an email confirming that your order has been accepted and payment has been processed. The Business Vendor is required to ship the item within five business days of purchase; otherwise, the transaction will be automatically cancelled. We will receive updates from the carrier and notify you regarding the expected delivery date or if the item appears to be lost.  
+Purchases Outside of Our Site: If you purchase an item offline or outside of our Site, we assume no responsibility for that transaction. Such purchases are made at your own risk and will not be covered by the protections we offer for transactions conducted on our Site.  
+Your Right of Withdrawal
+Understanding the Right of Withdrawal/Cancelation: If you are classified as a “consumer” under Directive 2011/83/EU on Consumer Rights and purchase an item from a Business Vendor, you possess a legal right to return the item for a refund should you change your mind (the Return Right).  
+Exceptions to the Right of Withdrawal: The Return Right is not applicable under certain legal exceptions, including:  
+- Items customized to consumer specifications or clearly personalized.  
+- Items likely to deteriorate or expire rapidly.  
+- Sealed items unsuitable for return due to health or hygiene reasons that have been unsealed after delivery.  
+- Items that are, by nature, inseparably mixed with other items post-delivery.  
+- Sealed audio or video recordings or sealed computer software that have been unsealed after delivery.  
+Exercising Your Right of Withdrawal: You have 14 calendar days from the delivery date to return the item. If the 14th day falls on a weekend or public holiday, you may return it on the next working day. To initiate the return process, you can:  
+I. Send “I have an issue” in your private message with the Business Vendor.  
+II. Include your  withdrawal form when returning the item.  
+III. Provide any clear statement to the Business Vendor indicating your desire to return the item.  
+Returning the Item: Ensure to use tracked delivery and retain the tracking number. Generally, you are responsible for return shipping unless the Business Vendor Policy states otherwise. In certain circumstances, you may not need to return the item (for instance, if there is compelling evidence that the item is counterfeit).  
+Responsibility of Business Vendors: If you exercise your Return Right through channels other than the 'I have an issue' button as described, your interactions will be directly between you and the Business Vendor, and we will not be liable for the Return Right.  
+Refund Process: Refunds will be issued using the same payment method employed for the purchase:  
+- Once the Business Vendor agrees to refund you without requesting the item back, or  
+- Once the Business Vendor confirms receipt of the item and its condition. We will then instruct the Dedw3n Payment Provider to process your refund. If the Business Vendor does not notify us within 14 days of your proof of dispatch or receipt of the item, we will investigate the issue. The transaction will be suspended, and the total price will remain in escrow until a determination is made regarding your refund.  
+Additional Rights and Protections
+Legal Guarantee of Conformity: By law, Business Vendors are accountable if an item does not conform to its description in the Catalogue or the order, regardless of whether the defect is obvious or concealed. You should address any defects directly with the Business Vendor, as they bear responsibility in this regard, not Dedw3n.  
+Responsibilities  
+- Data Shared with Us: While we implement measures to protect personal data, Content, and other information you share, we cannot guarantee that unauthorized third parties will not bypass these measures. You acknowledge that providing personal data is done at your own risk, and we suggest that you take appropriate precautions to safeguard your data or software, particularly against potential viruses.  
+- Tax Liabilities: We are not responsible for any tax liabilities or reporting obligations that may arise from your activities on the Site or transactions you conduct.  
+- Force Majeure: In the event of unforeseen circumstances beyond the control of either party, that party will not be held accountable for failing to meet obligations under these Business Terms until the situation resolves.  
+
+Site Ownership and Operation 
+We, along with Dedw3n Affiliates and/or our licensors, retain all intellectual property rights associated with the Site, including its system, layout, software, trademarks, and domain names.  
+Information Presentation: To enhance User experience, we may reorganize the Catalogue, advertising spaces, or other information on the Site. Such changes will not affect the Content you provide or our obligations under these Business Terms.  
+Service Interruptions: We may partially suspend the Site or our Services but will provide Business Vendors and Users with a seven-day advance notice.  
+Site Availability: We are not liable for interruptions in Site availability due to maintenance or other events beyond our control. We strive to inform you of planned or existing availability restrictions, schedule downtime outside of peak hours, and limit maintenance-related downtime to reasonable durations consistent with market standards.  
+Confidentiality in Our Relationship 
+Both parties may share Confidential Information, which refers to any sensitive information regarding one party's business, Transactions, or other non-public information. Neither party will disclose the other’s Confidential Information except to affiliates, employees, agents, or professional advisors who need to know it, are legally bound to confidentiality, and will use it solely for fulfilling obligations under these Business Terms. The recipient may disclose Confidential Information if required by law, provided reasonable notice is given to the other party when legally permissible.  
+Publicity Restrictions: You are prohibited from making any public statements regarding the relationship established in these Business Terms without our prior written consent, except as required by law with reasonable notice to us.  
+
+Handling Personal Data
+Joint Data Controllers: Business Vendors and Dedw3n function as joint controllers when processing personal data, which includes any information that can identify an individual, such as name, date of birth, address, or email address. The handling of this personal data and our respective responsibilities are detailed in the Joint Controllership Agreement attached to these Business Terms.  
+Independent Data Processing Activities: Both Business Vendors and Dedw3n may engage in data processing activities independent of one another. Each party is responsible for complying with data protection laws (particularly the General Data Protection Regulation) when conducting these independent activities, and Business Vendors agree to refrain from processing personal data in a manner that violates Dedw3n's Terms & Conditions or these Business Terms.  
+Privacy Policies: If required by applicable data protection or privacy laws, Business Vendors must maintain their own privacy policy, detailing how Users can reach them with privacy-related inquiries or concerns. Any terms regarding data protection within Business Vendor Policies must clearly differentiate between Dedw3n's personal data processing activities and the Vendor's independent activities. If we conduct independent data processing activities, we will adhere to our Privacy Policy.  
+Ending Our Relationship
+Termination by Business Vendors and Buyers: Business Vendors may terminate their relationship with Dedw3n and cease using our Services at any time, free of charge, by deleting their Business account or emailing us at love@dedw3n.com.  
+Termination by Dedw3n: We reserve the right to terminate these Business Terms at any time and for any reason, providing you with 30 days' written notice.  
+Assignment of Rights: We may transfer our rights and obligations under these Business Terms to another organization, with a 30-day prior notification. Should you disagree with this transfer, you may terminate these Business Terms immediately by deleting your Business account. If you wish to assign your rights and obligations under these Business Terms to a third party, and such assignment may impact Users' rights, both parties must inform Users in a timely manner before the assignment takes effect.  
+Continuation of Terms After Termination: Upon termination of these Business Terms, they will remain in effect until all pending Transactions and Payouts are completed.  
+Dispute Resolution 
+Resolving Disputes with Dedw3n: If you are a Business Vendor and Customer Support does not respond to your complaint within one month of submission through our complaint form, or if you are dissatisfied with the outcome, we may work to resolve the issue or utilize a mediation service prior to escalating to court.  
+
+Dispute Resolution Between Buyers and Business Vendors: Buyers should refer to the Business Vendor Policy (if provided) and first attempt to resolve any disagreements directly with the Business Vendor.  
+Governing Law: Our relationship with Business Vendors is governed by the national laws of the Business Vendor, while the relationship between us and/or the Business Vendor and Buyer is governed by the national laws of the Buyer’s country of residence.  
+Final Considerations
+Updates to Business Terms: We may update these Business Terms in the future. Depending on the nature of the changes, Business Vendors will be notified. These changes will not apply retroactively and will not affect Transactions already completed on the Site.  
+Disagreement with Changes: If you disagree with any changes made to these Business Terms:  
+- As a Business Vendor, you may terminate the relationship free of charge after completing any pending Transactions.  
+- As a Buyer, refrain from purchasing items from Business Vendors. You may still acquire items from non-Business Vendors under our Terms & Conditions or choose to end your relationship with us.  
+No Partnership: These Business Terms do not create a partnership or agency relationship between you and us. Neither party has the authority to enter into agreements on behalf of the other or legally bind the other in any capacity.  
+Severability: Should a court or relevant authority determine that any section of these Business Terms is illegal, the remaining sections shall remain in full effect.

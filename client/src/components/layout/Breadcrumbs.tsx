@@ -28,7 +28,7 @@ export function Breadcrumbs() {
     'Messages', 'Notifications', 'Settings', 'Shopping Cart', 'Checkout',
     'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
     'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
-    'Privacy Policy', 'Terms of Service', 'Shipping Info', 'Cookie Policy',
+    'Privacy Policy', 'Terms of Service', 'Business Terms of Service', 'Shipping Info', 'Cookie Policy',
     'Community Guidelines', 'Site Map', 'Network Partnerships', 'Affiliate Partnerships', 'Resources'
   ], []);
 
@@ -72,13 +72,14 @@ export function Breadcrumbs() {
     faq: translatedTexts[32] || "FAQ",
     privacyPolicy: translatedTexts[33] || "Privacy Policy",
     termsOfService: translatedTexts[34] || "Terms of Service",
-    shippingInfo: translatedTexts[35] || "Shipping Info",
-    cookiePolicy: translatedTexts[36] || "Cookie Policy",
-    communityGuidelines: translatedTexts[37] || "Community Guidelines",
-    siteMap: translatedTexts[38] || "Site Map",
-    networkPartnerships: translatedTexts[39] || "Network Partnerships",
-    affiliatePartnerships: translatedTexts[40] || "Affiliate Partnerships",
-    resources: translatedTexts[41] || "Resources"
+    businessTermsOfService: translatedTexts[35] || "Business Terms of Service",
+    shippingInfo: translatedTexts[36] || "Shipping Info",
+    cookiePolicy: translatedTexts[37] || "Cookie Policy",
+    communityGuidelines: translatedTexts[38] || "Community Guidelines",
+    siteMap: translatedTexts[39] || "Site Map",
+    networkPartnerships: translatedTexts[40] || "Network Partnerships",
+    affiliatePartnerships: translatedTexts[41] || "Affiliate Partnerships",
+    resources: translatedTexts[42] || "Resources"
   }), [translatedTexts]);
 
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
@@ -157,6 +158,13 @@ export function Breadcrumbs() {
       breadcrumbs.push({ label: translatedLabels.resources });
       return breadcrumbs;
     }
+    
+    // Special handling for business terms to show terms of service hierarchy
+    if (path === '/business-terms') {
+      breadcrumbs.push({ label: translatedLabels.termsOfService, path: '/terms' });
+      breadcrumbs.push({ label: translatedLabels.businessTermsOfService });
+      return breadcrumbs;
+    }
 
     // Special handling for marketplace subsections (C2C, B2C, B2B)
     if (path === '/c2c' || path === '/marketplace/c2c') {
@@ -215,6 +223,7 @@ export function Breadcrumbs() {
       'faq': translatedLabels.faq,
       'privacy': translatedLabels.privacyPolicy,
       'terms': translatedLabels.termsOfService,
+      'business-terms': translatedLabels.businessTermsOfService,
       'shipping': translatedLabels.shippingInfo,
       'cookies': translatedLabels.cookiePolicy,
       'community-guidelines': translatedLabels.communityGuidelines,
