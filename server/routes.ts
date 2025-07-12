@@ -842,6 +842,10 @@ const pageContents: Record<string, PageContent> = {
       <h2>WELCOME TO DEDW3N</h2>
       <p>Thank you for choosing our platform!</p>
       
+      <div style="background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin: 1.5rem 0;">
+        <p><strong>For Business Users:</strong> <a href="/business-terms" style="color: #2563eb; text-decoration: underline;">Visit our Business Terms Of Service</a> for comprehensive business vendor and buyer legal requirements.</p>
+      </div>
+      
       <h3>I. About</h3>
       <p>Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com. We also refer to Dedw3n Affiliates, which are all companies within our group.</p>
       
