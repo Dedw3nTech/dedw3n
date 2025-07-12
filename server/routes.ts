@@ -1915,6 +1915,77 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
     }
   });
+
+  // Error reporting endpoint for sending error reports via SMTP
+  app.post('/api/report-error', async (req: Request, res: Response) => {
+    try {
+      const { errorType, errorMessage, url, userAgent, additionalInfo, userEmail } = req.body;
+      
+      // Basic validation
+      if (!errorType || !errorMessage) {
+        return res.status(400).json({ message: 'Error type and message are required' });
+      }
+      
+      // Generate error report content
+      const timestamp = new Date().toISOString();
+      const reportId = `ERR-${Date.now()}`;
+      
+      let emailContent = `ERROR REPORT - ${reportId}\n`;
+      emailContent += `===========================================\n\n`;
+      emailContent += `Timestamp: ${timestamp}\n`;
+      emailContent += `Error Type: ${errorType}\n`;
+      emailContent += `Error Message: ${errorMessage}\n`;
+      emailContent += `Page URL: ${url || 'Not provided'}\n`;
+      emailContent += `User Agent: ${userAgent || 'Not provided'}\n`;
+      
+      if (req.user) {
+        emailContent += `\nUser Information:\n`;
+        emailContent += `- User ID: ${req.user.id}\n`;
+        emailContent += `- Username: ${req.user.username}\n`;
+        emailContent += `- Email: ${req.user.email}\n`;
+        emailContent += `- Role: ${req.user.role}\n`;
+      } else if (userEmail) {
+        emailContent += `\nReporter Email: ${userEmail}\n`;
+      }
+      
+      if (additionalInfo) {
+        emailContent += `\nAdditional Information:\n${additionalInfo}\n`;
+      }
+      
+      emailContent += `\n===========================================\n`;
+      emailContent += `This is an automated error report from Dedw3n platform.\n`;
+      emailContent += `Please investigate and resolve the issue as soon as possible.`;
+      
+      // Send error report email using Brevo
+      console.log('[ERROR REPORT] Attempting to send error report:', reportId);
+      const emailSent = await sendContactEmail({
+        name: 'Error Reporting System',
+        email: userEmail || req.user?.email || 'system@dedw3n.com',
+        subject: `Error Report: ${errorType} - ${reportId}`,
+        message: emailContent
+      });
+      
+      if (emailSent) {
+        console.log('[ERROR REPORT] Error report sent successfully:', reportId);
+        return res.json({ 
+          success: true, 
+          message: 'Error report has been sent successfully. Thank you for helping us improve!',
+          reportId: reportId
+        });
+      } else {
+        console.log('[ERROR REPORT] Email sending failed for report:', reportId);
+        return res.status(500).json({ 
+          success: false,
+          message: 'Failed to send error report. Please try again later.'
+        });
+      }
+    } catch (error) {
+      console.error('Error report submission error:', error);
+      return res.status(500).json({ 
+        message: 'An error occurred while processing your error report. Please try again later.' 
+      });
+    }
+  });
   
   // Admin endpoint to update Brevo API key
   app.post('/api/admin/update-brevo-key', async (req: Request, res: Response) => {
@@ -12670,6 +12741,36 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('[ESCROW WEBHOOK] Error processing webhook:', error);
       res.status(500).json({ success: false, message: 'Webhook processing failed' });
+    }
+  });
+
+  // Test error reporting functionality
+  app.get('/api/test/error-report', async (req: Request, res: Response) => {
+    try {
+      // Simulate test error report
+      const testReportData = {
+        errorType: "Test Error Report",
+        errorMessage: "This is a test error report to verify the system is working",
+        url: req.get('Referer') || 'Unknown',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        additionalInfo: "Test performed from admin dashboard",
+        userEmail: undefined
+      };
+
+      const result = await reportError(testReportData);
+      
+      res.json({ 
+        success: true, 
+        message: "Test error report sent successfully",
+        details: result
+      });
+    } catch (error) {
+      console.error('Test error report failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Test failed', 
+        error: error.message 
+      });
     }
   });
 

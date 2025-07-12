@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
 import { VideoDisplayCard } from '@/components/products/VideoDisplayCard';
+import { ReportButton } from '@/components/ui/report-button';
 
 // Use server-served static asset paths for production compatibility
 const luxuryB2CImage = '/attached_assets/Dedw3n Marketplace (1).png';
@@ -741,11 +742,19 @@ export default function Products() {
 
     if (productsError) {
       return (
-        <div className="col-span-full py-12 text-center">
+        <div className="col-span-full py-12 text-center space-y-4">
           <div className="text-red-500 mb-4">Error loading products</div>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+            <ReportButton 
+              errorType="Products Loading Error"
+              errorMessage={`Failed to load products: ${productsError?.message || 'Unknown error'}`}
+              variant="outline"
+              size="default"
+            />
+          </div>
         </div>
       );
     }

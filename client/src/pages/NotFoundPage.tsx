@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useEffect } from "react";
+import { ReportButton } from "@/components/ui/report-button";
 
 export default function NotFoundPage() {
   useEffect(() => {
@@ -32,8 +33,18 @@ export default function NotFoundPage() {
           <Link href="/wall" className="text-black text-base hover:underline">Visit Community</Link>
         </div>
 
-        <div className="mt-8 text-sm text-gray-500">
-          <p>If you believe this is an error, please <Link href="/contact" className="text-blue-600 hover:underline">contact us</Link>.</p>
+        <div className="mt-8 space-y-4">
+          <div className="text-sm text-gray-500">
+            <p>If you believe this is an error, please <Link href="/contact" className="text-blue-600 hover:underline">contact us</Link>.</p>
+          </div>
+          <div className="flex justify-center">
+            <ReportButton 
+              errorType="404 - Page Not Found"
+              errorMessage={`Page not found: ${window.location.pathname}`}
+              variant="outline"
+              size="sm"
+            />
+          </div>
         </div>
       </div>
     </div>

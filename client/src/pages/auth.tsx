@@ -16,6 +16,7 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { MathCaptcha } from "@/components/MathCaptcha";
+import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
 import { 
   User, 
@@ -64,6 +65,7 @@ export default function AuthPage() {
     resetValidation 
   } = useEmailValidation();
 
+  const [authError, setAuthError] = useState<{type: string, message: string, show: boolean} | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -279,9 +281,15 @@ export default function AuthPage() {
       }
       setLocation('/');
     } catch (error: any) {
+      const errorMessage = error.message || "Something went wrong. Please try again.";
+      setAuthError({
+        type: isLogin ? "Login Error" : "Registration Error",
+        message: errorMessage,
+        show: true
+      });
       toast({
         title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -576,6 +584,47 @@ export default function AuthPage() {
                 )}
               </Button>
             </form>
+
+            {/* Authentication Error Report Section */}
+            {authError?.show && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-red-800 mb-1">
+                      {authError.type}
+                    </h4>
+                    <p className="text-sm text-red-700 mb-3">
+                      {authError.message}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAuthError(null)}
+                        className="text-xs"
+                      >
+                        Dismiss
+                      </Button>
+                      <ReportButton 
+                        errorType={authError.type}
+                        errorMessage={authError.message}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAuthError(null)}
+                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="text-center text-sm text-gray-600">
               {isLogin ? (

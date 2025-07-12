@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCcw, Home, Wifi, WifiOff } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 import { useNavigate } from '@/hooks/use-navigate';
+import { ReportButton } from '@/components/ui/report-button';
 
 interface Props {
   children: ReactNode;
@@ -131,6 +132,13 @@ export class ApiErrorBoundary extends Component<Props, State> {
             </Button>
             
             {showHomeButton && <this.NavigateToHomeComponent />}
+            
+            <ReportButton 
+              errorType={isOffline ? "Network Error" : "API Error"}
+              errorMessage={error?.message || 'An unexpected API error occurred'}
+              variant="outline"
+              size="default"
+            />
           </div>
         </div>
       );
