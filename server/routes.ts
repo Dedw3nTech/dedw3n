@@ -39,6 +39,7 @@ import { advancedSocialMediaSuite } from "./advanced-social-suite";
 
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey } from "./email-service";
+import { createZendeskTicket, testZendeskConnection } from "./zendesk-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 import TranslationOptimizer from "./translation-optimizer";
@@ -1876,7 +1877,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
       
-      // Send email using Brevo
+      // Send email using Brevo and create Zendesk ticket
       console.log('[CONTACT] Attempting to send contact email for submission:', submission.id);
       const emailSent = await sendContactEmail({
         name: submission.name,
@@ -1885,23 +1886,40 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: emailMessage
       });
       
-      if (emailSent) {
-        console.log('[CONTACT] Email sent successfully for submission:', submission.id);
+      // Create Zendesk ticket
+      console.log('[CONTACT] Creating Zendesk ticket for submission:', submission.id);
+      const zendeskResult = await createZendeskTicket({
+        name: submission.name,
+        email: submission.email,
+        subject: submission.subject,
+        message: emailMessage,
+        category: submission.subject
+      });
+      
+      if (emailSent || zendeskResult.success) {
+        console.log('[CONTACT] Contact submission processed successfully:', submission.id);
+        let responseMessage = 'Your message has been sent successfully. We\'ll get back to you soon!';
+        
+        if (zendeskResult.success && zendeskResult.ticketId) {
+          responseMessage += ` Your support ticket #${zendeskResult.ticketId} has been created.`;
+        }
+        
         return res.json({ 
           success: true, 
-          message: 'Your message has been sent successfully. We\'ll get back to you soon!',
+          message: responseMessage,
+          ticketId: zendeskResult.ticketId,
           filesUploaded: {
             titleUpload: titleFileInfo ? titleFileInfo.originalName : null,
             textUpload: textFileInfo ? textFileInfo.originalName : null
           }
         });
       } else {
-        console.log('[CONTACT] Email sending failed for submission:', submission.id);
-        // Even if email fails, we still saved the submission, so return success
+        console.log('[CONTACT] Both email and Zendesk failed for submission:', submission.id);
+        // Even if both fail, we still saved the submission, so return success
         return res.json({ 
           success: true, 
           message: 'Your message has been saved. We\'ll review it and get back to you soon!',
-          note: 'Email notification temporarily unavailable',
+          note: 'Notification systems temporarily unavailable',
           filesUploaded: {
             titleUpload: titleFileInfo ? titleFileInfo.originalName : null,
             textUpload: textFileInfo ? textFileInfo.originalName : null
@@ -1916,6 +1934,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
   
+  // Test Zendesk API connection
+  app.get('/api/zendesk/test', async (req: Request, res: Response) => {
+    try {
+      const result = await testZendeskConnection();
+      return res.json(result);
+    } catch (error) {
+      console.error('Zendesk test error:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to test Zendesk connection',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Admin endpoint to update Brevo API key
   app.post('/api/admin/update-brevo-key', async (req: Request, res: Response) => {
     const { apiKey } = req.body;
