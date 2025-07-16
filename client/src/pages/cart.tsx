@@ -684,7 +684,43 @@ export default function Cart() {
                   })}
                 </div>
                 
-                {/* Hidden Shipping Type Selection - Auto-calculated */}
+                {/* Shipping Method Selection */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {translateText('Select Shipping Method')}
+                  </label>
+                  <Select value={selectedShippingType} onValueChange={setSelectedShippingType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={translateText('Choose shipping method')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal-freight">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4" />
+                          <span>{translateText('Normal Freight')} - {translateText('3 days')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="air-freight">
+                        <div className="flex items-center gap-2">
+                          <Plane className="h-4 w-4" />
+                          <span>{translateText('Air Freight')} - {translateText('10 days')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="sea-freight">
+                        <div className="flex items-center gap-2">
+                          <Ship className="h-4 w-4" />
+                          <span>{translateText('Sea Freight')} - {translateText('45 days')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="under-customs">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span>{translateText('Under Customs')} - {translateText('7-10 days')}</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Shipping Summary */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
