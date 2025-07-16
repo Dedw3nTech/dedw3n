@@ -4578,15 +4578,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Get authentic shipping rate per kg from Excel data
       const ratePerKg = shippingRatesPerKg[shippingType as keyof typeof shippingRatesPerKg] || shippingRatesPerKg['normal-freight'];
       
-      // Calculate total cost using authentic pricing: (weight × rate per kg) + admin fee
-      let totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
-      
-      // Add small random variation (±5%) to simulate real-time pricing
-      const variation = 0.95 + (Math.random() * 0.1);
-      totalCost *= variation;
-
-      // Round to 2 decimal places
-      totalCost = Math.round(totalCost * 100) / 100;
+      // Calculate total cost using authentic pricing: £16.50-£16.53 per kg × weight + £6 admin fee
+      // Example: £16.50 × 5 kg + £6 = £88.50
+      const totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
 
       // Use authentic carrier from Excel data
       const carrier = 'Dedw3n Shipping';
