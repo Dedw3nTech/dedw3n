@@ -577,6 +577,17 @@ export default function ProductDetail() {
             </p>
           </div>
 
+          {/* Product Specifications */}
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">{translateText('Specifications')}</h3>
+            <div className="text-sm text-gray-600">
+              <div className="flex items-center">
+                <span className="font-medium">{translateText('Weight')}:</span>
+                <span className="ml-2">5 kg</span>
+              </div>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex gap-2 mb-6">
             <Button
