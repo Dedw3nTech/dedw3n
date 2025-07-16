@@ -1,0 +1,38 @@
+[
+  {
+    "Carrier":"Dedw3n Shipping",
+    "Shipping type":"Normal Freight",
+    "Seller Location":"Kinshasa",
+    "Buyer Location":"London",
+    "Price per kg ":19.0,
+    "admin fee per shipment":6,
+    "Delivery ":"3  days"
+  },
+  {
+    "Carrier":"Dedw3n Shipping",
+    "Shipping type":"Air  Freight",
+    "Seller Location":"Kinshasa",
+    "Buyer Location":"London",
+    "Price per kg ":16.75,
+    "admin fee per shipment":6,
+    "Delivery ":"10 Days"
+  },
+  {
+    "Carrier":"Dedw3n Shipping",
+    "Shipping type":"Sea Freight",
+    "Seller Location":"Kinshasa",
+    "Buyer Location":"London",
+    "Price per kg ":3.0,
+    "admin fee per shipment":83,
+    "Delivery ":"45 Days"
+  },
+  {
+    "Carrier":"Dedw3n Shipping",
+    "Shipping type":"Under Customs",
+    "Seller Location":"Kinshasa",
+    "Buyer Location":"London",
+    "Price per kg ":7.0,
+    "admin fee per shipment":133,
+    "Delivery ":"variable"
+  }
+]

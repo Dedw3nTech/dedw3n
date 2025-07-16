@@ -243,14 +243,16 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Fallback System** - Graceful fallback to basic calculation if API unavailable
   - Auto-calculation uses cart total weight, selected shipping type, and user destination for accurate pricing
   - Shipping notification displays carrier information and estimated delivery times automatically
-- **2025-07-16**: Authentic Shipping Data Integration - Replaced mock calculations with real Dedw3n Shipping Excel data
-  - **COMPLETED: Excel Data Import** - Extracted shipping rates from provided Excel file (Shipping fee_1752643264098.xlsx)
-  - **COMPLETED: Authentic Pricing Implementation** - Updated API to use real rates: £16.50-£16.53 per kg × weight + £6 admin fee (example: £16.50 × 5 kg + £6 = £88.50)
-  - **COMPLETED: Delivery Times Update** - Integrated authentic delivery times: Normal Freight (3 days), Air Freight (10 days), Sea Freight (45 days)
-  - **COMPLETED: Carrier Authentication** - All calculations now use "Dedw3n Shipping" as authentic carrier
-  - **COMPLETED: Cost Formula Update** - Changed from mock multipliers to authentic formula: (weight × rate per kg) + admin fee (example: £16.50 × 5 kg + £6 = £88.50)
-  - Authentic pricing eliminates random variations and provides consistent, real-world shipping costs
-  - All shipping calculations now reflect actual Dedw3n Shipping rates for Kinshasa to London route
+- **2025-07-16**: Updated Shipping Data Integration - Updated with latest Dedw3n Shipping Excel data  
+  - **COMPLETED: Latest Excel Data Import** - Updated shipping rates from latest Excel file (Shipping fee_1752644365410.xlsx)
+  - **COMPLETED: Updated Pricing Implementation** - Updated API with new authentic rates and variable admin fees
+  - **COMPLETED: Variable Admin Fee System** - Admin fees now vary by shipping type: Normal/Air (£6), Sea (£83), Under Customs (£133)
+  - **COMPLETED: Updated Rate Structure** - New rates: Normal Freight (£19.00/kg), Air Freight (£16.75/kg), Sea Freight (£3.00/kg), Under Customs (£7.00/kg)
+  - **COMPLETED: Delivery Times Update** - Updated delivery times: Normal Freight (3 days), Air Freight (10 days), Sea Freight (45 days), Under Customs (variable)
+  - **COMPLETED: Cost Formula Update** - Formula: (weight × rate per kg) + shipping-type-specific admin fee
+  - Examples: Normal Freight: £19.00 × 5 kg + £6 = £101.00, Sea Freight: £3.00 × 5 kg + £83 = £98.00
+  - **COMPLETED: Shipping Method Selector** - Added user-selectable shipping methods in cart with icons and delivery times
+  - All shipping calculations now reflect latest authentic Dedw3n Shipping rates with proper cost differentiation
 - **2025-07-11**: SMTP Brevo Authentication Assessment Complete - Comprehensive verification of email functionality
   - **COMPLETED: SMTP Authentication Verification** - All Brevo SMTP authentication requirements met and verified
   - **COMPLETED: Email Functionality Testing** - Contact form emails sending successfully to love@dedw3n.com

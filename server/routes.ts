@@ -4564,22 +4564,31 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Calculate distance factor based on countries (simplified)
       const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
       
-      // Authentic shipping rates from Dedw3n Shipping Excel data (per kg in GBP)
+      // Updated authentic shipping rates from Dedw3n Shipping Excel data (per kg in GBP)
       const shippingRatesPerKg = {
-        'normal-freight': 16.50,
-        'air-freight': 16.51, 
-        'sea-freight': 16.52,
-        'under-customs': 16.53
+        'normal-freight': 19.00,
+        'air-freight': 16.75, 
+        'sea-freight': 3.00,
+        'under-customs': 7.00
       };
       
-      // Admin fee per shipment (from Excel data)
-      const adminFeePerShipment = 6.00;
+      // Updated admin fees per shipment (from Excel data) - varies by shipping type
+      const adminFeesPerShipment = {
+        'normal-freight': 6,
+        'air-freight': 6, 
+        'sea-freight': 83,
+        'under-customs': 133
+      };
 
       // Get authentic shipping rate per kg from Excel data
       const ratePerKg = shippingRatesPerKg[shippingType as keyof typeof shippingRatesPerKg] || shippingRatesPerKg['normal-freight'];
       
-      // Calculate total cost using authentic pricing: £16.50-£16.53 per kg × weight + £6 admin fee
-      // Example: £16.50 × 5 kg + £6 = £88.50
+      // Get authentic admin fee for selected shipping type
+      const adminFeePerShipment = adminFeesPerShipment[shippingType as keyof typeof adminFeesPerShipment] || adminFeesPerShipment['normal-freight'];
+      
+      // Calculate total cost using updated authentic pricing from Excel data
+      // Examples: Normal Freight: £19.00 × 5 kg + £6 = £101.00
+      //          Sea Freight: £3.00 × 5 kg + £83 = £98.00
       const totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
 
       // Use authentic carrier from Excel data
@@ -4659,10 +4668,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       'normal-freight': '3 days',
       'air-freight': '10 days', 
       'sea-freight': '45 days',
-      'under-customs': '7-10 days' // Default for Under Customs since no specific time in Excel
+      'under-customs': 'variable' // As specified in Excel data
     };
     
-    return deliveryTimes[shippingType as keyof typeof deliveryTimes] || '7-10 days';
+    return deliveryTimes[shippingType as keyof typeof deliveryTimes] || 'variable';
   }
 
   function getEstimatedDays(shippingType: string, distanceFactor: number): string {
