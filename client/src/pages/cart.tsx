@@ -37,24 +37,6 @@ export default function Cart() {
   // Shipping type selection
   const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
   
-  // Auto-calculate shipping costs
-  const cartTotalWeight = cartItems.reduce((total: number, item: any) => 
-    total + ((item.product?.weight || 0) * item.quantity), 0
-  );
-  
-  // Get shipping calculation automatically
-  const { data: autoShippingCalculation } = useQuery({
-    queryKey: ['/api/shipping/calculate', {
-      shippingType: selectedShippingType,
-      weight: cartTotalWeight,
-      originCountry: 'DR Congo',
-      destinationCountry: user?.country || 'United Kingdom',
-      originCity: 'Kinshasa',
-      destinationCity: user?.city || 'London'
-    }],
-    enabled: cartTotalWeight > 0 && cartItems.length > 0
-  });
-  
   // Navigation helper
   const handleProductClick = (productId: number) => {
     setLocation(`/product/${productId}`);
@@ -107,6 +89,27 @@ export default function Cart() {
       return response.json();
     },
     enabled: !!cartItems.length,
+  });
+
+  // Auto-calculate shipping costs - ensure cartItems is available
+  const cartTotalWeight = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems.reduce((total: number, item: any) => 
+      total + ((item.product?.weight || 0) * item.quantity), 0
+    );
+  }, [cartItems]);
+  
+  // Get shipping calculation automatically
+  const { data: autoShippingCalculation } = useQuery({
+    queryKey: ['/api/shipping/calculate', {
+      shippingType: selectedShippingType,
+      weight: cartTotalWeight,
+      originCountry: 'DR Congo',
+      destinationCountry: user?.country || 'United Kingdom',
+      originCity: 'Kinshasa',
+      destinationCity: user?.city || 'London'
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0 && cartTotalWeight > 0
   });
   
   // Update quantity mutation
@@ -229,7 +232,9 @@ export default function Cart() {
   const { subtotal, tax } = pricing;
   
   // Use auto-calculated shipping cost if available, otherwise fallback to basic calculation
-  const finalShippingCost = autoShippingCalculation?.totalCost || pricing.shippingCost;
+  const finalShippingCost = useMemo(() => {
+    return autoShippingCalculation?.totalCost || pricing.shippingCost;
+  }, [autoShippingCalculation, pricing.shippingCost]);
   
   // Calculate 1.5% transaction commission on subtotal with £2 minimum
   const calculatedCommission = subtotal * 0.015;
