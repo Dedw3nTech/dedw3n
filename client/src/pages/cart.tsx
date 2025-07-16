@@ -582,9 +582,11 @@ export default function Cart() {
                             <MapPin className="h-4 w-4 text-green-600 flex-shrink-0" />
                             <span className="text-gray-600">{translateText('Seller Location')}:</span>
                             <span className="font-medium text-gray-900">
-                              {vendor?.city && vendor?.country 
-                                ? `${vendor.city}, ${vendor.country}`
-                                : vendor?.location || translateText('Location not specified')
+                              {item.product?.vendorId === 1 
+                                ? 'Kinshasa, DR Congo'
+                                : vendor?.city && vendor?.country 
+                                  ? `${vendor.city}, ${vendor.country}`
+                                  : vendor?.location || translateText('Location not specified')
                               }
                             </span>
                           </div>
