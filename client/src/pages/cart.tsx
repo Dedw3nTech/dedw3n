@@ -17,6 +17,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
+import { useWeightUnit } from '@/contexts/WeightUnitContext';
 
 
 export default function Cart() {
@@ -25,6 +26,7 @@ export default function Cart() {
   const { toast } = useToast();
   const { formatPriceFromGBP } = useCurrency();
   const { translateText } = useMasterTranslation();
+  const { formatWeight } = useWeightUnit();
   
   // Escrow state management
   const [useEscrow, setUseEscrow] = useState(false);
@@ -632,7 +634,7 @@ export default function Cart() {
                             <span className="text-gray-600">{translateText('Total Weight')}:</span>
                             <span className="font-medium text-gray-900">
                               {totalWeight > 0 
-                                ? `${totalWeight} ${item.product?.weightUnit || 'kg'}`
+                                ? formatWeight(totalWeight)
                                 : translateText('Weight not specified')
                               }
                             </span>
@@ -667,9 +669,9 @@ export default function Cart() {
                   <div className="flex items-center justify-between text-sm mt-1">
                     <span className="text-gray-600">{translateText('Total Weight')}:</span>
                     <span className="font-medium">
-                      {cartItems.reduce((total: number, item: any) => 
+                      {formatWeight(cartItems.reduce((total: number, item: any) => 
                         total + ((item.product?.weight || 0) * item.quantity), 0
-                      ).toFixed(2)} kg
+                      ))}
                     </span>
                   </div>
                 </div>

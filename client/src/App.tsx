@@ -13,6 +13,7 @@ import { useLocation } from 'wouter';
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { WeightUnitProvider } from "@/contexts/WeightUnitContext";
 import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider";
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
@@ -444,6 +445,7 @@ function App() {
                         <MessagingProvider>
                           <CurrencyProvider>
                             <LanguageProvider>
+                              <WeightUnitProvider>
                               <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
                           <SafeComponentWrapper componentName="OptimizedNavigation">
@@ -493,6 +495,7 @@ function App() {
                         </div>
                               </ErrorBoundary>
                               <Toaster />
+                              </WeightUnitProvider>
                             </LanguageProvider>
                           </CurrencyProvider>
                         </MessagingProvider>

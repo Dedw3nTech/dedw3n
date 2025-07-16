@@ -12,6 +12,7 @@ import { formatPrice } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
+import { useWeightUnit } from '@/contexts/WeightUnitContext';
 
 import { 
   Loader2, 
@@ -68,6 +69,9 @@ export default function ProductDetail() {
   
   // Translation system
   const { translateText } = useMasterTranslation();
+  
+  // Weight unit system
+  const { formatWeight } = useWeightUnit();
 
 
   
@@ -583,7 +587,7 @@ export default function ProductDetail() {
             <div className="text-sm text-gray-600">
               <div className="flex items-center">
                 <span className="font-medium">{translateText('Weight')}:</span>
-                <span className="ml-2">5 kg</span>
+                <span className="ml-2">{formatWeight(5)}</span>
               </div>
             </div>
           </div>
