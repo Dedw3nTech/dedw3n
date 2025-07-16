@@ -65,7 +65,19 @@ export default function ShippingCalculator() {
       originCity,
       destinationCity
     }],
-    enabled: weight > 0 && originCountry && destinationCountry
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        shippingType,
+        weight: weight.toString(),
+        originCountry,
+        destinationCountry,
+        originCity,
+        destinationCity
+      });
+      const response = await apiRequest('GET', `/api/shipping/calculate?${params}`);
+      return response.json();
+    },
+    enabled: Boolean(weight > 0 && originCountry && destinationCountry)
   });
 
   const shippingTypes = [
