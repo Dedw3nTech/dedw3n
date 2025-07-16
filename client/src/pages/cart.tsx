@@ -37,6 +37,24 @@ export default function Cart() {
   // Shipping type selection
   const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
   
+  // Auto-calculate shipping costs
+  const cartTotalWeight = cartItems.reduce((total: number, item: any) => 
+    total + ((item.product?.weight || 0) * item.quantity), 0
+  );
+  
+  // Get shipping calculation automatically
+  const { data: autoShippingCalculation } = useQuery({
+    queryKey: ['/api/shipping/calculate', {
+      shippingType: selectedShippingType,
+      weight: cartTotalWeight,
+      originCountry: 'DR Congo',
+      destinationCountry: user?.country || 'United Kingdom',
+      originCity: 'Kinshasa',
+      destinationCity: user?.city || 'London'
+    }],
+    enabled: cartTotalWeight > 0 && cartItems.length > 0
+  });
+  
   // Navigation helper
   const handleProductClick = (productId: number) => {
     setLocation(`/product/${productId}`);
@@ -206,16 +224,19 @@ export default function Cart() {
   
 
   
-  // Calculate pricing using centralized system
+  // Calculate pricing using centralized system with auto-calculated shipping
   const pricing = calculatePricing(cartItems, pricingConfig);
-  const { subtotal, shippingCost, tax } = pricing;
+  const { subtotal, tax } = pricing;
+  
+  // Use auto-calculated shipping cost if available, otherwise fallback to basic calculation
+  const finalShippingCost = autoShippingCalculation?.totalCost || pricing.shippingCost;
   
   // Calculate 1.5% transaction commission on subtotal with £2 minimum
   const calculatedCommission = subtotal * 0.015;
   const transactionCommission = subtotal > 0 ? Math.max(calculatedCommission, 2) : 0;
   
-  // Recalculate total with commission
-  const total = subtotal + shippingCost + tax + transactionCommission;
+  // Recalculate total with commission using final shipping cost
+  const total = subtotal + finalShippingCost + tax + transactionCommission;
   
   // Loading state
   if (isLoading) {
@@ -658,55 +679,17 @@ export default function Cart() {
                   })}
                 </div>
                 
-                {/* Shipping Type Selection */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {translateText('Shipping Type')}
-                    </label>
-                    <Select value={selectedShippingType} onValueChange={setSelectedShippingType}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={translateText('Select shipping type')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal-freight">
-                          <div className="flex items-center gap-2">
-                            <Truck className="h-4 w-4" />
-                            <span>{translateText('Normal Freight')}</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="air-freight">
-                          <div className="flex items-center gap-2">
-                            <Plane className="h-4 w-4" />
-                            <span>{translateText('Air Freight')}</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="sea-freight">
-                          <div className="flex items-center gap-2">
-                            <Ship className="h-4 w-4" />
-                            <span>{translateText('Sea Freight')}</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="under-customs">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4" />
-                            <span>{translateText('Under Customs')}</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                {/* Hidden Shipping Type Selection - Auto-calculated */}
 
                 {/* Shipping Summary */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{translateText('Estimated Shipping')}:</span>
+                    <span className="text-gray-600">{translateText('Calculated Shipping')}:</span>
                     <span className="font-medium">
-                      {shippingCost === 0 ? (
+                      {finalShippingCost === 0 ? (
                         <span className="text-green-600">{translateText('Free')}</span>
                       ) : (
-                        formatPriceFromGBP(shippingCost)
+                        <span className="text-blue-600">{formatPriceFromGBP(finalShippingCost)}</span>
                       )}
                     </span>
                   </div>
@@ -728,29 +711,39 @@ export default function Cart() {
                     </span>
                   </div>
                   
-                  {/* Shipping Calculator Link */}
-                  <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-gray-100">
-                    <span className="text-gray-600">{translateText('Need detailed shipping cost?')}:</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open('/shipping-calculator', '_blank')}
-                      className="text-xs h-7 px-2"
-                    >
-                      <Calculator className="h-3 w-3 mr-1" />
-                      {translateText('Calculate Shipping')}
-                    </Button>
-                  </div>
+                  {/* Auto-calculated shipping details */}
+                  {autoShippingCalculation && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Carrier')}:</span>
+                          <span className="font-medium">{autoShippingCalculation.carrier}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Estimated Delivery')}:</span>
+                          <span className="font-medium">{autoShippingCalculation.estimatedDays}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Route')}:</span>
+                          <span className="font-medium text-xs">{autoShippingCalculation.origin} → {autoShippingCalculation.destination}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Free shipping notification */}
-          {amountNeededForFreeShipping(subtotal, pricingConfig) > 0 && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                {translateText('Add')} {formatPriceFromGBP(amountNeededForFreeShipping(subtotal, pricingConfig))} {translateText('more to qualify for free shipping!')}
+          {/* Auto-calculated shipping notification */}
+          {autoShippingCalculation && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-blue-800">
+                <Calculator className="h-4 w-4" />
+                <span className="font-medium">{translateText('Shipping automatically calculated based on cart contents and destination')}</span>
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                {translateText('Carrier')}: {autoShippingCalculation.carrier} • {translateText('Estimated')}: {autoShippingCalculation.estimatedDays}
               </p>
             </div>
           )}
