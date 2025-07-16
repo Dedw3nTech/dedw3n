@@ -31,6 +31,11 @@ export default function Cart() {
   const [escrowTransaction, setEscrowTransaction] = useState<any>(null);
   const [escrowLoading, setEscrowLoading] = useState(false);
   
+  // Navigation helper
+  const handleProductClick = (productId: number) => {
+    setLocation(`/product/${productId}`);
+  };
+  
   // Show authentication message if not logged in
   if (!user) {
     return (
@@ -273,7 +278,10 @@ export default function Cart() {
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-4">
                     {/* Product Image */}
-                    <div className="h-16 w-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                    <div 
+                      className="h-16 w-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleProductClick(item.product?.id)}
+                    >
                       {item.product?.imageUrl ? (
                         <img
                           src={item.product.imageUrl}
@@ -291,7 +299,10 @@ export default function Cart() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1 pr-2">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                          <h3 
+                            className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
                             {translateText(item.product?.name || 'Product')}
                           </h3>
                           {item.product?.vendorId && (
@@ -418,7 +429,10 @@ export default function Cart() {
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden mr-4">
+                        <div 
+                          className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden mr-4 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleProductClick(item.product?.id)}
+                        >
                           {item.product?.imageUrl ? (
                             <img
                               src={item.product.imageUrl}
@@ -432,7 +446,10 @@ export default function Cart() {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div 
+                            className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
                             {translateText(item.product?.name || 'Product')}
                           </div>
                           {item.product?.vendorId && (
@@ -553,7 +570,10 @@ export default function Cart() {
                     return (
                       <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
                         <div className="flex items-start gap-3 mb-3">
-                          <div className="h-12 w-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                          <div 
+                            className="h-12 w-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
                             {item.product?.imageUrl ? (
                               <img
                                 src={item.product.imageUrl}
@@ -567,7 +587,10 @@ export default function Cart() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm truncate">
+                            <h4 
+                              className="font-medium text-gray-900 text-sm truncate cursor-pointer hover:text-blue-600 transition-colors"
+                              onClick={() => handleProductClick(item.product?.id)}
+                            >
                               {translateText(item.product?.name || 'Product')}
                             </h4>
                             <p className="text-xs text-gray-500">
