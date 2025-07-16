@@ -4537,6 +4537,167 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Shipping cost calculation endpoint
+  app.get('/api/shipping/calculate', async (req: Request, res: Response) => {
+    try {
+      const {
+        shippingType,
+        weight,
+        originCountry,
+        destinationCountry,
+        originCity,
+        destinationCity
+      } = req.query;
+
+      // Validate required parameters
+      if (!shippingType || !weight || !originCountry || !destinationCountry) {
+        return res.status(400).json({ 
+          message: "Missing required parameters: shippingType, weight, originCountry, destinationCountry" 
+        });
+      }
+
+      const weightNum = parseFloat(weight as string);
+      if (isNaN(weightNum) || weightNum <= 0) {
+        return res.status(400).json({ message: "Weight must be a positive number" });
+      }
+
+      // Calculate distance factor based on countries (simplified)
+      const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
+      
+      // Base costs for different shipping types (in GBP)
+      const baseCosts = {
+        'normal-freight': 8.50,
+        'air-freight': 25.00,
+        'sea-freight': 15.00,
+        'under-customs': 35.00
+      };
+
+      // Type multipliers for different shipping methods
+      const typeMultipliers = {
+        'normal-freight': 1.0,
+        'air-freight': 2.5,
+        'sea-freight': 0.8,
+        'under-customs': 3.2
+      };
+
+      // Weight multipliers (progressive pricing)
+      const getWeightMultiplier = (weight: number) => {
+        if (weight <= 1) return 1.0;
+        if (weight <= 5) return 1.2;
+        if (weight <= 10) return 1.5;
+        if (weight <= 25) return 2.0;
+        return 2.8;
+      };
+
+      const baseCost = baseCosts[shippingType as keyof typeof baseCosts] || baseCosts['normal-freight'];
+      const typeMultiplier = typeMultipliers[shippingType as keyof typeof typeMultipliers] || 1.0;
+      const weightMultiplier = getWeightMultiplier(weightNum);
+      
+      // Calculate total cost
+      let totalCost = baseCost * distanceFactor * weightMultiplier * typeMultiplier;
+      
+      // Add small random variation (±5%) to simulate real-time pricing
+      const variation = 0.95 + (Math.random() * 0.1);
+      totalCost *= variation;
+
+      // Round to 2 decimal places
+      totalCost = Math.round(totalCost * 100) / 100;
+
+      // Determine carrier based on shipping type
+      const carriers = {
+        'normal-freight': 'FedEx Ground',
+        'air-freight': 'DHL Express',
+        'sea-freight': 'Maersk Line',
+        'under-customs': 'UPS Worldwide Express'
+      };
+
+      const calculation = {
+        shippingType,
+        weight: weightNum,
+        distance: distanceFactor,
+        baseCost,
+        weightMultiplier,
+        typeMultiplier,
+        totalCost,
+        estimatedDays: getEstimatedDays(shippingType as string, distanceFactor),
+        carrier: carriers[shippingType as keyof typeof carriers] || 'Standard Carrier',
+        origin: `${originCity || ''}, ${originCountry}`.replace(/^,\s*/, ''),
+        destination: `${destinationCity || ''}, ${destinationCountry}`.replace(/^,\s*/, '')
+      };
+
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error calculating shipping cost:", error);
+      res.status(500).json({ message: "Failed to calculate shipping cost" });
+    }
+  });
+
+  // Helper function to calculate distance factor
+  function calculateDistanceFactor(origin: string, destination: string): number {
+    // Simplified distance calculation based on regions
+    const regions = {
+      'DR Congo': 'central-africa',
+      'Kenya': 'east-africa', 
+      'Nigeria': 'west-africa',
+      'South Africa': 'southern-africa',
+      'Morocco': 'north-africa',
+      'Egypt': 'north-africa',
+      'Ghana': 'west-africa',
+      'United Kingdom': 'europe',
+      'Germany': 'europe',
+      'France': 'europe',
+      'Belgium': 'europe',
+      'Netherlands': 'europe',
+      'Spain': 'europe',
+      'Italy': 'europe',
+      'Switzerland': 'europe',
+      'United States': 'north-america',
+      'Canada': 'north-america',
+      'Mexico': 'north-america',
+      'Brazil': 'south-america',
+      'China': 'asia',
+      'Japan': 'asia',
+      'Australia': 'oceania'
+    };
+
+    const originRegion = regions[origin as keyof typeof regions] || 'other';
+    const destRegion = regions[destination as keyof typeof regions] || 'other';
+
+    // Same region
+    if (originRegion === destRegion) return 1.0;
+    
+    // Africa to Europe/North America
+    if (originRegion.includes('africa') && (destRegion === 'europe' || destRegion === 'north-america')) {
+      return 1.8;
+    }
+    
+    // Africa to Asia/Oceania
+    if (originRegion.includes('africa') && (destRegion === 'asia' || destRegion === 'oceania')) {
+      return 2.2;
+    }
+    
+    // Intercontinental (other combinations)
+    return 2.5;
+  }
+
+  // Helper function to get estimated delivery days
+  function getEstimatedDays(shippingType: string, distanceFactor: number): string {
+    const baseDays = {
+      'normal-freight': { min: 7, max: 14 },
+      'air-freight': { min: 2, max: 5 },
+      'sea-freight': { min: 20, max: 45 },
+      'under-customs': { min: 3, max: 10 }
+    };
+
+    const days = baseDays[shippingType as keyof typeof baseDays] || baseDays['normal-freight'];
+    
+    // Adjust for distance
+    const adjustedMin = Math.ceil(days.min * Math.min(distanceFactor, 2));
+    const adjustedMax = Math.ceil(days.max * Math.min(distanceFactor, 2));
+    
+    return `${adjustedMin}-${adjustedMax} days`;
+  }
+
   // Trending products endpoint
   app.get('/api/products/trending', async (req: Request, res: Response) => {
     try {

@@ -95,6 +95,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/become-vendor',
     '/liked',
     '/orders-returns',
+    '/shipping-calculator',
 
   ];
   
@@ -180,6 +181,7 @@ import AffiliatePartnerships from "@/pages/affiliate-partnerships";
 import Resources from "@/pages/resources";
 import ContactPage from "@/pages/contact";
 import CommunityGuidelines from "@/pages/community-guidelines";
+import ShippingCalculator from "@/pages/shipping-calculator";
 import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
@@ -382,6 +384,12 @@ function Router() {
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/orders-returns" component={OrdersReturnsPage} />
+      
+      {/* Shipping Calculator - accessible to all users */}
+      <Route path="/shipping-calculator">
+        <SEOHead title="Shipping Calculator - Dedw3n" description="Calculate shipping costs for different freight types and international destinations on Dedw3n marketplace." />
+        <ShippingCalculator />
+      </Route>
       
       {/* Product detail routes */}
       <Route path="/product/:id" component={ProductDetail} />

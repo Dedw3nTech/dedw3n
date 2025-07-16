@@ -224,6 +224,17 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Dynamic Display** - Selected shipping method displays in shipping summary with proper translation support
   - Shipping type selector positioned between product list and shipping summary for optimal user experience
   - Default selection set to "Normal Freight" with persistent state management across cart interactions
+- **2025-07-16**: Shipping Fee Calculator Tool Implementation - Created comprehensive shipping cost calculation system with API backend
+  - **COMPLETED: Shipping Calculator Page** - Created client/src/pages/shipping-calculator.tsx with comprehensive UI for cost calculation
+  - **COMPLETED: API Backend** - Implemented /api/shipping/calculate endpoint with distance-based pricing algorithms
+  - **COMPLETED: Cart Integration** - Added "Calculate Shipping" button in cart page linking to shipping calculator
+  - **COMPLETED: Route Configuration** - Added /shipping-calculator route to App.tsx and server validation
+  - **COMPLETED: Cost Calculation Logic** - Implemented weight-based, distance-based, and shipping-type multipliers
+  - **COMPLETED: Carrier Assignment** - Different carriers assigned per shipping type (FedEx, DHL, Maersk, UPS)
+  - **COMPLETED: Regional Distance Factors** - Africa-Europe, Africa-Asia, intercontinental distance calculations
+  - Calculator supports 22 countries with regional grouping for accurate cost estimation
+  - Progressive weight pricing (1kg, 5kg, 10kg, 25kg+ tiers) and shipping type multipliers implemented
+  - Real-time cost breakdown showing base cost, weight factor, type factor, and total shipping cost
 - **2025-07-11**: SMTP Brevo Authentication Assessment Complete - Comprehensive verification of email functionality
   - **COMPLETED: SMTP Authentication Verification** - All Brevo SMTP authentication requirements met and verified
   - **COMPLETED: Email Functionality Testing** - Contact form emails sending successfully to love@dedw3n.com

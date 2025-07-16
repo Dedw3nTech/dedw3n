@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText } from 'lucide-react';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -726,6 +726,20 @@ export default function Cart() {
                       {selectedShippingType === 'sea-freight' && translateText('Sea Freight')}
                       {selectedShippingType === 'under-customs' && translateText('Under Customs')}
                     </span>
+                  </div>
+                  
+                  {/* Shipping Calculator Link */}
+                  <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-gray-100">
+                    <span className="text-gray-600">{translateText('Need detailed shipping cost?')}:</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open('/shipping-calculator', '_blank')}
+                      className="text-xs h-7 px-2"
+                    >
+                      <Calculator className="h-3 w-3 mr-1" />
+                      {translateText('Calculate Shipping')}
+                    </Button>
                   </div>
                 </div>
               </CardContent>

@@ -453,7 +453,7 @@ app.use((req, res, next) => {
     const validRoutes = [
       '/', '/login', '/register', '/products', '/wall', '/dating', 
       '/about', '/contact', '/faq', '/catalogue-rules', '/tips-tricks', '/business', '/network-partnerships', '/network-partnership-resources', '/affiliate-partnerships', '/resources', '/privacy', '/terms', '/business-terms', '/cookies', '/community-guidelines',
-      '/profile', '/settings', '/messages', '/notifications', '/cart',
+      '/profile', '/settings', '/messages', '/notifications', '/cart', '/shipping-calculator',
       '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
       '/subscriptions', '/verify', '/reset-password', '/help', '/logout-success'
