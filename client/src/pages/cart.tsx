@@ -10,7 +10,8 @@ import {
   CardFooter 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -32,6 +33,9 @@ export default function Cart() {
   const [useEscrow, setUseEscrow] = useState(false);
   const [escrowTransaction, setEscrowTransaction] = useState<any>(null);
   const [escrowLoading, setEscrowLoading] = useState(false);
+  
+  // Shipping type selection
+  const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
   
   // Navigation helper
   const handleProductClick = (productId: number) => {
@@ -654,6 +658,46 @@ export default function Cart() {
                   })}
                 </div>
                 
+                {/* Shipping Type Selection */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {translateText('Shipping Type')}
+                    </label>
+                    <Select value={selectedShippingType} onValueChange={setSelectedShippingType}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={translateText('Select shipping type')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal-freight">
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4" />
+                            <span>{translateText('Normal Freight')}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="air-freight">
+                          <div className="flex items-center gap-2">
+                            <Plane className="h-4 w-4" />
+                            <span>{translateText('Air Freight')}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="sea-freight">
+                          <div className="flex items-center gap-2">
+                            <Ship className="h-4 w-4" />
+                            <span>{translateText('Sea Freight')}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="under-customs">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            <span>{translateText('Under Customs')}</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 {/* Shipping Summary */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between text-sm">
@@ -672,6 +716,15 @@ export default function Cart() {
                       {formatWeight(cartItems.reduce((total: number, item: any) => 
                         total + ((item.product?.weight || 0) * item.quantity), 0
                       ))}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-600">{translateText('Shipping Method')}:</span>
+                    <span className="font-medium text-blue-600">
+                      {selectedShippingType === 'normal-freight' && translateText('Normal Freight')}
+                      {selectedShippingType === 'air-freight' && translateText('Air Freight')}
+                      {selectedShippingType === 'sea-freight' && translateText('Sea Freight')}
+                      {selectedShippingType === 'under-customs' && translateText('Under Customs')}
                     </span>
                   </div>
                 </div>
