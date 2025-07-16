@@ -49,13 +49,10 @@ export function ReportButton({
         userEmail: !user && userEmail.trim() ? userEmail.trim() : undefined
       };
       
-      const response = await apiRequest({
-        url: '/api/report-error',
-        method: 'POST',
-        body: reportData
-      });
+      const response = await apiRequest('POST', '/api/report-error', reportData);
       
-      if (response.success) {
+      const data = await response.json();
+      if (data.success) {
         setSubmitStatus('success');
         setTimeout(() => {
           setIsOpen(false);

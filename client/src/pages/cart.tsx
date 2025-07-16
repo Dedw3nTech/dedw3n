@@ -408,10 +408,10 @@ export default function Cart() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">{translateText('Shipping')}</span>
                     <span className="font-medium">
-                      {shippingCost === 0 ? (
+                      {finalShippingCost === 0 ? (
                         <span className="text-green-600">{translateText('Free')}</span>
                       ) : (
-                        formatPriceFromGBP(shippingCost)
+                        formatPriceFromGBP(finalShippingCost)
                       )}
                     </span>
                   </div>
@@ -544,10 +544,10 @@ export default function Cart() {
                     {translateText('Shipping')}
                   </th>
                   <td className="px-6 py-3 text-right text-sm text-gray-900">
-                    {shippingCost === 0 ? (
+                    {finalShippingCost === 0 ? (
                       <span className="text-green-600">{translateText('Free')}</span>
                     ) : (
-                      formatPriceFromGBP(shippingCost)
+                      formatPriceFromGBP(finalShippingCost)
                     )}
                   </td>
                   <td></td>
