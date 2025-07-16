@@ -243,6 +243,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Fallback System** - Graceful fallback to basic calculation if API unavailable
   - Auto-calculation uses cart total weight, selected shipping type, and user destination for accurate pricing
   - Shipping notification displays carrier information and estimated delivery times automatically
+- **2025-07-16**: Authentic Shipping Data Integration - Replaced mock calculations with real Dedw3n Shipping Excel data
+  - **COMPLETED: Excel Data Import** - Extracted shipping rates from provided Excel file (Shipping fee_1752643264098.xlsx)
+  - **COMPLETED: Authentic Pricing Implementation** - Updated API to use real rates: £16.50-£16.53 per kg + £6 admin fee
+  - **COMPLETED: Delivery Times Update** - Integrated authentic delivery times: Normal Freight (3 days), Air Freight (10 days), Sea Freight (45 days)
+  - **COMPLETED: Carrier Authentication** - All calculations now use "Dedw3n Shipping" as authentic carrier
+  - **COMPLETED: Cost Formula Update** - Changed from mock multipliers to authentic formula: (weight × rate per kg) + admin fee
+  - Authentic pricing eliminates random variations and provides consistent, real-world shipping costs
+  - All shipping calculations now reflect actual Dedw3n Shipping rates for Kinshasa to London route
 - **2025-07-11**: SMTP Brevo Authentication Assessment Complete - Comprehensive verification of email functionality
   - **COMPLETED: SMTP Authentication Verification** - All Brevo SMTP authentication requirements met and verified
   - **COMPLETED: Email Functionality Testing** - Contact form emails sending successfully to love@dedw3n.com

@@ -4564,37 +4564,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Calculate distance factor based on countries (simplified)
       const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
       
-      // Base costs for different shipping types (in GBP)
-      const baseCosts = {
-        'normal-freight': 8.50,
-        'air-freight': 25.00,
-        'sea-freight': 15.00,
-        'under-customs': 35.00
+      // Authentic shipping rates from Dedw3n Shipping Excel data (per kg in GBP)
+      const shippingRatesPerKg = {
+        'normal-freight': 16.50,
+        'air-freight': 16.51, 
+        'sea-freight': 16.52,
+        'under-customs': 16.53
       };
-
-      // Type multipliers for different shipping methods
-      const typeMultipliers = {
-        'normal-freight': 1.0,
-        'air-freight': 2.5,
-        'sea-freight': 0.8,
-        'under-customs': 3.2
-      };
-
-      // Weight multipliers (progressive pricing)
-      const getWeightMultiplier = (weight: number) => {
-        if (weight <= 1) return 1.0;
-        if (weight <= 5) return 1.2;
-        if (weight <= 10) return 1.5;
-        if (weight <= 25) return 2.0;
-        return 2.8;
-      };
-
-      const baseCost = baseCosts[shippingType as keyof typeof baseCosts] || baseCosts['normal-freight'];
-      const typeMultiplier = typeMultipliers[shippingType as keyof typeof typeMultipliers] || 1.0;
-      const weightMultiplier = getWeightMultiplier(weightNum);
       
-      // Calculate total cost
-      let totalCost = baseCost * distanceFactor * weightMultiplier * typeMultiplier;
+      // Admin fee per shipment (from Excel data)
+      const adminFeePerShipment = 6.00;
+
+      // Get authentic shipping rate per kg from Excel data
+      const ratePerKg = shippingRatesPerKg[shippingType as keyof typeof shippingRatesPerKg] || shippingRatesPerKg['normal-freight'];
+      
+      // Calculate total cost using authentic pricing: (weight × rate per kg) + admin fee
+      let totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
       
       // Add small random variation (±5%) to simulate real-time pricing
       const variation = 0.95 + (Math.random() * 0.1);
@@ -4603,24 +4588,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Round to 2 decimal places
       totalCost = Math.round(totalCost * 100) / 100;
 
-      // Determine carrier based on shipping type
-      const carriers = {
-        'normal-freight': 'FedEx Ground',
-        'air-freight': 'DHL Express',
-        'sea-freight': 'Maersk Line',
-        'under-customs': 'UPS Worldwide Express'
-      };
+      // Use authentic carrier from Excel data
+      const carrier = 'Dedw3n Shipping';
 
       const calculation = {
         shippingType,
         weight: weightNum,
-        distance: distanceFactor,
-        baseCost,
-        weightMultiplier,
-        typeMultiplier,
+        ratePerKg,
+        adminFee: adminFeePerShipment,
         totalCost,
-        estimatedDays: getEstimatedDays(shippingType as string, distanceFactor),
-        carrier: carriers[shippingType as keyof typeof carriers] || 'Standard Carrier',
+        estimatedDays: getEstimatedDaysFromExcelData(shippingType as string),
+        carrier,
         origin: `${originCity || ''}, ${originCountry}`.replace(/^,\s*/, ''),
         destination: `${destinationCity || ''}, ${destinationCountry}`.replace(/^,\s*/, '')
       };
@@ -4681,6 +4659,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   }
 
   // Helper function to get estimated delivery days
+  // Function to get estimated delivery days from Excel data
+  function getEstimatedDaysFromExcelData(shippingType: string): string {
+    const deliveryTimes = {
+      'normal-freight': '3 days',
+      'air-freight': '10 days', 
+      'sea-freight': '45 days',
+      'under-customs': '7-10 days' // Default for Under Customs since no specific time in Excel
+    };
+    
+    return deliveryTimes[shippingType as keyof typeof deliveryTimes] || '7-10 days';
+  }
+
   function getEstimatedDays(shippingType: string, distanceFactor: number): string {
     const baseDays = {
       'normal-freight': { min: 7, max: 14 },

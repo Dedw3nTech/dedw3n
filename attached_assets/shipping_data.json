@@ -1,0 +1,51 @@
+{
+  "Sheet1": {
+    "columns": [
+      "Carrier",
+      "Shipping type",
+      "Seller Location",
+      "Buyer Location",
+      "Price per kg ",
+      "admin fee per shipment",
+      "Delivery "
+    ],
+    "data": [
+      {
+        "Carrier": "Dedw3n Shipping",
+        "Shipping type": "Normal Freight",
+        "Seller Location": "Kinshasa",
+        "Buyer Location": "London",
+        "Price per kg ": "\u00a3 16,50",
+        "admin fee per shipment": 6,
+        "Delivery ": "3  days"
+      },
+      {
+        "Carrier": "Dedw3n Shipping",
+        "Shipping type": "Air  Freight",
+        "Seller Location": "Kinshasa",
+        "Buyer Location": "London",
+        "Price per kg ": "\u00a3 16,51",
+        "admin fee per shipment": 6,
+        "Delivery ": "10 Days"
+      },
+      {
+        "Carrier": "Dedw3n Shipping",
+        "Shipping type": "Sea Freight",
+        "Seller Location": "Kinshasa",
+        "Buyer Location": "London",
+        "Price per kg ": "\u00a3 16,52",
+        "admin fee per shipment": 6,
+        "Delivery ": "45 Days"
+      },
+      {
+        "Carrier": "Dedw3n Shipping",
+        "Shipping type": "Under Customs",
+        "Seller Location": "Kinshasa",
+        "Buyer Location": "London",
+        "Price per kg ": "\u00a3 16,53",
+        "admin fee per shipment": 6,
+        "Delivery ": ""
+      }
+    ]
+  }
+}
