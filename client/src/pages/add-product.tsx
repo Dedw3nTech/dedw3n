@@ -396,6 +396,17 @@ export default function AddProduct() {
     }
   }, [availableMarketplaces, form]);
 
+  // Auto-fill vendor name when vendor accounts are loaded
+  useEffect(() => {
+    if (vendorAccountsResponse?.vendorAccounts?.length > 0 && !form.getValues('vendor')) {
+      const primaryVendorAccount = vendorAccountsResponse.vendorAccounts[0];
+      const vendorName = primaryVendorAccount.storeName || primaryVendorAccount.businessName || '';
+      if (vendorName) {
+        form.setValue('vendor', vendorName);
+      }
+    }
+  }, [vendorAccountsResponse, form]);
+
   // Check if user is a vendor
   useEffect(() => {
     const checkVendorStatus = async () => {
