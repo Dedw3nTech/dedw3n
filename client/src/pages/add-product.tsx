@@ -369,21 +369,19 @@ export default function AddProduct() {
       weight: undefined,
       weightUnit: 'kg',
       dimensions: '',
-      dimensionUnit: 'cm',
       sku: '',
       barcode: '',
       trackQuantity: true,
       continueSellingWhenOutOfStock: false,
       requiresShipping: true,
-      shippingCarrier: '',
-      shippingPrice: undefined,
-      variableShippingPrice: undefined,
       marketplace: 'c2c', // Default to C2C
       seoTitle: '',
       seoDescription: '',
       serviceDuration: '',
       serviceType: undefined,
       serviceLocation: undefined,
+      vatIncluded: false,
+      vatRate: undefined,
     },
   });
 
@@ -754,65 +752,63 @@ export default function AddProduct() {
         <h1 className="text-2xl font-bold">{t("Add Product / Service")}</h1>
       </div>
       
-      {/* Offering Type Selection */}
-      <div className="mb-6">
-        <Form {...form}>
-          <FormField
-            control={form.control}
-            name="offeringType"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>{t("What are you offering?")}</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="grid grid-cols-2 md:grid-cols-3 gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="product" id="product" />
-                      <label htmlFor="product" className="text-sm font-medium cursor-pointer">
-                        {t("Product")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="service" id="service" />
-                      <label htmlFor="service" className="text-sm font-medium cursor-pointer">
-                        {t("Service")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="vehicle" id="vehicle" />
-                      <label htmlFor="vehicle" className="text-sm font-medium cursor-pointer">
-                        {t("Vehicle")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="real_estate" id="real_estate" />
-                      <label htmlFor="real_estate" className="text-sm font-medium cursor-pointer">
-                        {t("Real Estate")}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="xl_xxl_product" id="xl_xxl_product" />
-                      <label htmlFor="xl_xxl_product" className="text-sm font-medium cursor-pointer">
-                        {t("XL/XXL Product")}
-                      </label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </Form>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          {/* Offering Type Selection */}
+          <div className="mb-6">
+            <FormField
+              control={form.control}
+              name="offeringType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>{t("What are you offering?")}</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid grid-cols-2 md:grid-cols-3 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="product" id="product" />
+                        <label htmlFor="product" className="text-sm font-medium cursor-pointer">
+                          {t("Product")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="service" id="service" />
+                        <label htmlFor="service" className="text-sm font-medium cursor-pointer">
+                          {t("Service")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="vehicle" id="vehicle" />
+                        <label htmlFor="vehicle" className="text-sm font-medium cursor-pointer">
+                          {t("Vehicle")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="real_estate" id="real_estate" />
+                        <label htmlFor="real_estate" className="text-sm font-medium cursor-pointer">
+                          {t("Real Estate")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="xl_xxl_product" id="xl_xxl_product" />
+                        <label htmlFor="xl_xxl_product" className="text-sm font-medium cursor-pointer">
+                          {t("XL/XXL Product")}
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
               {/* Product Title Section */}
               <Card>
                 <CardHeader>
@@ -1382,33 +1378,13 @@ export default function AddProduct() {
                               <FormItem>
                                 <FormLabel>{t("Dimensions (L × W × H)")}</FormLabel>
                                 <FormControl>
-                                  <Input placeholder={form.watch('dimensionUnit') === 'cm' ? t("10 × 5 × 2") : t("4 × 2 × 1")} {...field} />
+                                  <Input placeholder={t("10 × 5 × 2 cm")} {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                          <FormField
-                            control={form.control}
-                            name="dimensionUnit"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t("Unit")}</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="cm">cm</SelectItem>
-                                    <SelectItem value="inches">inches</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+
                         </div>
                         
                       <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>
@@ -1746,17 +1722,10 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              <Button type="submit" disabled={createProductMutation.isPending} className="w-full bg-black hover:bg-gray-800 text-white">
-                {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("Publish")}
-              </Button>
-            </form>
-          </Form>
-        </div>
+            </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <Form {...form}>
+            {/* Sidebar */}
+            <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>{t("Product status")}</CardTitle>
@@ -1874,9 +1843,18 @@ export default function AddProduct() {
                 />
               </CardContent>
             </Card>
-          </Form>
-        </div>
-      </div>
+            </div>
+          </div>
+          
+          {/* Submit Button */}
+          <div className="flex justify-center mt-8">
+            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-black hover:bg-gray-800 text-white">
+              {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t("Publish")}
+            </Button>
+          </div>
+        </form>
+      </Form>
       
       {/* Vendor Creation Dialog */}
       <VendorCreationDialog
