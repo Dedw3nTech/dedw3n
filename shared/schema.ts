@@ -51,6 +51,9 @@ export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
 // Define product status enum
 export const productStatusEnum = pgEnum('product_status', ['active', 'draft', 'archived']);
 
+// Define marketplace type enum
+export const marketplaceTypeEnum = pgEnum('marketplace_type', ['c2c', 'b2c', 'b2b']);
+
 // Define vendor badge level enum
 export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor', 'elite_vendor']);
 
@@ -266,6 +269,7 @@ export const products = pgTable("products", {
   shippingIncluded: boolean("shipping_included").default(false), // Whether shipping cost is included in price
   vatIncluded: boolean("vat_included").default(false), // Whether VAT is included in price
   vatRate: doublePrecision("vat_rate"), // VAT rate percentage (0-100)
+  marketplace: marketplaceTypeEnum("marketplace").notNull(), // C2C, B2C, or B2B marketplace
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   productCode: varchar("product_code", { length: 50 }).unique(),

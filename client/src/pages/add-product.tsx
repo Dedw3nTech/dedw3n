@@ -77,6 +77,7 @@ const productSchema = z.object({
   videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
+  marketplace: z.enum(['c2c', 'b2c', 'b2b']),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -144,6 +145,17 @@ export default function AddProduct() {
     "Short sleeve t-shirt",
     "Product description...",
     "Description",
+    
+    // Marketplace Selection
+    "Marketplace",
+    "Select marketplace",
+    "C2C (Consumer to Consumer)",
+    "For individual sellers",
+    "B2C (Business to Consumer)", 
+    "For businesses selling to consumers",
+    "B2B (Business to Business)",
+    "For businesses selling to other businesses",
+    "Choose which marketplace to list your product on",
     "Media",
     "Upload up to 12 images and 1 video for your product",
     "Product Images",
@@ -342,6 +354,7 @@ export default function AddProduct() {
       shippingPrice: undefined,
       variableShippingPrice: undefined,
       shippingIncluded: false,
+      marketplace: 'c2c', // Default to C2C
       seoTitle: '',
       seoDescription: '',
       serviceDuration: '',
@@ -358,6 +371,35 @@ export default function AddProduct() {
       return response.json();
     },
   });
+
+  // Get user's vendor accounts to determine marketplace availability
+  const { data: vendorAccounts = [] } = useQuery({
+    queryKey: ['/api/vendors/user/accounts'],
+    enabled: !!user,
+  });
+
+  // Determine available marketplaces based on vendor type
+  const getAvailableMarketplaces = () => {
+    const hasNormalVendor = vendorAccounts.some((account: any) => account.vendorType === 'normal');
+    const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
+    
+    const marketplaces = [];
+    
+    if (hasNormalVendor) {
+      marketplaces.push({ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' });
+    }
+    
+    if (hasBusinessVendor) {
+      marketplaces.push(
+        { value: 'b2c', label: 'B2C (Business to Consumer)', description: 'For businesses selling to consumers' },
+        { value: 'b2b', label: 'B2B (Business to Business)', description: 'For businesses selling to other businesses' }
+      );
+    }
+    
+    return marketplaces;
+  };
+
+  const availableMarketplaces = getAvailableMarketplaces();
 
   // Check if user is a vendor
   useEffect(() => {
@@ -763,6 +805,37 @@ export default function AddProduct() {
                             {...field} 
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="marketplace"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel>{t("Marketplace")}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("Select marketplace")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableMarketplaces.map((marketplace) => (
+                              <SelectItem key={marketplace.value} value={marketplace.value}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{t(marketplace.label)}</span>
+                                  <span className="text-sm text-muted-foreground">{t(marketplace.description)}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("Choose which marketplace to list your product on")}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
