@@ -647,15 +647,25 @@ export default function Cart() {
                           </div>
                           
                           {/* Location Buyer */}
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                            <span className="text-gray-600">{translateText('Buyer Location')}:</span>
-                            <span className="font-medium text-gray-900">
-                              {user?.location || user?.city 
-                                ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
-                                : translateText('Set in profile')
-                              }
-                            </span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                              <span className="text-gray-600">{translateText('Buyer Location')}:</span>
+                              <span className="font-medium text-gray-900">
+                                {user?.location || user?.city 
+                                  ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
+                                  : translateText('Set in profile')
+                                }
+                              </span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open('/profile-settings', '_blank')}
+                              className="text-xs h-6 px-2"
+                            >
+                              {translateText('Change')}
+                            </Button>
                           </div>
                           
                           {/* Weight Product */}

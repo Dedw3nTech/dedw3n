@@ -263,6 +263,18 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Registration Testing** - Verified successful account creation with simple passwords like "simplepass1", "hello1", "simple!"
   - New requirements: minimum 6 characters + one letter + (one number OR one special character)
   - Registration success rate significantly improved for better user experience and easier account creation
+- **2025-07-18**: Translation and Route Fix - Resolved Add Product button translation and routing issues
+  - **COMPLETED: Add Product Button Translation** - Fixed hardcoded "Add Product/Service" button to use translation system
+  - **COMPLETED: Route Configuration Fix** - Added missing /add-product route to server's validRoutes array
+  - **COMPLETED: Translation Integration** - Added "Add Product/Service" text to productTexts array for proper Spanish translation
+  - **COMPLETED: Server Route Access** - Resolved 404 errors when accessing /add-product, /upload-product, /vendor-dashboard, /become-vendor
+  - Button now properly displays as "Agregar Producto/Servicio" in Spanish interface
+- **2025-07-18**: Cart Location Change Enhancement - Added buyer location change functionality
+  - **COMPLETED: Change Button Addition** - Added "Change" button next to buyer location in cart shipping information
+  - **COMPLETED: Profile Settings Integration** - Button opens profile settings page in new tab for location updates
+  - **COMPLETED: Layout Improvement** - Reorganized buyer location display with justified layout for button placement
+  - **COMPLETED: Translation Support** - "Change" button text integrated with master translation system
+  - Users can now easily update their location for accurate shipping calculations without leaving the cart page
 - **2025-07-18**: VAT Functionality Implementation - Added comprehensive VAT options to product creation pages
   - **COMPLETED: VAT Schema Addition** - Added vat_included (boolean) and vat_rate (double precision) fields to products table
   - **COMPLETED: Add Product Page VAT UI** - Added VAT inclusion toggle switch and VAT rate input field (0-100%)
