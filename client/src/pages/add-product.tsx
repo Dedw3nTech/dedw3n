@@ -243,7 +243,7 @@ export default function AddProduct() {
     "Other",
     
     // Action Buttons
-    "Save product",
+    "Publish",
     "Save as draft",
     "Preview",
     "Delete product",
@@ -1525,9 +1525,9 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              <Button type="submit" disabled={createProductMutation.isPending} className="w-full">
+              <Button type="submit" disabled={createProductMutation.isPending} className="w-full bg-black hover:bg-gray-800 text-white">
                 {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("Save product")}
+                {t("Publish")}
               </Button>
             </form>
           </Form>

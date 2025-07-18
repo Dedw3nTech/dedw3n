@@ -286,6 +286,7 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: RadioGroup Import Fix** - Fixed missing RadioGroup import error that occurred after shipping field removal
   - **COMPLETED: Vendor Auto-Fill** - Added automatic vendor name population from vendor account data (storeName or businessName)
   - **COMPLETED: Product Code Format Update** - Changed format from 001{userId}{day}/{month}/{year} to {productCount}{userId}{day}{month}{year}
+  - **COMPLETED: Submit Button Update** - Changed submit button to black background with "Publish" text and updated translation system
   - Product creation now focuses on core product information with simplified shipping handled automatically by the system
 - **2025-07-18**: VAT Functionality Implementation - Added comprehensive VAT options to product creation pages
   - **COMPLETED: VAT Schema Addition** - Added vat_included (boolean) and vat_rate (double precision) fields to products table
