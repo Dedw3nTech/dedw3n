@@ -452,7 +452,7 @@ export default function UploadProduct() {
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">VAT included in price</FormLabel>
                         <p className="text-sm text-muted-foreground">
-                          Enable if the price includes VAT/tax
+                          Enable to include VAT/tax
                         </p>
                       </div>
                       <FormControl>

@@ -730,7 +730,7 @@ export default function AddProduct() {
                         <div className="space-y-0.5">
                           <FormLabel className="text-base">{t("VAT included in price")}</FormLabel>
                           <p className="text-sm text-muted-foreground">
-                            {t("Enable if the price includes VAT/tax")}
+                            {t("Enable to include VAT/tax")}
                           </p>
                         </div>
                         <FormControl>
