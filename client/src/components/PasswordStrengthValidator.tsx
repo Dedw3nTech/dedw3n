@@ -50,74 +50,25 @@ export function PasswordStrengthValidator({
     return password.length * Math.log2(charset);
   };
 
-  // Initialize validation rules
+  // Initialize validation rules - simplified for better user experience
   useEffect(() => {
     const validationRules: ValidationRule[] = [
       {
         id: "length",
-        label: "8-12 characters long",
-        test: (pwd) => pwd.length >= 8 && pwd.length <= 12,
+        label: "At least 6 characters long",
+        test: (pwd) => pwd.length >= 6,
         isValid: false
       },
       {
-        id: "lowercase",
-        label: "One lowercase letter (a-z)",
-        test: (pwd) => /[a-z]/.test(pwd),
+        id: "contains-letter",
+        label: "Contains at least one letter",
+        test: (pwd) => /[a-zA-Z]/.test(pwd),
         isValid: false
       },
       {
-        id: "uppercase",
-        label: "One uppercase letter (A-Z)",
-        test: (pwd) => /[A-Z]/.test(pwd),
-        isValid: false
-      },
-      {
-        id: "number",
-        label: "One number (0-9)",
-        test: (pwd) => /\d/.test(pwd),
-        isValid: false
-      },
-      {
-        id: "special",
-        label: "One special character (!@#$%^&*)",
-        test: (pwd) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(pwd),
-        isValid: false
-      },
-      {
-        id: "no-sequential",
-        label: "No sequential characters (123, abc)",
-        test: (pwd) => !/123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i.test(pwd),
-        isValid: false
-      },
-      {
-        id: "no-repeated",
-        label: "No repeated characters (aaa, 111)",
-        test: (pwd) => !/(.)\1{2,}/.test(pwd),
-        isValid: false
-      },
-      {
-        id: "no-keyboard",
-        label: "No keyboard patterns (qwerty, asdf)",
-        test: (pwd) => !/qwerty|asdfgh|zxcvbn|qwertz|asdfghjkl|yxcvbn|azerty|qsdfgh|wxcvbn/i.test(pwd),
-        isValid: false
-      },
-      {
-        id: "no-common",
-        label: "No common weak passwords",
-        test: (pwd) => {
-          const weakPasswords = [
-            'password', '123456', 'qwerty', 'abc123', 'password123', 'admin123',
-            '12345678', 'welcome', 'login123', 'secret', 'user123', 'guest123',
-            'test123', 'admin', 'root123', 'pass123', 'letmein', 'welcome123'
-          ];
-          return !weakPasswords.some(weak => pwd.toLowerCase().includes(weak.toLowerCase()));
-        },
-        isValid: false
-      },
-      {
-        id: "entropy",
-        label: "Sufficient complexity (35+ bits entropy)",
-        test: (pwd) => calculateEntropy(pwd) >= 35,
+        id: "contains-number-or-special",
+        label: "Contains a number or special character",
+        test: (pwd) => /[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(pwd),
         isValid: false
       }
     ];

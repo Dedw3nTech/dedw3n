@@ -106,123 +106,30 @@ const authAttempts = new Map<string, { count: number; resetTime: number }>();
 const ACCOUNT_LOCKOUT_ATTEMPTS = 5;
 const ACCOUNT_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 
-// Password security settings based on NIST and security research
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 12; // Enforced for optimal security-usability balance
+// Simplified password security settings for better user experience
+const PASSWORD_MIN_LENGTH = 6;
 const PASSWORD_PEPPER = process.env.PASSWORD_PEPPER || 'DedW3nSecurePepper2025!@#';
 
-// Enhanced password validation based on NIST guidelines and security research
+// Simplified password validation for easier account creation
 function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  // Length enforcement (8-12 characters for optimal security-usability balance)
+  // Minimum length requirement
   if (password.length < PASSWORD_MIN_LENGTH) {
     errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
   }
   
-  if (password.length > PASSWORD_MAX_LENGTH) {
-    errors.push(`Password must not exceed ${PASSWORD_MAX_LENGTH} characters for optimal security`);
+  // Must contain at least one letter
+  if (!/[a-zA-Z]/.test(password)) {
+    errors.push('Password must contain at least one letter');
   }
   
-  // Character variety requirements (all 4 types mandatory)
-  let charTypeCount = 0;
-  const charTypeErrors: string[] = [];
-  
-  if (!/[a-z]/.test(password)) {
-    charTypeErrors.push('lowercase letter (a-z)');
-  } else {
-    charTypeCount++;
+  // Must contain at least one number or special character
+  if (!/[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password)) {
+    errors.push('Password must contain at least one number or special character');
   }
   
-  if (!/[A-Z]/.test(password)) {
-    charTypeErrors.push('uppercase letter (A-Z)');
-  } else {
-    charTypeCount++;
-  }
-  
-  if (!/\d/.test(password)) {
-    charTypeErrors.push('number (0-9)');
-  } else {
-    charTypeCount++;
-  }
-  
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password)) {
-    charTypeErrors.push('special character (!@#$%^&*()_+-=[]{}|;:,.<>?~`)');
-  } else {
-    charTypeCount++;
-  }
-  
-  // All 4 character types required for 8-12 character passwords
-  if (charTypeErrors.length > 0) {
-    errors.push(`Password must contain at least one: ${charTypeErrors.join(', ')}`);
-  }
-  
-  // Advanced security checks for weak patterns
-  
-  // Sequential characters check
-  if (/123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i.test(password)) {
-    errors.push('Password must not contain sequential characters (e.g., 123, abc)');
-  }
-  
-  // Repeated characters check
-  if (/(.)\1{2,}/.test(password)) {
-    errors.push('Password must not contain 3 or more repeated characters (e.g., aaa, 111)');
-  }
-  
-  // Keyboard patterns check
-  const keyboardPatterns = [
-    /qwerty|asdfgh|zxcvbn/i,
-    /qwertz|asdfghjkl|yxcvbn/i,
-    /azerty|qsdfgh|wxcvbn/i
-  ];
-  
-  for (const pattern of keyboardPatterns) {
-    if (pattern.test(password)) {
-      errors.push('Password must not contain keyboard patterns (e.g., qwerty, asdf)');
-      break;
-    }
-  }
-  
-  // Common weak passwords check (comprehensive list)
-  const weakPasswords = [
-    'password', '123456', 'qwerty', 'abc123', 'password123', 'admin123',
-    '12345678', 'welcome', 'login123', 'secret', 'user123', 'guest123',
-    'test123', 'admin', 'root123', 'pass123', 'letmein', 'welcome123'
-  ];
-  
-  if (weakPasswords.some(weak => password.toLowerCase().includes(weak.toLowerCase()))) {
-    errors.push('Password must not contain common weak patterns or dictionary words');
-  }
-  
-  // Personal information patterns (basic check)
-  const personalPatterns = [
-    /admin|user|guest|test|demo|sample/i,
-    /company|business|office|work/i,
-    /email|mail|phone|address/i
-  ];
-  
-  for (const pattern of personalPatterns) {
-    if (pattern.test(password)) {
-      errors.push('Password should not contain personal or business-related terms');
-      break;
-    }
-  }
-  
-  // Password entropy calculation for additional strength verification
-  const entropy = calculatePasswordEntropy(password);
-  if (entropy < 35) {
-    errors.push('Password complexity is too low. Use more diverse character combinations');
-  }
-  
-  // Check for simple pattern variations
-  if (/^[a-zA-Z]+\d+$|^\d+[a-zA-Z]+$/.test(password)) {
-    errors.push('Password must not follow simple patterns (letters followed by numbers or vice versa)');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  return { isValid: errors.length === 0, errors };
 }
 
 // Helper function to calculate password entropy for strength measurement
