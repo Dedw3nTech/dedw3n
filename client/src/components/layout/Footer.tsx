@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { WeightUnitSelector } from "@/components/ui/weight-unit-selector";
+import { DimensionUnitSelector } from "@/components/ui/dimension-unit-selector";
 
 // Custom Link component that scrolls to top on navigation
 function ScrollToTopLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
@@ -65,6 +66,7 @@ function FooterContent() {
             <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
             <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2 items-center">
               <WeightUnitSelector />
+              <DimensionUnitSelector />
               <ScrollToTopLink href="/network-partnerships" className="text-xs text-gray-600 hover:text-primary">{networkPartnershipsText}</ScrollToTopLink>
               <ScrollToTopLink href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</ScrollToTopLink>
               <ScrollToTopLink href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</ScrollToTopLink>
