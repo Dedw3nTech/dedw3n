@@ -242,6 +242,10 @@ export default function AddProduct() {
     "Training",
     "Other",
     
+    // Product/Service Badges
+    "Product badges",
+    "Service badges",
+    
     // Action Buttons
     "Publish",
     "Save as draft",
@@ -1570,25 +1574,32 @@ export default function AddProduct() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Product badges</CardTitle>
+                <CardTitle>{form.watch('offeringType') === 'service' ? t('Service badges') : t('Product badges')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
                   name="isNew"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-normal">New Product</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const isService = form.watch('offeringType') === 'service';
+                    return (
+                      <FormItem className={`flex flex-row items-center justify-between ${isService ? 'opacity-50' : ''}`}>
+                        <div className="space-y-0.5">
+                          <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
+                            New Product
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={isService ? undefined : field.onChange}
+                            disabled={isService}
+                            className={isService ? 'cursor-not-allowed' : ''}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
