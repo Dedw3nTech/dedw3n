@@ -264,6 +264,8 @@ export const products = pgTable("products", {
   shippingPrice: doublePrecision("shipping_price"), // Fixed shipping price
   variableShippingPrice: doublePrecision("variable_shipping_price"), // Variable shipping price
   shippingIncluded: boolean("shipping_included").default(false), // Whether shipping cost is included in price
+  vatIncluded: boolean("vat_included").default(false), // Whether VAT is included in price
+  vatRate: doublePrecision("vat_rate"), // VAT rate percentage (0-100)
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   productCode: varchar("product_code", { length: 50 }).unique(),

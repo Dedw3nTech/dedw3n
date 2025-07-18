@@ -73,6 +73,8 @@ const productSchema = z.object({
   shippingPrice: z.coerce.number().nonnegative().optional(),
   variableShippingPrice: z.coerce.number().nonnegative().optional(),
   shippingIncluded: z.boolean().default(false),
+  vatIncluded: z.boolean().default(false),
+  vatRate: z.coerce.number().min(0).max(100).optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -719,6 +721,57 @@ export default function AddProduct() {
                       )}
                     />
                   </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="vatIncluded"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">{t("VAT included in price")}</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            {t("Enable if the price includes VAT/tax")}
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {form.watch('vatIncluded') && (
+                    <FormField
+                      control={form.control}
+                      name="vatRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("VAT Rate (%)")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="100"
+                              placeholder="20.00"
+                              {...field}
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                field.onChange(value);
+                              }}
+                            />
+                          </FormControl>
+                          <p className="text-sm text-muted-foreground">
+                            {t("Standard UK VAT rate is 20%")}
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   <FormField
                     control={form.control}
