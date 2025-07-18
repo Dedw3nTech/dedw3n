@@ -275,6 +275,13 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Layout Improvement** - Reorganized buyer location display with justified layout for button placement
   - **COMPLETED: Translation Support** - "Change" button text integrated with master translation system
   - Users can now easily update their location for accurate shipping calculations without leaving the cart page
+- **2025-07-18**: Weight Field Precision Enhancement - Scientific accuracy for weight measurements
+  - **COMPLETED: 3-Decimal Precision Implementation** - Weight field now accepts up to 0.999 (3 decimal places) for scientific accuracy
+  - **COMPLETED: Input Field Enhancement** - Updated step to 0.001, max to 999.999, placeholder to 0.000 for precise gram measurements
+  - **COMPLETED: Validation Logic Update** - Enhanced onChange handler to round to 3 decimal places and prevent precision errors
+  - **COMPLETED: Schema Validation** - Updated Zod schema with min(0), max(999.999), and 3-decimal-place validation refinement
+  - Scientific rationale: 999 grams is scientifically possible measurement before converting to 1 kg, ensuring accurate weight representation
+  - Weight field now supports precise measurements like 0.001 kg (1 gram), 0.500 kg (500 grams), 0.999 kg (999 grams)
 - **2025-07-18**: Shipping Fields Removal from Add Product Page - Simplified product creation workflow
   - **COMPLETED: Shipping Carrier Field Removal** - Removed shipping carrier selection dropdown with all carrier options
   - **COMPLETED: Shipping Price Type Removal** - Removed fixed/variable shipping price radio button selection

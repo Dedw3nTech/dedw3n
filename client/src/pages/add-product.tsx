@@ -63,7 +63,10 @@ const productSchema = z.object({
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
-  weight: z.coerce.number().positive().optional(),
+  weight: z.coerce.number().min(0).max(999.999).optional().refine(
+    (val) => val === undefined || Number((val * 1000).toFixed(0)) / 1000 === val,
+    { message: "Weight must have at most 3 decimal places" }
+  ),
   weightUnit: z.enum(['kg', 'lb', 'oz', 'g']).default('kg'),
   dimensions: z.string().optional(),
   sku: z.string().optional(),
@@ -1355,11 +1358,22 @@ export default function AddProduct() {
                                 <FormControl>
                                   <Input 
                                     type="number" 
-                                    step="0.01"
-                                    min="0" 
-                                    placeholder="0.0" 
+                                    step="0.001"
+                                    min="0"
+                                    max="999.999"
+                                    placeholder="0.000" 
                                     {...field} 
-                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      if (value === '') {
+                                        field.onChange(undefined);
+                                      } else {
+                                        const numValue = parseFloat(value);
+                                        // Allow up to 3 decimal places (0.999 max for grams)
+                                        const roundedValue = Math.round(numValue * 1000) / 1000;
+                                        field.onChange(roundedValue);
+                                      }
+                                    }}
                                   />
                                 </FormControl>
                                 <FormMessage />
