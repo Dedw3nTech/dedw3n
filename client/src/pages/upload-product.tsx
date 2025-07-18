@@ -38,6 +38,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Upload, ImageIcon, X, CheckCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 
 // Product upload form schema
 const uploadSchema = z.object({
@@ -65,6 +66,7 @@ export default function UploadProduct() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showVendorDialog, setShowVendorDialog] = useState(false);
 
   // Form initialization
   const form = useForm<UploadFormValues>({
@@ -289,13 +291,12 @@ export default function UploadProduct() {
 
   // Handle vendor creation
   const handleCreateVendor = () => {
-    const storeName = prompt('Enter your store name:');
-    if (!storeName) return;
-    
-    const description = prompt('Enter a brief description of your store:');
-    if (!description) return;
-    
-    createVendorMutation.mutate({ storeName, description });
+    setShowVendorDialog(true);
+  };
+
+  const handleVendorSubmit = (data: { storeName: string; description: string }) => {
+    createVendorMutation.mutate(data);
+    setShowVendorDialog(false);
   };
 
   // Redirect to login if not authenticated
@@ -645,6 +646,14 @@ export default function UploadProduct() {
           </Form>
         </CardContent>
       </Card>
+      
+      {/* Vendor Creation Dialog */}
+      <VendorCreationDialog
+        open={showVendorDialog}
+        onOpenChange={setShowVendorDialog}
+        onSubmit={handleVendorSubmit}
+        isLoading={createVendorMutation.isPending}
+      />
     </div>
   );
 }

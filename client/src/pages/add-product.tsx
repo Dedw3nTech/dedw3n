@@ -42,6 +42,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Plus } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
+import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 
 // Product form schema
 const productSchema = z.object({
@@ -91,6 +92,7 @@ export default function AddProduct() {
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
   const [shippingPriceType, setShippingPriceType] = useState<'fixed' | 'variable'>('fixed');
+  const [showVendorDialog, setShowVendorDialog] = useState(false);
   
   // State for regional shipping
   const [regionalShipping, setRegionalShipping] = useState<Record<string, { enabled: boolean; price: number }>>({
@@ -488,13 +490,12 @@ export default function AddProduct() {
 
   // Handle vendor creation
   const handleCreateVendor = () => {
-    const storeName = prompt('Enter your store name:');
-    if (!storeName) return;
-    
-    const description = prompt('Enter a brief description of your store:');
-    if (!description) return;
-    
-    createVendorMutation.mutate({ storeName, description });
+    setShowVendorDialog(true);
+  };
+
+  const handleVendorSubmit = (data: { storeName: string; description: string }) => {
+    createVendorMutation.mutate(data);
+    setShowVendorDialog(false);
   };
 
   // Redirect to login if not authenticated
@@ -1439,6 +1440,14 @@ export default function AddProduct() {
           </Form>
         </div>
       </div>
+      
+      {/* Vendor Creation Dialog */}
+      <VendorCreationDialog
+        open={showVendorDialog}
+        onOpenChange={setShowVendorDialog}
+        onSubmit={handleVendorSubmit}
+        isLoading={createVendorMutation.isPending}
+      />
     </div>
   );
 }
