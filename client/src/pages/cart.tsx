@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,6 +37,11 @@ export default function Cart() {
   
   // Shipping type selection
   const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
+  
+  // Location editing state
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [editCity, setEditCity] = useState('');
+  const [editCountry, setEditCountry] = useState('');
   
   // Navigation helper
   const handleProductClick = (productId: number) => {
@@ -647,25 +653,95 @@ export default function Cart() {
                           </div>
                           
                           {/* Location Buyer */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                              <span className="text-gray-600">{translateText('Buyer Location')}:</span>
-                              <span className="font-medium text-gray-900">
-                                {user?.location || user?.city 
-                                  ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
-                                  : translateText('Set in profile')
-                                }
-                              </span>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                <span className="text-gray-600">{translateText('Buyer Location')}:</span>
+                                {!isEditingLocation && (
+                                  <span className="font-medium text-gray-900">
+                                    {user?.location || user?.city 
+                                      ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
+                                      : translateText('Set in profile')
+                                    }
+                                  </span>
+                                )}
+                              </div>
+                              {!isEditingLocation ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setIsEditingLocation(true);
+                                    setEditCity(user?.city || '');
+                                    setEditCountry(user?.country || '');
+                                  }}
+                                  className="text-xs h-6 px-2"
+                                >
+                                  {translateText('Change')}
+                                </Button>
+                              ) : (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        // Update user location via API
+                                        await apiRequest('PATCH', '/api/user/location', {
+                                          city: editCity,
+                                          country: editCountry
+                                        });
+                                        
+                                        // Invalidate user query to refresh data
+                                        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+                                        
+                                        toast({
+                                          title: translateText('Success'),
+                                          description: translateText('Location updated successfully'),
+                                        });
+                                        
+                                        setIsEditingLocation(false);
+                                      } catch (error: any) {
+                                        toast({
+                                          title: translateText('Error'),
+                                          description: translateText('Failed to update location'),
+                                          variant: 'destructive',
+                                        });
+                                      }
+                                    }}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    {translateText('Save')}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsEditingLocation(false)}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    {translateText('Cancel')}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open('/profile-settings', '_blank')}
-                              className="text-xs h-6 px-2"
-                            >
-                              {translateText('Change')}
-                            </Button>
+                            
+                            {isEditingLocation && (
+                              <div className="flex gap-2 ml-6">
+                                <Input
+                                  placeholder={translateText('City')}
+                                  value={editCity}
+                                  onChange={(e) => setEditCity(e.target.value)}
+                                  className="text-xs h-7"
+                                />
+                                <Input
+                                  placeholder={translateText('Country')}
+                                  value={editCountry}
+                                  onChange={(e) => setEditCountry(e.target.value)}
+                                  className="text-xs h-7"
+                                />
+                              </div>
+                            )}
                           </div>
                           
                           {/* Weight Product */}

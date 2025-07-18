@@ -3634,6 +3634,40 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.json(req.user);
   });
 
+  // Update user location
+  app.patch("/api/user/location", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const { city, country } = req.body;
+
+      // Validate input
+      if (!city && !country) {
+        return res.status(400).json({ message: 'At least one location field (city or country) is required' });
+      }
+
+      // Update user location in database
+      await storage.updateUser(req.user.id, {
+        city: city || req.user.city,
+        country: country || req.user.country
+      });
+
+      console.log(`[DEBUG] Updated location for user ${req.user.id}: ${city}, ${country}`);
+
+      // Return success response
+      return res.json({
+        success: true,
+        message: 'Location updated successfully',
+        location: { city, country }
+      });
+    } catch (error: any) {
+      console.error('Error updating user location:', error);
+      return res.status(500).json({ message: 'Failed to update location' });
+    }
+  });
+
   // Dating activation route
   app.post("/api/user/activate-dating", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
