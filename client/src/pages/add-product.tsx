@@ -345,7 +345,15 @@ export default function AddProduct() {
     
     // Vendor Field
     "Auto-filled from vendor account",
-    "Automatically populated based on your vendor account and marketplace selection"
+    "Automatically populated based on your vendor account and marketplace selection",
+    
+    // Save and Publish Button
+    "Save Changes & Publish",
+    "Saving & Publishing...",
+    "Product Saved & Published",
+    "Product saved and published successfully with code:",
+    "Your product has been saved and published to the marketplace successfully.",
+    "Failed to save and publish product:"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -529,10 +537,10 @@ export default function AddProduct() {
     },
     onSuccess: (data) => {
       toast({
-        title: t('Product Added'),
+        title: t('Product Saved & Published'),
         description: data.productCode 
-          ? `${t('Product created successfully with code:')} ${data.productCode}`
-          : t('Your product has been added successfully.'),
+          ? `${t('Product saved and published successfully with code:')} ${data.productCode}`
+          : t('Your product has been saved and published to the marketplace successfully.'),
       });
       
       // Update form with the generated product code if available
@@ -552,7 +560,7 @@ export default function AddProduct() {
     onError: (error: any) => {
       toast({
         title: t('Error'),
-        description: `${t('Failed to add product:')} ${error.message}`,
+        description: `${t('Failed to save and publish product:')} ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -1892,7 +1900,7 @@ export default function AddProduct() {
           <div className="flex justify-center mt-8">
             <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-black hover:bg-gray-800 text-white">
               {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t("Publish")}
+              {createProductMutation.isPending ? t("Saving & Publishing...") : t("Save Changes & Publish")}
             </Button>
           </div>
         </form>
