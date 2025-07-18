@@ -46,7 +46,7 @@ export const regionEnum = pgEnum('region', [
 ]);
 
 // Define product type enum
-export const productTypeEnum = pgEnum('product_type', ['product', 'service']);
+export const productTypeEnum = pgEnum('product_type', ['product', 'service', 'vehicle', 'real_estate']);
 
 // Define product status enum
 export const productStatusEnum = pgEnum('product_status', ['active', 'draft', 'archived']);

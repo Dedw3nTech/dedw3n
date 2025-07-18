@@ -109,6 +109,8 @@ export default function AddProduct() {
     "What are you offering?",
     "Product",
     "Service",
+    "Vehicle",
+    "Real Estate",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -240,9 +242,39 @@ export default function AddProduct() {
     "Training",
     "Other",
     
-    // Product/Service Badges
+    // Product/Service/Vehicle/Real Estate Badges
     "Product badges",
     "Service badges",
+    "Vehicle badges",
+    "Property badges",
+    
+    // Vehicle Details
+    "Vehicle Details",
+    "Make",
+    "Model",
+    "Year", 
+    "Mileage",
+    "e.g., Toyota, BMW",
+    "e.g., Camry, X5",
+    "e.g., 2020",
+    "e.g., 50,000 km",
+    
+    // Real Estate Details
+    "Property Details",
+    "Property Type",
+    "Size (sq ft/m²)",
+    "Bedrooms",
+    "Bathrooms", 
+    "Age (years)",
+    "House",
+    "Apartment",
+    "Condo",
+    "Land",
+    "Commercial",
+    "e.g., 1200 sq ft",
+    "e.g., 3",
+    "e.g., 2",
+    "e.g., 5",
     
     // Action Buttons
     "Publish",
@@ -733,7 +765,7 @@ export default function AddProduct() {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="flex flex-row space-x-6"
+                    className="grid grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="product" id="product" />
@@ -745,6 +777,18 @@ export default function AddProduct() {
                       <RadioGroupItem value="service" id="service" />
                       <label htmlFor="service" className="text-sm font-medium cursor-pointer">
                         {t("Service")}
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="vehicle" id="vehicle" />
+                      <label htmlFor="vehicle" className="text-sm font-medium cursor-pointer">
+                        {t("Vehicle")}
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="real_estate" id="real_estate" />
+                      <label htmlFor="real_estate" className="text-sm font-medium cursor-pointer">
+                        {t("Real Estate")}
                       </label>
                     </div>
                   </RadioGroup>
@@ -1148,8 +1192,8 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              {/* Inventory Section - Only show for products */}
-              {form.watch('offeringType') === 'product' && (
+              {/* Inventory Section - Only show for products and vehicles */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Inventory")}</CardTitle>
@@ -1249,8 +1293,8 @@ export default function AddProduct() {
               </Card>
               )}
 
-              {/* Shipping Section - Only show for products */}
-              {form.watch('offeringType') === 'product' && (
+              {/* Shipping Section - Only show for products and vehicles */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Shipping")}</CardTitle>
@@ -1401,8 +1445,8 @@ export default function AddProduct() {
               </Card>
               )}
               
-              {/* Variants - Only show for products */}
-              {form.watch('offeringType') === 'product' && (
+              {/* Variants - Only show for products and vehicles */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Variants")}</CardTitle>
@@ -1485,6 +1529,164 @@ export default function AddProduct() {
                         </FormItem>
                       )}
                     />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Vehicle-specific fields */}
+              {form.watch('offeringType') === 'vehicle' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("Vehicle Details")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="vehicleMake"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Make")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Toyota, BMW")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="vehicleModel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Model")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Camry, X5")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="vehicleYear"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Year")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 2020")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="vehicleMileage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Mileage")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 50,000 km")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Real Estate-specific fields */}
+              {form.watch('offeringType') === 'real_estate' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("Property Details")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="propertyType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Property Type")}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select type")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="house">{t("House")}</SelectItem>
+                                <SelectItem value="apartment">{t("Apartment")}</SelectItem>
+                                <SelectItem value="condo">{t("Condo")}</SelectItem>
+                                <SelectItem value="land">{t("Land")}</SelectItem>
+                                <SelectItem value="commercial">{t("Commercial")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="propertySize"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Size (sq ft/m²)")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 1200 sq ft")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bedrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Bedrooms")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 3")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bathrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Bathrooms")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 2")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="propertyAge"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Age (years)")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 5")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -1581,7 +1783,11 @@ export default function AddProduct() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{form.watch('offeringType') === 'service' ? t('Service badges') : t('Product badges')}</CardTitle>
+                <CardTitle>
+                  {form.watch('offeringType') === 'service' ? t('Service badges') : 
+                   form.watch('offeringType') === 'vehicle' ? t('Vehicle badges') :
+                   form.watch('offeringType') === 'real_estate' ? t('Property badges') : t('Product badges')}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -1593,7 +1799,8 @@ export default function AddProduct() {
                       <FormItem className={`flex flex-row items-center justify-between ${isService ? 'opacity-50' : ''}`}>
                         <div className="space-y-0.5">
                           <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
-                            New Product
+                            {form.watch('offeringType') === 'vehicle' ? 'New Vehicle' : 
+                             form.watch('offeringType') === 'real_estate' ? 'New Property' : 'New Product'}
                           </FormLabel>
                         </div>
                         <FormControl>
