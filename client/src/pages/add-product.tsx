@@ -111,6 +111,7 @@ export default function AddProduct() {
     "Service",
     "Vehicle",
     "Real Estate",
+    "XL/XXL Product",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -242,11 +243,12 @@ export default function AddProduct() {
     "Training",
     "Other",
     
-    // Product/Service/Vehicle/Real Estate Badges
+    // Product/Service/Vehicle/Real Estate/XL-XXL Badges
     "Product badges",
     "Service badges",
     "Vehicle badges",
     "Property badges",
+    "XL/XXL Product badges",
     
     // Vehicle Details
     "Vehicle Details",
@@ -765,7 +767,7 @@ export default function AddProduct() {
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-2 md:grid-cols-3 gap-4"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="product" id="product" />
@@ -789,6 +791,12 @@ export default function AddProduct() {
                       <RadioGroupItem value="real_estate" id="real_estate" />
                       <label htmlFor="real_estate" className="text-sm font-medium cursor-pointer">
                         {t("Real Estate")}
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="xl_xxl_product" id="xl_xxl_product" />
+                      <label htmlFor="xl_xxl_product" className="text-sm font-medium cursor-pointer">
+                        {t("XL/XXL Product")}
                       </label>
                     </div>
                   </RadioGroup>
@@ -1192,8 +1200,8 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              {/* Inventory Section - Only show for products and vehicles */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
+              {/* Inventory Section - Only show for products, vehicles, and XL/XXL products */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Inventory")}</CardTitle>
@@ -1293,8 +1301,8 @@ export default function AddProduct() {
               </Card>
               )}
 
-              {/* Shipping Section - Only show for products and vehicles */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
+              {/* Shipping Section - Only show for products, vehicles, and XL/XXL products */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Shipping")}</CardTitle>
@@ -1445,8 +1453,8 @@ export default function AddProduct() {
               </Card>
               )}
               
-              {/* Variants - Only show for products and vehicles */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle') && (
+              {/* Variants - Only show for products, vehicles, and XL/XXL products */}
+              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Variants")}</CardTitle>
@@ -1786,7 +1794,8 @@ export default function AddProduct() {
                 <CardTitle>
                   {form.watch('offeringType') === 'service' ? t('Service badges') : 
                    form.watch('offeringType') === 'vehicle' ? t('Vehicle badges') :
-                   form.watch('offeringType') === 'real_estate' ? t('Property badges') : t('Product badges')}
+                   form.watch('offeringType') === 'real_estate' ? t('Property badges') :
+                   form.watch('offeringType') === 'xl_xxl_product' ? t('XL/XXL Product badges') : t('Product badges')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1800,7 +1809,8 @@ export default function AddProduct() {
                         <div className="space-y-0.5">
                           <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
                             {form.watch('offeringType') === 'vehicle' ? 'New Vehicle' : 
-                             form.watch('offeringType') === 'real_estate' ? 'New Property' : 'New Product'}
+                             form.watch('offeringType') === 'real_estate' ? 'New Property' :
+                             form.watch('offeringType') === 'xl_xxl_product' ? 'New XL/XXL Product' : 'New Product'}
                           </FormLabel>
                         </div>
                         <FormControl>
