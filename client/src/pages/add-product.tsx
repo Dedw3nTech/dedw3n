@@ -338,7 +338,11 @@ export default function AddProduct() {
     "Regional Shipping",
     "Select regions to ship to and set custom prices",
     "Based on your profile location",
-    "Enable shipping to this region"
+    "Enable shipping to this region",
+    
+    // Vendor Field
+    "Auto-filled from vendor account",
+    "Automatically populated based on your vendor account and marketplace selection"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -436,16 +440,32 @@ export default function AddProduct() {
     }
   }, [availableMarketplaces, form]);
 
-  // Auto-fill vendor name when vendor accounts are loaded
+  // Auto-fill vendor name based on marketplace selection
   useEffect(() => {
-    if (vendorAccountsResponse?.vendorAccounts?.length > 0 && !form.getValues('vendor')) {
-      const primaryVendorAccount = vendorAccountsResponse.vendorAccounts[0];
-      const vendorName = primaryVendorAccount.storeName || primaryVendorAccount.businessName || '';
+    if (vendorAccountsResponse?.vendorAccounts?.length > 0) {
+      const selectedMarketplace = form.getValues('marketplace');
+      const vendorAccounts = vendorAccountsResponse.vendorAccounts;
+      
+      let targetVendor;
+      if (selectedMarketplace === 'c2c') {
+        // C2C requires private vendor account
+        targetVendor = vendorAccounts.find((account: any) => account.vendorType === 'private');
+      } else if (selectedMarketplace === 'b2c' || selectedMarketplace === 'b2b') {
+        // B2C and B2B require business vendor account
+        targetVendor = vendorAccounts.find((account: any) => account.vendorType === 'business');
+      }
+      
+      // Fallback to first available vendor account
+      if (!targetVendor) {
+        targetVendor = vendorAccounts[0];
+      }
+      
+      const vendorName = targetVendor?.storeName || targetVendor?.businessName || '';
       if (vendorName) {
         form.setValue('vendor', vendorName);
       }
     }
-  }, [vendorAccountsResponse, form]);
+  }, [vendorAccountsResponse, form.watch('marketplace'), form]);
 
   // Check if user is a vendor
   useEffect(() => {
@@ -1713,8 +1733,16 @@ export default function AddProduct() {
                       <FormItem>
                         <FormLabel>{t("Vendor")}</FormLabel>
                         <FormControl>
-                          <Input placeholder={t("Vendor name")} {...field} />
+                          <Input 
+                            placeholder={t("Auto-filled from vendor account")} 
+                            {...field}
+                            disabled
+                            className="bg-gray-50 cursor-not-allowed"
+                          />
                         </FormControl>
+                        <FormDescription>
+                          {t("Automatically populated based on your vendor account and marketplace selection")}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
