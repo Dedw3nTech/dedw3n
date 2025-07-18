@@ -386,12 +386,12 @@ export default function AddProduct() {
     }
     
     const vendorAccounts = vendorAccountsResponse.vendorAccounts;
-    const hasNormalVendor = vendorAccounts.some((account: any) => account.vendorType === 'normal');
+    const hasPrivateVendor = vendorAccounts.some((account: any) => account.vendorType === 'private');
     const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
     
     const marketplaces = [];
     
-    if (hasNormalVendor) {
+    if (hasPrivateVendor) {
       marketplaces.push({ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' });
     }
     
@@ -406,6 +406,17 @@ export default function AddProduct() {
   };
 
   const availableMarketplaces = getAvailableMarketplaces();
+  
+  // Debug logging
+  console.log('Available marketplaces:', availableMarketplaces);
+  console.log('Vendor accounts response:', vendorAccountsResponse);
+  
+  // Set default marketplace when available marketplaces change
+  useEffect(() => {
+    if (availableMarketplaces.length > 0 && !form.getValues('marketplace')) {
+      form.setValue('marketplace', availableMarketplaces[0].value);
+    }
+  }, [availableMarketplaces, form]);
 
   // Check if user is a vendor
   useEffect(() => {
@@ -822,7 +833,7 @@ export default function AddProduct() {
                     render={({ field }) => (
                       <FormItem className="mt-4">
                         <FormLabel>{t("Marketplace")}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder={t("Select marketplace")} />
