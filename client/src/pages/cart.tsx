@@ -696,9 +696,12 @@ export default function Cart() {
                                         // Invalidate user query to refresh data
                                         queryClient.invalidateQueries({ queryKey: ['/api/user'] });
                                         
+                                        // Invalidate shipping calculation query to auto-recalculate with new location
+                                        queryClient.invalidateQueries({ queryKey: ['/api/shipping/calculate'] });
+                                        
                                         toast({
                                           title: translateText('Success'),
-                                          description: translateText('Location updated successfully'),
+                                          description: translateText('Location updated and shipping recalculated'),
                                         });
                                         
                                         setIsEditingLocation(false);

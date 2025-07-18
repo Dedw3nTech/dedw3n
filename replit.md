@@ -269,6 +269,12 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Translation Integration** - Added "Add Product/Service" text to productTexts array for proper Spanish translation
   - **COMPLETED: Server Route Access** - Resolved 404 errors when accessing /add-product, /upload-product, /vendor-dashboard, /become-vendor
   - Button now properly displays as "Agregar Producto/Servicio" in Spanish interface
+- **2025-07-18**: Auto-Recalculate Shipping Enhancement - Added automatic shipping recalculation on location change
+  - **COMPLETED: Save Button Auto-Calculation** - Cart save button now automatically recalculates shipping costs when location changes
+  - **COMPLETED: Query Invalidation Integration** - Added invalidation of shipping calculation queries to trigger immediate recalculation
+  - **COMPLETED: Enhanced Success Message** - Updated success message to "Location updated and shipping recalculated" for user clarity
+  - **COMPLETED: Seamless User Experience** - Location changes now provide immediate shipping cost updates without manual refresh
+  - Automatic shipping recalculation ensures users always see accurate costs based on their current destination
 - **2025-07-18**: Cart Location Change Enhancement - Added buyer location change functionality
   - **COMPLETED: Change Button Addition** - Added "Change" button next to buyer location in cart shipping information
   - **COMPLETED: Profile Settings Integration** - Button opens profile settings page in new tab for location updates
