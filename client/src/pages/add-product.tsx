@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Upload, X, Video as VideoIcon } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
@@ -70,10 +70,6 @@ const productSchema = z.object({
   trackQuantity: z.boolean().default(true),
   continueSellingWhenOutOfStock: z.boolean().default(false),
   requiresShipping: z.boolean().default(true),
-  shippingCarrier: z.string().optional(),
-  shippingPrice: z.coerce.number().nonnegative().optional(),
-  variableShippingPrice: z.coerce.number().nonnegative().optional(),
-  shippingIncluded: z.boolean().default(false),
   videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
@@ -96,22 +92,7 @@ export default function AddProduct() {
   const [isVendor, setIsVendor] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
-  const [shippingPriceType, setShippingPriceType] = useState<'fixed' | 'variable'>('fixed');
   const [showVendorDialog, setShowVendorDialog] = useState(false);
-  
-  // State for regional shipping
-  const [regionalShipping, setRegionalShipping] = useState<Record<string, { enabled: boolean; price: number }>>({
-    'Africa': { enabled: false, price: 0 },
-    'South Asia': { enabled: false, price: 0 },
-    'East Asia': { enabled: false, price: 0 },
-    'Oceania': { enabled: false, price: 0 },
-    'North America': { enabled: false, price: 0 },
-    'Central America': { enabled: false, price: 0 },
-    'South America': { enabled: false, price: 0 },
-    'Middle East': { enabled: false, price: 0 },
-    'Europe': { enabled: false, price: 0 },
-    'Central Asia': { enabled: false, price: 0 }
-  });
 
   // State for media uploads
   const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; preview: string }>>([]);
@@ -407,10 +388,6 @@ export default function AddProduct() {
 
   const availableMarketplaces = getAvailableMarketplaces();
   
-  // Debug logging
-  console.log('Available marketplaces:', availableMarketplaces);
-  console.log('Vendor accounts response:', vendorAccountsResponse);
-  
   // Set default marketplace when available marketplaces change
   useEffect(() => {
     if (availableMarketplaces.length > 0 && !form.getValues('marketplace')) {
@@ -528,27 +505,6 @@ export default function AddProduct() {
     ));
   };
 
-  // Regional shipping handlers
-  const toggleRegionalShipping = (region: string) => {
-    setRegionalShipping(prev => ({
-      ...prev,
-      [region]: {
-        ...prev[region],
-        enabled: !prev[region].enabled
-      }
-    }));
-  };
-
-  const updateRegionalShippingPrice = (region: string, price: number) => {
-    setRegionalShipping(prev => ({
-      ...prev,
-      [region]: {
-        ...prev[region],
-        price: price
-      }
-    }));
-  };
-
   // Media upload handlers
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -655,15 +611,10 @@ export default function AddProduct() {
       return;
     }
     
-    // Add custom fields and regional shipping to submission data
-    const enabledRegions = Object.entries(regionalShipping)
-      .filter(([_, settings]) => settings.enabled)
-      .map(([region, settings]) => ({ region, price: settings.price }));
-    
+    // Add custom fields to submission data
     const submitData = {
       ...values,
-      customFields: customFields.filter(field => field.name && field.value),
-      regionalShipping: enabledRegions
+      customFields: customFields.filter(field => field.name && field.value)
     };
     
     // If user has isVendor but no vendorId, we'll handle this on the server side
@@ -1385,221 +1336,6 @@ export default function AddProduct() {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name="shippingCarrier"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("Shipping Carrier")}</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={t("Select shipping carrier")} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="dhl">DHL</SelectItem>
-                                  <SelectItem value="fedex">FedEx</SelectItem>
-                                  <SelectItem value="ups">UPS</SelectItem>
-                                  <SelectItem value="royal-mail">Royal Mail</SelectItem>
-                                  <SelectItem value="usps">USPS</SelectItem>
-                                  <SelectItem value="dpd">DPD</SelectItem>
-                                  <SelectItem value="hermes">Hermes</SelectItem>
-                                  <SelectItem value="aramex">Aramex</SelectItem>
-                                  <SelectItem value="tnt">TNT</SelectItem>
-                                  <SelectItem value="gls">GLS</SelectItem>
-                                  <SelectItem value="other">{t("Other")}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Shipping Price Type Selection */}
-                        <div className="space-y-4">
-                          <div className="space-y-3">
-                            <Label className="text-sm font-medium">{t("Shipping Price Type")}</Label>
-                            <RadioGroup
-                              value={shippingPriceType}
-                              onValueChange={(value: 'fixed' | 'variable') => setShippingPriceType(value)}
-                              className="flex flex-col space-y-2 black-radio"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem 
-                                  value="fixed" 
-                                  id="fixed" 
-                                  className="border-2 border-black data-[state=checked]:bg-black data-[state=checked]:border-black text-white data-[state=checked]:text-white"
-                                />
-                                <Label htmlFor="fixed" className="text-sm font-medium">{t("Fixed Shipping Price")}</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem 
-                                  value="variable" 
-                                  id="variable" 
-                                  className="border-2 border-black data-[state=checked]:bg-black data-[state=checked]:border-black text-white data-[state=checked]:text-white"
-                                />
-                                <Label htmlFor="variable" className="text-sm font-medium">{t("Variable Shipping Price")}</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-
-                          {/* Fixed Shipping Price Field */}
-                          {shippingPriceType === 'fixed' && (
-                            <FormField
-                              control={form.control}
-                              name="shippingPrice"
-                              render={({ field }) => {
-                                const basePrice = field.value || 0;
-                                const calculatedCommission = basePrice * 0.015;
-                                const commission = basePrice > 0 ? Math.max(calculatedCommission, 2) : 0; // Minimum £2 commission
-                                const totalPrice = basePrice + commission;
-                                
-                                return (
-                                  <FormItem>
-                                    <FormLabel>{t("Fixed Shipping Price")}</FormLabel>
-                                    <FormControl>
-                                      <CurrencyInput
-                                        value={basePrice}
-                                        onValueChange={field.onChange}
-                                        placeholder={t("0.00")}
-                                      />
-                                    </FormControl>
-                                    <div className="text-xs font-normal text-gray-600 mt-1">
-                                      {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
-                                      {basePrice > 0 && (
-                                        <span className="ml-2 text-gray-800">
-                                          (Fee: £{commission.toFixed(2)}, Total: £{totalPrice.toFixed(2)})
-                                        </span>
-                                      )}
-                                    </div>
-                                    <FormMessage />
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          )}
-
-                          {/* Variable Shipping Price Field */}
-                          {shippingPriceType === 'variable' && (
-                            <FormField
-                              control={form.control}
-                              name="variableShippingPrice"
-                              render={({ field }) => {
-                                const basePrice = field.value || 0;
-                                const calculatedCommission = basePrice * 0.015;
-                                const commission = basePrice > 0 ? Math.max(calculatedCommission, 2) : 0; // Minimum £2 commission
-                                const totalPrice = basePrice + commission;
-                                
-                                return (
-                                  <FormItem>
-                                    <FormLabel>{t("Variable Shipping Price")}</FormLabel>
-                                    <FormControl>
-                                      <CurrencyInput
-                                        value={basePrice}
-                                        onValueChange={field.onChange}
-                                        placeholder={t("0.00")}
-                                      />
-                                    </FormControl>
-                                    <div className="text-xs font-normal text-gray-600 mt-1">
-                                      {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
-                                      {basePrice > 0 && (
-                                        <span className="ml-2 text-gray-800">
-                                          (Fee: £{commission.toFixed(2)}, Total: £{totalPrice.toFixed(2)})
-                                        </span>
-                                      )}
-                                    </div>
-                                    <FormMessage />
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          )}
-
-                          {/* Grayed out field for the unselected option */}
-                          {shippingPriceType === 'variable' && (
-                            <div className="opacity-50 pointer-events-none">
-                              <Label className="text-sm font-medium text-gray-500">{t("Fixed Shipping Price")}</Label>
-                              <CurrencyInput
-                                value={0}
-                                onValueChange={() => {}}
-                                placeholder={t("0.00")}
-                                className="mt-1"
-                              />
-                              <div className="text-xs font-normal text-gray-400 mt-1">
-                                {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
-                              </div>
-                            </div>
-                          )}
-
-                          {shippingPriceType === 'fixed' && (
-                            <div className="opacity-50 pointer-events-none">
-                              <Label className="text-sm font-medium text-gray-500">{t("Variable Shipping Price")}</Label>
-                              <CurrencyInput
-                                value={0}
-                                onValueChange={() => {}}
-                                placeholder={t("0.00")}
-                                className="mt-1"
-                              />
-                              <div className="text-xs font-normal text-gray-400 mt-1">
-                                {t("1.5% Dedw3n Shipping Fee will be applied")} (min £2)
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Regional Shipping Selection */}
-                        <div className="space-y-4 border-t pt-4 mt-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900 mb-2">{t("Regional Shipping")}</h3>
-                            <p className="text-xs text-gray-600 mb-4">{t("Select regions to ship to and set custom prices")}</p>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 gap-3">
-                            {Object.entries(regionalShipping).map(([region, settings]) => (
-                              <div key={region} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                                <div className="flex items-center space-x-3">
-                                  <div className="flex items-center">
-                                    <input
-                                      type="checkbox"
-                                      id={`region-${region}`}
-                                      checked={settings.enabled}
-                                      onChange={() => toggleRegionalShipping(region)}
-                                      className="h-4 w-4 border-2 border-gray-900 text-gray-900 focus:ring-gray-900 focus:ring-2 bg-white checked:bg-gray-900 checked:border-gray-900 rounded"
-                                      style={{
-                                        accentColor: '#000000',
-                                        backgroundColor: settings.enabled ? '#000000' : '#ffffff'
-                                      }}
-                                    />
-                                  </div>
-                                  <label htmlFor={`region-${region}`} className="text-sm font-medium text-gray-900 cursor-pointer">
-                                    {region}
-                                  </label>
-                                </div>
-                                
-                                {settings.enabled && (
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-xs text-gray-600">£</span>
-                                    <input
-                                      type="number"
-                                      value={settings.price}
-                                      onChange={(e) => updateRegionalShippingPrice(region, parseFloat(e.target.value) || 0)}
-                                      placeholder="0.00"
-                                      min="0"
-                                      step="0.01"
-                                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <div className="text-xs text-gray-500 mt-2">
-                            {t("Based on your profile location")} - {t("Enable shipping to this region")}
-                          </div>
-                        </div>
-                      
                       <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>
                         <Plus className="mr-2 h-4 w-4" />
                         {t("Add customs information")}

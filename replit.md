@@ -275,6 +275,15 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Layout Improvement** - Reorganized buyer location display with justified layout for button placement
   - **COMPLETED: Translation Support** - "Change" button text integrated with master translation system
   - Users can now easily update their location for accurate shipping calculations without leaving the cart page
+- **2025-07-18**: Shipping Fields Removal from Add Product Page - Simplified product creation workflow
+  - **COMPLETED: Shipping Carrier Field Removal** - Removed shipping carrier selection dropdown with all carrier options
+  - **COMPLETED: Shipping Price Type Removal** - Removed fixed/variable shipping price radio button selection
+  - **COMPLETED: Fixed Shipping Price Removal** - Removed fixed shipping price input field with commission calculations
+  - **COMPLETED: Variable Shipping Price Removal** - Removed variable shipping price input field with commission calculations  
+  - **COMPLETED: Regional Shipping Removal** - Removed entire regional shipping selection section with pricing
+  - **COMPLETED: Code Cleanup** - Removed unused state variables, functions, and schema fields related to removed shipping features
+  - **COMPLETED: Marketplace Selection Fix** - Fixed marketplace dropdown to properly show available options (C2C for private vendors)
+  - Product creation now focuses on core product information with simplified shipping handled automatically by the system
 - **2025-07-18**: VAT Functionality Implementation - Added comprehensive VAT options to product creation pages
   - **COMPLETED: VAT Schema Addition** - Added vat_included (boolean) and vat_rate (double precision) fields to products table
   - **COMPLETED: Add Product Page VAT UI** - Added VAT inclusion toggle switch and VAT rate input field (0-100%)
