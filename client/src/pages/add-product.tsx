@@ -40,7 +40,8 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Plus, Upload, X, Video as VideoIcon } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 
@@ -73,6 +74,7 @@ const productSchema = z.object({
   shippingPrice: z.coerce.number().nonnegative().optional(),
   variableShippingPrice: z.coerce.number().nonnegative().optional(),
   shippingIncluded: z.boolean().default(false),
+  videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
   seoTitle: z.string().optional(),
@@ -110,6 +112,11 @@ export default function AddProduct() {
     'Central Asia': { enabled: false, price: 0 }
   });
 
+  // State for media uploads
+  const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; preview: string }>>([]);
+  const [uploadedVideo, setUploadedVideo] = useState<{ file: File; preview: string } | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+
   // Comprehensive Add Product Page Text Collection for Translation
   const addProductTexts = [
     // Page Headers & Navigation
@@ -138,8 +145,29 @@ export default function AddProduct() {
     "Product description...",
     "Description",
     "Media",
-    "Product Image",
+    "Upload up to 12 images and 1 video for your product",
+    "Product Images",
+    "images",
+    "Upload Images",
+    "Image URLs",
+    "Upload images",
+    "PNG, JPG, GIF up to 5MB each",
+    "Main",
+    "Primary Image URL",
     "https://example.com/image.jpg",
+    "Provide a URL to your main product image",
+    "Additional Image URLs",
+    "Image",
+    "Add Image URL",
+    "Product Video",
+    "video",
+    "Upload Video",
+    "Video URL",
+    "Upload video",
+    "MP4, MOV, AVI up to 50MB",
+    "https://example.com/video.mp4",
+    "Provide a URL to your product video",
+    "Product Image",
     "Pricing",
     "Price",
     "Compare-at price",
@@ -462,6 +490,100 @@ export default function AddProduct() {
     }));
   };
 
+  // Media upload handlers
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: Array<{ file: File; preview: string }> = [];
+    const remainingSlots = 12 - uploadedImages.length;
+    const filesToProcess = Math.min(files.length, remainingSlots);
+
+    for (let i = 0; i < filesToProcess; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) { // 5MB limit
+        const preview = URL.createObjectURL(file);
+        newImages.push({ file, preview });
+      }
+    }
+
+    if (newImages.length > 0) {
+      setUploadedImages(prev => [...prev, ...newImages]);
+    }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => {
+      const imageToRemove = prev[index];
+      URL.revokeObjectURL(imageToRemove.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type.startsWith('video/') && file.size <= 50 * 1024 * 1024) { // 50MB limit
+      if (uploadedVideo) {
+        URL.revokeObjectURL(uploadedVideo.preview);
+      }
+      const preview = URL.createObjectURL(file);
+      setUploadedVideo({ file, preview });
+    }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeVideo = () => {
+    if (uploadedVideo) {
+      URL.revokeObjectURL(uploadedVideo.preview);
+      setUploadedVideo(null);
+    }
+  };
+
+  // Image URL handlers
+  const addImageUrl = () => {
+    setImageUrls(prev => [...prev, '']);
+  };
+
+  const updateImageUrl = (index: number, url: string) => {
+    setImageUrls(prev => prev.map((u, i) => i === index ? url : u));
+  };
+
+  const removeImageUrl = (index: number) => {
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Cleanup effect for blob URLs
+  useEffect(() => {
+    return () => {
+      // Cleanup image previews
+      uploadedImages.forEach(image => {
+        URL.revokeObjectURL(image.preview);
+      });
+      // Cleanup video preview
+      if (uploadedVideo) {
+        URL.revokeObjectURL(uploadedVideo.preview);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      uploadedImages.forEach(image => {
+        URL.revokeObjectURL(image.preview);
+      });
+      if (uploadedVideo) {
+        URL.revokeObjectURL(uploadedVideo.preview);
+      }
+    };
+  }, [uploadedImages, uploadedVideo]);
+
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
     // Check if user has isVendor flag set to true (system-level vendor status)
@@ -652,21 +774,210 @@ export default function AddProduct() {
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Media")}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {t("Upload up to 12 images and 1 video for your product")}
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("Product Image")}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t("https://example.com/image.jpg")} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <CardContent className="space-y-6">
+                  {/* Image Upload Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">{t("Product Images")}</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {uploadedImages.length}/12 {t("images")}
+                      </span>
+                    </div>
+                    
+                    <Tabs defaultValue="upload" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="upload">{t("Upload Images")}</TabsTrigger>
+                        <TabsTrigger value="url">{t("Image URLs")}</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="upload" className="space-y-4">
+                        {/* File Upload Area */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                          <div className="text-center">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="mt-4">
+                              <label htmlFor="image-upload" className="cursor-pointer">
+                                <span className="mt-2 block text-sm font-medium text-gray-900">
+                                  {t("Upload images")}
+                                </span>
+                                <span className="mt-1 block text-sm text-gray-500">
+                                  {t("PNG, JPG, GIF up to 5MB each")}
+                                </span>
+                              </label>
+                              <input
+                                id="image-upload"
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageUpload}
+                                disabled={uploadedImages.length >= 12}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Uploaded Images Grid */}
+                        {uploadedImages.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {uploadedImages.map((image, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={image.preview}
+                                  alt={`Product image ${index + 1}`}
+                                  className="w-full h-32 object-cover rounded-lg border"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                  {index === 0 ? t("Main") : `${index + 1}`}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="url" className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="imageUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Primary Image URL")}</FormLabel>
+                              <FormControl>
+                                <Input placeholder={t("https://example.com/image.jpg")} {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                {t("Provide a URL to your main product image")}
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Additional Image URLs */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">{t("Additional Image URLs")}</Label>
+                          {imageUrls.map((url, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                placeholder={`${t("Image")} ${index + 2} URL`}
+                                value={url}
+                                onChange={(e) => updateImageUrl(index, e.target.value)}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeImageUrl(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          {imageUrls.length < 11 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={addImageUrl}
+                              className="w-full"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              {t("Add Image URL")}
+                            </Button>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                  
+                  {/* Video Upload Section */}
+                  <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">{t("Product Video")}</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {uploadedVideo ? "1/1" : "0/1"} {t("video")}
+                      </span>
+                    </div>
+                    
+                    <Tabs defaultValue="upload" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="upload">{t("Upload Video")}</TabsTrigger>
+                        <TabsTrigger value="url">{t("Video URL")}</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="upload" className="space-y-4">
+                        {!uploadedVideo ? (
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                            <div className="text-center">
+                              <VideoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                              <div className="mt-4">
+                                <label htmlFor="video-upload" className="cursor-pointer">
+                                  <span className="mt-2 block text-sm font-medium text-gray-900">
+                                    {t("Upload video")}
+                                  </span>
+                                  <span className="mt-1 block text-sm text-gray-500">
+                                    {t("MP4, MOV, AVI up to 50MB")}
+                                  </span>
+                                </label>
+                                <input
+                                  id="video-upload"
+                                  type="file"
+                                  accept="video/*"
+                                  className="hidden"
+                                  onChange={handleVideoUpload}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <video
+                              src={uploadedVideo.preview}
+                              className="w-full h-48 object-cover rounded-lg border"
+                              controls
+                            />
+                            <button
+                              type="button"
+                              onClick={removeVideo}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="url" className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="videoUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Video URL")}</FormLabel>
+                              <FormControl>
+                                <Input placeholder={t("https://example.com/video.mp4")} {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                {t("Provide a URL to your product video")}
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
                 </CardContent>
               </Card>
 
