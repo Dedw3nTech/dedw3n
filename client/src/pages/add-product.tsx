@@ -59,7 +59,7 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   // New Shopify-style fields
   status: z.enum(['active', 'draft', 'archived']).default('active'),
-  offeringType: z.enum(['product', 'service']).default('product'),
+  offeringType: z.enum(['product', 'service', 'vehicle', 'real_estate', 'xl_xxl_product']).default('product'),
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),

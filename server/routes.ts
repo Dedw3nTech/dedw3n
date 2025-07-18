@@ -4996,14 +4996,75 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "No vendor accounts found" });
       }
 
-      // Use the first vendor account (primary vendor)
-      const vendor = vendorAccounts[0];
-      
-      // Add vendorId to product data
+      // Determine the appropriate vendor account and marketplace routing
+      const requestedMarketplace = req.body.marketplace;
+      let targetVendor: typeof vendorAccounts[0] | null = null;
+      let finalMarketplace: 'c2c' | 'b2c' | 'b2b' = 'c2c';
+
+      // Find the appropriate vendor account based on marketplace selection
+      if (requestedMarketplace === 'c2c') {
+        // C2C requires private vendor account
+        targetVendor = vendorAccounts.find(v => v.vendorType === 'private') || null;
+        finalMarketplace = 'c2c';
+      } else if (requestedMarketplace === 'b2c' || requestedMarketplace === 'b2b') {
+        // B2C and B2B require business vendor account
+        targetVendor = vendorAccounts.find(v => v.vendorType === 'business') || null;
+        finalMarketplace = requestedMarketplace as 'b2c' | 'b2b';
+      }
+
+      // Fallback: use the first available vendor account and determine marketplace automatically
+      if (!targetVendor) {
+        targetVendor = vendorAccounts[0];
+        
+        // Auto-determine marketplace based on vendor type
+        if (targetVendor.vendorType === 'private') {
+          finalMarketplace = 'c2c';
+        } else if (targetVendor.vendorType === 'business') {
+          // Default to B2C for business vendors if no specific marketplace selected
+          finalMarketplace = requestedMarketplace === 'b2b' ? 'b2b' : 'b2c';
+        }
+      }
+
+      // Validate marketplace compatibility with vendor type
+      if (finalMarketplace === 'c2c' && targetVendor.vendorType !== 'private') {
+        return res.status(400).json({ 
+          message: "C2C marketplace requires a private vendor account",
+          suggestion: "Please create a private vendor account or select B2C/B2B marketplace"
+        });
+      }
+
+      if ((finalMarketplace === 'b2c' || finalMarketplace === 'b2b') && targetVendor.vendorType !== 'business') {
+        return res.status(400).json({ 
+          message: `${finalMarketplace.toUpperCase()} marketplace requires a business vendor account`,
+          suggestion: "Please create a business vendor account or select C2C marketplace"
+        });
+      }
+
+      // Prepare product data with proper marketplace routing
       const productData = {
         ...req.body,
-        vendorId: vendor.id
+        vendorId: targetVendor.id,
+        marketplace: finalMarketplace,
+        // Auto-populate vendor field if not provided
+        vendor: req.body.vendor || targetVendor.storeName || targetVendor.businessName
       };
+
+      // Handle offering type conversion to productType
+      if (productData.offeringType) {
+        // Map offering types to product types
+        const typeMapping = {
+          'product': 'product',
+          'service': 'service',
+          'vehicle': 'vehicle',
+          'real_estate': 'real_estate',
+          'xl_xxl_product': 'product' // XL/XXL products are still categorized as 'product'
+        };
+        
+        productData.productType = typeMapping[productData.offeringType as keyof typeof typeMapping] || 'product';
+        
+        // Remove the offeringType field as it's not part of the schema
+        delete productData.offeringType;
+      }
 
       // Validate the product data
       const validatedProduct = insertProductSchema.parse(productData);
@@ -5011,10 +5072,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Create the product with automatic product code generation
       const newProduct = await storage.createProduct(validatedProduct);
       
-      res.status(201).json(newProduct);
+      res.status(201).json({
+        ...newProduct,
+        marketplace: finalMarketplace,
+        vendorType: targetVendor.vendorType,
+        message: `Product successfully published to ${finalMarketplace.toUpperCase()} marketplace`
+      });
     } catch (error) {
       console.error('Error creating product:', error);
-      res.status(500).json({ message: 'Failed to create product' });
+      if (error instanceof Error) {
+        res.status(400).json({ message: `Failed to create product: ${error.message}` });
+      } else {
+        res.status(500).json({ message: 'Failed to create product' });
+      }
     }
   });
 
