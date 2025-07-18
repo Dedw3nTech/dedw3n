@@ -373,13 +373,19 @@ export default function AddProduct() {
   });
 
   // Get user's vendor accounts to determine marketplace availability
-  const { data: vendorAccounts = [] } = useQuery({
+  const { data: vendorAccountsResponse } = useQuery({
     queryKey: ['/api/vendors/user/accounts'],
     enabled: !!user,
   });
 
   // Determine available marketplaces based on vendor type
   const getAvailableMarketplaces = () => {
+    // Safety check for null/undefined data
+    if (!vendorAccountsResponse || !vendorAccountsResponse.vendorAccounts || !Array.isArray(vendorAccountsResponse.vendorAccounts)) {
+      return [{ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' }];
+    }
+    
+    const vendorAccounts = vendorAccountsResponse.vendorAccounts;
     const hasNormalVendor = vendorAccounts.some((account: any) => account.vendorType === 'normal');
     const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
     

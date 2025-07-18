@@ -4053,15 +4053,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get user's vendor accounts endpoint
-  app.get('/api/vendors/user/accounts', async (req: Request, res: Response) => {
+  app.get('/api/vendors/user/accounts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      let userId = (req.user as any)?.id;
-      
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
