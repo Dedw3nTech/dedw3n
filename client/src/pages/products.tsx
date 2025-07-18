@@ -119,9 +119,9 @@ export default function Products() {
     "Show", "Sort by", "Sort Options", "Trending", "Price: Low to High", 
     "Price: High to Low", "Newest Product",
     
-    // Product Actions (8 texts)
+    // Product Actions (9 texts)
     "Add to Cart", "Add to shopping cart", "Share on community feed", "Make an offer",
-    "Send as gift", "Add to profile", "Share product", "View product details",
+    "Send as gift", "Add to profile", "Share product", "View product details", "Add Product/Service",
     
     // Additional Actions (12 texts)
     "Add to Shopping Bag", "New", "Sale", "Verified", "Min qty", "Buy Now",
@@ -172,7 +172,7 @@ export default function Products() {
     priceHighLowText, newestProductText,
     
     addToCartText, addToCartTooltipText, shareOnFeedTooltipText, makeOfferTooltipText,
-    sendGiftTooltipText, addToProfileTooltipText, shareProductTooltipText, viewProductDetailsText,
+    sendGiftTooltipText, addToProfileTooltipText, shareProductTooltipText, viewProductDetailsText, addProductServiceText,
     
     addToShoppingBagText, newBadgeText, saleBadgeText, verifiedBadgeText, minQtyText,
     buyNowText, shareText, viewProductText, cancelText, sendingText, postingText,
@@ -1258,7 +1258,7 @@ export default function Products() {
         className="w-full bg-black text-white hover:bg-gray-800 mt-3"
       >
         <Plus className="h-4 w-4 mr-2" />
-        Add Product/Service
+{addProductServiceText}
       </Button>
     </div>
   );
