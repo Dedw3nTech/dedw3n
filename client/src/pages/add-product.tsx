@@ -288,6 +288,12 @@ export default function AddProduct() {
     "oz",
     "g",
     
+    // Dimension Units and Placeholders
+    "cm",
+    "inches",
+    "10 × 5 × 2",
+    "4 × 2 × 1",
+    
     // Shipping Price Types
     "Shipping Price Type",
     "Fixed Shipping Price",
@@ -329,6 +335,7 @@ export default function AddProduct() {
       weight: undefined,
       weightUnit: 'kg',
       dimensions: '',
+      dimensionUnit: 'cm',
       sku: '',
       barcode: '',
       trackQuantity: true,
@@ -1315,19 +1322,42 @@ export default function AddProduct() {
                             )}
                           />
                         </div>
-                        <FormField
-                          control={form.control}
-                          name="dimensions"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("Dimensions (L × W × H)")}</FormLabel>
-                              <FormControl>
-                                <Input placeholder={t("10 × 5 × 2 cm")} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="dimensions"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("Dimensions (L × W × H)")}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder={form.watch('dimensionUnit') === 'cm' ? t("10 × 5 × 2") : t("4 × 2 × 1")} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="dimensionUnit"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("Unit")}</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="cm">cm</SelectItem>
+                                    <SelectItem value="inches">inches</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                         
                       <Button type="button" variant="outline" className="w-full" onClick={addCustomField}>
                         <Plus className="mr-2 h-4 w-4" />

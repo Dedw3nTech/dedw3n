@@ -258,6 +258,7 @@ export const products = pgTable("products", {
   weight: doublePrecision("weight"), // Product weight
   weightUnit: text("weight_unit").default('kg'), // kg, lb, oz, g
   dimensions: text("dimensions"), // Format: "L x W x H"
+  dimensionUnit: text("dimension_unit").default('cm'), // cm, inches
   sku: text("sku"), // Stock Keeping Unit
   barcode: text("barcode"),
   trackQuantity: boolean("track_quantity").default(true),
