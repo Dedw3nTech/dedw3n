@@ -165,8 +165,6 @@ export default function AddProduct() {
     "Pricing",
     "Price",
     "Compare-at price",
-    "Include shipping costs in price",
-    "Choose whether shipping costs are included in the product price or calculated separately at checkout",
     
     // Inventory Section
     "Inventory",
@@ -339,7 +337,6 @@ export default function AddProduct() {
       shippingCarrier: '',
       shippingPrice: undefined,
       variableShippingPrice: undefined,
-      shippingIncluded: false,
       marketplace: 'c2c', // Default to C2C
       seoTitle: '',
       seoDescription: '',
@@ -1140,27 +1137,7 @@ export default function AddProduct() {
                       )}
                     />
                   )}
-                  
-                  <FormField
-                    control={form.control}
-                    name="shippingIncluded"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">{t("Include shipping costs in price")}</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            {t("Choose whether shipping costs are included in the product price or calculated separately at checkout")}
-                          </p>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+
                 </CardContent>
               </Card>
 
