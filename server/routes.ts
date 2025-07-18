@@ -3898,15 +3898,40 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      // Default to private vendor type if not specified
+      const vendorType = req.body.vendorType || 'private';
+
+      // Check if user already has a vendor account of this type
+      const existingVendor = await storage.checkVendorAccountExists(userId, vendorType);
+      if (existingVendor) {
+        // Return the existing vendor instead of creating a new one
+        const userVendor = await storage.getVendorByUserIdAndType(userId, vendorType);
+        return res.status(200).json(userVendor);
+      }
+
       const vendorData = {
         userId,
+        vendorType,
         ...req.body
       };
 
       const vendor = await storage.createVendor(vendorData);
+      
+      // Update the user to mark them as a vendor if they don't already have vendor accounts
+      const userVendorAccounts = await storage.getUserVendorAccounts(userId);
+      if (userVendorAccounts.length === 1) {
+        // First vendor account - mark user as vendor
+        await storage.updateUser(userId, { isVendor: true });
+      }
+      
       res.status(201).json(vendor);
     } catch (error) {
       console.error("Error creating vendor:", error);
+      if (error.code === '23505') { // PostgreSQL unique constraint violation
+        return res.status(400).json({ 
+          message: "You already have a vendor account of this type" 
+        });
+      }
       res.status(500).json({ message: "Failed to create vendor account" });
     }
   });
