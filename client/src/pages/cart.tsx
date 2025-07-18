@@ -712,10 +712,10 @@ export default function Cart() {
                           <span>{translateText('Sea Freight')} - {translateText('45 days')}</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="under-customs">
+                      <SelectItem value="express-freight">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
-                          <span>{translateText('Under Customs')} - {translateText('7-10 days')}</span>
+                          <span>{translateText('Express Freight')} - {translateText('Next Work Day')}</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -748,7 +748,7 @@ export default function Cart() {
                       {selectedShippingType === 'normal-freight' && translateText('Normal Freight')}
                       {selectedShippingType === 'air-freight' && translateText('Air Freight')}
                       {selectedShippingType === 'sea-freight' && translateText('Sea Freight')}
-                      {selectedShippingType === 'under-customs' && translateText('Under Customs')}
+                      {selectedShippingType === 'express-freight' && translateText('Express Freight')}
                     </span>
                   </div>
                   

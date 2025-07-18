@@ -4564,46 +4564,134 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Calculate distance factor based on countries (simplified)
       const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
       
-      // Updated authentic shipping rates from Dedw3n Shipping Excel data (per kg in GBP)
-      const shippingRatesPerKg = {
-        'normal-freight': 19.00,
-        'air-freight': 16.75, 
-        'sea-freight': 3.00,
-        'under-customs': 7.00
-      };
-      
-      // Updated admin fees per shipment (from Excel data) - varies by shipping type
-      const adminFeesPerShipment = {
-        'normal-freight': 6,
-        'air-freight': 6, 
-        'sea-freight': 83,
-        'under-customs': 133
-      };
+      // Latest authentic shipping data from Dedw3n Shipping Excel (location-based with weight tiers)
+      const shippingData = [
+        // Belgium → Kinshasa, DR Congo (per kg pricing)
+        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'normal-freight', ratePerKg: 19.00, adminFee: 6, delivery: '3 days', partner: 'KPM Logestics' },
+        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'air-freight', ratePerKg: 16.75, adminFee: 6, delivery: '10 days', partner: 'KPM Logestics' },
+        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'sea-freight', ratePerKg: 3.00, adminFee: 83, delivery: '45 days', partner: 'KPM Logestics' },
+        
+        // Belgium → Belgium (weight tier pricing)
+        { origin: 'Belgium', destination: 'Belgium', type: 'express-freight', weightTiers: { '0-10': 7.5, '10-20': 11.5, '20-30': 14.0 }, adminFee: 0, delivery: 'Next Work Day', partner: 'Bpost' },
+        
+        // Belgium → France (weight tier pricing)
+        { origin: 'Belgium', destination: 'France', type: 'normal-freight', weightTiers: { '0-10': 19.2, '10-20': 27.0, '20-30': 39.6 }, adminFee: 0, delivery: '10 days', partner: 'Bpost' }
+      ];
 
-      // Get authentic shipping rate per kg from Excel data
-      const ratePerKg = shippingRatesPerKg[shippingType as keyof typeof shippingRatesPerKg] || shippingRatesPerKg['normal-freight'];
-      
-      // Get authentic admin fee for selected shipping type
-      const adminFeePerShipment = adminFeesPerShipment[shippingType as keyof typeof adminFeesPerShipment] || adminFeesPerShipment['normal-freight'];
-      
-      // Calculate total cost using updated authentic pricing from Excel data
-      // Examples: Normal Freight: £19.00 × 5 kg + £6 = £101.00
-      //          Sea Freight: £3.00 × 5 kg + £83 = £98.00
-      const totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
+      // Find matching shipping rate based on origin, destination, and shipping type
+      const matchingRate = shippingData.find(rate => {
+        // More specific location matching
+        const normalizeLocation = (loc: string) => loc.toLowerCase().trim();
+        
+        const originNorm = normalizeLocation(originCountry as string);
+        const destNorm = normalizeLocation(destinationCountry as string);
+        const rateOriginNorm = normalizeLocation(rate.origin);
+        const rateDestNorm = normalizeLocation(rate.destination);
+        
+        // Check for exact matches first, then partial matches
+        let originMatch = false;
+        let destMatch = false;
+        
+        // Origin matching
+        if (rateOriginNorm === originNorm || 
+            rateOriginNorm.includes(originNorm) || 
+            originNorm.includes(rateOriginNorm)) {
+          originMatch = true;
+        }
+        
+        // Destination matching with specific location handling
+        if (rateDestNorm === destNorm || 
+            rateDestNorm.includes(destNorm) || 
+            destNorm.includes(rateDestNorm)) {
+          destMatch = true;
+        }
+        
+        // Special handling for DR Congo variations
+        if (rateDestNorm.includes('kinshasa') && (destNorm.includes('congo') || destNorm.includes('kinshasa'))) {
+          destMatch = true;
+        }
+        if (destNorm.includes('kinshasa') && (rateDestNorm.includes('congo') || rateDestNorm.includes('kinshasa'))) {
+          destMatch = true;
+        }
+        
+        // Map shipping types
+        const typeMap = {
+          'normal-freight': 'normal-freight',
+          'air-freight': 'air-freight', 
+          'sea-freight': 'sea-freight',
+          'under-customs': 'normal-freight', // Default to normal freight for under customs
+          'express-freight': 'express-freight'
+        };
+        
+        const typeMatch = rate.type === typeMap[shippingType as keyof typeof typeMap];
+        
 
-      // Use authentic carrier from Excel data
-      const carrier = 'Dedw3n Shipping';
+        
+        return originMatch && destMatch && typeMatch;
+      });
+
+      let totalCost = 0;
+      let ratePerKg = 0;
+      let adminFeePerShipment = 0;
+      let estimatedDays = '7-10 days';
+      let shippingPartner = 'Dedw3n Shipping';
+
+      if (matchingRate) {
+        adminFeePerShipment = matchingRate.adminFee;
+        estimatedDays = matchingRate.delivery;
+        shippingPartner = matchingRate.partner;
+
+        if (matchingRate.ratePerKg) {
+          // Per kg pricing (Belgium → Kinshasa, DR Congo)
+          ratePerKg = matchingRate.ratePerKg;
+          totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
+        } else if (matchingRate.weightTiers) {
+          // Weight tier pricing (Belgium → Belgium, Belgium → France)
+          if (weightNum <= 10) {
+            totalCost = matchingRate.weightTiers['0-10'];
+            ratePerKg = totalCost / weightNum; // Calculate effective rate
+          } else if (weightNum <= 20) {
+            totalCost = matchingRate.weightTiers['10-20'];
+            ratePerKg = totalCost / weightNum;
+          } else if (weightNum <= 30) {
+            totalCost = matchingRate.weightTiers['20-30'];
+            ratePerKg = totalCost / weightNum;
+          } else {
+            // For weights over 30kg, extrapolate from 20-30kg tier
+            const baseRate = matchingRate.weightTiers['20-30'] / 25; // Average rate per kg for 20-30kg tier
+            totalCost = weightNum * baseRate;
+            ratePerKg = baseRate;
+          }
+          totalCost += adminFeePerShipment;
+        }
+      } else {
+        // Fallback to previous pricing structure for unsupported routes
+        const fallbackRates = {
+          'normal-freight': { rate: 19.00, admin: 6 },
+          'air-freight': { rate: 16.75, admin: 6 },
+          'sea-freight': { rate: 3.00, admin: 83 },
+          'under-customs': { rate: 7.00, admin: 133 }
+        };
+        
+        const fallback = fallbackRates[shippingType as keyof typeof fallbackRates] || fallbackRates['normal-freight'];
+        ratePerKg = fallback.rate;
+        adminFeePerShipment = fallback.admin;
+        totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
+        estimatedDays = getEstimatedDaysFromExcelData(shippingType as string);
+      }
 
       const calculation = {
         shippingType,
         weight: weightNum,
-        ratePerKg,
+        ratePerKg: Math.round(ratePerKg * 100) / 100,
         adminFee: adminFeePerShipment,
-        totalCost,
-        estimatedDays: getEstimatedDaysFromExcelData(shippingType as string),
-        carrier,
+        totalCost: Math.round(totalCost * 100) / 100,
+        estimatedDays,
+        carrier: 'Dedw3n Shipping',
+        shippingPartner,
         origin: `${originCity || ''}, ${originCountry}`.replace(/^,\s*/, ''),
-        destination: `${destinationCity || ''}, ${destinationCountry}`.replace(/^,\s*/, '')
+        destination: `${destinationCity || ''}, ${destinationCountry}`.replace(/^,\s*/, ''),
+        pricingType: matchingRate ? (matchingRate.ratePerKg ? 'per-kg' : 'weight-tier') : 'fallback'
       };
 
       res.json(calculation);

@@ -243,16 +243,17 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Fallback System** - Graceful fallback to basic calculation if API unavailable
   - Auto-calculation uses cart total weight, selected shipping type, and user destination for accurate pricing
   - Shipping notification displays carrier information and estimated delivery times automatically
-- **2025-07-16**: Updated Shipping Data Integration - Updated with latest Dedw3n Shipping Excel data  
-  - **COMPLETED: Latest Excel Data Import** - Updated shipping rates from latest Excel file (Shipping fee_1752644365410.xlsx)
-  - **COMPLETED: Updated Pricing Implementation** - Updated API with new authentic rates and variable admin fees
-  - **COMPLETED: Variable Admin Fee System** - Admin fees now vary by shipping type: Normal/Air (£6), Sea (£83), Under Customs (£133)
-  - **COMPLETED: Updated Rate Structure** - New rates: Normal Freight (£19.00/kg), Air Freight (£16.75/kg), Sea Freight (£3.00/kg), Under Customs (£7.00/kg)
-  - **COMPLETED: Delivery Times Update** - Updated delivery times: Normal Freight (3 days), Air Freight (10 days), Sea Freight (45 days), Under Customs (variable)
-  - **COMPLETED: Cost Formula Update** - Formula: (weight × rate per kg) + shipping-type-specific admin fee
-  - Examples: Normal Freight: £19.00 × 5 kg + £6 = £101.00, Sea Freight: £3.00 × 5 kg + £83 = £98.00
-  - **COMPLETED: Shipping Method Selector** - Added user-selectable shipping methods in cart with icons and delivery times
-  - All shipping calculations now reflect latest authentic Dedw3n Shipping rates with proper cost differentiation
+- **2025-07-18**: Location-Based Shipping Calculator Implementation - Advanced shipping system with weight tiers and location-specific pricing
+  - **COMPLETED: Latest Excel Data Integration** - Imported shipping rates from newest Excel file (Shipping fee_1752813833052.xlsx)
+  - **COMPLETED: Location-Based Pricing System** - Implemented complex pricing for Belgium → Kinshasa DR Congo, Belgium → Belgium, Belgium → France
+  - **COMPLETED: Weight Tier Pricing** - Added support for 0-10kg, 10-20kg, 20-30kg fixed price tiers with extrapolation for 30kg+
+  - **COMPLETED: Multiple Shipping Partners** - KPM Logestics for international routes, Bpost for domestic/European routes
+  - **COMPLETED: Advanced Rate Structure** - Belgium→DR Congo (per kg rates), Belgium→Belgium/France (weight tier rates)
+  - **COMPLETED: Express Freight Addition** - Added Express Freight option with Next Work Day delivery for Belgium domestic routes
+  - **COMPLETED: Dynamic Admin Fees** - Location and shipping type specific admin fees (€0 for domestic, €6-€83 for international)
+  - **COMPLETED: Smart Route Matching** - Intelligent location matching system handles variations like "DR Congo", "Kinshasa", country aliases
+  - Examples: Belgium→Belgium Express 8kg = €7.50, Belgium→France Normal 15kg = €27.00, Belgium→DR Congo Air 10kg = €173.50
+  - All shipping calculations now use authentic location-based Excel data with dynamic weight tier or per-kg pricing
 - **2025-07-11**: SMTP Brevo Authentication Assessment Complete - Comprehensive verification of email functionality
   - **COMPLETED: SMTP Authentication Verification** - All Brevo SMTP authentication requirements met and verified
   - **COMPLETED: Email Functionality Testing** - Contact form emails sending successfully to love@dedw3n.com
