@@ -4590,6 +4590,127 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get available shipping methods by destination and offering type
+  app.get('/api/shipping/methods/available', async (req: Request, res: Response) => {
+    try {
+      const { destinationCountry, offeringType } = req.query;
+      
+      // Default offering type to "Product" if not provided
+      const normalizedOfferingType = (offeringType as string || 'Product').toLowerCase().trim();
+      
+      // Latest authentic shipping data from Dedw3n Shipping Excel file (Shipping fee_1752848039793.xlsx)
+      const shippingData = [
+        // Product offering - Kinshas, DR Congo → United Kingdom
+        { offering_category: 'Product', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Product', buyer_location: 'United Kingdom', shipping_type: 'Air Freight', available: true },
+        { offering_category: 'Product', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', available: true },
+        { offering_category: 'Product', buyer_location: 'United Kingdom', shipping_type: 'Express Freight', available: false },
+        
+        // Product offering - Kinshas, DR Congo → France
+        { offering_category: 'Product', buyer_location: 'France', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Product', buyer_location: 'France', shipping_type: 'Air Freight', available: false },
+        { offering_category: 'Product', buyer_location: 'France', shipping_type: 'Sea Freight', available: false },
+        { offering_category: 'Product', buyer_location: 'France', shipping_type: 'Express Freight', available: false },
+        
+        // Product offering - Kinshas, DR Congo → Kinshas, DR Congo
+        { offering_category: 'Product', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Normal Freight', available: false },
+        { offering_category: 'Product', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Air Freight', available: false },
+        { offering_category: 'Product', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Sea Freight', available: false },
+        { offering_category: 'Product', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', available: true },
+        
+        // Vehicle offering - Higher availability for specialized transport
+        { offering_category: 'Vehicle', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Vehicle', buyer_location: 'United Kingdom', shipping_type: 'Air Freight', available: true },
+        { offering_category: 'Vehicle', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', available: true },
+        { offering_category: 'Vehicle', buyer_location: 'United Kingdom', shipping_type: 'Express Freight', available: false },
+        
+        { offering_category: 'Vehicle', buyer_location: 'France', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Vehicle', buyer_location: 'France', shipping_type: 'Air Freight', available: false },
+        { offering_category: 'Vehicle', buyer_location: 'France', shipping_type: 'Sea Freight', available: true },
+        { offering_category: 'Vehicle', buyer_location: 'France', shipping_type: 'Express Freight', available: false },
+        
+        // Service offering - Limited shipping options
+        { offering_category: 'Service', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Service', buyer_location: 'United Kingdom', shipping_type: 'Air Freight', available: false },
+        { offering_category: 'Service', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', available: false },
+        { offering_category: 'Service', buyer_location: 'United Kingdom', shipping_type: 'Express Freight', available: false },
+        
+        { offering_category: 'Service', buyer_location: 'France', shipping_type: 'Normal Freight', available: true },
+        { offering_category: 'Service', buyer_location: 'France', shipping_type: 'Air Freight', available: false },
+        { offering_category: 'Service', buyer_location: 'France', shipping_type: 'Sea Freight', available: false },
+        { offering_category: 'Service', buyer_location: 'France', shipping_type: 'Express Freight', available: false }
+      ];
+      
+      // Find available shipping methods for the destination and offering type
+      const availableMethods = shippingData.filter(method => {
+        const normalizeLocation = (loc: string) => loc.toLowerCase().trim();
+        const normalizeOffering = (offering: string) => offering.toLowerCase().trim();
+        
+        const destNorm = normalizeLocation(destinationCountry as string || 'United Kingdom');
+        const methodDestNorm = normalizeLocation(method.buyer_location);
+        const offeringNorm = normalizeOffering(normalizedOfferingType);
+        const methodOfferingNorm = normalizeOffering(method.offering_category);
+        
+        // Destination matching with country variations
+        let destMatch = false;
+        if (methodDestNorm.includes('united kingdom') && (destNorm.includes('uk') || destNorm.includes('united kingdom') || destNorm.includes('britain'))) {
+          destMatch = true;
+        } else if (destNorm.includes('united kingdom') && (methodDestNorm.includes('uk') || methodDestNorm.includes('britain'))) {
+          destMatch = true;
+        } else if (methodDestNorm.includes('congo') && (destNorm.includes('congo') || destNorm.includes('dr congo') || destNorm.includes('kinshasa'))) {
+          destMatch = true;
+        } else if (destNorm.includes('congo') && (methodDestNorm.includes('congo') || methodDestNorm.includes('kinshasa'))) {
+          destMatch = true;
+        } else if (methodDestNorm === destNorm || methodDestNorm.includes(destNorm) || destNorm.includes(methodDestNorm)) {
+          destMatch = true;
+        }
+        
+        // Offering type matching
+        const offeringMatch = methodOfferingNorm === offeringNorm;
+        
+        return destMatch && offeringMatch;
+      });
+      
+      // Format the response
+      const shippingMethods = [
+        { 
+          value: 'normal-freight', 
+          label: 'Normal Freight',
+          icon: 'Truck',
+          available: availableMethods.find(m => m.shipping_type === 'Normal Freight')?.available || false
+        },
+        { 
+          value: 'air-freight', 
+          label: 'Air Freight',
+          icon: 'Plane', 
+          available: availableMethods.find(m => m.shipping_type === 'Air Freight')?.available || false
+        },
+        { 
+          value: 'sea-freight', 
+          label: 'Sea Freight',
+          icon: 'Ship',
+          available: availableMethods.find(m => m.shipping_type === 'Sea Freight')?.available || false
+        },
+        { 
+          value: 'express-freight', 
+          label: 'Express Freight',
+          icon: 'FileText',
+          available: availableMethods.find(m => m.shipping_type === 'Express Freight')?.available || false
+        }
+      ];
+      
+      res.json({
+        destinationCountry: destinationCountry || 'United Kingdom',
+        offeringType: normalizedOfferingType,
+        shippingMethods: shippingMethods
+      });
+      
+    } catch (error) {
+      console.error('Error fetching shipping methods:', error);
+      res.status(500).json({ message: 'Failed to fetch shipping methods' });
+    }
+  });
+
   // Shipping cost calculation endpoint
   app.get('/api/shipping/calculate', async (req: Request, res: Response) => {
     try {

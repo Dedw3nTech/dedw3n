@@ -56,6 +56,23 @@ export default function ShippingCalculator() {
   const [destinationCity, setDestinationCity] = useState<string>('London');
   const [offeringType, setOfferingType] = useState<string>('Product');
 
+  // Get available shipping methods for destination and offering type
+  const { data: availableShippingMethods } = useQuery({
+    queryKey: ['/api/shipping/methods/available', {
+      destinationCountry,
+      offeringType
+    }],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        destinationCountry,
+        offeringType
+      });
+      const response = await apiRequest('GET', `/api/shipping/methods/available?${params}`);
+      return response.json();
+    },
+    enabled: Boolean(destinationCountry && offeringType)
+  });
+
   // Calculate shipping cost
   const { data: shippingCalculation, isLoading } = useQuery({
     queryKey: ['/api/shipping/calculate', {
@@ -157,23 +174,48 @@ export default function ShippingCalculator() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {shippingTypes.map((type) => {
-                    const Icon = type.icon;
-                    return (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          <span>{type.label}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                  {availableShippingMethods?.shippingMethods.map((method: any) => (
+                    <SelectItem 
+                      key={method.value} 
+                      value={method.value}
+                      disabled={!method.available}
+                      className={!method.available ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}
+                    >
+                      <div className={`flex items-center gap-2 ${!method.available ? 'opacity-50' : ''}`}>
+                        {method.icon === 'Truck' && <Truck className="h-4 w-4" />}
+                        {method.icon === 'Plane' && <Plane className="h-4 w-4" />}
+                        {method.icon === 'Ship' && <Ship className="h-4 w-4" />}
+                        {method.icon === 'FileText' && <FileText className="h-4 w-4" />}
+                        <span>
+                          {translateText(method.label)}
+                          {!method.available && (
+                            <span className="text-red-500 ml-1">- {translateText('Not Available')}</span>
+                          )}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {selectedTypeInfo && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {selectedTypeInfo.description}
-                </p>
+              
+              {/* Shipping Method Availability Info */}
+              {availableShippingMethods && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-xs text-blue-800 space-y-1">
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">{translateText('Available for')}:</span>
+                      <span>{availableShippingMethods.destinationCountry}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">{translateText('Offering Type')}:</span>
+                      <span className="capitalize">{availableShippingMethods.offeringType}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">{translateText('Available Methods')}:</span>
+                      <span>{availableShippingMethods.shippingMethods.filter((m: any) => m.available).length} / {availableShippingMethods.shippingMethods.length}</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

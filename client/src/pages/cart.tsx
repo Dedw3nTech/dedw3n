@@ -126,6 +126,15 @@ export default function Cart() {
     return predominantType.charAt(0).toUpperCase() + predominantType.slice(1);
   }, [cartItems]);
 
+  // Get available shipping methods for destination and offering type
+  const { data: availableShippingMethods } = useQuery({
+    queryKey: ['/api/shipping/methods/available', {
+      destinationCountry: user?.country || 'United Kingdom',
+      offeringType: cartOfferingType
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0
+  });
+
   // Get shipping calculation automatically
   const { data: autoShippingCalculation } = useQuery({
     queryKey: ['/api/shipping/calculate', {
@@ -805,32 +814,43 @@ export default function Cart() {
                       <SelectValue placeholder={translateText('Choose shipping method')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="normal-freight">
-                        <div className="flex items-center gap-2">
-                          <Truck className="h-4 w-4" />
-                          <span>{translateText('Normal Freight')} - {translateText('3 days')}</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="air-freight">
-                        <div className="flex items-center gap-2">
-                          <Plane className="h-4 w-4" />
-                          <span>{translateText('Air Freight')} - {translateText('10 days')}</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="sea-freight">
-                        <div className="flex items-center gap-2">
-                          <Ship className="h-4 w-4" />
-                          <span>{translateText('Sea Freight')} - {translateText('45 days')}</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="express-freight">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          <span>{translateText('Express Freight')} - {translateText('Next Work Day')}</span>
-                        </div>
-                      </SelectItem>
+                      {availableShippingMethods?.shippingMethods.map((method: any) => (
+                        <SelectItem 
+                          key={method.value} 
+                          value={method.value}
+                          disabled={!method.available}
+                          className={!method.available ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}
+                        >
+                          <div className={`flex items-center gap-2 ${!method.available ? 'opacity-50' : ''}`}>
+                            {method.icon === 'Truck' && <Truck className="h-4 w-4" />}
+                            {method.icon === 'Plane' && <Plane className="h-4 w-4" />}
+                            {method.icon === 'Ship' && <Ship className="h-4 w-4" />}
+                            {method.icon === 'FileText' && <FileText className="h-4 w-4" />}
+                            <span>
+                              {translateText(method.label)} 
+                              {!method.available && (
+                                <span className="text-red-500 ml-1">- {translateText('Not Available')}</span>
+                              )}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  
+                  {/* Shipping Method Info */}
+                  {availableShippingMethods && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <span>{translateText('Destination')}:</span>
+                        <span className="font-medium">{availableShippingMethods.destinationCountry}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>{translateText('Offering Type')}:</span>
+                        <span className="font-medium capitalize">{availableShippingMethods.offeringType}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Shipping Summary */}
