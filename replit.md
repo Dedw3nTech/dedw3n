@@ -283,6 +283,9 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Regional Shipping Removal** - Removed entire regional shipping selection section with pricing
   - **COMPLETED: Code Cleanup** - Removed unused state variables, functions, and schema fields related to removed shipping features
   - **COMPLETED: Marketplace Selection Fix** - Fixed marketplace dropdown to properly show available options (C2C for private vendors)
+  - **COMPLETED: RadioGroup Import Fix** - Fixed missing RadioGroup import error that occurred after shipping field removal
+  - **COMPLETED: Vendor Auto-Fill** - Added automatic vendor name population from vendor account data (storeName or businessName)
+  - **COMPLETED: Product Code Format Update** - Changed format from 001{userId}{day}/{month}/{year} to {productCount}{userId}{day}{month}{year}
   - Product creation now focuses on core product information with simplified shipping handled automatically by the system
 - **2025-07-18**: VAT Functionality Implementation - Added comprehensive VAT options to product creation pages
   - **COMPLETED: VAT Schema Addition** - Added vat_included (boolean) and vat_rate (double precision) fields to products table

@@ -1444,7 +1444,7 @@ export class DatabaseStorage implements IStorage {
       // Get vendor to extract user ID
       const vendor = await this.getVendor(productData.vendorId);
       if (vendor) {
-        productData.productCode = generateProductCode(vendor.userId);
+        productData.productCode = await generateProductCode(vendor.userId, productData.vendorId);
       }
     }
     
@@ -1484,7 +1484,7 @@ export class DatabaseStorage implements IStorage {
         // Get vendor to extract user ID
         const vendor = await this.getVendor(currentProduct.vendorId);
         if (vendor) {
-          updateData.productCode = generateProductCode(vendor.userId);
+          updateData.productCode = await generateProductCode(vendor.userId, currentProduct.vendorId);
         }
       }
 

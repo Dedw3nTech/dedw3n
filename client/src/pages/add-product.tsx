@@ -1631,7 +1631,7 @@ export default function AddProduct() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Save changes to automatically generate a unique product code. Format: 001{"{userId}"}{"{day}"}/{"{month}"}/{"{year}"}
+                        Save changes to automatically generate a unique product code. Format: {"{productCount}"}{"{userId}"}{"{day}"}{"{month}"}{"{year}"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
