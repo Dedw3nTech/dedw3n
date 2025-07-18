@@ -1,0 +1,98 @@
+[
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "United Kingdom",
+    "shipping_type": "Normal Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "KPM Logestics",
+    "delivery_time": "3  days",
+    "admin_fee": 6.0,
+    "price_per_kg": 19.0
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "United Kingdom",
+    "shipping_type": "Air  Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "KPM Logestics",
+    "delivery_time": "10 Days",
+    "admin_fee": 6.0,
+    "price_per_kg": 16.75
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "United Kingdom",
+    "shipping_type": "Sea Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "KPM Logestics",
+    "delivery_time": "45 Days",
+    "admin_fee": 83.0,
+    "price_per_kg": 3.0
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "Kinshas, DR Congo",
+    "shipping_type": "Express Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "Next Work Day",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_0_10kg": 7.5
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "Kinshas, DR Congo",
+    "shipping_type": "Express Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "Next Work Day",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_10_20kg": 11.5
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "Kinshas, DR Congo",
+    "shipping_type": "Express Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "Next Work Day",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_20_30kg": 14.0
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "France",
+    "shipping_type": "Normal Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "10 Days",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_0_10kg": 19.2
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "France",
+    "shipping_type": "Normal Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "10 Days",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_10_20kg": 27.0
+  },
+  {
+    "seller_location": "Kinshas, DR Congo",
+    "buyer_location": "France",
+    "shipping_type": "Normal Freight",
+    "carrier": "Dedw3n Shipping",
+    "shipping_partner": "Bpost",
+    "delivery_time": "10 Days",
+    "admin_fee": 0.0,
+    "price_per_kg": 0.0,
+    "tier_20_30kg": 39.6
+  }
+]

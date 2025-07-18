@@ -319,6 +319,16 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: UI Text Updates** - Changed VAT description to "Enable to include VAT/tax" for clearer user guidance
   - VAT rate field appears conditionally when VAT inclusion is enabled with 20% placeholder for UK standard rate
   - Consistent VAT functionality across both product creation workflows for better user experience
+- **2025-07-18**: Shipping Calculator Excel Data Update - Updated shipping calculator with latest authentic Excel data from Shipping fee_1752824726312.xlsx
+  - **COMPLETED: Excel Data Integration** - Processed and integrated newest Excel shipping data with comprehensive route coverage
+  - **COMPLETED: Advanced Route Matching** - Implemented flexible location matching supporting DR Congo, United Kingdom, France variations
+  - **COMPLETED: Dual Pricing Structure** - Added support for both per-kg pricing (international routes) and weight tier pricing (domestic/regional)
+  - **COMPLETED: Multiple Carrier System** - Integrated KPM Logistics for international shipping and Bpost for domestic/European routes
+  - **COMPLETED: Weight Tier Logic** - Implemented 0-10kg, 10-20kg, 20-30kg tier pricing with extrapolation for weights over 30kg
+  - **COMPLETED: Admin Fee Structure** - Location and shipping type specific admin fees (€0 for domestic, €6-€83 for international)
+  - **COMPLETED: Accurate Delivery Times** - Real delivery estimates from Next Work Day to 45 Days based on shipping method
+  - Examples: DR Congo→UK Air €89.75 (5kg), DR Congo→France Normal €46.08 (12kg), DR Congo→DR Congo Express €7.5 (8kg)
+  - All shipping calculations now use authentic Excel data with dynamic weight tier or per-kg pricing based on route
 - **2025-07-11**: SMTP Brevo Authentication Assessment Complete - Comprehensive verification of email functionality
   - **COMPLETED: SMTP Authentication Verification** - All Brevo SMTP authentication requirements met and verified
   - **COMPLETED: Email Functionality Testing** - Contact form emails sending successfully to love@dedw3n.com

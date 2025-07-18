@@ -4617,68 +4617,68 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Calculate distance factor based on countries (simplified)
       const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
       
-      // Latest authentic shipping data from Dedw3n Shipping Excel (location-based with weight tiers)
+      // Latest authentic shipping data from Dedw3n Shipping Excel file (Shipping fee_1752824726312.xlsx)
       const shippingData = [
-        // Belgium → Kinshasa, DR Congo (per kg pricing)
-        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'normal-freight', ratePerKg: 19.00, adminFee: 6, delivery: '3 days', partner: 'KPM Logestics' },
-        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'air-freight', ratePerKg: 16.75, adminFee: 6, delivery: '10 days', partner: 'KPM Logestics' },
-        { origin: 'Belgium', destination: 'Kinshasa, DR Congo', type: 'sea-freight', ratePerKg: 3.00, adminFee: 83, delivery: '45 days', partner: 'KPM Logestics' },
+        // Kinshas, DR Congo → United Kingdom (per kg pricing)
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '3  days', admin_fee: 6.0, price_per_kg: 19.0 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Air  Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '10 Days', admin_fee: 6.0, price_per_kg: 16.75 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '45 Days', admin_fee: 83.0, price_per_kg: 3.0 },
         
-        // Belgium → Belgium (weight tier pricing)
-        { origin: 'Belgium', destination: 'Belgium', type: 'express-freight', weightTiers: { '0-10': 7.5, '10-20': 11.5, '20-30': 14.0 }, adminFee: 0, delivery: 'Next Work Day', partner: 'Bpost' },
+        // Kinshas, DR Congo → Kinshas, DR Congo (weight tier pricing - Express Freight)
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 7.5 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 11.5 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 14.0 },
         
-        // Belgium → France (weight tier pricing)
-        { origin: 'Belgium', destination: 'France', type: 'normal-freight', weightTiers: { '0-10': 19.2, '10-20': 27.0, '20-30': 39.6 }, adminFee: 0, delivery: '10 days', partner: 'Bpost' }
+        // Kinshas, DR Congo → France (weight tier pricing)
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 19.2 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 27.0 },
+        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 39.6 }
       ];
 
-      // Find matching shipping rate based on origin, destination, and shipping type
+      // Find matching shipping rate based on seller location, buyer location, and shipping type
       const matchingRate = shippingData.find(rate => {
-        // More specific location matching
         const normalizeLocation = (loc: string) => loc.toLowerCase().trim();
         
         const originNorm = normalizeLocation(originCountry as string);
         const destNorm = normalizeLocation(destinationCountry as string);
-        const rateOriginNorm = normalizeLocation(rate.origin);
-        const rateDestNorm = normalizeLocation(rate.destination);
+        const rateOriginNorm = normalizeLocation(rate.seller_location);
+        const rateDestNorm = normalizeLocation(rate.buyer_location);
         
-        // Check for exact matches first, then partial matches
+        // Location matching with flexible variations
         let originMatch = false;
         let destMatch = false;
         
-        // Origin matching
-        if (rateOriginNorm === originNorm || 
-            rateOriginNorm.includes(originNorm) || 
-            originNorm.includes(rateOriginNorm)) {
+        // Origin matching (DR Congo variations)
+        if (rateOriginNorm.includes('kinshas') && (originNorm.includes('congo') || originNorm.includes('kinshasa') || originNorm.includes('dr congo'))) {
+          originMatch = true;
+        } else if (originNorm.includes('kinshas') && (rateOriginNorm.includes('congo') || rateOriginNorm.includes('kinshasa'))) {
+          originMatch = true;
+        } else if (rateOriginNorm === originNorm || rateOriginNorm.includes(originNorm) || originNorm.includes(rateOriginNorm)) {
           originMatch = true;
         }
         
-        // Destination matching with specific location handling
-        if (rateDestNorm === destNorm || 
-            rateDestNorm.includes(destNorm) || 
-            destNorm.includes(rateDestNorm)) {
+        // Destination matching with country variations
+        if (rateDestNorm.includes('united kingdom') && (destNorm.includes('uk') || destNorm.includes('united kingdom') || destNorm.includes('britain'))) {
+          destMatch = true;
+        } else if (destNorm.includes('united kingdom') && (rateDestNorm.includes('uk') || rateDestNorm.includes('britain'))) {
+          destMatch = true;
+        } else if (rateDestNorm.includes('kinshas') && (destNorm.includes('congo') || destNorm.includes('kinshasa') || destNorm.includes('dr congo'))) {
+          destMatch = true;
+        } else if (destNorm.includes('kinshas') && (rateDestNorm.includes('congo') || rateDestNorm.includes('kinshasa'))) {
+          destMatch = true;
+        } else if (rateDestNorm === destNorm || rateDestNorm.includes(destNorm) || destNorm.includes(rateDestNorm)) {
           destMatch = true;
         }
         
-        // Special handling for DR Congo variations
-        if (rateDestNorm.includes('kinshasa') && (destNorm.includes('congo') || destNorm.includes('kinshasa'))) {
-          destMatch = true;
-        }
-        if (destNorm.includes('kinshasa') && (rateDestNorm.includes('congo') || rateDestNorm.includes('kinshasa'))) {
-          destMatch = true;
-        }
-        
-        // Map shipping types
+        // Map shipping types from API format to Excel format
         const typeMap = {
-          'normal-freight': 'normal-freight',
-          'air-freight': 'air-freight', 
-          'sea-freight': 'sea-freight',
-          'under-customs': 'normal-freight', // Default to normal freight for under customs
-          'express-freight': 'express-freight'
+          'normal-freight': 'Normal Freight',
+          'air-freight': 'Air  Freight', // Note the extra space in Excel data
+          'sea-freight': 'Sea Freight',
+          'express-freight': 'Express Freight'
         };
         
-        const typeMatch = rate.type === typeMap[shippingType as keyof typeof typeMap];
-        
-
+        const typeMatch = rate.shipping_type === typeMap[shippingType as keyof typeof typeMap];
         
         return originMatch && destMatch && typeMatch;
       });
@@ -4690,34 +4690,39 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       let shippingPartner = 'Dedw3n Shipping';
 
       if (matchingRate) {
-        adminFeePerShipment = matchingRate.adminFee;
-        estimatedDays = matchingRate.delivery;
-        shippingPartner = matchingRate.partner;
+        adminFeePerShipment = matchingRate.admin_fee;
+        estimatedDays = matchingRate.delivery_time;
+        shippingPartner = matchingRate.shipping_partner;
 
-        if (matchingRate.ratePerKg) {
-          // Per kg pricing (Belgium → Kinshasa, DR Congo)
-          ratePerKg = matchingRate.ratePerKg;
+        if (matchingRate.price_per_kg > 0) {
+          // Per kg pricing (Kinshas, DR Congo → United Kingdom)
+          ratePerKg = matchingRate.price_per_kg;
           totalCost = (weightNum * ratePerKg) + adminFeePerShipment;
-        } else if (matchingRate.weightTiers) {
-          // Weight tier pricing (Belgium → Belgium, Belgium → France)
-          if (weightNum <= 10) {
-            totalCost = matchingRate.weightTiers['0-10'];
+        } else if (matchingRate.tier_0_10kg || matchingRate.tier_10_20kg || matchingRate.tier_20_30kg) {
+          // Weight tier pricing (Domestic and France routes)
+          if (weightNum <= 10 && matchingRate.tier_0_10kg) {
+            totalCost = matchingRate.tier_0_10kg;
             ratePerKg = totalCost / weightNum; // Calculate effective rate
-          } else if (weightNum <= 20) {
-            totalCost = matchingRate.weightTiers['10-20'];
+          } else if (weightNum <= 20 && matchingRate.tier_10_20kg) {
+            totalCost = matchingRate.tier_10_20kg;
             ratePerKg = totalCost / weightNum;
-          } else if (weightNum <= 30) {
-            totalCost = matchingRate.weightTiers['20-30'];
+          } else if (weightNum <= 30 && matchingRate.tier_20_30kg) {
+            totalCost = matchingRate.tier_20_30kg;
             ratePerKg = totalCost / weightNum;
           } else {
-            // For weights over 30kg, extrapolate from 20-30kg tier
-            const baseRate = matchingRate.weightTiers['20-30'] / 25; // Average rate per kg for 20-30kg tier
+            // For weights over 30kg, find the highest available tier and extrapolate
+            let baseTier = matchingRate.tier_20_30kg || matchingRate.tier_10_20kg || matchingRate.tier_0_10kg;
+            let tierWeight = baseTier === matchingRate.tier_20_30kg ? 25 : (baseTier === matchingRate.tier_10_20kg ? 15 : 5);
+            const baseRate = baseTier / tierWeight;
             totalCost = weightNum * baseRate;
             ratePerKg = baseRate;
           }
           totalCost += adminFeePerShipment;
         }
       } else {
+        console.log(`[SHIPPING] No matching rate found for: ${originCountry} → ${destinationCountry}, type: ${shippingType}`);
+        console.log('[SHIPPING] Available routes:', shippingData.map(r => `${r.seller_location} → ${r.buyer_location} (${r.shipping_type})`));
+        
         // Fallback to previous pricing structure for unsupported routes
         const fallbackRates = {
           'normal-freight': { rate: 19.00, admin: 6 },
