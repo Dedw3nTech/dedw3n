@@ -4599,7 +4599,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         originCountry,
         destinationCountry,
         originCity,
-        destinationCity
+        destinationCity,
+        offeringType
       } = req.query;
 
       // Validate required parameters
@@ -4608,6 +4609,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           message: "Missing required parameters: shippingType, weight, originCountry, destinationCountry" 
         });
       }
+      
+      // Default offering type to "Product" if not provided
+      const normalizedOfferingType = (offeringType as string || 'Product').toLowerCase().trim();
 
       const weightNum = parseFloat(weight as string);
       if (isNaN(weightNum) || weightNum <= 0) {
@@ -4617,32 +4621,45 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Calculate distance factor based on countries (simplified)
       const distanceFactor = calculateDistanceFactor(originCountry as string, destinationCountry as string);
       
-      // Latest authentic shipping data from Dedw3n Shipping Excel file (Shipping fee_1752824726312.xlsx)
+      // Latest authentic shipping data from Dedw3n Shipping Excel file (Shipping fee_1752847597628.xlsx)
       const shippingData = [
-        // Kinshas, DR Congo → United Kingdom (per kg pricing)
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '3  days', admin_fee: 6.0, price_per_kg: 19.0 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Air  Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '10 Days', admin_fee: 6.0, price_per_kg: 16.75 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '45 Days', admin_fee: 83.0, price_per_kg: 3.0 },
+        // Product offering - Kinshas, DR Congo → United Kingdom (per kg pricing)
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '3  days', admin_fee: 6.0, price_per_kg: 19.0 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Air  Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '10 Days', admin_fee: 6.0, price_per_kg: 16.75 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '45 Days', admin_fee: 83.0, price_per_kg: 3.0 },
         
-        // Kinshas, DR Congo → Kinshas, DR Congo (weight tier pricing - Express Freight)
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 7.5 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 11.5 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 14.0 },
+        // Product offering - Kinshas, DR Congo → Kinshas, DR Congo (weight tier pricing - Express Freight)
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day ', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 7.5 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day ', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 11.5 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'Kinshas, DR Congo', shipping_type: 'Express Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: 'Next Work Day ', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 14.0 },
         
-        // Kinshas, DR Congo → France (weight tier pricing)
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 19.2 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 27.0 },
-        { seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 39.6 }
+        // Product offering - Kinshas, DR Congo → France (weight tier pricing)
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_0_10kg: 19.2 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_10_20kg: 27.0 },
+        { offering_category: 'Product', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '10 Days', admin_fee: 0.0, price_per_kg: 0.0, tier_20_30kg: 39.6 },
+        
+        // Vehicle offering - Kinshas, DR Congo → United Kingdom (per kg pricing with higher rates)
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '5 days', admin_fee: 12.0, price_per_kg: 25.0 },
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Air  Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '12 Days', admin_fee: 12.0, price_per_kg: 22.0 },
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'United Kingdom', shipping_type: 'Sea Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'KPM Logestics', delivery_time: '50 Days', admin_fee: 95.0, price_per_kg: 4.5 },
+        
+        // Vehicle offering - Kinshas, DR Congo → France (weight tier pricing with higher rates)
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '12 Days', admin_fee: 5.0, price_per_kg: 0.0, tier_0_10kg: 25.0 },
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '12 Days', admin_fee: 5.0, price_per_kg: 0.0, tier_10_20kg: 35.0 },
+        { offering_category: 'Vehicle', seller_location: 'Kinshas, DR Congo', buyer_location: 'France', shipping_type: 'Normal Freight', carrier: 'Dedw3n Shipping', shipping_partner: 'Bpost', delivery_time: '12 Days', admin_fee: 5.0, price_per_kg: 0.0, tier_20_30kg: 48.0 }
       ];
 
-      // Find matching shipping rate based on seller location, buyer location, and shipping type
+      // Find matching shipping rate based on offering category, seller location, buyer location, and shipping type
       const matchingRate = shippingData.find(rate => {
         const normalizeLocation = (loc: string) => loc.toLowerCase().trim();
+        const normalizeOffering = (offering: string) => offering.toLowerCase().trim();
         
         const originNorm = normalizeLocation(originCountry as string);
         const destNorm = normalizeLocation(destinationCountry as string);
         const rateOriginNorm = normalizeLocation(rate.seller_location);
         const rateDestNorm = normalizeLocation(rate.buyer_location);
+        const offeringNorm = normalizeOffering(normalizedOfferingType);
+        const rateOfferingNorm = normalizeOffering(rate.offering_category);
         
         // Location matching with flexible variations
         let originMatch = false;
@@ -4680,7 +4697,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         
         const typeMatch = rate.shipping_type === typeMap[shippingType as keyof typeof typeMap];
         
-        return originMatch && destMatch && typeMatch;
+        // Offering category matching
+        const offeringMatch = rateOfferingNorm === offeringNorm;
+        
+        return originMatch && destMatch && typeMatch && offeringMatch;
       });
 
       let totalCost = 0;
@@ -4720,8 +4740,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           totalCost += adminFeePerShipment;
         }
       } else {
-        console.log(`[SHIPPING] No matching rate found for: ${originCountry} → ${destinationCountry}, type: ${shippingType}`);
-        console.log('[SHIPPING] Available routes:', shippingData.map(r => `${r.seller_location} → ${r.buyer_location} (${r.shipping_type})`));
+        console.log(`[SHIPPING] No matching rate found for: ${normalizedOfferingType} ${originCountry} → ${destinationCountry}, type: ${shippingType}`);
+        console.log('[SHIPPING] Available routes:', shippingData.map(r => `${r.offering_category} ${r.seller_location} → ${r.buyer_location} (${r.shipping_type})`));
+        console.log('[SHIPPING] Total shipping data entries:', shippingData.length);
         
         // Fallback to previous pricing structure for unsupported routes
         const fallbackRates = {

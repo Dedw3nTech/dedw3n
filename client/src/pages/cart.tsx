@@ -105,6 +105,27 @@ export default function Cart() {
     );
   }, [cartItems]);
   
+  // Determine predominant offering type from cart items
+  const cartOfferingType = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 'Product';
+    
+    // Get all offering types from cart items
+    const offeringTypes = cartItems.map((item: any) => item.product?.offeringType || 'product');
+    
+    // Find the most common offering type
+    const typeCounts = offeringTypes.reduce((acc: Record<string, number>, type: string) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Return the most common type, capitalized
+    const predominantType = Object.entries(typeCounts).reduce((a, b) => 
+      typeCounts[a[0]] > typeCounts[b[0]] ? a : b
+    )[0];
+    
+    return predominantType.charAt(0).toUpperCase() + predominantType.slice(1);
+  }, [cartItems]);
+
   // Get shipping calculation automatically
   const { data: autoShippingCalculation } = useQuery({
     queryKey: ['/api/shipping/calculate', {
@@ -113,7 +134,8 @@ export default function Cart() {
       originCountry: 'DR Congo',
       destinationCountry: user?.country || 'United Kingdom',
       originCity: 'Kinshasa',
-      destinationCity: user?.city || 'London'
+      destinationCity: user?.city || 'London',
+      offeringType: cartOfferingType
     }],
     enabled: !isLoading && cartItems && cartItems.length > 0 && cartTotalWeight > 0
   });

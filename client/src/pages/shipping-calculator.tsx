@@ -54,6 +54,7 @@ export default function ShippingCalculator() {
   const [destinationCountry, setDestinationCountry] = useState<string>('United Kingdom');
   const [originCity, setOriginCity] = useState<string>('Kinshasa');
   const [destinationCity, setDestinationCity] = useState<string>('London');
+  const [offeringType, setOfferingType] = useState<string>('Product');
 
   // Calculate shipping cost
   const { data: shippingCalculation, isLoading } = useQuery({
@@ -63,7 +64,8 @@ export default function ShippingCalculator() {
       originCountry,
       destinationCountry,
       originCity,
-      destinationCity
+      destinationCity,
+      offeringType
     }],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -72,7 +74,8 @@ export default function ShippingCalculator() {
         originCountry,
         destinationCountry,
         originCity,
-        destinationCity
+        destinationCity,
+        offeringType
       });
       const response = await apiRequest('GET', `/api/shipping/calculate?${params}`);
       return response.json();
@@ -172,6 +175,39 @@ export default function ShippingCalculator() {
                   {selectedTypeInfo.description}
                 </p>
               )}
+            </div>
+
+            {/* Offering Type Selection */}
+            <div>
+              <Label htmlFor="offering-type">{translateText('Offering Type')}</Label>
+              <Select value={offeringType} onValueChange={setOfferingType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Product">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <span>{translateText('Product')}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Service">
+                    <div className="flex items-center gap-2">
+                      <Info className="h-4 w-4" />
+                      <span>{translateText('Service')}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="Vehicle">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4" />
+                      <span>{translateText('Vehicle')}</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {translateText('Select the type of offering being shipped')}
+              </p>
             </div>
 
             {/* Weight Input */}
