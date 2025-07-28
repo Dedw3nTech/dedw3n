@@ -9,7 +9,7 @@ export function DimensionUnitSelector() {
         onClick={() => setDimensionUnit('cm')}
         className={`px-2 py-1 text-xs rounded transition-colors ${
           dimensionUnit === 'cm'
-            ? 'bg-gray-900 text-white'
+            ? 'bg-gray-900 text-white text-xs'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
@@ -20,7 +20,7 @@ export function DimensionUnitSelector() {
         onClick={() => setDimensionUnit('inches')}
         className={`px-2 py-1 text-xs rounded transition-colors ${
           dimensionUnit === 'inches'
-            ? 'bg-gray-900 text-white'
+            ? 'bg-gray-900 text-white text-xs'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
