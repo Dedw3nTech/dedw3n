@@ -1627,7 +1627,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-06-20",
 });
 
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
@@ -1662,8 +1662,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
-      console.error("Stripe payment intent error:", error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: "Payment processing failed. Please try again." });
     }
   });
 
@@ -1704,8 +1703,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       if (!escrowResponse.ok) {
-        const errorData = await escrowResponse.text();
-        console.error('Escrow API error:', errorData);
         return res.status(400).json({ message: 'Failed to create escrow transaction' });
       }
 
@@ -1719,7 +1716,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         escrow_url: escrowData.agreement_url
       });
     } catch (error) {
-      console.error('Error creating escrow transaction:', error);
       res.status(500).json({ message: 'Failed to create escrow transaction' });
     }
   });
@@ -1740,7 +1736,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const notifications = await storage.getNotifications(req.user.id);
       return res.json(notifications);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
       return res.status(500).json({ message: 'Failed to fetch notifications' });
     }
   });
@@ -1755,7 +1750,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.getUnreadNotificationCount(req.user.id);
       return res.json({ count });
     } catch (error) {
-      console.error('Error fetching unread notification count:', error);
       return res.status(500).json({ message: 'Failed to fetch unread notification count' });
     }
   });
@@ -1780,7 +1774,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       return res.json(updatedNotification);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       return res.status(500).json({ message: 'Failed to update notification' });
     }
   });
@@ -1800,7 +1793,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       return res.json({ success: true, message: 'All notifications marked as read' });
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
       return res.status(500).json({ message: 'Failed to update notifications' });
     }
   });
@@ -1886,7 +1878,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
       if (emailSent) {
-        console.log('[CONTACT] Email sent successfully for submission:', submission.id);
         return res.json({ 
           success: true, 
           message: 'Your message has been sent successfully. We\'ll get back to you soon!',
@@ -1896,7 +1887,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
         });
       } else {
-        console.log('[CONTACT] Email sending failed for submission:', submission.id);
         // Even if email fails, we still saved the submission, so return success
         return res.json({ 
           success: true, 
@@ -1909,7 +1899,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
     } catch (error) {
-      console.error('Contact form error:', error);
       return res.status(500).json({ 
         message: 'An error occurred while processing your request. Please try again later.' 
       });
@@ -1957,7 +1946,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       emailContent += `Please investigate and resolve the issue as soon as possible.`;
       
       // Send error report email using Brevo
-      console.log('[ERROR REPORT] Attempting to send error report:', reportId);
       const emailSent = await sendContactEmail({
         name: 'Error Reporting System',
         email: userEmail || req.user?.email || 'system@dedw3n.com',
@@ -1966,21 +1954,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
       if (emailSent) {
-        console.log('[ERROR REPORT] Error report sent successfully:', reportId);
         return res.json({ 
           success: true, 
           message: 'Error report has been sent successfully. Thank you for helping us improve!',
           reportId: reportId
         });
       } else {
-        console.log('[ERROR REPORT] Email sending failed for report:', reportId);
         return res.status(500).json({ 
           success: false,
           message: 'Failed to send error report. Please try again later.'
         });
       }
     } catch (error) {
-      console.error('Error report submission error:', error);
       return res.status(500).json({ 
         message: 'An error occurred while processing your error report. Please try again later.' 
       });
@@ -1998,13 +1983,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const success = setBrevoApiKey(apiKey);
       if (success) {
-        console.log('[ADMIN] Brevo API key updated successfully');
         return res.json({ message: "Brevo API key updated successfully" });
       } else {
         return res.status(500).json({ message: "Failed to update API key" });
       }
     } catch (error) {
-      console.error('[ADMIN] Error updating Brevo API key:', error);
       return res.status(500).json({ message: "Error updating API key" });
     }
   });
@@ -2023,12 +2006,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "User not found" });
       }
       
-      console.log(`[TEST] Testing password for user: ${username}`);
-      console.log(`[TEST] Stored hash: ${user.password}`);
-      console.log(`[TEST] Input password: ${password}`);
-      
       const isValid = await comparePasswords(password, user.password);
-      console.log(`[TEST] Password validation result: ${isValid}`);
       
       return res.json({ 
         username: username,
@@ -2036,7 +2014,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         storedHashLength: user.password?.length || 0
       });
     } catch (error) {
-      console.error('[TEST] Password test error:', error);
       return res.status(500).json({ message: "Test failed" });
     }
   });
@@ -2076,21 +2053,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
       
-      console.log(`[RECAPTCHA] Login verification passed for user: ${username}`);
-      
       // Proceed with normal authentication
-      console.log(`[AUTH] Looking up user: ${username}`);
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        console.log(`[AUTH] User not found: ${username}`);
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
-      console.log(`[AUTH] User found: ${user.username} (ID: ${user.id})`);
-      
       // Check if account is locked
       if (user.isLocked) {
-        console.log(`[AUTH] Account locked: ${username}`);
         return res.status(423).json({ 
           message: "Account is locked. Please contact support.",
           code: "ACCOUNT_LOCKED"
@@ -2098,18 +2068,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       // Verify password using the imported comparePasswords function
-      console.log(`[AUTH] Verifying password for user: ${username}`);
-      console.log(`[AUTH] Stored password hash length: ${user.password ? user.password.length : 'null'}`);
-      console.log(`[AUTH] Input password length: ${password ? password.length : 'null'}`);
-      
       const isPasswordValid = await comparePasswords(password, user.password);
-      console.log(`[AUTH] Password verification result: ${isPasswordValid}`);
       
       if (!isPasswordValid) {
-        console.log(`[AUTH] Password verification failed for user: ${username}`);
         // Track failed login attempts
         const failedAttempts = (user.failedLoginAttempts || 0) + 1;
-        console.log(`[AUTH] Failed login attempt ${failedAttempts} for user: ${username}`);
         
         // Update failed attempts in database
         try {
@@ -2117,7 +2080,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             failedLoginAttempts: failedAttempts
           });
         } catch (updateError) {
-          console.error('[AUTH] Error updating failed login attempts:', updateError);
+          // Failed attempt tracking error handled silently for security
         }
         
         return res.status(401).json({ message: "Invalid credentials" });
@@ -2127,11 +2090,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (req.login && typeof req.login === 'function') {
         req.login(user, (err) => {
           if (err) {
-            console.error('[ERROR] Login failed:', err);
             return res.status(500).json({ message: "Login failed" });
           }
-          
-          console.log(`[DEBUG] reCAPTCHA-protected login successful for: ${user.username}`);
           
           // Return user without password
           const { password: _, ...userWithoutPassword } = user;
@@ -2143,19 +2103,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           (req.session as any).passport = { user: user.id };
           req.user = user;
           
-          console.log(`[DEBUG] reCAPTCHA-protected login successful (session fallback) for: ${user.username}`);
-          
           // Return user without password
           const { password: _, ...userWithoutPassword } = user;
           res.json(userWithoutPassword);
         } else {
-          console.error('[ERROR] No session available for login');
           return res.status(500).json({ message: "Session unavailable" });
         }
       }
       
     } catch (error) {
-      console.error('[ERROR] reCAPTCHA login failed:', error);
       res.status(500).json({ message: "Login failed" });
     }
   });
@@ -2244,7 +2200,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'Invalid API key format' });
       }
     } catch (error) {
-      console.error('Error configuring Brevo API key:', error);
       return res.status(500).json({ message: 'Failed to configure API key' });
     }
   });
@@ -2259,7 +2214,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const settings = await storage.getNotificationSettings(req.user.id);
       return res.json(settings);
     } catch (error) {
-      console.error('Error fetching notification settings:', error);
       return res.status(500).json({ message: 'Failed to fetch notification settings' });
     }
   });
@@ -2290,7 +2244,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       return res.json(updatedSetting);
     } catch (error) {
-      console.error('Error updating notification setting:', error);
       return res.status(500).json({ message: 'Failed to update notification setting' });
     }
   });
@@ -2651,9 +2604,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         
         // Clear any passport data
         req.logout((err) => {
-          if (err) {
-            console.error('Error during logout:', err);
-          }
+          // Logout error handled silently for security
         });
         
         res.json({ 
@@ -2661,7 +2612,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           message: "Session reset successfully. Please refresh the page." 
         });
       } catch (error) {
-        console.error('Session reset error:', error);
         res.status(500).json({ 
           success: false, 
           message: "Failed to reset session" 
@@ -2675,11 +2625,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     // API connection test endpoint
     app.post('/api/posts/ping', unifiedIsAuthenticated, (req: Request, res: Response) => {
-      console.log('[DEBUG] Direct API ping endpoint called');
-      console.log('[DEBUG] Request headers:', JSON.stringify(req.headers));
-      console.log('[DEBUG] Request user:', req.user ? `ID: ${req.user.id}, Username: ${req.user.username}` : 'No user found');
-      console.log('[DEBUG] Request authentication status:', req.isAuthenticated() ? 'Authenticated via session' : 'Not authenticated via session');
-      
       // Set content type to JSON for all responses from this endpoint
       res.setHeader('Content-Type', 'application/json');
       
@@ -2687,15 +2632,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.json({ 
         success: true, 
         message: "API connection test successful", 
-        contentType: "json",
-        authenticated: !!req.user,
-        sessionAuth: req.isAuthenticated()
+        authenticated: !!req.user
       });
     });
     
     // Simple and robust image upload endpoint
     app.post('/api/simple-upload', (req: Request, res: Response) => {
-      console.log('[DEBUG] Simple upload endpoint called');
       
       // Create uploads directory if it doesn't exist
       if (!fs.existsSync('./public/uploads')) {
@@ -7314,7 +7256,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(userOrders);
     } catch (error) {
-      console.error('Error fetching user orders:', error);
       res.status(500).json({ message: 'Failed to fetch orders' });
     }
   });
