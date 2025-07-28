@@ -1896,13 +1896,7 @@ export default function AddProduct() {
             </div>
           </div>
           
-          {/* Submit Button */}
-          <div className="flex justify-center mt-8">
-            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-black hover:bg-gray-800 text-white">
-              {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {createProductMutation.isPending ? t("Saving & Publishing...") : t("Save Changes & Publish")}
-            </Button>
-          </div>
+
         </form>
       </Form>
       
