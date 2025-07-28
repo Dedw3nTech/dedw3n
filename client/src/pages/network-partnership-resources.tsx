@@ -11,8 +11,8 @@ export default function NetworkPartnershipResources() {
       {/* Header Image Section */}
       <div className="w-full max-w-6xl mx-auto">
         <img 
-          src="/attached_assets/image_1752125051711.png"
-          alt="Network Partnership Resources"
+          src="/attached_assets/Dedw3n Business  (6)_1753734936099.png"
+          alt="Dedw3n Network Partnership - Professional business networking and partnerships"
           className="w-full h-auto object-cover"
         />
       </div>
