@@ -347,9 +347,9 @@ export default function AddProduct() {
     "Auto-filled from vendor account",
     "Automatically populated based on your vendor account and marketplace selection",
     
-    // Save and Publish Button
-    "Save Changes & Publish",
-    "Saving & Publishing...",
+    // Upload Button
+    "Upload Product",
+    "Uploading...",
     "Product Saved & Published",
     "Product saved and published successfully with code:",
     "Your product has been saved and published to the marketplace successfully.",
@@ -1896,7 +1896,13 @@ export default function AddProduct() {
             </div>
           </div>
           
-
+          {/* Upload Button */}
+          <div className="flex justify-center mt-8">
+            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-blue-600 hover:bg-blue-700 text-white">
+              {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {createProductMutation.isPending ? t("Uploading...") : t("Upload Product")}
+            </Button>
+          </div>
         </form>
       </Form>
       
