@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 // Use server-served static asset path for production compatibility
-const campaignImage = '/attached_assets/Pre Launch Campaingn Car Drive_1751997729010.png';
+const campaignImage = '/attached_assets/Dedw3n Business  (5)_1753733900980.png';
 
 export default function Resources() {
   // Set document title on mount
@@ -14,7 +14,7 @@ export default function Resources() {
       <div className="w-full">
         <img 
           src={campaignImage}
-          alt="Dedw3n Affiliate Resources" 
+          alt="Dedw3n Affiliate Marketing - Woman with content creation setup" 
           className="w-full h-64 md:h-96 object-cover"
         />
       </div>
