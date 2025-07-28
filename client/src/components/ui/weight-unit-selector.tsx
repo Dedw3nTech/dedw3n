@@ -9,7 +9,7 @@ export function WeightUnitSelector() {
         onClick={() => setWeightUnit('kg')}
         className={`px-2 py-1 text-xs rounded transition-colors ${
           weightUnit === 'kg'
-            ? 'bg-gray-900 text-white'
+            ? 'bg-gray-900 text-white text-xs'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
@@ -20,7 +20,7 @@ export function WeightUnitSelector() {
         onClick={() => setWeightUnit('lbs')}
         className={`px-2 py-1 text-xs rounded transition-colors ${
           weightUnit === 'lbs'
-            ? 'bg-gray-900 text-white'
+            ? 'bg-gray-900 text-white text-xs'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
