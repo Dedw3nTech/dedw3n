@@ -277,8 +277,7 @@ export default function NetworkPartnerships() {
             <Link href="/network-partnership-resources">
               <Button 
                 size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg font-semibold"
+                className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold"
               >
                 Resources
               </Button>
@@ -297,7 +296,7 @@ export default function NetworkPartnerships() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
                 href="mailto:sales@dedw3n.com"
-                className="inline-flex items-center px-6 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors text-lg"
               >
                 Contact Sales Team
               </a>
