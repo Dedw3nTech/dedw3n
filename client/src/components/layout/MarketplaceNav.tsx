@@ -36,7 +36,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Liked",
     "Shopping Cart",
     "Orders & Returns",
-    "Vendor Dashboard"
+    "Vendor Dashboard",
+    "Vendor Pages"
   ], []);
 
   // Use optimized batch translation for optimal performance
@@ -51,7 +52,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     likedText: translatedTexts[4] || navigationTexts[4],
     cartText: translatedTexts[5] || navigationTexts[5],
     ordersText: translatedTexts[6] || navigationTexts[6],
-    vendorText: translatedTexts[7] || navigationTexts[7]
+    vendorText: translatedTexts[7] || navigationTexts[7],
+    vendorPagesText: translatedTexts[8] || navigationTexts[8]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -143,6 +145,18 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   ? 'bg-black w-full' 
                   : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
               }`} />
+            </div>
+            
+            <div 
+              className="cursor-pointer group transition-all duration-300"
+              onClick={() => handlePageNavigation("/vendors")}
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <span className={`text-xs font-medium transition-colors duration-300 text-black group-hover:text-black`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.vendorPagesText}
+                </span>
+              </div>
+              <div className={`h-0.5 transition-all duration-300 bg-transparent w-0 group-hover:w-full group-hover:bg-black`} />
             </div>
             
             {/* Search bar */}

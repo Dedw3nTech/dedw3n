@@ -4225,6 +4225,167 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // =====================================
+  // Vendor Store Pages API Routes (Must be before parameterized routes)
+  // =====================================
+
+  // Get all vendors for vendor listing page (MUST be before /api/vendors/:id)
+  app.get('/api/vendors/list', async (req: Request, res: Response) => {
+    try {
+      const vendorsWithStats = await db
+        .select({
+          id: vendors.id,
+          storeName: vendors.storeName,
+          businessName: vendors.businessName,
+          description: vendors.description,
+          logo: vendors.logo,
+          email: vendors.email,
+          phone: vendors.phone,
+          website: vendors.website,
+          address: vendors.address,
+          createdAt: vendors.createdAt,
+          totalProducts: sql<number>`COALESCE((
+            SELECT COUNT(*)::int 
+            FROM ${products} 
+            WHERE ${products.vendorId} = ${vendors.id}
+          ), 0)`,
+          totalSales: sql<number>`COALESCE((
+            SELECT COUNT(*)::int 
+            FROM ${orderItems} 
+            WHERE ${orderItems.vendorId} = ${vendors.id}
+          ), 0)`,
+          rating: sql<number>`COALESCE((
+            SELECT AVG(rating)::numeric(3,2)
+            FROM ${products}
+            WHERE ${products.vendorId} = ${vendors.id}
+            AND rating IS NOT NULL
+          ), 0)`
+        })
+        .from(vendors)
+        .where(eq(vendors.isApproved, true));
+
+      // Add computed fields for display
+      const vendorsWithDisplay = vendorsWithStats.map(vendor => ({
+        ...vendor,
+        imageUrl: vendor.logo || null,
+        location: vendor.address || null,
+        badges: [
+          ...(vendor.totalSales > 100 ? ['Top Seller'] : []),
+          ...(vendor.rating >= 4.5 ? ['Verified Vendor'] : []),
+          ...(new Date().getTime() - new Date(vendor.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000 ? ['New Vendor'] : [])
+        ]
+      }));
+
+      res.json(vendorsWithDisplay);
+    } catch (error) {
+      console.error('Error fetching vendors list:', error);
+      res.status(500).json({ message: 'Failed to fetch vendors' });
+    }
+  });
+
+  // Get individual vendor store data with products
+  app.get('/api/vendor/store/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      
+      if (!slug) {
+        return res.status(400).json({ message: 'Vendor slug is required' });
+      }
+
+      // Find vendor by storeName slug
+      const vendorData = await db
+        .select({
+          id: vendors.id,
+          storeName: vendors.storeName,
+          businessName: vendors.businessName,
+          description: vendors.description,
+          logo: vendors.logo,
+          email: vendors.email,
+          phone: vendors.phone,
+          website: vendors.website,
+          address: vendors.address,
+          createdAt: vendors.createdAt,
+          totalProducts: sql<number>`COALESCE((
+            SELECT COUNT(*)::int 
+            FROM ${products} 
+            WHERE ${products.vendorId} = ${vendors.id}
+          ), 0)`,
+          totalSales: sql<number>`COALESCE((
+            SELECT COUNT(*)::int 
+            FROM ${orderItems} 
+            WHERE ${orderItems.vendorId} = ${vendors.id}
+          ), 0)`,
+          rating: sql<number>`COALESCE((
+            SELECT AVG(rating)::numeric(3,2)
+            FROM ${products}
+            WHERE ${products.vendorId} = ${vendors.id}
+            AND rating IS NOT NULL
+          ), 0)`
+        })
+        .from(vendors)
+        .where(
+          and(
+            eq(vendors.isApproved, true),
+            sql`LOWER(REPLACE(REGEXP_REPLACE(${vendors.storeName}, '[^a-zA-Z0-9\\s-]', '', 'g'), ' ', '-')) = ${slug.toLowerCase()}`
+          )
+        )
+        .limit(1);
+
+      if (!vendorData || vendorData.length === 0) {
+        return res.status(404).json({ message: 'Vendor store not found' });
+      }
+
+      const vendor = vendorData[0];
+
+      // Get vendor's products
+      const vendorProducts = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          discountPrice: products.discountPrice,
+          imageUrl: products.imageUrl,
+          category: categories.name,
+          inventory: products.inventory,
+          rating: products.rating,
+          createdAt: products.createdAt
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .where(eq(products.vendorId, vendor.id))
+        .orderBy(desc(products.createdAt));
+
+      // Add computed fields for products
+      const productsWithDisplay = vendorProducts.map(product => ({
+        ...product,
+        category: product.category || 'Uncategorized',
+        isNew: new Date().getTime() - new Date(product.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000,
+        isOnSale: !!product.discountPrice,
+        reviews: Math.floor(Math.random() * 50) + 1 // Placeholder until reviews system implemented
+      }));
+
+      // Prepare store data
+      const storeData = {
+        ...vendor,
+        imageUrl: vendor.logo || null,
+        bannerUrl: null, // Placeholder for future banner implementation
+        location: vendor.address || null,
+        badges: [
+          ...(vendor.totalSales > 100 ? ['Top Seller'] : []),
+          ...(vendor.rating >= 4.5 ? ['Verified Vendor'] : []),
+          ...(new Date().getTime() - new Date(vendor.createdAt).getTime() < 30 * 24 * 60 * 60 * 1000 ? ['New Vendor'] : [])
+        ],
+        products: productsWithDisplay
+      };
+
+      res.json(storeData);
+    } catch (error) {
+      console.error('Error fetching vendor store:', error);
+      res.status(500).json({ message: 'Failed to fetch vendor store' });
+    }
+  });
+
   // Remove user from store
   app.delete("/api/vendor/store-users/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
