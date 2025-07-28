@@ -457,7 +457,7 @@ app.use((req, res, next) => {
       '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
       '/subscriptions', '/verify', '/reset-password', '/help', '/logout-success',
-      '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/vendors'
+      '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor'
     ];
     
     // Check for dynamic routes patterns that are valid
@@ -469,7 +469,6 @@ app.use((req, res, next) => {
       /^\/business\/[^/]+$/, // /business/category
       /^\/wall\/[^/]+$/, // /wall/category
       /^\/dating\/[^/]+$/, // /dating/category
-      /^\/vendor\/[^/]+$/ // /vendor/vendor-slug
     ];
     
     // Remove query parameters and hash for route checking

@@ -156,7 +156,6 @@ import VendorAnalyticsPage from "@/pages/vendor-analytics";
 import SpendingAnalytics from "@/pages/spending-analytics";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailPage from "@/pages/vendor-detail";
-import VendorStorePage from "@/pages/vendor-store";
 import GovernmentPage from "@/pages/government";
 import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
@@ -290,11 +289,11 @@ function Router() {
       <Route path="/product/:id" component={ProductDetail} />
       
       <Route path="/vendors">
-        <SEOHead title="Vendor Pages - Dedw3n" description="Discover amazing stores from verified vendors on Dedw3n marketplace." />
+        <SEOHead {...seoConfigs.vendors} />
         <VendorsPage />
       </Route>
       
-      <Route path="/vendor/:slug" component={VendorStorePage} />
+      <Route path="/vendor/:id" component={VendorDetailPage} />
       
       <Route path="/government">
         <SEOHead {...seoConfigs.government} />

@@ -1,235 +1,224 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useQuery } from "@tanstack/react-query";
+import { Vendor } from "@shared/schema";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  Store, 
+  User, 
+  ShoppingBag, 
+  BadgePercent, 
+  Star, 
+  ArrowRight,
+  Search,
+  ArrowUpRight
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, Store, MapPin, Star, Users } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-
-interface Vendor {
-  id: number;
-  storeName: string;
-  businessName?: string;
-  description: string;
-  location?: string;
-  rating?: number;
-  totalProducts: number;
-  totalSales?: number;
-  imageUrl?: string;
-  badges?: string[];
-  createdAt: string;
-}
+const VendorCard = ({ vendor }: { vendor: Vendor }) => {
+  const [, setLocation] = useLocation();
+  const { t } = useTranslation();
+  
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center gap-4">
+        <Avatar className="h-14 w-14">
+          <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
+          <AvatarFallback>
+            <Store className="h-6 w-6" />
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <CardTitle className="text-lg">{vendor.storeName}</CardTitle>
+          <div className="flex items-center mt-1">
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+            <span className="text-sm font-medium">
+              {vendor.rating?.toFixed(1) || "New"} 
+              {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
+            </span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {vendor.description || t("vendors.no_description")}
+        </p>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLocation(`/vendors/${vendor.id}`)}
+        >
+          {t("vendors.view_profile")}
+        </Button>
+        <Button
+          variant="ghost" 
+          size="sm"
+          onClick={() => setLocation(`/products?vendorId=${vendor.id}`)}
+        >
+          {t("vendors.browse_products")} <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 export default function VendorsPage() {
+  usePageTitle("vendors");
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Translation texts
-  const vendorTexts = [
-    "Vendor Pages",
-    "Discover amazing stores from verified vendors",
-    "Search vendors...",
-    "Visit Store",
-    "Products",
-    "Sales",
-    "Rating",
-    "Verified Vendor",
-    "New Vendor",
-    "Top Seller",
-    "Featured",
-    "Loading vendors...",
-    "No vendors found",
-    "Try adjusting your search terms",
-    "Location"
-  ];
-
-  const { translations, isLoading: isTranslating } = useMasterBatchTranslation(vendorTexts);
-  const t = (text: string) => translations?.[text] || text;
-
-  // Fetch vendors
-  const { data: vendors = [], isLoading } = useQuery({
-    queryKey: ['/api/vendors/list'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/vendors/list');
-      return response.json();
-    }
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  
+  const { 
+    data: vendors, 
+    isLoading 
+  } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
   });
 
-  // Filter vendors based on search term
-  const filteredVendors = vendors.filter((vendor: Vendor) =>
-    vendor.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleVendorClick = (vendor: Vendor) => {
-    // Create SEO-friendly URL with vendor store name
-    const vendorSlug = vendor.storeName.toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .trim();
-    setLocation(`/vendor/${vendorSlug}`);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <Skeleton className="h-8 w-48 mx-auto mb-4" />
-            <Skeleton className="h-4 w-96 mx-auto mb-6" />
-            <Skeleton className="h-10 w-80 mx-auto" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-48 w-full" />
-                <CardHeader>
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-4 w-full" />
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-center">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-8 w-24" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Filter vendors based on search query and active tab
+  const filteredVendors = vendors?.filter((vendor) => {
+    const matchesSearch = vendor.storeName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (vendor.description && vendor.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "popular") return matchesSearch && (vendor.ratingCount || 0) > 0 && (vendor.rating || 0) >= 4;
+    if (activeTab === "new") {
+      // For this example, consider vendors with 0 ratings as new
+      return matchesSearch && (vendor.ratingCount === 0 || vendor.ratingCount === null);
+    }
+    
+    return matchesSearch;
+  });
+  
+  // Redirect to my-vendor page if user is a vendor
+  useEffect(() => {
+    if (user?.isVendor) {
+      // Get the vendor ID from the backend
+      const fetchVendorId = async () => {
+        try {
+          const response = await fetch("/api/vendors/me");
+          if (response.ok) {
+            const vendor = await response.json();
+            setLocation(`/vendor-analytics?vendorId=${vendor.id}`);
+          }
+        } catch (error) {
+          console.error("Error fetching vendor data:", error);
+        }
+      };
+      
+      fetchVendorId();
+    }
+  }, [user, setLocation]);
+  
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {t("Vendor Pages")}
-          </h1>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            {t("Discover amazing stores from verified vendors")}
+    <div className="container py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">{t("vendors.title")}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t("vendors.subtitle")}
           </p>
-          
-          {/* Search */}
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={t("Search vendors...")}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
         </div>
-
-        {/* Vendors Grid */}
-        {filteredVendors.length === 0 ? (
-          <div className="text-center py-12">
-            <Store className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {t("No vendors found")}
-            </h3>
-            <p className="text-gray-500">
-              {t("Try adjusting your search terms")}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVendors.map((vendor: Vendor) => (
-              <Card 
-                key={vendor.id} 
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={() => handleVendorClick(vendor)}
-              >
-                {/* Vendor Image/Header */}
-                <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
-                  {vendor.imageUrl ? (
-                    <img 
-                      src={vendor.imageUrl} 
-                      alt={vendor.storeName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Store className="h-16 w-16 text-white/80" />
-                    </div>
-                  )}
-                  
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                    {vendor.badges?.map((badge) => (
-                      <Badge key={badge} variant="secondary" className="text-xs bg-white/90 text-gray-800">
-                        {t(badge)}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold group-hover:text-blue-600 transition-colors">
-                      {vendor.storeName}
-                    </CardTitle>
-                    {vendor.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{vendor.rating.toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {vendor.description}
-                  </p>
-                  {vendor.location && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <MapPin className="h-3 w-3" />
-                      {vendor.location}
-                    </div>
-                  )}
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Store className="h-3 w-3" />
-                        <span>{vendor.totalProducts} {t("Products")}</span>
-                      </div>
-                      {vendor.totalSales && (
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span>{vendor.totalSales} {t("Sales")}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className="w-full group-hover:bg-blue-600 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVendorClick(vendor);
-                    }}
-                  >
-                    <Store className="h-4 w-4 mr-2" />
-                    {t("Visit Store")}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        
+        {user && !user.isVendor && (
+          <Button onClick={() => setLocation("/become-vendor")}>
+            {t("vendors.become_vendor")}
+            <ArrowUpRight className="ml-1 h-4 w-4" />
+          </Button>
         )}
       </div>
+      
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder={t("vendors.search_placeholder")}
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <Tabs 
+          defaultValue="all" 
+          className="w-full sm:w-auto"
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="all">{t("vendors.all")}</TabsTrigger>
+            <TabsTrigger value="popular">{t("vendors.popular")}</TabsTrigger>
+            <TabsTrigger value="new">{t("vendors.new")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      
+      <Separator className="my-6" />
+      
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array(6).fill(0).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center gap-4">
+                <Skeleton className="h-14 w-14 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-32" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : filteredVendors && filteredVendors.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVendors.map((vendor) => (
+            <VendorCard key={vendor.id} vendor={vendor} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+          <h3 className="mt-4 text-lg font-medium">
+            {searchQuery 
+              ? t("vendors.no_results") 
+              : t("vendors.no_vendors")}
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+            {searchQuery 
+              ? t("vendors.try_different_search")
+              : t("vendors.check_back_later")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
