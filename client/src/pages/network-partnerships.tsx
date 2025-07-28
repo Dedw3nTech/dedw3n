@@ -26,9 +26,7 @@ export default function NetworkPartnerships() {
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                   Network Partnership
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Join our Network Partnership, designed to connect transportation, logistics, export and import companies, manufacturers, farmers, and miners.
-                </p>
+                <p className="text-xl text-gray-600 leading-relaxed">Join our Network Partnership, designed to connect transportation, logistics, export and import companies, manufacturers, farmers, recycling companies and miners.</p>
                 <p className="text-lg text-gray-600 leading-relaxed">
                   We provide a dynamic supply chain that links developed and emerging markets, facilitating seamless business connections and offering support in identifying new global supply chain partners.
                 </p>
@@ -64,7 +62,6 @@ export default function NetworkPartnerships() {
           </div>
         </div>
       </div>
-
       {/* Benefits Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
@@ -121,7 +118,6 @@ export default function NetworkPartnerships() {
           ))}
         </div>
       </div>
-
       {/* Professional Image Showcase */}
       <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -161,7 +157,6 @@ export default function NetworkPartnerships() {
           </div>
         </div>
       </div>
-
       {/* How It Works Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
@@ -199,7 +194,6 @@ export default function NetworkPartnerships() {
           ))}
         </div>
       </div>
-
       {/* Partner Types Section */}
       <div className="bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
@@ -263,7 +257,6 @@ export default function NetworkPartnerships() {
           </div>
         </div>
       </div>
-
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="bg-black rounded-3xl p-12 text-center text-white">
@@ -293,7 +286,6 @@ export default function NetworkPartnerships() {
           </div>
         </div>
       </div>
-
       {/* Contact Section */}
       <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
