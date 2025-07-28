@@ -26,7 +26,7 @@ export default function NetworkPartnershipResources() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">About Network Partnerships</h2>
               <p>
-                Our Network Partnership program connects transportation, logistics, export/import companies, manufacturers, farmers, and miners across global markets. We facilitate dynamic supply chain connections that bridge developed and emerging markets, creating opportunities for sustainable business growth and expansion.
+                Our Network Partnership program connects transportation, logistics, export/import companies, manufacturers, farmers, recycling services and miners across global markets. We facilitate dynamic supply chain connections that bridge developed and emerging markets, creating opportunities for sustainable business growth and expansion.
               </p>
             </section>
 
