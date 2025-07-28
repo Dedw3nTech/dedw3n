@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
 // Use server-served static asset paths for production compatibility
-const professionalImage = '/attached_assets/Building software today that will transform the world we live in tomorrow. II_1751993584729.png';
+const professionalImage = '/attached_assets/affiliate partnership 2_1753733691630.png';
 const businessWomanImage = '/attached_assets/We are developing software today that will facilitate business operations in the world of tomorrow._1751996823481.png';
 const activeWomanImage = '/attached_assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
 const affiliateHeaderImage = '/attached_assets/affiliate partnership header_1753733527345.png';
@@ -163,7 +163,7 @@ export default function AffiliatePartnerships() {
             <div className="relative lg:col-span-2">
               <img 
                 src={professionalImage} 
-                alt="Professional with phone representing innovation and future technology"
+                alt="Professional content creator with podcast setup and laptop for affiliate marketing"
                 className="w-full h-auto rounded-2xl shadow-2xl"
               />
               
