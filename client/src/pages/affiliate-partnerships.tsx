@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/affiliate partnership 2_1753733691630.png';
-const businessWomanImage = '/attached_assets/We are developing software today that will facilitate business operations in the world of tomorrow._1751996823481.png';
+const businessWomanImage = '/attached_assets/affiliate partnership 1_1753733741393.png';
 const activeWomanImage = '/attached_assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
 const affiliateHeaderImage = '/attached_assets/affiliate partnership header_1753733527345.png';
 
@@ -187,11 +187,11 @@ export default function AffiliatePartnerships() {
             
             {/* Smaller images stacked vertically in single column */}
             <div className="flex flex-col gap-6">
-              {/* Business woman image - smaller */}
+              {/* Professional affiliate partner image - smaller */}
               <div className="relative">
                 <img 
                   src={businessWomanImage} 
-                  alt="Business woman representing professional success and growth"
+                  alt="Professional man working on laptop representing affiliate marketing success"
                   className="w-full h-auto rounded-2xl shadow-xl"
                 />
                 
