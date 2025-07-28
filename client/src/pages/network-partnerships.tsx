@@ -6,7 +6,7 @@ import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight, Truck
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/cargo-ship-sailing-through-ocean_1753734478144.jpg';
 const businessWomanImage = '/attached_assets/side-view-women-working-outdoors_1753734596681.jpg';
-const activeWomanImage = '/attached_assets/_Pre Launch Campaingn Speak language (1)_1752126583125.png';
+const activeWomanImage = '/attached_assets/heavy-machinery-quarry (2)_1753734670414.jpg';
 
 export default function NetworkPartnerships() {
   // Set document title on mount
@@ -150,7 +150,7 @@ export default function NetworkPartnerships() {
             <div className="relative h-[240px] overflow-hidden rounded-2xl shadow-xl group">
               <img 
                 src={activeWomanImage}
-                alt="Supply Chain Success"
+                alt="Heavy machinery in quarry - Mining and resource extraction operations"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             </div>
