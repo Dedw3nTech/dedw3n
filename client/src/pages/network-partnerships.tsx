@@ -45,37 +45,12 @@ export default function NetworkPartnerships() {
 
             {/* Right Visual */}
             <div className="relative lg:ml-8">
-              <div className="relative bg-white rounded-2xl shadow-2xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div className="flex items-center justify-between mb-6">
-                  <Truck className="h-8 w-8 text-blue-600" />
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">£3,247</div>
-                    <div className="text-sm text-gray-500">This quarter</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="h-3 bg-blue-200 rounded-full">
-                    <div className="h-3 bg-blue-500 rounded-full w-3/4"></div>
-                  </div>
-                  <div className="h-3 bg-green-200 rounded-full">
-                    <div className="h-3 bg-green-500 rounded-full w-1/2"></div>
-                  </div>
-                  <div className="h-3 bg-purple-200 rounded-full">
-                    <div className="h-3 bg-purple-500 rounded-full w-5/6"></div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="font-semibold text-gray-900">28</div>
-                    <div className="text-gray-500">Partners</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">15</div>
-                    <div className="text-gray-500">Active Routes</div>
-                  </div>
-                </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                <img 
+                  src="/attached_assets/IMG_5271_1753734097243.PNG"
+                  alt="Professional customer service representative providing network partnership support"
+                  className="w-full h-auto object-cover"
+                />
               </div>
               
               {/* Floating elements */}
