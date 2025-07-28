@@ -173,9 +173,6 @@ export default function AffiliatePartnerships() {
               {/* Text overlay positioned next to the image */}
               <div className="absolute inset-0 flex items-center justify-end pr-8">
                 <div className="bg-black/70 backdrop-blur-sm rounded-xl p-6 max-w-md">
-                  <h2 className="text-2xl font-bold text-white mb-3">
-                    Building Software Today That Will Transform The World We Live In Tomorrow
-                  </h2>
                   <p className="text-lg text-gray-200">
                     Join us in creating innovative solutions that shape the future of digital commerce and social interaction.
                   </p>
