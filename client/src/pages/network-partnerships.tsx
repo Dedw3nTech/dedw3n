@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight, Truck, Globe, Package } from 'lucide-react';
 // Use server-served static asset paths for production compatibility
-const professionalImage = '/attached_assets/Copy of  Pre Launch Building the software of tomorrow_1752126375828.png';
+const professionalImage = '/attached_assets/cargo-ship-sailing-through-ocean_1753734478144.jpg';
 const businessWomanImage = '/attached_assets/Pre Launch Campaign  Couple Palm Oil_1752126449403.png';
 const activeWomanImage = '/attached_assets/_Pre Launch Campaingn Speak language (1)_1752126583125.png';
 
@@ -126,7 +126,7 @@ export default function NetworkPartnerships() {
             <div className="relative h-[500px] overflow-hidden rounded-3xl shadow-2xl group">
               <img 
                 src={professionalImage}
-                alt="Building Software Today That Will Transform The World We Live In Tomorrow"
+                alt="Cargo ship sailing through ocean - Global maritime logistics and shipping"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
