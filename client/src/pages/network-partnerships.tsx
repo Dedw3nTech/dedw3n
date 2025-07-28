@@ -217,7 +217,7 @@ export default function NetworkPartnerships() {
                 features: ["Trade Documentation", "Customs Clearance", "International Regulations", "Market Access"]
               },
               {
-                title: "Manufacturers",
+                title: "Manufactures & Recycling Companies",
                 description: "Production facilities and industrial manufacturers",
                 features: ["Production Capacity", "Quality Assurance", "Supply Chain Integration", "Custom Manufacturing"]
               },
