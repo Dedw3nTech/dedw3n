@@ -21,13 +21,13 @@ import { CommunityUniqueAdCard } from "@/components/CommunityUniqueAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
 import { AdPostCard } from "@/components/AdPostCard";
 
-import campaignImage from "@assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
+const campaignImage = "/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 import { useLocation } from "wouter";
 
 // Community-specific promotional images
-import communityTopPromo from "@assets/Dedw3n Business commHeader.png";
-import communityBottomPromo from "@assets/_Dedw3n Business comm footer _1749580313800.png";
-import communityMidPromo from "@assets/Dedw3n Business II (1).png";
+const communityTopPromo = "/attached_assets/Dedw3n Business commHeader.png";
+const communityBottomPromo = "/attached_assets/_Dedw3n Business comm footer _1749580313800.png";
+const communityMidPromo = "/attached_assets/Dedw3n Business II (1).png";
 
 interface Post {
   id: number;

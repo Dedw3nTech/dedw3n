@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { clearLogoutState } from "@/utils/unified-logout-system";
 
 // Import the Dedwen logo
-import newDedwenLogo from "@assets/Dedw3n Logo_1749096270700.png";
+const newDedwenLogo = "/attached_assets/Dedw3n Logo_1749096270700.png";
 
 export default function LogoutSuccess() {
   const [, setLocation] = useLocation();

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
-import dedw3nLogo from "@assets/Dedw3n Logo.png";
+const dedw3nLogo = "/attached_assets/Dedw3n Logo.png";
 import {
   Dialog,
   DialogContent,

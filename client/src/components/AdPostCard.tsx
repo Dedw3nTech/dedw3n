@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { InstantImage } from "@/hooks/use-ultra-instant-image";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
-import campaignImage from "@assets/Copy of Pre Launch Campaingn Notification_1749109720371.png";
+const campaignImage = "/attached_assets/Copy of Pre Launch Campaingn Notification_1749109720371.png";
 
 export function AdPostCard() {
   // Translation setup

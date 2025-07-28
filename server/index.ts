@@ -278,7 +278,10 @@ app.use((req, res, next) => {
       });
     } catch (error) {
       console.error('[DEBUG] Post creation error:', error);
-      return res.status(500).json({ message: "Failed to create post", error: error.message });
+      return res.status(500).json({ 
+        message: "Failed to create post", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 
@@ -314,7 +317,10 @@ app.use((req, res, next) => {
       return res.status(200).json(posts);
     } catch (error) {
       console.error('[DEBUG] Feed error:', error);
-      return res.status(500).json({ message: "Failed to get feed", error: error.message });
+      return res.status(500).json({ 
+        message: "Failed to get feed", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 
@@ -361,11 +367,11 @@ app.use((req, res, next) => {
           posts = await storage.getPostsByLocation(userId, sortBy, limit, offset);
         } else {
           // Fallback to all posts if user not authenticated
-          posts = await storage.getAllPostsPaginated(limit, offset, userId);
+          posts = await storage.getAllPostsPaginated(limit, offset, userId || undefined);
         }
       } else {
         // Default to all posts for other sort types
-        posts = await storage.getAllPostsPaginated(limit, offset, userId);
+        posts = await storage.getAllPostsPaginated(limit, offset, userId || undefined);
       }
       
       // Check if there are more posts available
@@ -383,7 +389,10 @@ app.use((req, res, next) => {
       });
     } catch (error) {
       console.error('[DEBUG] Community feed error:', error);
-      return res.status(500).json({ message: "Failed to get community feed", error: error.message });
+      return res.status(500).json({ 
+        message: "Failed to get community feed", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
   

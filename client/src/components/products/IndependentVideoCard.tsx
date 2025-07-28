@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause, Info } from "lucide-react";
-import phoneFingerVideo from "@assets/Phone finger _1749108033480.mp4";
+const phoneFingerVideo = "/attached_assets/Phone finger _1749108033480.mp4";
 
 interface IndependentVideoCardProps {
   title?: string;

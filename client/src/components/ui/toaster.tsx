@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
 import { useLocation } from "wouter"
-import dedwenLogo from "@assets/Dedw3n Logo_1749080607700.png"
-import newDedwenLogo from "@assets/Dedw3n Logo_1749096101995.png"
+const dedwenLogo = "/attached_assets/Dedw3n Logo_1749080607700.png"
+const newDedwenLogo = "/attached_assets/Dedw3n Logo_1749096101995.png"
 
 export function Toaster() {
   const { toasts } = useToast()
