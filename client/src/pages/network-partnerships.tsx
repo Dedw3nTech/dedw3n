@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight, Truck, Globe, Package } from 'lucide-react';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/cargo-ship-sailing-through-ocean_1753734478144.jpg';
-const businessWomanImage = '/attached_assets/Pre Launch Campaign  Couple Palm Oil_1752126449403.png';
+const businessWomanImage = '/attached_assets/side-view-women-working-outdoors_1753734596681.jpg';
 const activeWomanImage = '/attached_assets/_Pre Launch Campaingn Speak language (1)_1752126583125.png';
 
 export default function NetworkPartnerships() {
@@ -142,7 +142,7 @@ export default function NetworkPartnerships() {
             <div className="relative h-[240px] overflow-hidden rounded-2xl shadow-xl group">
               <img 
                 src={businessWomanImage}
-                alt="Innovation and Technology"
+                alt="Women farmers working outdoors - Agriculture and farming partnerships"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             </div>
