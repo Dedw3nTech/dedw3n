@@ -174,7 +174,7 @@ export default function AffiliatePartnerships() {
               <div className="absolute inset-0 flex items-center justify-end pr-8">
                 <div className="bg-black/70 backdrop-blur-sm rounded-xl p-6 max-w-md">
                   <p className="text-lg text-gray-200">
-                    Join us in creating innovative solutions that shape the future of digital commerce and social interaction.
+                    Join us in finding new people and  creating innovative solutions that shape the future of digital commerce and social interaction.
                   </p>
                 </div>
               </div>
