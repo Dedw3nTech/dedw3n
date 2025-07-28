@@ -7,7 +7,7 @@ import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from
 const professionalImage = '/attached_assets/affiliate partnership 2_1753733691630.png';
 const businessWomanImage = '/attached_assets/affiliate partnership 1_1753733741393.png';
 const activeWomanImage = '/attached_assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
-const affiliateHeaderImage = '/attached_assets/affiliate partnership header_1753733527345.png';
+const affiliateHeaderImage = '/attached_assets/Affiliat partnership 3_1753733859529.png';
 
 export default function AffiliatePartnerships() {
   // Set document title on mount
@@ -206,11 +206,11 @@ export default function AffiliatePartnerships() {
                 </div>
               </div>
 
-              {/* Affiliate partnership image - smaller */}
+              {/* Digital marketplace image - smaller */}
               <div className="relative">
                 <img 
                   src={affiliateHeaderImage} 
-                  alt="Young woman with selfie stick creating content for affiliate marketing"
+                  alt="Digital marketplace on tablet with money and piggy bank representing affiliate earnings"
                   className="w-full h-auto rounded-2xl shadow-xl"
                 />
                 
@@ -220,7 +220,7 @@ export default function AffiliatePartnerships() {
                 {/* Optional overlay text */}
                 <div className="absolute bottom-4 left-4 text-white">
                   <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
-                    <p className="text-xs font-medium">Content • Marketing • Partnership</p>
+                    <p className="text-xs font-medium">Earnings • Commission • Marketplace</p>
                   </div>
                 </div>
               </div>
