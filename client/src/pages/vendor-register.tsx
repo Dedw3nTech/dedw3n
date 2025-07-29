@@ -88,6 +88,15 @@ export default function VendorRegisterPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Check for query parameter to auto-select vendor type
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeParam = urlParams.get('type');
+    if (typeParam === 'business' || typeParam === 'private') {
+      setVendorType(typeParam);
+    }
+  }, []);
+
   // Master Translation System - Single mega-batch call (88 → 1 API call)
   const vendorRegisterTexts = [
     // Vendor Type Selection (8 texts)

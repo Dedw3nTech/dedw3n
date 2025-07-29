@@ -83,7 +83,10 @@ export default function VendorDashboard() {
     // Delete Store Modal (8 texts) 
     "Delete Store Confirmation", "Are you sure you want to permanently delete your", "vendor store?",
     "This action cannot be undone. All your products and data will be permanently removed.",
-    "private", "business", "Cancel", "Delete Store"
+    "private", "business", "Cancel", "Delete Store",
+    
+    // Business Store Button (1 text)
+    "Open Business Store"
   ], []);
 
   // All hooks must be called at the top level, before any conditional logic
@@ -197,6 +200,11 @@ export default function VendorDashboard() {
     } finally {
       setIsDeletingStore(false);
     }
+  };
+
+  // Handle opening business store (redirect to business vendor registration)
+  const handleOpenBusinessStore = () => {
+    setLocation('/become-vendor?type=business');
   };
 
   // Set vendor ID when data is loaded
@@ -407,6 +415,17 @@ export default function VendorDashboard() {
             <PlusCircle className="mr-2 h-4 w-4" />
             {t("Add Product")}
           </Button>
+          {/* Show Open Business Store button only for private vendors */}
+          {vendor.vendorType === 'private' && (
+            <Button 
+              variant="outline" 
+              onClick={handleOpenBusinessStore}
+              className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+            >
+              <Building className="mr-2 h-4 w-4" />
+              {t("Open Business Store")}
+            </Button>
+          )}
           <Button 
             variant="destructive" 
             onClick={handleDeleteStore}
