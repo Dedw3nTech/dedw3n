@@ -4248,6 +4248,169 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // =====================================
+  // VENDOR PROFILE API ENDPOINTS
+  // =====================================
+
+  // Get vendor profile by ID (public endpoint)
+  app.get('/api/vendors/:vendorId/profile', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: "Invalid vendor ID" });
+      }
+
+      // Get vendor information with user details
+      const vendorProfile = await db
+        .select({
+          id: vendors.id,
+          businessName: vendors.businessName,
+          storeName: vendors.storeName,
+          businessType: vendors.businessType,
+          vendorType: vendors.vendorType,
+          description: vendors.description,
+          website: vendors.website,
+          contactEmail: vendors.contactEmail,
+          contactPhone: vendors.contactPhone,
+          businessAddress: vendors.address,
+          city: vendors.city,
+          country: vendors.country,
+          verificationStatus: vendors.verificationStatus,
+          rating: vendors.rating,
+          totalSales: vendors.totalSales,
+          createdAt: vendors.createdAt,
+          // User information
+          userName: users.name,
+          userAvatar: users.avatar
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendorProfile || vendorProfile.length === 0) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+
+      const vendor = vendorProfile[0];
+
+      // Get vendor products
+      const vendorProducts = await db
+        .select({
+          id: products.id,
+          title: products.title,
+          description: products.description,
+          price: products.price,
+          currency: products.currency,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          subcategory: products.subcategory,
+          condition: products.condition,
+          marketplace: products.marketplace,
+          stockQuantity: products.stockQuantity,
+          createdAt: products.createdAt
+        })
+        .from(products)
+        .where(eq(products.vendorId, vendorId))
+        .orderBy(desc(products.createdAt))
+        .limit(20);
+
+      res.json({
+        vendor: {
+          id: vendor.id,
+          businessName: vendor.businessName,
+          storeName: vendor.storeName,
+          businessType: vendor.businessType,
+          vendorType: vendor.vendorType,
+          description: vendor.description,
+          website: vendor.website,
+          contactEmail: vendor.contactEmail,
+          contactPhone: vendor.contactPhone,
+          businessAddress: vendor.businessAddress,
+          city: vendor.city,
+          country: vendor.country,
+          verificationStatus: vendor.verificationStatus,
+          rating: vendor.rating,
+          totalSales: vendor.totalSales,
+          createdAt: vendor.createdAt,
+          userName: vendor.userName,
+          userAvatar: vendor.userAvatar
+        },
+        products: vendorProducts,
+        stats: {
+          totalProducts: vendorProducts.length,
+          memberSince: vendor.createdAt,
+          isVerified: vendor.verificationStatus === 'verified'
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor profile:', error);
+      res.status(500).json({ message: 'Failed to fetch vendor profile' });
+    }
+  });
+
+  // Get vendor products by vendor ID (public endpoint)
+  app.get('/api/vendors/:vendorId/products', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      const offset = (page - 1) * limit;
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: "Invalid vendor ID" });
+      }
+
+      // Get total count for pagination
+      const totalCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      // Get paginated products
+      const vendorProducts = await db
+        .select({
+          id: products.id,
+          title: products.title,
+          description: products.description,
+          price: products.price,
+          currency: products.currency,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          subcategory: products.subcategory,
+          condition: products.condition,
+          marketplace: products.marketplace,
+          stockQuantity: products.stockQuantity,
+          weight: products.weight,
+          dimensions: products.dimensions,
+          createdAt: products.createdAt
+        })
+        .from(products)
+        .where(eq(products.vendorId, vendorId))
+        .orderBy(desc(products.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      const total = totalCount[0]?.count || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      res.json({
+        products: vendorProducts,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasMore: page < totalPages
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor products:', error);
+      res.status(500).json({ message: 'Failed to fetch vendor products' });
+    }
+  });
+
   // Get vendor orders (must be before parameterized routes)
   app.get('/api/vendors/orders', async (req: Request, res: Response) => {
     try {
@@ -4472,11 +4635,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           vendorId: vendors.id,
           vendorName: vendors.businessName,
           vendorType: vendors.vendorType,
-          location: vendors.location,
-          address: vendors.address,
+          businessAddress: vendors.address,
           city: vendors.city,
           country: vendors.country,
-          postalCode: vendors.postalCode,
           userId: users.id,
           userName: users.name,
           userEmail: users.email,
@@ -4489,11 +4650,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           id: vendor.vendorId,
           name: vendor.vendorName,
           type: vendor.vendorType,
-          location: vendor.location,
-          address: vendor.address,
+          address: vendor.businessAddress,
           city: vendor.city,
           country: vendor.country,
-          postalCode: vendor.postalCode,
           user: {
             id: vendor.userId,
             name: vendor.userName,

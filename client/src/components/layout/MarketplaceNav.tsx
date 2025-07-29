@@ -36,7 +36,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Liked",
     "Shopping Cart",
     "Orders & Returns",
-    "Vendor Dashboard"
+    "Vendor Dashboard",
+    "Vendor Page"
   ], []);
 
   // Use optimized batch translation for optimal performance
@@ -51,7 +52,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     likedText: translatedTexts[4] || navigationTexts[4],
     cartText: translatedTexts[5] || navigationTexts[5],
     ordersText: translatedTexts[6] || navigationTexts[6],
-    vendorText: translatedTexts[7] || navigationTexts[7]
+    vendorText: translatedTexts[7] || navigationTexts[7],
+    vendorPageText: translatedTexts[8] || navigationTexts[8]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -219,6 +221,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorText}</span>
             </Button>
             
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                onClick={() => handlePageNavigation(`/vendor/${user?.id}`)}
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorPageText}</span>
+              </Button>
+            )}
 
           </div>
         </div>

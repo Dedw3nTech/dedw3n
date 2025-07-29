@@ -215,6 +215,7 @@ import PawapayRefundCallback from "@/pages/pawapay-refund-callback";
 import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
 import TestCookiesPage from "@/pages/test-cookies";
+import VendorProfile from "@/pages/vendor-profile";
 
 
 // SEO wrapper component for routing
@@ -395,6 +396,8 @@ function Router() {
       {/* Product detail routes */}
       <Route path="/product/:id" component={ProductDetail} />
 
+      {/* Vendor profile routes */}
+      <Route path="/vendor/:vendorId" component={VendorProfile} />
       
       {/* Premium video routes */}
       <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />
