@@ -50,6 +50,7 @@ import VendorAnalytics from "@/components/vendor/VendorAnalytics";
 import VendorMarketingTools from "@/components/vendor/VendorMarketingTools";
 import VendorSettings from "@/components/vendor/VendorSettings";
 import { AIProductUpload } from "@/components/AIProductUpload";
+import { DeleteStoreModal } from "@/components/ui/delete-store-modal";
 
 export default function VendorDashboard() {
   // Master Translation mega-batch for Vendor Dashboard (60+ texts)
@@ -77,7 +78,12 @@ export default function VendorDashboard() {
     "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports",
     
     // Store Management (4 texts)
-    "Add Product", "Delete Store", "Deleting...", "Using Private Vendor account", "Using Business Vendor account"
+    "Add Product", "Delete Store", "Deleting...", "Using Private Vendor account", "Using Business Vendor account",
+    
+    // Delete Store Modal (8 texts) 
+    "Delete Store Confirmation", "Are you sure you want to permanently delete your", "vendor store?",
+    "This action cannot be undone. All your products and data will be permanently removed.",
+    "private", "business", "Cancel", "Delete Store"
   ], []);
 
   // All hooks must be called at the top level, before any conditional logic
@@ -87,6 +93,7 @@ export default function VendorDashboard() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isDeletingStore, setIsDeletingStore] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
@@ -176,20 +183,19 @@ export default function VendorDashboard() {
   });
 
   // Handle delete store with confirmation
-  const handleDeleteStore = async () => {
+  const handleDeleteStore = () => {
     if (!vendor) return;
-    
-    const confirmed = window.confirm(
-      `Are you sure you want to permanently delete your ${vendor.vendorType} vendor store? This action cannot be undone. All your products and data will be permanently removed.`
-    );
-    
-    if (confirmed) {
-      setIsDeletingStore(true);
-      try {
-        await deleteStoreMutation.mutateAsync();
-      } finally {
-        setIsDeletingStore(false);
-      }
+    setShowDeleteModal(true);
+  };
+
+  // Handle confirmed delete store
+  const handleConfirmDeleteStore = async () => {
+    setShowDeleteModal(false);
+    setIsDeletingStore(true);
+    try {
+      await deleteStoreMutation.mutateAsync();
+    } finally {
+      setIsDeletingStore(false);
     }
   };
 
@@ -599,6 +605,15 @@ export default function VendorDashboard() {
           <VendorSettings vendorId={vendorId!} />
         </TabsContent>
       </Tabs>
+
+      {/* Delete Store Modal */}
+      <DeleteStoreModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDeleteStore}
+        vendorType={vendor?.vendorType || 'private'}
+        isDeleting={isDeletingStore}
+      />
     </div>
   );
 }
