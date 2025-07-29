@@ -13417,6 +13417,41 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // DELETE /api/vendors/store - Delete current vendor store
+  app.delete("/api/vendors/store", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get current vendor
+      const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor store not found" });
+      }
+      
+      // Delete all associated data in proper order (respecting foreign key constraints)
+      // First, delete products associated with this vendor
+      await db.delete(products).where(eq(products.vendorId, vendor.id));
+      
+      // Delete vendor payment info if exists
+      await db.delete(vendorPaymentInfo).where(eq(vendorPaymentInfo.vendorId, vendor.id));
+      
+      // Delete store users if exists
+      await db.delete(storeUsers).where(eq(storeUsers.vendorId, vendor.id));
+      
+      // Finally, delete the vendor record
+      await db.delete(vendors).where(eq(vendors.id, vendor.id));
+      
+      res.json({ 
+        message: "Vendor store successfully deleted",
+        redirectTo: "/"
+      });
+    } catch (error) {
+      console.error("Error deleting vendor store:", error);
+      res.status(500).json({ message: "Failed to delete vendor store" });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({

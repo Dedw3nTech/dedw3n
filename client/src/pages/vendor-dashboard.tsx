@@ -39,7 +39,8 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Trash2
 } from "lucide-react";
 
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
@@ -73,7 +74,10 @@ export default function VendorDashboard() {
     
     // Analytics & Reports (12 texts)
     "Sales Reports", "Performance Analytics", "Revenue Charts", "Product Performance", "Customer Insights", "Traffic Analysis",
-    "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports"
+    "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports",
+    
+    // Store Management (4 texts)
+    "Add Product", "Delete Store", "Deleting...", "Using Private Vendor account", "Using Business Vendor account"
   ], []);
 
   // All hooks must be called at the top level, before any conditional logic
@@ -82,6 +86,7 @@ export default function VendorDashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isDeletingStore, setIsDeletingStore] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
@@ -145,6 +150,48 @@ export default function VendorDashboard() {
       });
     }
   });
+
+  // Delete store mutation
+  const deleteStoreMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("DELETE", "/api/vendors/store");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Store Deleted",
+        description: "Your vendor store has been permanently closed and deleted.",
+        variant: "default"
+      });
+      // Redirect to home page after successful deletion
+      setLocation('/');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete store",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle delete store with confirmation
+  const handleDeleteStore = async () => {
+    if (!vendor) return;
+    
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete your ${vendor.vendorType} vendor store? This action cannot be undone. All your products and data will be permanently removed.`
+    );
+    
+    if (confirmed) {
+      setIsDeletingStore(true);
+      try {
+        await deleteStoreMutation.mutateAsync();
+      } finally {
+        setIsDeletingStore(false);
+      }
+    }
+  };
 
   // Set vendor ID when data is loaded
   useEffect(() => {
@@ -349,10 +396,20 @@ export default function VendorDashboard() {
             {vendor.vendorType === 'private' ? t("Using Private Vendor account") : t("Using Business Vendor account")}
           </p>
         </div>
-        <Button onClick={() => setLocation('/products/new')}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {t("Add Product")}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setLocation('/products/new')}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {t("Add Product")}
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleDeleteStore}
+            disabled={isDeletingStore}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {isDeletingStore ? t("Deleting...") : t("Delete Store")}
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
