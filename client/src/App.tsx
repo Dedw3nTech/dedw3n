@@ -94,6 +94,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/upload-product',
     '/vendor-dashboard',
     '/become-vendor',
+    '/become-business-vendor',
     '/liked',
     '/orders-returns',
     '/shipping-calculator',
@@ -159,6 +160,7 @@ import VendorDetailPage from "@/pages/vendor-detail";
 import GovernmentPage from "@/pages/government";
 import DatingPage from "@/pages/dating";
 import BecomeVendorPage from "@/pages/become-vendor";
+import BecomeBusinessVendorPage from "@/pages/become-business-vendor";
 import VendorDashboardPage from "@/pages/vendor-dashboard";
 import VendorRegisterPage from "@/pages/vendor-register";
 import LikedPage from "@/pages/liked";
@@ -321,6 +323,7 @@ function Router() {
       <Route path="/pawapay/refund/callback" component={PawapayRefundCallback} />
       
       <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
+      <ProtectedRoute path="/become-business-vendor" component={BecomeBusinessVendorPage} />
       <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
       <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />
       
