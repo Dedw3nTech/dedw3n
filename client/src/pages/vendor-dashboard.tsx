@@ -40,7 +40,8 @@ import {
   AlertCircle,
   XCircle,
   ArrowUpCircle,
-  Trash2
+  Trash2,
+  Building
 } from "lucide-react";
 
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
