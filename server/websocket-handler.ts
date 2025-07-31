@@ -446,6 +446,20 @@ export function getConnectionStats() {
   };
 }
 
+// Broadcast message to specific user (used by routes.ts)
+export function broadcastMessage(message: any, targetUserId: number) {
+  const ws = wsClients.get(targetUserId);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'message',
+      data: message,
+      timestamp: new Date().toISOString()
+    }));
+    return true;
+  }
+  return false;
+}
+
 // Cleanup function
 export function closeWebSocketServer() {
   if (wss) {
