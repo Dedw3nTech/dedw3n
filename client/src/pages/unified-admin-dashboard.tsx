@@ -1253,8 +1253,8 @@ export default function UnifiedAdminDashboard() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge className={getStatusColor(user.status)}>
-                                    {user.isLocked ? 'Locked' : user.status}
+                                  <Badge className={getStatusColor(user.isLocked ? 'locked' : 'active')}>
+                                    {user.isLocked ? 'Locked' : 'Active'}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -3117,13 +3117,13 @@ function AffiliatePartnerManagement() {
                       <div className="text-sm">
                         <p>Referrals: <span className="font-medium">{partner.totalReferrals || 0}</span></p>
                         <p className="text-xs text-gray-500">
-                          Earned: £{(partner.totalCommissionEarned || 0).toFixed(2)}
+                          Earned: £{(Number(partner.totalCommissionEarned) || 0).toFixed(2)}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono">
-                        {((partner.commissionRate || 0.30) * 100).toFixed(1)}%
+                        {((Number(partner.commissionRate) || 0.30) * 100).toFixed(1)}%
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -1724,7 +1724,7 @@ export type SavedPost = typeof savedPosts.$inferSelect;
 export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
 
 // Notification schemas and types
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
