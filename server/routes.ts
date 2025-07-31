@@ -13436,8 +13436,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Delete vendor payment info if exists
       await db.delete(vendorPaymentInfo).where(eq(vendorPaymentInfo.vendorId, vendor.id));
       
-      // Delete store users if exists
-      await db.delete(storeUsers).where(eq(storeUsers.vendorId, vendor.id));
+      // Delete store users if exists (table will be created in future migration)
+      // await db.delete(storeUsers).where(eq(storeUsers.vendorId, vendor.id));
       
       // Finally, delete the vendor record
       await db.delete(vendors).where(eq(vendors.id, vendor.id));

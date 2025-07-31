@@ -401,10 +401,6 @@ export default function VendorDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setLocation('/products/new')}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {t("Add Product")}
-          </Button>
           {/* Show Open Business Store button only for private vendors */}
           {vendor.vendorType === 'private' && (
             <Button 
