@@ -24,7 +24,7 @@ export function Breadcrumbs() {
     'Home', 'Marketplace', 'Private Vendor Dashboard', 'Business Vendor Dashboard',
     'Dating', 'Dating Profile', 'Community', 'Events & Meetups', 'Add Product/Service',
     'Vendor Registration', 'Orders & Returns', 'B2C Marketplace', 'B2B Marketplace',
-    'C2C Marketplace', 'Product Details', 'Contact', 'Sign In', 'Sign Up', 'Profile',
+    'C2C Marketplace', 'RQST Marketplace', 'Product Details', 'Contact', 'Sign In', 'Sign Up', 'Profile',
     'Messages', 'Notifications', 'Settings', 'Shopping Cart', 'Checkout',
     'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
     'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
@@ -51,35 +51,36 @@ export function Breadcrumbs() {
     b2cMarketplace: translatedTexts[11] || "B2C Marketplace",
     b2bMarketplace: translatedTexts[12] || "B2B Marketplace",
     c2cMarketplace: translatedTexts[13] || "C2C Marketplace",
-    productDetails: translatedTexts[14] || "Product Details",
-    contact: translatedTexts[15] || "Contact",
-    signIn: translatedTexts[16] || "Sign In",
-    signUp: translatedTexts[17] || "Sign Up",
-    profile: translatedTexts[18] || "Profile",
-    messages: translatedTexts[19] || "Messages",
-    notifications: translatedTexts[20] || "Notifications",
-    settings: translatedTexts[21] || "Settings",
-    shoppingCart: translatedTexts[22] || "Shopping Cart",
-    checkout: translatedTexts[23] || "Checkout",
-    likedProducts: translatedTexts[24] || "Liked Products",
-    addProduct: translatedTexts[25] || "Add Product",
-    uploadProduct: translatedTexts[26] || "Upload Product",
-    vendorDashboard: translatedTexts[27] || "Vendor Dashboard",
-    becomeVendor: translatedTexts[28] || "Become a Vendor",
-    members: translatedTexts[29] || "Members",
-    wallet: translatedTexts[30] || "Wallet",
-    adminDashboard: translatedTexts[31] || "Admin Dashboard",
-    faq: translatedTexts[32] || "FAQ",
-    privacyPolicy: translatedTexts[33] || "Privacy Policy",
-    termsOfService: translatedTexts[34] || "Terms of Service",
-    businessTermsOfService: translatedTexts[35] || "Business Terms of Service",
-    shippingInfo: translatedTexts[36] || "Shipping Info",
-    cookiePolicy: translatedTexts[37] || "Cookie Policy",
-    communityGuidelines: translatedTexts[38] || "Community Guidelines",
-    siteMap: translatedTexts[39] || "Site Map",
-    networkPartnerships: translatedTexts[40] || "Network Partnerships",
-    affiliatePartnerships: translatedTexts[41] || "Affiliate Partnerships",
-    resources: translatedTexts[42] || "Resources"
+    rqstMarketplace: translatedTexts[14] || "RQST Marketplace",
+    productDetails: translatedTexts[15] || "Product Details",
+    contact: translatedTexts[16] || "Contact",
+    signIn: translatedTexts[17] || "Sign In",
+    signUp: translatedTexts[18] || "Sign Up",
+    profile: translatedTexts[19] || "Profile",
+    messages: translatedTexts[20] || "Messages",
+    notifications: translatedTexts[21] || "Notifications",
+    settings: translatedTexts[22] || "Settings",
+    shoppingCart: translatedTexts[23] || "Shopping Cart",
+    checkout: translatedTexts[24] || "Checkout",
+    likedProducts: translatedTexts[25] || "Liked Products",
+    addProduct: translatedTexts[26] || "Add Product",
+    uploadProduct: translatedTexts[27] || "Upload Product",
+    vendorDashboard: translatedTexts[28] || "Vendor Dashboard",
+    becomeVendor: translatedTexts[29] || "Become a Vendor",
+    members: translatedTexts[30] || "Members",
+    wallet: translatedTexts[31] || "Wallet",
+    adminDashboard: translatedTexts[32] || "Admin Dashboard",
+    faq: translatedTexts[33] || "FAQ",
+    privacyPolicy: translatedTexts[34] || "Privacy Policy",
+    termsOfService: translatedTexts[35] || "Terms of Service",
+    businessTermsOfService: translatedTexts[36] || "Business Terms of Service",
+    shippingInfo: translatedTexts[37] || "Shipping Info",
+    cookiePolicy: translatedTexts[38] || "Cookie Policy",
+    communityGuidelines: translatedTexts[39] || "Community Guidelines",
+    siteMap: translatedTexts[40] || "Site Map",
+    networkPartnerships: translatedTexts[41] || "Network Partnerships",
+    affiliatePartnerships: translatedTexts[42] || "Affiliate Partnerships",
+    resources: translatedTexts[43] || "Resources"
   }), [translatedTexts]);
 
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
@@ -185,6 +186,12 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
 
+    if (path === '/rqst' || path === '/marketplace/rqst') {
+      breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+      breadcrumbs.push({ label: translatedLabels.rqstMarketplace });
+      return breadcrumbs;
+    }
+
     // Special handling for marketplace main page
     if (path === '/marketplace' || path === '/products') {
       breadcrumbs.push({ label: translatedLabels.marketplace });
@@ -199,6 +206,7 @@ export function Breadcrumbs() {
       'b2c': translatedLabels.b2cMarketplace,
       'b2b': translatedLabels.b2bMarketplace, 
       'c2c': translatedLabels.c2cMarketplace,
+      'rqst': translatedLabels.rqstMarketplace,
       'wall': translatedLabels.community,
       'community': translatedLabels.community,
       'dating': translatedLabels.dating,

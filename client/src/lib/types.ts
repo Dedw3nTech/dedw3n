@@ -20,13 +20,14 @@ export interface CommentWithUser extends Comment {
 export type ViewType = "marketplace" | "social";
 
 // Market type for different marketplace experiences
-export type MarketType = "c2c" | "b2c" | "b2b" | "gov";
+export type MarketType = "c2c" | "b2c" | "b2b" | "rqst" | "gov";
 
 // Market type labels
 export const MARKET_TYPE_LABELS = {
   c2c: "Buy from a friend",
   b2c: "Buy from a store", 
   b2b: "Business",
+  rqst: "Request marketplace",
   gov: "Governmental"
 };
 

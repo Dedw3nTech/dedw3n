@@ -218,6 +218,7 @@ import PremiumVideoPage from "@/pages/premium-video";
 import VideoDemo from "@/pages/video-demo";
 import TestCookiesPage from "@/pages/test-cookies";
 import VendorProfile from "@/pages/vendor-profile";
+import MarketplaceRQST from "@/pages/marketplace-rqst";
 
 
 // SEO wrapper component for routing
@@ -277,6 +278,11 @@ function Router() {
       <Route path="/marketplace/c2c">
         <SEOHead {...seoConfigs.products} title="C2C Marketplace - Dedw3n" description="Shop Consumer-to-Consumer marketplace for unique items and second-hand products." />
         <Products />
+      </Route>
+      
+      <Route path="/marketplace/rqst">
+        <SEOHead title="RQST Marketplace - Dedw3n" description="Request marketplace where you can post product requests and connect with vendors who can fulfill them." />
+        <MarketplaceRQST />
       </Route>
       
       <Route path="/marketplace">
@@ -548,6 +554,8 @@ function MarketplacePromoSection() {
         return '/attached_assets/Dedw3n Business _1753731843941.png';
       case 'c2c':
         return '/attached_assets/Dedw3n Business  (2)_1753732264836.png';
+      case 'rqst':
+        return '/attached_assets/Dedw3n Business  (3)_1753732357966.png';
       default:
         return '/attached_assets/Copy of Dedw3n Marketplace II.png';
     }
