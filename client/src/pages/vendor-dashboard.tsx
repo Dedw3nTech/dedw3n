@@ -16,22 +16,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  LayoutDashboard, 
   Package, 
   Users, 
   Truck, 
   Settings, 
-  BarChart,
   Store,
   Loader2,
   PlusCircle,
-  TrendingUp,
-  Tag,
-  Megaphone,
   DollarSign,
   ShoppingCart,
-  Star,
-  Eye,
   FileText,
   Calendar,
   MapPin,
@@ -39,7 +32,6 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  ArrowUpCircle,
   Trash2,
   Building
 } from "lucide-react";
@@ -47,10 +39,7 @@ import {
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 import VendorProductManagement from "@/components/vendor/VendorProductManagement";
 import VendorOrderManagement from "@/components/vendor/VendorOrderManagement";
-import VendorAnalytics from "@/components/vendor/VendorAnalytics";
-import VendorMarketingTools from "@/components/vendor/VendorMarketingTools";
 import VendorSettings from "@/components/vendor/VendorSettings";
-import { AIProductUpload } from "@/components/AIProductUpload";
 import { DeleteStoreModal } from "@/components/ui/delete-store-modal";
 
 export default function VendorDashboard() {
@@ -95,7 +84,7 @@ export default function VendorDashboard() {
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("products");
   const [isDeletingStore, setIsDeletingStore] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
@@ -499,15 +488,7 @@ export default function VendorDashboard() {
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="dashboard">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
-            {t("Overview")}
-          </TabsTrigger>
-          <TabsTrigger value="ai-upload">
-            <Star className="mr-2 h-4 w-4" />
-            AI Upload
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">
             <Package className="mr-2 h-4 w-4" />
             {productsText}
@@ -515,14 +496,6 @@ export default function VendorDashboard() {
           <TabsTrigger value="orders">
             <Truck className="mr-2 h-4 w-4" />
             {t("Shipping & Orders")}
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart className="mr-2 h-4 w-4" />
-            {analyticsText}
-          </TabsTrigger>
-          <TabsTrigger value="marketing">
-            <Megaphone className="mr-2 h-4 w-4" />
-            {marketingText}
           </TabsTrigger>
           <TabsTrigger value="commission">
             <DollarSign className="mr-2 h-4 w-4" />
@@ -534,72 +507,7 @@ export default function VendorDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ai-upload">
-          <AIProductUpload />
-        </TabsContent>
 
-        <TabsContent value="dashboard" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setLocation('/products/new')}
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  {t("Add New Product")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab('orders')}
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  {t("View Orders")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab('analytics')}
-                >
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  {t("Deep Analytics")}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">New order received</span>
-                    <span className="text-xs text-muted-foreground ml-auto">2 hours ago</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ArrowUpCircle className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">Product published</span>
-                    <span className="text-xs text-muted-foreground ml-auto">1 day ago</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm">New review received</span>
-                    <span className="text-xs text-muted-foreground ml-auto">2 days ago</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="products">
           <VendorProductManagement vendorId={vendorId!} />
@@ -609,13 +517,7 @@ export default function VendorDashboard() {
           <VendorOrderManagement vendorId={vendorId!} />
         </TabsContent>
 
-        <TabsContent value="analytics">
-          <VendorAnalytics vendorId={vendorId!} />
-        </TabsContent>
 
-        <TabsContent value="marketing">
-          <VendorMarketingTools vendorId={vendorId!} />
-        </TabsContent>
 
         <TabsContent value="commission">
           <VendorCommissionDashboard vendorId={vendorId!} />
