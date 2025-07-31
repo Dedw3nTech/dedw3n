@@ -137,8 +137,8 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
         sortOrder
       });
       
-      const response = await apiRequest(`/api/vendors/products?${params}`);
-      return response;
+      const response = await apiRequest('GET', `/api/vendors/products?${params}`);
+      return response.json();
     },
     enabled: !!vendorId
   });
@@ -147,8 +147,8 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   const { data: categories } = useQuery({
     queryKey: ['/api/categories'],
     queryFn: async () => {
-      const response = await apiRequest('/api/categories');
-      return response;
+      const response = await apiRequest('GET', '/api/categories');
+      return response.json();
     }
   });
 
@@ -160,11 +160,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
         : '/api/vendors/products';
       const method = editingProduct ? 'PUT' : 'POST';
       
-      return await apiRequest(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...productData, vendorId })
-      });
+      return await apiRequest(method, url, { ...productData, vendorId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
@@ -187,9 +183,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   // Delete product mutation
   const deleteMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return await apiRequest(`/api/vendors/products/${productId}`, {
-        method: 'DELETE'
-      });
+      return await apiRequest('DELETE', `/api/vendors/products/${productId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
@@ -203,11 +197,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   // Bulk operations mutation
   const bulkMutation = useMutation({
     mutationFn: async ({ action, productIds }: { action: string; productIds: number[] }) => {
-      return await apiRequest('/api/vendors/products/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, productIds, vendorId })
-      });
+      return await apiRequest('POST', '/api/vendors/products/bulk', { action, productIds, vendorId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });

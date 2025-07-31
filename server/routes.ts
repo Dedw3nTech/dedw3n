@@ -4534,22 +4534,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get vendor summary (must be before parameterized routes)
-  app.get('/api/vendors/summary', async (req: Request, res: Response) => {
+  app.get('/api/vendors/summary', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use the same authentication pattern as working vendor endpoints
-      let userId = (req.user as any)?.id;
-      
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // No fallback authentication - require proper login
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = req.user!.id;
 
       // Get vendor accounts for the user
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
@@ -4561,24 +4548,33 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Use the first vendor account (primary vendor)
       const vendor = vendorAccounts[0];
 
-      // Return vendor summary data
+      // Get real metrics from database
+      const vendorProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.vendorId, vendor.id));
+
+      const vendorOrders = await db
+        .select()
+        .from(orders)
+        .where(inArray(orders.productId, vendorProducts.map(p => p.id)));
+
+      const totalProducts = vendorProducts.length;
+      const totalOrders = vendorOrders.length;
+      const totalRevenue = vendorOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const pendingOrders = vendorOrders.filter(o => o.status === 'pending').length;
+
+      // Return vendor summary data with real metrics
       const summary = {
+        totalProducts,
+        totalOrders,
+        totalRevenue,
+        pendingOrders,
         vendorInfo: {
           id: vendor.id,
           storeName: vendor.storeName,
           vendorType: vendor.vendorType,
           isActive: vendor.isActive
-        },
-        metrics: {
-          totalOrders: 0,
-          totalRevenue: 0,
-          totalProducts: 0,
-          averageOrderValue: 0
-        },
-        recentActivity: {
-          newOrders: 0,
-          pendingShipments: 0,
-          completedToday: 0
         }
       };
 
@@ -5174,22 +5170,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Vendor Products Management Routes
   // Get vendor products
-  app.get('/api/vendors/products', async (req: Request, res: Response) => {
+  app.get('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use the same authentication pattern as working vendor endpoints
-      let userId = (req.user as any)?.id;
-      
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // No fallback authentication - require proper login
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = req.user!.id;
 
       // Get vendor accounts for the user
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
@@ -5220,22 +5203,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Create vendor product
-  app.post('/api/vendors/products', async (req: Request, res: Response) => {
+  app.post('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Use the same authentication pattern as working vendor endpoints
-      let userId = (req.user as any)?.id;
-      
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // No fallback authentication - require proper login
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = req.user!.id;
 
       // Get vendor accounts for the user
       const vendorAccounts = await storage.getUserVendorAccounts(userId);

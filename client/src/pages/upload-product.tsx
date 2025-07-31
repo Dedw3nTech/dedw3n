@@ -226,7 +226,7 @@ export default function UploadProduct() {
         throw new Error('No image URL provided');
       }
       
-      const response = await apiRequest('POST', '/api/products', {
+      const response = await apiRequest('POST', '/api/vendors/products', {
         ...data,
         vendorId,
         imageUrl: finalImageUrl,
