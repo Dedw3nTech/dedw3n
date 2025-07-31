@@ -9,6 +9,9 @@ import { AuthService } from './services/auth.service';
 import { ProductService } from './services/product.service';
 import { VendorService } from './services/vendor.service';
 import { OrderService } from './services/order.service';
+import { PaymentService } from './services/payment.service';
+import { NotificationService } from './services/notification.service';
+import { AnalyticsService } from './services/analytics.service';
 import { UserController } from './controllers/user.controller';
 import { AuthController } from './controllers/auth.controller';
 
@@ -27,6 +30,9 @@ export function setupContainer(): void {
   registerService('VendorService', VendorService, ['VendorRepository', 'UserService'], true);
   registerService('ProductService', ProductService, ['ProductRepository', 'VendorService'], true);
   registerService('OrderService', OrderService, ['OrderRepository', 'ProductService', 'VendorService'], true);
+  registerService('PaymentService', PaymentService, ['OrderService', 'VendorService'], true);
+  registerService('NotificationService', NotificationService, ['UserService'], true);
+  registerService('AnalyticsService', AnalyticsService, ['ProductService', 'VendorService', 'OrderService', 'UserService'], true);
 
   // Register controllers
   registerService('UserController', UserController, ['UserService'], false);
