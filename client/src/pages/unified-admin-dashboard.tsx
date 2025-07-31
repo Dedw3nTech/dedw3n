@@ -838,14 +838,30 @@ export default function UnifiedAdminDashboard() {
                                   {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge className={user.isVendor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
-                                    {user.isVendor ? 'Active' : 'Inactive'}
-                                  </Badge>
+                                  {user.isVendor ? (
+                                    <Link href={`/admin/vendor-store/${user.id}`}>
+                                      <Badge className="bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors">
+                                        Active
+                                      </Badge>
+                                    </Link>
+                                  ) : (
+                                    <Badge className="bg-gray-100 text-gray-600">
+                                      Inactive
+                                    </Badge>
+                                  )}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge className={user.datingEnabled ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-600'}>
-                                    {user.datingEnabled ? 'Active' : 'Inactive'}
-                                  </Badge>
+                                  {user.datingEnabled ? (
+                                    <Link href={`/admin/dating-profile/${user.id}`}>
+                                      <Badge className="bg-pink-100 text-pink-800 cursor-pointer hover:bg-pink-200 transition-colors">
+                                        Active
+                                      </Badge>
+                                    </Link>
+                                  ) : (
+                                    <Badge className="bg-gray-100 text-gray-600">
+                                      Inactive
+                                    </Badge>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
