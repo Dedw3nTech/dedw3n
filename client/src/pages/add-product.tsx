@@ -85,6 +85,17 @@ const productSchema = z.object({
   serviceDuration: z.string().optional(),
   serviceType: z.enum(['onetime', 'recurring', 'subscription', 'consultation']).optional(),
   serviceLocation: z.enum(['online', 'onsite', 'office', 'flexible']).optional(),
+  // Vehicle-specific fields
+  vehicleMake: z.string().optional(),
+  vehicleModel: z.string().optional(),
+  vehicleYear: z.string().optional(),
+  vehicleMileage: z.string().optional(),
+  // Property-specific fields  
+  propertyType: z.string().optional(),
+  propertySize: z.string().optional(),
+  bedrooms: z.string().optional(),
+  bathrooms: z.string().optional(),
+  propertyAge: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -413,6 +424,17 @@ export default function AddProduct() {
       serviceLocation: undefined,
       vatIncluded: false,
       vatRate: undefined,
+      // Vehicle fields
+      vehicleMake: '',
+      vehicleModel: '',
+      vehicleYear: '',
+      vehicleMileage: '',
+      // Property fields
+      propertyType: '',
+      propertySize: '',
+      bedrooms: '',
+      bathrooms: '',
+      propertyAge: '',
     },
   });
 
@@ -584,10 +606,10 @@ export default function AddProduct() {
       // Transform frontend field names to backend expected field names
       const backendData = {
         ...data,
-        name: data.title, // Backend expects 'name' field instead of 'title'
+        name: data.name, // Use the correct 'name' field from schema
         // Ensure required fields have fallback values
         imageUrl: data.imageUrl || '/attached_assets/D3 black logo.png', // Provide fallback image
-        title: undefined, // Remove the frontend title field to avoid conflicts
+        // All fields properly mapped from schema
       };
       
       const response = await apiRequest('POST', '/api/vendors/products', backendData);
