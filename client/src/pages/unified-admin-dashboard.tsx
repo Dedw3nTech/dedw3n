@@ -27,7 +27,7 @@ import {
   Database, RefreshCw, Download, Upload, AlertTriangle, Activity, AlertCircle, CheckCircle, 
   XCircle, Clock, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Mail, Phone, MapPin, 
   Calendar, Store, UserCog, Languages, CreditCard, Truck, FileText, BarChart3, Bell, 
-  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck
+  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban
 } from 'lucide-react';
 
 // Types
@@ -78,6 +78,43 @@ interface VendorRequest {
     username: string;
     email: string;
     avatar?: string;
+  };
+}
+
+interface Vendor {
+  id: number;
+  userId: number;
+  vendorType: string;
+  storeName: string;
+  businessName: string;
+  businessType: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  website?: string;
+  logo?: string;
+  rating: number;
+  ratingCount: number;
+  badgeLevel: string;
+  totalSalesAmount: number;
+  totalTransactions: number;
+  accountStatus: string;
+  isActive: boolean;
+  isApproved: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: number;
+    name: string;
+    username: string;
+    email: string;
+    avatar?: string;
+    role: string;
+    lastLogin?: Date;
+    createdAt: Date;
   };
 }
 
@@ -141,10 +178,13 @@ export default function UnifiedAdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [selectedVendorRequest, setSelectedVendorRequest] = useState<VendorRequest | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [vendorSearchTerm, setVendorSearchTerm] = useState('');
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
+  const [vendorDetailsDialogOpen, setVendorDetailsDialogOpen] = useState(false);
 
   // System maintenance states
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
@@ -189,6 +229,16 @@ export default function UnifiedAdminDashboard() {
     queryKey: ['/api/admin/vendor-requests'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/vendor-requests');
+      return response.json();
+    },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
+  });
+
+  // Fetch all vendors (approved/active vendors)
+  const { data: vendors = [], isLoading: vendorsLoading } = useQuery<Vendor[]>({
+    queryKey: ['/api/admin/vendors'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/vendors');
       return response.json();
     },
     enabled: !!(user && user.role === 'admin'), // Only run if user is admin
@@ -251,12 +301,30 @@ export default function UnifiedAdminDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Vendor Request Updated",
         description: "Vendor request has been successfully processed.",
       });
       setVendorDialogOpen(false);
+    },
+  });
+
+  // Vendor status management mutations
+  const updateVendorStatusMutation = useMutation({
+    mutationFn: async ({ vendorId, accountStatus, isActive }: { vendorId: number; accountStatus?: string; isActive?: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/admin/vendors/${vendorId}`, { accountStatus, isActive });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Vendor Updated",
+        description: "Vendor status has been successfully updated.",
+      });
+      setVendorDetailsDialogOpen(false);
     },
   });
 
@@ -359,6 +427,14 @@ export default function UnifiedAdminDashboard() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredVendors = vendors.filter(vendor => 
+    vendor.storeName.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.businessName.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.user.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.user.username.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.email.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+  );
+
   // Utility functions
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -379,9 +455,23 @@ export default function UnifiedAdminDashboard() {
         return 'bg-yellow-100 text-yellow-800';
       case 'rejected':
       case 'suspended':
+      case 'permanently_suspended':
         return 'bg-red-100 text-red-800';
+      case 'on_hold':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getBadgeColor = (badgeLevel: string) => {
+    switch (badgeLevel) {
+      case 'new_vendor': return 'bg-gray-100 text-gray-700';
+      case 'level_2_vendor': return 'bg-blue-100 text-blue-700';
+      case 'top_vendor': return 'bg-green-100 text-green-700';
+      case 'infinity_vendor': return 'bg-purple-100 text-purple-700';
+      case 'elite_vendor': return 'bg-yellow-100 text-yellow-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -635,117 +725,285 @@ export default function UnifiedAdminDashboard() {
 
           {/* Vendors Tab */}
           <TabsContent value="vendors" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Store className="h-5 w-5" />
-                  {t("Vendor Requests")}
-                </CardTitle>
-                <CardDescription>
-                  Review and manage vendor account applications
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Business</TableHead>
-                        <TableHead>Applicant</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Applied</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vendorRequestsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            Loading vendor requests...
-                          </TableCell>
-                        </TableRow>
-                      ) : vendorRequests.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            No vendor requests found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        vendorRequests.slice(0, 10).map((request) => (
-                          <TableRow key={request.id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{request.businessName}</p>
-                                <p className="text-sm text-gray-500">{request.businessEmail}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                  {request.user.avatar ? (
-                                    <img src={request.user.avatar} alt={request.user.name} className="w-8 h-8 rounded-full" />
-                                  ) : (
-                                    <Users className="h-4 w-4" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-medium">{request.user.name}</p>
-                                  <p className="text-sm text-gray-500">@{request.user.username}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {request.vendorType}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(request.status)}>
-                                {request.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(request.createdAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedVendorRequest(request);
-                                    setVendorDialogOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => updateVendorRequestMutation.mutate({ requestId: request.id, status: 'approved' })}
-                                  disabled={request.status === 'approved'}
-                                >
-                                  <CheckCircle className="h-3 w-3" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => updateVendorRequestMutation.mutate({ requestId: request.id, status: 'rejected' })}
-                                  disabled={request.status === 'rejected'}
-                                >
-                                  <XCircle className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
+            <Tabs defaultValue="vendors-list" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="vendors-list">{t("All Vendors")}</TabsTrigger>
+                <TabsTrigger value="vendor-requests">{t("Vendor Requests")}</TabsTrigger>
+              </TabsList>
+              
+              {/* All Vendors List */}
+              <TabsContent value="vendors-list" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Store className="h-5 w-5" />
+                      {t("All Vendors")}
+                    </CardTitle>
+                    <CardDescription>
+                      Manage all approved vendors (both private and business vendors)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          placeholder="Search vendors..."
+                          value={vendorSearchTerm}
+                          onChange={(e) => setVendorSearchTerm(e.target.value)}
+                          className="w-64"
+                        />
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Badge variant="outline">
+                        {filteredVendors.length} vendors found
+                      </Badge>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Vendor</TableHead>
+                            <TableHead>User</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Badge</TableHead>
+                            <TableHead>Sales</TableHead>
+                            <TableHead>Joined</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {vendorsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                Loading vendors...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredVendors.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                No vendors found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredVendors.slice(0, 10).map((vendor) => (
+                              <TableRow key={vendor.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
+                                      {vendor.logo ? (
+                                        <img src={vendor.logo} alt={vendor.storeName} className="w-10 h-10 rounded-lg object-cover" />
+                                      ) : (
+                                        <Store className="h-5 w-5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{vendor.storeName}</p>
+                                      <p className="text-sm text-gray-500">{vendor.businessName}</p>
+                                      <p className="text-xs text-gray-400">{vendor.email}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {vendor.user.avatar ? (
+                                        <img src={vendor.user.avatar} alt={vendor.user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Users className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{vendor.user.name}</p>
+                                      <p className="text-sm text-gray-500">@{vendor.user.username}</p>
+                                      <p className="text-xs text-gray-400">ID: {vendor.userId}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={vendor.vendorType === 'private' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'}>
+                                    {vendor.vendorType}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col gap-1">
+                                    <Badge className={getStatusColor(vendor.accountStatus)}>
+                                      {vendor.accountStatus}
+                                    </Badge>
+                                    {!vendor.isActive && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        Inactive
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={getBadgeColor(vendor.badgeLevel)}>
+                                    {vendor.badgeLevel?.replace('_', ' ') || 'new vendor'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    <p className="font-medium">£{vendor.totalSalesAmount?.toFixed(2) || '0.00'}</p>
+                                    <p className="text-gray-500">{vendor.totalTransactions || 0} transactions</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(vendor.createdAt).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedVendor(vendor);
+                                        setVendorDetailsDialogOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => updateVendorStatusMutation.mutate({ 
+                                        vendorId: vendor.id, 
+                                        accountStatus: vendor.accountStatus === 'active' ? 'suspended' : 'active' 
+                                      })}
+                                    >
+                                      {vendor.accountStatus === 'active' ? 
+                                        <Ban className="h-3 w-3" /> : 
+                                        <CheckCircle className="h-3 w-3" />
+                                      }
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Vendor Requests */}
+              <TabsContent value="vendor-requests" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Store className="h-5 w-5" />
+                      {t("Vendor Requests")}
+                    </CardTitle>
+                    <CardDescription>
+                      Review and manage vendor account applications
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Business</TableHead>
+                            <TableHead>Applicant</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Applied</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vendorRequestsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8">
+                                Loading vendor requests...
+                              </TableCell>
+                            </TableRow>
+                          ) : vendorRequests.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8">
+                                No vendor requests found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            vendorRequests.slice(0, 10).map((request) => (
+                              <TableRow key={request.id}>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{request.businessName}</p>
+                                    <p className="text-sm text-gray-500">{request.businessEmail}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {request.user.avatar ? (
+                                        <img src={request.user.avatar} alt={request.user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Users className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{request.user.name}</p>
+                                      <p className="text-sm text-gray-500">@{request.user.username}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">
+                                    {request.vendorType}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusColor(request.status)}>
+                                    {request.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(request.createdAt).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedVendorRequest(request);
+                                        setVendorDialogOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => updateVendorRequestMutation.mutate({ requestId: request.id, status: 'approved' })}
+                                      disabled={request.status === 'approved'}
+                                    >
+                                      <CheckCircle className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => updateVendorRequestMutation.mutate({ requestId: request.id, status: 'rejected' })}
+                                      disabled={request.status === 'rejected'}
+                                    >
+                                      <XCircle className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* Reports Tab */}

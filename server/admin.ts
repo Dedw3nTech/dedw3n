@@ -215,6 +215,251 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Error updating vendor request' });
     }
   });
+
+  // Get all vendors (approved/active vendors list)
+  app.get('/api/admin/vendors', isAdmin, async (req, res) => {
+    try {
+      // Get all approved/active vendors with user information
+      const vendorsList = await db
+        .select({
+          id: vendors.id,
+          userId: vendors.userId,
+          vendorType: vendors.vendorType,
+          storeName: vendors.storeName,
+          businessName: vendors.businessName,
+          businessType: vendors.businessType,
+          email: vendors.email,
+          phone: vendors.phone,
+          address: vendors.address,
+          city: vendors.city,
+          state: vendors.state,
+          country: vendors.country,
+          website: vendors.website,
+          logo: vendors.logo,
+          rating: vendors.rating,
+          ratingCount: vendors.ratingCount,
+          badgeLevel: vendors.badgeLevel,
+          totalSalesAmount: vendors.totalSalesAmount,
+          totalTransactions: vendors.totalTransactions,
+          accountStatus: vendors.accountStatus,
+          isActive: vendors.isActive,
+          isApproved: vendors.isApproved,
+          createdAt: vendors.createdAt,
+          updatedAt: vendors.updatedAt,
+          // User details
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar,
+          userRole: users.role,
+          userLastLogin: users.lastLogin,
+          userCreatedAt: users.createdAt
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .where(
+          and(
+            eq(vendors.isApproved, true),
+            or(
+              eq(vendors.accountStatus, 'active'),
+              eq(vendors.accountStatus, 'on_hold')
+            )
+          )
+        )
+        .orderBy(desc(vendors.createdAt));
+
+      // Transform the data to match the expected format
+      const formattedVendors = vendorsList.map(vendor => ({
+        id: vendor.id,
+        userId: vendor.userId,
+        vendorType: vendor.vendorType,
+        storeName: vendor.storeName,
+        businessName: vendor.businessName,
+        businessType: vendor.businessType,
+        email: vendor.email,
+        phone: vendor.phone,
+        address: vendor.address,
+        city: vendor.city,
+        state: vendor.state,
+        country: vendor.country,
+        website: vendor.website,
+        logo: vendor.logo,
+        rating: vendor.rating || 0,
+        ratingCount: vendor.ratingCount || 0,
+        badgeLevel: vendor.badgeLevel,
+        totalSalesAmount: vendor.totalSalesAmount || 0,
+        totalTransactions: vendor.totalTransactions || 0,
+        accountStatus: vendor.accountStatus,
+        isActive: vendor.isActive,
+        isApproved: vendor.isApproved,
+        createdAt: vendor.createdAt,
+        updatedAt: vendor.updatedAt,
+        user: {
+          id: vendor.userId,
+          name: vendor.userName,
+          username: vendor.userUsername,
+          email: vendor.userEmail,
+          avatar: vendor.userAvatar,
+          role: vendor.userRole,
+          lastLogin: vendor.userLastLogin,
+          createdAt: vendor.userCreatedAt
+        }
+      }));
+
+      res.json(formattedVendors);
+    } catch (error) {
+      console.error('Error fetching vendors list:', error);
+      res.status(500).json({ message: 'Error fetching vendors list' });
+    }
+  });
+
+  // Get vendor by ID with detailed information
+  app.get('/api/admin/vendors/:id', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      
+      // Get vendor with user information
+      const vendorDetails = await db
+        .select({
+          id: vendors.id,
+          userId: vendors.userId,
+          vendorType: vendors.vendorType,
+          storeName: vendors.storeName,
+          businessName: vendors.businessName,
+          businessType: vendors.businessType,
+          description: vendors.description,
+          email: vendors.email,
+          phone: vendors.phone,
+          address: vendors.address,
+          city: vendors.city,
+          state: vendors.state,
+          zipCode: vendors.zipCode,
+          country: vendors.country,
+          taxId: vendors.taxId,
+          website: vendors.website,
+          logo: vendors.logo,
+          rating: vendors.rating,
+          ratingCount: vendors.ratingCount,
+          badgeLevel: vendors.badgeLevel,
+          totalSalesAmount: vendors.totalSalesAmount,
+          totalTransactions: vendors.totalTransactions,
+          accountStatus: vendors.accountStatus,
+          isActive: vendors.isActive,
+          isApproved: vendors.isApproved,
+          createdAt: vendors.createdAt,
+          updatedAt: vendors.updatedAt,
+          // User details
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar,
+          userRole: users.role,
+          userLastLogin: users.lastLogin,
+          userCreatedAt: users.createdAt
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendorDetails.length) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorDetails[0];
+      const formattedVendor = {
+        id: vendor.id,
+        userId: vendor.userId,
+        vendorType: vendor.vendorType,
+        storeName: vendor.storeName,
+        businessName: vendor.businessName,
+        businessType: vendor.businessType,
+        description: vendor.description,
+        email: vendor.email,
+        phone: vendor.phone,
+        address: vendor.address,
+        city: vendor.city,
+        state: vendor.state,
+        zipCode: vendor.zipCode,
+        country: vendor.country,
+        taxId: vendor.taxId,
+        website: vendor.website,
+        logo: vendor.logo,
+        rating: vendor.rating || 0,
+        ratingCount: vendor.ratingCount || 0,
+        badgeLevel: vendor.badgeLevel,
+        totalSalesAmount: vendor.totalSalesAmount || 0,
+        totalTransactions: vendor.totalTransactions || 0,
+        accountStatus: vendor.accountStatus,
+        isActive: vendor.isActive,
+        isApproved: vendor.isApproved,
+        createdAt: vendor.createdAt,
+        updatedAt: vendor.updatedAt,
+        user: {
+          id: vendor.userId,
+          name: vendor.userName,
+          username: vendor.userUsername,
+          email: vendor.userEmail,
+          avatar: vendor.userAvatar,
+          role: vendor.userRole,
+          lastLogin: vendor.userLastLogin,
+          createdAt: vendor.userCreatedAt
+        }
+      };
+
+      res.json(formattedVendor);
+    } catch (error) {
+      console.error('Error fetching vendor details:', error);
+      res.status(500).json({ message: 'Error fetching vendor details' });
+    }
+  });
+
+  // Update vendor account status
+  app.patch('/api/admin/vendors/:id', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      const { accountStatus, isActive } = req.body;
+      
+      // Validate account status if provided
+      if (accountStatus && !['active', 'on_hold', 'suspended', 'permanently_suspended'].includes(accountStatus)) {
+        return res.status(400).json({ message: 'Invalid account status' });
+      }
+
+      // Build update object
+      const updateData: any = { updatedAt: new Date() };
+      if (accountStatus !== undefined) updateData.accountStatus = accountStatus;
+      if (isActive !== undefined) updateData.isActive = isActive;
+
+      // Update the vendor
+      const updatedVendor = await db
+        .update(vendors)
+        .set(updateData)
+        .where(eq(vendors.id, vendorId))
+        .returning();
+
+      if (!updatedVendor.length) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      // If suspending vendor, update user's isVendor flag
+      if (accountStatus === 'suspended' || accountStatus === 'permanently_suspended') {
+        await db
+          .update(users)
+          .set({ isVendor: false })
+          .where(eq(users.id, updatedVendor[0].userId));
+      } else if (accountStatus === 'active') {
+        await db
+          .update(users)
+          .set({ isVendor: true })
+          .where(eq(users.id, updatedVendor[0].userId));
+      }
+
+      res.json({ message: 'Vendor status updated successfully' });
+    } catch (error) {
+      console.error('Error updating vendor:', error);
+      res.status(500).json({ message: 'Error updating vendor' });
+    }
+  });
   // Get all users
   app.get('/api/admin/users', isAdmin, async (req, res) => {
     try {
