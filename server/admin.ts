@@ -297,6 +297,54 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Get user by ID
+  app.get('/api/admin/users/:id', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const userResult = await db.select({
+        id: users.id,
+        username: users.username,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        avatar: users.avatar,
+        status: users.status,
+        isLocked: users.isLocked,
+        lastLogin: users.lastLogin,
+        createdAt: users.createdAt,
+        isVendor: users.isVendor,
+        datingEnabled: users.datingEnabled,
+        datingSubscription: users.datingSubscription,
+        city: users.city,
+        country: users.country,
+        region: users.region,
+        gender: users.gender,
+        dateOfBirth: users.dateOfBirth
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+      
+      if (userResult.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const user = userResult[0];
+      res.json({
+        ...user,
+        password: undefined // Don't send password to frontend
+      });
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ message: 'Error fetching user' });
+    }
+  });
+
   // Update user role
   app.patch('/api/admin/users/:id/role', isAdmin, async (req, res) => {
     try {
