@@ -27,7 +27,7 @@ import {
   Database, RefreshCw, Download, Upload, AlertTriangle, Activity, AlertCircle, CheckCircle, 
   XCircle, Clock, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Mail, Phone, MapPin, 
   Calendar, Store, UserCog, Languages, CreditCard, Truck, FileText, BarChart3, Bell, 
-  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban
+  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban, ChevronUp, ChevronDown
 } from 'lucide-react';
 
 // Types
@@ -188,6 +188,8 @@ export default function UnifiedAdminDashboard() {
   const [vendorDetailsDialogOpen, setVendorDetailsDialogOpen] = useState(false);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [userSortField, setUserSortField] = useState<'createdAt' | 'lastLogin' | 'name'>('createdAt');
+  const [userSortDirection, setUserSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // System maintenance states
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
@@ -465,12 +467,52 @@ export default function UnifiedAdminDashboard() {
     }
   };
 
-  // Filter functions
-  const filteredUsers = users.filter(user => 
+  // Filter and sort functions
+  const sortUsers = (users: User[]) => {
+    return [...users].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+      
+      switch (userSortField) {
+        case 'createdAt':
+          aValue = new Date(a.createdAt || '').getTime();
+          bValue = new Date(b.createdAt || '').getTime();
+          break;
+        case 'lastLogin':
+          aValue = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+          bValue = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+          break;
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+      
+      if (userSortDirection === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
+  const filteredUsers = sortUsers(users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
+
+  // Handle sort changes
+  const handleUserSort = (field: 'createdAt' | 'lastLogin' | 'name') => {
+    if (userSortField === field) {
+      setUserSortDirection(userSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setUserSortField(field);
+      setUserSortDirection('desc');
+    }
+  };
 
   const filteredVendors = vendors.filter(vendor => 
     vendor.storeName.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
@@ -696,23 +738,54 @@ export default function UnifiedAdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>User</TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleUserSort('name')}
+                        >
+                          <div className="flex items-center gap-2">
+                            User
+                            {userSortField === 'name' && (
+                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Last Login</TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleUserSort('createdAt')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Creation Date
+                            {userSortField === 'createdAt' && (
+                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleUserSort('lastLogin')}
+                        >
+                          <div className="flex items-center gap-2">
+                            Last Login
+                            {userSortField === 'lastLogin' && (
+                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {usersLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={6} className="text-center py-8">
                             Loading users...
                           </TableCell>
                         </TableRow>
                       ) : filteredUsers.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={6} className="text-center py-8">
                             No users found
                           </TableCell>
                         </TableRow>
@@ -743,6 +816,9 @@ export default function UnifiedAdminDashboard() {
                               <Badge className={getStatusColor(user.status)}>
                                 {user.isLocked ? 'Locked' : user.status}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                             </TableCell>
                             <TableCell>
                               {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
