@@ -4,11 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -97,32 +94,10 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
-  const [showProductDialog, setShowProductDialog] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
 
-  // Product form state
-  const [productForm, setProductForm] = useState({
-    name: '',
-    description: '',
-    price: '',
-    compareAtPrice: '',
-    category: '',
-    subcategory: '',
-    brand: '',
-    sku: '',
-    barcode: '',
-    weight: '',
-    dimensions: '',
-    status: 'draft' as const,
-    quantity: '',
-    lowStockThreshold: '',
-    trackQuantity: true,
-    allowBackorder: false,
-    tags: '',
-    seoTitle: '',
-    seoDescription: ''
-  });
+
+
 
   // Fetch vendor products
   const { data: products, isLoading, error } = useQuery({
@@ -152,33 +127,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
     }
   });
 
-  // Product mutation
-  const productMutation = useMutation({
-    mutationFn: async (productData: any) => {
-      const url = editingProduct 
-        ? `/api/vendors/products/${editingProduct.id}`
-        : '/api/vendors/products';
-      const method = editingProduct ? 'PUT' : 'POST';
-      
-      return await apiRequest(method, url, { ...productData, vendorId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
-      setShowProductDialog(false);
-      resetForm();
-      toast({
-        title: "Success",
-        description: editingProduct ? "Product updated successfully" : "Product created successfully"
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to save product",
-        variant: "destructive"
-      });
-    }
-  });
+
 
   // Delete product mutation
   const deleteMutation = useMutation({
@@ -196,84 +145,11 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
 
 
 
-  const resetForm = () => {
-    setProductForm({
-      name: '',
-      description: '',
-      price: '',
-      compareAtPrice: '',
-      category: '',
-      subcategory: '',
-      brand: '',
-      sku: '',
-      barcode: '',
-      weight: '',
-      dimensions: '',
-      status: 'draft',
-      quantity: '',
-      lowStockThreshold: '',
-      trackQuantity: true,
-      allowBackorder: false,
-      tags: '',
-      seoTitle: '',
-      seoDescription: ''
-    });
-    setEditingProduct(null);
-  };
 
-  const openEditDialog = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description,
-      price: product.price.toString(),
-      compareAtPrice: product.compareAtPrice?.toString() || '',
-      category: product.category,
-      subcategory: product.subcategory || '',
-      brand: product.brand || '',
-      sku: product.sku,
-      barcode: product.barcode || '',
-      weight: product.weight?.toString() || '',
-      dimensions: product.dimensions || '',
-      status: product.status,
-      quantity: product.inventory.quantity.toString(),
-      lowStockThreshold: product.inventory.lowStockThreshold.toString(),
-      trackQuantity: product.inventory.trackQuantity,
-      allowBackorder: product.inventory.allowBackorder,
-      tags: product.tags.join(', '),
-      seoTitle: product.seoTitle || '',
-      seoDescription: product.seoDescription || ''
-    });
-    setShowProductDialog(true);
-  };
 
-  const handleSubmit = () => {
-    const productData = {
-      name: productForm.name,
-      description: productForm.description,
-      price: parseFloat(productForm.price),
-      compareAtPrice: productForm.compareAtPrice ? parseFloat(productForm.compareAtPrice) : undefined,
-      category: productForm.category,
-      subcategory: productForm.subcategory || undefined,
-      brand: productForm.brand || undefined,
-      sku: productForm.sku,
-      barcode: productForm.barcode || undefined,
-      weight: productForm.weight ? parseFloat(productForm.weight) : undefined,
-      dimensions: productForm.dimensions || undefined,
-      status: productForm.status,
-      inventory: {
-        quantity: parseInt(productForm.quantity),
-        lowStockThreshold: parseInt(productForm.lowStockThreshold),
-        trackQuantity: productForm.trackQuantity,
-        allowBackorder: productForm.allowBackorder
-      },
-      tags: productForm.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      seoTitle: productForm.seoTitle || undefined,
-      seoDescription: productForm.seoDescription || undefined
-    };
 
-    productMutation.mutate(productData);
-  };
+
+
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -329,196 +205,14 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="bg-black text-white hover:bg-gray-800">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="grid gap-6 py-4">
-                {/* Basic Information */}
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-semibold">Basic Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Product Name *</Label>
-                      <Input
-                        id="name"
-                        value={productForm.name}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter product name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sku">SKU *</Label>
-                      <Input
-                        id="sku"
-                        value={productForm.sku}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, sku: e.target.value }))}
-                        placeholder="Enter SKU"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={productForm.description}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter product description"
-                      rows={3}
-                    />
-                  </div>
-                </div>
+          <Button 
+            onClick={() => window.location.href = '/add-product'} 
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
 
-                {/* Pricing */}
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-semibold">Pricing</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="price">Price (GBP) *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.01"
-                        value={productForm.price}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="compareAtPrice">Compare at Price (GBP)</Label>
-                      <Input
-                        id="compareAtPrice"
-                        type="number"
-                        step="0.01"
-                        value={productForm.compareAtPrice}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, compareAtPrice: e.target.value }))}
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Categorization */}
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-semibold">Categorization</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="category">Category *</Label>
-                      <Select
-                        value={productForm.category}
-                        onValueChange={(value) => setProductForm(prev => ({ ...prev, category: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories?.map((category: any) => (
-                            <SelectItem key={category.id} value={category.name}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="subcategory">Subcategory</Label>
-                      <Input
-                        id="subcategory"
-                        value={productForm.subcategory}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, subcategory: e.target.value }))}
-                        placeholder="Enter subcategory"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="brand">Brand</Label>
-                      <Input
-                        id="brand"
-                        value={productForm.brand}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
-                        placeholder="Enter brand"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Inventory */}
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-semibold">Inventory Management</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input
-                        id="quantity"
-                        type="number"
-                        value={productForm.quantity}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, quantity: e.target.value }))}
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lowStockThreshold">Low Stock Threshold</Label>
-                      <Input
-                        id="lowStockThreshold"
-                        type="number"
-                        value={productForm.lowStockThreshold}
-                        onChange={(e) => setProductForm(prev => ({ ...prev, lowStockThreshold: e.target.value }))}
-                        placeholder="5"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={productForm.status}
-                    onValueChange={(value) => setProductForm(prev => ({ ...prev, status: value as any }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <Label htmlFor="tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={productForm.tags}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, tags: e.target.value }))}
-                    placeholder="tag1, tag2, tag3"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowProductDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={productMutation.isPending}>
-                  {productMutation.isPending ? 'Saving...' : (editingProduct ? 'Update' : 'Create')}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -672,7 +366,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => openEditDialog(product)}
+                        onClick={() => window.location.href = '/add-product'}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -702,7 +396,10 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && categoryFilter === 'all' && (
-                <Button onClick={() => setShowProductDialog(true)} className="bg-black text-white hover:bg-gray-800">
+                <Button 
+                  onClick={() => window.location.href = '/add-product'} 
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Your First Product
                 </Button>
