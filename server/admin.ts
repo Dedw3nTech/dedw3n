@@ -327,6 +327,139 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Deactivate vendor account (force reapplication)
+  app.patch('/api/admin/vendors/:id/deactivate', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      const { reason } = req.body;
+
+      if (!reason || typeof reason !== 'string') {
+        return res.status(400).json({ message: 'Deactivation reason is required' });
+      }
+
+      // Get vendor and user information
+      const vendorResult = await db.select({
+        vendorId: vendors.id,
+        userId: vendors.userId,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        userName: users.name,
+        userEmail: users.email
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Deactivate vendor account and force reapplication
+      await db
+        .update(vendors)
+        .set({ 
+          isActive: false,
+          isApproved: false,
+          accountStatus: 'suspended',
+          accountSuspendedAt: new Date(),
+          accountSuspensionReason: reason,
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId));
+
+      // Update user's isVendor status to false
+      await db
+        .update(users)
+        .set({ 
+          isVendor: false,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, vendor.userId));
+
+      console.log(`[ADMIN] Vendor account deactivated - User: ${vendor.userName} (ID: ${vendor.userId}), Vendor: ${vendor.storeName} (ID: ${vendorId}), Reason: ${reason}`);
+
+      res.json({ 
+        message: 'Vendor account deactivated successfully. User must reapply for vendor status.',
+        deactivatedVendor: {
+          vendorId: vendorId,
+          userId: vendor.userId,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName,
+          reason: reason
+        }
+      });
+    } catch (error) {
+      console.error('Error deactivating vendor account:', error);
+      res.status(500).json({ message: 'Error deactivating vendor account' });
+    }
+  });
+
+  // Reactivate vendor account
+  app.patch('/api/admin/vendors/:id/reactivate', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+
+      // Get vendor and user information
+      const vendorResult = await db.select({
+        vendorId: vendors.id,
+        userId: vendors.userId,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        userName: users.name
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Reactivate vendor account
+      await db
+        .update(vendors)
+        .set({ 
+          isActive: true,
+          isApproved: true,
+          accountStatus: 'active',
+          accountSuspendedAt: null,
+          accountSuspensionReason: null,
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId));
+
+      // Update user's isVendor status to true
+      await db
+        .update(users)
+        .set({ 
+          isVendor: true,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, vendor.userId));
+
+      console.log(`[ADMIN] Vendor account reactivated - User: ${vendor.userName} (ID: ${vendor.userId}), Vendor: ${vendor.storeName} (ID: ${vendorId})`);
+
+      res.json({ 
+        message: 'Vendor account reactivated successfully.',
+        reactivatedVendor: {
+          vendorId: vendorId,
+          userId: vendor.userId,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName
+        }
+      });
+    } catch (error) {
+      console.error('Error reactivating vendor account:', error);
+      res.status(500).json({ message: 'Error reactivating vendor account' });
+    }
+  });
+
   // Get all vendors
   app.get('/api/admin/vendors', isAdmin, async (req, res) => {
     try {
