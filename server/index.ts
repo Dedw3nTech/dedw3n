@@ -466,7 +466,8 @@ app.use((req, res, next) => {
       '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
       '/subscriptions', '/verify', '/reset-password', '/help', '/logout-success',
-      '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor'
+      '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',
+      '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/rqst'
     ];
     
     // Check for dynamic routes patterns that are valid

@@ -236,6 +236,10 @@ export default function Products() {
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
   const [selectedMember, setSelectedMember] = useState<any>(null);
 
+  // RQST Sell Confirmation dialog state
+  const [sellConfirmationOpen, setSellConfirmationOpen] = useState(false);
+  const [selectedSellProduct, setSelectedSellProduct] = useState<any>(null);
+
   // Member search query for share functionality
   const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
     queryKey: ['/api/users/search', memberSearchQuery],
@@ -978,6 +982,10 @@ export default function Products() {
                 e.stopPropagation();
                 if (marketType === 'c2c') {
                   setLocation(`/product/${product.id}`);
+                } else if (marketType === 'rqst') {
+                  // Show confirmation dialog for RQST marketplace
+                  setSelectedSellProduct(product);
+                  setSellConfirmationOpen(true);
                 } else {
                   addToCartMutation.mutate(product.id);
                 }
@@ -1983,6 +1991,79 @@ export default function Products() {
         </DialogContent>
       </Dialog>
 
+      {/* RQST Sell Confirmation Dialog */}
+      <Dialog open={sellConfirmationOpen} onOpenChange={setSellConfirmationOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="text-center">
+            {/* Logo */}
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/attached_assets/DEDWEN LOGO (1) (1).png" 
+                alt="Dedw3n Logo" 
+                className="h-12 w-auto"
+              />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              Add to Online Store
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Are you sure you want to add the following product to your online store?
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSellProduct && (
+            <div className="py-4">
+              <div className="flex items-start space-x-4 p-4 border rounded-lg">
+                <img
+                  src={selectedSellProduct.imageUrl || '/placeholder-image.jpg'}
+                  alt={selectedSellProduct.name}
+                  className="w-16 h-16 object-cover rounded-md"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">
+                    <ProductName productName={selectedSellProduct.name} />
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {formatPrice(selectedSellProduct.price, currencySymbol)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {selectedSellProduct.category}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setSellConfirmationOpen(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedSellProduct) {
+                  addToCartMutation.mutate(selectedSellProduct.id);
+                  setSellConfirmationOpen(false);
+                }
+              }}
+              disabled={addToCartMutation.isPending}
+              className="bg-red-600 text-white hover:bg-red-700 flex-1"
+            >
+              {addToCartMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add to Store'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       
       </div>
