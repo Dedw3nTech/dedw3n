@@ -417,6 +417,7 @@ function Router() {
       {/* Admin routes */}
       <ProtectedRoute path="/admin" component={UnifiedAdminDashboard} />
       <ProtectedRoute path="/admin/:tab" component={UnifiedAdminDashboard} />
+      <ProtectedRoute path="/unified-admin-dashboard" component={UnifiedAdminDashboard} />
       <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/admin-control-center" component={AdminControlCenter} />
       

@@ -250,6 +250,36 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Delete user account
+  app.delete('/api/admin/users/:id', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      // Check if user exists
+      const userExists = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (userExists.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Don't allow deletion of admin users
+      if (userExists[0].role === 'admin') {
+        return res.status(403).json({ message: 'Cannot delete admin users' });
+      }
+
+      // Delete user (this will cascade to related records)
+      await db.delete(users).where(eq(users.id, userId));
+
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Error deleting user' });
+    }
+  });
+
   // Get vendor requests
   app.get('/api/admin/vendor-requests', isAdmin, async (req, res) => {
     try {
