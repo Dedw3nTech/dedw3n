@@ -231,19 +231,9 @@ export default function Products() {
   });
 
   const likeMutation = useMutation({
-    mutationFn: (productId: number) => 
-      fetch(`/api/products/${productId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to like product');
-        }
-        return res.json();
-      }),
+    mutationFn: async (productId: number) => {
+      return apiRequest('POST', `/api/products/${productId}/like`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
@@ -252,29 +242,19 @@ export default function Products() {
         description: "Product added to your liked items!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to like product. Please try again.",
+        description: error.message || "Failed to like product. Please try again.",
         variant: "destructive",
       });
     }
   });
 
   const unlikeMutation = useMutation({
-    mutationFn: (productId: number) => 
-      fetch(`/api/products/${productId}/like`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to unlike product');
-        }
-        return res.json();
-      }),
+    mutationFn: async (productId: number) => {
+      return apiRequest('DELETE', `/api/products/${productId}/like`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/liked-products/count'] });
@@ -283,10 +263,10 @@ export default function Products() {
         description: "Product removed from your liked items.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error", 
-        description: "Failed to unlike product. Please try again.",
+        description: error.message || "Failed to unlike product. Please try again.",
         variant: "destructive",
       });
     }
@@ -1691,7 +1671,10 @@ export default function Products() {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (nextElement) {
+                              nextElement.style.display = 'flex';
+                            }
                           }}
                         />
                       ) : null}

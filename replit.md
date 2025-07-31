@@ -12,6 +12,16 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-31**: LIKE BUTTON AUTHENTICATION FIX COMPLETE - Resolved "Failed to like product" errors across product pages and product detail pages
+  - **COMPLETED: Products Page Authentication Fix** - Changed like/unlike mutations from direct fetch requests to unified apiRequest function
+  - **COMPLETED: Product Detail Page Like Implementation** - Added complete like functionality with proper authentication and state management
+  - **COMPLETED: TypeScript Error Resolution** - Fixed DOM manipulation TypeScript errors in gift dialog user avatar handling
+  - **COMPLETED: Storage Method Implementation** - Added missing getPlatformUsers and createGift methods to DatabaseStorage class
+  - **COMPLETED: Success/Error Handling** - Enhanced error messages to display specific API error responses for better debugging
+  - Like buttons now properly authenticate using X-Client-User-ID headers, JWT tokens, and session cookies
+  - Heart icons dynamically change color (red when liked, black when unliked) with proper visual feedback
+  - Product detail page now has full like/unlike functionality matching products page behavior
+  - All authentication patterns now use unified apiRequest function ensuring consistent header management
 - **2025-07-31**: PERSONALIZED SUCCESS POPUP ENHANCEMENT COMPLETE - Changed generic success messages to show vendor names
   - **COMPLETED: Products Page Success Message** - Changed "Your offer has been sent to the product owner" to "Your offer has been sent to [vendor name]"
   - **COMPLETED: PostCard Success Message** - Changed generic message to "Your offer has been sent to [user name/username]"

@@ -99,6 +99,76 @@ export default function ProductDetail() {
     },
     enabled: giftSearchQuery.length >= 2,
   });
+
+  // Liked products functionality
+  const { data: likedProducts = [] } = useQuery({
+    queryKey: ['/api/liked-products'],
+    queryFn: () => apiRequest('/api/liked-products'),
+  });
+
+  const likeMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      return apiRequest('POST', `/api/products/${productId}/like`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
+      toast({
+        title: "Product Liked",
+        description: "Product added to your liked items!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to like product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      return apiRequest('DELETE', `/api/products/${productId}/like`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/liked-products'] });
+      toast({
+        title: "Product Unliked",
+        description: "Product removed from your liked items.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to unlike product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Check if a product is liked
+  const isProductLiked = (productId: number) => {
+    return likedProducts.some((likedProduct: any) => likedProduct.id === productId);
+  };
+
+  // Handle like/unlike toggle
+  const handleLikeToggle = (productId: number) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to like products",
+        variant: "destructive"
+      });
+      setLocation('/auth');
+      return;
+    }
+
+    if (isProductLiked(productId)) {
+      unlikeMutation.mutate(productId);
+    } else {
+      likeMutation.mutate(productId);
+    }
+  };
   
   // Force rerender when currency changes
   useEffect(() => {
@@ -597,15 +667,13 @@ export default function ProductDetail() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                toast({
-                  title: translateText("Product Liked"),
-                  description: translateText("Added to your favorites!"),
-                });
-              }}
+              onClick={() => handleLikeToggle(product.id)}
+              disabled={likeMutation.isPending || unlikeMutation.isPending}
               className="p-2 hover:bg-gray-100"
             >
-              <Heart className="h-5 w-5 text-black" />
+              <Heart 
+                className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
+              />
             </Button>
             
             <Button
