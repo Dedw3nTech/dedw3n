@@ -32,7 +32,7 @@ import {
   Tags,
   Image as ImageIcon,
   DollarSign,
-  Package2,
+
   Truck,
   Globe
 } from 'lucide-react';
@@ -99,7 +99,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+
 
   // Product form state
   const [productForm, setProductForm] = useState({
@@ -194,20 +194,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
     }
   });
 
-  // Bulk operations mutation
-  const bulkMutation = useMutation({
-    mutationFn: async ({ action, productIds }: { action: string; productIds: number[] }) => {
-      return await apiRequest('POST', '/api/vendors/products/bulk', { action, productIds, vendorId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
-      setSelectedProducts([]);
-      toast({
-        title: "Success",
-        description: "Bulk operation completed successfully"
-      });
-    }
-  });
+
 
   const resetForm = () => {
     setProductForm({
@@ -342,10 +329,6 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowBulkActions(!showBulkActions)}>
-            <Package2 className="mr-2 h-4 w-4" />
-            Bulk Actions
-          </Button>
           <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>
@@ -588,31 +571,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Products ({filteredProducts.length})</span>
-            {selectedProducts.length > 0 && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => bulkMutation.mutate({ action: 'activate', productIds: selectedProducts })}
-                >
-                  Activate Selected
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => bulkMutation.mutate({ action: 'deactivate', productIds: selectedProducts })}
-                >
-                  Deactivate Selected
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => bulkMutation.mutate({ action: 'delete', productIds: selectedProducts })}
-                >
-                  Delete Selected
-                </Button>
-              </div>
-            )}
+
           </CardTitle>
         </CardHeader>
         <CardContent>
