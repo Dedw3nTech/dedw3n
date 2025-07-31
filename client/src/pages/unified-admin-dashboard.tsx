@@ -379,7 +379,24 @@ export default function UnifiedAdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Product Deleted",
-        description: "Product has been successfully deleted.",
+        description: "Product has been permanently deleted.",
+      });
+    },
+  });
+
+  // Vendor deletion mutation
+  const deleteVendorMutation = useMutation({
+    mutationFn: async (vendorId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/vendors/${vendorId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Vendor Deleted",
+        description: "Vendor account and all products permanently deleted.",
       });
     },
   });
@@ -1351,6 +1368,14 @@ export default function UnifiedAdminDashboard() {
                                         <Ban className="h-3 w-3" /> : 
                                         <CheckCircle className="h-3 w-3" />
                                       }
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => deleteVendorMutation.mutate(vendor.id)}
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
                                     </Button>
                                   </div>
                                 </TableCell>

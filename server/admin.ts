@@ -460,6 +460,112 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Delete vendor account (PERMANENT DELETION)
+  app.delete('/api/admin/vendors/:id', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+
+      // Get vendor and user information before deletion
+      const vendorResult = await db.select({
+        vendorId: vendors.id,
+        userId: vendors.userId,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        userName: users.name,
+        userEmail: users.email
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Delete all products associated with this vendor
+      const deletedProducts = await db.delete(products).where(eq(products.vendorId, vendorId));
+
+      // Delete vendor account
+      await db.delete(vendors).where(eq(vendors.id, vendorId));
+
+      // Update user's isVendor status to false
+      await db
+        .update(users)
+        .set({ 
+          isVendor: false,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, vendor.userId));
+
+      console.log(`[ADMIN] PERMANENT VENDOR DELETION - User: ${vendor.userName} (ID: ${vendor.userId}), Vendor: ${vendor.storeName} (ID: ${vendorId}), Products deleted: ${deletedProducts.rowCount || 0}`);
+
+      res.json({ 
+        message: 'Vendor account and all associated products permanently deleted.',
+        deletedVendor: {
+          vendorId: vendorId,
+          userId: vendor.userId,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName,
+          productsDeleted: deletedProducts.rowCount || 0
+        }
+      });
+    } catch (error) {
+      console.error('Error deleting vendor account:', error);
+      res.status(500).json({ message: 'Error deleting vendor account' });
+    }
+  });
+
+  // Delete product (PERMANENT DELETION)
+  app.delete('/api/admin/products/:id', isAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+
+      // Get product information before deletion
+      const productResult = await db.select({
+        productId: products.id,
+        productName: products.name,
+        productCode: products.code,
+        vendorId: products.vendorId,
+        storeName: vendors.storeName,
+        userName: users.name
+      })
+      .from(products)
+      .leftJoin(vendors, eq(products.vendorId, vendors.id))
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(products.id, productId))
+      .limit(1);
+
+      if (productResult.length === 0) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      const product = productResult[0];
+
+      // Delete the product
+      const deletedProduct = await db.delete(products).where(eq(products.id, productId));
+
+      console.log(`[ADMIN] PERMANENT PRODUCT DELETION - Product: ${product.productName} (ID: ${productId}, Code: ${product.productCode}), Vendor: ${product.storeName}, User: ${product.userName}`);
+
+      res.json({ 
+        message: 'Product permanently deleted.',
+        deletedProduct: {
+          productId: productId,
+          productName: product.productName,
+          productCode: product.productCode,
+          vendorId: product.vendorId,
+          storeName: product.storeName,
+          userName: product.userName
+        }
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ message: 'Error deleting product' });
+    }
+  });
+
   // Get all vendors
   app.get('/api/admin/vendors', isAdmin, async (req, res) => {
     try {
