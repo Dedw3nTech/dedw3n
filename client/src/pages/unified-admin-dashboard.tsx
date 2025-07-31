@@ -213,7 +213,7 @@ export default function UnifiedAdminDashboard() {
   });
 
   // Fetch all users
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+  const { data: usersData = { users: [], totalCount: 0 }, isLoading: usersLoading } = useQuery<{users: User[], totalCount: number}>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
@@ -221,6 +221,8 @@ export default function UnifiedAdminDashboard() {
     },
     enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
+  
+  const users = usersData.users || [];
 
   // Fetch reports
   const { data: reports = [], isLoading: reportsLoading } = useQuery<Report[]>({
@@ -243,7 +245,7 @@ export default function UnifiedAdminDashboard() {
   });
 
   // Fetch all vendors (approved/active vendors)
-  const { data: vendors = [], isLoading: vendorsLoading } = useQuery<Vendor[]>({
+  const { data: vendorsData = { vendors: [], totalCount: 0 }, isLoading: vendorsLoading } = useQuery<{vendors: Vendor[], totalCount: number}>({
     queryKey: ['/api/admin/vendors'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/vendors');
@@ -251,9 +253,11 @@ export default function UnifiedAdminDashboard() {
     },
     enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
+  
+  const vendors = vendorsData.vendors || [];
 
   // Fetch all products
-  const { data: products = [], isLoading: productsLoading } = useQuery<any[]>({
+  const { data: productsData = { products: [], totalCount: 0 }, isLoading: productsLoading } = useQuery<{products: any[], totalCount: number}>({
     queryKey: ['/api/admin/products'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/products');
@@ -261,6 +265,8 @@ export default function UnifiedAdminDashboard() {
     },
     enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
+  
+  const products = productsData.products || [];
 
   // User management mutations
   const updateUserMutation = useMutation({

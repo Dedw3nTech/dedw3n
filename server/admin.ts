@@ -22,7 +22,7 @@ export const isAdmin = async (req: any, res: any, next: any) => {
     // Third priority: Check session passport data directly
     else if (req.session && (req.session as any).passport?.user) {
       userId = (req.session as any).passport.user;
-      const dbUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const dbUsers = await db.select().from(users).where(eq(users.id, userId!)).limit(1);
       user = dbUsers[0];
     }
     // Fourth priority: Check for client user ID header
@@ -31,7 +31,7 @@ export const isAdmin = async (req: any, res: any, next: any) => {
       if (typeof clientUserId === 'string') {
         userId = parseInt(clientUserId);
         if (!isNaN(userId)) {
-          const dbUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+          const dbUsers = await db.select().from(users).where(eq(users.id, userId!)).limit(1);
           user = dbUsers[0];
         }
       }
@@ -324,6 +324,149 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error('Error updating vendor request:', error);
       res.status(500).json({ message: 'Error updating vendor request' });
+    }
+  });
+
+  // Get all vendors
+  app.get('/api/admin/vendors', isAdmin, async (req, res) => {
+    try {
+      const searchTerm = req.query.search as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = (page - 1) * limit;
+
+      let allVendors;
+
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        allVendors = await db.select({
+          id: vendors.id,
+          userId: vendors.userId,
+          vendorType: vendors.vendorType,
+          businessName: vendors.businessName,
+          storeName: vendors.storeName,
+          address: vendors.address,
+          phone: vendors.phone,
+          email: vendors.email,
+          description: vendors.description,
+          website: vendors.website,
+          logo: vendors.logo,
+          rating: vendors.rating,
+          ratingCount: vendors.ratingCount,
+          badgeLevel: vendors.badgeLevel,
+          totalSalesAmount: vendors.totalSalesAmount,
+          totalTransactions: vendors.totalTransactions,
+          accountStatus: vendors.accountStatus,
+          isActive: vendors.isActive,
+          isApproved: vendors.isApproved,
+          createdAt: vendors.createdAt,
+          updatedAt: vendors.updatedAt,
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar,
+          userRole: users.role,
+          userLastLogin: users.lastLogin,
+          userCreatedAt: users.createdAt
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .where(
+          sql`LOWER(${vendors.businessName}) LIKE ${`%${searchLower}%`} OR 
+              LOWER(${vendors.storeName}) LIKE ${`%${searchLower}%`} OR 
+              LOWER(${users.name}) LIKE ${`%${searchLower}%`} OR 
+              LOWER(${users.username}) LIKE ${`%${searchLower}%`}`
+        )
+        .orderBy(desc(vendors.createdAt))
+        .limit(limit)
+        .offset(offset);
+      } else {
+        allVendors = await db.select({
+          id: vendors.id,
+          userId: vendors.userId,
+          vendorType: vendors.vendorType,
+          businessName: vendors.businessName,
+          storeName: vendors.storeName,
+          address: vendors.address,
+          phone: vendors.phone,
+          email: vendors.email,
+          description: vendors.description,
+          website: vendors.website,
+          logo: vendors.logo,
+          rating: vendors.rating,
+          ratingCount: vendors.ratingCount,
+          badgeLevel: vendors.badgeLevel,
+          totalSalesAmount: vendors.totalSalesAmount,
+          totalTransactions: vendors.totalTransactions,
+          accountStatus: vendors.accountStatus,
+          isActive: vendors.isActive,
+          isApproved: vendors.isApproved,
+          createdAt: vendors.createdAt,
+          updatedAt: vendors.updatedAt,
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar,
+          userRole: users.role,
+          userLastLogin: users.lastLogin,
+          userCreatedAt: users.createdAt
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .orderBy(desc(vendors.createdAt))
+        .limit(limit)
+        .offset(offset);
+      }
+
+      // Transform the data to match the expected format
+      const formattedVendors = allVendors.map(vendor => ({
+        id: vendor.id,
+        userId: vendor.userId,
+        vendorType: vendor.vendorType,
+        businessName: vendor.businessName,
+        storeName: vendor.storeName,
+        address: vendor.address,
+        phone: vendor.phone,
+        email: vendor.email,
+        description: vendor.description,
+        website: vendor.website,
+        logo: vendor.logo,
+        rating: vendor.rating,
+        ratingCount: vendor.ratingCount,
+        badgeLevel: vendor.badgeLevel,
+        totalSalesAmount: vendor.totalSalesAmount,
+        totalTransactions: vendor.totalTransactions,
+        accountStatus: vendor.accountStatus,
+        isActive: vendor.isActive,
+        isApproved: vendor.isApproved,
+        createdAt: vendor.createdAt,
+        updatedAt: vendor.updatedAt,
+        user: {
+          id: vendor.userId,
+          name: vendor.userName,
+          username: vendor.userUsername,
+          email: vendor.userEmail,
+          avatar: vendor.userAvatar,
+          role: vendor.userRole,
+          lastLogin: vendor.userLastLogin,
+          createdAt: vendor.userCreatedAt
+        }
+      }));
+
+      // Get total count for pagination
+      const totalCountResult = await db.select({ count: count() }).from(vendors);
+      const totalCount = totalCountResult[0]?.count || 0;
+
+      res.json({
+        vendors: formattedVendors,
+        totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      });
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+      res.status(500).json({ message: 'Error fetching vendors' });
     }
   });
 
