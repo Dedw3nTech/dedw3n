@@ -2037,21 +2037,25 @@ export default function Products() {
             <Button
               onClick={() => {
                 if (selectedSellProduct) {
-                  addToCartMutation.mutate(selectedSellProduct.id);
+                  // Navigate to add-product page with pre-filled data
+                  const productData = encodeURIComponent(JSON.stringify({
+                    name: selectedSellProduct.name,
+                    price: selectedSellProduct.price,
+                    category: selectedSellProduct.category,
+                    description: selectedSellProduct.description || '',
+                    imageUrl: selectedSellProduct.imageUrl || '',
+                    weight: selectedSellProduct.weight || 0,
+                    stock: selectedSellProduct.stock || 1,
+                    type: selectedSellProduct.type || 'product'
+                  }));
+                  setLocation(`/add-product?prefill=${productData}`);
                   setSellConfirmationOpen(false);
                 }
               }}
-              disabled={addToCartMutation.isPending}
+              disabled={false}
               className="bg-red-600 text-white hover:bg-red-700 flex-1"
             >
-              {addToCartMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
                 'Add to Store'
-              )}
             </Button>
           </DialogFooter>
         </DialogContent>

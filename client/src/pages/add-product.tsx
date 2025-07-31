@@ -98,6 +98,19 @@ export default function AddProduct() {
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
   const [showVendorDialog, setShowVendorDialog] = useState(false);
 
+  // Parse URL parameters for prefill data
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefillData = urlParams.get('prefill');
+  let parsedPrefillData = null;
+
+  if (prefillData) {
+    try {
+      parsedPrefillData = JSON.parse(decodeURIComponent(prefillData));
+    } catch (error) {
+      console.error('Error parsing prefill data:', error);
+    }
+  }
+
   // State for media uploads
   const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; preview: string }>>([]);
   const [uploadedVideo, setUploadedVideo] = useState<{ file: File; preview: string } | null>(null);
@@ -364,26 +377,26 @@ export default function AddProduct() {
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;
 
-  // Form initialization
+  // Form initialization with prefill support
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      price: 0,
+      name: parsedPrefillData?.name || '',
+      description: parsedPrefillData?.description || '',
+      price: parsedPrefillData?.price || 0,
       discountPrice: undefined,
-      category: '',
-      imageUrl: '',
-      inventory: 1,
+      category: parsedPrefillData?.category || '',
+      imageUrl: parsedPrefillData?.imageUrl || '',
+      inventory: parsedPrefillData?.stock || 1,
       isNew: true,
       isOnSale: false,
       // New Shopify-style field defaults
       status: 'active',
-      offeringType: 'product',
+      offeringType: parsedPrefillData?.type || 'product',
       vendor: '',
       collections: [],
       tags: [],
-      weight: undefined,
+      weight: parsedPrefillData?.weight || undefined,
       weightUnit: 'kg',
       dimensions: '',
       sku: '',
@@ -522,6 +535,22 @@ export default function AddProduct() {
 
     checkVendorStatus();
   }, [user]);
+
+  // Show success message when form is pre-filled from RQST
+  useEffect(() => {
+    if (parsedPrefillData && parsedPrefillData.name) {
+      toast({
+        title: "Product Data Auto-Filled",
+        description: `Product "${parsedPrefillData.name}" data has been automatically filled. Review and click Publish to add to your store.`,
+        duration: 5000,
+      });
+      
+      // Auto-populate image URLs if provided
+      if (parsedPrefillData.imageUrl && parsedPrefillData.imageUrl !== '/placeholder-image.jpg') {
+        setImageUrls([parsedPrefillData.imageUrl]);
+      }
+    }
+  }, [parsedPrefillData, toast]);
 
   // Create vendor mutation
   const createVendorMutation = useMutation({
@@ -822,6 +851,29 @@ export default function AddProduct() {
       <div className="flex items-center gap-2 mb-6">
         <h1 className="text-2xl font-bold">{t("Add Product / Service")}</h1>
       </div>
+
+      {/* Pre-filled Data Indicator */}
+      {parsedPrefillData && parsedPrefillData.name && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                Product Data Auto-Filled from RQST
+              </h3>
+              <div className="mt-2 text-sm text-green-700">
+                <p>Product "{parsedPrefillData.name}" has been automatically filled. Review the details below and click Publish to add to your store.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -1948,11 +2000,11 @@ export default function AddProduct() {
             </div>
           </div>
           
-          {/* Upload Button */}
+          {/* Publish Button */}
           <div className="flex justify-center mt-8">
-            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-blue-600 hover:bg-blue-700 text-white">
+            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-black hover:bg-gray-800 text-white">
               {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {createProductMutation.isPending ? t("Uploading...") : t("Upload Product")}
+              {createProductMutation.isPending ? t("Publishing...") : t("Publish")}
             </Button>
           </div>
         </form>
