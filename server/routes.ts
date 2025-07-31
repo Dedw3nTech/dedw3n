@@ -13304,20 +13304,72 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Create Stripe payment intent for commission payment
+  // Create payment intent for commission payment with multiple gateways
   app.post('/api/commission-periods/:periodId/payment-intent', async (req: Request, res: Response) => {
     try {
       const periodId = parseInt(req.params.periodId);
+      const { gateway = 'stripe' } = req.body;
+      
       if (isNaN(periodId)) {
         return res.status(400).json({ message: 'Invalid commission period ID' });
       }
 
-      const paymentIntent = await commissionService.createCommissionPaymentIntent(periodId);
+      const paymentIntent = await commissionService.createCommissionPaymentIntent(periodId, gateway);
       res.json(paymentIntent);
     } catch (error) {
       console.error('Error creating payment intent:', error);
       res.status(500).json({ message: 'Failed to create payment intent' });
     }
+  });
+
+  // Get available payment methods for vendor
+  app.get('/api/vendors/:vendorId/payment-methods', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      const paymentMethods = await commissionService.getAvailablePaymentMethods(vendorId);
+      res.json(paymentMethods);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      res.status(500).json({ message: 'Failed to fetch payment methods' });
+    }
+  });
+
+  // Capture payment after completion
+  app.post('/api/payments/:paymentId/capture', async (req: Request, res: Response) => {
+    try {
+      const { paymentId } = req.params;
+      const { gateway } = req.body;
+
+      if (!gateway) {
+        return res.status(400).json({ message: 'Gateway type is required' });
+      }
+
+      const result = await commissionService.captureCommissionPayment(paymentId, gateway);
+      res.json(result);
+    } catch (error) {
+      console.error('Error capturing payment:', error);
+      res.status(500).json({ message: 'Failed to capture payment' });
+    }
+  });
+
+  // PayPal integration routes
+  const { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } = require('./paypal');
+
+  app.get("/api/paypal/setup", async (req: Request, res: Response) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/api/paypal/order", async (req: Request, res: Response) => {
+    // Request body should contain: { intent, amount, currency }
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/api/paypal/order/:orderID/capture", async (req: Request, res: Response) => {
+    await capturePaypalOrder(req, res);
   });
 
   // Check for pending payment notifications (monthly popup)

@@ -11,11 +11,7 @@ import {
   users
 } from '../shared/schema';
 import { eq, and, gte, lte, desc, asc, sql } from 'drizzle-orm';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+import { paymentGatewayFactory } from './payment-gateways';
 
 export class CommissionService {
   // Calculate commission tier based on monthly sales volume
@@ -487,8 +483,8 @@ export class CommissionService {
     }
   }
 
-  // Create Stripe payment intent for commission payment
-  async createCommissionPaymentIntent(commissionPeriodId: number) {
+  // Create payment intent for commission payment using multiple gateways
+  async createCommissionPaymentIntent(commissionPeriodId: number, gatewayType: string = 'stripe') {
     const period = await db
       .select()
       .from(vendorCommissionPeriods)
@@ -500,42 +496,122 @@ export class CommissionService {
     }
 
     const commission = period[0];
-    const amountInPence = Math.round(Number(commission.commissionAmount) * 100);
+    const amount = Number(commission.commissionAmount);
 
     try {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amountInPence,
-        currency: 'gbp',
-        metadata: {
+      const paymentData = await paymentGatewayFactory.createPayment(
+        gatewayType,
+        amount,
+        'GBP',
+        {
           type: 'commission_payment',
           commission_period_id: commissionPeriodId.toString(),
           vendor_id: commission.vendorId.toString(),
           month: commission.month.toString(),
           year: commission.year.toString(),
-        },
-        description: `Commission payment for ${commission.month}/${commission.year}`,
-      });
+          description: `Commission payment for ${commission.month}/${commission.year}`,
+        }
+      );
 
-      // Create payment record
-      await db.insert(vendorCommissionPayments).values({
+      // Create payment record with gateway-specific data
+      const paymentRecord: any = {
         commissionPeriodId,
         vendorId: commission.vendorId,
         amount: commission.commissionAmount,
         currency: 'GBP',
-        paymentMethod: 'stripe',
-        stripePaymentIntentId: paymentIntent.id,
+        paymentMethod: gatewayType,
         status: 'pending',
-      });
+      };
+
+      // Add gateway-specific fields
+      if (gatewayType === 'stripe') {
+        paymentRecord.stripePaymentIntentId = paymentData.paymentId;
+      } else if (gatewayType === 'bank_transfer') {
+        paymentRecord.bankTransferReference = paymentData.paymentId;
+      } else if (gatewayType === 'mobile_money') {
+        paymentRecord.mobileMoneyReference = paymentData.paymentId;
+      }
+
+      await db.insert(vendorCommissionPayments).values(paymentRecord);
 
       return {
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        gateway: gatewayType,
+        paymentData,
         amount: commission.commissionAmount,
       };
     } catch (error) {
-      console.error('[Commission] Error creating payment intent:', error);
+      console.error(`[Commission] Error creating ${gatewayType} payment:`, error);
       throw error;
     }
+  }
+
+  // Get available payment methods for vendor
+  async getAvailablePaymentMethods(vendorId: number) {
+    // Get vendor's location/region to determine available payment methods
+    const vendor = await db
+      .select({
+        id: vendors.id,
+        userId: vendors.userId,
+      })
+      .from(vendors)
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+    if (!vendor.length) {
+      throw new Error('Vendor not found');
+    }
+
+    // Get user's country/region
+    const user = await db
+      .select({ country: users.country, region: users.region })
+      .from(users)
+      .where(eq(users.id, vendor[0].userId))
+      .limit(1);
+
+    const userCountry = user.length > 0 ? user[0].country : null;
+    const userRegion = user.length > 0 ? user[0].region : null;
+
+    // Define available payment methods based on location
+    const allMethods = [
+      {
+        id: 'stripe',
+        name: 'Credit/Debit Card',
+        description: 'Pay securely with your card',
+        icon: 'credit-card',
+        processingTime: 'Instant',
+        fees: '2.9% + 30p',
+        supported: true, // Stripe is available globally
+      },
+      {
+        id: 'paypal',
+        name: 'PayPal',
+        description: 'Pay with your PayPal account',
+        icon: 'paypal',
+        processingTime: 'Instant',
+        fees: '3.4% + 20p',
+        supported: true, // PayPal is available globally
+      },
+      {
+        id: 'bank_transfer',
+        name: 'Bank Transfer',
+        description: 'Direct bank transfer (UK only)',
+        icon: 'bank',
+        processingTime: '1-3 business days',
+        fees: 'Free',
+        supported: userCountry === 'GB' || userRegion === 'Europe',
+      },
+      {
+        id: 'mobile_money',
+        name: 'Mobile Money',
+        description: 'M-Pesa, Airtel Money (Africa only)',
+        icon: 'smartphone',
+        processingTime: 'Instant',
+        fees: '1.5%',
+        supported: userRegion === 'Africa',
+      },
+    ];
+
+    return allMethods.filter(method => method.supported);
   }
 
   // Process monthly billing for all vendors (called on 1st of each month)
@@ -654,6 +730,59 @@ export class CommissionService {
     } catch (error) {
       console.error('[Commission] Error checking pending payments:', error);
       return null;
+    }
+  }
+
+  // Capture commission payment
+  async captureCommissionPayment(paymentId: string, gatewayType: string) {
+    try {
+      const result = await paymentGatewayFactory.capturePayment(gatewayType, paymentId);
+      
+      // Update payment record
+      const updateData: any = {
+        status: 'completed',
+        completedAt: new Date(),
+      };
+
+      let whereCondition;
+      if (gatewayType === 'stripe') {
+        whereCondition = eq(vendorCommissionPayments.stripePaymentIntentId, paymentId);
+      } else if (gatewayType === 'bank_transfer') {
+        whereCondition = eq(vendorCommissionPayments.bankTransferReference, paymentId);
+      } else if (gatewayType === 'mobile_money') {
+        whereCondition = eq(vendorCommissionPayments.mobileMoneyReference, paymentId);
+      }
+
+      if (whereCondition) {
+        await db
+          .update(vendorCommissionPayments)
+          .set(updateData)
+          .where(whereCondition);
+
+        // Update commission period status
+        const payment = await db
+          .select({ commissionPeriodId: vendorCommissionPayments.commissionPeriodId })
+          .from(vendorCommissionPayments)
+          .where(whereCondition)
+          .limit(1);
+
+        if (payment.length > 0) {
+          await db
+            .update(vendorCommissionPeriods)
+            .set({ 
+              status: 'paid',
+              paidDate: new Date(),
+              paymentMethod: gatewayType,
+              paymentReference: paymentId,
+            })
+            .where(eq(vendorCommissionPeriods.id, payment[0].commissionPeriodId));
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error(`[Commission] Error capturing ${gatewayType} payment:`, error);
+      throw error;
     }
   }
 

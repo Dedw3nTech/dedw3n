@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Calendar, CreditCard, Clock, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useQuery } from '@tanstack/react-query';
+import PaymentGatewaySelector from './PaymentGatewaySelector';
+import MultiPaymentProcessor from './MultiPaymentProcessor';
 
-// Load Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+// Payment process stages
+type PaymentStage = 'method_selection' | 'payment_processing' | 'payment_success';
 
 interface CommissionBillingPopupProps {
   vendorId: number;
@@ -30,150 +31,14 @@ interface CommissionBillingPopupProps {
   } | null;
 }
 
-interface PaymentFormProps {
-  pendingPayments: NonNullable<CommissionBillingPopupProps['pendingPayments']>;
-  onPaymentSuccess: () => void;
-}
-
-// Payment form component that handles Stripe payment
-function PaymentForm({ pendingPayments, onPaymentSuccess }: PaymentFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string>('');
-  const { toast } = useToast();
-  const { formatPrice } = useCurrency();
-
-  useEffect(() => {
-    // Create payment intent when component mounts
-    const createPaymentIntent = async () => {
-      try {
-        const response = await fetch('/api/commission-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Client-User-ID': localStorage.getItem('userId') || '',
-          },
-          body: JSON.stringify({
-            amount: pendingPayments.totalAmount,
-            paymentIds: pendingPayments.payments.map(p => p.id),
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setClientSecret(data.clientSecret);
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to initialize payment. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error('Error creating payment intent:', error);
-        toast({
-          title: "Error",
-          description: "Failed to initialize payment. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    createPaymentIntent();
-  }, [pendingPayments.totalAmount, pendingPayments.payments, toast]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!stripe || !elements || !clientSecret) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/vendor-dashboard?tab=commission&payment=success`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Payment Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Payment Successful",
-          description: "Your commission payment has been processed successfully!",
-        });
-        onPaymentSuccess();
-      }
-    } catch (error) {
-      toast({
-        title: "Payment Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  if (!clientSecret) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-        <span className="ml-3">Initializing payment...</span>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <div className="flex items-center mb-3">
-          <Banknote className="h-5 w-5 text-blue-600 mr-2" />
-          <h4 className="font-semibold text-blue-900">Payment Summary</h4>
-        </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Commission payments:</span>
-            <span>{pendingPayments.paymentCount} month(s)</span>
-          </div>
-          <div className="flex justify-between font-bold text-lg">
-            <span>Total amount:</span>
-            <span>{formatPrice(pendingPayments.totalAmount)}</span>
-          </div>
-        </div>
-      </div>
-
-      <PaymentElement />
-
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full bg-black hover:bg-gray-800"
-        size="lg"
-      >
-        {isProcessing ? (
-          <>
-            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-            Processing Payment...
-          </>
-        ) : (
-          <>
-            <CreditCard className="h-4 w-4 mr-2" />
-            Pay {formatPrice(pendingPayments.totalAmount)}
-          </>
-        )}
-      </Button>
-    </form>
-  );
+// Payment methods interface
+interface PaymentMethod {
+  id: string;
+  name: string;
+  description: string;
+  processingTime: string;
+  fees: string;
+  supported: boolean;
 }
 
 export default function CommissionBillingPopup({
@@ -182,16 +47,42 @@ export default function CommissionBillingPopup({
   onClose,
   pendingPayments,
 }: CommissionBillingPopupProps) {
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentStage, setPaymentStage] = useState<PaymentStage>('method_selection');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const { formatPrice } = useCurrency();
   const { toast } = useToast();
 
+  // Fetch available payment methods for this vendor
+  const { data: paymentMethods, isLoading: loadingMethods } = useQuery<PaymentMethod[]>({
+    queryKey: ['/api/vendors', vendorId, 'payment-methods'],
+    enabled: !!vendorId && isOpen,
+  });
+
   const handlePaymentSuccess = () => {
-    setShowPaymentForm(false);
-    onClose();
-    // Refresh commission dashboard data
-    window.location.reload();
+    setPaymentStage('payment_success');
+    setTimeout(() => {
+      onClose();
+      // Refresh commission dashboard data
+      window.location.reload();
+    }, 2000);
   };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+    setPaymentStage('method_selection');
+  };
+
+  // Reset state when popup is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setPaymentStage('method_selection');
+      setSelectedPaymentMethod('');
+    }
+  }, [isOpen]);
 
   const formatDueDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -319,33 +210,98 @@ export default function CommissionBillingPopup({
             ))}
           </div>
 
-          {/* Payment Form or Pay Button */}
-          {showPaymentForm ? (
-            <Elements stripe={stripePromise}>
-              <PaymentForm
-                pendingPayments={pendingPayments}
-                onPaymentSuccess={handlePaymentSuccess}
+          {/* Payment Stage Content */}
+          {loadingMethods ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+              <span className="ml-3">Loading payment methods...</span>
+            </div>
+          ) : paymentStage === 'method_selection' ? (
+            <div className="space-y-6">
+              <PaymentGatewaySelector
+                amount={pendingPayments.totalAmount}
+                currency="GBP"
+                onPaymentMethodSelect={setSelectedPaymentMethod}
+                selectedMethod={selectedPaymentMethod}
               />
-            </Elements>
-          ) : (
-            <div className="flex space-x-3">
-              <Button
-                onClick={() => setShowPaymentForm(true)}
-                className="flex-1 bg-black hover:bg-gray-800"
-                size="lg"
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Pay Now
-              </Button>
+              <div className="flex space-x-3">
+                <Button
+                  onClick={() => {
+                    if (selectedPaymentMethod) {
+                      setPaymentStage('payment_processing');
+                    } else {
+                      toast({
+                        title: "Select Payment Method",
+                        description: "Please select a payment method to continue.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  disabled={!selectedPaymentMethod}
+                  className="flex-1 bg-black hover:bg-gray-800"
+                  size="lg"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Continue to Payment
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  size="lg"
+                >
+                  Pay Later
+                </Button>
+              </div>
+            </div>
+          ) : paymentStage === 'payment_processing' ? (
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center mb-3">
+                  <Banknote className="h-5 w-5 text-blue-600 mr-2" />
+                  <h4 className="font-semibold text-blue-900">Payment Summary</h4>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Commission payments:</span>
+                    <span>{pendingPayments.paymentCount} month(s)</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total amount:</span>
+                    <span>{formatPrice(pendingPayments.totalAmount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <MultiPaymentProcessor
+                amount={pendingPayments.totalAmount}
+                currency="GBP"
+                paymentMethod={selectedPaymentMethod}
+                commissionPeriodIds={pendingPayments.payments.map(p => p.id)}
+                vendorId={vendorId}
+                onPaymentSuccess={handlePaymentSuccess}
+                onPaymentError={handlePaymentError}
+              />
+
               <Button
                 variant="outline"
-                onClick={onClose}
-                size="lg"
+                onClick={() => setPaymentStage('method_selection')}
+                className="w-full"
               >
-                Pay Later
+                ← Back to Payment Methods
               </Button>
             </div>
-          )}
+          ) : paymentStage === 'payment_success' ? (
+            <div className="text-center p-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Payment Successful!</h3>
+              <p className="text-gray-600">
+                Your commission payment has been processed successfully. 
+                Your account will be updated shortly.
+              </p>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

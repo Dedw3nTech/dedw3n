@@ -49,9 +49,9 @@ export default function VendorBillingDashboard({ vendorId }: VendorBillingDashbo
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
 
-  // Fetch billing dashboard data
+  // Fetch billing dashboard data (for now using commission data)
   const { data: billingData, isLoading, error, refetch } = useQuery<BillingData>({
-    queryKey: ['/api/vendors', vendorId, 'billing-dashboard'],
+    queryKey: ['/api/vendors', vendorId, 'commission-dashboard'],
     enabled: !!vendorId,
   });
 
