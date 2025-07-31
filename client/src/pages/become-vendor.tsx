@@ -33,18 +33,6 @@ const privateVendorSchema = z.object({
   zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
   country: z.string().min(2, "Country must be at least 2 characters"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
-  hasSalesManager: z.boolean().default(false),
-  salesManagerName: z.string().optional(),
-  salesManagerId: z.string().optional(),
-}).refine((data) => {
-  if (data.hasSalesManager) {
-    return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
-           data.salesManagerId && data.salesManagerId.trim().length > 0;
-  }
-  return true;
-}, {
-  message: "Sales Manager name and ID are required when Sales Manager is selected",
-  path: ["salesManagerName"],
 });
 
 // Business Vendor Schema - Comprehensive form with all business fields
@@ -85,20 +73,6 @@ const businessVendorSchema = z.object({
   bankName: z.string().min(2, "Bank name required"),
   bankAccountNumber: z.string().min(5, "Bank account number required"),
   routingNumber: z.string().min(5, "Routing number required"),
-  
-  // Sales manager
-  hasSalesManager: z.boolean().default(false),
-  salesManagerName: z.string().optional(),
-  salesManagerId: z.string().optional(),
-}).refine((data) => {
-  if (data.hasSalesManager) {
-    return data.salesManagerName && data.salesManagerName.trim().length > 0 &&
-           data.salesManagerId && data.salesManagerId.trim().length > 0;
-  }
-  return true;
-}, {
-  message: "Sales Manager name and ID are required when Sales Manager is selected",
-  path: ["salesManagerName"],
 });
 
 type PrivateVendorForm = z.infer<typeof privateVendorSchema>;
@@ -1075,64 +1049,7 @@ export default function BecomeVendorPage() {
                 </CardContent>
               </Card>
 
-              {/* Sales Manager */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{salesManagerText}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={businessForm.control}
-                    name="hasSalesManager"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">{hasSalesManagerText}</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            {salesManagerCommissionText}
-                          </p>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  {businessForm.watch("hasSalesManager") && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={businessForm.control}
-                        name="salesManagerName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{salesManagerNameText}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={salesManagerNamePlaceholderText} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={businessForm.control}
-                        name="salesManagerId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{salesManagerIdText}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={salesManagerIdPlaceholderText} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+
 
               {/* Submit Button */}
               <div className="flex justify-center pt-6">
