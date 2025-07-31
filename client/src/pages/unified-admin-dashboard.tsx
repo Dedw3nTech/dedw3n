@@ -46,6 +46,9 @@ interface User {
   isVendor: boolean;
   datingEnabled: boolean;
   datingSubscription?: string;
+  city?: string;
+  country?: string;
+  region?: string;
 }
 
 interface Report {
@@ -135,6 +138,13 @@ interface AdminStats {
   productCount: number;
   orderCount: number;
   communityCount: number;
+  totalDatingProfiles: number;
+  activeDatingProfiles: number;
+  activeVendors: number;
+  totalAmountSold: number;
+  totalTransactions: number;
+  totalAmountShipped: number;
+  shippedOrders: number;
 }
 
 // Master Translation mega-batch for Unified Admin Dashboard
@@ -908,6 +918,7 @@ export default function UnifiedAdminDashboard() {
                                 )}
                               </div>
                             </TableHead>
+                            <TableHead>Location</TableHead>
                             <TableHead>Vendor Status</TableHead>
                             <TableHead>Dating Status</TableHead>
                             <TableHead>Actions</TableHead>
@@ -916,13 +927,13 @@ export default function UnifiedAdminDashboard() {
                         <TableBody>
                           {usersLoading ? (
                             <TableRow>
-                              <TableCell colSpan={8} className="text-center py-8">
+                              <TableCell colSpan={9} className="text-center py-8">
                                 Loading users...
                               </TableCell>
                             </TableRow>
                           ) : filteredUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={8} className="text-center py-8">
+                              <TableCell colSpan={9} className="text-center py-8">
                                 No users found
                               </TableCell>
                             </TableRow>
@@ -959,6 +970,24 @@ export default function UnifiedAdminDashboard() {
                                 </TableCell>
                                 <TableCell>
                                   {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {user.city && user.country ? (
+                                      <div>
+                                        <p className="font-medium">{user.city}</p>
+                                        <p className="text-gray-500">{user.country}</p>
+                                        {user.region && <p className="text-xs text-gray-400">{user.region}</p>}
+                                      </div>
+                                    ) : user.country ? (
+                                      <div>
+                                        <p className="font-medium">{user.country}</p>
+                                        {user.region && <p className="text-xs text-gray-400">{user.region}</p>}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400">Not set</span>
+                                    )}
+                                  </div>
                                 </TableCell>
                                 <TableCell>
                                   <Badge className={user.isVendor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
