@@ -750,7 +750,7 @@ export default function BecomeVendorPage() {
                       name="businessRegistrationNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{businessRegNumberText}</FormLabel>
+                          <FormLabel>{businessRegNumberText} *</FormLabel>
                           <FormControl>
                             <Input placeholder={businessRegNumberPlaceholderText} {...field} />
                           </FormControl>
