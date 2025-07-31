@@ -1643,7 +1643,6 @@ export default function Products() {
       <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{sendGiftTitle}</DialogTitle>
             <DialogDescription>
               {sendProductAsGiftText}
             </DialogDescription>
