@@ -31,8 +31,20 @@ import {
   AlertTriangle,
   Building,
   FileText,
-  Banknote
+  Banknote,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface VendorData {
   id: number;
@@ -775,6 +787,90 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                 <Save className="mr-2 h-4 w-4" />
                 {updateVendorMutation.isPending ? 'Saving...' : 'Save Preferences'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Delete Account Section */}
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="h-5 w-5" />
+                Delete Vendor Account
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-destructive">Warning: This action cannot be undone</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Deleting your vendor account will permanently remove:
+                    </p>
+                    <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                      <li>• All your products and listings</li>
+                      <li>• Order history and customer data</li>
+                      <li>• Payment information and bank details</li>
+                      <li>• Reviews and ratings</li>
+                      <li>• Store customization and branding</li>
+                    </ul>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      You will lose access to your vendor dashboard and all associated data. This action cannot be reversed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full bg-red-600 hover:bg-red-700"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Vendor Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
+                      Confirm Account Deletion
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-3">
+                      <p>
+                        Are you absolutely sure you want to delete your vendor account? This will:
+                      </p>
+                      <ul className="text-sm space-y-1 ml-4">
+                        <li>• Permanently delete all your products and data</li>
+                        <li>• Remove your store from the marketplace</li>
+                        <li>• Cancel any pending orders</li>
+                        <li>• Delete all customer interactions and reviews</li>
+                      </ul>
+                      <p className="font-medium text-destructive">
+                        This action cannot be undone. All data will be permanently lost.
+                      </p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={() => {
+                        // TODO: Implement actual delete functionality
+                        toast({
+                          title: "Delete Account",
+                          description: "Account deletion functionality will be implemented soon.",
+                          variant: "destructive",
+                        });
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Yes, Delete Account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
 
