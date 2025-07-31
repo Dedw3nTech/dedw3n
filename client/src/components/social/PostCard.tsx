@@ -348,7 +348,7 @@ export default function PostCard({
       
       const response = await apiRequest(
         "POST",
-        `/api/cart/add`,
+        `/api/cart`,
         { 
           productId: post.product.id,
           quantity: 1

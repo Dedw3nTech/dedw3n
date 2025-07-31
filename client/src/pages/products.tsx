@@ -309,16 +309,33 @@ export default function Products() {
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return await fetch('/api/cart', {
+      // Get auth token for authentication
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      
+      const response = await fetch('/api/cart', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          // Include auth token if available for JWT auth
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+          // Add session cookie support flag
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Client-User-ID': user?.id?.toString() || '',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           productId,
           quantity: 1
         })
-      }).then(res => res.json());
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to add to cart: ${response.status} ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });

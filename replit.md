@@ -12,6 +12,15 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-31**: CART AUTHENTICATION FIXES COMPLETE - Resolved all cart functionality authentication errors
+  - **COMPLETED: Products Page Cart Fix** - Added proper authentication headers to addToCartMutation in products.tsx
+  - **COMPLETED: PersonalizedRecommendations Cart Fix** - Added proper authentication headers to addToCartMutation in PersonalizedRecommendations.tsx
+  - **COMPLETED: PostCard Component Endpoint Fix** - Changed incorrect endpoint from `/api/cart/add` to `/api/cart` in PostCard.tsx
+  - **COMPLETED: useCart Hook Enhancement** - Added missing addToCart function with proper authentication via apiRequest
+  - **COMPLETED: Authentication Headers Implementation** - All cart mutations now include X-Client-User-ID, Authorization, and session headers
+  - Cart functionality now works properly across all components: products page, recommendations, social posts, and vendor profiles
+  - All previous 401 "Unauthorized" errors for cart operations have been resolved
+  - Cart operations use unified authentication system with JWT tokens, session cookies, and client user ID headers
 - **2025-07-31**: COMMISSION STRUCTURE COMPLETE - Simplified to single 15% commission rate across entire platform
   - **COMPLETED: Delete Store Button Removal** - Removed "Delete Store" button from vendor dashboard header for cleaner UI design
   - **COMPLETED: Commission System Restructuring** - Changed from tiered commission (10%, 12.5%) to flat 15% rate for all vendors
