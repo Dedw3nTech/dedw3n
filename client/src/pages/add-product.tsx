@@ -817,7 +817,7 @@ export default function AddProduct() {
               name="offeringType"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>{t("What are you offering?")}</FormLabel>
+                  <FormLabel>{t("What are you offering/requesting ?")}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
