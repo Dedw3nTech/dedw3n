@@ -141,13 +141,15 @@ export default function AdminControlCenter() {
   });
 
   // Fetch all users
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+  const { data: usersData = { users: [], totalCount: 0 }, isLoading: usersLoading } = useQuery<{users: User[], totalCount: number}>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
       return response.json();
     },
   });
+  
+  const users = usersData.users || [];
 
   // Fetch reports
   const { data: reports = [], isLoading: reportsLoading } = useQuery<Report[]>({
