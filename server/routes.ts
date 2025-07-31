@@ -5550,7 +5550,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           'service': 'service',
           'vehicle': 'vehicle',
           'real_estate': 'real_estate',
-          'xl_xxl_product': 'product' // XL/XXL products are still categorized as 'product'
+          'xl_xxl_product': 'product', // XL/XXL products are still categorized as 'product'
+          'request_product': 'product', // Request product is categorized as 'product'
+          'request_service': 'service' // Request service is categorized as 'service'
         };
         
         productData.productType = typeMapping[productData.offeringType as keyof typeof typeMapping] || 'product';

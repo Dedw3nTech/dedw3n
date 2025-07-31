@@ -113,8 +113,10 @@ export default function AddProduct() {
     "Product",
     "Service",
     "Vehicle",
-    "Real Estate",
+    "Real Estate", 
     "XL/XXL Product",
+    "Request Product",
+    "Request Service",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -850,6 +852,18 @@ export default function AddProduct() {
                         <RadioGroupItem value="xl_xxl_product" id="xl_xxl_product" />
                         <label htmlFor="xl_xxl_product" className="text-sm font-medium cursor-pointer">
                           {t("XL/XXL Product")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="request_product" id="request_product" />
+                        <label htmlFor="request_product" className="text-sm font-medium cursor-pointer">
+                          {t("Request Product")}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="request_service" id="request_service" />
+                        <label htmlFor="request_service" className="text-sm font-medium cursor-pointer">
+                          {t("Request Service")}
                         </label>
                       </div>
                     </RadioGroup>
