@@ -68,6 +68,57 @@ export interface AdminStats {
   communityCount?: number;
 }
 
+export interface AdminVendorCommission {
+  vendor: {
+    id: number;
+    storeName: string;
+    businessName: string;
+    accountStatus: string;
+    isActive: boolean;
+    totalSalesAmount: number;
+    totalTransactions: number;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+    };
+  };
+  commission: {
+    totalCommissionOwed: number;
+    totalCommissionPaid: number;
+    pendingPayments: number;
+    commissionPeriods: any[];
+    recentPayments: any[];
+  };
+}
+
+export interface AdminCommissionSummary {
+  vendors: Array<{
+    vendorId: number;
+    storeName: string;
+    businessName: string;
+    accountStatus: string;
+    isActive: boolean;
+    userId: number;
+    userName: string;
+    userEmail: string;
+    totalSalesAmount: number;
+    totalTransactions: number;
+    commission: {
+      totalOwed: number;
+      totalPaid: number;
+      pendingCount: number;
+      totalPeriods: number;
+    };
+  }>;
+  totals: {
+    totalCommissionOwed: number;
+    totalCommissionPaid: number;
+    totalPendingPayments: number;
+    totalVendorsWithCommission: number;
+  };
+}
+
 // Enums
 export const communityVisibilityEnum = pgEnum('community_visibility', ['public', 'private', 'secret']);
 export const membershipTierTypeEnum = pgEnum('membership_tier_type', ['free', 'paid', 'premium']);

@@ -401,6 +401,52 @@ export default function UnifiedAdminDashboard() {
     },
   });
 
+  // Commission management mutations
+  const freezeVendorMutation = useMutation({
+    mutationFn: async ({ vendorId, reason }: { vendorId: number; reason: string }) => {
+      const response = await apiRequest('PATCH', `/api/admin/vendors/${vendorId}/freeze`, { reason });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Vendor Account Frozen",
+        description: "Vendor account has been frozen successfully.",
+      });
+    },
+  });
+
+  const unfreezeVendorMutation = useMutation({
+    mutationFn: async (vendorId: number) => {
+      const response = await apiRequest('PATCH', `/api/admin/vendors/${vendorId}/unfreeze`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Vendor Account Unfrozen",
+        description: "Vendor account has been unfrozen successfully.",
+      });
+    },
+  });
+
+  const markCommissionPaidMutation = useMutation({
+    mutationFn: async ({ periodId, paymentMethod, paymentReference }: { periodId: number; paymentMethod?: string; paymentReference?: string }) => {
+      const response = await apiRequest('PATCH', `/api/admin/commission-periods/${periodId}/mark-paid`, { paymentMethod, paymentReference });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/commissions'] });
+      toast({
+        title: "Commission Marked as Paid",
+        description: "Commission has been marked as paid successfully.",
+      });
+    },
+  });
+
   // Check if user is admin AFTER all hooks
   if (!user || user.role !== 'admin') {
     return (
@@ -787,9 +833,10 @@ export default function UnifiedAdminDashboard() {
           {/* Users Tab */}
           <TabsContent value="users" className="space-y-6">
             <Tabs defaultValue="users-list" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="users-list">{t("Users")}</TabsTrigger>
                 <TabsTrigger value="vendor-status">{t("Vendor")}</TabsTrigger>
+                <TabsTrigger value="commission-management">{t("Commission")}</TabsTrigger>
                 <TabsTrigger value="dating-status">{t("Dating")}</TabsTrigger>
               </TabsList>
               
@@ -1201,6 +1248,151 @@ export default function UnifiedAdminDashboard() {
                                     >
                                       <Eye className="h-3 w-3" />
                                     </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Commission Management Tab */}
+              <TabsContent value="commission-management" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      {t("Commission Management")}
+                    </CardTitle>
+                    <CardDescription>
+                      Manage vendor commissions, payments, and account freezing/unfreezing
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          placeholder="Search vendors..."
+                          value={vendorSearchTerm}
+                          onChange={(e) => setVendorSearchTerm(e.target.value)}
+                          className="w-64"
+                        />
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Badge variant="outline">
+                        {filteredVendors.length} vendors found
+                      </Badge>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Vendor</TableHead>
+                            <TableHead>Store/Business</TableHead>
+                            <TableHead>Total Sales</TableHead>
+                            <TableHead>Commission Owed</TableHead>
+                            <TableHead>Commission Paid</TableHead>
+                            <TableHead>Account Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vendorsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-8">
+                                Loading vendors...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredVendors.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-8">
+                                No vendors found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredVendors.slice(0, 10).map((vendor) => (
+                              <TableRow key={vendor.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {vendor.user?.avatar ? (
+                                        <img src={vendor.user.avatar} alt={vendor.user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Store className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{vendor.user?.name}</p>
+                                      <p className="text-sm text-gray-500">@{vendor.user?.username}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{vendor.storeName}</p>
+                                    <p className="text-sm text-gray-500">{vendor.businessName}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">£{(vendor.totalSalesAmount || 0).toFixed(2)}</p>
+                                    <p className="text-sm text-gray-500">{vendor.totalTransactions || 0} transactions</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                                    £{((vendor.totalSalesAmount || 0) * 0.15).toFixed(2)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                                    £0.00
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusColor(vendor.accountStatus)}>
+                                    {vendor.accountStatus === 'frozen' ? 'Frozen' : 
+                                     vendor.isActive ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        // Open commission details dialog
+                                        console.log('View commission details for vendor:', vendor.id);
+                                      }}
+                                    >
+                                      <DollarSign className="h-3 w-3" />
+                                    </Button>
+                                    {vendor.accountStatus === 'frozen' ? (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        className="text-green-600 hover:text-green-700"
+                                        onClick={() => unfreezeVendorMutation.mutate(vendor.id)}
+                                        disabled={unfreezeVendorMutation.isPending}
+                                      >
+                                        <CheckCircle className="h-3 w-3" />
+                                      </Button>
+                                    ) : (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        className="text-red-600 hover:text-red-700"
+                                        onClick={() => freezeVendorMutation.mutate({ vendorId: vendor.id, reason: 'Administrative freeze' })}
+                                        disabled={freezeVendorMutation.isPending}
+                                      >
+                                        <Ban className="h-3 w-3" />
+                                      </Button>
+                                    )}
                                   </div>
                                 </TableCell>
                               </TableRow>

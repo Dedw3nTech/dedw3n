@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { db } from './db.js';
-import { users, vendors, products, orders, posts } from '../shared/schema.js';
-import { eq, desc, count, sql, and } from 'drizzle-orm';
+import { users, vendors, products, orders, posts, vendorCommissionPeriods, vendorCommissionPayments } from '../shared/schema.js';
+import { eq, desc, count, sql, and, sum } from 'drizzle-orm';
 
 // Middleware to check if user is admin
 export const isAdmin = async (req: any, res: any, next: any) => {
@@ -952,6 +952,337 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error('Error updating report:', error);
       res.status(500).json({ message: 'Error updating report' });
+    }
+  });
+
+  // ===== COMMISSION MANAGEMENT API ENDPOINTS =====
+
+  // Get vendor commission summary
+  app.get('/api/admin/vendors/:id/commission', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      // Get vendor basic info
+      const vendorResult = await db.select({
+        id: vendors.id,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        accountStatus: vendors.accountStatus,
+        isActive: vendors.isActive,
+        totalSalesAmount: vendors.totalSalesAmount,
+        totalTransactions: vendors.totalTransactions,
+        userId: vendors.userId,
+        userName: users.name,
+        userEmail: users.email
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Get commission periods for this vendor
+      const commissionPeriods = await db.select()
+        .from(vendorCommissionPeriods)
+        .where(eq(vendorCommissionPeriods.vendorId, vendorId))
+        .orderBy(desc(vendorCommissionPeriods.year), desc(vendorCommissionPeriods.month));
+
+      // Calculate totals
+      const totalCommissionOwed = commissionPeriods
+        .filter(p => p.status === 'pending' || p.status === 'overdue')
+        .reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
+
+      const totalCommissionPaid = commissionPeriods
+        .filter(p => p.status === 'paid')
+        .reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
+
+      const pendingPayments = commissionPeriods.filter(p => p.status === 'pending' || p.status === 'overdue').length;
+
+      // Get recent commission payments
+      const recentPayments = await db.select()
+        .from(vendorCommissionPayments)
+        .where(eq(vendorCommissionPayments.vendorId, vendorId))
+        .orderBy(desc(vendorCommissionPayments.createdAt))
+        .limit(10);
+
+      res.json({
+        vendor: {
+          id: vendor.id,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName,
+          accountStatus: vendor.accountStatus,
+          isActive: vendor.isActive,
+          totalSalesAmount: vendor.totalSalesAmount,
+          totalTransactions: vendor.totalTransactions,
+          user: {
+            id: vendor.userId,
+            name: vendor.userName,
+            email: vendor.userEmail
+          }
+        },
+        commission: {
+          totalCommissionOwed,
+          totalCommissionPaid,
+          pendingPayments,
+          commissionPeriods,
+          recentPayments
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor commission:', error);
+      res.status(500).json({ message: 'Error fetching vendor commission' });
+    }
+  });
+
+  // Freeze vendor account (commission-related)
+  app.patch('/api/admin/vendors/:id/freeze', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+      const { reason } = req.body;
+
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      if (!reason || typeof reason !== 'string') {
+        return res.status(400).json({ message: 'Freeze reason is required' });
+      }
+
+      // Get vendor information
+      const vendorResult = await db.select({
+        vendorId: vendors.id,
+        userId: vendors.userId,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        accountStatus: vendors.accountStatus,
+        userName: users.name,
+        userEmail: users.email
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Freeze vendor account
+      await db
+        .update(vendors)
+        .set({ 
+          accountStatus: 'frozen',
+          isActive: false,
+          accountSuspendedAt: new Date(),
+          accountSuspensionReason: reason,
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId));
+
+      console.log(`[ADMIN] Vendor account FROZEN - User: ${vendor.userName} (ID: ${vendor.userId}), Vendor: ${vendor.storeName} (ID: ${vendorId}), Reason: ${reason}`);
+
+      res.json({ 
+        message: 'Vendor account frozen successfully',
+        frozenVendor: {
+          vendorId: vendorId,
+          userId: vendor.userId,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName,
+          reason: reason,
+          previousStatus: vendor.accountStatus
+        }
+      });
+    } catch (error) {
+      console.error('Error freezing vendor account:', error);
+      res.status(500).json({ message: 'Error freezing vendor account' });
+    }
+  });
+
+  // Unfreeze vendor account
+  app.patch('/api/admin/vendors/:id/unfreeze', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.id);
+
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      // Get vendor information
+      const vendorResult = await db.select({
+        vendorId: vendors.id,
+        userId: vendors.userId,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        accountStatus: vendors.accountStatus,
+        userName: users.name
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .where(eq(vendors.id, vendorId))
+      .limit(1);
+
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      const vendor = vendorResult[0];
+
+      // Unfreeze vendor account
+      await db
+        .update(vendors)
+        .set({ 
+          accountStatus: 'active',
+          isActive: true,
+          accountSuspendedAt: null,
+          accountSuspensionReason: null,
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId));
+
+      console.log(`[ADMIN] Vendor account UNFROZEN - User: ${vendor.userName} (ID: ${vendor.userId}), Vendor: ${vendor.storeName} (ID: ${vendorId})`);
+
+      res.json({ 
+        message: 'Vendor account unfrozen successfully',
+        unfrozenVendor: {
+          vendorId: vendorId,
+          userId: vendor.userId,
+          storeName: vendor.storeName,
+          businessName: vendor.businessName,
+          previousStatus: vendor.accountStatus
+        }
+      });
+    } catch (error) {
+      console.error('Error unfreezing vendor account:', error);
+      res.status(500).json({ message: 'Error unfreezing vendor account' });
+    }
+  });
+
+  // Mark commission as paid
+  app.patch('/api/admin/commission-periods/:id/mark-paid', isAdmin, async (req, res) => {
+    try {
+      const periodId = parseInt(req.params.id);
+      const { paymentMethod, paymentReference } = req.body;
+
+      if (isNaN(periodId)) {
+        return res.status(400).json({ message: 'Invalid commission period ID' });
+      }
+
+      // Get commission period
+      const periodResult = await db.select()
+        .from(vendorCommissionPeriods)
+        .where(eq(vendorCommissionPeriods.id, periodId))
+        .limit(1);
+
+      if (periodResult.length === 0) {
+        return res.status(404).json({ message: 'Commission period not found' });
+      }
+
+      // Mark as paid
+      await db
+        .update(vendorCommissionPeriods)
+        .set({
+          status: 'paid',
+          paidDate: new Date(),
+          paymentMethod: paymentMethod || 'manual',
+          paymentReference: paymentReference,
+          updatedAt: new Date()
+        })
+        .where(eq(vendorCommissionPeriods.id, periodId));
+
+      console.log(`[ADMIN] Commission period ${periodId} marked as PAID by admin ${req.user?.id}`);
+
+      res.json({ 
+        message: 'Commission marked as paid successfully',
+        periodId,
+        paymentMethod: paymentMethod || 'manual',
+        paymentReference
+      });
+    } catch (error) {
+      console.error('Error marking commission as paid:', error);
+      res.status(500).json({ message: 'Error marking commission as paid' });
+    }
+  });
+
+  // Get all vendor commissions summary (for admin overview)
+  app.get('/api/admin/commissions/summary', isAdmin, async (req, res) => {
+    try {
+      // Get all vendors with commission data
+      const vendorsWithCommission = await db.select({
+        vendorId: vendors.id,
+        storeName: vendors.storeName,
+        businessName: vendors.businessName,
+        accountStatus: vendors.accountStatus,
+        isActive: vendors.isActive,
+        userId: vendors.userId,
+        userName: users.name,
+        userEmail: users.email,
+        totalSalesAmount: vendors.totalSalesAmount,
+        totalTransactions: vendors.totalTransactions
+      })
+      .from(vendors)
+      .leftJoin(users, eq(vendors.userId, users.id))
+      .orderBy(desc(vendors.totalSalesAmount));
+
+      // Get commission totals for each vendor
+      const vendorCommissions = await Promise.all(
+        vendorsWithCommission.map(async (vendor) => {
+          const commissionPeriods = await db.select()
+            .from(vendorCommissionPeriods)
+            .where(eq(vendorCommissionPeriods.vendorId, vendor.vendorId));
+
+          const totalOwed = commissionPeriods
+            .filter(p => p.status === 'pending' || p.status === 'overdue')
+            .reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
+
+          const totalPaid = commissionPeriods
+            .filter(p => p.status === 'paid')
+            .reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
+
+          const pendingCount = commissionPeriods.filter(p => p.status === 'pending' || p.status === 'overdue').length;
+
+          return {
+            ...vendor,
+            commission: {
+              totalOwed,
+              totalPaid,
+              pendingCount,
+              totalPeriods: commissionPeriods.length
+            }
+          };
+        })
+      );
+
+      // Calculate overall totals
+      const overallTotals = vendorCommissions.reduce((acc, vendor) => ({
+        totalCommissionOwed: acc.totalCommissionOwed + vendor.commission.totalOwed,
+        totalCommissionPaid: acc.totalCommissionPaid + vendor.commission.totalPaid,
+        totalPendingPayments: acc.totalPendingPayments + vendor.commission.pendingCount,
+        totalVendorsWithCommission: acc.totalVendorsWithCommission + (vendor.commission.totalPeriods > 0 ? 1 : 0)
+      }), {
+        totalCommissionOwed: 0,
+        totalCommissionPaid: 0,
+        totalPendingPayments: 0,
+        totalVendorsWithCommission: 0
+      });
+
+      res.json({
+        vendors: vendorCommissions,
+        totals: overallTotals
+      });
+    } catch (error) {
+      console.error('Error fetching commissions summary:', error);
+      res.status(500).json({ message: 'Error fetching commissions summary' });
     }
   });
 }
