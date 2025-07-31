@@ -59,7 +59,7 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   // New Shopify-style fields
   status: z.enum(['active', 'draft', 'archived']).default('active'),
-  offeringType: z.enum(['product', 'service', 'vehicle', 'real_estate', 'xl_xxl_product']).default('product'),
+  offeringType: z.enum(['product', 'service', 'vehicle', 'real_estate', 'xl_xxl_product', 'request_product', 'request_service']).default('product'),
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -77,7 +77,7 @@ const productSchema = z.object({
   videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
-  marketplace: z.enum(['c2c', 'b2c', 'b2b']),
+  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'rqst']),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -417,8 +417,15 @@ export default function AddProduct() {
     enabled: !!user,
   });
 
-  // Determine available marketplaces based on vendor type
+  // Determine available marketplaces based on vendor type and offering type
   const getAvailableMarketplaces = () => {
+    const offeringType = form.watch('offeringType');
+    
+    // If request_product or request_service is selected, only show RQST marketplace
+    if (offeringType === 'request_product' || offeringType === 'request_service') {
+      return [{ value: 'rqst', label: 'RQST (Request)', description: 'For product and service requests' }];
+    }
+    
     // Safety check for null/undefined data
     if (!vendorAccountsResponse || !vendorAccountsResponse.vendorAccounts || !Array.isArray(vendorAccountsResponse.vendorAccounts)) {
       return [{ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' }];
@@ -452,6 +459,14 @@ export default function AddProduct() {
       form.setValue('marketplace', availableMarketplaces[0].value);
     }
   }, [availableMarketplaces, form]);
+
+  // Auto-select RQST marketplace when request options are selected
+  useEffect(() => {
+    const offeringType = form.watch('offeringType');
+    if (offeringType === 'request_product' || offeringType === 'request_service') {
+      form.setValue('marketplace', 'rqst');
+    }
+  }, [form.watch('offeringType'), form]);
 
   // Auto-fill vendor name based on marketplace selection
   useEffect(() => {
