@@ -13304,6 +13304,64 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Create Stripe payment intent for commission payment
+  app.post('/api/commission-periods/:periodId/payment-intent', async (req: Request, res: Response) => {
+    try {
+      const periodId = parseInt(req.params.periodId);
+      if (isNaN(periodId)) {
+        return res.status(400).json({ message: 'Invalid commission period ID' });
+      }
+
+      const paymentIntent = await commissionService.createCommissionPaymentIntent(periodId);
+      res.json(paymentIntent);
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      res.status(500).json({ message: 'Failed to create payment intent' });
+    }
+  });
+
+  // Check for pending payment notifications (monthly popup)
+  app.get('/api/vendors/:vendorId/payment-notification', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      const notification = await commissionService.checkPendingPaymentNotification(vendorId);
+      res.json(notification);
+    } catch (error) {
+      console.error('Error checking payment notification:', error);
+      res.status(500).json({ message: 'Failed to check payment notification' });
+    }
+  });
+
+  // Process monthly billing (admin endpoint - typically called by cron job)
+  app.post('/api/admin/process-monthly-billing', async (req: Request, res: Response) => {
+    try {
+      await commissionService.processMonthlyBilling();
+      res.json({ success: true, message: 'Monthly billing processed successfully' });
+    } catch (error) {
+      console.error('Error processing monthly billing:', error);
+      res.status(500).json({ message: 'Failed to process monthly billing' });
+    }
+  });
+
+  // Process overdue payments and block accounts (admin endpoint)
+  app.post('/api/admin/process-overdue-payments', async (req: Request, res: Response) => {
+    try {
+      const blockedCount = await commissionService.processOverduePayments();
+      res.json({ 
+        success: true, 
+        message: `Processed overdue payments. ${blockedCount} accounts blocked.`,
+        blockedAccounts: blockedCount
+      });
+    } catch (error) {
+      console.error('Error processing overdue payments:', error);
+      res.status(500).json({ message: 'Failed to process overdue payments' });
+    }
+  });
+
   // Process monthly commissions (admin only)
   app.post('/api/admin/process-commissions', async (req: Request, res: Response) => {
     try {

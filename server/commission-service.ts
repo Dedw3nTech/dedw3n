@@ -7,7 +7,8 @@ import {
   vendorAccountActions,
   orders,
   orderItems,
-  products
+  products,
+  users
 } from '../shared/schema';
 import { eq, and, gte, lte, desc, asc, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
@@ -428,11 +429,232 @@ export class CommissionService {
 
   // Send commission-related notifications
   async sendCommissionNotification(vendorId: number, periodId: number, type: string) {
-    // This would integrate with your notification system
     console.log(`[Commission] Sending ${type} notification to vendor ${vendorId} for period ${periodId}`);
     
-    // TODO: Integrate with SendGrid or other email service
-    // For now, just log the notification
+    try {
+      // Get vendor details for email
+      const vendor = await db
+        .select({
+          userId: vendors.userId,
+          storeName: vendors.storeName,
+        })
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor.length) return;
+
+      // Get user email
+      const user = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.id, vendor[0].userId))
+        .limit(1);
+
+      if (!user.length) return;
+
+      // Get commission period details
+      const period = await db
+        .select()
+        .from(vendorCommissionPeriods)
+        .where(eq(vendorCommissionPeriods.id, periodId))
+        .limit(1);
+
+      if (!period.length) return;
+
+      const commission = period[0];
+      
+      // Update notification timestamps
+      const updateData: any = {};
+      if (type === 'first_notification') {
+        updateData.firstNotificationSent = new Date();
+      } else if (type === 'second_notification') {
+        updateData.secondNotificationSent = new Date();
+      } else if (type === 'final_warning') {
+        updateData.finalWarningNotificationSent = new Date();
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await db
+          .update(vendorCommissionPeriods)
+          .set(updateData)
+          .where(eq(vendorCommissionPeriods.id, periodId));
+      }
+
+      console.log(`[Commission] ${type} notification sent to ${user[0].email} for ${vendor[0].storeName}`);
+    } catch (error) {
+      console.error(`[Commission] Error sending notification:`, error);
+    }
+  }
+
+  // Create Stripe payment intent for commission payment
+  async createCommissionPaymentIntent(commissionPeriodId: number) {
+    const period = await db
+      .select()
+      .from(vendorCommissionPeriods)
+      .where(eq(vendorCommissionPeriods.id, commissionPeriodId))
+      .limit(1);
+
+    if (!period.length) {
+      throw new Error('Commission period not found');
+    }
+
+    const commission = period[0];
+    const amountInPence = Math.round(Number(commission.commissionAmount) * 100);
+
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInPence,
+        currency: 'gbp',
+        metadata: {
+          type: 'commission_payment',
+          commission_period_id: commissionPeriodId.toString(),
+          vendor_id: commission.vendorId.toString(),
+          month: commission.month.toString(),
+          year: commission.year.toString(),
+        },
+        description: `Commission payment for ${commission.month}/${commission.year}`,
+      });
+
+      // Create payment record
+      await db.insert(vendorCommissionPayments).values({
+        commissionPeriodId,
+        vendorId: commission.vendorId,
+        amount: commission.commissionAmount,
+        currency: 'GBP',
+        paymentMethod: 'stripe',
+        stripePaymentIntentId: paymentIntent.id,
+        status: 'pending',
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        amount: commission.commissionAmount,
+      };
+    } catch (error) {
+      console.error('[Commission] Error creating payment intent:', error);
+      throw error;
+    }
+  }
+
+  // Process monthly billing for all vendors (called on 1st of each month)
+  async processMonthlyBilling() {
+    const currentDate = new Date();
+    const previousMonth = currentDate.getMonth() === 0 ? 12 : currentDate.getMonth();
+    const year = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+
+    console.log(`[Commission] Processing monthly billing for ${previousMonth}/${year}`);
+
+    try {
+      // Get all active vendors
+      const activeVendors = await db
+        .select({ id: vendors.id })
+        .from(vendors)
+        .where(eq(vendors.accountStatus, 'active'));
+
+      for (const vendor of activeVendors) {
+        await this.createCommissionPeriod(vendor.id, previousMonth, year);
+      }
+
+      console.log(`[Commission] Monthly billing processed for ${activeVendors.length} vendors`);
+    } catch (error) {
+      console.error('[Commission] Error processing monthly billing:', error);
+    }
+  }
+
+  // Check for overdue payments and block accounts
+  async processOverduePayments() {
+    const currentDate = new Date();
+    const graceEndDate = new Date(currentDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 days ago
+
+    try {
+      // Find overdue commission periods
+      const overduePayments = await db
+        .select({
+          id: vendorCommissionPeriods.id,
+          vendorId: vendorCommissionPeriods.vendorId,
+          dueDate: vendorCommissionPeriods.dueDate,
+          commissionAmount: vendorCommissionPeriods.commissionAmount,
+        })
+        .from(vendorCommissionPeriods)
+        .where(
+          and(
+            eq(vendorCommissionPeriods.status, 'pending'),
+            lte(vendorCommissionPeriods.dueDate, graceEndDate)
+          )
+        );
+
+      for (const payment of overduePayments) {
+        // Mark commission as overdue
+        await db
+          .update(vendorCommissionPeriods)
+          .set({ status: 'overdue' })
+          .where(eq(vendorCommissionPeriods.id, payment.id));
+
+        // Block vendor account
+        await db
+          .update(vendors)
+          .set({ 
+            accountStatus: 'suspended',
+            paymentFailureCount: sql`${vendors.paymentFailureCount} + 1`
+          })
+          .where(eq(vendors.id, payment.vendorId));
+
+        console.log(`[Commission] Vendor ${payment.vendorId} account suspended due to overdue payment`);
+      }
+
+      return overduePayments.length;
+    } catch (error) {
+      console.error('[Commission] Error processing overdue payments:', error);
+      return 0;
+    }
+  }
+
+  // Check if vendor has pending payments requiring popup notification
+  async checkPendingPaymentNotification(vendorId: number) {
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    
+    // Only show popup on 1st of the month
+    if (currentDay !== 1) {
+      return null;
+    }
+
+    try {
+      const pendingPayments = await db
+        .select({
+          id: vendorCommissionPeriods.id,
+          month: vendorCommissionPeriods.month,
+          year: vendorCommissionPeriods.year,
+          commissionAmount: vendorCommissionPeriods.commissionAmount,
+          dueDate: vendorCommissionPeriods.dueDate,
+        })
+        .from(vendorCommissionPeriods)
+        .where(
+          and(
+            eq(vendorCommissionPeriods.vendorId, vendorId),
+            eq(vendorCommissionPeriods.status, 'pending')
+          )
+        )
+        .orderBy(desc(vendorCommissionPeriods.dueDate));
+
+      if (pendingPayments.length === 0) {
+        return null;
+      }
+
+      const totalOwed = pendingPayments.reduce((sum, payment) => sum + Number(payment.commissionAmount), 0);
+
+      return {
+        totalAmount: totalOwed,
+        paymentCount: pendingPayments.length,
+        dueDate: pendingPayments[0].dueDate,
+        payments: pendingPayments,
+      };
+    } catch (error) {
+      console.error('[Commission] Error checking pending payments:', error);
+      return null;
+    }
   }
 
   // Get vendor commission dashboard data
