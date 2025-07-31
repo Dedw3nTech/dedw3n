@@ -964,18 +964,6 @@ export default function Products() {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
-              title={sendGiftTooltipText}
-              onClick={() => {
-                setSelectedGiftProduct(product);
-                setGiftDialogOpen(true);
-              }}
-            >
-              <Gift className="h-5 w-5 text-blue-500" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
               onClick={() => handleAddToDatingProfile(product.id)}
               disabled={addToDatingProfileMutation.isPending}
               title="Add to Dating Profile"
