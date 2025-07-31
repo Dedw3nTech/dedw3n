@@ -1440,6 +1440,15 @@ export default function Products() {
                     {clearAllText}
                   </Button>
                 )}
+                
+                {/* Add Product/Service Button */}
+                <Button 
+                  onClick={() => setLocation('/add-product')}
+                  size="sm" 
+                  className="h-7 px-3 bg-black text-white hover:bg-gray-800"
+                >
+                  + Add Product/Service
+                </Button>
               </div>
             </div>
             
