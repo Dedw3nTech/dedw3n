@@ -17,12 +17,12 @@ import { eq, and, or, like, desc, count, sql } from "drizzle-orm";
 import { db } from './db';
 
 // Import unified authentication middleware
-import { unifiedIsAuthenticated } from './unified-auth';
+import { isAuthenticated } from './unified-auth';
 
 // Middleware to check if user is admin using unified auth
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   // First check unified authentication
-  unifiedIsAuthenticated(req, res, (authError?: any) => {
+  isAuthenticated(req, res, (authError?: any) => {
     if (authError || !req.user) {
       console.log('[ADMIN] Authentication failed:', authError?.message || 'No user found');
       return res.status(401).json({ message: "Not authenticated" });
