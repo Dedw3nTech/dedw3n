@@ -1538,13 +1538,6 @@ export default function Products() {
 
           <DialogFooter className="gap-2">
             <Button
-              variant="outline"
-              onClick={() => handleRepost(false)}
-              disabled={repostMutation.isPending}
-            >
-              {postWithoutTextButton}
-            </Button>
-            <Button
               onClick={handleRepostWithText}
               disabled={repostMutation.isPending}
               className="bg-black text-white hover:bg-gray-800"
