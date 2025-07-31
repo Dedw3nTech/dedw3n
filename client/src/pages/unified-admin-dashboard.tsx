@@ -293,6 +293,9 @@ export default function UnifiedAdminDashboard() {
   const [vendorFilter, setVendorFilter] = useState('all');
   const [datingFilter, setDatingFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [ageFilter, setAgeFilter] = useState('all');
+  const [lastLoginFilter, setLastLoginFilter] = useState('all');
 
   // System maintenance states
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
@@ -699,7 +702,33 @@ export default function UnifiedAdminDashboard() {
       (genderFilter === 'not_set' && !user.gender) ||
       (genderFilter !== 'not_set' && user.gender === genderFilter);
     
-    return matchesSearch && matchesRole && matchesStatus && matchesVendor && matchesDating && matchesGender;
+    // Location filter
+    const matchesLocation = locationFilter === 'all' ||
+      (locationFilter === 'has_location' && (user.city || user.country)) ||
+      (locationFilter === 'no_location' && !user.city && !user.country);
+    
+    // Age filter
+    const userAge = user.dateOfBirth ? 
+      Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+    const matchesAge = ageFilter === 'all' ||
+      (ageFilter === 'under_18' && userAge && userAge < 18) ||
+      (ageFilter === '18_25' && userAge && userAge >= 18 && userAge <= 25) ||
+      (ageFilter === '26_35' && userAge && userAge >= 26 && userAge <= 35) ||
+      (ageFilter === '36_50' && userAge && userAge >= 36 && userAge <= 50) ||
+      (ageFilter === 'over_50' && userAge && userAge > 50) ||
+      (ageFilter === 'not_set' && !user.dateOfBirth);
+    
+    // Last login filter
+    const daysSinceLogin = user.lastLogin ? 
+      Math.floor((new Date().getTime() - new Date(user.lastLogin).getTime()) / (24 * 60 * 60 * 1000)) : null;
+    const matchesLastLogin = lastLoginFilter === 'all' ||
+      (lastLoginFilter === 'today' && daysSinceLogin !== null && daysSinceLogin === 0) ||
+      (lastLoginFilter === 'week' && daysSinceLogin !== null && daysSinceLogin <= 7) ||
+      (lastLoginFilter === 'month' && daysSinceLogin !== null && daysSinceLogin <= 30) ||
+      (lastLoginFilter === 'over_month' && daysSinceLogin !== null && daysSinceLogin > 30) ||
+      (lastLoginFilter === 'never' && !user.lastLogin);
+    
+    return matchesSearch && matchesRole && matchesStatus && matchesVendor && matchesDating && matchesGender && matchesLocation && matchesAge && matchesLastLogin;
   }));
 
   // Handle sort changes
@@ -1050,6 +1079,55 @@ export default function UnifiedAdminDashboard() {
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Location:</label>
+                          <Select value={locationFilter} onValueChange={setLocationFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All locations" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All locations</SelectItem>
+                              <SelectItem value="has_location">Has location</SelectItem>
+                              <SelectItem value="no_location">No location</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Age:</label>
+                          <Select value={ageFilter} onValueChange={setAgeFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All ages" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All ages</SelectItem>
+                              <SelectItem value="under_18">Under 18</SelectItem>
+                              <SelectItem value="18_25">18-25</SelectItem>
+                              <SelectItem value="26_35">26-35</SelectItem>
+                              <SelectItem value="36_50">36-50</SelectItem>
+                              <SelectItem value="over_50">Over 50</SelectItem>
+                              <SelectItem value="not_set">Not set</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Last Login:</label>
+                          <Select value={lastLoginFilter} onValueChange={setLastLoginFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All logins" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All logins</SelectItem>
+                              <SelectItem value="today">Today</SelectItem>
+                              <SelectItem value="week">This week</SelectItem>
+                              <SelectItem value="month">This month</SelectItem>
+                              <SelectItem value="over_month">Over month</SelectItem>
+                              <SelectItem value="never">Never</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
                           <label className="text-sm font-medium text-gray-700">Sort by:</label>
                           <Select value={`${userSortField}-${userSortDirection}`} onValueChange={(value) => {
                             const [field, direction] = value.split('-');
@@ -1079,6 +1157,9 @@ export default function UnifiedAdminDashboard() {
                             setVendorFilter('all');
                             setDatingFilter('all');
                             setGenderFilter('all');
+                            setLocationFilter('all');
+                            setAgeFilter('all');
+                            setLastLoginFilter('all');
                             setSearchTerm('');
                           }}
                           className="h-8"
