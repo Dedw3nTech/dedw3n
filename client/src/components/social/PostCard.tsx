@@ -346,14 +346,19 @@ export default function PostCard({
         throw new Error("No product information available");
       }
       
-      const response = await apiRequest(
-        "POST",
-        `/api/cart`,
-        { 
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-User-ID': currentUser?.id?.toString() || '',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
           productId: post.product.id,
           quantity: 1
-        }
-      );
+        })
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -1143,7 +1148,7 @@ export default function PostCard({
                     </p>
                   )}
                   <div className="flex items-center gap-2">
-                    {post.product.discountPrice !== null && post.product.discountPrice < post.product.price && (
+                    {post.product.discountPrice && post.product.discountPrice < post.product.price && (
                       <span className="text-sm text-gray-500 line-through">
                         £{post.product.price.toFixed(2)}
                       </span>
@@ -1152,9 +1157,9 @@ export default function PostCard({
                       £{(post.product.discountPrice ?? post.product.price).toFixed(2)}
                     </span>
                   </div>
-                  {post.product.discountPrice !== null && post.product.discountPrice < post.product.price && (
+                  {post.product.discountPrice && post.product.discountPrice < post.product.price && (
                     <Badge className="bg-red-500 hover:bg-red-600 mt-2 text-white">
-                      {Math.round((1 - (post.product.discountPrice || 0) / post.product.price) * 100)}% OFF
+                      {Math.round((1 - post.product.discountPrice / post.product.price) * 100)}% OFF
                     </Badge>
                   )}
                 </div>

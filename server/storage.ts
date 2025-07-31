@@ -1634,13 +1634,40 @@ export class DatabaseStorage implements IStorage {
             username: users.username,
             name: users.name,
             avatar: users.avatar
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.stock,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .leftJoin(users, eq(posts.userId, users.id))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
         .where(eq(posts.id, postId));
 
-      return post;
+      if (!post) return null;
+
+      return {
+        ...post,
+        product: post.product?.id ? {
+          ...post.product,
+          vendorName: post.vendor?.storeName || post.vendor?.businessName || 'Unknown Vendor'
+        } : null
+      };
     } catch (error) {
       console.error('Error getting post by ID:', error);
       throw error;
@@ -1856,10 +1883,27 @@ export class DatabaseStorage implements IStorage {
           user_avatar: users.avatar,
           user_city: users.city,
           user_country: users.country,
-          user_region: users.region
+          user_region: users.region,
+          // Product fields
+          product_id: products.id,
+          product_name: products.name,
+          product_description: products.description,
+          product_price: products.price,
+          product_discountPrice: products.discountPrice,
+          product_imageUrl: products.imageUrl,
+          product_category: products.category,
+          product_stock: products.stock,
+          product_vendorId: products.vendorId,
+          // Vendor fields
+          vendor_id: vendors.id,
+          vendor_storeName: vendors.storeName,
+          vendor_businessName: vendors.businessName,
+          vendor_rating: vendors.rating
         })
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
         .where(eq(posts.isPublished, true))
         .orderBy(desc(posts.createdAt));
 
@@ -1896,7 +1940,20 @@ export class DatabaseStorage implements IStorage {
           city: row.user_city,
           country: row.user_country,
           region: row.user_region
-        }
+        },
+        // Add complete product information if post has a productId
+        product: row.product_id ? {
+          id: row.product_id,
+          name: row.product_name,
+          description: row.product_description,
+          price: row.product_price,
+          discountPrice: row.product_discountPrice,
+          imageUrl: row.product_imageUrl,
+          category: row.product_category,
+          stock: row.product_stock,
+          vendorId: row.product_vendorId,
+          vendorName: row.vendor_storeName || row.vendor_businessName || 'Unknown Vendor'
+        } : null
       }));
     } catch (error) {
       console.error('Error getting all posts:', error);
@@ -1917,10 +1974,29 @@ export class DatabaseStorage implements IStorage {
             city: users.city,
             country: users.country,
             region: users.region
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.stock,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
         .where(eq(posts.isPublished, true))
         .orderBy(desc(posts.createdAt))
         .limit(limit)
@@ -1953,9 +2029,13 @@ export class DatabaseStorage implements IStorage {
         savedPostIds = savedPostsData.map(s => s.postId);
       }
 
-      return postsWithUsers.map(({ post, user }) => ({
+      return postsWithUsers.map(({ post, user, product, vendor }) => ({
         ...post,
         user,
+        product: product?.id ? {
+          ...product,
+          vendorName: vendor?.storeName || vendor?.businessName || 'Unknown Vendor'
+        } : null,
         _count: {
           likes: post.likes || 0,
           comments: post.comments || 0,
@@ -3853,11 +3933,30 @@ export class DatabaseStorage implements IStorage {
             city: users.city,
             country: users.country,
             region: users.region
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.stock,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .leftJoin(users, eq(posts.userId, users.id))
         .leftJoin(follows, and(eq(follows.followingId, posts.userId), eq(follows.followerId, userId)))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
         .where(
           or(
             eq(posts.userId, userId), // User's own posts
@@ -3870,7 +3969,7 @@ export class DatabaseStorage implements IStorage {
 
       console.log(`[DEBUG] Found ${userFeed.length} posts, first user data:`, userFeed[0]?.user);
       
-      const result = userFeed.map(({ post, user }) => ({
+      const result = userFeed.map(({ post, user, product, vendor }) => ({
         ...post,
         user: {
           id: user.id,
@@ -3881,10 +3980,23 @@ export class DatabaseStorage implements IStorage {
           city: user.city,
           country: user.country,
           region: user.region
-        }
+        },
+        // Add complete product information if post has a productId
+        product: product ? {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          discountPrice: product.discountPrice,
+          imageUrl: product.imageUrl,
+          category: product.category,
+          stock: product.stock,
+          vendorId: product.vendorId,
+          vendorName: vendor?.storeName || vendor?.businessName || 'Unknown Vendor'
+        } : null
       })) as Post[];
       
-      console.log(`[DEBUG] Returning post with user:`, result[0]?.user);
+      console.log(`[DEBUG] Returning post with user and product:`, result[0]?.user, result[0]?.product);
       return result;
     } catch (error) {
       console.error('Error getting user feed:', error);
