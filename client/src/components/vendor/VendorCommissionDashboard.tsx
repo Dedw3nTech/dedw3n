@@ -112,10 +112,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
   const commissionTexts = useMemo(() => [
     "Commission Tier System",
     "Your commission rate is determined by your monthly sales volume",
-    "Standard Tier",
-    "Basic commission rate", 
-    "Sales Manager",
-    "10% commission + 2.5% Sales Manager Fee",
+    "Platform Commission",
+    "Standard commission rate for all vendors",
     "ID",
     "Total Owed",
     "pending payment(s)",
@@ -142,10 +140,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     "Redirecting to payment page...",
     "Error",
     "Failed to create payment link",
-    "£50,000+ monthly sales - 12.5% commission",
-    "£10,000+ monthly sales - 10% commission", 
-    "Under £10,000 monthly sales - 10% commission",
-    "Commission rate varies based on sales volume",
+    "15% commission rate for all vendors",
+    "Simplified commission structure",
     "Active",
     "standard",
     "premium", 
@@ -156,6 +152,11 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
   ], []);
   
   const { translations } = useMasterBatchTranslation(commissionTexts);
+  
+  // Safe translation access helper
+  const t = (key: string, fallback: string = key) => {
+    return translations?.[key] || fallback;
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/vendors/${vendorId}/commission-dashboard`],
@@ -171,8 +172,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       // Redirect to Stripe payment page
       if (data.clientSecret) {
         toast({
-          title: translations?.["Payment Link Created"] || "Payment Link Created",
-          description: translations?.["Redirecting to payment page..."] || "Redirecting to payment page...",
+          title: t("Payment Link Created"),
+          description: t("Redirecting to payment page..."),
         });
         // In a real implementation, you would redirect to Stripe Checkout
         console.log('Payment Intent created:', data);
@@ -180,8 +181,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
     },
     onError: (error: any) => {
       toast({
-        title: translations?.["Error"] || "Error",
-        description: translations?.["Failed to create payment link"] || "Failed to create payment link",
+        title: t("Error"),
+        description: t("Failed to create payment link"),
         variant: "destructive",
       });
     },
@@ -205,7 +206,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          {translations?.["Failed to load commission dashboard. Please try again later."] || "Failed to load commission dashboard. Please try again later."}
+          {t("Failed to load commission dashboard. Please try again later.")}
         </AlertDescription>
       </Alert>
     );
@@ -238,39 +239,15 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4">
-            {!commissionData.vendor.hasSalesManager ? (
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{translations?.["Standard Tier"] || "Standard Tier"}</h4>
-                  <Badge className="bg-gray-100 text-gray-800">10%</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {translations?.["Basic commission rate"] || "Basic commission rate"}
-                </p>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium">{t("Platform Commission")}</h4>
+                <Badge className="bg-blue-100 text-blue-800">15%</Badge>
               </div>
-            ) : (
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{translations?.["Sales Manager"] || "Sales Manager"}</h4>
-                  <Badge className="bg-blue-100 text-blue-800">10% + 2.5%</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {translations?.["10% commission + 2.5% Sales Manager Fee"] || "10% commission + 2.5% Sales Manager Fee"}
-                </p>
-                {commissionData.vendor.salesManagerName && (
-                  <div className="mt-2 pt-2 border-t">
-                    <p className="text-xs text-muted-foreground">
-                      <strong>{translations?.["Sales Manager"] || "Sales Manager"}:</strong> {commissionData.vendor.salesManagerName}
-                    </p>
-                    {commissionData.vendor.salesManagerId && (
-                      <p className="text-xs text-muted-foreground">
-                        <strong>{translations?.["ID"] || "ID"}:</strong> {commissionData.vendor.salesManagerId}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+              <p className="text-sm text-muted-foreground">
+                {t("Standard commission rate for all vendors")}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -279,7 +256,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{translations?.["Total Owed"] || "Total Owed"}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Owed")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -287,14 +264,14 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               £{commissionData.totals.totalCommissionOwed.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {commissionData.pendingPayments.length} {translations?.["pending payment(s)"] || "pending payment(s)"}
+              {commissionData.pendingPayments.length} {t("pending payment(s)")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{translations?.["Total Paid"] || "Total Paid"}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Paid")}</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -302,14 +279,14 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               £{commissionData.totals.totalCommissionPaid.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {translations?.["All-time commission payments"] || "All-time commission payments"}
+              {t("All-time commission payments")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{translations?.["Account Status"] || "Account Status"}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Account Status")}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -317,7 +294,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
               {commissionData.vendor.accountStatus}
             </div>
             <p className="text-xs text-muted-foreground">
-              {commissionData.vendor.paymentFailureCount} {translations?.["payment failure(s)"] || "payment failure(s)"}
+              {commissionData.vendor.paymentFailureCount} {t("payment failure(s)")}
             </p>
           </CardContent>
         </Card>
@@ -329,10 +306,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              {translations?.["Pending Payments"] || "Pending Payments"}
+              {t("Pending Payments")}
             </CardTitle>
             <CardDescription>
-              {translations?.["Commission payments that require your attention"] || "Commission payments that require your attention"}
+              {t("Commission payments that require your attention")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,17 +322,17 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                         {format(new Date(payment.year, payment.month - 1), 'MMMM yyyy')}
                       </h4>
                       <Badge className={getTierColor(payment.commissionTier)}>
-                        {translations?.[payment.commissionTier] || payment.commissionTier} ({(parseFloat(payment.commissionRate) * 100).toFixed(1)}%)
+                        {t(payment.commissionTier)} ({(parseFloat(payment.commissionRate) * 100).toFixed(1)}%)
                       </Badge>
                       <Badge className={getStatusColor(payment.status)}>
                         {getStatusIcon(payment.status)}
-                        {translations?.[payment.status] || payment.status}
+                        {t(payment.status)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {translations?.["Sales"] || "Sales"}: £{parseFloat(payment.totalSales).toFixed(2)} • 
-                      {translations?.["Commission"] || "Commission"}: £{parseFloat(payment.commissionAmount).toFixed(2)} • 
-                      {translations?.["Due"] || "Due"}: {format(new Date(payment.dueDate), 'MMM dd, yyyy')}
+                      {t("Sales")}: £{parseFloat(payment.totalSales).toFixed(2)} • 
+                      {t("Commission")}: £{parseFloat(payment.commissionAmount).toFixed(2)} • 
+                      {t("Due")}: {format(new Date(payment.dueDate), 'MMM dd, yyyy')}
                     </p>
                   </div>
                   <Button
@@ -364,7 +341,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                     size="sm"
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
-                    {translations?.["Pay Now"] || "Pay Now"}
+                    {t("Pay Now")}
                   </Button>
                 </div>
               ))}
@@ -378,10 +355,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
-            {translations?.["Commission History"] || "Commission History"}
+            {t("Commission History")}
           </CardTitle>
           <CardDescription>
-            {translations?.["Your last 12 months of commission calculations"] || "Your last 12 months of commission calculations"}
+            {t("Your last 12 months of commission calculations")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -394,23 +371,23 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                       {format(new Date(period.year, period.month - 1), 'MMMM yyyy')}
                     </h4>
                     <Badge className={getTierColor(period.commissionTier)}>
-                      {translations?.[period.commissionTier] || period.commissionTier}
+                      {t(period.commissionTier)}
                     </Badge>
                     <Badge className={getStatusColor(period.status)}>
                       {getStatusIcon(period.status)}
-                      {translations?.[period.status] || period.status}
+                      {t(period.status)}
                     </Badge>
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>
-                      {translations?.["Sales"] || "Sales"}: £{parseFloat(period.totalSales).toFixed(2)} • 
-                      {translations?.["Transactions"] || "Transactions"}: {period.totalTransactions} • 
-                      {translations?.["Rate"] || "Rate"}: {(parseFloat(period.commissionRate) * 100).toFixed(1)}%
+                      {t("Sales")}: £{parseFloat(period.totalSales).toFixed(2)} • 
+                      {t("Transactions")}: {period.totalTransactions} • 
+                      {t("Rate")}: {(parseFloat(period.commissionRate) * 100).toFixed(1)}%
                     </p>
                     <p>
-                      {translations?.["Commission"] || "Commission"}: £{parseFloat(period.commissionAmount).toFixed(2)} • 
-                      {translations?.["Due"] || "Due"}: {format(new Date(period.dueDate), 'MMM dd, yyyy')}
-                      {period.paidDate && ` • ${translations?.["Paid"] || "Paid"}: ${format(new Date(period.paidDate), 'MMM dd, yyyy')}`}
+                      {t("Commission")}: £{parseFloat(period.commissionAmount).toFixed(2)} • 
+                      {t("Due")}: {format(new Date(period.dueDate), 'MMM dd, yyyy')}
+                      {period.paidDate && ` • ${t("Paid")}: ${format(new Date(period.paidDate), 'MMM dd, yyyy')}`}
                     </p>
                   </div>
                 </div>
@@ -419,7 +396,7 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
                     £{parseFloat(period.commissionAmount).toFixed(2)}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {(parseFloat(period.commissionRate) * 100).toFixed(1)}% {translations?.["rate"] || "rate"}
+                    {(parseFloat(period.commissionRate) * 100).toFixed(1)}% {t("rate")}
                   </div>
                 </div>
               </div>
@@ -428,8 +405,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
             {commissionData.commissionPeriods.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{translations?.["No commission history available yet"] || "No commission history available yet"}</p>
-                <p className="text-sm">{translations?.["Commission calculations will appear here after your first sales"] || "Commission calculations will appear here after your first sales"}</p>
+                <p>{t("No commission history available yet")}</p>
+                <p className="text-sm">{t("Commission calculations will appear here after your first sales")}</p>
               </div>
             )}
           </div>

@@ -12,6 +12,17 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-31**: COMMISSION STRUCTURE COMPLETE - Simplified to single 15% commission rate across entire platform
+  - **COMPLETED: Delete Store Button Removal** - Removed "Delete Store" button from vendor dashboard header for cleaner UI design
+  - **COMPLETED: Commission System Restructuring** - Changed from tiered commission (10%, 12.5%) to flat 15% rate for all vendors
+  - **COMPLETED: Backend Commission Service Update** - Updated calculateCommissionTier() method to return single 15% rate regardless of sales volume
+  - **COMPLETED: Frontend Commission Dashboard Update** - Replaced tier system with single "Platform Commission" badge showing 15%
+  - **COMPLETED: Translation System Update** - Added new translation strings for "Platform Commission" and "Standard commission rate for all vendors"
+  - **COMPLETED: TypeScript Error Resolution** - Fixed all translation array access errors with safe translation helper function
+  - **COMPLETED: Database Schema Update** - Updated default commission rate from 0.10 to 0.15 in vendorCommissionPeriods table
+  - Commission system now uses consistent 15% rate across all vendors with simplified UI and backend logic
+  - Vendor dashboard header cleaned up with only essential "Open Business Store" button for private vendors
+  - All commission calculations, payment processing, and dashboard displays now reflect the 15% unified rate
 - **2025-07-31**: UI CLEANUP & BUTTON COLOR UPDATES COMPLETE - Removed bulk actions, changed button colors, cleaned up interfaces
   - **COMPLETED: Bulk Actions Removal** - Removed "Bulk Actions" button and all related functionality from vendor product management
   - **COMPLETED: Button Color Updates** - Changed "Open Business Store" button and "Add Product" buttons from blue to black background

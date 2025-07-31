@@ -1958,7 +1958,7 @@ export const vendorCommissionPeriods = pgTable("vendor_commission_periods", {
   
   // Commission calculation
   commissionTier: commissionTierEnum("commission_tier").notNull().default("standard"),
-  commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull().default("0.10"), // 10%
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).notNull().default("0.15"), // 15%
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   
   // Payment tracking

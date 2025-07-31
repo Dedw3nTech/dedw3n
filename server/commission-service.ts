@@ -18,15 +18,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export class CommissionService {
   // Calculate commission tier based on monthly sales volume
-  calculateCommissionTier(totalSales: number): { tier: 'standard' | 'premium' | 'enterprise', rate: number } {
-    // Commission tiers based on monthly sales volume
-    if (totalSales >= 50000) { // £50,000+ per month
-      return { tier: 'enterprise', rate: 0.125 }; // 12.5%
-    } else if (totalSales >= 10000) { // £10,000+ per month
-      return { tier: 'premium', rate: 0.10 }; // 10%
-    } else {
-      return { tier: 'standard', rate: 0.10 }; // 10%
-    }
+  calculateCommissionTier(totalSales: number): { tier: 'standard', rate: number } {
+    // Single commission tier for all vendors - 15%
+    return { tier: 'standard', rate: 0.15 }; // 15%
   }
 
   // Calculate commission for a specific vendor and month
