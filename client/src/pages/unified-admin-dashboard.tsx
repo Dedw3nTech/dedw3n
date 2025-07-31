@@ -49,6 +49,8 @@ interface User {
   city?: string;
   country?: string;
   region?: string;
+  gender?: string;
+  dateOfBirth?: Date;
 }
 
 interface Report {
@@ -284,6 +286,13 @@ export default function UnifiedAdminDashboard() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [userSortField, setUserSortField] = useState<'createdAt' | 'lastLogin' | 'name'>('createdAt');
   const [userSortDirection, setUserSortDirection] = useState<'asc' | 'desc'>('desc');
+  
+  // Filter states for User Management
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
+  const [datingFilter, setDatingFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
 
   // System maintenance states
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
@@ -660,11 +669,38 @@ export default function UnifiedAdminDashboard() {
     });
   };
 
-  const filteredUsers = sortUsers(users.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+  const filteredUsers = sortUsers(users.filter(user => {
+    // Search term filter
+    const matchesSearch = searchTerm === '' || 
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Role filter
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    
+    // Status filter
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'locked' && user.isLocked) ||
+      (statusFilter === 'active' && !user.isLocked);
+    
+    // Vendor filter
+    const matchesVendor = vendorFilter === 'all' ||
+      (vendorFilter === 'active' && user.isVendor) ||
+      (vendorFilter === 'inactive' && !user.isVendor);
+    
+    // Dating filter
+    const matchesDating = datingFilter === 'all' ||
+      (datingFilter === 'active' && user.datingEnabled) ||
+      (datingFilter === 'inactive' && !user.datingEnabled);
+    
+    // Gender filter
+    const matchesGender = genderFilter === 'all' ||
+      (genderFilter === 'not_set' && !user.gender) ||
+      (genderFilter !== 'not_set' && user.gender === genderFilter);
+    
+    return matchesSearch && matchesRole && matchesStatus && matchesVendor && matchesDating && matchesGender;
+  }));
 
   // Handle sort changes
   const handleUserSort = (field: 'createdAt' | 'lastLogin' | 'name') => {
@@ -922,19 +958,134 @@ export default function UnifiedAdminDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-4">
-                        <Input
-                          placeholder="Search users..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-64"
-                        />
-                        <Search className="h-4 w-4 text-gray-400" />
+                    <div className="space-y-4 mb-6">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <Input
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-64"
+                          />
+                          <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <Badge variant="outline">
+                          {filteredUsers.length} users found
+                        </Badge>
                       </div>
-                      <Badge variant="outline">
-                        {filteredUsers.length} users found
-                      </Badge>
+                      
+                      {/* Filters Row */}
+                      <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Role:</label>
+                          <Select value={roleFilter} onValueChange={setRoleFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All roles" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All roles</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="moderator">Moderator</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Status:</label>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All status</SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="locked">Locked</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Vendor:</label>
+                          <Select value={vendorFilter} onValueChange={setVendorFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All vendors" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All vendors</SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Dating:</label>
+                          <Select value={datingFilter} onValueChange={setDatingFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All dating" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All dating</SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Gender:</label>
+                          <Select value={genderFilter} onValueChange={setGenderFilter}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue placeholder="All genders" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All genders</SelectItem>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                              <SelectItem value="not_set">Not set</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                          <Select value={`${userSortField}-${userSortDirection}`} onValueChange={(value) => {
+                            const [field, direction] = value.split('-');
+                            setUserSortField(field as 'createdAt' | 'lastLogin' | 'name');
+                            setUserSortDirection(direction as 'asc' | 'desc');
+                          }}>
+                            <SelectTrigger className="w-40 h-8">
+                              <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                              <SelectItem value="createdAt-desc">Newest first</SelectItem>
+                              <SelectItem value="createdAt-asc">Oldest first</SelectItem>
+                              <SelectItem value="lastLogin-desc">Recent login</SelectItem>
+                              <SelectItem value="lastLogin-asc">Old login</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setRoleFilter('all');
+                            setStatusFilter('all');
+                            setVendorFilter('all');
+                            setDatingFilter('all');
+                            setGenderFilter('all');
+                            setSearchTerm('');
+                          }}
+                          className="h-8"
+                        >
+                          Clear filters
+                        </Button>
+                      </div>
                     </div>
                     
                     <div className="rounded-md border">
