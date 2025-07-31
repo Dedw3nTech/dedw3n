@@ -2741,7 +2741,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to link affiliate partner
   const linkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest('POST', `/api/admin/vendors/${vendorId}/affiliate-partner`, { affiliatePartnerId: partnerId }),
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`, 'POST', { affiliatePartnerId: partnerId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2764,7 +2764,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to unlink affiliate partner
   const unlinkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest('DELETE', `/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`),
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2964,7 +2964,7 @@ function AffiliatePartnerManagement() {
   // Update affiliate partner mutation
   const updatePartnerMutation = useMutation({
     mutationFn: ({ id, ...updates }: any) => 
-      apiRequest('PATCH', `/api/admin/affiliate-partners/${id}`, updates),
+      apiRequest(`/api/admin/affiliate-partners/${id}`, 'PATCH', updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
       toast({
@@ -3122,46 +3122,39 @@ function AffiliatePartnerManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono">
-                        {((Number(partner.commissionRate) || 0.30) * 100).toFixed(1)}%
+                      <Badge variant="outline" className="font-mono text-gray-500">
+                        {(Number(partner.commissionRate) * 100 || 30).toFixed(0)}%
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {new Date(partner.createdAt).toLocaleDateString()}
+                      {partner.createdAt ? new Date(partner.createdAt).toLocaleDateString() : 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setSelectedPartner(partner);
                             setEditDialogOpen(true);
                           }}
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
-                          onClick={() => updatePartnerMutation.mutate({ 
-                            id: partner.id, 
-                            status: partner.status === 'active' ? 'inactive' : 'active' 
-                          })}
-                          className={partner.status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
-                        >
-                          {partner.status === 'active' ? 
-                            <Ban className="h-3 w-3" /> : 
-                            <CheckCircle className="h-3 w-3" />
-                          }
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => deletePartnerMutation.mutate(partner.id)}
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this affiliate partner?')) {
+                              deletePartnerMutation.mutate(partner.id);
+                            }
+                          }}
+                          disabled={deletePartnerMutation.isPending}
                           className="text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
                         </Button>
                       </div>
                     </TableCell>
@@ -3357,6 +3350,7 @@ function CreatePartnerDialog({ open, onOpenChange, onSubmit, isLoading }: {
               className="bg-gray-100 text-gray-500 cursor-not-allowed"
               placeholder="30.00"
             />
+            <p className="text-xs text-gray-500 mt-1">Commission rate is fixed at 30% for all affiliate partners</p>
           </div>
 
           <div>
