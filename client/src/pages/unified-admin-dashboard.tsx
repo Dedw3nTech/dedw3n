@@ -1213,7 +1213,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Age</TableHead>
                             <TableHead>Vendor Status</TableHead>
                             <TableHead>Dating Status</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1318,27 +1317,6 @@ export default function UnifiedAdminDashboard() {
                                     {user.datingEnabled ? 'Active' : 'Inactive'}
                                   </Badge>
                                 </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={() => {
-                                        setSelectedUser(user);
-                                        setUserDialogOpen(true);
-                                      }}
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={() => deleteUserMutation.mutate(user.id)}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
                               </TableRow>
                             ))
                           )}
@@ -1388,7 +1366,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Vendor Type</TableHead>
                             <TableHead>Store Name</TableHead>
                             <TableHead>Creation Date</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1517,7 +1494,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Subscription</TableHead>
                             <TableHead>Profile Status</TableHead>
                             <TableHead>Creation Date</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1648,7 +1624,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Commission Owed</TableHead>
                             <TableHead>Commission Paid</TableHead>
                             <TableHead>Account Status</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1807,7 +1782,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Badge</TableHead>
                             <TableHead>Sales</TableHead>
                             <TableHead>Joined</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1956,7 +1930,6 @@ export default function UnifiedAdminDashboard() {
                             <TableHead>Type</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Applied</TableHead>
-                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -2091,7 +2064,6 @@ export default function UnifiedAdminDashboard() {
                         <TableHead>Price</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Created</TableHead>
-                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
