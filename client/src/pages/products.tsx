@@ -993,9 +993,12 @@ export default function Products() {
                 <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
                 {shareOnFeedText}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => shareViaMessage(product)}>
+              <DropdownMenuItem onClick={() => {
+                setSelectedOfferProduct(product);
+                setOfferDialogOpen(true);
+              }}>
                 <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-                {sendViaMessageText}
+                Add a message with your offer...
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
                 <Users className="h-4 w-4 mr-2 text-blue-600" />
