@@ -1,6 +1,6 @@
 import { Express } from 'express';
 import { db } from './db.js';
-import { users, vendors, products, orders, posts, vendorCommissionPeriods, vendorCommissionPayments } from '../shared/schema.js';
+import { users, vendors, products, orders, posts, vendorCommissionPeriods, vendorCommissionPayments, affiliatePartners, vendorAffiliatePartners } from '../shared/schema.js';
 import { eq, desc, count, sql, and, sum } from 'drizzle-orm';
 
 // Middleware to check if user is admin
@@ -1283,6 +1283,200 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error('Error fetching commissions summary:', error);
       res.status(500).json({ message: 'Error fetching commissions summary' });
+    }
+  });
+
+  // ===== AFFILIATE PARTNER MANAGEMENT API ENDPOINTS =====
+
+  // Get all affiliate partners (for search/linking functionality)
+  app.get('/api/admin/affiliate-partners', isAdmin, async (req, res) => {
+    try {
+      const { search, page = 1, limit = 50 } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+
+      let query = db.select({
+        id: affiliatePartners.id,
+        name: affiliatePartners.name,
+        email: affiliatePartners.email,
+        phone: affiliatePartners.phone,
+        company: affiliatePartners.company,
+        partnerCode: affiliatePartners.partnerCode,
+        specialization: affiliatePartners.specialization,
+        region: affiliatePartners.region,
+        status: affiliatePartners.status,
+        isVerified: affiliatePartners.isVerified,
+        totalReferrals: affiliatePartners.totalReferrals,
+        totalCommissionEarned: affiliatePartners.totalCommissionEarned,
+        commissionRate: affiliatePartners.commissionRate,
+        createdAt: affiliatePartners.createdAt
+      }).from(affiliatePartners);
+
+      // Add search functionality
+      if (search && typeof search === 'string') {
+        query = query.where(
+          sql`LOWER(${affiliatePartners.name}) LIKE LOWER(${'%' + search + '%'}) 
+              OR LOWER(${affiliatePartners.email}) LIKE LOWER(${'%' + search + '%'}) 
+              OR LOWER(${affiliatePartners.company}) LIKE LOWER(${'%' + search + '%'})
+              OR LOWER(${affiliatePartners.partnerCode}) LIKE LOWER(${'%' + search + '%'})`
+        );
+      }
+
+      // Get total count
+      const countQuery = db.select({ count: count() }).from(affiliatePartners);
+      if (search && typeof search === 'string') {
+        countQuery.where(
+          sql`LOWER(${affiliatePartners.name}) LIKE LOWER(${'%' + search + '%'}) 
+              OR LOWER(${affiliatePartners.email}) LIKE LOWER(${'%' + search + '%'}) 
+              OR LOWER(${affiliatePartners.company}) LIKE LOWER(${'%' + search + '%'})
+              OR LOWER(${affiliatePartners.partnerCode}) LIKE LOWER(${'%' + search + '%'})`
+        );
+      }
+
+      const [allPartners, totalResult] = await Promise.all([
+        query.orderBy(desc(affiliatePartners.createdAt)).limit(Number(limit)).offset(offset),
+        countQuery
+      ]);
+
+      const totalCount = totalResult[0]?.count || 0;
+
+      res.json({
+        data: allPartners,
+        totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / Number(limit))
+      });
+    } catch (error) {
+      console.error('Error fetching affiliate partners:', error);
+      res.status(500).json({ message: 'Error fetching affiliate partners' });
+    }
+  });
+
+  // Link affiliate partner to vendor
+  app.post('/api/admin/vendors/:vendorId/affiliate-partner', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const { affiliatePartnerId, notes } = req.body;
+
+      if (isNaN(vendorId) || !affiliatePartnerId) {
+        return res.status(400).json({ message: 'Invalid vendor ID or affiliate partner ID' });
+      }
+
+      // Check if vendor exists
+      const vendorResult = await db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+      if (vendorResult.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      // Check if affiliate partner exists
+      const partnerResult = await db.select().from(affiliatePartners).where(eq(affiliatePartners.id, affiliatePartnerId)).limit(1);
+      if (partnerResult.length === 0) {
+        return res.status(404).json({ message: 'Affiliate partner not found' });
+      }
+
+      // Check if relationship already exists
+      const existingRelationship = await db.select()
+        .from(vendorAffiliatePartners)
+        .where(and(
+          eq(vendorAffiliatePartners.vendorId, vendorId),
+          eq(vendorAffiliatePartners.affiliatePartnerId, affiliatePartnerId)
+        ))
+        .limit(1);
+
+      if (existingRelationship.length > 0) {
+        return res.status(400).json({ message: 'Affiliate partner already linked to this vendor' });
+      }
+
+      // Create the relationship
+      await db.insert(vendorAffiliatePartners).values({
+        vendorId,
+        affiliatePartnerId,
+        assignedBy: req.user?.id,
+        notes: notes || null,
+        status: 'active'
+      });
+
+      console.log(`[ADMIN] Linked affiliate partner ${affiliatePartnerId} to vendor ${vendorId} by admin ${req.user?.id}`);
+
+      res.json({ 
+        message: 'Affiliate partner linked to vendor successfully',
+        vendorId,
+        affiliatePartnerId
+      });
+    } catch (error) {
+      console.error('Error linking affiliate partner to vendor:', error);
+      res.status(500).json({ message: 'Error linking affiliate partner to vendor' });
+    }
+  });
+
+  // Get affiliate partner for a specific vendor
+  app.get('/api/admin/vendors/:vendorId/affiliate-partner', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      // Get the affiliate partner relationship for this vendor
+      const partnerRelationship = await db.select({
+        partnerId: affiliatePartners.id,
+        partnerName: affiliatePartners.name,
+        partnerEmail: affiliatePartners.email,
+        partnerCompany: affiliatePartners.company,
+        partnerCode: affiliatePartners.partnerCode,
+        specialization: affiliatePartners.specialization,
+        relationshipStatus: vendorAffiliatePartners.status,
+        assignedAt: vendorAffiliatePartners.assignedAt,
+        notes: vendorAffiliatePartners.notes
+      })
+      .from(vendorAffiliatePartners)
+      .leftJoin(affiliatePartners, eq(vendorAffiliatePartners.affiliatePartnerId, affiliatePartners.id))
+      .where(eq(vendorAffiliatePartners.vendorId, vendorId))
+      .limit(1);
+
+      if (partnerRelationship.length === 0) {
+        return res.json({ affiliatePartner: null });
+      }
+
+      res.json({ affiliatePartner: partnerRelationship[0] });
+    } catch (error) {
+      console.error('Error fetching vendor affiliate partner:', error);
+      res.status(500).json({ message: 'Error fetching vendor affiliate partner' });
+    }
+  });
+
+  // Remove affiliate partner from vendor
+  app.delete('/api/admin/vendors/:vendorId/affiliate-partner/:partnerId', isAdmin, async (req, res) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      const partnerId = parseInt(req.params.partnerId);
+
+      if (isNaN(vendorId) || isNaN(partnerId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID or partner ID' });
+      }
+
+      // Remove the relationship
+      const result = await db.delete(vendorAffiliatePartners)
+        .where(and(
+          eq(vendorAffiliatePartners.vendorId, vendorId),
+          eq(vendorAffiliatePartners.affiliatePartnerId, partnerId)
+        ));
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: 'Affiliate partner relationship not found' });
+      }
+
+      console.log(`[ADMIN] Removed affiliate partner ${partnerId} from vendor ${vendorId} by admin ${req.user?.id}`);
+
+      res.json({ 
+        message: 'Affiliate partner removed from vendor successfully',
+        vendorId,
+        partnerId
+      });
+    } catch (error) {
+      console.error('Error removing affiliate partner from vendor:', error);
+      res.status(500).json({ message: 'Error removing affiliate partner from vendor' });
     }
   });
 }

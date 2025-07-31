@@ -2059,6 +2059,66 @@ export type TrustedDevice = typeof trustedDevices.$inferSelect;
 export type InsertTrustedDevice = z.infer<typeof insertTrustedDeviceSchema>;
 
 // =====================================
+// Affiliate Partner System Schema
+// =====================================
+
+// Affiliate partners table
+export const affiliatePartners = pgTable("affiliate_partners", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  phone: varchar("phone", { length: 50 }),
+  company: varchar("company", { length: 255 }),
+  website: varchar("website", { length: 500 }),
+  partnerCode: varchar("partner_code", { length: 50 }).notNull().unique(),
+  
+  // Partner details
+  description: text("description"),
+  specialization: varchar("specialization", { length: 100 }), // "marketing", "technology", "logistics", etc.
+  region: varchar("region", { length: 100 }),
+  languages: json("languages").$type<string[]>().default([]),
+  
+  // Status and performance
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, inactive, suspended
+  isVerified: boolean("is_verified").default(false),
+  verificationDate: timestamp("verification_date"),
+  
+  // Commission and referral tracking
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).default("0.30"), // 30% default
+  totalReferrals: integer("total_referrals").default(0),
+  totalCommissionEarned: decimal("total_commission_earned", { precision: 10, scale: 2 }).default("0"),
+  
+  // Relationship tracking
+  assignedVendors: integer("assigned_vendors").array().default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    partnerCodeIdx: index('idx_affiliate_partner_code').on(table.partnerCode),
+    statusIdx: index('idx_affiliate_status').on(table.status),
+    emailIdx: index('idx_affiliate_email').on(table.email),
+  };
+});
+
+// Vendor-Affiliate partner relationships
+export const vendorAffiliatePartners = pgTable("vendor_affiliate_partners", {
+  id: serial("id").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  affiliatePartnerId: integer("affiliate_partner_id").notNull().references(() => affiliatePartners.id, { onDelete: "cascade" }),
+  assignedBy: integer("assigned_by").notNull().references(() => users.id), // Admin who made the assignment
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, inactive
+  notes: text("notes"),
+}, (table) => {
+  return {
+    uniqueVendorAffiliate: unique().on(table.vendorId, table.affiliatePartnerId),
+    vendorIdIdx: index('idx_vendor_affiliate_vendor').on(table.vendorId),
+    affiliateIdIdx: index('idx_vendor_affiliate_partner').on(table.affiliatePartnerId),
+  };
+});
+
+// =====================================
 // Vendor Commission System Schema
 // =====================================
 
@@ -2223,6 +2283,20 @@ export const insertVendorPaymentMethodSchema = createInsertSchema(vendorPaymentM
 
 export const insertVendorAccountActionSchema = createInsertSchema(vendorAccountActions)
   .omit({ id: true, createdAt: true });
+
+// Affiliate partner schemas
+export const insertAffiliatePartnerSchema = createInsertSchema(affiliatePartners)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertVendorAffiliatePartnerSchema = createInsertSchema(vendorAffiliatePartners)
+  .omit({ id: true, assignedAt: true });
+
+// Affiliate partner types
+export type AffiliatePartner = typeof affiliatePartners.$inferSelect;
+export type InsertAffiliatePartner = z.infer<typeof insertAffiliatePartnerSchema>;
+
+export type VendorAffiliatePartner = typeof vendorAffiliatePartners.$inferSelect;
+export type InsertVendorAffiliatePartner = z.infer<typeof insertVendorAffiliatePartnerSchema>;
 
 // AI Personalization Tables
 

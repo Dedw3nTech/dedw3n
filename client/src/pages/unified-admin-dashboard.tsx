@@ -27,7 +27,8 @@ import {
   Database, RefreshCw, Download, Upload, AlertTriangle, Activity, AlertCircle, CheckCircle, 
   XCircle, Clock, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Mail, Phone, MapPin, 
   Calendar, Store, UserCog, Languages, CreditCard, Truck, FileText, BarChart3, Bell, 
-  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban, ChevronUp, ChevronDown, Heart
+  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban, ChevronUp, ChevronDown, Heart,
+  Link as LinkIcon, Unlink
 } from 'lucide-react';
 
 // Types
@@ -1294,6 +1295,7 @@ export default function UnifiedAdminDashboard() {
                           <TableRow>
                             <TableHead>Vendor</TableHead>
                             <TableHead>Store/Business</TableHead>
+                            <TableHead>Affiliate Partner</TableHead>
                             <TableHead>Total Sales</TableHead>
                             <TableHead>Commission Owed</TableHead>
                             <TableHead>Commission Paid</TableHead>
@@ -1304,13 +1306,13 @@ export default function UnifiedAdminDashboard() {
                         <TableBody>
                           {vendorsLoading ? (
                             <TableRow>
-                              <TableCell colSpan={7} className="text-center py-8">
+                              <TableCell colSpan={8} className="text-center py-8">
                                 Loading vendors...
                               </TableCell>
                             </TableRow>
                           ) : filteredVendors.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={7} className="text-center py-8">
+                              <TableCell colSpan={8} className="text-center py-8">
                                 No vendors found
                               </TableCell>
                             </TableRow>
@@ -1337,6 +1339,9 @@ export default function UnifiedAdminDashboard() {
                                     <p className="font-medium">{vendor.storeName}</p>
                                     <p className="text-sm text-gray-500">{vendor.businessName}</p>
                                   </div>
+                                </TableCell>
+                                <TableCell>
+                                  <AffiliatePartnerCell vendorId={vendor.id} />
                                 </TableCell>
                                 <TableCell>
                                   <div>
@@ -2357,5 +2362,216 @@ export default function UnifiedAdminDashboard() {
         </Dialog>
       </div>
     </div>
+  );
+}
+
+// Affiliate Partner Cell Component
+function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
+  const { toast } = useToast();
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
+
+  // Query to get current affiliate partner for this vendor
+  const { data: currentPartner, isLoading: isLoadingCurrentPartner } = useQuery({
+    queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'],
+    queryFn: () => apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`)
+  });
+
+  // Query to search affiliate partners
+  const { data: searchResults, isLoading: isLoadingSearch } = useQuery({
+    queryKey: ['/api/admin/affiliate-partners', { search: searchTerm }],
+    queryFn: () => apiRequest(`/api/admin/affiliate-partners?search=${encodeURIComponent(searchTerm)}&limit=20`),
+    enabled: searchTerm.length > 0
+  });
+
+  // Mutation to link affiliate partner
+  const linkPartnerMutation = useMutation({
+    mutationFn: (partnerId: number) => 
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`, {
+        method: 'POST',
+        body: JSON.stringify({ affiliatePartnerId: partnerId })
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
+      toast({
+        title: "Success",
+        description: "Affiliate partner linked successfully"
+      });
+      setIsSearchDialogOpen(false);
+      setSearchTerm('');
+      setSelectedPartnerId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to link affiliate partner",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation to unlink affiliate partner
+  const unlinkPartnerMutation = useMutation({
+    mutationFn: (partnerId: number) => 
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`, {
+        method: 'DELETE'
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
+      toast({
+        title: "Success",
+        description: "Affiliate partner removed successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove affiliate partner",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleLinkPartner = () => {
+    if (selectedPartnerId) {
+      linkPartnerMutation.mutate(selectedPartnerId);
+    }
+  };
+
+  const handleUnlinkPartner = (partnerId: number) => {
+    unlinkPartnerMutation.mutate(partnerId);
+  };
+
+  if (isLoadingCurrentPartner) {
+    return (
+      <div className="flex items-center justify-center p-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  const partner = currentPartner?.affiliatePartner;
+
+  return (
+    <>
+      {partner ? (
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm truncate">{partner.partnerName || 'Unknown'}</p>
+            <p className="text-xs text-gray-500 truncate">{partner.partnerCompany || 'No Company'}</p>
+            <p className="text-xs text-blue-600">{partner.partnerCode || 'No Code'}</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleUnlinkPartner(partner.partnerId)}
+            disabled={unlinkPartnerMutation.isPending}
+            className="text-red-600 hover:text-red-700"
+          >
+            <Unlink className="h-3 w-3" />
+          </Button>
+        </div>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setIsSearchDialogOpen(true)}
+          className="text-blue-600 hover:text-blue-700"
+        >
+          <LinkIcon className="h-3 w-3 mr-1" />
+          Link Partner
+        </Button>
+      )}
+
+      {/* Search and Link Dialog */}
+      <Dialog open={isSearchDialogOpen} onOpenChange={setIsSearchDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Link Affiliate Partner</DialogTitle>
+            <DialogDescription>
+              Search and select an affiliate partner to link to this vendor
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Search partners by name, email, company, or code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1"
+              />
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+
+            {searchTerm.length > 0 && (
+              <div className="max-h-64 overflow-y-auto border rounded-lg">
+                {isLoadingSearch ? (
+                  <div className="flex items-center justify-center p-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : searchResults?.data?.length > 0 ? (
+                  <div className="space-y-1 p-2">
+                    {searchResults.data.map((partner: any) => (
+                      <div
+                        key={partner.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedPartnerId === partner.id 
+                            ? 'bg-blue-50 border-blue-200' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => setSelectedPartnerId(partner.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{partner.name}</p>
+                            <p className="text-sm text-gray-600">{partner.company || 'No Company'}</p>
+                            <p className="text-xs text-blue-600">{partner.partnerCode}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={partner.status === 'active' ? 'default' : 'secondary'}>
+                              {partner.status}
+                            </Badge>
+                            {partner.isVerified && (
+                              <Badge variant="outline" className="ml-1 text-green-600">
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center p-4 text-gray-500">
+                    No partners found matching your search
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsSearchDialogOpen(false);
+                setSearchTerm('');
+                setSelectedPartnerId(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleLinkPartner}
+              disabled={!selectedPartnerId || linkPartnerMutation.isPending}
+            >
+              {linkPartnerMutation.isPending ? 'Linking...' : 'Link Partner'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
