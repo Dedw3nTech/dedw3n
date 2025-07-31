@@ -532,15 +532,26 @@ export default function AddProduct() {
   // Create product mutation
   const createProductMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
-      const response = await apiRequest('POST', '/api/vendors/products', data);
+      // Transform frontend field names to backend expected field names
+      const backendData = {
+        ...data,
+        name: data.title, // Backend expects 'name' field instead of 'title'
+        // Ensure required fields have fallback values
+        imageUrl: data.imageUrl || '/attached_assets/D3 black logo.png', // Provide fallback image
+        title: undefined, // Remove the frontend title field to avoid conflicts
+      };
+      
+      const response = await apiRequest('POST', '/api/vendors/products', backendData);
       return response.json();
     },
     onSuccess: (data) => {
+      // Show success popup with product confirmation
       toast({
-        title: t('Product Saved & Published'),
+        title: t('✅ Product Successfully Published!'),
         description: data.productCode 
-          ? `${t('Product saved and published successfully with code:')} ${data.productCode}`
-          : t('Your product has been saved and published to the marketplace successfully.'),
+          ? `${t('Product published to marketplace with code:')} ${data.productCode}`
+          : t('Your product has been successfully published to the marketplace!'),
+        duration: 5000,
       });
       
       // Update form with the generated product code if available
@@ -552,17 +563,29 @@ export default function AddProduct() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
       
-      // Don't navigate immediately to show the generated product code
+      // Show success alert dialog
+      alert(`✅ SUCCESS! Your product "${data.name || form.getValues('title')}" has been published!\n\nProduct Code: ${data.productCode || 'Generated'}\nMarketplace: ${data.marketplace?.toUpperCase() || 'C2C'}\n\nRedirecting to product page...`);
+      
+      // Navigate to product page
       setTimeout(() => {
         setLocation(`/product/${data.id}`);
       }, 2000);
     },
     onError: (error: any) => {
+      // Show error popup with detailed information
+      const errorMessage = error.message || 'Unknown error occurred';
+      
       toast({
-        title: t('Error'),
-        description: `${t('Failed to save and publish product:')} ${error.message}`,
+        title: t('❌ Upload Failed'),
+        description: `${t('Failed to publish product:')} ${errorMessage}`,
         variant: 'destructive',
+        duration: 8000,
       });
+      
+      // Show detailed error alert dialog
+      alert(`❌ UPLOAD FAILED!\n\nError Details: ${errorMessage}\n\nPlease check:\n• All required fields are filled\n• Valid image URL or upload\n• Internet connection\n• Try again or contact support`);
+      
+      console.error('Product upload error:', error);
     },
   });
 
