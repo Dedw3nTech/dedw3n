@@ -1433,13 +1433,17 @@ export default function Products() {
                   </Button>
                 )}
                 
-                {/* Add Product/Service Button */}
+                {/* Add Product/Service Button - Conditional styling for RQST */}
                 <Button 
                   onClick={() => setLocation('/add-product')}
                   size="sm" 
-                  className="h-7 px-3 bg-black text-white hover:bg-gray-800"
+                  className={`h-7 px-3 ${
+                    marketType === 'rqst' 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-black text-white hover:bg-gray-800'
+                  }`}
                 >
-                  + Add Product/Service
+                  {marketType === 'rqst' ? '+ Request Product/Service' : '+ Add Product/Service'}
                 </Button>
               </div>
             </div>

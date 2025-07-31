@@ -19,6 +19,7 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: SMS URL Scheme** - Uses sms:?body=${encodeURIComponent(message)} to open native messaging apps
   - **COMPLETED: Translation Integration** - "Share via Text Message" text integrated with master translation system
   - **COMPLETED: Add Product Button** - Added black "Add Product/Service" button next to product count and Clear All button on products page
+  - **COMPLETED: RQST Button Customization** - Button shows red background with "+ Request Product/Service" text only on RQST marketplace
   - SMS sharing functionality now available across products page, community posts, and product detail pages
   - Button opens native SMS app with pre-populated product/post information and links
   - Conditional rendering ensures SMS option only appears on mobile devices for optimal user experience
