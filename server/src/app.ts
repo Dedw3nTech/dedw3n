@@ -4,6 +4,7 @@ import { config } from './config/app.config';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { securityHeaders, requestLogger, sanitizeRequest } from './middleware/security.middleware';
 import { userRoutes } from './routes/user.routes';
+import { authRoutes } from './routes/auth.routes';
 import './container.setup'; // Initialize dependency injection container
 
 export function createApp(): express.Application {
@@ -35,6 +36,7 @@ export function createApp(): express.Application {
 
   // API Routes - New modular structure
   app.use('/api/v2/users', userRoutes);
+  app.use('/api/v2/auth', authRoutes);
 
   // 404 handler
   app.use(notFoundHandler);
