@@ -421,9 +421,10 @@ export default function Products() {
       return response.json();
     },
     onSuccess: () => {
+      const vendorName = selectedOfferProduct?.vendorId === 1 ? 'Kinshasa DR Congo' : `Vendor ${selectedOfferProduct?.vendorId}`;
       toast({
         title: "Offer Sent!",
-        description: "Your offer has been sent to the product owner.",
+        description: `Your offer has been sent to ${vendorName}`,
       });
       setOfferDialogOpen(false);
       setOfferAmount('');

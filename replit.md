@@ -12,6 +12,14 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 - Flexible content type support (text, product, event)
 
 ## Recent Changes
+- **2025-07-31**: PERSONALIZED SUCCESS POPUP ENHANCEMENT COMPLETE - Changed generic success messages to show vendor names
+  - **COMPLETED: Products Page Success Message** - Changed "Your offer has been sent to the product owner" to "Your offer has been sent to [vendor name]"
+  - **COMPLETED: PostCard Success Message** - Changed generic message to "Your offer has been sent to [user name/username]"
+  - **COMPLETED: Dynamic Vendor Name Display** - Shows "Kinshasa DR Congo" for vendor ID 1, "Vendor X" for others
+  - **COMPLETED: Social Posts Integration** - Uses post.user.name or post.user.username for personalized messaging
+  - **COMPLETED: User Experience Enhancement** - Success popups now provide clear confirmation of who received the offer
+  - Success notifications now display specific recipient names instead of generic "product owner" or "post author" text
+  - Maintains consistency across marketplace products and social post offers with personalized messaging
 - **2025-07-31**: COMPREHENSIVE ERROR ASSESSMENT & DRIZZLE ORM FIX COMPLETE - Resolved all authentication, TypeScript, and database query issues
   - **COMPLETED: Drizzle ORM Field Selection Fix** - Fixed "Cannot convert undefined or null to object" errors in complex join queries
   - **COMPLETED: Community Feed Product Data** - Timeline posts now display complete product information with images and buy buttons

@@ -523,7 +523,7 @@ export default function PostCard({
       setIsOfferModalOpen(false);
       toast({
         title: "Offer Sent!",
-        description: "Your offer has been sent as a message to the post author",
+        description: `Your offer has been sent to ${post.user?.name || post.user?.username || 'the post author'}`,
       });
     },
     onError: (error: Error) => {
