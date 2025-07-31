@@ -39,7 +39,7 @@ interface User {
   email: string;
   role: string;
   avatar?: string;
-  status: string;
+  // status: string; // Field doesn't exist in schema
   isLocked: boolean;
   lastLogin?: Date;
   createdAt: Date;

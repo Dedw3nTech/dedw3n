@@ -313,7 +313,7 @@ export function registerAdminRoutes(app: Express) {
         email: users.email,
         role: users.role,
         avatar: users.avatar,
-        status: users.status,
+        // status: users.status, // Field doesn't exist in schema
         isLocked: users.isLocked,
         lastLogin: users.lastLogin,
         createdAt: users.createdAt,
@@ -1473,7 +1473,7 @@ export function registerAdminRoutes(app: Express) {
         totalReferrals: affiliatePartners.totalReferrals,
         totalCommissionEarned: affiliatePartners.totalCommissionEarned,
         commissionRate: affiliatePartners.commissionRate,
-        notes: affiliatePartners.notes,
+        // notes: affiliatePartners.notes, // Field doesn't exist in affiliate_partners table
         createdAt: affiliatePartners.createdAt
       }).from(affiliatePartners);
 
@@ -1536,7 +1536,7 @@ export function registerAdminRoutes(app: Express) {
         totalReferrals = 0,
         totalCommissionEarned = 0.00,
         commissionRate = 0.30,
-        notes
+        // notes // Field doesn't exist in affiliate_partners table
       } = req.body;
 
       const newPartner = await db.insert(affiliatePartners).values({
@@ -1551,8 +1551,8 @@ export function registerAdminRoutes(app: Express) {
         isVerified,
         totalReferrals,
         totalCommissionEarned,
-        commissionRate,
-        notes
+        commissionRate
+        // notes // Field doesn't exist in affiliate_partners table
       }).returning();
 
       // Add the additional fields using raw SQL since Drizzle doesn't recognize the new columns yet

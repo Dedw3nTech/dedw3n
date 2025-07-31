@@ -10,7 +10,6 @@ export interface AdminUser {
   email: string;
   role: string;
   avatar?: string;
-  status: string;
   isLocked: boolean;
   lastLogin?: Date;
   createdAt: Date;
