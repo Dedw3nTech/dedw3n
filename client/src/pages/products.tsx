@@ -2037,16 +2037,55 @@ export default function Products() {
             <Button
               onClick={() => {
                 if (selectedSellProduct) {
-                  // Navigate to add-product page with pre-filled data
+                  // Collect ALL images from the original product
+                  const allImages: string[] = [];
+                  
+                  // Add primary image
+                  if (selectedSellProduct.imageUrl && selectedSellProduct.imageUrl !== '/placeholder-image.jpg') {
+                    allImages.push(selectedSellProduct.imageUrl);
+                  }
+                  
+                  // Add additional images from various possible sources
+                  if (selectedSellProduct.images && Array.isArray(selectedSellProduct.images)) {
+                    selectedSellProduct.images.forEach((img: string) => {
+                      if (img && img !== '/placeholder-image.jpg' && !allImages.includes(img)) {
+                        allImages.push(img);
+                      }
+                    });
+                  }
+                  
+                  // Add gallery images if they exist
+                  if (selectedSellProduct.gallery && Array.isArray(selectedSellProduct.gallery)) {
+                    selectedSellProduct.gallery.forEach((img: string) => {
+                      if (img && img !== '/placeholder-image.jpg' && !allImages.includes(img)) {
+                        allImages.push(img);
+                      }
+                    });
+                  }
+                  
+                  // Add imageUrls array if it exists
+                  if (selectedSellProduct.imageUrls && Array.isArray(selectedSellProduct.imageUrls)) {
+                    selectedSellProduct.imageUrls.forEach((img: string) => {
+                      if (img && img !== '/placeholder-image.jpg' && !allImages.includes(img)) {
+                        allImages.push(img);
+                      }
+                    });
+                  }
+                  
+                  // Navigate to add-product page with comprehensive pre-filled data including ALL images
                   const productData = encodeURIComponent(JSON.stringify({
                     name: selectedSellProduct.name,
                     price: selectedSellProduct.price,
                     category: selectedSellProduct.category,
                     description: selectedSellProduct.description || '',
-                    imageUrl: selectedSellProduct.imageUrl || '',
+                    imageUrl: allImages[0] || '', // Primary image
+                    images: allImages.slice(1), // Additional images
+                    gallery: allImages, // Complete gallery for compatibility
+                    imageUrls: allImages, // Complete image URLs array
                     weight: selectedSellProduct.weight || 0,
                     stock: selectedSellProduct.stock || 1,
-                    type: selectedSellProduct.type || 'product'
+                    type: selectedSellProduct.type || 'product',
+                    videoUrl: selectedSellProduct.videoUrl || ''
                   }));
                   setLocation(`/add-product?prefill=${productData}`);
                   setSellConfirmationOpen(false);

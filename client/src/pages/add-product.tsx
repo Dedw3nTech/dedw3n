@@ -389,6 +389,52 @@ export default function AddProduct() {
   // Helper function to get translated text
   const t = (text: string) => translations?.[text] || text;
 
+  // Helper function to extract all images from prefill data
+  const getAutoFilledImages = (): string[] => {
+    if (!parsedPrefillData) return [];
+    
+    const images: string[] = [];
+    
+    // Add primary image URL
+    if (parsedPrefillData.imageUrl && parsedPrefillData.imageUrl !== '/placeholder-image.jpg') {
+      images.push(parsedPrefillData.imageUrl);
+    }
+    
+    // Add additional images if they exist in prefill data
+    if (parsedPrefillData.images && Array.isArray(parsedPrefillData.images)) {
+      parsedPrefillData.images.forEach((img: string) => {
+        if (img && img !== '/placeholder-image.jpg' && !images.includes(img)) {
+          images.push(img);
+        }
+      });
+    }
+    
+    // Add gallery images if they exist
+    if (parsedPrefillData.gallery && Array.isArray(parsedPrefillData.gallery)) {
+      parsedPrefillData.gallery.forEach((img: string) => {
+        if (img && img !== '/placeholder-image.jpg' && !images.includes(img)) {
+          images.push(img);
+        }
+      });
+    }
+    
+    // Add imageUrls array if it exists
+    if (parsedPrefillData.imageUrls && Array.isArray(parsedPrefillData.imageUrls)) {
+      parsedPrefillData.imageUrls.forEach((img: string) => {
+        if (img && img !== '/placeholder-image.jpg' && !images.includes(img)) {
+          images.push(img);
+        }
+      });
+    }
+    
+    return images.slice(0, 12); // Limit to maximum 12 images
+  };
+
+  // Helper function to get count of auto-filled images
+  const getAutoFilledImageCount = (): number => {
+    return getAutoFilledImages().length;
+  };
+
   // Form initialization with prefill support
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -564,15 +610,24 @@ export default function AddProduct() {
     if (parsedPrefillData && parsedPrefillData.name && !hasShownAutoFillNotification) {
       toast({
         title: "Product Data Auto-Filled",
-        description: `Product "${parsedPrefillData.name}" data has been automatically filled. Review and click Publish to add to your store.`,
+        description: `Product "${parsedPrefillData.name}" data has been automatically filled with ${getAutoFilledImageCount()} image(s). Review and click Publish to add to your store.`,
         duration: 5000,
       });
       
       setHasShownAutoFillNotification(true);
       
-      // Auto-populate image URLs if provided
-      if (parsedPrefillData.imageUrl && parsedPrefillData.imageUrl !== '/placeholder-image.jpg') {
-        setImageUrls([parsedPrefillData.imageUrl]);
+      // Auto-populate ALL image URLs from original request
+      const autoFilledImages = getAutoFilledImages();
+      if (autoFilledImages.length > 0) {
+        setImageUrls(autoFilledImages);
+        
+        // Update form with primary image URL
+        form.setValue('imageUrl', autoFilledImages[0]);
+      }
+      
+      // Auto-populate video URL if provided
+      if (parsedPrefillData.videoUrl && parsedPrefillData.videoUrl !== '/placeholder-video.mp4') {
+        form.setValue('videoUrl', parsedPrefillData.videoUrl);
       }
     }
   }, [parsedPrefillData, hasShownAutoFillNotification]);
