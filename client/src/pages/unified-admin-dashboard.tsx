@@ -3018,11 +3018,9 @@ function CreatePartnerDialog({ open, onOpenChange, onSubmit, isLoading }: {
             <Input
               id="commissionRate"
               type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={formData.commissionRate * 100}
-              onChange={(e) => setFormData(prev => ({ ...prev, commissionRate: parseFloat(e.target.value) / 100 }))}
+              value="30"
+              disabled
+              className="bg-gray-100 text-gray-500 cursor-not-allowed"
               placeholder="30.00"
             />
           </div>
@@ -3204,11 +3202,9 @@ function EditPartnerDialog({ open, onOpenChange, partner, onSubmit, isLoading }:
               <Input
                 id="edit-commissionRate"
                 type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={formData.commissionRate * 100}
-                onChange={(e) => setFormData(prev => ({ ...prev, commissionRate: parseFloat(e.target.value) / 100 }))}
+                value="30"
+                disabled
+                className="bg-gray-100 text-gray-500 cursor-not-allowed"
                 placeholder="30.00"
               />
             </div>
