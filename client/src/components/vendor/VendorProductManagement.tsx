@@ -331,7 +331,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
         <div className="flex gap-2">
           <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
+              <Button onClick={resetForm} className="bg-black text-white hover:bg-gray-800">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Product
               </Button>
@@ -702,7 +702,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && categoryFilter === 'all' && (
-                <Button onClick={() => setShowProductDialog(true)}>
+                <Button onClick={() => setShowProductDialog(true)} className="bg-black text-white hover:bg-gray-800">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Your First Product
                 </Button>
