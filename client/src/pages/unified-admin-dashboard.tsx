@@ -1218,13 +1218,13 @@ export default function UnifiedAdminDashboard() {
                         <TableBody>
                           {usersLoading ? (
                             <TableRow>
-                              <TableCell colSpan={11} className="text-center py-8">
+                              <TableCell colSpan={10} className="text-center py-8">
                                 Loading users...
                               </TableCell>
                             </TableRow>
                           ) : filteredUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={11} className="text-center py-8">
+                              <TableCell colSpan={10} className="text-center py-8">
                                 No users found
                               </TableCell>
                             </TableRow>
