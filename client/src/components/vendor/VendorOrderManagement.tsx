@@ -18,7 +18,7 @@ import {
   Eye,
   Search,
   Filter,
-  Download,
+
   Clock,
   CheckCircle,
   XCircle,
@@ -31,7 +31,7 @@ import {
   Send,
   Phone,
   Mail,
-  Printer,
+
   RefreshCw,
   ArrowUpDown
 } from 'lucide-react';
@@ -276,16 +276,7 @@ export default function VendorOrderManagement({ vendorId }: VendorOrderManagemen
             Track and manage your customer orders and shipments
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export Orders
-          </Button>
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" />
-            Print Labels
-          </Button>
-        </div>
+
       </div>
 
       {/* Order Statistics */}
