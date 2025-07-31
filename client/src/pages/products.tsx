@@ -28,7 +28,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift, Smartphone } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -77,7 +77,11 @@ const ProductName = ({ productName }: { productName: string }) => {
 };
 import { useToast } from '@/hooks/use-toast';
 
-
+// Mobile device detection utility
+const isMobileDevice = () => {
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (window.innerWidth <= 768 && 'ontouchstart' in window);
+};
 
 export default function Products() {
   usePageTitle({ title: 'Products' });
@@ -127,16 +131,17 @@ export default function Products() {
     "Add to Shopping Bag", "New", "Sale", "Verified", "Min qty", "Buy Now",
     "Share", "View Product", "Cancel", "Sending...", "Posting...",
     
-    // Gift & Messaging (12 texts) - Fixed count
+    // Gift & Messaging (13 texts) - Fixed count
     "Search for recipient", "Type name or username...", "No users found matching",
     "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
-    "(incl. VAT)", // Added VAT text
+    "(incl. VAT)", "Share via Text Message", // Added VAT text and SMS sharing
     
-    // Community & Sharing (10 texts)
+    // Community & Sharing (11 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
     "What do you think about this product?", "Repost", "Repost", "Share on Feed",
+    "Share via Email",
     
     // Offers & Actions (10 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
@@ -179,9 +184,11 @@ export default function Products() {
     
     searchForRecipientText, typeNameUsernameText, noUsersFoundText, typeAtLeastText,
     sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
+    shareViaTextMessageText,
     
     servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
     addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText, shareOnFeedText,
+    shareViaEmailText,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
     enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText, sendOfferBtnText,
@@ -197,7 +204,6 @@ export default function Products() {
   
   // Fix for missing variables
   const shareProductText = shareProductTooltipText;
-  const shareViaEmailText = "Share via Email";
   const copyLinkText = "Copy Link";
   const friendText = friendsOnlyText;
   const volumeDiscountText = "Volume Discounts";
@@ -781,6 +787,23 @@ export default function Products() {
     setLocation(`/messages?share=${product.id}&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&content=${encodeURIComponent(`Check out this product: ${product.name}`)}`);
   };
 
+  // SMS sharing function - opens native text messaging app on mobile
+  const shareViaSMS = (product: any) => {
+    const productUrl = `${window.location.origin}/product/${product.id}`;
+    const smsBody = `Check out this product: ${product.name}\n\n${formatPrice(product.price)}\n\n${productUrl}`;
+    
+    // Create SMS URL scheme
+    const smsUrl = `sms:?body=${encodeURIComponent(smsBody)}`;
+    
+    // Open SMS app
+    window.open(smsUrl, '_blank');
+    
+    toast({
+      title: "Opening Text Messages",
+      description: "Text messaging app should open with product details",
+    });
+  };
+
   // Render product grid
   const renderProductGrid = () => {
     if (productsLoading) {
@@ -1052,6 +1075,12 @@ export default function Products() {
                 <Users className="h-4 w-4 mr-2 text-blue-600" />
                 {shareWithMemberText}
               </DropdownMenuItem>
+              {isMobileDevice() && (
+                <DropdownMenuItem onClick={() => shareViaSMS(product)}>
+                  <Smartphone className="h-4 w-4 mr-2 text-green-600" />
+                  {shareViaTextMessageText || "Share via Text Message"}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
             </DropdownMenu>
           </div>

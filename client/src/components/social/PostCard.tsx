@@ -63,6 +63,7 @@ import {
   Plus,
   Bookmark,
   Flag,
+  Smartphone,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -157,7 +158,12 @@ export default function PostCard({
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostText, setRepostText] = useState("");
 
-  // Master Translation System - PostCard Mega-Batch (49 texts)
+  // Mobile device detection
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // Master Translation System - PostCard Mega-Batch (50 texts)
   const postCardTexts = useMemo(() => [
     // Post Actions (13 texts)
     "Like", "Comment", "Share", "Save", "Report", "More options", "Delete Post", 
@@ -176,6 +182,9 @@ export default function PostCard({
     "Make an Offer", "Send", "Cancel", "Share Post", "Add Comment", 
     "Send Friend Request", "Repost", "Select User", "Write message", 
     "Offer amount", "Your message", "Are you sure?",
+    
+    // SMS Sharing (1 text)
+    "Share via Text Message",
     
     // Error Messages (5 texts)
     "Failed to like post", "Failed to save post", "Failed to share post", 
@@ -202,6 +211,9 @@ export default function PostCard({
     makeOfferTitle, sendText, cancelText, sharePostTitle, addCommentTitle,
     friendRequestTitle, repostTitle, selectUserText, writeMessageText,
     offerAmountText, yourMessageText, confirmText,
+    
+    // SMS Sharing
+    shareViaTextMessageText,
     
     // Error Messages
     failedLikeText, failedSaveText, failedShareText, failedDeleteText, errorText
@@ -417,6 +429,29 @@ export default function PostCard({
       });
     },
   });
+
+  // SMS sharing function for posts
+  const shareViaSMS = () => {
+    const postUrl = `${window.location.origin}/posts/${post.id}`;
+    let smsBody = `Check out this post by ${post.user.name}`;
+    
+    if (post.content) {
+      smsBody += `: ${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}`;
+    }
+    
+    smsBody += `\n\n${postUrl}`;
+    
+    // Create SMS URL scheme
+    const smsUrl = `sms:?body=${encodeURIComponent(smsBody)}`;
+    
+    // Open SMS app
+    window.open(smsUrl, '_blank');
+    
+    toast({
+      title: "Opening Text Messages",
+      description: "Text messaging app should open with post details",
+    });
+  };
 
   // Save post mutation
   const saveMutation = useMutation({
@@ -1319,6 +1354,12 @@ export default function PostCard({
                   )}
                   Repost
                 </DropdownMenuItem>
+                {isMobileDevice() && (
+                  <DropdownMenuItem onClick={shareViaSMS}>
+                    <Smartphone className="mr-2 h-4 w-4 text-green-600" />
+                    {shareViaTextMessageText || "Share via Text Message"}
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             

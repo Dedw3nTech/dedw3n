@@ -28,7 +28,8 @@ import {
   Heart,
   Gift,
   Search,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 
 import { 
@@ -72,6 +73,11 @@ export default function ProductDetail() {
   
   // Weight unit system
   const { formatWeight } = useWeightUnit();
+
+  // Mobile device detection
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
 
 
   
@@ -465,6 +471,25 @@ export default function ProductDetail() {
       content: reviewContent
     });
   };
+
+  // SMS sharing function for product detail
+  const shareViaSMS = () => {
+    if (!product) return;
+    
+    const productUrl = `${window.location.origin}/product/${product.id}`;
+    const smsBody = `Check out this product: ${product.name}\n\n${formatPrice(product.price)}\n\n${productUrl}`;
+    
+    // Create SMS URL scheme
+    const smsUrl = `sms:?body=${encodeURIComponent(smsBody)}`;
+    
+    // Open SMS app
+    window.open(smsUrl, '_blank');
+    
+    toast({
+      title: "Opening Text Messages",
+      description: "Text messaging app should open with product details",
+    });
+  };
   
 
 
@@ -842,6 +867,12 @@ export default function ProductDetail() {
                   <Users className="h-4 w-4 mr-2 text-blue-600" />
 {translateText('Share with Member')}
                 </DropdownMenuItem>
+                {isMobileDevice() && (
+                  <DropdownMenuItem onClick={shareViaSMS}>
+                    <Smartphone className="h-4 w-4 mr-2 text-green-600" />
+                    {translateText('Share via Text Message')}
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
