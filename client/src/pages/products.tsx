@@ -1503,7 +1503,6 @@ export default function Products() {
       <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{repostToCommunityText}</DialogTitle>
             <DialogDescription>
               {addMessageText}
             </DialogDescription>
