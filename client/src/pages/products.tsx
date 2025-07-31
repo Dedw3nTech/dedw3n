@@ -406,24 +406,20 @@ export default function Products() {
 
   // Send offer mutation
   const sendOfferMutation = useMutation({
-    mutationFn: ({ productId, amount, message }: { productId: number; amount: string; message: string }) => 
-      fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          receiverId: selectedOfferProduct?.vendorId,
-          content: `🎯 OFFER: ${formatPrice(parseFloat(amount))} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
-          category: 'marketplace'
-        })
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to send offer');
-        }
-        return res.json();
-      }),
+    mutationFn: async ({ productId, amount, message }: { productId: number; amount: string; message: string }) => {
+      const response = await apiRequest('POST', '/api/messages/send', {
+        receiverId: selectedOfferProduct?.vendorId,
+        content: `🎯 OFFER: ${formatPrice(parseFloat(amount))} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
+        category: 'marketplace'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send offer');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Offer Sent!",

@@ -504,8 +504,9 @@ export default function PostCard({
         "POST",
         `/api/messages/send`,
         { 
-          recipientId: post.userId,
-          content: `💰 Offer: $${amount}\n\n${message}`
+          receiverId: post.userId,
+          content: `💰 Offer: $${amount}\n\n${message}`,
+          category: 'marketplace'
         }
       );
       

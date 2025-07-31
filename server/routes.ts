@@ -6001,6 +6001,72 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // DEDICATED OFFER SENDING ENDPOINT - for frontend compatibility
+  app.post('/api/messages/send', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    console.log('[DEBUG] Send offer message endpoint called');
+    
+    try {
+      const { receiverId, recipientId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
+      const senderId = req.user!.id;
+      
+      // Handle both receiverId and recipientId for compatibility
+      const targetReceiverId = receiverId || recipientId;
+
+      console.log('[DEBUG] Offer message send request:', {
+        senderId,
+        receiverId: targetReceiverId,
+        content: content?.substring(0, 50) + '...',
+        category
+      });
+
+      if (!targetReceiverId) {
+        return res.status(400).json({ message: 'Receiver ID is required' });
+      }
+
+      if (!content && !attachmentUrl) {
+        return res.status(400).json({ message: 'Message content or attachment is required' });
+      }
+
+      // Validate receiver exists
+      const receiver = await storage.getUser(parseInt(targetReceiverId));
+      if (!receiver) {
+        return res.status(404).json({ message: 'Receiver not found' });
+      }
+
+      // Create message with attachment support
+      const messageData = {
+        senderId,
+        receiverId: parseInt(targetReceiverId),
+        content: content || '',
+        attachmentUrl: attachmentUrl || null,
+        attachmentType: attachmentType || null,
+        category: category as 'marketplace' | 'community' | 'dating',
+        messageType: attachmentUrl ? 'attachment' : 'text',
+        isRead: false
+      };
+
+      console.log('[DEBUG] Creating offer message with data:', messageData);
+
+      const message = await storage.createMessage(messageData);
+
+      console.log('[DEBUG] Offer message created successfully:', message.id);
+
+      // Broadcast to WebSocket if available
+      try {
+        const { broadcastMessage } = await import('./websocket-handler');
+        broadcastMessage(message, parseInt(targetReceiverId));
+        console.log('[DEBUG] Offer message broadcasted via WebSocket');
+      } catch (wsError) {
+        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError.message);
+      }
+
+      res.status(201).json(message);
+    } catch (error) {
+      console.error('[ERROR] Failed to send offer message:', error);
+      res.status(500).json({ message: 'Failed to send offer message' });
+    }
+  });
+
   // Category-specific messaging endpoints
   app.get('/api/messages/category/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -6052,41 +6118,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: 'Failed to get unread count' });
     }
   });
-
-  // Enhanced message creation with category support
-  app.post('/api/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const { receiverId, content, attachmentUrl, attachmentType, messageType, category = 'marketplace' } = req.body;
-      const senderId = (req as any).user.id;
-
-      if (!receiverId || !content) {
-        return res.status(400).json({ message: 'Receiver ID and content are required' });
-      }
-
-      if (!['marketplace', 'community', 'dating'].includes(category)) {
-        return res.status(400).json({ message: 'Invalid category' });
-      }
-
-      const messageData = {
-        senderId,
-        receiverId,
-        content,
-        attachmentUrl,
-        attachmentType,
-        messageType: messageType || 'text',
-        category,
-        isRead: false
-      };
-
-      const message = await storage.createMessage(messageData);
-      res.json(message);
-    } catch (error) {
-      console.error('Error creating message:', error);
-      res.status(500).json({ message: 'Failed to create message' });
-    }
-  });
-
-
 
   // Categories API endpoint
   app.get('/api/categories', async (req: Request, res: Response) => {
