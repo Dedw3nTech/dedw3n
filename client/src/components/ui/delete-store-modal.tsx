@@ -37,15 +37,6 @@ export function DeleteStoreModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-center space-y-4">
-          {/* Dedw3n Logo */}
-          <div className="flex justify-center mb-2">
-            <img 
-              src="/attached_assets/D3 black logo.png" 
-              alt="Dedw3n" 
-              className="h-12 w-auto"
-            />
-          </div>
-          
           <DialogTitle className="text-xl font-semibold text-gray-900">
             {finalTexts[0]}
           </DialogTitle>
