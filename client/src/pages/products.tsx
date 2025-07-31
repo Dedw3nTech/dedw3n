@@ -235,8 +235,7 @@ export default function Products() {
     queryKey: ['/api/users/search', memberSearchQuery],
     queryFn: async () => {
       if (memberSearchQuery.length >= 2) {
-        const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
-        return response;
+        return await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
       }
       return [];
     },
@@ -1812,13 +1811,6 @@ export default function Products() {
       <Dialog open={shareWithMemberDialogOpen} onOpenChange={setShareWithMemberDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="items-center text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <img 
-                src="/attached_assets/D3 black logo.png" 
-                alt="Dedw3n Logo" 
-                className="w-8 h-8"
-              />
-            </div>
             <DialogTitle className="text-xl font-bold">Share with Member</DialogTitle>
             <DialogDescription>
               Share this product with another member via direct message
