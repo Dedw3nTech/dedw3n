@@ -66,6 +66,13 @@ export interface AdminStats {
   productCount?: number;
   orderCount?: number;
   communityCount?: number;
+  totalDatingProfiles: number;
+  activeDatingProfiles: number;
+  activeVendors: number;
+  totalAmountSold: number;
+  totalTransactions: number;
+  totalAmountShipped: number;
+  shippedOrders: number;
 }
 
 export interface AdminVendorCommission {

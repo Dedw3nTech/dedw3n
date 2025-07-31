@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { useToast } from '@/hooks/use-toast';
@@ -2394,10 +2394,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to link affiliate partner
   const linkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`, {
-        method: 'POST',
-        body: JSON.stringify({ affiliatePartnerId: partnerId })
-      }),
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`, 'POST', { affiliatePartnerId: partnerId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2420,9 +2417,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to unlink affiliate partner
   const unlinkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`, {
-        method: 'DELETE'
-      }),
+      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2601,10 +2596,7 @@ function AffiliatePartnerManagement() {
   // Create affiliate partner mutation
   const createPartnerMutation = useMutation({
     mutationFn: (partnerData: any) => 
-      apiRequest('/api/admin/affiliate-partners', {
-        method: 'POST',
-        body: JSON.stringify(partnerData)
-      }),
+      apiRequest('/api/admin/affiliate-partners', 'POST', partnerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
       toast({
@@ -2625,10 +2617,7 @@ function AffiliatePartnerManagement() {
   // Update affiliate partner mutation
   const updatePartnerMutation = useMutation({
     mutationFn: ({ id, ...updates }: any) => 
-      apiRequest(`/api/admin/affiliate-partners/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updates)
-      }),
+      apiRequest(`/api/admin/affiliate-partners/${id}`, 'PATCH', updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
       toast({
@@ -2650,9 +2639,7 @@ function AffiliatePartnerManagement() {
   // Delete affiliate partner mutation
   const deletePartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest(`/api/admin/affiliate-partners/${partnerId}`, {
-        method: 'DELETE'
-      }),
+      apiRequest(`/api/admin/affiliate-partners/${partnerId}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
       toast({
