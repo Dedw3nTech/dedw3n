@@ -496,9 +496,9 @@ export default function MarketplaceRQST() {
               <Button variant="outline" size="sm" className="flex-1">
                 {t("View Details")}
               </Button>
-              <Button size="sm" className="flex-1 bg-black hover:bg-gray-800">
+              <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700 text-white">
                 <MessageSquare className="h-3 w-3 mr-1" />
-                {t("Respond to Request")}
+                Sell
               </Button>
             </CardFooter>
           </Card>

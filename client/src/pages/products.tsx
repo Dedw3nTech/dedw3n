@@ -926,13 +926,13 @@ export default function Products() {
                 }
               }}
               disabled={addToCartMutation.isPending}
-              className="bg-black text-white hover:bg-gray-800 font-bold w-full"
+              className={marketType === 'rqst' ? "bg-red-600 text-white hover:bg-red-700 font-bold w-full" : "bg-black text-white hover:bg-gray-800 font-bold w-full"}
               title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
             >
               {addToCartMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                buyText
+                marketType === 'rqst' ? 'Sell' : buyText
               )}
             </Button>
           </div>
