@@ -374,7 +374,7 @@ export default function UnifiedAdminDashboard() {
   // User management mutations
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, updates }: { userId: number; updates: Partial<User> }) => {
-      return apiRequest(`/api/admin/users/${userId}`, 'PATCH', updates);
+      return apiRequest('PATCH', `/api/admin/users/${userId}`, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -392,7 +392,7 @@ export default function UnifiedAdminDashboard() {
   // Report management mutations
   const updateReportMutation = useMutation({
     mutationFn: async ({ reportId, status }: { reportId: number; status: string }) => {
-      return apiRequest(`/api/admin/reports/${reportId}`, 'PATCH', { status });
+      return apiRequest('PATCH', `/api/admin/reports/${reportId}`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/reports'] });
@@ -408,7 +408,7 @@ export default function UnifiedAdminDashboard() {
   // Vendor request management mutations
   const updateVendorRequestMutation = useMutation({
     mutationFn: async ({ requestId, status }: { requestId: number; status: string }) => {
-      return apiRequest(`/api/admin/vendor-requests/${requestId}`, 'PATCH', { status });
+      return apiRequest('PATCH', `/api/admin/vendor-requests/${requestId}`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-requests'] });
@@ -425,7 +425,7 @@ export default function UnifiedAdminDashboard() {
   // User deletion mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      return apiRequest(`/api/admin/users/${userId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/admin/users/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -447,7 +447,7 @@ export default function UnifiedAdminDashboard() {
   // Vendor status management mutations
   const updateVendorStatusMutation = useMutation({
     mutationFn: async ({ vendorId, accountStatus, isActive }: { vendorId: number; accountStatus?: string; isActive?: boolean }) => {
-      return apiRequest(`/api/admin/vendors/${vendorId}`, 'PATCH', { accountStatus, isActive });
+      return apiRequest('PATCH', `/api/admin/vendors/${vendorId}`, { accountStatus, isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
@@ -463,7 +463,7 @@ export default function UnifiedAdminDashboard() {
   // Product management mutations
   const updateProductStatusMutation = useMutation({
     mutationFn: async ({ productId, status, isActive }: { productId: number; status?: string; isActive?: boolean }) => {
-      return apiRequest(`/api/admin/products/${productId}`, 'PATCH', { status, isActive });
+      return apiRequest('PATCH', `/api/admin/products/${productId}`, { status, isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
@@ -478,7 +478,7 @@ export default function UnifiedAdminDashboard() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: number) => {
-      return apiRequest(`/api/admin/products/${productId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/admin/products/${productId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
@@ -493,7 +493,7 @@ export default function UnifiedAdminDashboard() {
   // Vendor deletion mutation
   const deleteVendorMutation = useMutation({
     mutationFn: async (vendorId: number) => {
-      return apiRequest(`/api/admin/vendors/${vendorId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/admin/vendors/${vendorId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
@@ -509,7 +509,7 @@ export default function UnifiedAdminDashboard() {
   // Commission management mutations
   const freezeVendorMutation = useMutation({
     mutationFn: async ({ vendorId, reason }: { vendorId: number; reason: string }) => {
-      return apiRequest(`/api/admin/vendors/${vendorId}/freeze`, 'PATCH', { reason });
+      return apiRequest('PATCH', `/api/admin/vendors/${vendorId}/freeze`, { reason });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
@@ -523,7 +523,7 @@ export default function UnifiedAdminDashboard() {
 
   const unfreezeVendorMutation = useMutation({
     mutationFn: async (vendorId: number) => {
-      return apiRequest(`/api/admin/vendors/${vendorId}/unfreeze`, 'PATCH');
+      return apiRequest('PATCH', `/api/admin/vendors/${vendorId}/unfreeze`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
@@ -537,7 +537,7 @@ export default function UnifiedAdminDashboard() {
 
   const markCommissionPaidMutation = useMutation({
     mutationFn: async ({ periodId, paymentMethod, paymentReference }: { periodId: number; paymentMethod?: string; paymentReference?: string }) => {
-      return apiRequest(`/api/admin/commission-periods/${periodId}/mark-paid`, 'PATCH', { paymentMethod, paymentReference });
+      return apiRequest('PATCH', `/api/admin/commission-periods/${periodId}/mark-paid`, { paymentMethod, paymentReference });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors'] });
@@ -2741,7 +2741,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to link affiliate partner
   const linkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner`, 'POST', { affiliatePartnerId: partnerId }),
+      apiRequest('POST', `/api/admin/vendors/${vendorId}/affiliate-partner`, { affiliatePartnerId: partnerId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2764,7 +2764,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
   // Mutation to unlink affiliate partner
   const unlinkPartnerMutation = useMutation({
     mutationFn: (partnerId: number) => 
-      apiRequest(`/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`, 'DELETE'),
+      apiRequest('DELETE', `/api/admin/vendors/${vendorId}/affiliate-partner/${partnerId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendors', vendorId, 'affiliate-partner'] });
       toast({
@@ -2964,7 +2964,7 @@ function AffiliatePartnerManagement() {
   // Update affiliate partner mutation
   const updatePartnerMutation = useMutation({
     mutationFn: ({ id, ...updates }: any) => 
-      apiRequest(`/api/admin/affiliate-partners/${id}`, 'PATCH', updates),
+      apiRequest('PATCH', `/api/admin/affiliate-partners/${id}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
       toast({
