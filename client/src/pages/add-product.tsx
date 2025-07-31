@@ -387,7 +387,10 @@ export default function AddProduct() {
   const { translations, isLoading: isTranslating } = useMasterBatchTranslation(addProductTexts);
 
   // Helper function to get translated text
-  const t = (text: string) => translations?.[text] || text;
+  const t = (text: string): string => {
+    if (!translations) return text;
+    return translations[text] || text;
+  };
 
   // Helper function to extract all images from prefill data
   const getAutoFilledImages = (): string[] => {
@@ -494,7 +497,7 @@ export default function AddProduct() {
   });
 
   // Get user's vendor accounts to determine marketplace availability
-  const { data: vendorAccountsResponse } = useQuery({
+  const { data: vendorAccountsResponse } = useQuery<{vendorAccounts: any[]}>({
     queryKey: ['/api/vendors/user/accounts'],
     enabled: !!user,
   });
@@ -538,21 +541,26 @@ export default function AddProduct() {
   // Set default marketplace when available marketplaces change
   useEffect(() => {
     if (availableMarketplaces.length > 0 && !form.getValues('marketplace')) {
-      form.setValue('marketplace', availableMarketplaces[0].value);
+      form.setValue('marketplace', availableMarketplaces[0].value as 'c2c' | 'b2c' | 'b2b' | 'rqst');
     }
   }, [availableMarketplaces, form]);
 
   // Auto-select RQST marketplace when request options are selected
   useEffect(() => {
-    const offeringType = form.watch('offeringType');
-    if (offeringType === 'request_product' || offeringType === 'request_service') {
-      form.setValue('marketplace', 'rqst');
-    }
-  }, [form.watch('offeringType'), form]);
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'offeringType') {
+        const offeringType = value.offeringType;
+        if (offeringType === 'request_product' || offeringType === 'request_service') {
+          form.setValue('marketplace', 'rqst');
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Auto-fill vendor name based on marketplace selection
   useEffect(() => {
-    if (vendorAccountsResponse?.vendorAccounts?.length > 0) {
+    if (vendorAccountsResponse?.vendorAccounts && vendorAccountsResponse.vendorAccounts.length > 0) {
       const selectedMarketplace = form.getValues('marketplace');
       const vendorAccounts = vendorAccountsResponse.vendorAccounts;
       
@@ -575,7 +583,7 @@ export default function AddProduct() {
         form.setValue('vendor', vendorName);
       }
     }
-  }, [vendorAccountsResponse, form.watch('marketplace'), form]);
+  }, [vendorAccountsResponse, form]);
 
   // Check if user is a vendor
   useEffect(() => {
@@ -690,7 +698,7 @@ export default function AddProduct() {
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
       
       // Show success alert dialog
-      alert(`✅ SUCCESS! Your product "${data.name || form.getValues('title')}" has been published!\n\nProduct Code: ${data.productCode || 'Generated'}\nMarketplace: ${data.marketplace?.toUpperCase() || 'C2C'}\n\nRedirecting to product page...`);
+      alert(`✅ SUCCESS! Your product "${data.name || form.getValues('name')}" has been published!\n\nProduct Code: ${data.productCode || 'Generated'}\nMarketplace: ${data.marketplace?.toUpperCase() || 'C2C'}\n\nRedirecting to product page...`);
       
       // Navigate to product page
       setTimeout(() => {
@@ -1920,7 +1928,7 @@ export default function AddProduct() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((category) => (
+                            {categories.map((category: {id: number, name: string}) => (
                               <SelectItem key={category.id} value={category.name}>
                                 {category.name}
                               </SelectItem>
