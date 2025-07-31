@@ -10,7 +10,7 @@ import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
-import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, LogOut, ChevronDown } from "lucide-react";
+import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, Shield, LogOut, ChevronDown } from "lucide-react";
 import { performUnifiedLogout } from "@/utils/unified-logout-system";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
@@ -31,6 +31,7 @@ export default function UserMenu() {
     "Notifications",
     "Dating Dashboard",
     "Vendor Dashboard",
+    "Admin Centre",
     "Log Out",
     "Log in",
     "Logging out..."
@@ -47,9 +48,10 @@ export default function UserMenu() {
     notifications: translatedTexts[3] || "Notifications",
     datingDashboard: translatedTexts[4] || "Dating Dashboard",
     vendorDashboard: translatedTexts[5] || "Vendor Dashboard",
-    logout: translatedTexts[6] || "Log Out",
-    login: translatedTexts[7] || "Log in",
-    loggingOut: translatedTexts[8] || "Logging out..."
+    adminCentre: translatedTexts[6] || "Admin Centre",
+    logout: translatedTexts[7] || "Log Out",
+    login: translatedTexts[8] || "Log in",
+    loggingOut: translatedTexts[9] || "Logging out..."
   }), [translatedTexts]);
 
   // Fetch unread message count
@@ -229,6 +231,18 @@ export default function UserMenu() {
               <Store className="h-4 w-4 text-gray-500" />
               {translatedLabels.vendorDashboard}
             </button>
+            
+            {/* Admin Centre - Only visible to admin users */}
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin" 
+                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Shield className="h-4 w-4 text-gray-500" />
+                {translatedLabels.adminCentre}
+              </Link>
+            )}
           </div>
 
           {/* Logout Section */}
