@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,68 +28,70 @@ import {
   DollarSign,
   Camera,
   Save,
-  AlertTriangle
+  AlertTriangle,
+  Building,
+  FileText,
+  Banknote
 } from 'lucide-react';
 
-interface VendorProfile {
+interface VendorData {
   id: number;
+  userId: number;
+  vendorType: 'private' | 'business';
+  storeName: string;
   businessName: string;
-  displayName: string;
-  description: string;
-  logo?: string;
-  bannerImage?: string;
-  contactEmail: string;
-  businessPhone?: string;
+  description?: string;
+  businessType: string;
+  email: string;
+  phone: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  taxId?: string;
   website?: string;
-  businessAddress: {
-    street: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
-  businessHours: {
-    monday: { open: string; close: string; closed: boolean };
-    tuesday: { open: string; close: string; closed: boolean };
-    wednesday: { open: string; close: string; closed: boolean };
-    thursday: { open: string; close: string; closed: boolean };
-    friday: { open: string; close: string; closed: boolean };
-    saturday: { open: string; close: string; closed: boolean };
-    sunday: { open: string; close: string; closed: boolean };
-  };
-  socialMedia: {
-    facebook?: string;
-    instagram?: string;
-    twitter?: string;
-    linkedin?: string;
-  };
-  settings: {
-    autoAcceptOrders: boolean;
-    holidayMode: boolean;
-    showInventoryCount: boolean;
-    allowBackorders: boolean;
-    enableReviews: boolean;
-    requireSignature: boolean;
-    emailNotifications: boolean;
-    smsNotifications: boolean;
-    lowStockAlerts: boolean;
-    currency: string;
-    timeZone: string;
-    language: string;
-  };
-  paymentSettings: {
-    acceptsCreditCards: boolean;
-    acceptsPayPal: boolean;
-    acceptsBankTransfer: boolean;
-    acceptsCOD: boolean;
-    paymentTerms: string;
-  };
-  shippingSettings: {
-    freeShippingThreshold?: number;
-    handlingTime: number;
-    returnPolicy: string;
-    internationalShipping: boolean;
-  };
+  logo?: string;
+  rating: number;
+  ratingCount: number;
+  badgeLevel: string;
+  totalSalesAmount: number;
+  totalTransactions: number;
+  isApproved: boolean;
+  isActive: boolean;
+  accountStatus: string;
+  hasSalesManager: boolean;
+  salesManagerName?: string;
+  salesManagerId?: string;
+  unitSystem: string;
+  weightSystem: string;
+  timezone: string;
+  billingCycle: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface BankAccountData {
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  sortCode: string;
+  iban?: string;
+  swiftCode?: string;
+  currency: string;
+  accountType: 'checking' | 'savings' | 'business';
+}
+
+interface NotificationSettings {
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  orderNotifications: boolean;
+  paymentNotifications: boolean;
+  lowStockAlerts: boolean;
+  reviewNotifications: boolean;
+  marketingEmails: boolean;
 }
 
 interface VendorSettingsProps {
@@ -100,78 +102,141 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch vendor profile
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['/api/vendors/profile', vendorId],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/vendors/profile?vendorId=${vendorId}`);
-      return response as VendorProfile;
-    },
+  // Fetch vendor data
+  const { data: vendor, isLoading } = useQuery({
+    queryKey: ['/api/vendors/details', vendorId],
+    queryFn: () => apiRequest(`/api/vendors/details/${vendorId}`),
     enabled: !!vendorId
   });
 
-  // Profile update mutation
-  const updateProfileMutation = useMutation({
-    mutationFn: async (profileData: Partial<VendorProfile>) => {
-      return await apiRequest(`/api/vendors/profile/${vendorId}`, {
+  // Local state for form data
+  const [formData, setFormData] = useState<Partial<VendorData>>({});
+  const [bankAccount, setBankAccount] = useState<BankAccountData>({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    sortCode: '',
+    iban: '',
+    swiftCode: '',
+    currency: 'GBP',
+    accountType: 'business'
+  });
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    emailNotifications: true,
+    smsNotifications: false,
+    orderNotifications: true,
+    paymentNotifications: true,
+    lowStockAlerts: true,
+    reviewNotifications: true,
+    marketingEmails: false
+  });
+
+  // Initialize form data when vendor loads
+  useEffect(() => {
+    if (vendor) {
+      setFormData(vendor);
+    }
+  }, [vendor]);
+
+  // Update vendor profile mutation
+  const updateVendorMutation = useMutation({
+    mutationFn: async (updateData: Partial<VendorData>) => {
+      return await apiRequest(`/api/vendors/${vendorId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(updateData)
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vendors/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/details'] });
       toast({
         title: "Success",
-        description: "Profile updated successfully"
+        description: "Vendor settings updated successfully"
       });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "Failed to update vendor settings",
         variant: "destructive"
       });
     }
   });
 
-  const [formData, setFormData] = useState<Partial<VendorProfile>>({});
-
-  // Initialize form data when profile loads
-  React.useEffect(() => {
-    if (profile) {
-      setFormData(profile);
+  // Bank account update mutation
+  const updateBankAccountMutation = useMutation({
+    mutationFn: async (bankData: BankAccountData) => {
+      return await apiRequest(`/api/vendors/${vendorId}/bank-account`, {
+        method: 'PUT',
+        body: JSON.stringify(bankData)
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Bank account information updated successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error", 
+        description: "Failed to update bank account information",
+        variant: "destructive"
+      });
     }
-  }, [profile]);
+  });
 
-  const updateField = (path: string, value: any) => {
-    setFormData(prev => {
-      const keys = path.split('.');
-      const newData = { ...prev };
-      let current: any = newData;
+  // Notification settings mutation
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async (notificationData: NotificationSettings) => {
+      return await apiRequest(`/api/vendors/${vendorId}/notifications`, {
+        method: 'PUT',
+        body: JSON.stringify(notificationData)
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Notification settings updated successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update notification settings", 
+        variant: "destructive"
+      });
+    }
+  });
 
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) {
-          current[keys[i]] = {};
-        }
-        current = current[keys[i]];
-      }
-      
-      current[keys[keys.length - 1]] = value;
-      return newData;
-    });
+  const updateField = (field: keyof VendorData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = (section: string) => {
-    const sectionData = { [section]: formData[section as keyof VendorProfile] };
-    updateProfileMutation.mutate(sectionData);
+  const updateBankField = (field: keyof BankAccountData, value: any) => {
+    setBankAccount(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateNotificationField = (field: keyof NotificationSettings, value: boolean) => {
+    setNotifications(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = () => {
+    updateVendorMutation.mutate(formData);
+  };
+
+  const handleSaveBankAccount = () => {
+    updateBankAccountMutation.mutate(bankAccount);
+  };
+
+  const handleSaveNotifications = () => {
+    updateNotificationsMutation.mutate(notifications);
   };
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading settings...</div>;
   }
 
-  if (!profile) {
+  if (!vendor) {
     return <div className="text-center p-8">Failed to load vendor settings</div>;
   }
 
@@ -179,33 +244,42 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Store Settings</h2>
+          <h2 className="text-2xl font-bold">Vendor Settings</h2>
           <p className="text-muted-foreground">
-            Configure your store profile, preferences, and business information
+            Manage your vendor profile, payment information, and business settings
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="business">Business</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="shipping">Shipping</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
+        {/* Profile Settings */}
         <TabsContent value="profile" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Store className="h-5 w-5" />
-                Store Profile
+                Store Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="storeName">Store Name</Label>
+                  <Input
+                    id="storeName"
+                    value={formData.storeName || ''}
+                    onChange={(e) => updateField('storeName', e.target.value)}
+                    placeholder="Your store name"
+                  />
+                </div>
                 <div>
                   <Label htmlFor="businessName">Business Name</Label>
                   <Input
@@ -213,15 +287,6 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                     value={formData.businessName || ''}
                     onChange={(e) => updateField('businessName', e.target.value)}
                     placeholder="Your business name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    value={formData.displayName || ''}
-                    onChange={(e) => updateField('displayName', e.target.value)}
-                    placeholder="Name shown to customers"
                   />
                 </div>
               </div>
@@ -239,21 +304,21 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="contactEmail">Contact Email</Label>
+                  <Label htmlFor="email">Business Email</Label>
                   <Input
-                    id="contactEmail"
+                    id="email"
                     type="email"
-                    value={formData.contactEmail || ''}
-                    onChange={(e) => updateField('contactEmail', e.target.value)}
-                    placeholder="contact@yourbusiness.com"
+                    value={formData.email || ''}
+                    onChange={(e) => updateField('email', e.target.value)}
+                    placeholder="business@example.com"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="businessPhone">Business Phone</Label>
+                  <Label htmlFor="phone">Business Phone</Label>
                   <Input
-                    id="businessPhone"
-                    value={formData.businessPhone || ''}
-                    onChange={(e) => updateField('businessPhone', e.target.value)}
+                    id="phone"
+                    value={formData.phone || ''}
+                    onChange={(e) => updateField('phone', e.target.value)}
                     placeholder="+44 20 1234 5678"
                   />
                 </div>
@@ -269,195 +334,256 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                 />
               </div>
 
-              <Button onClick={() => handleSave('profile')} disabled={updateProfileMutation.isPending}>
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={updateVendorMutation.isPending}
+                className="bg-black text-white hover:bg-gray-800"
+              >
                 <Save className="mr-2 h-4 w-4" />
-                Save Profile
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Social Media
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="facebook">Facebook</Label>
-                  <Input
-                    id="facebook"
-                    value={formData.socialMedia?.facebook || ''}
-                    onChange={(e) => updateField('socialMedia.facebook', e.target.value)}
-                    placeholder="https://facebook.com/yourbusiness"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="instagram">Instagram</Label>
-                  <Input
-                    id="instagram"
-                    value={formData.socialMedia?.instagram || ''}
-                    onChange={(e) => updateField('socialMedia.instagram', e.target.value)}
-                    placeholder="https://instagram.com/yourbusiness"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="twitter">Twitter</Label>
-                  <Input
-                    id="twitter"
-                    value={formData.socialMedia?.twitter || ''}
-                    onChange={(e) => updateField('socialMedia.twitter', e.target.value)}
-                    placeholder="https://twitter.com/yourbusiness"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="linkedin">LinkedIn</Label>
-                  <Input
-                    id="linkedin"
-                    value={formData.socialMedia?.linkedin || ''}
-                    onChange={(e) => updateField('socialMedia.linkedin', e.target.value)}
-                    placeholder="https://linkedin.com/company/yourbusiness"
-                  />
-                </div>
-              </div>
-
-              <Button onClick={() => handleSave('socialMedia')} disabled={updateProfileMutation.isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Social Media
+                {updateVendorMutation.isPending ? 'Saving...' : 'Save Profile'}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Business Settings */}
         <TabsContent value="business" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Business Address
+                <Building className="h-5 w-5" />
+                Business Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="street">Street Address</Label>
-                <Input
-                  id="street"
-                  value={formData.businessAddress?.street || ''}
-                  onChange={(e) => updateField('businessAddress.street', e.target.value)}
-                  placeholder="123 Business Street"
-                />
-              </div>
-
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.businessAddress?.city || ''}
-                    onChange={(e) => updateField('businessAddress.city', e.target.value)}
-                    placeholder="London"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State/County</Label>
-                  <Input
-                    id="state"
-                    value={formData.businessAddress?.state || ''}
-                    onChange={(e) => updateField('businessAddress.state', e.target.value)}
-                    placeholder="Greater London"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="postalCode">Postal Code</Label>
-                  <Input
-                    id="postalCode"
-                    value={formData.businessAddress?.postalCode || ''}
-                    onChange={(e) => updateField('businessAddress.postalCode', e.target.value)}
-                    placeholder="SW1A 1AA"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="country">Country</Label>
+                  <Label htmlFor="businessType">Business Type</Label>
                   <Select
-                    value={formData.businessAddress?.country || ''}
-                    onValueChange={(value) => updateField('businessAddress.country', value)}
+                    value={formData.businessType || ''}
+                    onValueChange={(value) => updateField('businessType', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
+                      <SelectValue placeholder="Select business type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GB">United Kingdom</SelectItem>
-                      <SelectItem value="US">United States</SelectItem>
-                      <SelectItem value="CA">Canada</SelectItem>
-                      <SelectItem value="AU">Australia</SelectItem>
-                      <SelectItem value="DE">Germany</SelectItem>
-                      <SelectItem value="FR">France</SelectItem>
+                      <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+                      <SelectItem value="partnership">Partnership</SelectItem>
+                      <SelectItem value="limited_company">Limited Company</SelectItem>
+                      <SelectItem value="corporation">Corporation</SelectItem>
+                      <SelectItem value="non_profit">Non-Profit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="taxId">Tax ID / VAT Number</Label>
+                  <Input
+                    id="taxId"
+                    value={formData.taxId || ''}
+                    onChange={(e) => updateField('taxId', e.target.value)}
+                    placeholder="GB123456789"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Business Address</h4>
+                <div>
+                  <Label htmlFor="address">Street Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address || ''}
+                    onChange={(e) => updateField('address', e.target.value)}
+                    placeholder="123 Business Street"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={formData.city || ''}
+                      onChange={(e) => updateField('city', e.target.value)}
+                      placeholder="London"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State/County</Label>
+                    <Input
+                      id="state"
+                      value={formData.state || ''}
+                      onChange={(e) => updateField('state', e.target.value)}
+                      placeholder="Greater London"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="zipCode">Postal Code</Label>
+                    <Input
+                      id="zipCode"
+                      value={formData.zipCode || ''}
+                      onChange={(e) => updateField('zipCode', e.target.value)}
+                      placeholder="SW1A 1AA"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Select
+                      value={formData.country || ''}
+                      onValueChange={(value) => updateField('country', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GB">United Kingdom</SelectItem>
+                        <SelectItem value="US">United States</SelectItem>
+                        <SelectItem value="CA">Canada</SelectItem>
+                        <SelectItem value="AU">Australia</SelectItem>
+                        <SelectItem value="DE">Germany</SelectItem>
+                        <SelectItem value="FR">France</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={updateVendorMutation.isPending}
+                className="bg-black text-white hover:bg-gray-800"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {updateVendorMutation.isPending ? 'Saving...' : 'Save Business Info'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payment & Bank Account Settings */}
+        <TabsContent value="payment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Banknote className="h-5 w-5" />
+                Bank Account Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                  <Input
+                    id="accountHolderName"
+                    value={bankAccount.accountHolderName}
+                    onChange={(e) => updateBankField('accountHolderName', e.target.value)}
+                    placeholder="John Smith"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bankName">Bank Name</Label>
+                  <Input
+                    id="bankName"
+                    value={bankAccount.bankName}
+                    onChange={(e) => updateBankField('bankName', e.target.value)}
+                    placeholder="Barclays Bank"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="accountNumber">Account Number</Label>
+                  <Input
+                    id="accountNumber"
+                    value={bankAccount.accountNumber}
+                    onChange={(e) => updateBankField('accountNumber', e.target.value)}
+                    placeholder="12345678"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="sortCode">Sort Code</Label>
+                  <Input
+                    id="sortCode"
+                    value={bankAccount.sortCode}
+                    onChange={(e) => updateBankField('sortCode', e.target.value)}
+                    placeholder="12-34-56"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="iban">IBAN (Optional)</Label>
+                  <Input
+                    id="iban"
+                    value={bankAccount.iban}
+                    onChange={(e) => updateBankField('iban', e.target.value)}
+                    placeholder="GB33BUKB20201555555555"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="swiftCode">SWIFT/BIC Code (Optional)</Label>
+                  <Input
+                    id="swiftCode"
+                    value={bankAccount.swiftCode}
+                    onChange={(e) => updateBankField('swiftCode', e.target.value)}
+                    placeholder="BUKBGB22"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={bankAccount.currency}
+                    onValueChange={(value) => updateBankField('currency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GBP">British Pound (GBP)</SelectItem>
+                      <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                      <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="accountType">Account Type</Label>
+                  <Select
+                    value={bankAccount.accountType}
+                    onValueChange={(value) => updateBankField('accountType', value as 'checking' | 'savings' | 'business')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="business">Business Account</SelectItem>
+                      <SelectItem value="checking">Checking Account</SelectItem>
+                      <SelectItem value="savings">Savings Account</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <Button onClick={() => handleSave('businessAddress')} disabled={updateProfileMutation.isPending}>
+              <Button 
+                onClick={handleSaveBankAccount} 
+                disabled={updateBankAccountMutation.isPending}
+                className="bg-black text-white hover:bg-gray-800"
+              >
                 <Save className="mr-2 h-4 w-4" />
-                Save Address
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Business Hours
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(formData.businessHours || {}).map(([day, hours]) => (
-                <div key={day} className="flex items-center gap-4">
-                  <div className="w-24 capitalize font-medium">{day}</div>
-                  <Switch
-                    checked={!hours.closed}
-                    onCheckedChange={(checked) => updateField(`businessHours.${day}.closed`, !checked)}
-                  />
-                  {!hours.closed && (
-                    <>
-                      <Input
-                        type="time"
-                        value={hours.open || '09:00'}
-                        onChange={(e) => updateField(`businessHours.${day}.open`, e.target.value)}
-                        className="w-32"
-                      />
-                      <span>to</span>
-                      <Input
-                        type="time"
-                        value={hours.close || '17:00'}
-                        onChange={(e) => updateField(`businessHours.${day}.close`, e.target.value)}
-                        className="w-32"
-                      />
-                    </>
-                  )}
-                  {hours.closed && (
-                    <span className="text-muted-foreground">Closed</span>
-                  )}
-                </div>
-              ))}
-
-              <Button onClick={() => handleSave('businessHours')} disabled={updateProfileMutation.isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Hours
+                {updateBankAccountMutation.isPending ? 'Saving...' : 'Save Bank Account'}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
@@ -466,289 +592,149 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                 Notification Preferences
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="emailNotifications">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive order and customer notifications via email</p>
+                    <h4 className="font-medium">Email Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                   </div>
                   <Switch
-                    id="emailNotifications"
-                    checked={formData.settings?.emailNotifications || false}
-                    onCheckedChange={(checked) => updateField('settings.emailNotifications', checked)}
+                    checked={notifications.emailNotifications}
+                    onCheckedChange={(checked) => updateNotificationField('emailNotifications', checked)}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="smsNotifications">SMS Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive urgent notifications via SMS</p>
+                    <h4 className="font-medium">SMS Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Receive notifications via SMS</p>
                   </div>
                   <Switch
-                    id="smsNotifications"
-                    checked={formData.settings?.smsNotifications || false}
-                    onCheckedChange={(checked) => updateField('settings.smsNotifications', checked)}
+                    checked={notifications.smsNotifications}
+                    onCheckedChange={(checked) => updateNotificationField('smsNotifications', checked)}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="lowStockAlerts">Low Stock Alerts</Label>
-                    <p className="text-sm text-muted-foreground">Get notified when products are running low</p>
+                    <h4 className="font-medium">Order Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Get notified about new orders</p>
                   </div>
                   <Switch
-                    id="lowStockAlerts"
-                    checked={formData.settings?.lowStockAlerts || false}
-                    onCheckedChange={(checked) => updateField('settings.lowStockAlerts', checked)}
+                    checked={notifications.orderNotifications}
+                    onCheckedChange={(checked) => updateNotificationField('orderNotifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Payment Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Get notified about payments and payouts</p>
+                  </div>
+                  <Switch
+                    checked={notifications.paymentNotifications}
+                    onCheckedChange={(checked) => updateNotificationField('paymentNotifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Low Stock Alerts</h4>
+                    <p className="text-sm text-muted-foreground">Get notified when inventory is low</p>
+                  </div>
+                  <Switch
+                    checked={notifications.lowStockAlerts}
+                    onCheckedChange={(checked) => updateNotificationField('lowStockAlerts', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Review Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Get notified about new reviews</p>
+                  </div>
+                  <Switch
+                    checked={notifications.reviewNotifications}
+                    onCheckedChange={(checked) => updateNotificationField('reviewNotifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Marketing Emails</h4>
+                    <p className="text-sm text-muted-foreground">Receive marketing and promotional emails</p>
+                  </div>
+                  <Switch
+                    checked={notifications.marketingEmails}
+                    onCheckedChange={(checked) => updateNotificationField('marketingEmails', checked)}
                   />
                 </div>
               </div>
 
-              <Button onClick={() => handleSave('settings')} disabled={updateProfileMutation.isPending}>
+              <Button 
+                onClick={handleSaveNotifications} 
+                disabled={updateNotificationsMutation.isPending}
+                className="bg-black text-white hover:bg-gray-800"
+              >
                 <Save className="mr-2 h-4 w-4" />
-                Save Notifications
+                {updateNotificationsMutation.isPending ? 'Saving...' : 'Save Notification Settings'}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="payment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Payment Methods
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="acceptsCreditCards">Credit Cards</Label>
-                    <p className="text-sm text-muted-foreground">Accept Visa, Mastercard, and other credit cards</p>
-                  </div>
-                  <Switch
-                    id="acceptsCreditCards"
-                    checked={formData.paymentSettings?.acceptsCreditCards || false}
-                    onCheckedChange={(checked) => updateField('paymentSettings.acceptsCreditCards', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="acceptsPayPal">PayPal</Label>
-                    <p className="text-sm text-muted-foreground">Accept PayPal payments</p>
-                  </div>
-                  <Switch
-                    id="acceptsPayPal"
-                    checked={formData.paymentSettings?.acceptsPayPal || false}
-                    onCheckedChange={(checked) => updateField('paymentSettings.acceptsPayPal', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="acceptsBankTransfer">Bank Transfer</Label>
-                    <p className="text-sm text-muted-foreground">Accept direct bank transfers</p>
-                  </div>
-                  <Switch
-                    id="acceptsBankTransfer"
-                    checked={formData.paymentSettings?.acceptsBankTransfer || false}
-                    onCheckedChange={(checked) => updateField('paymentSettings.acceptsBankTransfer', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="acceptsCOD">Cash on Delivery</Label>
-                    <p className="text-sm text-muted-foreground">Accept cash on delivery payments</p>
-                  </div>
-                  <Switch
-                    id="acceptsCOD"
-                    checked={formData.paymentSettings?.acceptsCOD || false}
-                    onCheckedChange={(checked) => updateField('paymentSettings.acceptsCOD', checked)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="paymentTerms">Payment Terms</Label>
-                <Textarea
-                  id="paymentTerms"
-                  value={formData.paymentSettings?.paymentTerms || ''}
-                  onChange={(e) => updateField('paymentSettings.paymentTerms', e.target.value)}
-                  placeholder="Describe your payment terms and conditions"
-                  rows={3}
-                />
-              </div>
-
-              <Button onClick={() => handleSave('paymentSettings')} disabled={updateProfileMutation.isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Payment Settings
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="shipping" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Shipping Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="freeShippingThreshold">Free Shipping Threshold (GBP)</Label>
-                  <Input
-                    id="freeShippingThreshold"
-                    type="number"
-                    step="0.01"
-                    value={formData.shippingSettings?.freeShippingThreshold || ''}
-                    onChange={(e) => updateField('shippingSettings.freeShippingThreshold', parseFloat(e.target.value))}
-                    placeholder="50.00"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="handlingTime">Handling Time (days)</Label>
-                  <Input
-                    id="handlingTime"
-                    type="number"
-                    value={formData.shippingSettings?.handlingTime || ''}
-                    onChange={(e) => updateField('shippingSettings.handlingTime', parseInt(e.target.value))}
-                    placeholder="1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="internationalShipping">International Shipping</Label>
-                  <p className="text-sm text-muted-foreground">Ship to international destinations</p>
-                </div>
-                <Switch
-                  id="internationalShipping"
-                  checked={formData.shippingSettings?.internationalShipping || false}
-                  onCheckedChange={(checked) => updateField('shippingSettings.internationalShipping', checked)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="returnPolicy">Return Policy</Label>
-                <Textarea
-                  id="returnPolicy"
-                  value={formData.shippingSettings?.returnPolicy || ''}
-                  onChange={(e) => updateField('shippingSettings.returnPolicy', e.target.value)}
-                  placeholder="Describe your return and refund policy"
-                  rows={4}
-                />
-              </div>
-
-              <Button onClick={() => handleSave('shippingSettings')} disabled={updateProfileMutation.isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Shipping Settings
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        {/* Preferences */}
         <TabsContent value="preferences" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Store Preferences
+                System Preferences
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="autoAcceptOrders">Auto-Accept Orders</Label>
-                    <p className="text-sm text-muted-foreground">Automatically accept new orders</p>
-                  </div>
-                  <Switch
-                    id="autoAcceptOrders"
-                    checked={formData.settings?.autoAcceptOrders || false}
-                    onCheckedChange={(checked) => updateField('settings.autoAcceptOrders', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="holidayMode">Holiday Mode</Label>
-                    <p className="text-sm text-muted-foreground">Temporarily disable new orders</p>
-                  </div>
-                  <Switch
-                    id="holidayMode"
-                    checked={formData.settings?.holidayMode || false}
-                    onCheckedChange={(checked) => updateField('settings.holidayMode', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="showInventoryCount">Show Inventory Count</Label>
-                    <p className="text-sm text-muted-foreground">Display stock quantities to customers</p>
-                  </div>
-                  <Switch
-                    id="showInventoryCount"
-                    checked={formData.settings?.showInventoryCount || false}
-                    onCheckedChange={(checked) => updateField('settings.showInventoryCount', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="allowBackorders">Allow Backorders</Label>
-                    <p className="text-sm text-muted-foreground">Accept orders for out-of-stock items</p>
-                  </div>
-                  <Switch
-                    id="allowBackorders"
-                    checked={formData.settings?.allowBackorders || false}
-                    onCheckedChange={(checked) => updateField('settings.allowBackorders', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="enableReviews">Enable Reviews</Label>
-                    <p className="text-sm text-muted-foreground">Allow customers to leave product reviews</p>
-                  </div>
-                  <Switch
-                    id="enableReviews"
-                    checked={formData.settings?.enableReviews || false}
-                    onCheckedChange={(checked) => updateField('settings.enableReviews', checked)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="unitSystem">Unit System</Label>
                   <Select
-                    value={formData.settings?.currency || 'GBP'}
-                    onValueChange={(value) => updateField('settings.currency', value)}
+                    value={formData.unitSystem || 'metric'}
+                    onValueChange={(value) => updateField('unitSystem', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="CAD">CAD ($)</SelectItem>
+                      <SelectItem value="metric">Metric</SelectItem>
+                      <SelectItem value="imperial">Imperial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="timeZone">Time Zone</Label>
+                  <Label htmlFor="weightSystem">Weight System</Label>
                   <Select
-                    value={formData.settings?.timeZone || 'Europe/London'}
-                    onValueChange={(value) => updateField('settings.timeZone', value)}
+                    value={formData.weightSystem || 'kg'}
+                    onValueChange={(value) => updateField('weightSystem', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                      <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                      <SelectItem value="g">Grams (g)</SelectItem>
+                      <SelectItem value="oz">Ounces (oz)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select
+                    value={formData.timezone || 'Europe/London'}
+                    onValueChange={(value) => updateField('timezone', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -758,32 +744,74 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                       <SelectItem value="America/New_York">New York (EST)</SelectItem>
                       <SelectItem value="America/Los_Angeles">Los Angeles (PST)</SelectItem>
                       <SelectItem value="Europe/Paris">Paris (CET)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
+                      <SelectItem value="Australia/Sydney">Sydney (AEDT)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="language">Language</Label>
+                  <Label htmlFor="billingCycle">Billing Cycle</Label>
                   <Select
-                    value={formData.settings?.language || 'en'}
-                    onValueChange={(value) => updateField('settings.language', value)}
+                    value={formData.billingCycle || 'monthly'}
+                    onValueChange={(value) => updateField('billingCycle', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <Button onClick={() => handleSave('settings')} disabled={updateProfileMutation.isPending}>
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={updateVendorMutation.isPending}
+                className="bg-black text-white hover:bg-gray-800"
+              >
                 <Save className="mr-2 h-4 w-4" />
-                Save Preferences
+                {updateVendorMutation.isPending ? 'Saving...' : 'Save Preferences'}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Account Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Vendor Type:</span>
+                  <span className="capitalize font-medium">{formData.vendorType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Badge Level:</span>
+                  <span className="capitalize font-medium">{formData.badgeLevel?.replace('_', ' ')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Account Status:</span>
+                  <span className="capitalize font-medium">{formData.accountStatus}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total Sales:</span>
+                  <span className="font-medium">£{formData.totalSalesAmount?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total Transactions:</span>
+                  <span className="font-medium">{formData.totalTransactions || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Account Approved:</span>
+                  <span className="font-medium">{formData.isApproved ? 'Yes' : 'No'}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

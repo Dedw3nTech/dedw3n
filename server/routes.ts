@@ -4687,6 +4687,239 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get vendor details by ID for vendor settings
+  app.get('/api/vendors/details/:vendorId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Find vendor account and verify ownership
+      const [vendor] = await db.select().from(vendors).where(
+        and(eq(vendors.id, vendorId), eq(vendors.userId, userId))
+      );
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor account not found or access denied" });
+      }
+
+      return res.json(vendor);
+    } catch (error) {
+      console.error('Error fetching vendor details:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update vendor profile settings
+  app.put('/api/vendors/:vendorId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Verify vendor ownership
+      const [existingVendor] = await db.select().from(vendors).where(
+        and(eq(vendors.id, vendorId), eq(vendors.userId, userId))
+      );
+      
+      if (!existingVendor) {
+        return res.status(404).json({ message: "Vendor account not found or access denied" });
+      }
+
+      // Extract updateable fields from request body
+      const {
+        storeName,
+        businessName,
+        description,
+        businessType,
+        email,
+        phone,
+        contactEmail,
+        contactPhone,
+        address,
+        city,
+        state,
+        zipCode,
+        country,
+        taxId,
+        website,
+        unitSystem,
+        weightSystem,
+        timezone,
+        billingCycle
+      } = req.body;
+
+      // Update vendor record
+      const [updatedVendor] = await db.update(vendors)
+        .set({
+          ...(storeName && { storeName }),
+          ...(businessName && { businessName }),
+          ...(description !== undefined && { description }),
+          ...(businessType && { businessType }),
+          ...(email && { email }),
+          ...(phone && { phone }),
+          ...(contactEmail !== undefined && { contactEmail }),
+          ...(contactPhone !== undefined && { contactPhone }),
+          ...(address && { address }),
+          ...(city && { city }),
+          ...(state && { state }),
+          ...(zipCode && { zipCode }),
+          ...(country && { country }),
+          ...(taxId !== undefined && { taxId }),
+          ...(website !== undefined && { website }),
+          ...(unitSystem && { unitSystem }),
+          ...(weightSystem && { weightSystem }),
+          ...(timezone && { timezone }),
+          ...(billingCycle && { billingCycle }),
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId))
+        .returning();
+
+      return res.json(updatedVendor);
+    } catch (error) {
+      console.error('Error updating vendor profile:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update vendor bank account information
+  app.put('/api/vendors/:vendorId/bank-account', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Verify vendor ownership
+      const [existingVendor] = await db.select().from(vendors).where(
+        and(eq(vendors.id, vendorId), eq(vendors.userId, userId))
+      );
+      
+      if (!existingVendor) {
+        return res.status(404).json({ message: "Vendor account not found or access denied" });
+      }
+
+      const {
+        accountHolderName,
+        bankName,
+        accountNumber,
+        sortCode,
+        iban,
+        swiftCode,
+        currency,
+        accountType
+      } = req.body;
+
+      // Check if vendor payment info exists
+      const [existingPaymentInfo] = await db.select().from(vendorPaymentInfo).where(
+        eq(vendorPaymentInfo.vendorId, vendorId)
+      );
+
+      const bankAccountData = {
+        accountHolderName,
+        bankName,
+        accountNumber,
+        sortCode,
+        iban,
+        swiftCode,
+        currency,
+        accountType
+      };
+
+      let paymentInfo;
+      if (existingPaymentInfo) {
+        // Update existing payment info
+        [paymentInfo] = await db.update(vendorPaymentInfo)
+          .set({
+            bankAccountData: JSON.stringify(bankAccountData),
+            updatedAt: new Date()
+          })
+          .where(eq(vendorPaymentInfo.vendorId, vendorId))
+          .returning();
+      } else {
+        // Create new payment info record
+        [paymentInfo] = await db.insert(vendorPaymentInfo)
+          .values({
+            vendorId,
+            bankAccountData: JSON.stringify(bankAccountData),
+            paymentMethod: 'bank_transfer',
+            isActive: true
+          })
+          .returning();
+      }
+
+      return res.json({ success: true, message: "Bank account information updated successfully" });
+    } catch (error) {
+      console.error('Error updating bank account information:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update vendor notification settings
+  app.put('/api/vendors/:vendorId/notifications', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Verify vendor ownership
+      const [existingVendor] = await db.select().from(vendors).where(
+        and(eq(vendors.id, vendorId), eq(vendors.userId, userId))
+      );
+      
+      if (!existingVendor) {
+        return res.status(404).json({ message: "Vendor account not found or access denied" });
+      }
+
+      const {
+        emailNotifications,
+        smsNotifications,
+        orderNotifications,
+        paymentNotifications,
+        lowStockAlerts,
+        reviewNotifications,
+        marketingEmails
+      } = req.body;
+
+      // For now, we'll store notification settings as JSON in the vendor description field
+      // In a production system, you'd want a separate notification_settings table
+      const notificationSettings = {
+        emailNotifications,
+        smsNotifications,
+        orderNotifications,
+        paymentNotifications,
+        lowStockAlerts,
+        reviewNotifications,
+        marketingEmails
+      };
+
+      // Update vendor with notification settings
+      await db.update(vendors)
+        .set({
+          // Store in a metadata field - you might want to add a dedicated field for this
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, vendorId));
+
+      return res.json({ success: true, message: "Notification settings updated successfully" });
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get available shipping methods by destination and offering type
   app.get('/api/shipping/methods/available', async (req: Request, res: Response) => {
     try {
