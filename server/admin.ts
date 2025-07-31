@@ -48,9 +48,26 @@ export function registerAdminRoutes(app: Express) {
       const userCountResult = await db.select({ count: count() }).from(users);
       const totalUsers = userCountResult[0]?.count || 0;
 
+      // Get dating profiles count (users with datingEnabled = true)
+      const datingProfilesResult = await db
+        .select({ count: count() })
+        .from(users)
+        .where(eq(users.datingEnabled, true));
+      const totalDatingProfiles = datingProfilesResult[0]?.count || 0;
+
+      // Get active dating profiles (dating enabled and not locked)
+      const activeDatingResult = await db
+        .select({ count: count() })
+        .from(users)
+        .where(and(eq(users.datingEnabled, true), eq(users.isLocked, false)));
+      const activeDatingProfiles = activeDatingResult[0]?.count || 0;
+
       // Get vendor count
       const vendorCountResult = await db.select({ count: count() }).from(vendors);
       const totalVendors = vendorCountResult[0]?.count || 0;
+
+      // Get active vendors (count all vendors as active since we don't have status field)
+      const activeVendors = totalVendors;
 
       // Get product count
       const productCountResult = await db.select({ count: count() }).from(products);
@@ -60,6 +77,38 @@ export function registerAdminRoutes(app: Express) {
       const orderCountResult = await db.select({ count: count() }).from(orders);
       const totalOrders = orderCountResult[0]?.count || 0;
 
+      // Get total amount sold (sum of completed orders)
+      const totalSoldResult = await db
+        .select({ 
+          total: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)` 
+        })
+        .from(orders)
+        .where(eq(orders.status, 'completed'));
+      const totalAmountSold = Number(totalSoldResult[0]?.total || 0);
+
+      // Get total transactions count (completed orders)
+      const transactionsResult = await db
+        .select({ count: count() })
+        .from(orders)
+        .where(eq(orders.status, 'completed'));
+      const totalTransactions = transactionsResult[0]?.count || 0;
+
+      // Get total amount shipped (sum of shipped orders)
+      const totalShippedResult = await db
+        .select({ 
+          total: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)` 
+        })
+        .from(orders)
+        .where(eq(orders.status, 'shipped'));
+      const totalAmountShipped = Number(totalShippedResult[0]?.total || 0);
+
+      // Get shipped orders count
+      const shippedOrdersResult = await db
+        .select({ count: count() })
+        .from(orders)
+        .where(eq(orders.status, 'shipped'));
+      const shippedOrders = shippedOrdersResult[0]?.count || 0;
+
       // Get active users in last 24 hours
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const activeUsersResult = await db
@@ -68,20 +117,25 @@ export function registerAdminRoutes(app: Express) {
         .where(sql`${users.lastLogin} >= ${twentyFourHoursAgo}`);
       const activeUsers24h = activeUsersResult[0]?.count || 0;
 
-      // Mock data for other statistics (can be implemented later)
+      // Get pending reports and vendor requests (placeholder for now)
       const pendingReports = 0;
       const pendingVendorRequests = 0;
-      const totalRevenue = 0;
 
       const stats = {
         totalUsers,
+        totalDatingProfiles,
+        activeDatingProfiles, 
         totalVendors,
+        activeVendors,
         totalProducts,
         totalOrders,
+        totalAmountSold,
+        totalTransactions,
+        totalAmountShipped,
+        shippedOrders,
         pendingReports,
         pendingVendorRequests,
-        activeUsers24h,
-        totalRevenue
+        activeUsers24h
       };
 
       res.json(stats);
