@@ -17,8 +17,10 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
   - **COMPLETED: Product Buy Buttons on RQST** - Modified Products component to show "Sell" with red background when marketType === 'rqst'
   - **COMPLETED: Conditional Button Styling** - Buy buttons remain black with "Buy" text on all other marketplace types (B2B, B2C, C2C)
   - **COMPLETED: Translation Integration** - RQST marketplace fully integrated with breadcrumb navigation and translation system
+  - **COMPLETED: "Sold by" to "Requested by" Change** - Changed vendor prefix from "Sold by" to "Requested by" specifically on RQST marketplace only
   - RQST marketplace now has distinctive red "Sell" buttons while maintaining original black "Buy" buttons on other marketplaces
   - Button styling: bg-red-600 with hover:bg-red-700 for RQST, bg-black with hover:bg-gray-800 for others
+  - Text prefix: "Requested by" for RQST marketplace, "Sold by" for all other marketplace types
 - **2025-07-31**: PUBLISH BUTTON AUTHENTICATION ASSESSMENT COMPLETE - Resolved all upload button functionality and authentication errors
   - **COMPLETED: Field Mapping Fix** - Fixed critical issue where frontend sent 'title' field but backend expected 'name' field
   - **COMPLETED: Required Fields Validation** - Added fallback imageUrl and proper field transformation for backend validation

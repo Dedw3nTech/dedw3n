@@ -896,7 +896,7 @@ export default function Products() {
           
           {/* Vendor/Store information */}
           <div className="text-[12px] text-blue-600 mt-1">
-            {soldByText || "Sold by"} {product.vendorId === 1 ? 'Kinshasa DR Congo' : product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
+            {marketType === 'rqst' ? 'Requested by' : (soldByText || "Sold by")} {product.vendorId === 1 ? 'Kinshasa DR Congo' : product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
           </div>
           
           {/* Additional info based on market type */}
