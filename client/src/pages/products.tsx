@@ -95,7 +95,7 @@ export default function Products() {
   const [showNew, setShowNew] = useState(false);
   const [, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
-  const { formatPrice, currencySymbol } = useCurrency();
+  const { formatPrice } = useCurrency();
   const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
   const [productsPerPage, setProductsPerPage] = useState<number>(30);
@@ -1995,14 +1995,6 @@ export default function Products() {
       <Dialog open={sellConfirmationOpen} onOpenChange={setSellConfirmationOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader className="text-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-4">
-              <img 
-                src="/attached_assets/DEDWEN LOGO (1) (1).png" 
-                alt="Dedw3n Logo" 
-                className="h-12 w-auto"
-              />
-            </div>
             <DialogTitle className="text-lg font-semibold">
               Add to Online Store
             </DialogTitle>
@@ -2024,7 +2016,7 @@ export default function Products() {
                     <ProductName productName={selectedSellProduct.name} />
                   </h4>
                   <p className="text-sm text-gray-600 mt-1">
-                    {formatPrice(selectedSellProduct.price, currencySymbol)}
+                    {formatPrice(selectedSellProduct.price)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {selectedSellProduct.category}
