@@ -97,6 +97,7 @@ export default function AddProduct() {
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
   const [showVendorDialog, setShowVendorDialog] = useState(false);
+  const [hasShownAutoFillNotification, setHasShownAutoFillNotification] = useState(false);
 
   // Parse URL parameters for prefill data
   const urlParams = new URLSearchParams(window.location.search);
@@ -536,21 +537,23 @@ export default function AddProduct() {
     checkVendorStatus();
   }, [user]);
 
-  // Show success message when form is pre-filled from RQST
+  // Show success message when form is pre-filled from RQST (only once)
   useEffect(() => {
-    if (parsedPrefillData && parsedPrefillData.name) {
+    if (parsedPrefillData && parsedPrefillData.name && !hasShownAutoFillNotification) {
       toast({
         title: "Product Data Auto-Filled",
         description: `Product "${parsedPrefillData.name}" data has been automatically filled. Review and click Publish to add to your store.`,
         duration: 5000,
       });
       
+      setHasShownAutoFillNotification(true);
+      
       // Auto-populate image URLs if provided
       if (parsedPrefillData.imageUrl && parsedPrefillData.imageUrl !== '/placeholder-image.jpg') {
         setImageUrls([parsedPrefillData.imageUrl]);
       }
     }
-  }, [parsedPrefillData, toast]);
+  }, [parsedPrefillData, hasShownAutoFillNotification]);
 
   // Create vendor mutation
   const createVendorMutation = useMutation({
