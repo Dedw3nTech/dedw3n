@@ -761,11 +761,12 @@ export default function UnifiedAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
             <TabsTrigger value="users">{t("Users")}</TabsTrigger>
             <TabsTrigger value="vendors">{t("Vendors")}</TabsTrigger>
             <TabsTrigger value="products">{t("Products")}</TabsTrigger>
+            <TabsTrigger value="affiliate-partners">Partners</TabsTrigger>
             <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
             <TabsTrigger value="system">{t("System")}</TabsTrigger>
             <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>
@@ -1875,6 +1876,11 @@ export default function UnifiedAdminDashboard() {
             </Card>
           </TabsContent>
 
+          {/* Affiliate Partners Tab */}
+          <TabsContent value="affiliate-partners" className="space-y-6">
+            <AffiliatePartnerManagement />
+          </TabsContent>
+
           {/* Reports Tab */}
           <TabsContent value="reports" className="space-y-6">
             <Card>
@@ -2573,5 +2579,671 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+// Affiliate Partner Management Component
+function AffiliatePartnerManagement() {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+
+  // Fetch affiliate partners
+  const { data: partnersData = { data: [], totalCount: 0 }, isLoading: partnersLoading } = useQuery({
+    queryKey: ['/api/admin/affiliate-partners', { search: searchTerm }],
+    queryFn: () => apiRequest(`/api/admin/affiliate-partners?search=${encodeURIComponent(searchTerm)}&limit=50`)
+  });
+
+  const partners = partnersData.data || [];
+
+  // Create affiliate partner mutation
+  const createPartnerMutation = useMutation({
+    mutationFn: (partnerData: any) => 
+      apiRequest('/api/admin/affiliate-partners', {
+        method: 'POST',
+        body: JSON.stringify(partnerData)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
+      toast({
+        title: "Success",
+        description: "Affiliate partner created successfully"
+      });
+      setCreateDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create affiliate partner",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update affiliate partner mutation
+  const updatePartnerMutation = useMutation({
+    mutationFn: ({ id, ...updates }: any) => 
+      apiRequest(`/api/admin/affiliate-partners/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
+      toast({
+        title: "Success",
+        description: "Affiliate partner updated successfully"
+      });
+      setEditDialogOpen(false);
+      setSelectedPartner(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update affiliate partner",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete affiliate partner mutation
+  const deletePartnerMutation = useMutation({
+    mutationFn: (partnerId: number) => 
+      apiRequest(`/api/admin/affiliate-partners/${partnerId}`, {
+        method: 'DELETE'
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/affiliate-partners'] });
+      toast({
+        title: "Success",
+        description: "Affiliate partner deleted successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete affiliate partner",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const filteredPartners = partners.filter((partner: any) =>
+    partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    partner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    partner.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    partner.partnerCode.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Affiliate Partner Management
+        </CardTitle>
+        <CardDescription>
+          Manage affiliate partners, create new partnerships, and track performance
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-4">
+            <Input
+              placeholder="Search partners by name, email, company, or code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-96"
+            />
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Badge variant="outline">
+              {filteredPartners.length} partners found
+            </Badge>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Users className="h-4 w-4 mr-2" />
+              Create Partner
+            </Button>
+          </div>
+        </div>
+        
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Partner Info</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Company & Region</TableHead>
+                <TableHead>Specialization</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Performance</TableHead>
+                <TableHead>Commission Rate</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {partnersLoading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    Loading affiliate partners...
+                  </TableCell>
+                </TableRow>
+              ) : filteredPartners.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    No affiliate partners found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPartners.map((partner: any) => (
+                  <TableRow key={partner.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{partner.name}</p>
+                        <Badge variant="outline" className="text-xs mt-1">
+                          {partner.partnerCode}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm">{partner.email}</p>
+                        {partner.phone && (
+                          <p className="text-xs text-gray-500">{partner.phone}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{partner.company || 'No Company'}</p>
+                        <p className="text-xs text-gray-500">{partner.region || 'No Region'}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {partner.specialization || 'General'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant={partner.status === 'active' ? 'default' : 'secondary'}>
+                          {partner.status}
+                        </Badge>
+                        {partner.isVerified && (
+                          <Badge variant="outline" className="text-xs text-green-600">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <p>Referrals: <span className="font-medium">{partner.totalReferrals || 0}</span></p>
+                        <p className="text-xs text-gray-500">
+                          Earned: £{(partner.totalCommissionEarned || 0).toFixed(2)}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono">
+                        {((partner.commissionRate || 0.30) * 100).toFixed(1)}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(partner.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedPartner(partner);
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => updatePartnerMutation.mutate({ 
+                            id: partner.id, 
+                            status: partner.status === 'active' ? 'inactive' : 'active' 
+                          })}
+                          className={partner.status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+                        >
+                          {partner.status === 'active' ? 
+                            <Ban className="h-3 w-3" /> : 
+                            <CheckCircle className="h-3 w-3" />
+                          }
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => deletePartnerMutation.mutate(partner.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Create Partner Dialog */}
+        <CreatePartnerDialog 
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onSubmit={createPartnerMutation.mutate}
+          isLoading={createPartnerMutation.isPending}
+        />
+
+        {/* Edit Partner Dialog */}
+        {selectedPartner && (
+          <EditPartnerDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            partner={selectedPartner}
+            onSubmit={updatePartnerMutation.mutate}
+            isLoading={updatePartnerMutation.isPending}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Create Partner Dialog Component
+function CreatePartnerDialog({ open, onOpenChange, onSubmit, isLoading }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    country: '',
+    company: '',
+    specialization: '',
+    region: '',
+    commissionRate: 0.30,
+    notes: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Generate partner code
+    const partnerCode = `AP${Date.now().toString().slice(-6)}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    
+    onSubmit({
+      ...formData,
+      partnerCode,
+      status: 'active',
+      isVerified: false,
+      totalReferrals: 0,
+      totalCommissionEarned: 0.00
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      dateOfBirth: '',
+      country: '',
+      company: '',
+      specialization: '',
+      region: '',
+      commissionRate: 0.30,
+      notes: ''
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      onOpenChange(newOpen);
+      if (!newOpen) resetForm();
+    }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Affiliate Partner</DialogTitle>
+          <DialogDescription>
+            Add a new affiliate partner with comprehensive information
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Full Name *</Label>
+              <Input
+                id="name"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email Address *</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
+                value={formData.country}
+                onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                placeholder="Enter country"
+              />
+            </div>
+            <div>
+              <Label htmlFor="region">Region</Label>
+              <Input
+                id="region"
+                value={formData.region}
+                onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
+                placeholder="Enter region (e.g., UK, EU, US)"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="company">Company Name</Label>
+              <Input
+                id="company"
+                value={formData.company}
+                onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                placeholder="Enter company name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="specialization">Specialization</Label>
+              <Input
+                id="specialization"
+                value={formData.specialization}
+                onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
+                placeholder="e.g., E-commerce Marketing, Tech Solutions"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="commissionRate">Commission Rate (%)</Label>
+            <Input
+              id="commissionRate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={formData.commissionRate * 100}
+              onChange={(e) => setFormData(prev => ({ ...prev, commissionRate: parseFloat(e.target.value) / 100 }))}
+              placeholder="30.00"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Input
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Additional notes about the partner"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Creating...' : 'Create Partner'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Edit Partner Dialog Component
+function EditPartnerDialog({ open, onOpenChange, partner, onSubmit, isLoading }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  partner: any;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    name: partner?.name || '',
+    email: partner?.email || '',
+    phone: partner?.phone || '',
+    dateOfBirth: partner?.dateOfBirth || '',
+    country: partner?.country || '',
+    company: partner?.company || '',
+    specialization: partner?.specialization || '',
+    region: partner?.region || '',
+    commissionRate: partner?.commissionRate || 0.30,
+    notes: partner?.notes || '',
+    isVerified: partner?.isVerified || false
+  });
+
+  // Update form data when partner changes
+  React.useEffect(() => {
+    if (partner) {
+      setFormData({
+        name: partner.name || '',
+        email: partner.email || '',
+        phone: partner.phone || '',
+        dateOfBirth: partner.dateOfBirth || '',
+        country: partner.country || '',
+        company: partner.company || '',
+        specialization: partner.specialization || '',
+        region: partner.region || '',
+        commissionRate: partner.commissionRate || 0.30,
+        notes: partner.notes || '',
+        isVerified: partner.isVerified || false
+      });
+    }
+  }, [partner]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      id: partner.id,
+      ...formData
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Affiliate Partner</DialogTitle>
+          <DialogDescription>
+            Update affiliate partner information and settings
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-name">Full Name *</Label>
+              <Input
+                id="edit-name"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-email">Email Address *</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Input
+                id="edit-phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-dateOfBirth">Date of Birth</Label>
+              <Input
+                id="edit-dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-country">Country</Label>
+              <Input
+                id="edit-country"
+                value={formData.country}
+                onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+                placeholder="Enter country"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-region">Region</Label>
+              <Input
+                id="edit-region"
+                value={formData.region}
+                onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
+                placeholder="Enter region (e.g., UK, EU, US)"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-company">Company Name</Label>
+              <Input
+                id="edit-company"
+                value={formData.company}
+                onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                placeholder="Enter company name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-specialization">Specialization</Label>
+              <Input
+                id="edit-specialization"
+                value={formData.specialization}
+                onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
+                placeholder="e.g., E-commerce Marketing, Tech Solutions"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="edit-commissionRate">Commission Rate (%)</Label>
+              <Input
+                id="edit-commissionRate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={formData.commissionRate * 100}
+                onChange={(e) => setFormData(prev => ({ ...prev, commissionRate: parseFloat(e.target.value) / 100 }))}
+                placeholder="30.00"
+              />
+            </div>
+            <div className="flex items-center space-x-2 pt-8">
+              <input
+                type="checkbox"
+                id="edit-isVerified"
+                checked={formData.isVerified}
+                onChange={(e) => setFormData(prev => ({ ...prev, isVerified: e.target.checked }))}
+                className="rounded"
+              />
+              <Label htmlFor="edit-isVerified">Verified Partner</Label>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="edit-notes">Notes</Label>
+            <Input
+              id="edit-notes"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Additional notes about the partner"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Updating...' : 'Update Partner'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

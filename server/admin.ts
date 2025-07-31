@@ -1299,6 +1299,8 @@ export function registerAdminRoutes(app: Express) {
         name: affiliatePartners.name,
         email: affiliatePartners.email,
         phone: affiliatePartners.phone,
+        dateOfBirth: sql`${affiliatePartners}.date_of_birth`.as('dateOfBirth'),
+        country: sql`${affiliatePartners}.country`,
         company: affiliatePartners.company,
         partnerCode: affiliatePartners.partnerCode,
         specialization: affiliatePartners.specialization,
@@ -1308,6 +1310,7 @@ export function registerAdminRoutes(app: Express) {
         totalReferrals: affiliatePartners.totalReferrals,
         totalCommissionEarned: affiliatePartners.totalCommissionEarned,
         commissionRate: affiliatePartners.commissionRate,
+        notes: affiliatePartners.notes,
         createdAt: affiliatePartners.createdAt
       }).from(affiliatePartners);
 
@@ -1349,6 +1352,117 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error('Error fetching affiliate partners:', error);
       res.status(500).json({ message: 'Error fetching affiliate partners' });
+    }
+  });
+
+  // Create new affiliate partner
+  app.post('/api/admin/affiliate-partners', isAdmin, async (req, res) => {
+    try {
+      const {
+        name,
+        email,
+        phone,
+        dateOfBirth,
+        country,
+        company,
+        partnerCode,
+        specialization,
+        region,
+        status = 'active',
+        isVerified = false,
+        totalReferrals = 0,
+        totalCommissionEarned = 0.00,
+        commissionRate = 0.30,
+        notes
+      } = req.body;
+
+      const newPartner = await db.insert(affiliatePartners).values({
+        name,
+        email,
+        phone,
+        company,
+        partnerCode,
+        specialization,
+        region,
+        status,
+        isVerified,
+        totalReferrals,
+        totalCommissionEarned,
+        commissionRate,
+        notes
+      }).returning();
+
+      // Add the additional fields using raw SQL since Drizzle doesn't recognize the new columns yet
+      if (dateOfBirth || country) {
+        await db.execute(sql`
+          UPDATE affiliate_partners 
+          SET date_of_birth = ${dateOfBirth || null}, 
+              country = ${country || null}
+          WHERE id = ${newPartner[0].id}
+        `);
+      }
+
+      res.status(201).json({
+        message: 'Affiliate partner created successfully',
+        partner: newPartner[0]
+      });
+    } catch (error) {
+      console.error('Error creating affiliate partner:', error);
+      res.status(500).json({ message: 'Error creating affiliate partner' });
+    }
+  });
+
+  // Update affiliate partner
+  app.patch('/api/admin/affiliate-partners/:id', isAdmin, async (req, res) => {
+    try {
+      const partnerId = parseInt(req.params.id);
+      const updates = req.body;
+
+      // Extract date_of_birth and country for separate handling
+      const { dateOfBirth, country, ...standardUpdates } = updates;
+
+      // Update standard fields
+      if (Object.keys(standardUpdates).length > 0) {
+        await db.update(affiliatePartners)
+          .set(standardUpdates)
+          .where(eq(affiliatePartners.id, partnerId));
+      }
+
+      // Update additional fields using raw SQL
+      if (dateOfBirth !== undefined || country !== undefined) {
+        await db.execute(sql`
+          UPDATE affiliate_partners 
+          SET date_of_birth = ${dateOfBirth || null}, 
+              country = ${country || null}
+          WHERE id = ${partnerId}
+        `);
+      }
+
+      res.json({ message: 'Affiliate partner updated successfully' });
+    } catch (error) {
+      console.error('Error updating affiliate partner:', error);
+      res.status(500).json({ message: 'Error updating affiliate partner' });
+    }
+  });
+
+  // Delete affiliate partner
+  app.delete('/api/admin/affiliate-partners/:id', isAdmin, async (req, res) => {
+    try {
+      const partnerId = parseInt(req.params.id);
+
+      // First remove any vendor linkages
+      await db.execute(sql`
+        DELETE FROM vendor_affiliate_partners 
+        WHERE affiliate_partner_id = ${partnerId}
+      `);
+
+      // Then delete the partner
+      await db.delete(affiliatePartners).where(eq(affiliatePartners.id, partnerId));
+
+      res.json({ message: 'Affiliate partner deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting affiliate partner:', error);
+      res.status(500).json({ message: 'Error deleting affiliate partner' });
     }
   });
 
