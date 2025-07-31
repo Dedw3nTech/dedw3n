@@ -3120,6 +3120,65 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Get platform users for gift recipients
+  app.get('/api/users/platform-users', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = (req.user as any)?.id;
+      if (!currentUserId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get all users except the current user
+      const platformUsers = await storage.getPlatformUsers(currentUserId);
+      res.json(platformUsers);
+    } catch (error) {
+      console.error('Error getting platform users:', error);
+      res.status(500).json({ message: 'Failed to get platform users' });
+    }
+  });
+
+  // Send gift endpoint
+  app.post('/api/gifts/send', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const senderId = (req.user as any)?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { recipientId, cartItems, message, total, shippingCost, shippingType } = req.body;
+
+      if (!recipientId || !cartItems || cartItems.length === 0) {
+        return res.status(400).json({ message: 'Recipient and cart items are required' });
+      }
+
+      // Create gift transaction
+      const gift = await storage.createGift({
+        senderId,
+        recipientId,
+        cartItems,
+        message: message || '',
+        total,
+        shippingCost,
+        shippingType,
+        status: 'sent'
+      });
+
+      // Send notification to recipient (could integrate with messaging system)
+      await storage.createNotification({
+        userId: recipientId,
+        type: 'gift_received',
+        title: 'Gift Received!',
+        message: `You received a gift from ${(req.user as any)?.name || 'Someone'}`,
+        data: { giftId: gift.id }
+      });
+
+      res.json({ success: true, giftId: gift.id, message: 'Gift sent successfully' });
+    } catch (error) {
+      console.error('Error sending gift:', error);
+      res.status(500).json({ message: 'Failed to send gift' });
+    }
+  });
+
   // Get current user's communities - MUST be before /:username route
   app.get('/api/users/communities', unifiedIsAuthenticated, async (req: any, res) => {
     try {

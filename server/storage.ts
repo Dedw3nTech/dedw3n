@@ -256,6 +256,10 @@ export interface IStorage {
   getUserSentGifts(userId: number): Promise<GiftProposition[]>;
   getUserReceivedGifts(userId: number): Promise<GiftProposition[]>;
   updateGiftStatus(id: number, status: string, paymentIntentId?: string): Promise<GiftProposition | undefined>;
+  
+  // Platform users and gift system
+  getPlatformUsers(excludeUserId: number): Promise<User[]>;
+  createGift(giftData: any): Promise<any>;
 
   // Store user management operations
   searchUsersForStore(query: string): Promise<User[]>;
@@ -4976,6 +4980,58 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error searching events:', error);
       return [];
+    }
+  }
+
+  async getPlatformUsers(excludeUserId: number): Promise<User[]> {
+    try {
+      const platformUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          avatar: users.avatar,
+          city: users.city,
+          country: users.country
+        })
+        .from(users)
+        .where(
+          and(
+            ne(users.id, excludeUserId),
+            eq(users.isActive, true)
+          )
+        )
+        .orderBy(users.name, users.username);
+      
+      return platformUsers as User[];
+    } catch (error) {
+      console.error('Error getting platform users:', error);
+      return [];
+    }
+  }
+
+  async createGift(giftData: any): Promise<any> {
+    try {
+      // For now, create a gift proposition in the existing gift table
+      const gift = await db
+        .insert(giftPropositions)
+        .values({
+          senderId: giftData.senderId,
+          recipientId: giftData.recipientId,
+          productId: giftData.cartItems[0]?.productId || 0, // Use first item's product ID
+          quantity: giftData.cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0),
+          proposedPrice: giftData.total,
+          message: giftData.message,
+          status: giftData.status || 'sent',
+          shippingType: giftData.shippingType,
+          shippingCost: giftData.shippingCost
+        })
+        .returning();
+      
+      return gift[0];
+    } catch (error) {
+      console.error('Error creating gift:', error);
+      throw new Error('Failed to create gift');
     }
   }
 

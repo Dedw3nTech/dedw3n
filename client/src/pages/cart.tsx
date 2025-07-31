@@ -999,35 +999,200 @@ export default function Cart() {
           </p>
         </div>
 
-        <CardFooter className="flex flex-col sm:flex-row justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={handleContinueShopping}
-            className="w-full sm:w-auto"
-          >
-            {translateText('Continue Shopping')}
-          </Button>
-          <div className="w-full sm:w-auto">
+        <CardFooter className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
             <Button
-              onClick={handleCheckout}
+              variant="outline"
+              onClick={handleContinueShopping}
               className="w-full sm:w-auto"
-              disabled={
-                updateQuantityMutation.isPending || 
-                removeFromCartMutation.isPending
-              }
             >
-              {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {translateText('Processing...')}
-                </>
-              ) : (
-                translateText('Proceed to Checkout')
-              )}
+              {translateText('Continue Shopping')}
             </Button>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setGiftDialogOpen(true)}
+                className="w-full sm:w-auto bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                disabled={cartItems.length === 0}
+              >
+                <Gift className="mr-2 h-4 w-4" />
+                {translateText('Send as Gift')}
+              </Button>
+              <Button
+                onClick={handleCheckout}
+                className="w-full sm:w-auto"
+                disabled={
+                  updateQuantityMutation.isPending || 
+                  removeFromCartMutation.isPending
+                }
+              >
+                {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {translateText('Processing...')}
+                  </>
+                ) : (
+                  translateText('Proceed to Checkout')
+                )}
+              </Button>
+            </div>
           </div>
         </CardFooter>
       </Card>
+
+      {/* Gift Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-blue-600" />
+              {translateText('Send Cart as Gift')}
+            </DialogTitle>
+            <DialogDescription>
+              {translateText('Choose a recipient from the platform and add a personal message')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Gift Summary */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Gift Summary')}</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>{translateText('Items')}:</span>
+                  <span>{cartItems.length} {cartItems.length === 1 ? translateText('item') : translateText('items')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{translateText('Total Value')}:</span>
+                  <span className="font-medium">{formatPriceFromGBP(total)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{translateText('Shipping Cost')}:</span>
+                  <span className="font-medium">
+                    {finalShippingCost === 0 ? translateText('Free') : formatPriceFromGBP(finalShippingCost)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-medium text-base pt-2 border-t">
+                  <span>{translateText('Gift Total')}:</span>
+                  <span>{formatPriceFromGBP(total + finalShippingCost)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recipient Selection */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Select Recipient')}</h4>
+              
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder={translateText('Search platform users...')}
+                  value={recipientSearch}
+                  onChange={(e) => setRecipientSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Recipients List */}
+              <div className="max-h-60 overflow-y-auto border rounded-lg">
+                {usersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    {recipientSearch ? translateText('No users found') : translateText('No users available')}
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredUsers.map((user: any) => (
+                      <div
+                        key={user.id}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedRecipient?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                        onClick={() => setSelectedRecipient(user)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name || user.username}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Users className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {user.name || user.username}
+                            </div>
+                            {user.name && user.username && (
+                              <div className="text-sm text-gray-500">@{user.username}</div>
+                            )}
+                          </div>
+                          {selectedRecipient?.id === user.id && (
+                            <Check className="h-5 w-5 text-blue-600" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Gift Message */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Personal Message')}</h4>
+              <Input
+                type="text"
+                placeholder={translateText('Add a personal message (optional)...')}
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setGiftDialogOpen(false);
+                  setSelectedRecipient(null);
+                  setGiftMessage('');
+                  setRecipientSearch('');
+                }}
+              >
+                {translateText('Cancel')}
+              </Button>
+              <Button
+                onClick={handleSendGift}
+                disabled={!selectedRecipient || sendGiftMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {sendGiftMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {translateText('Sending Gift...')}
+                  </>
+                ) : (
+                  <>
+                    <Gift className="mr-2 h-4 w-4" />
+                    {translateText('Send Gift')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
