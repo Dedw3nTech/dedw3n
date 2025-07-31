@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { db } from './db.js';
 import { users, vendors, products, orders, posts, vendorCommissionPeriods, vendorCommissionPayments, affiliatePartners, vendorAffiliatePartners } from '../shared/schema.js';
-import { eq, desc, count, sql, and, sum } from 'drizzle-orm';
+import { eq, desc, count, sql, and, sum, gte } from 'drizzle-orm';
 
 // Middleware to check if user is admin
 export const isAdmin = async (req: any, res: any, next: any) => {
@@ -58,6 +58,93 @@ export const isAdmin = async (req: any, res: any, next: any) => {
 
 // Register admin-specific routes
 export function registerAdminRoutes(app: Express) {
+  // Get recent admin activity
+  app.get('/api/admin/recent-activity', isAdmin, async (req, res) => {
+    try {
+      const activities: any[] = [];
+
+      // Get recent user registrations (last 24 hours)
+      const recentUsers = await db.select({
+        id: users.id,
+        name: users.name,
+        username: users.username,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .where(gte(users.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)))
+      .orderBy(desc(users.createdAt))
+      .limit(5);
+
+      // Get recent vendor applications (last 7 days)
+      const recentVendorRequests = await db.select({
+        id: vendors.id,
+        businessName: vendors.businessName,
+        createdAt: vendors.createdAt,
+        isApproved: vendors.isApproved
+      })
+      .from(vendors)
+      .where(gte(vendors.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)))
+      .orderBy(desc(vendors.createdAt))
+      .limit(5);
+
+      // Get recent products (last 7 days)
+      const recentProducts = await db.select({
+        id: products.id,
+        name: products.name,
+        createdAt: products.createdAt,
+        storeName: vendors.storeName
+      })
+      .from(products)
+      .leftJoin(vendors, eq(products.vendorId, vendors.id))
+      .where(gte(products.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)))
+      .orderBy(desc(products.createdAt))
+      .limit(3);
+
+      // Format activities
+      recentUsers.forEach(user => {
+        activities.push({
+          type: 'user_registration',
+          title: 'New user registration',
+          description: `${user.name} (@${user.username}) joined the platform`,
+          timestamp: user.createdAt,
+          icon: 'user',
+          color: 'green'
+        });
+      });
+
+      recentVendorRequests.forEach(request => {
+        activities.push({
+          type: 'vendor_request',
+          title: request.isApproved ? 'Vendor approved' : 'Vendor application submitted',
+          description: `${request.businessName} ${request.isApproved ? 'was approved as vendor' : 'applied for vendor status'}`,
+          timestamp: request.createdAt,
+          icon: 'store',
+          color: request.isApproved ? 'green' : 'blue'
+        });
+      });
+
+      recentProducts.forEach(product => {
+        activities.push({
+          type: 'product_created',
+          title: 'New product listed',
+          description: `"${product.name}" added by ${product.storeName || 'Unknown Store'}`,
+          timestamp: product.createdAt,
+          icon: 'package',
+          color: 'purple'
+        });
+      });
+
+      // Sort by timestamp and limit to 10
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const limitedActivities = activities.slice(0, 10);
+
+      res.json(limitedActivities);
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+      res.status(500).json({ message: 'Error fetching recent activity' });
+    }
+  });
+
   // Get admin statistics
   app.get('/api/admin/stats', isAdmin, async (req, res) => {
     try {
@@ -557,7 +644,6 @@ export function registerAdminRoutes(app: Express) {
       const productResult = await db.select({
         productId: products.id,
         productName: products.name,
-        productCode: products.code,
         vendorId: products.vendorId,
         storeName: vendors.storeName,
         userName: users.name
@@ -577,14 +663,13 @@ export function registerAdminRoutes(app: Express) {
       // Delete the product
       const deletedProduct = await db.delete(products).where(eq(products.id, productId));
 
-      console.log(`[ADMIN] PERMANENT PRODUCT DELETION - Product: ${product.productName} (ID: ${productId}, Code: ${product.productCode}), Vendor: ${product.storeName}, User: ${product.userName}`);
+      console.log(`[ADMIN] PERMANENT PRODUCT DELETION - Product: ${product.productName} (ID: ${productId}), Vendor: ${product.storeName}, User: ${product.userName}`);
 
       res.json({ 
         message: 'Product permanently deleted.',
         deletedProduct: {
           productId: productId,
           productName: product.productName,
-          productCode: product.productCode,
           vendorId: product.vendorId,
           storeName: product.storeName,
           userName: product.userName
@@ -1112,7 +1197,7 @@ export function registerAdminRoutes(app: Express) {
       await db
         .update(vendors)
         .set({ 
-          accountStatus: 'frozen',
+          accountStatus: 'suspended',
           isActive: false,
           accountSuspendedAt: new Date(),
           accountSuspensionReason: reason,

@@ -170,6 +170,86 @@ const adminTexts = [
   "System Logs", "Error Reports", "Server Status"
 ];
 
+// Recent Activity Component
+function RecentActivity() {
+  const { data: activities, isLoading } = useQuery({
+    queryKey: ['/api/admin/recent-activity'],
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const getActivityIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'user': return <Users className="h-4 w-4" />;
+      case 'store': return <Store className="h-4 w-4" />;
+      case 'package': return <Package className="h-4 w-4" />;
+      default: return <Activity className="h-4 w-4" />;
+    }
+  };
+
+  const getActivityColor = (color: string) => {
+    switch (color) {
+      case 'green': return 'bg-green-500';
+      case 'blue': return 'bg-blue-500';
+      case 'purple': return 'bg-purple-500';
+      case 'yellow': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center space-x-4 animate-pulse">
+            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!activities || !Array.isArray(activities) || activities.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">No recent activity</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {activities.slice(0, 6).map((activity: any, index: number) => (
+        <div key={index} className="flex items-center space-x-4">
+          <div className={`w-2 h-2 ${getActivityColor(activity.color)} rounded-full`}></div>
+          <div className="flex-1">
+            <p className="text-sm font-medium">{activity.title}</p>
+            <p className="text-xs text-muted-foreground">{activity.description}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatTimeAgo(activity.timestamp)}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function UnifiedAdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -789,29 +869,7 @@ export default function UnifiedAdminDashboard() {
                   <CardTitle>Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm">New user registration</p>
-                        <p className="text-xs text-muted-foreground">2 minutes ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm">Vendor application submitted</p>
-                        <p className="text-xs text-muted-foreground">15 minutes ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm">Content flagged for review</p>
-                        <p className="text-xs text-muted-foreground">1 hour ago</p>
-                      </div>
-                    </div>
-                  </div>
+                  <RecentActivity />
                 </CardContent>
               </Card>
 
