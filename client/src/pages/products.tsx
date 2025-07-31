@@ -450,18 +450,11 @@ export default function Products() {
         throw new Error('Product information is missing');
       }
 
-      const response = await apiRequest('POST', '/api/messages/send', {
+      return await apiRequest('POST', '/api/messages/send', {
         receiverId: memberId,
         content: `📦 PRODUCT SHARE: "${selectedShareProduct.name}"\n\nPrice: ${formatPrice(selectedShareProduct.price)}\n\nCheck it out: /product/${productId}`,
         category: 'marketplace'
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to share product');
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
       const memberName = selectedMember?.name || selectedMember?.username || 'the member';

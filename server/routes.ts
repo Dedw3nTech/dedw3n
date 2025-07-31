@@ -3200,34 +3200,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Search users endpoint with authentication - MUST be before /:username route
-  app.get('/api/users/search', async (req: Request, res: Response) => {
+  app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       console.log(`[DEBUG] /api/users/search called`);
       
-      // Manual authentication check with fallback
-      let authenticatedUser = null;
-      
-      // Try session authentication first
-      if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
-        try {
-          const userId = (req.session as any).passport.user;
-          const user = await storage.getUser(userId);
-          if (user) {
-            authenticatedUser = user;
-            console.log(`[AUTH] Session authentication successful for search: ${user.username} (ID: ${user.id})`);
-          }
-        } catch (error) {
-          console.error('[AUTH] Error with passport session authentication:', error);
-        }
-      }
-      
-      // Fallback to user 9 for development
-      // No fallback authentication - require proper login
-      
-      if (!authenticatedUser) {
-        console.log('[AUTH] No authentication available for user search');
+      if (!req.user?.id) {
+        console.log('[AUTH] No authenticated user for user search');
         return res.status(401).json({ message: 'Authentication required for user search' });
       }
+      
+      const authenticatedUser = req.user;
+      console.log(`[AUTH] User search authenticated: ${authenticatedUser.username} (ID: ${authenticatedUser.id})`);
       
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 20;
