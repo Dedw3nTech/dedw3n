@@ -12,7 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator, Gift, Users, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -43,10 +44,31 @@ export default function Cart() {
   const [editCity, setEditCity] = useState('');
   const [editCountry, setEditCountry] = useState('');
   
+  // Gift functionality state
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
+  const [giftMessage, setGiftMessage] = useState('');
+  const [recipientSearch, setRecipientSearch] = useState('');
+  
   // Navigation helper
   const handleProductClick = (productId: number) => {
     setLocation(`/product/${productId}`);
   };
+  
+  // Query for platform users (for gift recipients)
+  const { data: platformUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/users/platform-users'],
+    enabled: giftDialogOpen,
+  });
+  
+  // Filtered users based on search
+  const filteredUsers = useMemo(() => {
+    if (!platformUsers || !recipientSearch) return platformUsers || [];
+    return platformUsers.filter((user: any) => 
+      user.name?.toLowerCase().includes(recipientSearch.toLowerCase()) ||
+      user.username?.toLowerCase().includes(recipientSearch.toLowerCase())
+    );
+  }, [platformUsers, recipientSearch]);
   
   // Show authentication message if not logged in
   if (!user) {
@@ -186,6 +208,55 @@ export default function Cart() {
       });
     },
   });
+  
+  // Send gift mutation
+  const sendGiftMutation = useMutation({
+    mutationFn: async (giftData: any) => {
+      return apiRequest('POST', '/api/gifts/send', giftData);
+    },
+    onSuccess: () => {
+      toast({
+        title: translateText('Gift Sent Successfully'),
+        description: translateText('Your gift has been sent to the recipient'),
+      });
+      setGiftDialogOpen(false);
+      setSelectedRecipient(null);
+      setGiftMessage('');
+      setRecipientSearch('');
+      // Clear cart after successful gift
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText('Gift Send Failed'),
+        description: error.message || translateText('Failed to send gift'),
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Handle gift sending
+  const handleSendGift = () => {
+    if (!selectedRecipient) {
+      toast({
+        title: translateText('No Recipient Selected'),
+        description: translateText('Please select a recipient for the gift'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const giftData = {
+      recipientId: selectedRecipient.id,
+      cartItems: cartItems,
+      message: giftMessage,
+      total: total,
+      shippingCost: finalShippingCost,
+      shippingType: selectedShippingType
+    };
+    
+    sendGiftMutation.mutate(giftData);
+  };
   
   // Update quantity handler
   const handleUpdateQuantity = (id: number, currentQuantity: number, change: number) => {
