@@ -18,14 +18,16 @@ import { db } from './db';
 
 // Middleware to check if user is admin
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated()) {
+  if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  if (req.user.role !== 'admin') {
+  const user = req.user as any;
+  if (!user || user.role !== 'admin') {
     return res.status(403).json({ message: "Access denied. Admin privileges required." });
   }
 
+  console.log(`[ADMIN] Admin access granted to user ${user.username} (ID: ${user.id})`);
   next();
 };
 
