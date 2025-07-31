@@ -2,6 +2,72 @@ import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, va
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Admin-specific types for unified admin dashboard
+export interface AdminUser {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+  status: string;
+  isLocked: boolean;
+  lastLogin?: Date;
+  createdAt: Date;
+}
+
+export interface AdminReport {
+  id: number;
+  type: string;
+  contentId: number;
+  reporterId: number;
+  reason: string;
+  status: string;
+  createdAt: Date;
+  reporter: {
+    username: string;
+    name: string;
+  };
+  content: {
+    title: string;
+    excerpt: string;
+  };
+}
+
+export interface AdminVendorRequest {
+  id: number;
+  userId: number;
+  vendorType: string;
+  businessName: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  description: string;
+  status: string;
+  createdAt: Date;
+  user: {
+    name: string;
+    username: string;
+    email: string;
+    avatar?: string;
+  };
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalVendors: number;
+  totalProducts: number;
+  totalOrders: number;
+  pendingReports: number;
+  pendingVendorRequests: number;
+  activeUsers24h: number;
+  totalRevenue: number;
+  userCount?: number;
+  productCount?: number;
+  orderCount?: number;
+  communityCount?: number;
+}
+
 // Enums
 export const communityVisibilityEnum = pgEnum('community_visibility', ['public', 'private', 'secret']);
 export const membershipTierTypeEnum = pgEnum('membership_tier_type', ['free', 'paid', 'premium']);

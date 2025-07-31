@@ -130,6 +130,7 @@ import PaymentSuccess from "@/pages/payment-success";
 import LogoutSuccess from "@/pages/logout-success";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminControlCenter from "@/pages/admin-control-center";
+import UnifiedAdminDashboard from "@/pages/unified-admin-dashboard";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
@@ -414,8 +415,9 @@ function Router() {
       <ProtectedRoute path="/premium-videos/:id" component={PremiumVideoPage} />
       
       {/* Admin routes */}
-      <ProtectedRoute path="/admin" component={AdminDashboard} />
-      <ProtectedRoute path="/admin/:tab" component={AdminDashboard} />
+      <ProtectedRoute path="/admin" component={UnifiedAdminDashboard} />
+      <ProtectedRoute path="/admin/:tab" component={UnifiedAdminDashboard} />
+      <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/admin-control-center" component={AdminControlCenter} />
       
 
