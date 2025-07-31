@@ -777,7 +777,7 @@ export default function EventsPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => shareEventOnFeed(event)}>
                             <Repeat2 className="h-4 w-4 mr-2" />
-                            Share on Feed
+                            Share via E-mail
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => shareEventViaMessage(event)}>
                             <MessageSquare className="h-4 w-4 mr-2" />

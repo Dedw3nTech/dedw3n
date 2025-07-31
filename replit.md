@@ -13,6 +13,10 @@ A sophisticated multi-purpose social marketplace platform that bridges global co
 
 ## Recent Changes
 
+- **2025-07-31**: UI TEXT UPDATES COMPLETE - Updated share menu dropdown text from "(incl vat)" to "Share via Text" and "share on feed" to "Share via E-mail"
+  - **COMPLETED: Share Menu Text Changes** - Updated products.tsx, product-detail.tsx, and events.tsx share dropdown text
+  - **COMPLETED: Translation System Integration** - Modified translation strings to reflect new text: "Share via Text" and "Share via E-mail"
+  - **COMPLETED: Cross-Component Consistency** - Applied text changes across all product sharing interfaces for uniform user experience
 - **2025-07-31**: COMPREHENSIVE ERROR ASSESSMENT COMPLETE - Conducted thorough analysis of 400/500 errors, authentication, TypeScript, routing, and email notification systems
   - **COMPLETED: Email Notification System Verification** - Both user and vendor registration notifications confirmed fully operational with successful email delivery
   - **COMPLETED: WebSocket Handler Fix** - Added missing broadcastMessage export function resolving message broadcasting errors in routes.ts

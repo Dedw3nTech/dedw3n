@@ -828,14 +828,14 @@ export default function ProductDetail() {
                   } else {
                     toast({
                       title: translateText("Login Required"),
-                      description: translateText("Please log in to share on feed"),
+                      description: translateText("Please log in to share via e-mail"),
                       variant: "destructive"
                     });
                     setLocation('/auth');
                   }
                 }}>
                   <Share2 className="h-4 w-4 mr-2 text-blue-600" />
-{translateText('Share on Feed')}
+{translateText('Share via E-mail')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   if (user) {

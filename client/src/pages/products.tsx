@@ -135,12 +135,12 @@ export default function Products() {
     "Search for recipient", "Type name or username...", "No users found matching",
     "Type at least 2 characters to search", "Send Gift", "Buy", "Listed by",
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
-    "(incl. VAT)", "Share via Text Message", // Added VAT text and SMS sharing
+    "Share via Text", "Share via Text Message", // Updated VAT text to SMS sharing
     
     // Community & Sharing (11 texts)
     "Services", "Your Region", "Your Country", "Repost to Community Feed",
     "Would you like to add a message with this product share?", "Add your message (optional)",
-    "What do you think about this product?", "Repost", "Repost", "Share on Feed",
+    "What do you think about this product?", "Repost", "Repost", "Share via E-mail",
     "Share via Email",
     
     // Offers & Actions (10 texts)
