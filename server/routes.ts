@@ -19,7 +19,7 @@ import { promisify } from "util";
 import { scrypt, randomBytes } from "crypto";
 import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
-import { registerPaypalRoutes } from "./paypal";
+import { registerPaypalRoutes, createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { fraudRiskMiddleware, highRiskActionMiddleware, registerFraudPreventionRoutes } from "./fraud-prevention";
 import { registerShippingRoutes } from "./shipping";
 import { registerImageRoutes } from "./image-handler";
@@ -13357,7 +13357,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // PayPal integration routes
-  const { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } = require('./paypal');
 
   app.get("/api/paypal/setup", async (req: Request, res: Response) => {
     await loadPaypalDefault(req, res);
