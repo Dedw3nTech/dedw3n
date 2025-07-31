@@ -4,13 +4,17 @@ import {
   userRoleEnum, 
   posts, 
   users, 
+  vendors,
+  products,
+  orders,
   postReviewStatusEnum,
   flaggedContentStatusEnum,
   moderationMatchTypeEnum,
   moderationSeverityEnum,
   flaggedContentTypeEnum
 } from "@shared/schema";
-import { eq, and, or, like, desc } from "drizzle-orm";
+import { eq, and, or, like, desc, count, sql } from "drizzle-orm";
+import { db } from './db';
 
 // Middleware to check if user is admin
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,6 +31,180 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
 
 // Register admin-specific routes
 export function registerAdminRoutes(app: Express) {
+  // Get admin statistics
+  app.get('/api/admin/stats', isAdmin, async (req, res) => {
+    try {
+      // Get user count
+      const userCountResult = await db.select({ count: count() }).from(users);
+      const totalUsers = userCountResult[0]?.count || 0;
+
+      // Get vendor count
+      const vendorCountResult = await db.select({ count: count() }).from(vendors);
+      const totalVendors = vendorCountResult[0]?.count || 0;
+
+      // Get product count
+      const productCountResult = await db.select({ count: count() }).from(products);
+      const totalProducts = productCountResult[0]?.count || 0;
+
+      // Get order count
+      const orderCountResult = await db.select({ count: count() }).from(orders);
+      const totalOrders = orderCountResult[0]?.count || 0;
+
+      // Get active users in last 24 hours
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const activeUsersResult = await db
+        .select({ count: count() })
+        .from(users)
+        .where(sql`${users.lastLogin} >= ${twentyFourHoursAgo}`);
+      const activeUsers24h = activeUsersResult[0]?.count || 0;
+
+      // Mock data for other statistics (can be implemented later)
+      const pendingReports = 0;
+      const pendingVendorRequests = 0;
+      const totalRevenue = 0;
+
+      const stats = {
+        totalUsers,
+        totalVendors,
+        totalProducts,
+        totalOrders,
+        pendingReports,
+        pendingVendorRequests,
+        activeUsers24h,
+        totalRevenue
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Error fetching admin statistics' });
+    }
+  });
+
+  // Get all reports (placeholder for future implementation)
+  app.get('/api/admin/reports', isAdmin, async (req, res) => {
+    try {
+      // For now, return empty array since we don't have a reports table yet
+      // This can be implemented when the reports/moderation system is built
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      res.status(500).json({ message: 'Error fetching reports' });
+    }
+  });
+
+  // Update report status (placeholder)
+  app.patch('/api/admin/reports/:id', isAdmin, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Validate status
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+      }
+
+      // For now, just return success since we don't have reports table
+      res.json({ message: 'Report status updated successfully' });
+    } catch (error) {
+      console.error('Error updating report:', error);
+      res.status(500).json({ message: 'Error updating report' });
+    }
+  });
+
+  // Get vendor requests
+  app.get('/api/admin/vendor-requests', isAdmin, async (req, res) => {
+    try {
+      // Get all vendors with user information
+      const vendorRequests = await db
+        .select({
+          id: vendors.id,
+          userId: vendors.userId,
+          vendorType: vendors.vendorType,
+          businessName: vendors.businessName,
+          businessAddress: vendors.businessAddress,
+          businessPhone: vendors.businessPhone,
+          businessEmail: vendors.businessEmail,
+          description: vendors.description,
+          status: vendors.accountStatus,
+          createdAt: vendors.createdAt,
+          // User details
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id))
+        .orderBy(desc(vendors.createdAt));
+
+      // Transform the data to match the expected format
+      const formattedRequests = vendorRequests.map(request => ({
+        id: request.id,
+        userId: request.userId,
+        vendorType: request.vendorType,
+        businessName: request.businessName,
+        businessAddress: request.businessAddress,
+        businessPhone: request.businessPhone,
+        businessEmail: request.businessEmail,
+        description: request.description,
+        status: request.status || 'pending',
+        createdAt: request.createdAt,
+        user: {
+          name: request.userName,
+          username: request.userUsername,
+          email: request.userEmail,
+          avatar: request.userAvatar
+        }
+      }));
+
+      res.json(formattedRequests);
+    } catch (error) {
+      console.error('Error fetching vendor requests:', error);
+      res.status(500).json({ message: 'Error fetching vendor requests' });
+    }
+  });
+
+  // Update vendor request status
+  app.patch('/api/admin/vendor-requests/:id', isAdmin, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Validate status
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+      }
+
+      // Update the vendor account status
+      const updatedVendor = await db
+        .update(vendors)
+        .set({ 
+          accountStatus: status === 'approved' ? 'active' : 
+                        status === 'rejected' ? 'suspended' : 'on_hold',
+          updatedAt: new Date()
+        })
+        .where(eq(vendors.id, requestId))
+        .returning();
+
+      if (!updatedVendor.length) {
+        return res.status(404).json({ message: 'Vendor request not found' });
+      }
+
+      // If approved, update the user's isVendor flag
+      if (status === 'approved') {
+        await db
+          .update(users)
+          .set({ isVendor: true })
+          .where(eq(users.id, updatedVendor[0].userId));
+      }
+
+      res.json({ message: 'Vendor request status updated successfully' });
+    } catch (error) {
+      console.error('Error updating vendor request:', error);
+      res.status(500).json({ message: 'Error updating vendor request' });
+    }
+  });
   // Get all users
   app.get('/api/admin/users', isAdmin, async (req, res) => {
     try {

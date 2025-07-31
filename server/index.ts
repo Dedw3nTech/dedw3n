@@ -463,7 +463,7 @@ app.use((req, res, next) => {
       '/', '/login', '/register', '/products', '/wall', '/dating', 
       '/about', '/contact', '/faq', '/catalogue-rules', '/tips-tricks', '/business', '/network-partnerships', '/network-partnership-resources', '/affiliate-partnerships', '/resources', '/privacy', '/terms', '/business-terms', '/cookies', '/community-guidelines',
       '/profile', '/settings', '/messages', '/notifications', '/cart', '/shipping-calculator',
-      '/checkout', '/orders', '/dashboard', '/admin', '/moderator',
+      '/checkout', '/orders', '/dashboard', '/admin', '/admin-control-center', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
       '/subscriptions', '/verify', '/reset-password', '/help', '/logout-success',
       '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',

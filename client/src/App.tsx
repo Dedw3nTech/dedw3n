@@ -129,6 +129,7 @@ import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
 import LogoutSuccess from "@/pages/logout-success";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminControlCenter from "@/pages/admin-control-center";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
@@ -415,6 +416,7 @@ function Router() {
       {/* Admin routes */}
       <ProtectedRoute path="/admin" component={AdminDashboard} />
       <ProtectedRoute path="/admin/:tab" component={AdminDashboard} />
+      <ProtectedRoute path="/admin-control-center" component={AdminControlCenter} />
       
 
       <Route component={NotFoundPage} />

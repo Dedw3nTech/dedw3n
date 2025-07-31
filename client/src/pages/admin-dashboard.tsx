@@ -39,6 +39,7 @@ import {
   TrendingUp,
   Settings,
   Shield,
+  ShieldAlert,
   Database,
   RefreshCw,
   Download,
@@ -74,7 +75,7 @@ import {
 } from "lucide-react";
 import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 // Master Translation mega-batch for Admin Dashboard (50+ texts)
@@ -117,11 +118,16 @@ const UserModeration = () => (
       <CardDescription>Manage user accounts and moderation tasks</CardDescription>
     </CardHeader>
     <CardContent className="flex flex-col items-center justify-center py-10">
-      <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
-      <p className="text-center text-muted-foreground">
-        User moderation features are being implemented.
-        <br />Check back soon!
+      <ShieldAlert className="h-12 w-12 text-blue-500 mb-4" />
+      <p className="text-center text-muted-foreground mb-4">
+        Access the comprehensive Admin Control Center for complete platform moderation.
       </p>
+      <Link href="/admin-control-center">
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <ShieldAlert className="h-4 w-4 mr-2" />
+          Open Control Center
+        </Button>
+      </Link>
     </CardContent>
   </Card>
 );
