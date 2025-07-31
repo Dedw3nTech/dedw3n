@@ -412,14 +412,6 @@ export default function VendorDashboard() {
               {t("Open Business Store")}
             </Button>
           )}
-          <Button 
-            variant="destructive" 
-            onClick={handleDeleteStore}
-            disabled={isDeletingStore}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {isDeletingStore ? t("Deleting...") : t("Delete Store")}
-          </Button>
         </div>
       </div>
 
