@@ -977,6 +977,8 @@ export default function UnifiedAdminDashboard() {
                               </div>
                             </TableHead>
                             <TableHead>Location</TableHead>
+                            <TableHead>Gender</TableHead>
+                            <TableHead>Age</TableHead>
                             <TableHead>Vendor Status</TableHead>
                             <TableHead>Dating Status</TableHead>
                             <TableHead>Actions</TableHead>
@@ -985,13 +987,13 @@ export default function UnifiedAdminDashboard() {
                         <TableBody>
                           {usersLoading ? (
                             <TableRow>
-                              <TableCell colSpan={9} className="text-center py-8">
+                              <TableCell colSpan={11} className="text-center py-8">
                                 Loading users...
                               </TableCell>
                             </TableRow>
                           ) : filteredUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={9} className="text-center py-8">
+                              <TableCell colSpan={11} className="text-center py-8">
                                 No users found
                               </TableCell>
                             </TableRow>
@@ -1041,6 +1043,33 @@ export default function UnifiedAdminDashboard() {
                                       <div>
                                         <p className="font-medium">{user.country}</p>
                                         {user.region && <p className="text-xs text-gray-400">{user.region}</p>}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400">Not set</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {user.gender ? (
+                                      <Badge variant="outline" className="capitalize">
+                                        {user.gender}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-gray-400">Not set</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-sm">
+                                    {user.dateOfBirth ? (
+                                      <div>
+                                        <p className="font-medium">
+                                          {Math.floor((new Date().getTime() - new Date(user.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                          {new Date(user.dateOfBirth).toLocaleDateString()}
+                                        </p>
                                       </div>
                                     ) : (
                                       <span className="text-gray-400">Not set</span>
