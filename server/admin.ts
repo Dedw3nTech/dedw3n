@@ -2082,4 +2082,135 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: 'Error deleting moderation report' });
     }
   });
+
+  // Get all products for admin management
+  app.get('/api/admin/products', isAdmin, async (req, res) => {
+    try {
+      // Get all products with vendor and user information
+      const productsList = await db
+        .select({
+          id: products.id,
+          userId: products.userId,
+          vendorId: products.vendorId,
+          productCode: products.productCode,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          compareAtPrice: products.compareAtPrice,
+          imageUrl: products.imageUrl,
+          offeringType: products.offeringType,
+          status: products.status,
+          isActive: products.isActive,
+          createdAt: products.createdAt,
+          updatedAt: products.updatedAt,
+          // Vendor details
+          vendorStoreName: vendors.storeName,
+          vendorBusinessName: vendors.businessName,
+          vendorEmail: vendors.email,
+          vendorType: vendors.vendorType,
+          // User details
+          userName: users.name,
+          userUsername: users.username,
+          userEmail: users.email,
+          userAvatar: users.avatar,
+          userRole: users.role
+        })
+        .from(products)
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .leftJoin(users, eq(products.userId, users.id))
+        .orderBy(desc(products.createdAt));
+
+      // Transform the data to match the expected format
+      const formattedProducts = productsList.map(product => ({
+        id: product.id,
+        userId: product.userId,
+        vendorId: product.vendorId,
+        productCode: product.productCode,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        compareAtPrice: product.compareAtPrice,
+        imageUrl: product.imageUrl,
+        offeringType: product.offeringType,
+        status: product.status,
+        isActive: product.isActive,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+        vendor: product.vendorId ? {
+          id: product.vendorId,
+          storeName: product.vendorStoreName,
+          businessName: product.vendorBusinessName,
+          email: product.vendorEmail,
+          vendorType: product.vendorType
+        } : null,
+        user: product.userId ? {
+          id: product.userId,
+          name: product.userName,
+          username: product.userUsername,
+          email: product.userEmail,
+          avatar: product.userAvatar,
+          role: product.userRole
+        } : null
+      }));
+
+      res.json(formattedProducts);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Error fetching products' });
+    }
+  });
+
+  // Update product status
+  app.patch('/api/admin/products/:id', isAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const { status, isActive } = req.body;
+
+      const updateData: any = { updatedAt: new Date() };
+      
+      if (status !== undefined) {
+        updateData.status = status;
+      }
+      
+      if (isActive !== undefined) {
+        updateData.isActive = isActive;
+      }
+
+      const updatedProduct = await db
+        .update(products)
+        .set(updateData)
+        .where(eq(products.id, productId))
+        .returning();
+
+      if (!updatedProduct.length) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      res.json({ message: 'Product status updated successfully', product: updatedProduct[0] });
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ message: 'Error updating product' });
+    }
+  });
+
+  // Delete product
+  app.delete('/api/admin/products/:id', isAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+
+      const deletedProduct = await db
+        .delete(products)
+        .where(eq(products.id, productId))
+        .returning();
+
+      if (!deletedProduct.length) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ message: 'Error deleting product' });
+    }
+  });
 }

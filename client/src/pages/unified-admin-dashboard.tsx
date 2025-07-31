@@ -181,10 +181,13 @@ export default function UnifiedAdminDashboard() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [vendorSearchTerm, setVendorSearchTerm] = useState('');
+  const [productSearchTerm, setProductSearchTerm] = useState('');
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
   const [vendorDetailsDialogOpen, setVendorDetailsDialogOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // System maintenance states
   const [isSettingsSaved, setIsSettingsSaved] = useState(false);
@@ -239,6 +242,16 @@ export default function UnifiedAdminDashboard() {
     queryKey: ['/api/admin/vendors'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/vendors');
+      return response.json();
+    },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
+  });
+
+  // Fetch all products
+  const { data: products = [], isLoading: productsLoading } = useQuery<any[]>({
+    queryKey: ['/api/admin/products'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/products');
       return response.json();
     },
     enabled: !!(user && user.role === 'admin'), // Only run if user is admin
@@ -325,6 +338,38 @@ export default function UnifiedAdminDashboard() {
         description: "Vendor status has been successfully updated.",
       });
       setVendorDetailsDialogOpen(false);
+    },
+  });
+
+  // Product management mutations
+  const updateProductStatusMutation = useMutation({
+    mutationFn: async ({ productId, status, isActive }: { productId: number; status?: string; isActive?: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/admin/products/${productId}`, { status, isActive });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Product Updated",
+        description: "Product status has been successfully updated.",
+      });
+      setProductDialogOpen(false);
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/products/${productId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      toast({
+        title: "Product Deleted",
+        description: "Product has been successfully deleted.",
+      });
     },
   });
 
@@ -435,6 +480,15 @@ export default function UnifiedAdminDashboard() {
     vendor.email.toLowerCase().includes(vendorSearchTerm.toLowerCase())
   );
 
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.productCode.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.vendor?.storeName.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.vendor?.businessName.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.user?.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product.user?.username.toLowerCase().includes(productSearchTerm.toLowerCase())
+  );
+
   // Utility functions
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -540,10 +594,11 @@ export default function UnifiedAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
             <TabsTrigger value="users">{t("Users")}</TabsTrigger>
             <TabsTrigger value="vendors">{t("Vendors")}</TabsTrigger>
+            <TabsTrigger value="products">{t("Products")}</TabsTrigger>
             <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
             <TabsTrigger value="system">{t("System")}</TabsTrigger>
             <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>
@@ -1006,6 +1061,178 @@ export default function UnifiedAdminDashboard() {
             </Tabs>
           </TabsContent>
 
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  {t("Products Management")}
+                </CardTitle>
+                <CardDescription>
+                  Manage all products and services uploaded to the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-4">
+                    <Input
+                      placeholder="Search products..."
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                      className="w-64"
+                    />
+                    <Search className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <Badge variant="outline">
+                    {filteredProducts.length} products found
+                  </Badge>
+                </div>
+                
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Product Code</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead>User ID</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {productsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-8">
+                            Loading products...
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredProducts.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-8">
+                            No products found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredProducts.slice(0, 20).map((product) => (
+                          <TableRow key={product.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                  {product.imageUrl ? (
+                                    <img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                                  ) : (
+                                    <Package className="h-6 w-6" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium">{product.name}</p>
+                                  <p className="text-sm text-gray-500 max-w-xs truncate">{product.description}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="font-mono text-xs">
+                                {product.productCode}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{product.vendor?.storeName || product.vendor?.businessName}</p>
+                                <p className="text-sm text-gray-500">{product.vendor?.email}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                  ID: {product.userId}
+                                </Badge>
+                                {product.user && (
+                                  <div className="text-xs text-gray-500">
+                                    {product.user.name} (@{product.user.username})
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={product.offeringType === 'service' ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700'}>
+                                {product.offeringType || 'product'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                £{product.price?.toFixed(2) || '0.00'}
+                              </div>
+                              {product.compareAtPrice && (
+                                <div className="text-xs text-gray-500 line-through">
+                                  £{product.compareAtPrice.toFixed(2)}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                <Badge className={getStatusColor(product.status || 'active')}>
+                                  {product.status || 'active'}
+                                </Badge>
+                                {product.isActive === false && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Inactive
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(product.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedProduct(product);
+                                    setProductDialogOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => updateProductStatusMutation.mutate({ 
+                                    productId: product.id, 
+                                    isActive: !product.isActive 
+                                  })}
+                                >
+                                  {product.isActive === false ? 
+                                    <CheckCircle className="h-3 w-3" /> : 
+                                    <Ban className="h-3 w-3" />
+                                  }
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => deleteProductMutation.mutate(product.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Reports Tab */}
           <TabsContent value="reports" className="space-y-6">
             <Card>
@@ -1374,6 +1601,119 @@ export default function UnifiedAdminDashboard() {
               </Button>
               <Button onClick={() => updateReportMutation.mutate({ reportId: selectedReport?.id || 0, status: 'approved' })}>
                 Take Action
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Product Details Dialog */}
+        <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{t("Product Details")}</DialogTitle>
+              <DialogDescription>
+                View and manage product information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedProduct && (
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label>Product Name</Label>
+                    <p className="text-sm font-medium">{selectedProduct.name}</p>
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <p className="text-sm">{selectedProduct.description}</p>
+                  </div>
+                  <div>
+                    <Label>Product Code</Label>
+                    <Badge variant="secondary" className="font-mono">
+                      {selectedProduct.productCode}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label>Type</Label>
+                    <Badge variant="outline" className={selectedProduct.offeringType === 'service' ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700'}>
+                      {selectedProduct.offeringType || 'product'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label>Price</Label>
+                    <p className="text-sm font-medium">£{selectedProduct.price?.toFixed(2) || '0.00'}</p>
+                    {selectedProduct.compareAtPrice && (
+                      <p className="text-xs text-gray-500 line-through">
+                        Was: £{selectedProduct.compareAtPrice.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Vendor</Label>
+                    <p className="text-sm font-medium">{selectedProduct.vendor?.storeName || selectedProduct.vendor?.businessName}</p>
+                    <p className="text-xs text-gray-500">{selectedProduct.vendor?.email}</p>
+                  </div>
+                  <div>
+                    <Label>User</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        ID: {selectedProduct.userId}
+                      </Badge>
+                      {selectedProduct.user && (
+                        <span className="text-xs text-gray-500">
+                          {selectedProduct.user.name} (@{selectedProduct.user.username})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Badge className={getStatusColor(selectedProduct.status || 'active')}>
+                      {selectedProduct.status || 'active'}
+                    </Badge>
+                    {selectedProduct.isActive === false && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        Inactive
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Created</Label>
+                    <p className="text-sm">{new Date(selectedProduct.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  {selectedProduct.imageUrl && (
+                    <div>
+                      <Label>Product Image</Label>
+                      <img 
+                        src={selectedProduct.imageUrl} 
+                        alt={selectedProduct.name} 
+                        className="w-32 h-32 rounded-lg object-cover border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setProductDialogOpen(false)}>
+                Close
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => updateProductStatusMutation.mutate({ 
+                  productId: selectedProduct?.id || 0, 
+                  isActive: !selectedProduct?.isActive 
+                })}
+              >
+                {selectedProduct?.isActive === false ? 'Activate' : 'Deactivate'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => deleteProductMutation.mutate(selectedProduct?.id || 0)}
+                className="text-red-600 hover:text-red-700"
+              >
+                Delete Product
               </Button>
             </DialogFooter>
           </DialogContent>
