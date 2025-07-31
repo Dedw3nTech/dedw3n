@@ -406,7 +406,7 @@ export default function VendorDashboard() {
             <Button 
               variant="outline" 
               onClick={handleOpenBusinessStore}
-              className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+              className="bg-black text-white hover:bg-gray-800 border-black"
             >
               <Building className="mr-2 h-4 w-4" />
               {t("Open Business Store")}
