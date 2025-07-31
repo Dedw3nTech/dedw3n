@@ -13905,6 +13905,119 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Test endpoint for user registration notification
+  app.post('/api/test-user-registration-email', async (req: Request, res: Response) => {
+    try {
+      const testUser = {
+        id: 999,
+        username: 'testuser123',
+        email: 'testuser@example.com',
+        name: 'Test User Registration'
+      };
+
+      const subject = `🎉 New User Registration - ${testUser.username}`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #333; text-align: center; margin-bottom: 30px;">🎉 New User Registration (TEST)</h2>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+              <h3 style="color: #495057; margin-bottom: 15px;">User Details:</h3>
+              <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Username:</strong> ${testUser.username}</li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Email:</strong> ${testUser.email}</li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Name:</strong> ${testUser.name}</li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>User ID:</strong> ${testUser.id}</li>
+                <li style="padding: 8px 0;"><strong>Registration Date:</strong> ${new Date().toLocaleString()}</li>
+              </ul>
+            </div>
+            
+            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 6px; border-left: 4px solid #2196f3;">
+              <p style="margin: 0; color: #1565c0;">
+                <strong>TEST EMAIL:</strong> This is a test of the user registration notification system.
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+              <p style="color: #666; font-size: 14px; margin: 0;">
+                This is a test email from the Dedw3n marketplace system.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const text = `
+TEST - New User Registration Alert
+
+Username: ${testUser.username}
+Email: ${testUser.email}
+Name: ${testUser.name}
+User ID: ${testUser.id}
+Registration Date: ${new Date().toLocaleString()}
+
+This is a test email from the Dedw3n marketplace system.
+      `;
+
+      await sendEmail({
+        to: 'love@dedw3n.com',
+        from: '8e7c36001@smtp-brevo.com',
+        subject,
+        text,
+        html
+      });
+
+      res.json({
+        success: true,
+        message: 'Test user registration notification sent successfully',
+        testUser
+      });
+    } catch (error) {
+      console.error('[TEST] Failed to send user registration test email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send test user registration email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Test endpoint for vendor registration notification
+  app.post('/api/test-vendor-registration-email', async (req: Request, res: Response) => {
+    try {
+      const testUser = {
+        id: 888,
+        username: 'testvendor123',
+        email: 'testvendor@example.com',
+        name: 'Test Vendor Account'
+      };
+
+      const testVendor = {
+        id: 777,
+        storeName: 'Test Marketplace Store',
+        businessName: 'Test Business LLC'
+      };
+
+      await sendVendorNotificationEmail(testUser, testVendor, 'business', false);
+
+      res.json({
+        success: true,
+        message: 'Test vendor registration notification sent successfully',
+        testUser,
+        testVendor,
+        vendorType: 'business',
+        isApproved: false
+      });
+    } catch (error) {
+      console.error('[TEST] Failed to send vendor registration test email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send test vendor registration email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // DELETE /api/vendors/store - Delete current vendor store
   app.delete("/api/vendors/store", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
