@@ -708,150 +708,421 @@ export default function UnifiedAdminDashboard() {
 
           {/* Users Tab */}
           <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {t("User Management")}
-                </CardTitle>
-                <CardDescription>
-                  Manage user accounts, roles, and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
-                    <Input
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-64"
-                    />
-                    <Search className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <Badge variant="outline">
-                    {filteredUsers.length} users found
-                  </Badge>
-                </div>
-                
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead 
-                          className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleUserSort('name')}
-                        >
-                          <div className="flex items-center gap-2">
-                            User
-                            {userSortField === 'name' && (
-                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead 
-                          className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleUserSort('createdAt')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Creation Date
-                            {userSortField === 'createdAt' && (
-                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead 
-                          className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleUserSort('lastLogin')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Last Login
-                            {userSortField === 'lastLogin' && (
-                              userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {usersLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            Loading users...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
-                            No users found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredUsers.slice(0, 10).map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                  {user.avatar ? (
-                                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                                  ) : (
-                                    <Users className="h-4 w-4" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-medium">{user.name}</p>
-                                  <p className="text-sm text-gray-500">@{user.username}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getRoleColor(user.role)}>
-                                {user.role}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(user.status)}>
-                                {user.isLocked ? 'Locked' : user.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
-                            </TableCell>
-                            <TableCell>
-                              {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-                            </TableCell>
-                            <TableCell>
+            <Tabs defaultValue="users-list" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="users-list">{t("Users")}</TabsTrigger>
+                <TabsTrigger value="vendor-status">{t("Vendor")}</TabsTrigger>
+                <TabsTrigger value="dating-status">{t("Dating")}</TabsTrigger>
+              </TabsList>
+              
+              {/* Users List */}
+              <TabsContent value="users-list" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      {t("User Management")}
+                    </CardTitle>
+                    <CardDescription>
+                      Manage user accounts, roles, and permissions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          placeholder="Search users..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-64"
+                        />
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Badge variant="outline">
+                        {filteredUsers.length} users found
+                      </Badge>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead 
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => handleUserSort('name')}
+                            >
                               <div className="flex items-center gap-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setUserDialogOpen(true);
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => deleteUserMutation.mutate(user.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                                User
+                                {userSortField === 'name' && (
+                                  userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                                )}
                               </div>
-                            </TableCell>
+                            </TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead 
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => handleUserSort('createdAt')}
+                            >
+                              <div className="flex items-center gap-2">
+                                Creation Date
+                                {userSortField === 'createdAt' && (
+                                  userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                                )}
+                              </div>
+                            </TableHead>
+                            <TableHead 
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => handleUserSort('lastLogin')}
+                            >
+                              <div className="flex items-center gap-2">
+                                Last Login
+                                {userSortField === 'lastLogin' && (
+                                  userSortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                                )}
+                              </div>
+                            </TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                        </TableHeader>
+                        <TableBody>
+                          {usersLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8">
+                                Loading users...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8">
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredUsers.slice(0, 10).map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {user.avatar ? (
+                                        <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Users className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{user.name}</p>
+                                      <p className="text-sm text-gray-500">@{user.username}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getRoleColor(user.role)}>
+                                    {user.role}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusColor(user.status)}>
+                                    {user.isLocked ? 'Locked' : user.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                                </TableCell>
+                                <TableCell>
+                                  {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setUserDialogOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => deleteUserMutation.mutate(user.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Vendor Status Tab */}
+              <TabsContent value="vendor-status" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Store className="h-5 w-5" />
+                      {t("Vendor Status Management")}
+                    </CardTitle>
+                    <CardDescription>
+                      View and manage vendor account status for all users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          placeholder="Search users..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-64"
+                        />
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Badge variant="outline">
+                        {filteredUsers.length} users found
+                      </Badge>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>User ID</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Vendor Status</TableHead>
+                            <TableHead>Vendor Type</TableHead>
+                            <TableHead>Store Name</TableHead>
+                            <TableHead>Creation Date</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {usersLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                Loading users...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredUsers.slice(0, 10).map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {user.avatar ? (
+                                        <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Users className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{user.name}</p>
+                                      <p className="text-sm text-gray-500">@{user.username}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary" className="font-mono text-xs">
+                                    #{user.id}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <p className="text-sm">{user.email}</p>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={user.isVendor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
+                                    {user.isVendor ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.isVendor ? (
+                                    <Badge variant="outline" className="text-xs">
+                                      Vendor
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-sm text-gray-400">N/A</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {user.isVendor ? (
+                                    <p className="text-sm">Store Available</p>
+                                  ) : (
+                                    <span className="text-sm text-gray-400">No Store</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setUserDialogOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Dating Status Tab */}
+              <TabsContent value="dating-status" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5" />
+                      {t("Dating Status Management")}
+                    </CardTitle>
+                    <CardDescription>
+                      View and manage dating account status for all users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-4">
+                        <Input
+                          placeholder="Search users..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-64"
+                        />
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Badge variant="outline">
+                        {filteredUsers.length} users found
+                      </Badge>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>User ID</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Dating Status</TableHead>
+                            <TableHead>Subscription</TableHead>
+                            <TableHead>Profile Status</TableHead>
+                            <TableHead>Creation Date</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {usersLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                Loading users...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-8">
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredUsers.slice(0, 10).map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                      {user.avatar ? (
+                                        <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                                      ) : (
+                                        <Users className="h-4 w-4" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{user.name}</p>
+                                      <p className="text-sm text-gray-500">@{user.username}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary" className="font-mono text-xs">
+                                    #{user.id}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <p className="text-sm">{user.email}</p>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={user.datingEnabled ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-600'}>
+                                    {user.datingEnabled ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={
+                                    user.datingSubscription === 'premium' ? 'bg-yellow-100 text-yellow-800' :
+                                    user.datingSubscription === 'plus' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-600'
+                                  }>
+                                    {user.datingSubscription || 'normal'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.datingEnabled ? (
+                                    <Badge variant="outline" className="text-xs">
+                                      Profile Set
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-sm text-gray-400">No Profile</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setUserDialogOpen(true);
+                                      }}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* Vendors Tab */}
