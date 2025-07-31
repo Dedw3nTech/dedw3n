@@ -86,6 +86,11 @@ export default function ProductDetail() {
   const [giftSearchQuery, setGiftSearchQuery] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
   const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Offer dialog state
+  const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerMessage, setOfferMessage] = useState('');
   
   // User search query for gift functionality
   const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery({
@@ -169,6 +174,46 @@ export default function ProductDetail() {
       likeMutation.mutate(productId);
     }
   };
+
+  // Send offer mutation for product detail page
+  const sendOfferMutation = useMutation({
+    mutationFn: async ({ amount, message }: { amount: string; message: string }) => {
+      if (!product?.vendorId) {
+        throw new Error('Product vendor information is missing');
+      }
+
+      const response = await apiRequest('POST', '/api/messages/send', {
+        receiverId: product.vendorId,
+        content: `🎯 OFFER: ${formatPriceFromGBP(parseFloat(amount))} for "${product?.name}"\n\n${message}\n\nProduct: /product/${product.id}`,
+        category: 'marketplace'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send offer');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      const vendorName = product?.vendorId === 1 ? 'Kinshasa DR Congo' : `Vendor ${product?.vendorId}`;
+      toast({
+        title: "Offer Sent!",
+        description: `Your offer has been sent to ${vendorName}`,
+      });
+      setIsOfferDialogOpen(false);
+      setOfferAmount('');
+      setOfferMessage('');
+    },
+    onError: (error: any) => {
+      console.error('Product detail send offer error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send offer. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   // Force rerender when currency changes
   useEffect(() => {
@@ -537,11 +582,7 @@ export default function ProductDetail() {
                     variant="ghost"
                     onClick={() => {
                       if (user) {
-                        // Handle send offer logic
-                        toast({
-                          title: "Send Offer",
-                          description: "Offer functionality coming soon",
-                        });
+                        setIsOfferDialogOpen(true);
                       } else {
                         toast({
                           title: "Login Required",
@@ -1105,6 +1146,97 @@ export default function ProductDetail() {
                   <Gift className="mr-2 h-4 w-4" />
                   Send Gift
                 </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Offer Dialog */}
+      <Dialog open={isOfferDialogOpen} onOpenChange={setIsOfferDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Offer</DialogTitle>
+            <DialogDescription>
+              Send a price offer for this product
+            </DialogDescription>
+          </DialogHeader>
+          
+          {product && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0">
+                  {product.imageUrl && (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{product.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    Listed: {formatPriceFromGBP(product.price)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="offer-amount">Your Offer Amount</Label>
+              <Input
+                id="offer-amount"
+                type="number"
+                placeholder="0.00"
+                value={offerAmount}
+                onChange={(e) => setOfferAmount(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="offer-message">Message (Optional)</Label>
+              <Textarea
+                id="offer-message"
+                placeholder="Add a message with your offer..."
+                value={offerMessage}
+                onChange={(e) => setOfferMessage(e.target.value)}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsOfferDialogOpen(false)}
+              disabled={sendOfferMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (offerAmount) {
+                  sendOfferMutation.mutate({
+                    amount: offerAmount,
+                    message: offerMessage
+                  });
+                }
+              }}
+              disabled={sendOfferMutation.isPending || !offerAmount}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              {sendOfferMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Offer'
               )}
             </Button>
           </div>

@@ -500,6 +500,10 @@ export default function PostCard({
   // Offer message mutation
   const offerMutation = useMutation({
     mutationFn: async ({ amount, message }: { amount: string; message: string }) => {
+      if (!post.userId) {
+        throw new Error('Post author information is missing');
+      }
+
       const response = await apiRequest(
         "POST",
         `/api/messages/send`,
@@ -526,7 +530,8 @@ export default function PostCard({
         description: `Your offer has been sent to ${post.user?.name || post.user?.username || 'the post author'}`,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error('PostCard send offer error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to send offer",

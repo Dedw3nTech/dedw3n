@@ -387,8 +387,12 @@ export default function Products() {
   // Send offer mutation
   const sendOfferMutation = useMutation({
     mutationFn: async ({ productId, amount, message }: { productId: number; amount: string; message: string }) => {
+      if (!selectedOfferProduct?.vendorId) {
+        throw new Error('Product vendor information is missing');
+      }
+
       const response = await apiRequest('POST', '/api/messages/send', {
-        receiverId: selectedOfferProduct?.vendorId,
+        receiverId: selectedOfferProduct.vendorId,
         content: `🎯 OFFER: ${formatPrice(parseFloat(amount))} for "${selectedOfferProduct?.name}"\n\n${message}\n\nProduct: /product/${productId}`,
         category: 'marketplace'
       });
@@ -411,10 +415,11 @@ export default function Products() {
       setOfferMessage('');
       setSelectedOfferProduct(null);
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Send offer error:', error);
       toast({
         title: "Error",
-        description: "Failed to send offer. Please try again.",
+        description: error.message || "Failed to send offer. Please try again.",
         variant: "destructive",
       });
     }
