@@ -27,7 +27,7 @@ import {
   Database, RefreshCw, Download, Upload, AlertTriangle, Activity, AlertCircle, CheckCircle, 
   XCircle, Clock, Search, Filter, MoreHorizontal, Edit, Trash2, Eye, Mail, Phone, MapPin, 
   Calendar, Store, UserCog, Languages, CreditCard, Truck, FileText, BarChart3, Bell, 
-  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban, ChevronUp, ChevronDown
+  ExternalLink, DollarSign, Sparkles, FileWarning, ShieldCheck, Ban, ChevronUp, ChevronDown, Heart
 } from 'lucide-react';
 
 // Types
@@ -42,6 +42,9 @@ interface User {
   isLocked: boolean;
   lastLogin?: Date;
   createdAt: Date;
+  isVendor: boolean;
+  datingEnabled: boolean;
+  datingSubscription?: string;
 }
 
 interface Report {
@@ -782,19 +785,21 @@ export default function UnifiedAdminDashboard() {
                                 )}
                               </div>
                             </TableHead>
+                            <TableHead>Vendor Status</TableHead>
+                            <TableHead>Dating Status</TableHead>
                             <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {usersLoading ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8">
+                              <TableCell colSpan={8} className="text-center py-8">
                                 Loading users...
                               </TableCell>
                             </TableRow>
                           ) : filteredUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8">
+                              <TableCell colSpan={8} className="text-center py-8">
                                 No users found
                               </TableCell>
                             </TableRow>
@@ -831,6 +836,16 @@ export default function UnifiedAdminDashboard() {
                                 </TableCell>
                                 <TableCell>
                                   {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={user.isVendor ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}>
+                                    {user.isVendor ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={user.datingEnabled ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-600'}>
+                                    {user.datingEnabled ? 'Active' : 'Inactive'}
+                                  </Badge>
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
