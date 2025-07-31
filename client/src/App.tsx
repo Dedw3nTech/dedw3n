@@ -189,7 +189,6 @@ import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
 import AuthPage from "@/pages/auth";
-import RequestsPage from "@/pages/requests";
 import { SiteMap } from "@/components/layout/SiteMap";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
@@ -390,9 +389,6 @@ function Router() {
       <ProtectedRoute path="/explore" component={ExplorePage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/orders-returns" component={OrdersReturnsPage} />
-      
-      {/* Requests page - accessible to authenticated users */}
-      <ProtectedRoute path="/requests" component={RequestsPage} />
       
       {/* Shipping Calculator - accessible to all users */}
       <Route path="/shipping-calculator">

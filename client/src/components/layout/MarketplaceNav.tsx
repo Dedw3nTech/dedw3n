@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse } from 'lucide-react';
-import { useLocation as useWouterLocation } from 'wouter';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -21,7 +20,7 @@ interface MarketplaceNavProps {
 }
 
 export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNavProps = {}) {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { cartItemCount } = useCart();
@@ -33,7 +32,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Friends (C2C)",
     "Online Store (B2C)", 
     "Wholesale (B2B)",
-    "Requests",
     "Search products...",
     "Liked",
     "Shopping Cart",
@@ -50,13 +48,12 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     c2cText: translatedTexts[0] || navigationTexts[0],
     b2cText: translatedTexts[1] || navigationTexts[1], 
     b2bText: translatedTexts[2] || navigationTexts[2],
-    requestsText: translatedTexts[3] || navigationTexts[3],
-    searchPlaceholder: translatedTexts[4] || navigationTexts[4],
-    likedText: translatedTexts[5] || navigationTexts[5],
-    cartText: translatedTexts[6] || navigationTexts[6],
-    ordersText: translatedTexts[7] || navigationTexts[7],
-    vendorText: translatedTexts[8] || navigationTexts[8],
-    vendorPageText: translatedTexts[9] || navigationTexts[9]
+    searchPlaceholder: translatedTexts[3] || navigationTexts[3],
+    likedText: translatedTexts[4] || navigationTexts[4],
+    cartText: translatedTexts[5] || navigationTexts[5],
+    ordersText: translatedTexts[6] || navigationTexts[6],
+    vendorText: translatedTexts[7] || navigationTexts[7],
+    vendorPageText: translatedTexts[8] || navigationTexts[8]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -145,26 +142,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               </div>
               <div className={`h-0.5 transition-all duration-300 ${
                 marketType === 'b2b' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handlePageNavigation("/requests")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`text-xs font-medium transition-colors duration-300 ${
-                  location === '/requests' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
-                  {translatedLabels.requestsText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                location === '/requests' 
                   ? 'bg-black w-full' 
                   : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
               }`} />

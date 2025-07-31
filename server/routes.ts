@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, productRequests, requestResponses, insertProductRequestSchema, insertRequestResponseSchema, connections, friendRequests, chatrooms, privateRoomInvitations } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers } from "@shared/schema";
 
 import { setupAuth, hashPassword, verifyRecaptcha, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -8261,11 +8261,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           username: users.username,
           avatar: users.avatar
         })
-        .from(connections)
-        .leftJoin(users, eq(connections.connectedUserId, users.id))
+        .from(friendships)
+        .leftJoin(users, eq(friendships.friendId, users.id))
         .where(and(
-          eq(connections.userId, userId),
-          eq(connections.status, 'connected')
+          eq(friendships.userId, userId),
+          eq(friendships.status, 'accepted')
         ));
 
       res.json(friends);
@@ -13761,236 +13761,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Error deleting vendor store:", error);
       res.status(500).json({ message: "Failed to delete vendor store" });
-    }
-  });
-
-  // Product Requests API endpoints
-  
-  // Get all product requests
-  app.get('/api/requests', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const requests = await db
-        .select({
-          id: productRequests.id,
-          userId: productRequests.userId,
-          title: productRequests.title,
-          description: productRequests.description,
-          category: productRequests.category,
-          maxPrice: productRequests.maxPrice,
-          currency: productRequests.currency,
-          urgency: productRequests.urgency,
-          status: productRequests.status,
-          friendsOnly: productRequests.friendsOnly,
-          localOnly: productRequests.localOnly,
-          responseCount: productRequests.responseCount,
-          expiresAt: productRequests.expiresAt,
-          createdAt: productRequests.createdAt,
-          updatedAt: productRequests.updatedAt,
-          user: {
-            id: users.id,
-            username: users.username,
-            name: users.name,
-            avatar: users.avatar,
-          }
-        })
-        .from(productRequests)
-        .leftJoin(users, eq(productRequests.userId, users.id))
-        .where(eq(productRequests.status, 'open'))
-        .orderBy(desc(productRequests.createdAt));
-
-      res.json(requests);
-    } catch (error) {
-      console.error('Error fetching product requests:', error);
-      res.status(500).json({ message: 'Failed to fetch product requests' });
-    }
-  });
-
-  // Create a new product request
-  app.post('/api/requests', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const { title, description, category, maxPrice, urgency, friendsOnly, localOnly } = req.body;
-
-      // Validate required fields
-      if (!title || !description) {
-        return res.status(400).json({ message: "Title and description are required" });
-      }
-
-      // Set expiration date (30 days from now)
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
-
-      const newRequest = await db.insert(productRequests).values({
-        userId,
-        title,
-        description,
-        category: category || 'general',
-        maxPrice: parseFloat(maxPrice) || 0,
-        currency: 'GBP',
-        urgency: urgency || 'medium',
-        status: 'open',
-        friendsOnly: friendsOnly || false,
-        localOnly: localOnly || false,
-        expiresAt,
-      }).returning();
-
-      res.json({ 
-        success: true, 
-        message: "Product request created successfully",
-        request: newRequest[0] 
-      });
-    } catch (error) {
-      console.error('Error creating product request:', error);
-      res.status(500).json({ message: 'Failed to create product request' });
-    }
-  });
-
-  // Get responses for a specific request
-  app.get('/api/requests/:requestId/responses', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const requestId = parseInt(req.params.requestId);
-      
-      if (isNaN(requestId)) {
-        return res.status(400).json({ message: 'Invalid request ID' });
-      }
-
-      const responses = await db
-        .select({
-          id: requestResponses.id,
-          requestId: requestResponses.requestId,
-          userId: requestResponses.userId,
-          message: requestResponses.message,
-          price: requestResponses.price,
-          productUrl: requestResponses.productUrl,
-          createdAt: requestResponses.createdAt,
-          user: {
-            id: users.id,
-            username: users.username,
-            name: users.name,
-            avatar: users.avatar,
-          }
-        })
-        .from(requestResponses)
-        .leftJoin(users, eq(requestResponses.userId, users.id))
-        .where(eq(requestResponses.requestId, requestId))
-        .orderBy(desc(requestResponses.createdAt));
-
-      res.json(responses);
-    } catch (error) {
-      console.error('Error fetching request responses:', error);
-      res.status(500).json({ message: 'Failed to fetch request responses' });
-    }
-  });
-
-  // Create a response to a product request
-  app.post('/api/requests/:requestId/responses', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const requestId = parseInt(req.params.requestId);
-      
-      if (isNaN(requestId)) {
-        return res.status(400).json({ message: 'Invalid request ID' });
-      }
-
-      const { message, price, productUrl } = req.body;
-
-      // Validate required fields
-      if (!message) {
-        return res.status(400).json({ message: "Message is required" });
-      }
-
-      // Check if request exists and is still open
-      const [request] = await db
-        .select()
-        .from(productRequests)
-        .where(and(
-          eq(productRequests.id, requestId),
-          eq(productRequests.status, 'open')
-        ));
-
-      if (!request) {
-        return res.status(404).json({ message: 'Request not found or no longer open' });
-      }
-
-      // Create the response
-      const newResponse = await db.insert(requestResponses).values({
-        requestId,
-        userId,
-        message,
-        price: price ? parseFloat(price) : null,
-        productUrl: productUrl || null,
-      }).returning();
-
-      // Update response count
-      await db
-        .update(productRequests)
-        .set({ 
-          responseCount: sql`${productRequests.responseCount} + 1`,
-          updatedAt: new Date()
-        })
-        .where(eq(productRequests.id, requestId));
-
-      res.json({ 
-        success: true, 
-        message: "Response created successfully",
-        response: newResponse[0] 
-      });
-    } catch (error) {
-      console.error('Error creating response:', error);
-      res.status(500).json({ message: 'Failed to create response' });
-    }
-  });
-
-  // Delete a product request (only by owner)
-  app.delete('/api/requests/:requestId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const requestId = parseInt(req.params.requestId);
-      
-      if (isNaN(requestId)) {
-        return res.status(400).json({ message: 'Invalid request ID' });
-      }
-
-      // Check if user owns the request
-      const [request] = await db
-        .select()
-        .from(productRequests)
-        .where(and(
-          eq(productRequests.id, requestId),
-          eq(productRequests.userId, userId)
-        ));
-
-      if (!request) {
-        return res.status(404).json({ message: 'Request not found or not authorized' });
-      }
-
-      // Delete the request (responses will be deleted due to cascade)
-      await db.delete(productRequests).where(eq(productRequests.id, requestId));
-
-      res.json({ 
-        success: true, 
-        message: "Request deleted successfully" 
-      });
-    } catch (error) {
-      console.error('Error deleting request:', error);
-      res.status(500).json({ message: 'Failed to delete request' });
     }
   });
 

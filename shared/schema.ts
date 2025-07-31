@@ -72,12 +72,6 @@ export const promotionTargetEnum = pgEnum('promotion_target', ['all_products', '
 // Define commission status enum
 export const commissionStatusEnum = pgEnum('commission_status', ['pending', 'sent', 'paid', 'overdue', 'failed']);
 
-// Define product request urgency enum
-export const requestUrgencyEnum = pgEnum('request_urgency', ['low', 'medium', 'high']);
-
-// Define product request status enum
-export const requestStatusEnum = pgEnum('request_status', ['open', 'fulfilled', 'expired', 'cancelled']);
-
 // Define payment status enum
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'cancelled']);
 
@@ -2613,70 +2607,6 @@ export const insertGiftPropositionSchema = createInsertSchema(giftPropositions).
 // Gift proposition types
 export type GiftProposition = typeof giftPropositions.$inferSelect;
 export type InsertGiftProposition = z.infer<typeof insertGiftPropositionSchema>;
-
-// Product Requests Table
-export const productRequests = pgTable("product_requests", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull().default('general'),
-  maxPrice: doublePrecision("max_price").notNull().default(0),
-  currency: text("currency").notNull().default("GBP"),
-  urgency: requestUrgencyEnum("urgency").notNull().default('medium'),
-  status: requestStatusEnum("status").notNull().default('open'),
-  friendsOnly: boolean("friends_only").notNull().default(false),
-  localOnly: boolean("local_only").notNull().default(false),
-  responseCount: integer("response_count").notNull().default(0),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => {
-  return {
-    userIdx: index('idx_product_requests_user').on(table.userId),
-    statusIdx: index('idx_product_requests_status').on(table.status),
-    categoryIdx: index('idx_product_requests_category').on(table.category),
-    urgencyIdx: index('idx_product_requests_urgency').on(table.urgency),
-    createdAtIdx: index('idx_product_requests_created').on(table.createdAt),
-  };
-});
-
-// Request Responses Table
-export const requestResponses = pgTable("request_responses", {
-  id: serial("id").primaryKey(),
-  requestId: integer("request_id").notNull().references(() => productRequests.id, { onDelete: 'cascade' }),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  message: text("message").notNull(),
-  price: doublePrecision("price"),
-  productUrl: text("product_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => {
-  return {
-    requestIdx: index('idx_request_responses_request').on(table.requestId),
-    userIdx: index('idx_request_responses_user').on(table.userId),
-    createdAtIdx: index('idx_request_responses_created').on(table.createdAt),
-  };
-});
-
-// Product request schemas
-export const insertProductRequestSchema = createInsertSchema(productRequests).omit({ 
-  id: true, 
-  responseCount: true,
-  createdAt: true, 
-  updatedAt: true 
-});
-
-export const insertRequestResponseSchema = createInsertSchema(requestResponses).omit({ 
-  id: true, 
-  createdAt: true 
-});
-
-// Product request types
-export type ProductRequest = typeof productRequests.$inferSelect;
-export type InsertProductRequest = z.infer<typeof insertProductRequestSchema>;
-
-export type RequestResponse = typeof requestResponses.$inferSelect;
-export type InsertRequestResponse = z.infer<typeof insertRequestResponseSchema>;
 
 // Vendor Discounts and Promotions
 export const vendorDiscounts = pgTable("vendor_discounts", {
