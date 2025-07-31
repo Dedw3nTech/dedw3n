@@ -224,6 +224,25 @@ export default function Products() {
   const [giftSearchQuery, setGiftSearchQuery] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
 
+  // Share with Member dialog state
+  const [shareWithMemberDialogOpen, setShareWithMemberDialogOpen] = useState(false);
+  const [selectedShareProduct, setSelectedShareProduct] = useState<any>(null);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+
+  // Member search query for share functionality
+  const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
+    queryKey: ['/api/users/search', memberSearchQuery],
+    queryFn: async () => {
+      if (memberSearchQuery.length >= 2) {
+        const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
+        return response;
+      }
+      return [];
+    },
+    enabled: memberSearchQuery.length >= 2,
+  });
+
   // Liked products functionality
   const { data: likedProducts = [] } = useQuery({
     queryKey: ['/api/liked-products'],
@@ -420,6 +439,47 @@ export default function Products() {
       toast({
         title: "Error",
         description: error.message || "Failed to send offer. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Share with member mutation
+  const shareWithMemberMutation = useMutation({
+    mutationFn: async ({ productId, memberId }: { productId: number; memberId: number }) => {
+      if (!selectedShareProduct) {
+        throw new Error('Product information is missing');
+      }
+
+      const response = await apiRequest('POST', '/api/messages/send', {
+        receiverId: memberId,
+        content: `📦 PRODUCT SHARE: "${selectedShareProduct.name}"\n\nPrice: ${formatPrice(selectedShareProduct.price)}\n\nCheck it out: /product/${productId}`,
+        category: 'marketplace'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to share product');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      const memberName = selectedMember?.name || selectedMember?.username || 'the member';
+      toast({
+        title: "Product Shared!",
+        description: `Product has been shared with ${memberName}`,
+      });
+      setShareWithMemberDialogOpen(false);
+      setMemberSearchQuery('');
+      setSelectedMember(null);
+      setSelectedShareProduct(null);
+    },
+    onError: (error: any) => {
+      console.error('Share with member error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to share product. Please try again.",
         variant: "destructive",
       });
     }
@@ -993,7 +1053,10 @@ export default function Products() {
                 <MessageSquare className="h-4 w-4 mr-2 text-blue-600" />
                 {shareOnFeedText}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation(`/members?share=${product.id}&url=${encodeURIComponent(`/product/${product.id}`)}&title=${encodeURIComponent(product.name)}`)}>
+              <DropdownMenuItem onClick={() => {
+                setSelectedShareProduct(product);
+                setShareWithMemberDialogOpen(true);
+              }}>
                 <Users className="h-4 w-4 mr-2 text-blue-600" />
                 {shareWithMemberText}
               </DropdownMenuItem>
@@ -1739,6 +1802,162 @@ export default function Products() {
                 </>
               ) : (
                 sendGiftText
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share with Member Dialog */}
+      <Dialog open={shareWithMemberDialogOpen} onOpenChange={setShareWithMemberDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="items-center text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <img 
+                src="/attached_assets/D3 black logo.png" 
+                alt="Dedw3n Logo" 
+                className="w-8 h-8"
+              />
+            </div>
+            <DialogTitle className="text-xl font-bold">Share with Member</DialogTitle>
+            <DialogDescription>
+              Share this product with another member via direct message
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedShareProduct && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                  {selectedShareProduct.imageUrl && (
+                    <img 
+                      src={selectedShareProduct.imageUrl} 
+                      alt={selectedShareProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{selectedShareProduct.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {formatPrice(selectedShareProduct.price)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {byText} {selectedShareProduct.vendorName || 'Vendor'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="member-search" className="text-sm font-medium mb-2 block">
+                Search for Member
+              </Label>
+              <Input
+                id="member-search"
+                type="text"
+                placeholder={typeNameUsernameText}
+                value={memberSearchQuery}
+                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            {memberSearchLoading && memberSearchQuery.length >= 2 && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+            
+            {Array.isArray(memberSearchResults) && memberSearchResults.length > 0 && (
+              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
+                {memberSearchResults.map((member: any) => (
+                  <div
+                    key={member.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedMember?.id === member.id
+                        ? 'bg-blue-100 border border-blue-300'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setSelectedMember(member)}
+                  >
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200">
+                      {member.avatar ? (
+                        <img 
+                          src={member.avatar} 
+                          alt={`${member.name || member.username}'s profile`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (nextElement) {
+                              nextElement.style.display = 'flex';
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${member.avatar ? 'hidden' : 'flex'}`}
+                      >
+                        {(member.name || member.username).charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{member.name || member.username}</p>
+                      <p className="text-xs text-gray-500 truncate">@{member.username}</p>
+                      {member.bio && (
+                        <p className="text-xs text-gray-400 truncate mt-1">{member.bio}</p>
+                      )}
+                    </div>
+                    {selectedMember?.id === member.id && (
+                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {memberSearchQuery.length >= 2 && !memberSearchLoading && Array.isArray(memberSearchResults) && memberSearchResults.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>{noUsersFoundText} "{memberSearchQuery}"</p>
+              </div>
+            )}
+            
+            {memberSearchQuery.length < 2 && memberSearchQuery.length > 0 && (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                {typeAtLeastText}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareWithMemberDialogOpen(false)}>
+              {cancelText}
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedMember && selectedShareProduct) {
+                  shareWithMemberMutation.mutate({
+                    productId: selectedShareProduct.id,
+                    memberId: selectedMember.id
+                  });
+                }
+              }}
+              disabled={shareWithMemberMutation.isPending || !selectedMember}
+              className="bg-blue-500 text-white hover:bg-blue-600"
+            >
+              {shareWithMemberMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sharing...
+                </>
+              ) : (
+                'Share Product'
               )}
             </Button>
           </DialogFooter>
