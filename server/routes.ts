@@ -38,7 +38,7 @@ import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 
 import { setupWebSocket } from "./websocket-handler";
-import { sendContactEmail, setBrevoApiKey } from "./email-service";
+import { sendContactEmail, setBrevoApiKey, sendEmail } from "./email-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 import TranslationOptimizer from "./translation-optimizer";
@@ -73,6 +73,96 @@ import {
   chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
 } from "@shared/schema";
 import { z } from "zod";
+
+// Email notification function for vendor registration
+async function sendVendorNotificationEmail(user: any, vendor: any, vendorType: string, isApproved: boolean): Promise<void> {
+  try {
+    const subject = `🏪 New Vendor Account Created - ${vendor.storeName || vendor.businessName}`;
+    const approvalStatus = isApproved ? 'APPROVED' : 'PENDING APPROVAL';
+    const vendorTypeLabel = vendorType === 'private' ? 'Private Vendor' : 'Business Vendor';
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; text-align: center; margin-bottom: 30px;">🏪 New Vendor Account Created</h2>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #495057; margin-bottom: 15px;">Vendor Details:</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Store Name:</strong> ${vendor.storeName || 'N/A'}</li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Business Name:</strong> ${vendor.businessName || 'N/A'}</li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Vendor Type:</strong> ${vendorTypeLabel}</li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Status:</strong> <span style="color: ${isApproved ? '#28a745' : '#ffc107'}; font-weight: bold;">${approvalStatus}</span></li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Vendor ID:</strong> ${vendor.id}</li>
+              <li style="padding: 8px 0;"><strong>Registration Date:</strong> ${new Date().toLocaleString()}</li>
+            </ul>
+          </div>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #495057; margin-bottom: 15px;">User Information:</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Username:</strong> ${user.username}</li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Email:</strong> ${user.email}</li>
+              <li style="padding: 8px 0; border-bottom: 1px solid #e9ecef;"><strong>Name:</strong> ${user.name}</li>
+              <li style="padding: 8px 0;"><strong>User ID:</strong> ${user.id}</li>
+            </ul>
+          </div>
+          
+          <div style="background-color: ${isApproved ? '#d4edda' : '#fff3cd'}; padding: 15px; border-radius: 6px; border-left: 4px solid ${isApproved ? '#28a745' : '#ffc107'};">
+            <p style="margin: 0; color: ${isApproved ? '#155724' : '#856404'};">
+              <strong>${isApproved ? 'Auto-Approved:' : 'Manual Review Required:'}</strong> 
+              ${isApproved 
+                ? 'Private vendor account has been automatically approved and activated. The vendor can start selling immediately.' 
+                : 'Business vendor account requires manual review. Please review the application and approve/reject within 24-48 hours.'}
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; font-size: 14px; margin: 0;">
+              This is an automated notification from the Dedw3n marketplace system.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const text = `
+New Vendor Account Created Alert
+
+Store Name: ${vendor.storeName || 'N/A'}
+Business Name: ${vendor.businessName || 'N/A'}
+Vendor Type: ${vendorTypeLabel}
+Status: ${approvalStatus}
+Vendor ID: ${vendor.id}
+Registration Date: ${new Date().toLocaleString()}
+
+User Information:
+Username: ${user.username}
+Email: ${user.email}
+Name: ${user.name}
+User ID: ${user.id}
+
+${isApproved 
+  ? 'Auto-Approved: Private vendor account has been automatically approved and activated. The vendor can start selling immediately.' 
+  : 'Manual Review Required: Business vendor account requires manual review. Please review the application and approve/reject within 24-48 hours.'}
+
+This is an automated notification from the Dedw3n marketplace system.
+    `;
+
+    await sendEmail({
+      to: 'love@dedw3n.com',
+      from: '8e7c36001@smtp-brevo.com',
+      subject,
+      text,
+      html
+    });
+
+    console.log(`[VENDOR_REGISTER] Vendor notification sent for ${vendor.storeName || vendor.businessName}`);
+  } catch (error) {
+    console.error('[VENDOR_REGISTER] Failed to send vendor notification:', error);
+    throw error;
+  }
+}
 
 // Content management API endpoints
 interface PageContent {
@@ -4006,6 +4096,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (userVendorAccounts.length === 1) {
         // First vendor account - mark user as vendor
         await storage.updateUser(userId, { isVendor: true });
+      }
+
+      // Send system notification email to love@dedw3n.com
+      try {
+        const user = await storage.getUser(userId);
+        if (user) {
+          await sendVendorNotificationEmail(user, vendor, validatedData.vendorType, isApproved);
+        }
+      } catch (emailError) {
+        console.error('[VENDOR_REGISTER] Failed to send vendor notification:', emailError);
+        // Don't fail registration if email notification fails
       }
       
       // Create appropriate success message based on vendor type

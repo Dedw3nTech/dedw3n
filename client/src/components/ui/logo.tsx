@@ -33,9 +33,7 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
               Dedw3n
             </span>
 
-            <span className="ml-2 text-blue-500 text-sm font-medium">
-              Beta Version
-            </span>
+            <span className="ml-2 text-sm font-medium text-[#cf0000]">Under Maintenance</span>
           </div>
         )}
       </div>

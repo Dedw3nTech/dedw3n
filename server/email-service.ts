@@ -92,6 +92,43 @@ interface ContactFormData {
   message: string;
 }
 
+interface EmailOptions {
+  to: string;
+  from: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}
+
+export async function sendEmail(options: EmailOptions): Promise<boolean> {
+  if (!transporter) {
+    console.log('[EMAIL] SMTP transporter not configured');
+    return false;
+  }
+
+  try {
+    console.log(`[EMAIL] Sending email to ${options.to}`);
+    
+    const mailOptions = {
+      from: {
+        name: 'Dedw3n System',
+        address: options.from
+      },
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+      html: options.html
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL] Email sent successfully to ${options.to}`);
+    return true;
+  } catch (error: any) {
+    console.error('[EMAIL] Failed to send email:', error);
+    return false;
+  }
+}
+
 export async function sendContactEmail(formData: ContactFormData): Promise<boolean> {
   if (!transporter) {
     console.log('[EMAIL] SMTP transporter not configured - storing message locally');
