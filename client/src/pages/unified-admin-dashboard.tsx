@@ -153,29 +153,7 @@ export default function UnifiedAdminDashboard() {
   const [isRebuildingIndices, setIsRebuildingIndices] = useState(false);
   const [isFixingBlobAvatars, setIsFixingBlobAvatars] = useState(false);
 
-  // Check if user is admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-96">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-6 w-6 text-red-500" />
-              Access Denied
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>You don't have permission to access the Admin Dashboard.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (translationsLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading admin dashboard...</div>;
-  }
-
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY - Move queries here
   // Fetch admin statistics
   const { data: stats } = useQuery<AdminStats>({
     queryKey: ['/api/admin/stats'],
@@ -183,6 +161,7 @@ export default function UnifiedAdminDashboard() {
       const response = await apiRequest('GET', '/api/admin/stats');
       return response.json();
     },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
 
   // Fetch all users
@@ -192,6 +171,7 @@ export default function UnifiedAdminDashboard() {
       const response = await apiRequest('GET', '/api/admin/users');
       return response.json();
     },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
 
   // Fetch reports
@@ -201,6 +181,7 @@ export default function UnifiedAdminDashboard() {
       const response = await apiRequest('GET', '/api/admin/reports');
       return response.json();
     },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
 
   // Fetch vendor requests
@@ -210,6 +191,7 @@ export default function UnifiedAdminDashboard() {
       const response = await apiRequest('GET', '/api/admin/vendor-requests');
       return response.json();
     },
+    enabled: !!(user && user.role === 'admin'), // Only run if user is admin
   });
 
   // User management mutations
@@ -255,13 +237,13 @@ export default function UnifiedAdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Report Updated",
-        description: "Report status has been updated.",
+        description: "Report status has been successfully updated.",
       });
       setReportDialogOpen(false);
     },
   });
 
-  // Vendor request mutations
+  // Vendor request management mutations
   const updateVendorRequestMutation = useMutation({
     mutationFn: async ({ requestId, status }: { requestId: number; status: string }) => {
       const response = await apiRequest('PATCH', `/api/admin/vendor-requests/${requestId}`, { status });
@@ -272,11 +254,36 @@ export default function UnifiedAdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Vendor Request Updated",
-        description: "Vendor request has been processed.",
+        description: "Vendor request has been successfully processed.",
       });
       setVendorDialogOpen(false);
     },
   });
+
+  // Check if user is admin AFTER all hooks
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6 text-red-500" />
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>You don't have permission to access the Admin Dashboard.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (translationsLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading admin dashboard...</div>;
+  }
+
+
 
   // System maintenance handlers
   const handleSaveSettings = () => {

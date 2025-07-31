@@ -16,19 +16,27 @@ import {
 import { eq, and, or, like, desc, count, sql } from "drizzle-orm";
 import { db } from './db';
 
-// Middleware to check if user is admin
+// Import unified authentication middleware
+import { unifiedIsAuthenticated } from './unified-auth';
+
+// Middleware to check if user is admin using unified auth
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated() || !req.user) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+  // First check unified authentication
+  unifiedIsAuthenticated(req, res, (authError?: any) => {
+    if (authError || !req.user) {
+      console.log('[ADMIN] Authentication failed:', authError?.message || 'No user found');
+      return res.status(401).json({ message: "Not authenticated" });
+    }
 
-  const user = req.user as any;
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({ message: "Access denied. Admin privileges required." });
-  }
+    const user = req.user as any;
+    if (!user || user.role !== 'admin') {
+      console.log(`[ADMIN] Access denied for user ${user.username || 'unknown'} with role ${user.role || 'none'}`);
+      return res.status(403).json({ message: "Access denied. Admin privileges required." });
+    }
 
-  console.log(`[ADMIN] Admin access granted to user ${user.username} (ID: ${user.id})`);
-  next();
+    console.log(`[ADMIN] Admin access granted to user ${user.username} (ID: ${user.id})`);
+    next();
+  });
 };
 
 // Register admin-specific routes
