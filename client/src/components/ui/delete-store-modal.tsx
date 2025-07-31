@@ -31,8 +31,8 @@ export function DeleteStoreModal({
     "Deleting..."
   ];
 
-  const { translatedTexts } = useMasterTranslation(modalTexts, 'delete-store-modal');
-  const finalTexts = translatedTexts || modalTexts;
+  const { translateText } = useMasterTranslation();
+  const finalTexts = modalTexts.map(text => translateText(text));
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
