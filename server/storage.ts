@@ -1991,24 +1991,48 @@ export class DatabaseStorage implements IStorage {
           
           if (post.productId) {
             try {
-              const [productResult] = await db
-                .select({
-                  id: products.id,
-                  name: products.name,
-                  description: products.description,
-                  price: products.price,
-                  discountPrice: products.discountPrice,
-                  imageUrl: products.imageUrl,
-                  category: products.category,
-                  stock: products.stock,
-                  vendorId: products.vendorId,
-                  vendorName: vendors.storeName || vendors.businessName || 'Unknown Vendor'
-                })
-                .from(products)
-                .leftJoin(vendors, eq(products.vendorId, vendors.id))
-                .where(eq(products.id, post.productId));
+              // Simplified approach without joins to isolate the issue
+              const productResult = await db.query.products.findFirst({
+                where: eq(products.id, post.productId),
+                columns: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  price: true,
+                  discountPrice: true,
+                  imageUrl: true,
+                  category: true,
+                  inventory: true,
+                  vendorId: true
+                }
+              });
               
-              product = productResult || null;
+              if (productResult) {
+                // Get vendor name separately
+                let vendorName = 'Unknown Vendor';
+                try {
+                  const vendorResult = await db.query.vendors.findFirst({
+                    where: eq(vendors.id, productResult.vendorId),
+                    columns: {
+                      storeName: true,
+                      businessName: true
+                    }
+                  });
+                  
+                  if (vendorResult) {
+                    vendorName = vendorResult.storeName || vendorResult.businessName || 'Unknown Vendor';
+                  }
+                } catch (vendorError) {
+                  console.error(`Error fetching vendor:`, vendorError);
+                }
+                
+                product = {
+                  ...productResult,
+                  stock: productResult.inventory, // Map inventory to stock for compatibility
+                  vendorName
+                };
+              }
+
             } catch (error) {
               console.error(`Error fetching product ${post.productId}:`, error);
             }
@@ -2019,7 +2043,7 @@ export class DatabaseStorage implements IStorage {
       );
 
       // If currentUserId is provided, check which posts are liked and saved by this user
-      const postIds = postsWithUsers.map(p => p.post_id);
+      const postIds = postsWithProductInfo.map(p => p.post.id);
       let likedPostIds: number[] = [];
       let savedPostIds: number[] = [];
 
@@ -2045,60 +2069,18 @@ export class DatabaseStorage implements IStorage {
         savedPostIds = savedPostsData.map(s => s.postId);
       }
 
-      return postsWithUsers.map((row) => ({
-        id: row.post_id,
-        userId: row.post_userId,
-        content: row.post_content,
-        title: row.post_title,
-        contentType: row.post_contentType,
-        imageUrl: row.post_imageUrl,
-        videoUrl: row.post_videoUrl,
-        productId: row.post_productId,
-        likes: row.post_likes,
-        comments: row.post_comments,
-        shares: row.post_shares,
-        views: row.post_views,
-        tags: row.post_tags,
-        isPromoted: row.post_isPromoted,
-        promotionEndDate: row.post_promotionEndDate,
-        isPublished: row.post_isPublished,
-        isFlagged: row.post_isFlagged,
-        flagReason: row.post_flagReason,
-        reviewStatus: row.post_reviewStatus,
-        reviewedAt: row.post_reviewedAt,
-        reviewedBy: row.post_reviewedBy,
-        moderationNote: row.post_moderationNote,
-        createdAt: row.post_createdAt,
-        updatedAt: row.post_updatedAt,
-        user: {
-          id: row.user_id,
-          username: row.user_username,
-          name: row.user_name,
-          avatar: row.user_avatar,
-          city: row.user_city,
-          country: row.user_country,
-          region: row.user_region
-        },
-        product: row.product_id ? {
-          id: row.product_id,
-          name: row.product_name,
-          description: row.product_description,
-          price: row.product_price,
-          discountPrice: row.product_discountPrice,
-          imageUrl: row.product_imageUrl,
-          category: row.product_category,
-          stock: row.product_stock,
-          vendorId: row.product_vendorId,
-          vendorName: row.vendor_storeName || row.vendor_businessName || 'Unknown Vendor'
-        } : null,
+      return postsWithProductInfo.map(({ post, user, product }) => ({
+        ...post,
+        user,
+        product,
         _count: {
-          likes: row.post_likes || 0,
-          comments: row.post_comments || 0,
-          shares: row.post_shares || 0
+          likes: post.likes || 0,
+          comments: post.comments || 0,
+          shares: post.shares || 0
         },
-        isLiked: likedPostIds.includes(row.post_id),
+        isLiked: likedPostIds.includes(post.id),
         isShared: false,
-        isSaved: savedPostIds.includes(row.post_id)
+        isSaved: savedPostIds.includes(post.id)
       }));
     } catch (error) {
       console.error('Error getting paginated posts:', error);
