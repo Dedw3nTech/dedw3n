@@ -389,7 +389,7 @@ export default function AddProduct() {
   // Helper function to get translated text
   const t = (text: string): string => {
     if (!translations) return text;
-    return translations[text] || text;
+    return (translations as Record<string, string>)[text] || text;
   };
 
   // Helper function to extract all images from prefill data
@@ -491,7 +491,7 @@ export default function AddProduct() {
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/categories');
+      const response = await apiRequest('/api/categories', 'GET');
       return response.json();
     },
   });
@@ -594,7 +594,7 @@ export default function AddProduct() {
 
       try {
         // Check if user is already a vendor
-        const response = await apiRequest('GET', '/api/vendors');
+        const response = await apiRequest('/api/vendors', 'GET');
         const vendors = await response.json();
         const userVendor = vendors.find((v: any) => v.userId === user.id);
         
@@ -643,7 +643,7 @@ export default function AddProduct() {
   // Create vendor mutation
   const createVendorMutation = useMutation({
     mutationFn: async (data: { storeName: string, description: string }) => {
-      const response = await apiRequest('POST', '/api/vendors', data);
+      const response = await apiRequest('/api/vendors', 'POST', data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -675,7 +675,7 @@ export default function AddProduct() {
         // All fields properly mapped from schema
       };
       
-      const response = await apiRequest('POST', '/api/vendors/products', backendData);
+      const response = await apiRequest('/api/vendors/products', 'POST', backendData);
       return response.json();
     },
     onSuccess: (data) => {
