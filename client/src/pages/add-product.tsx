@@ -2097,7 +2097,17 @@ export default function AddProduct() {
           
           {/* Publish Button */}
           <div className="flex justify-center mt-8">
-            <Button type="submit" disabled={createProductMutation.isPending} className="w-full max-w-md bg-black hover:bg-gray-800 text-white">
+            <Button 
+              type="submit" 
+              disabled={createProductMutation.isPending} 
+              className="w-full max-w-md bg-black hover:bg-gray-800 text-white"
+              onClick={(e) => {
+                console.log('🔘 Publish button clicked!', e);
+                console.log('📊 Form state:', form.formState);
+                console.log('📝 Form values:', form.getValues());
+                console.log('❌ Form errors:', form.formState.errors);
+              }}
+            >
               {createProductMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {createProductMutation.isPending ? t("Publishing...") : t("Publish")}
             </Button>
