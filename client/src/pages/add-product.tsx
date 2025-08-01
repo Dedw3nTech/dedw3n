@@ -559,9 +559,9 @@ export default function AddProduct() {
 
   // Auto-fill vendor name based on marketplace selection
   useEffect(() => {
-    if (vendorAccountsResponse?.vendorAccounts && vendorAccountsResponse.vendorAccounts.length > 0) {
+    if (vendorAccountsData?.vendorAccounts && vendorAccountsData.vendorAccounts.length > 0) {
       const selectedMarketplace = form.getValues('marketplace');
-      const vendorAccounts = vendorAccountsResponse.vendorAccounts;
+      const vendorAccounts = vendorAccountsData.vendorAccounts;
       
       let targetVendor;
       if (selectedMarketplace === 'c2c') {
@@ -582,7 +582,7 @@ export default function AddProduct() {
         form.setValue('vendor', vendorName);
       }
     }
-  }, [vendorAccountsResponse, form]);
+  }, [vendorAccountsData, form]);
 
   // Check if user is a vendor
   useEffect(() => {
