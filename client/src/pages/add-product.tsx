@@ -53,7 +53,16 @@ const productSchema = z.object({
   price: z.coerce.number().positive({ message: "Price must be positive" }),
   discountPrice: z.coerce.number().nonnegative().optional(),
   category: z.string().min(1, { message: "Please select a category" }),
-  imageUrl: z.string().url({ message: "Please enter a valid image URL" }),
+  imageUrl: z.string().optional().refine((val) => {
+    // Allow empty string or valid URL
+    if (!val || val.trim() === '') return true;
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Please enter a valid image URL or leave empty"),
   inventory: z.coerce.number().int().nonnegative({ message: "Inventory must be a non-negative number" }),
   isNew: z.boolean().default(false),
   isOnSale: z.boolean().default(false),
