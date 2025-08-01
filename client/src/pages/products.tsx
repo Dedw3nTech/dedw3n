@@ -957,7 +957,7 @@ export default function Products() {
           
           {/* Vendor/Store information */}
           <div className="text-[12px] text-blue-600 mt-1">
-            {marketType === 'rqst' ? 'Requested by' : (soldByText || "Sold by")} {product.vendorId === 1 ? 'Kinshasa DR Congo' : product.vendorId ? `Vendor ${product.vendorId}` : 'Store'}
+            {marketType === 'rqst' ? 'Requested by' : (soldByText || "Sold by")} {product.vendorStoreName || `Vendor ${product.vendorId}`}
           </div>
           
           {/* Additional info based on market type */}
@@ -968,7 +968,7 @@ export default function Products() {
           )}
           {marketType === 'c2c' && (
             <div className="text-xs text-gray-500">
-              <span>{listedByText} {product.vendorId === 1 ? 'Kinshasa DR Congo' : `User${product.vendorId}`}</span>
+              <span>{listedByText} {product.vendorStoreName || `User${product.vendorId}`}</span>
             </div>
           )}
         </CardContent>

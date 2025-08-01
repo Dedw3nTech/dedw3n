@@ -6567,7 +6567,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.json(cachedResult);
       }
 
-      let query = db.select().from(products);
+      // Join products with vendors table to get store names
+      let query = db
+        .select({
+          // Product fields
+          id: products.id,
+          vendorId: products.vendorId,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          discountPrice: products.discountPrice,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          marketplace: products.marketplace,
+          inventory: products.inventory,
+          createdAt: products.createdAt,
+          // Vendor fields
+          vendorStoreName: vendors.storeName,
+          vendorBusinessName: vendors.businessName
+        })
+        .from(products)
+        .leftJoin(vendors, eq(products.vendorId, vendors.id));
+
       const conditions = [];
 
       // Search filter
@@ -6639,10 +6660,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       console.log(`[DEBUG] Found ${filteredProducts.length} products after filtering`);
       
-      // Map database fields to expected frontend fields
+      // Map database fields to expected frontend fields with vendor store name
       const mappedProducts = filteredProducts.map(product => ({
         ...product,
-        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+        imageUrl: (product as any).image_url || product.imageUrl, // Map image_url to imageUrl
+        vendorStoreName: product.vendorStoreName || product.vendorBusinessName || `Vendor ${product.vendorId}` // Use store name or business name as fallback
       }));
       
       // Cache the result for 30 seconds to speed up subsequent requests
