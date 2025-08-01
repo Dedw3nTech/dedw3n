@@ -684,15 +684,66 @@ export default function AddProduct() {
   // Create product mutation
   const createProductMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
+      console.log('🚀 Starting product creation with images:', { 
+        uploadedImagesCount: uploadedImages.length,
+        imageUrl: data.imageUrl 
+      });
+      
+      let finalImageUrl = data.imageUrl;
+      
+      // If there are uploaded images, upload the first one to server
+      if (uploadedImages.length > 0 && uploadedImages[0].file) {
+        console.log('📸 Uploading image to server...');
+        try {
+          // Convert File to base64 for upload
+          const file = uploadedImages[0].file;
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          
+          const imageData = await base64Promise;
+          
+          // Upload to server using existing image upload API
+          const uploadResponse = await fetch('/api/image/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageData,
+              imageType: 'product'
+            }),
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          console.log('✅ Image uploaded successfully:', uploadResult);
+          
+          // Use the uploaded image URL
+          finalImageUrl = uploadResult.imageUrl;
+        } catch (uploadError) {
+          console.error('❌ Image upload failed:', uploadError);
+          // Use fallback image if upload fails
+          finalImageUrl = '/attached_assets/D3 black logo.png';
+        }
+      }
+      
       // Transform frontend field names to backend expected field names
       const backendData = {
         ...data,
         name: data.name, // Use the correct 'name' field from schema
-        // Ensure required fields have fallback values
-        imageUrl: data.imageUrl || '/attached_assets/D3 black logo.png', // Provide fallback image
+        // Use uploaded image URL or fallback
+        imageUrl: finalImageUrl || '/attached_assets/D3 black logo.png',
         // All fields properly mapped from schema
       };
       
+      console.log('💾 Sending product data to backend:', backendData);
       const response = await apiRequest('POST', '/api/vendors/products', backendData);
       return response.json();
     },
@@ -847,6 +898,11 @@ export default function AddProduct() {
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
     console.log('🚀 Form submission started!', values);
+    console.log('📸 Images to process:', {
+      uploadedImagesCount: uploadedImages.length,
+      imageUrl: values.imageUrl,
+      firstImageFile: uploadedImages[0]?.file?.name || 'none'
+    });
     console.log('🔍 Vendor status check:', { 
       isVendor, 
       userIsVendor: user?.isVendor, 
