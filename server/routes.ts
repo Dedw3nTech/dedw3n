@@ -5596,6 +5596,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
 
 
+
+
   // Create vendor product
   app.post('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -5756,30 +5758,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Delete vendor product
-  app.delete('/api/vendors/products/:id', async (req: Request, res: Response) => {
+  app.delete('/api/vendors/products/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.user!.id; // User is guaranteed to exist due to unifiedIsAuthenticated
       const productId = parseInt(req.params.id);
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: 'Invalid product ID' });
       }
 
-      // Use the same authentication pattern as working vendor endpoints
-      let userId = (req.user as any)?.id;
+      // Get vendor accounts for the user
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
       
-      // Try passport session
-      if (!userId && req.session?.passport?.user) {
-        const sessionUser = await storage.getUser(req.session.passport.user);
-        userId = sessionUser?.id;
-      }
-      
-      // No fallback authentication - require proper login
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
       }
 
-      // Get the product to verify ownership
+      const vendorIds = vendorAccounts.map(v => v.id);
+
+      // Get the product to verify ownership  
       const product = await storage.getProduct(productId);
       
       if (!product) {
@@ -5787,20 +5784,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Verify the product belongs to one of the user's vendor accounts
-      const vendorAccounts = await storage.getUserVendorAccounts(userId);
-      const vendorIds = vendorAccounts.map(v => v.id);
-      
       if (!vendorIds.includes(product.vendorId)) {
         return res.status(403).json({ message: 'You do not have permission to delete this product' });
       }
 
       // Delete the product
-      const success = await storage.deleteProduct(productId);
+      await storage.deleteProduct(productId);
       
-      if (!success) {
-        return res.status(500).json({ message: 'Failed to delete product' });
-      }
-
       res.json({ message: 'Product deleted successfully' });
     } catch (error) {
       console.error('Error deleting product:', error);

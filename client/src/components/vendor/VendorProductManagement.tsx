@@ -364,7 +364,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.location.href = '/add-product'}
+                        onClick={() => window.location.href = `/add-product?edit=${product.id}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
