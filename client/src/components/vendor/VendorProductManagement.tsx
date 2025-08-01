@@ -79,7 +79,7 @@ interface ProductVariant {
 }
 
 interface VendorProductManagementProps {
-  vendorId: number;
+  vendorId?: number; // Make optional since endpoint gets vendor from auth
 }
 
 export default function VendorProductManagement({ vendorId }: VendorProductManagementProps) {
@@ -99,23 +99,21 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
 
 
 
-  // Fetch vendor products
+  // Fetch vendor products - endpoint doesn't take vendorId param, uses authenticated user
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['/api/vendors/products', vendorId, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder],
+    queryKey: ['/api/vendors/products', searchTerm, statusFilter, categoryFilter, sortBy, sortOrder],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        vendorId: vendorId.toString(),
-        search: searchTerm,
-        status: statusFilter !== 'all' ? statusFilter : '',
-        category: categoryFilter !== 'all' ? categoryFilter : '',
-        sortBy,
-        sortOrder
-      });
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (categoryFilter !== 'all') params.append('category', categoryFilter);
+      if (sortBy) params.append('sortBy', sortBy);
+      if (sortOrder) params.append('sortOrder', sortOrder);
       
-      const response = await apiRequest('GET', `/api/vendors/products?${params}`);
+      const url = `/api/vendors/products${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await apiRequest('GET', url);
       return response.json();
-    },
-    enabled: !!vendorId
+    }
   });
 
   // Fetch categories for filter

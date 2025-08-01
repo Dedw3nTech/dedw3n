@@ -4392,6 +4392,59 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // =====================================
+  // VENDOR PRODUCTS MANAGEMENT ROUTES (MUST BE BEFORE PARAMETERIZED ROUTES)
+  // =====================================
+
+  // Get vendor products
+  app.get('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+
+      // Get vendor accounts for the user
+      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.status(404).json({ message: "No vendor accounts found" });
+      }
+
+      // Get products for all vendor accounts
+      const vendorIds = vendorAccounts.map(v => v.id);
+      const vendorProducts = await db
+        .select()
+        .from(products)
+        .where(inArray(products.vendorId, vendorIds))
+        .orderBy(desc(products.createdAt));
+
+      // Map database fields to expected frontend fields
+      const mappedVendorProducts = vendorProducts.map(product => ({
+        ...product,
+        imageUrl: (product as any).image_url || product.imageUrl, // Map image_url to imageUrl
+        // Add required fields for frontend compatibility
+        sku: product.id.toString(), // Fallback SKU
+        status: 'active', // Default status
+        inventory: {
+          quantity: product.inventory || 0,
+          lowStockThreshold: 10,
+          trackQuantity: true,
+          allowBackorder: false
+        },
+        images: product.imageUrl ? [product.imageUrl] : [],
+        tags: [],
+        totalSales: 0,
+        revenue: 0,
+        views: 0,
+        rating: 0,
+        reviewCount: 0
+      }));
+
+      res.json(mappedVendorProducts);
+    } catch (error) {
+      console.error('Error getting vendor products:', error);
+      res.status(500).json({ message: 'Failed to get vendor products' });
+    }
+  });
+
+  // =====================================
   // VENDOR PROFILE API ENDPOINTS
   // =====================================
 
@@ -4493,7 +4546,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get vendor products by vendor ID (public endpoint)
+  // Get vendor products by vendor ID (public endpoint) - MOVED AFTER /api/vendors/products
   app.get('/api/vendors/:vendorId/products', async (req: Request, res: Response) => {
     try {
       const vendorId = parseInt(req.params.vendorId);
@@ -4511,20 +4564,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .from(products)
         .where(eq(products.vendorId, vendorId));
 
-      // Get paginated products
+      // Get paginated products with corrected field mapping
       const vendorProducts = await db
         .select({
           id: products.id,
-          title: products.title,
+          name: products.name, // Use 'name' instead of 'title'
           description: products.description,
           price: products.price,
-          currency: products.currency,
           imageUrl: products.imageUrl,
           category: products.category,
-          subcategory: products.subcategory,
-          condition: products.condition,
           marketplace: products.marketplace,
-          stockQuantity: products.stockQuantity,
+          inventory: products.inventory, // Use 'inventory' instead of 'stockQuantity'
           weight: products.weight,
           dimensions: products.dimensions,
           createdAt: products.createdAt
@@ -5544,39 +5594,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Vendor Products Management Routes
-  // Get vendor products
-  app.get('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user!.id;
 
-      // Get vendor accounts for the user
-      const vendorAccounts = await storage.getUserVendorAccounts(userId);
-      
-      if (!vendorAccounts || vendorAccounts.length === 0) {
-        return res.status(404).json({ message: "No vendor accounts found" });
-      }
-
-      // Get products for all vendor accounts
-      const vendorIds = vendorAccounts.map(v => v.id);
-      const vendorProducts = await db
-        .select()
-        .from(products)
-        .where(inArray(products.vendorId, vendorIds))
-        .orderBy(desc(products.createdAt));
-
-      // Map database fields to expected frontend fields
-      const mappedVendorProducts = vendorProducts.map(product => ({
-        ...product,
-        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
-      }));
-
-      res.json(mappedVendorProducts);
-    } catch (error) {
-      console.error('Error getting vendor products:', error);
-      res.status(500).json({ message: 'Failed to get vendor products' });
-    }
-  });
 
   // Create vendor product
   app.post('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
