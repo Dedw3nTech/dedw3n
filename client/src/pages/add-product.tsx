@@ -496,7 +496,7 @@ export default function AddProduct() {
   });
 
   // Get user's vendor accounts to determine marketplace availability
-  const { data: vendorAccountsResponse } = useQuery<{vendorAccounts: any[]}>({
+  const { data: vendorAccountsData } = useQuery<{vendorAccounts: any[]}>({
     queryKey: ['/api/vendors/user/accounts'],
     enabled: !!user,
   });
@@ -511,11 +511,11 @@ export default function AddProduct() {
     }
     
     // Safety check for null/undefined data
-    if (!vendorAccountsResponse || !vendorAccountsResponse.vendorAccounts || !Array.isArray(vendorAccountsResponse.vendorAccounts)) {
+    if (!vendorAccountsData || !vendorAccountsData.vendorAccounts || !Array.isArray(vendorAccountsData.vendorAccounts)) {
       return [{ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' }];
     }
     
-    const vendorAccounts = vendorAccountsResponse.vendorAccounts;
+    const vendorAccounts = vendorAccountsData.vendorAccounts;
     const hasPrivateVendor = vendorAccounts.some((account: any) => account.vendorType === 'private');
     const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
     
@@ -839,8 +839,17 @@ export default function AddProduct() {
 
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
-    // Check if user has isVendor flag set to true (system-level vendor status)
-    if (!isVendor && !(user && user.isVendor === true)) {
+    console.log('🚀 Form submission started!', values);
+    console.log('🔍 Vendor status check:', { 
+      isVendor, 
+      userIsVendor: user?.isVendor, 
+      vendorAccountsData: vendorAccountsData,
+      hasVendorAccounts: vendorAccountsData?.vendorAccounts?.length > 0 
+    });
+    
+    // Check if user has vendor accounts from the API response
+    if (!vendorAccountsData?.vendorAccounts?.length) {
+      console.log('❌ No vendor accounts found, showing error');
       toast({
         title: t('Error'),
         description: t('You need to create a vendor account first.'),
