@@ -697,15 +697,6 @@ export default function AddProduct() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Show success popup with product confirmation
-      toast({
-        title: t('✅ Product Successfully Published!'),
-        description: data.productCode 
-          ? `${t('Product published to marketplace with code:')} ${data.productCode}`
-          : t('Your product has been successfully published to the marketplace!'),
-        duration: 5000,
-      });
-      
       // Update form with the generated product code if available
       if (data.productCode) {
         form.setValue('productCode', data.productCode);
