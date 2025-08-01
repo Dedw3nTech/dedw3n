@@ -53,7 +53,7 @@ import {
 import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
-import dedw3nLogo from '@assets/D3 black logo.png';
+
 
 // Product form schema
 const productSchema = z.object({
@@ -2199,16 +2199,9 @@ export default function AddProduct() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img 
-                src={dedw3nLogo} 
-                alt="Dedw3n Logo" 
-                className="h-16 w-auto"
-              />
+              <CheckCircle className="h-16 w-16 text-green-500" />
             </div>
-            <div className="flex justify-center mb-2">
-              <CheckCircle className="h-12 w-12 text-green-500" />
-            </div>
-            <DialogTitle className="text-xl font-bold text-green-600">
+            <DialogTitle className="text-2xl font-bold text-green-600 text-center">
               SUCCESS!
             </DialogTitle>
             <DialogDescription className="text-center space-y-2">
