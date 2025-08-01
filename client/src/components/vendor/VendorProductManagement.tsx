@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +87,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   const { toast } = useToast();
   const { formatPriceFromGBP } = useCurrency();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
@@ -204,7 +206,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => window.location.href = '/add-product'} 
+            onClick={() => setLocation('/add-product')} 
             className="bg-black text-white hover:bg-gray-800"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -276,7 +278,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                     checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedProducts(filteredProducts.map(p => p.id));
+                        setSelectedProducts(filteredProducts.map((p: any) => p.id));
                       } else {
                         setSelectedProducts([]);
                       }
@@ -364,7 +366,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.location.href = `/add-product?edit=${product.id}`}
+                        onClick={() => setLocation(`/add-product?edit=${product.id}`)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -395,7 +397,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
               </p>
               {!searchTerm && statusFilter === 'all' && categoryFilter === 'all' && (
                 <Button 
-                  onClick={() => window.location.href = '/add-product'} 
+                  onClick={() => setLocation('/add-product')} 
                   className="bg-black text-white hover:bg-gray-800"
                 >
                   <Plus className="mr-2 h-4 w-4" />
