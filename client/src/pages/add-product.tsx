@@ -42,9 +42,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Plus, Upload, X, Video as VideoIcon } from 'lucide-react';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
+import dedw3nLogo from '@assets/D3 black logo.png';
 
 // Product form schema
 const productSchema = z.object({
@@ -118,6 +127,8 @@ export default function AddProduct() {
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
   const [showVendorDialog, setShowVendorDialog] = useState(false);
   const [hasShownAutoFillNotification, setHasShownAutoFillNotification] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successData, setSuccessData] = useState<any>(null);
 
   // Parse URL parameters for prefill data
   const urlParams = new URLSearchParams(window.location.search);
@@ -704,13 +715,9 @@ export default function AddProduct() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
       
-      // Show success alert dialog
-      alert(`✅ SUCCESS! Your product "${data.name || form.getValues('name')}" has been published!\n\nProduct Code: ${data.productCode || 'Generated'}\nMarketplace: ${data.marketplace?.toUpperCase() || 'C2C'}\n\nRedirecting to product page...`);
-      
-      // Navigate to product page
-      setTimeout(() => {
-        setLocation(`/product/${data.id}`);
-      }, 2000);
+      // Store success data and show modal
+      setSuccessData(data);
+      setShowSuccessDialog(true);
     },
     onError: (error: any) => {
       // Show error popup with detailed information
@@ -886,6 +893,14 @@ export default function AddProduct() {
   const handleVendorSubmit = (data: { storeName: string; description: string }) => {
     createVendorMutation.mutate(data);
     setShowVendorDialog(false);
+  };
+
+  // Handle success dialog confirmation
+  const handleSuccessConfirm = () => {
+    setShowSuccessDialog(false);
+    if (successData?.id) {
+      setLocation(`/product/${successData.id}`);
+    }
   };
 
   // Redirect to login if not authenticated
@@ -2131,6 +2146,47 @@ export default function AddProduct() {
         onSubmit={handleVendorSubmit}
         isLoading={createVendorMutation.isPending}
       />
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src={dedw3nLogo} 
+                alt="Dedw3n Logo" 
+                className="h-16 w-auto"
+              />
+            </div>
+            <div className="flex justify-center mb-2">
+              <CheckCircle className="h-12 w-12 text-green-500" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-green-600">
+              SUCCESS!
+            </DialogTitle>
+            <DialogDescription className="text-center space-y-2">
+              <p className="text-lg font-medium">
+                Your product "{successData?.name || form.getValues('name')}" has been published!
+              </p>
+              <div className="bg-gray-50 p-3 rounded-lg space-y-1 text-sm">
+                <p><strong>Product Code:</strong> {successData?.productCode || 'Generated'}</p>
+                <p><strong>Marketplace:</strong> {successData?.marketplace?.toUpperCase() || 'C2C'}</p>
+              </div>
+              <p className="text-gray-600">
+                Redirecting to product page...
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center">
+            <Button 
+              onClick={handleSuccessConfirm}
+              className="w-full bg-black hover:bg-gray-800 text-white"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
