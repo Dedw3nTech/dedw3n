@@ -1,7 +1,8 @@
 import React from 'react';
-import heroImage from "@assets/spend more time enjoying life (Website)_1754112546594.png";
 
 export default function LandingPage() {
+  const heroImagePath = "/attached_assets/spend more time enjoying life (Website)_1754112546594.png";
+  
   return (
     <div className="min-h-screen">
       {/* Hero section with full-screen image */}
@@ -9,7 +10,7 @@ export default function LandingPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${heroImage})`,
+            backgroundImage: `url("${heroImagePath}")`,
             backgroundPosition: 'center center',
             backgroundSize: 'cover'
           }}
