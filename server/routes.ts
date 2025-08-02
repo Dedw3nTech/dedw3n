@@ -3300,7 +3300,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       const authenticatedUser = req.user;
-      console.log(`[AUTH] User search authenticated: ${authenticatedUser.username} (ID: ${authenticatedUser.id})`);
+      console.log(`[AUTH] User search authenticated: ${authenticatedUser.id ? `(ID: ${authenticatedUser.id})` : 'No ID'}`);
       
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 20;

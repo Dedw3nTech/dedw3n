@@ -246,10 +246,13 @@ export default function Products() {
     queryFn: async () => {
       if (memberSearchQuery.length >= 2) {
         return await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
+      } else if (memberSearchQuery.length === 0 && shareWithMemberDialogOpen) {
+        // Show recent users when dialog is open but no search query
+        return await apiRequest('GET', `/api/users/search?q=&limit=10`);
       }
       return [];
     },
-    enabled: memberSearchQuery.length >= 2,
+    enabled: shareWithMemberDialogOpen && (memberSearchQuery.length >= 2 || memberSearchQuery.length === 0),
   });
 
   // Liked products functionality
@@ -1929,7 +1932,7 @@ export default function Products() {
               />
             </div>
             
-            {memberSearchLoading && memberSearchQuery.length >= 2 && (
+            {memberSearchLoading && (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -1989,6 +1992,13 @@ export default function Products() {
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>{noUsersFoundText} "{memberSearchQuery}"</p>
+              </div>
+            )}
+            
+            {memberSearchQuery.length === 0 && !memberSearchLoading && Array.isArray(memberSearchResults) && memberSearchResults.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>No members available to share with</p>
               </div>
             )}
             

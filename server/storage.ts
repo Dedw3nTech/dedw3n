@@ -721,18 +721,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async searchUsers(query: string, limit: number = 10): Promise<User[]> {
-    if (!query) return [];
-    const searchUsers = await db.select()
-      .from(users)
-      .where(
-        or(
-          // Search in username
-          sql`LOWER(${users.username}) LIKE ${`%${query.toLowerCase()}%`}`,
-          // Search in name
-          sql`LOWER(${users.name}) LIKE ${`%${query.toLowerCase()}%`}`
+    let searchUsers;
+    
+    if (!query || query.trim().length === 0) {
+      // If no query, return recent active users excluding current user
+      searchUsers = await db.select()
+        .from(users)
+        .orderBy(desc(users.lastActiveAt))
+        .limit(limit);
+    } else {
+      // Search with query
+      searchUsers = await db.select()
+        .from(users)
+        .where(
+          or(
+            // Search in username
+            sql`LOWER(${users.username}) LIKE ${`%${query.toLowerCase()}%`}`,
+            // Search in name
+            sql`LOWER(${users.name}) LIKE ${`%${query.toLowerCase()}%`}`
+          )
         )
-      )
-      .limit(limit);
+        .limit(limit);
+    }
     
     // Remove sensitive information before returning
     return searchUsers.map(user => {
