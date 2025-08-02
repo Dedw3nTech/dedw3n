@@ -245,10 +245,14 @@ export default function Products() {
     queryKey: ['/api/users/search', memberSearchQuery, shareWithMemberDialogOpen],
     queryFn: async () => {
       if (memberSearchQuery.length >= 2) {
-        return await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
+        const result = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
+        console.log('Member search results:', result);
+        return result;
       } else if (shareWithMemberDialogOpen) {
         // Show recent users when dialog is open but no search query
-        return await apiRequest('GET', `/api/users/search?q=&limit=10`);
+        const result = await apiRequest('GET', `/api/users/search?q=&limit=10`);
+        console.log('Recent users:', result);
+        return result;
       }
       return [];
     },
@@ -1941,11 +1945,18 @@ export default function Products() {
             {memberSearchLoading && (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-gray-500">Searching...</span>
               </div>
             )}
             
+            {/* Debug info */}
+            <div className="text-xs text-gray-400 p-2">
+              Debug: Query="{memberSearchQuery}", Loading={memberSearchLoading ? 'true' : 'false'}, Results={Array.isArray(memberSearchResults) ? memberSearchResults.length : 'not array'}, DialogOpen={shareWithMemberDialogOpen ? 'true' : 'false'}
+            </div>
+            
             {Array.isArray(memberSearchResults) && memberSearchResults.length > 0 && (
               <div className="max-h-60 overflow-y-auto space-y-2 border rounded-lg p-2">
+                <div className="text-xs text-gray-500 mb-2">Found {memberSearchResults.length} members</div>
                 {memberSearchResults.map((member: any) => (
                   <div
                     key={member.id}
