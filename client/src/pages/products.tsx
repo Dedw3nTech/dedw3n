@@ -1093,8 +1093,8 @@ export default function Products() {
               <DropdownMenuLabel>{shareProductText}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => shareByEmail(product)}>
-                <Mail className="h-4 w-4 mr-2 text-gray-600" />
-                Repost
+                <Mail className="h-4 w-4 mr-2 text-blue-600" />
+                Share via Email
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
                 <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
