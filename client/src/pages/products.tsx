@@ -2043,7 +2043,7 @@ export default function Products() {
                 }
               }}
               disabled={shareWithMemberMutation.isPending || !selectedMember}
-              className="bg-blue-500 text-white hover:bg-blue-600"
+              className="text-white hover:bg-blue-600 bg-[#000000]"
             >
               {shareWithMemberMutation.isPending ? (
                 <>
