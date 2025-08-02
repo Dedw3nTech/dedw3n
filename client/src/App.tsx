@@ -98,6 +98,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/liked',
     '/orders-returns',
     '/shipping-calculator',
+    '/landing',
 
   ];
   
@@ -170,6 +171,7 @@ import SavedPosts from "@/pages/saved-posts";
 import EventsPage from "@/pages/events";
 import EventDetailPage from "@/pages/event-detail";
 import OrdersReturnsPage from "@/pages/orders-returns";
+import LandingPage from "@/pages/LandingPage";
 
 // Import footer pages
 import FAQPage from "@/pages/faq";
@@ -255,6 +257,11 @@ function Router() {
       <Route path="/auth">
         <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
         <AuthPage />
+      </Route>
+
+      <Route path="/landing">
+        <SEOHead title="Welcome to Dedw3n - The Leading Social Platform for Modern Commerce" description="Spend more time enjoying life. We simplify the complexities of conducting business online. Join millions of users worldwide." />
+        <LandingPage />
       </Route>
 
       <Route path="/">
