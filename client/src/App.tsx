@@ -80,7 +80,6 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
   
   // Only show marketplace nav on marketplace-related pages
   const showOnPaths = [
-    '/',
     '/marketplace',
     '/products',
     '/product',
@@ -98,7 +97,6 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/liked',
     '/orders-returns',
     '/shipping-calculator',
-    '/landing',
 
   ];
   
@@ -259,12 +257,12 @@ function Router() {
         <AuthPage />
       </Route>
 
-      <Route path="/landing">
+      <Route path="/">
         <SEOHead title="Welcome to Dedw3n - The Leading Social Platform for Modern Commerce" description="Spend more time enjoying life. We simplify the complexities of conducting business online. Join millions of users worldwide." />
         <LandingPage />
       </Route>
 
-      <Route path="/">
+      <Route path="/marketplace">
         <SEOHead {...seoConfigs.home} />
         <Products />
       </Route>
@@ -292,11 +290,6 @@ function Router() {
       <Route path="/marketplace/rqst">
         <SEOHead title="RQST Marketplace - Dedw3n" description="Request marketplace where you can post product requests and connect with vendors who can fulfill them." />
         <MarketplaceRQST />
-      </Route>
-      
-      <Route path="/marketplace">
-        <SEOHead {...seoConfigs.products} />
-        <Products />
       </Route>
       
       <Route path="/products">
