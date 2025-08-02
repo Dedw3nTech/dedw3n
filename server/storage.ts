@@ -724,10 +724,10 @@ export class DatabaseStorage implements IStorage {
     let searchUsers;
     
     if (!query || query.trim().length === 0) {
-      // If no query, return recent active users excluding current user
+      // If no query, return recent users excluding current user
       searchUsers = await db.select()
         .from(users)
-        .orderBy(desc(users.lastActiveAt))
+        .orderBy(desc(users.updatedAt))
         .limit(limit);
     } else {
       // Search with query

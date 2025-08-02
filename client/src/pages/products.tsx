@@ -242,17 +242,17 @@ export default function Products() {
 
   // Member search query for share functionality
   const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
-    queryKey: ['/api/users/search', memberSearchQuery],
+    queryKey: ['/api/users/search', memberSearchQuery, shareWithMemberDialogOpen],
     queryFn: async () => {
       if (memberSearchQuery.length >= 2) {
         return await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
-      } else if (memberSearchQuery.length === 0 && shareWithMemberDialogOpen) {
+      } else if (shareWithMemberDialogOpen) {
         // Show recent users when dialog is open but no search query
         return await apiRequest('GET', `/api/users/search?q=&limit=10`);
       }
       return [];
     },
-    enabled: shareWithMemberDialogOpen && (memberSearchQuery.length >= 2 || memberSearchQuery.length === 0),
+    enabled: shareWithMemberDialogOpen,
   });
 
   // Liked products functionality
@@ -1883,7 +1883,13 @@ export default function Products() {
       </Dialog>
 
       {/* Share with Member Dialog */}
-      <Dialog open={shareWithMemberDialogOpen} onOpenChange={setShareWithMemberDialogOpen}>
+      <Dialog open={shareWithMemberDialogOpen} onOpenChange={(open) => {
+        setShareWithMemberDialogOpen(open);
+        if (!open) {
+          setMemberSearchQuery('');
+          setSelectedMember(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="items-center text-center">
             <DialogTitle className="text-xl font-bold">Share with Member</DialogTitle>
@@ -1995,10 +2001,16 @@ export default function Products() {
               </div>
             )}
             
-            {memberSearchQuery.length === 0 && !memberSearchLoading && Array.isArray(memberSearchResults) && memberSearchResults.length === 0 && (
+            {memberSearchQuery.length === 0 && !memberSearchLoading && Array.isArray(memberSearchResults) && memberSearchResults.length === 0 && shareWithMemberDialogOpen && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>No members available to share with</p>
+              </div>
+            )}
+            
+            {memberSearchQuery.length === 0 && Array.isArray(memberSearchResults) && memberSearchResults.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Recent members:</p>
               </div>
             )}
             
