@@ -1101,9 +1101,9 @@ export default function Products() {
                 {copyLinkText}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => shareOnFeed(product)}>
-                <svg className="h-4 w-4 mr-2 text-orange-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 4V2L8 6l4 4V8c2.2 0 4 1.8 4 4s-1.8 4-4 4v2c3.3 0 6-2.7 6-6s-2.7-6-6-6z"/>
-                  <path d="M6 12c0-2.2 1.8-4 4-4V6L6 10l4 4v-2c-2.2 0-4-1.8-4-4z"/>
+                <svg className="h-4 w-4 mr-2 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M1 4v6h6M23 20v-6h-6"/>
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
                 </svg>
                 Repost
               </DropdownMenuItem>
