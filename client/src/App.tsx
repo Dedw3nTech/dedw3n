@@ -545,8 +545,8 @@ function MarketplacePromoSection() {
   const [location] = useLocation();
   const { marketType } = useMarketType();
   
-  // Only show on marketplace-related pages (including home page)
-  const isMarketplacePage = location === "/" || location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
+  // Only show on marketplace-related pages (excluding landing page)
+  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
   
   if (!isMarketplacePage) return null;
   
@@ -585,8 +585,8 @@ function MarketplaceBottomPromoSection() {
   const [location] = useLocation();
   const { marketType } = useMarketType();
   
-  // Only show on marketplace-related pages (including home page)
-  const isMarketplacePage = location === "/" || location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
+  // Only show on marketplace-related pages (excluding landing page)
+  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
   
   if (!isMarketplacePage) return null;
   
