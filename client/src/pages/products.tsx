@@ -1647,7 +1647,7 @@ export default function Products() {
                   {postingText}
                 </>
               ) : (
-                postToFeedButton
+                "Repost"
               )}
             </Button>
           </DialogFooter>
