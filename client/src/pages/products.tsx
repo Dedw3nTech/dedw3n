@@ -244,17 +244,28 @@ export default function Products() {
   const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
     queryKey: ['/api/users/search', memberSearchQuery, shareWithMemberDialogOpen],
     queryFn: async () => {
-      if (memberSearchQuery.length >= 2) {
-        const result = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
-        console.log('Member search results:', result);
-        return result;
-      } else if (shareWithMemberDialogOpen) {
-        // Show recent users when dialog is open but no search query
-        const result = await apiRequest('GET', `/api/users/search?q=&limit=10`);
-        console.log('Recent users:', result);
-        return result;
+      try {
+        if (memberSearchQuery.length >= 2) {
+          const response = await fetch(`/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`, {
+            credentials: 'include'
+          });
+          const result = await response.json();
+          console.log('Member search results:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
+          return Array.isArray(result) ? result : [];
+        } else if (shareWithMemberDialogOpen) {
+          // Show recent users when dialog is open but no search query
+          const response = await fetch(`/api/users/search?q=&limit=10`, {
+            credentials: 'include'
+          });
+          const result = await response.json();
+          console.log('Recent users:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
+          return Array.isArray(result) ? result : [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
       }
-      return [];
     },
     enabled: shareWithMemberDialogOpen,
   });
