@@ -3593,6 +3593,50 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Analytics endpoint for tracking product shares
+  app.post("/api/analytics/share", async (req: Request, res: Response) => {
+    try {
+      const { productId, shareType, platform } = req.body;
+      
+      // Validate input
+      if (!productId || !shareType || !platform) {
+        return res.status(400).json({ message: "Missing required fields: productId, shareType, platform" });
+      }
+
+      // Verify product exists
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Log the share event for analytics
+      console.log(`[ANALYTICS] Product share tracked: Product ${productId} shared via ${platform} (${shareType})`);
+      
+      // In a production system, you would store this in an analytics table
+      // For now, we'll just log it and return success
+      const shareEvent = {
+        productId: parseInt(productId),
+        shareType,
+        platform,
+        timestamp: new Date().toISOString(),
+        userAgent: req.headers['user-agent'] || 'unknown',
+        ipAddress: req.ip || 'unknown'
+      };
+
+      // You could extend this to store in a dedicated analytics table:
+      // await db.insert(shareAnalytics).values(shareEvent);
+
+      res.json({ 
+        success: true, 
+        message: "Share event tracked successfully",
+        event: shareEvent
+      });
+    } catch (error) {
+      console.error("Error tracking share analytics:", error);
+      res.status(500).json({ message: "Failed to track share event" });
+    }
+  });
+
   // Use provided server - don't create a new one to avoid port conflicts
   // const server = httpServer; // Removed duplicate declaration
   
