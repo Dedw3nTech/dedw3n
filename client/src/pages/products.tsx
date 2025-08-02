@@ -240,24 +240,18 @@ export default function Products() {
   const [sellConfirmationOpen, setSellConfirmationOpen] = useState(false);
   const [selectedSellProduct, setSelectedSellProduct] = useState<any>(null);
 
-  // Member search query for share functionality
+  // Member search query for share functionality  
   const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
     queryKey: ['/api/users/search', memberSearchQuery, shareWithMemberDialogOpen],
     queryFn: async () => {
       try {
         if (memberSearchQuery.length >= 2) {
-          const response = await fetch(`/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`, {
-            credentials: 'include'
-          });
-          const result = await response.json();
+          const result = await apiRequest(`/api/users/search?q=${encodeURIComponent(memberSearchQuery)}`);
           console.log('Member search results:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
           return Array.isArray(result) ? result : [];
         } else if (shareWithMemberDialogOpen) {
           // Show recent users when dialog is open but no search query
-          const response = await fetch(`/api/users/search?q=&limit=10`, {
-            credentials: 'include'
-          });
-          const result = await response.json();
+          const result = await apiRequest(`/api/users/search?q=&limit=10`);
           console.log('Recent users:', result, 'Type:', typeof result, 'Is Array:', Array.isArray(result));
           return Array.isArray(result) ? result : [];
         }
