@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -176,35 +176,49 @@ export default function AffiliatePartnership() {
   const [formData, setFormData] = useState({
     partnerName: '',
     businessName: '',
-    contactEmail: user?.email || '',
+    contactEmail: '',
     contactPhone: '',
     website: '',
     description: '',
     specialization: ''
   });
 
+  // Auto-populate form data from user profile
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        partnerName: user.name || user.username || '',
+        contactEmail: user.email || '',
+        contactPhone: user.phone || '',
+        website: user.website || '',
+        businessName: user.businessName || user.company || ''
+      }));
+    }
+  }, [user]);
+
   // Fetch affiliate partner data
   const { data: affiliatePartner, isLoading: partnerLoading } = useQuery<AffiliatePartner>({
-    queryKey: ['/api/affiliate/partner'],
+    queryKey: ['/api/affiliate-partnership/profile'],
     enabled: !!user,
   });
 
   // Fetch referrals data
   const { data: referrals = [], isLoading: referralsLoading } = useQuery<AffiliateReferral[]>({
-    queryKey: ['/api/affiliate/referrals'],
+    queryKey: ['/api/affiliate-partnership/referrals'],
     enabled: !!affiliatePartner,
   });
 
   // Fetch earnings data
   const { data: earnings = [], isLoading: earningsLoading } = useQuery<AffiliateEarning[]>({
-    queryKey: ['/api/affiliate/earnings'],
+    queryKey: ['/api/affiliate-partnership/earnings'],
     enabled: !!affiliatePartner,
   });
 
   // Create affiliate partner application
   const createPartnerMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return await apiRequest('/api/affiliate/partner', {
+      return await apiRequest('/api/affiliate-partnership/apply', {
         method: 'POST',
         body: JSON.stringify(data),
       });
@@ -214,7 +228,7 @@ export default function AffiliatePartnership() {
         title: "Application Submitted",
         description: "Your affiliate partnership application has been submitted for review.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/affiliate/partner'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/affiliate-partnership/profile'] });
       setFormData({
         partnerName: '',
         businessName: '',
@@ -326,8 +340,13 @@ export default function AffiliatePartnership() {
                     id="partnerName"
                     value={formData.partnerName}
                     onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
+                    disabled={!!formData.partnerName && (user?.name || user?.username)}
+                    className={!!formData.partnerName && (user?.name || user?.username) ? "bg-gray-100 text-gray-600" : ""}
                     required
                   />
+                  {!!formData.partnerName && (user?.name || user?.username) && (
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="businessName">{t.businessName}</Label>
@@ -335,7 +354,12 @@ export default function AffiliatePartnership() {
                     id="businessName"
                     value={formData.businessName}
                     onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                    disabled={!!formData.businessName && (user?.businessName || user?.company)}
+                    className={!!formData.businessName && (user?.businessName || user?.company) ? "bg-gray-100 text-gray-600" : ""}
                   />
+                  {!!formData.businessName && (user?.businessName || user?.company) && (
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="contactEmail">{t.contactEmail} *</Label>
@@ -344,8 +368,13 @@ export default function AffiliatePartnership() {
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    disabled={!!formData.contactEmail && user?.email}
+                    className={!!formData.contactEmail && user?.email ? "bg-gray-100 text-gray-600" : ""}
                     required
                   />
+                  {!!formData.contactEmail && user?.email && (
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="contactPhone">{t.contactPhone}</Label>
@@ -353,7 +382,12 @@ export default function AffiliatePartnership() {
                     id="contactPhone"
                     value={formData.contactPhone}
                     onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                    disabled={!!formData.contactPhone && user?.phone}
+                    className={!!formData.contactPhone && user?.phone ? "bg-gray-100 text-gray-600" : ""}
                   />
+                  {!!formData.contactPhone && user?.phone && (
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="website">{t.website}</Label>
@@ -362,7 +396,12 @@ export default function AffiliatePartnership() {
                     type="url"
                     value={formData.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    disabled={!!formData.website && user?.website}
+                    className={!!formData.website && user?.website ? "bg-gray-100 text-gray-600" : ""}
                   />
+                  {!!formData.website && user?.website && (
+                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="specialization">{t.specialization}</Label>

@@ -17,7 +17,7 @@ import { setupAuth, hashPassword, verifyRecaptcha, comparePasswords } from "./au
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
 import { promisify } from "util";
 import { scrypt, randomBytes } from "crypto";
-import { isAuthenticated as unifiedIsAuthenticated, requireRole } from './unified-auth';
+import { isAuthenticated as unifiedIsAuthenticated, isAuthenticated, requireRole } from './unified-auth';
 import { registerPaymentRoutes } from "./payment";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { fraudRiskMiddleware, highRiskActionMiddleware, registerFraudPreventionRoutes } from "./fraud-prevention";
@@ -14144,7 +14144,7 @@ This is a test email from the Dedw3n marketplace system.
   });
 
   // Affiliate Partnership API Routes
-  app.get('/api/affiliate-partnership/profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.get('/api/affiliate-partnership/profile', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const partner = await storage.getAffiliatePartnerByUserId(userId);
@@ -14155,7 +14155,7 @@ This is a test email from the Dedw3n marketplace system.
     }
   });
 
-  app.post('/api/affiliate-partnership/apply', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/affiliate-partnership/apply', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       
@@ -14182,7 +14182,7 @@ This is a test email from the Dedw3n marketplace system.
     }
   });
 
-  app.put('/api/affiliate-partnership/profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.put('/api/affiliate-partnership/profile', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const partner = await storage.getAffiliatePartnerByUserId(userId);
