@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogoConfirmationDialog } from '@/components/ui/logo-confirmation-dialog';
 import { useLogoConfirmation } from '@/hooks/use-logo-confirmation';
 import { useLocation, Link } from 'wouter';
+import AdvertisementManagement from './admin/AdvertisementManagement';
 
 // UI Components
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -917,12 +918,13 @@ export default function UnifiedAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
             <TabsTrigger value="users">{t("Users")}</TabsTrigger>
             <TabsTrigger value="vendors">{t("Vendors")}</TabsTrigger>
             <TabsTrigger value="products">{t("Products")}</TabsTrigger>
             <TabsTrigger value="affiliate-partners">Partners</TabsTrigger>
+            <TabsTrigger value="advertisements">Ads</TabsTrigger>
             <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
             <TabsTrigger value="system">{t("System")}</TabsTrigger>
             <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>
@@ -2228,6 +2230,11 @@ export default function UnifiedAdminDashboard() {
           {/* Affiliate Partners Tab */}
           <TabsContent value="affiliate-partners" className="space-y-6">
             <AffiliatePartnerManagement />
+          </TabsContent>
+
+          {/* Advertisements Tab */}
+          <TabsContent value="advertisements" className="space-y-6">
+            <AdvertisementManagement />
           </TabsContent>
 
           {/* Reports Tab */}

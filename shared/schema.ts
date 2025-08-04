@@ -1343,6 +1343,90 @@ export const insertVideoPurchaseSchema = createInsertSchema(videoPurchases)
 export type Video = typeof videos.$inferSelect;
 export type InsertVideo = z.infer<typeof insertVideoSchema>;
 
+// Advertisement management system
+export const advertisementStatusEnum = pgEnum('advertisement_status', ['active', 'paused', 'expired', 'pending', 'rejected']);
+export const advertisementPlacementEnum = pgEnum('advertisement_placement', ['marketplace', 'community', 'dating', 'all']);
+export const advertisementTypeEnum = pgEnum('advertisement_type', ['banner', 'sidebar', 'popup', 'native', 'video']);
+
+// Advertisements table
+export const advertisements = pgTable('advertisements', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  videoUrl: text('video_url'),
+  linkUrl: text('link_url').notNull(),
+  placement: advertisementPlacementEnum('placement').notNull(),
+  type: advertisementTypeEnum('type').notNull(),
+  status: advertisementStatusEnum('status').default('pending'),
+  
+  // Advertiser information
+  advertiserName: varchar('advertiser_name', { length: 255 }).notNull(),
+  advertiserEmail: varchar('advertiser_email', { length: 255 }).notNull(),
+  advertiserPhone: varchar('advertiser_phone', { length: 50 }),
+  advertiserCompany: varchar('advertiser_company', { length: 255 }),
+  advertiserAddress: text('advertiser_address'),
+  
+  // Payment information
+  budget: decimal('budget', { precision: 10, scale: 2 }).notNull(),
+  spentAmount: decimal('spent_amount', { precision: 10, scale: 2 }).default('0'),
+  costPerClick: decimal('cost_per_click', { precision: 10, scale: 4 }),
+  costPerImpression: decimal('cost_per_impression', { precision: 10, scale: 4 }),
+  
+  // Campaign details
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  targetAudience: json('target_audience'),
+  keywords: json('keywords'),
+  
+  // Analytics
+  impressions: integer('impressions').default(0),
+  clicks: integer('clicks').default(0),
+  conversions: integer('conversions').default(0),
+  
+  // System fields
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Advertisement clicks tracking
+export const advertisementClicks = pgTable('advertisement_clicks', {
+  id: serial('id').primaryKey(),
+  advertisementId: integer('advertisement_id').references(() => advertisements.id).notNull(),
+  userId: integer('user_id').references(() => users.id),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  referer: text('referer'),
+  clickedAt: timestamp('clicked_at').defaultNow(),
+});
+
+// Advertisement impressions tracking
+export const advertisementImpressions = pgTable('advertisement_impressions', {
+  id: serial('id').primaryKey(),
+  advertisementId: integer('advertisement_id').references(() => advertisements.id).notNull(),
+  userId: integer('user_id').references(() => users.id),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  page: varchar('page', { length: 255 }),
+  viewedAt: timestamp('viewed_at').defaultNow(),
+});
+
+// Advertisement schemas
+export const insertAdvertisementSchema = createInsertSchema(advertisements).omit({
+  id: true,
+  impressions: true,
+  clicks: true,
+  conversions: true,
+  spentAmount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectAdvertisementSchema = createSelectSchema(advertisements);
+export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
+export type Advertisement = z.infer<typeof selectAdvertisementSchema>;
+
 export type VideoEngagement = typeof videoEngagements.$inferSelect;
 export type InsertVideoEngagement = z.infer<typeof insertVideoEngagementSchema>;
 

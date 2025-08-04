@@ -36,6 +36,16 @@ import { registerNewsFeedRoutes } from "./news-feed";
 import { registerFileUploadRoutes } from "./file-upload";
 import { seedDatabase } from "./seed";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
+import {
+  getAdvertisements,
+  getAdvertisementById,
+  createAdvertisement,
+  updateAdvertisement,
+  updateAdvertisementStatus,
+  deleteAdvertisement,
+  getAdvertisementAnalytics,
+  getAdvertisementStats
+} from "./advertisement-management";
 
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey, sendEmail } from "./email-service";
@@ -2959,6 +2969,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Register admin routes
   registerAdminRoutes(app);
+  
+  // Advertisement Management Routes
+  app.get('/api/admin/advertisements', isAuthenticated, requireRole('admin'), getAdvertisements);
+  app.get('/api/admin/advertisements/stats', isAuthenticated, requireRole('admin'), getAdvertisementStats);
+  app.get('/api/admin/advertisements/:id', isAuthenticated, requireRole('admin'), getAdvertisementById);
+  app.get('/api/admin/advertisements/:id/analytics', isAuthenticated, requireRole('admin'), getAdvertisementAnalytics);
+  app.post('/api/admin/advertisements', isAuthenticated, requireRole('admin'), createAdvertisement);
+  app.put('/api/admin/advertisements/:id', isAuthenticated, requireRole('admin'), updateAdvertisement);
+  app.patch('/api/admin/advertisements/:id/status', isAuthenticated, requireRole('admin'), updateAdvertisementStatus);
+  app.delete('/api/admin/advertisements/:id', isAuthenticated, requireRole('admin'), deleteAdvertisement);
   
   // Register AI insights routes
   registerAIInsightsRoutes(app);
