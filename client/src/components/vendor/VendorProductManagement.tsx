@@ -49,6 +49,7 @@ interface Product {
   weight?: number;
   dimensions?: string;
   status: 'draft' | 'active' | 'inactive' | 'out_of_stock';
+  marketplace: 'c2c' | 'b2c' | 'b2b' | 'rqst';
   inventory: {
     quantity: number;
     lowStockThreshold: number;
@@ -181,6 +182,24 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
     return <Badge variant="default" className="bg-green-100 text-green-800">In Stock</Badge>;
   };
 
+  // Helper function to get marketplace badge
+  const getMarketplaceBadge = (marketplace: string) => {
+    const variants = {
+      c2c: { label: 'C2C', variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
+      b2c: { label: 'B2C', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
+      b2b: { label: 'B2B', variant: 'outline' as const, className: 'bg-purple-100 text-purple-800' },
+      rqst: { label: 'RQST', variant: 'destructive' as const, className: 'bg-orange-100 text-orange-800' },
+    };
+    
+    const config = variants[marketplace as keyof typeof variants] || variants.c2c;
+    
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
+
   const filteredProducts = products?.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchTerm.toLowerCase());
@@ -291,6 +310,7 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                 <TableHead>Status</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Sales</TableHead>
+                <TableHead>Marketplace</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -360,6 +380,9 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                         {formatPriceFromGBP(product.revenue)}
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {getMarketplaceBadge(product.marketplace || 'c2c')}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

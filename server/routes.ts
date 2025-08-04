@@ -4464,16 +4464,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ...product,
         imageUrl: (product as any).image_url || product.imageUrl, // Map image_url to imageUrl
         // Add required fields for frontend compatibility
-        sku: product.id.toString(), // Fallback SKU
-        status: 'active', // Default status
+        sku: product.sku || product.id.toString(), // Use actual SKU or fallback
+        status: product.status || 'active', // Use actual status or default
+        marketplace: product.marketplace || 'c2c', // Include marketplace field
         inventory: {
           quantity: product.inventory || 0,
           lowStockThreshold: 10,
-          trackQuantity: true,
-          allowBackorder: false
+          trackQuantity: product.trackQuantity !== undefined ? product.trackQuantity : true,
+          allowBackorder: product.continueSellingWhenOutOfStock || false
         },
         images: product.imageUrl ? [product.imageUrl] : [],
-        tags: [],
+        tags: product.tags || [],
         totalSales: 0,
         revenue: 0,
         views: 0,
