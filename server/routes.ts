@@ -14483,6 +14483,94 @@ The Dedw3n Team
     }
   });
 
+  // DELETE /api/admin/affiliate-partners/:id - Delete affiliate partner
+  app.delete('/api/admin/affiliate-partners/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const partnerId = parseInt(req.params.id);
+      
+      if (isNaN(partnerId)) {
+        return res.status(400).json({ message: 'Invalid partner ID' });
+      }
+
+      // Check if partner exists
+      const [partner] = await db.select().from(affiliatePartners).where(eq(affiliatePartners.id, partnerId));
+      if (!partner) {
+        return res.status(404).json({ message: 'Affiliate partner not found' });
+      }
+
+      // Delete all related vendor associations first
+      await db.delete(vendorAffiliatePartners).where(eq(vendorAffiliatePartners.partnerId, partnerId));
+      
+      // Delete the affiliate partner
+      await db.delete(affiliatePartners).where(eq(affiliatePartners.id, partnerId));
+
+      console.log('[AFFILIATE] Partner deleted successfully:', partnerId);
+      res.json({ message: 'Affiliate partner deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to delete affiliate partner' });
+    }
+  });
+
+  // PATCH /api/admin/affiliate-partners/:id - Update affiliate partner
+  app.patch('/api/admin/affiliate-partners/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const partnerId = parseInt(req.params.id);
+      
+      if (isNaN(partnerId)) {
+        return res.status(400).json({ message: 'Invalid partner ID' });
+      }
+
+      // Check if partner exists
+      const [existingPartner] = await db.select().from(affiliatePartners).where(eq(affiliatePartners.id, partnerId));
+      if (!existingPartner) {
+        return res.status(404).json({ message: 'Affiliate partner not found' });
+      }
+
+      // Update the partner with provided fields
+      const updateData = {
+        ...req.body,
+        updatedAt: new Date()
+      };
+
+      const [updatedPartner] = await db
+        .update(affiliatePartners)
+        .set(updateData)
+        .where(eq(affiliatePartners.id, partnerId))
+        .returning();
+
+      console.log('[AFFILIATE] Partner updated successfully:', partnerId);
+      res.json(updatedPartner);
+    } catch (error) {
+      console.error('Error updating affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to update affiliate partner' });
+    }
+  });
+
+  // POST /api/admin/affiliate-partners - Create new affiliate partner
+  app.post('/api/admin/affiliate-partners', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const partnerData = {
+        ...req.body,
+        partnerCode: req.body.partnerCode || `DEDW3N${Date.now().toString().slice(-6)}`,
+        status: req.body.status || 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const [newPartner] = await db
+        .insert(affiliatePartners)
+        .values(partnerData)
+        .returning();
+
+      console.log('[AFFILIATE] New partner created:', newPartner.id);
+      res.status(201).json(newPartner);
+    } catch (error) {
+      console.error('Error creating affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to create affiliate partner' });
+    }
+  });
+
   app.get('/api/affiliate-partnership/earnings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;

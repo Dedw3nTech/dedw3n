@@ -74,6 +74,9 @@ if (!fs.existsSync(avatarsDir)) {
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+// Serve static files from the public directory (logos, icons, etc.)
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Serve static files from attached_assets directory
 app.use('/attached_assets', express.static(path.join(__dirname, '../attached_assets')));
 
