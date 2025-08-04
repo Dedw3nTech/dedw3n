@@ -14158,6 +14158,7 @@ This is a test email from the Dedw3n marketplace system.
   app.post('/api/affiliate-partnership/apply', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
+      const user = req.user!;
       
       // Check if user already has a partnership
       const existingPartner = await storage.getAffiliatePartnerByUserId(userId);
@@ -14171,10 +14172,87 @@ This is a test email from the Dedw3n marketplace system.
       const partnerData = {
         userId,
         referralCode,
-        commissionRate: req.body.commissionRate || 5.0
+        commissionRate: req.body.commissionRate || 5.0,
+        partnerName: req.body.partnerName || user.name || user.username,
+        businessName: req.body.businessName,
+        contactEmail: req.body.contactEmail || user.email,
+        contactPhone: req.body.contactPhone,
+        website: req.body.website,
+        description: req.body.description,
+        specialization: req.body.specialization
       };
       
       const newPartner = await storage.createAffiliatePartner(partnerData);
+      
+      // Send email notification to love@dedw3n.com
+      try {
+        const emailSubject = 'New Affiliate Partnership Application - Dedw3n';
+        const emailHtml = `
+          <h2>New Affiliate Partnership Application</h2>
+          <p>A new affiliate partnership application has been submitted:</p>
+          
+          <h3>Partner Information:</h3>
+          <ul>
+            <li><strong>Partner Name:</strong> ${partnerData.partnerName}</li>
+            <li><strong>Business Name:</strong> ${partnerData.businessName || 'Not provided'}</li>
+            <li><strong>Contact Email:</strong> ${partnerData.contactEmail}</li>
+            <li><strong>Contact Phone:</strong> ${partnerData.contactPhone || 'Not provided'}</li>
+            <li><strong>Website:</strong> ${partnerData.website || 'Not provided'}</li>
+            <li><strong>Specialization:</strong> ${partnerData.specialization || 'Not provided'}</li>
+          </ul>
+          
+          <h3>User Details:</h3>
+          <ul>
+            <li><strong>User ID:</strong> ${userId}</li>
+            <li><strong>Username:</strong> ${user.username}</li>
+            <li><strong>Referral Code:</strong> ${referralCode}</li>
+            <li><strong>Commission Rate:</strong> ${partnerData.commissionRate}%</li>
+          </ul>
+          
+          ${partnerData.description ? `
+          <h3>Description:</h3>
+          <p>${partnerData.description}</p>
+          ` : ''}
+          
+          <p><em>Application submitted on ${new Date().toLocaleString()}</em></p>
+        `;
+
+        const emailText = `
+New Affiliate Partnership Application
+
+Partner Information:
+- Partner Name: ${partnerData.partnerName}
+- Business Name: ${partnerData.businessName || 'Not provided'}
+- Contact Email: ${partnerData.contactEmail}
+- Contact Phone: ${partnerData.contactPhone || 'Not provided'}
+- Website: ${partnerData.website || 'Not provided'}
+- Specialization: ${partnerData.specialization || 'Not provided'}
+
+User Details:
+- User ID: ${userId}
+- Username: ${user.username}
+- Referral Code: ${referralCode}
+- Commission Rate: ${partnerData.commissionRate}%
+
+${partnerData.description ? `Description: ${partnerData.description}` : ''}
+
+Application submitted on ${new Date().toLocaleString()}
+        `;
+
+        await sendEmail({
+          from: 'system@dedw3n.com',
+          to: 'love@dedw3n.com',
+          subject: emailSubject,
+          html: emailHtml,
+          text: emailText
+        });
+
+        console.log('[AFFILIATE] Email notification sent to love@dedw3n.com for new application');
+      } catch (emailError) {
+        console.error('[AFFILIATE] Failed to send email notification:', emailError);
+        // Don't fail the request if email fails, just log the error
+      }
+      
       res.status(201).json(newPartner);
     } catch (error) {
       console.error('Error creating affiliate partner:', error);
