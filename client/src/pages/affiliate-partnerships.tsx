@@ -346,7 +346,12 @@ export default function AffiliatePartnerships() {
             >
               {t("Apply to Become an Affiliate")}
             </Button>
-            <Link href="/resources">
+            <a 
+              href="/resources"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
               <Button 
                 variant="outline"
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200"
@@ -354,7 +359,7 @@ export default function AffiliatePartnerships() {
               >
                 Resources
               </Button>
-            </Link>
+            </a>
           </div>
           
           <div className="mt-8 text-blue-100 text-sm">
