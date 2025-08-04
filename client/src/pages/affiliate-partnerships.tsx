@@ -6,7 +6,7 @@ import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/7de00802-228e-4675-a1e4-485266b9f817_1754329722525.png';
-const businessWomanImage = '/attached_assets/affiliate partnership 1_1753733741393.png';
+const businessWomanImage = '/attached_assets/affiliate partnership 2_1754329999391.png';
 const activeWomanImage = '/attached_assets/Copy of We are developing software today that will facilitate business operations in the world of tomorrow._1751998175092.png';
 const affiliateHeaderImage = '/attached_assets/Affiliat partnership 3_1753733859529.png';
 
