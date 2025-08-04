@@ -60,7 +60,7 @@ export function LogoConfirmationDialog({
           {showLogo && (
             <div className="flex justify-center mb-4">
               <img 
-                src="/d3-black-logo.png" 
+                src="/dedw3n-main-logo.png" 
                 alt="Dedw3n" 
                 className="h-12 w-auto"
                 onError={(e) => {

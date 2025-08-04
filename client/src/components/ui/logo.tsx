@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 // Use server-served static asset path for production compatibility
-const logoImage = '/attached_assets/Dedw3n Logo.png';
+const logoImage = '/dedw3n-main-logo.png';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
