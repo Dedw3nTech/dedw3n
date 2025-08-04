@@ -5836,7 +5836,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Delete the product
-      await storage.deleteProduct(productId);
+      const deleted = await storage.deleteProduct(productId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: 'Failed to delete product due to database constraints' });
+      }
       
       res.json({ message: 'Product deleted successfully' });
     } catch (error) {

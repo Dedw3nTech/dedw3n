@@ -1517,11 +1517,27 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: number): Promise<boolean> {
     try {
-      await db.delete(products).where(eq(products.id, id));
+      // First delete all foreign key references to avoid constraint violations
+      await db.delete(likedProducts).where(eq(likedProducts.productId, id));
+      await db.delete(posts).where(eq(posts.productId, id));
+      await db.delete(carts).where(eq(carts.productId, id));
+      await db.delete(reviews).where(eq(reviews.productId, id));
+      
+      // Delete from gift_propositions if any exist
+      try {
+        await db.delete(giftPropositions).where(eq(giftPropositions.productId, id));
+      } catch (error: any) {
+        // Ignore if gift_propositions table doesn't exist or other issues
+        console.log('[DEBUG] Could not delete from gift_propositions:', error?.message || 'Unknown error');
+      }
+      
+      // Now delete the product itself
+      const result = await db.delete(products).where(eq(products.id, id));
+      console.log(`[DEBUG] Product ${id} deletion completed successfully`);
       return true;
     } catch (error) {
       console.error('Error deleting product:', error);
-      return false;
+      throw error; // Re-throw to let the API handle it properly
     }
   }
 
