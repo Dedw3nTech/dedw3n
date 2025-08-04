@@ -8,6 +8,7 @@ Dedw3n is a sophisticated multi-purpose social marketplace platform designed to 
 - Prioritize Search Console compliance and SEO optimization.
 - Maintain clear documentation of architectural changes.
 - Use comprehensive error handling and logging.
+- Implement comprehensive features without unnecessary advanced UI enhancements when core functionality is sufficient.
 
 ## System Architecture
 The platform is built with a modular, layered architecture for maintainability and scalability.
@@ -24,6 +25,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **UI/UX**: Clean, professional design with a focus on user experience, including dynamic button styling, clear navigation, and consistent language. Specific design choices include a streamlined vendor dashboard, comprehensive admin control center, personalized success notifications, and enhanced product sharing interface with color-coded icons (blue email, orange repost with circular arrows, green WhatsApp/SMS).
 - **Security**: Hardened against common vulnerabilities with debug statement cleanup, error response sanitization, secure API integrations, and HTTPS enforcement.
 - **Internationalization**: Integrated translation system for multi-language support.
+- **Global Currency Support**: Comprehensive 100+ currency system with professional selection interface, search functionality, and regional grouping for true international marketplace capabilities.
 
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.
