@@ -4078,8 +4078,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.status(201).json(vendor);
     } catch (error) {
-      console.error("Error creating vendor:", error);
-      if (error.code === '23505') { // PostgreSQL unique constraint violation
+      console.error("Error creating vendor:", error instanceof Error ? error.message : String(error));
+      if ((error as any)?.code === '23505') { // PostgreSQL unique constraint violation
         return res.status(400).json({ 
           message: "You already have a vendor account of this type" 
         });
@@ -4235,7 +4235,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Update vendor settings
   app.put('/api/vendors/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const { 
         storeName, 
         description, 
@@ -4442,7 +4445,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get vendor products
   app.get('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       // Get vendor accounts for the user
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
@@ -4774,10 +4780,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get vendor summary (must be before parameterized routes)
   app.get('/api/vendors/summary', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
-      
+      const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
+        return res.status(401).json({ message: 'Authentication required' });
       }
 
       // Get vendor accounts for the user
@@ -5648,7 +5653,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Create vendor product
   app.post('/api/vendors/products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       // Get vendor accounts for the user
       const vendorAccounts = await storage.getUserVendorAccounts(userId);
@@ -6146,7 +6154,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     
     try {
       const { receiverId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
-      const senderId = req.user!.id;
+      const senderId = req.user?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       console.log('[DEBUG] Message send request:', {
         senderId,
@@ -6195,7 +6206,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         broadcastMessage(message, parseInt(receiverId));
         console.log('[DEBUG] Message broadcasted via WebSocket');
       } catch (wsError) {
-        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError.message);
+        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError instanceof Error ? wsError.message : String(wsError));
       }
 
       res.status(201).json(message);
@@ -6211,7 +6222,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     
     try {
       const { receiverId, recipientId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
-      const senderId = req.user!.id;
+      const senderId = req.user?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       
       // Handle both receiverId and recipientId for compatibility
       const targetReceiverId = receiverId || recipientId;
@@ -6261,7 +6275,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         broadcastMessage(message, parseInt(targetReceiverId));
         console.log('[DEBUG] Offer message broadcasted via WebSocket');
       } catch (wsError) {
-        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError.message);
+        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError instanceof Error ? wsError.message : String(wsError));
       }
 
       res.status(201).json(message);
@@ -8430,7 +8444,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   app.get('/api/liked-products', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const likedProducts = await storage.getUserLikedProducts(userId);
       res.json(likedProducts);
     } catch (error) {
@@ -8442,7 +8459,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get count of user's liked products
   app.get('/api/liked-products/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const count = await storage.getUserLikedProductsCount(userId);
       res.json({ count });
     } catch (error) {
@@ -8455,7 +8475,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/friends/request", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { recipientId, message } = req.body;
-      const senderId = req.user!.id;
+      const senderId = req.user?.id;
+      if (!senderId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       // Check if friend request already exists
       const existingRequest = await storage.getFriendRequest(senderId, recipientId);
@@ -8479,7 +8502,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   app.get("/api/friends/requests", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const requests = await storage.getFriendRequests(userId);
       res.json(requests);
     } catch (error) {
@@ -8491,7 +8517,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/friends/accept/:requestId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestId = parseInt(req.params.requestId);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       await storage.acceptFriendRequest(requestId, userId);
       res.json({ message: "Friend request accepted" });
@@ -8504,7 +8533,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/friends/reject/:requestId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const requestId = parseInt(req.params.requestId);
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
       await storage.rejectFriendRequest(requestId, userId);
       res.json({ message: "Friend request rejected" });
@@ -8777,21 +8809,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Dating profile endpoint - Enhanced authentication with fallback
-  app.get('/api/dating-profile', async (req: Request, res: Response) => {
+  app.get('/api/dating-profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       console.log('[DEBUG] /api/dating-profile called');
-      console.log('[AUTH] Authentication check for GET /api/dating-profile');
       
-      let authenticatedUser = null;
-      
-      // Try session authentication first
-      if (req.user) {
-        authenticatedUser = req.user;
-        console.log('[AUTH] Session user found:', authenticatedUser.id);
-      }
-      
+      const authenticatedUser = req.user;
       if (!authenticatedUser) {
-        console.log('[AUTH] No authentication token provided');
         return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
       }
       

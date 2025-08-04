@@ -15,44 +15,54 @@ export function useOfflineMode() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have offline data stored
-    const storedOfflineData = localStorage.getItem('dedw3n-offline-data');
-    const offlineMode = localStorage.getItem('dedw3n-offline-mode') === 'true';
-    
-    if (storedOfflineData) {
-      setOfflineData(JSON.parse(storedOfflineData));
+    try {
+      // Check if we have offline data stored
+      const storedOfflineData = localStorage.getItem('dedw3n-offline-data');
+      const offlineMode = localStorage.getItem('dedw3n-offline-mode') === 'true';
+      
+      if (storedOfflineData) {
+        try {
+          const parsedData = JSON.parse(storedOfflineData);
+          setOfflineData(parsedData);
+        } catch (parseError) {
+          console.warn('Failed to parse offline data, clearing invalid data:', parseError);
+          localStorage.removeItem('dedw3n-offline-data');
+        }
+      }
+      
+      setIsOffline(offlineMode);
+
+      // Listen for online/offline status changes
+      const handleOnline = () => {
+        if (isOffline && localStorage.getItem('dedw3n-offline-mode') === 'true') {
+          toast({
+            title: "Connection Restored",
+            description: "You're back online! Offline mode is still active.",
+            variant: "default"
+          });
+        }
+      };
+
+      const handleOffline = () => {
+        if (!isOffline) {
+          toast({
+            title: "Connection Lost",
+            description: "You've gone offline. Consider enabling offline mode for better experience.",
+            variant: "destructive"
+          });
+        }
+      };
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    } catch (error) {
+      console.error('Error initializing offline mode:', error);
     }
-    
-    setIsOffline(offlineMode);
-
-    // Listen for online/offline status changes
-    const handleOnline = () => {
-      if (isOffline && localStorage.getItem('dedw3n-offline-mode') === 'true') {
-        toast({
-          title: "Connection Restored",
-          description: "You're back online! Offline mode is still active.",
-          variant: "default"
-        });
-      }
-    };
-
-    const handleOffline = () => {
-      if (!isOffline) {
-        toast({
-          title: "Connection Lost",
-          description: "You've gone offline. Consider enabling offline mode for better experience.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
   }, [isOffline, toast]);
 
   const cacheDataForOffline = async () => {
@@ -66,29 +76,57 @@ export function useOfflineMode() {
         notifications: []
       };
 
-      // Try to fetch and cache current data
+      // Try to fetch and cache current data with better error handling
       try {
+        const fetchWithHeaders = (url: string) => fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
         const [productsRes, userRes, conversationsRes, notificationsRes] = await Promise.allSettled([
-          fetch('/api/products?limit=50'),
-          fetch('/api/user'),
-          fetch('/api/messages/conversations'),
-          fetch('/api/notifications/unread/count')
+          fetchWithHeaders('/api/products?limit=50'),
+          fetchWithHeaders('/api/user'),
+          fetchWithHeaders('/api/messages/conversations'),
+          fetchWithHeaders('/api/notifications/unread/count')
         ]);
 
-        if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
-          dataToCache.products = await productsRes.value.json();
+        if (productsRes.status === 'fulfilled' && productsRes.value?.ok) {
+          try {
+            const products = await productsRes.value.json();
+            dataToCache.products = Array.isArray(products) ? products : products.products || [];
+          } catch (e) {
+            console.warn('Failed to parse products data:', e);
+          }
         }
 
-        if (userRes.status === 'fulfilled' && userRes.value.ok) {
-          dataToCache.userProfile = await userRes.value.json();
+        if (userRes.status === 'fulfilled' && userRes.value?.ok) {
+          try {
+            dataToCache.userProfile = await userRes.value.json();
+          } catch (e) {
+            console.warn('Failed to parse user data:', e);
+          }
         }
 
-        if (conversationsRes.status === 'fulfilled' && conversationsRes.value.ok) {
-          dataToCache.conversations = await conversationsRes.value.json();
+        if (conversationsRes.status === 'fulfilled' && conversationsRes.value?.ok) {
+          try {
+            const conversations = await conversationsRes.value.json();
+            dataToCache.conversations = Array.isArray(conversations) ? conversations : [];
+          } catch (e) {
+            console.warn('Failed to parse conversations data:', e);
+          }
         }
 
-        if (notificationsRes.status === 'fulfilled' && notificationsRes.value.ok) {
-          dataToCache.notifications = await notificationsRes.value.json();
+        if (notificationsRes.status === 'fulfilled' && notificationsRes.value?.ok) {
+          try {
+            const notifications = await notificationsRes.value.json();
+            dataToCache.notifications = notifications;
+          } catch (e) {
+            console.warn('Failed to parse notifications data:', e);
+          }
         }
       } catch (error) {
         console.warn('Some data could not be cached for offline use:', error);
