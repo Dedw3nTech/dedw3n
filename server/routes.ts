@@ -6609,7 +6609,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         maxPrice,
         onSale,
         isNew,
-        sortBy
+        sortBy,
+        marketplace
       } = req.query;
 
       console.log('[DEBUG] Products API called with filters:', req.query);
@@ -6663,6 +6664,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           conditions.push(
             or(...categoryList.map(category => eq(products.category, category)))
           );
+        }
+      }
+
+      // Marketplace filter
+      if (marketplace && typeof marketplace === 'string') {
+        const validMarketplaces = ['c2c', 'b2c', 'b2b', 'rqst'];
+        if (validMarketplaces.includes(marketplace)) {
+          conditions.push(eq(products.marketplace, marketplace));
         }
       }
 

@@ -93,9 +93,15 @@ export default function Products() {
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
   const { formatPrice } = useCurrency();
+  
+  // Get current marketplace from URL
+  const currentMarketplace = location.includes('/marketplace/b2c') ? 'b2c' :
+                           location.includes('/marketplace/b2b') ? 'b2b' :
+                           location.includes('/marketplace/c2c') ? 'c2c' :
+                           location.includes('/marketplace/rqst') ? 'rqst' : null;
   const [forceUpdate, setForceUpdate] = useState(0);
   const [sortBy, setSortBy] = useState<string>('trending');
   const [productsPerPage, setProductsPerPage] = useState<number>(30);
@@ -600,7 +606,8 @@ export default function Products() {
       maxPrice: priceRange[1],
       onSale: showSale,
       isNew: showNew,
-      sortBy: sortBy
+      sortBy: sortBy,
+      marketplace: currentMarketplace
     }],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -613,6 +620,7 @@ export default function Products() {
       if (showSale) params.append('onSale', 'true');
       if (showNew) params.append('isNew', 'true');
       if (sortBy) params.append('sortBy', sortBy);
+      if (currentMarketplace) params.append('marketplace', currentMarketplace);
       
       const url = `/api/products${params.toString() ? `?${params.toString()}` : ''}`;
       const response = await apiRequest('GET', url);
