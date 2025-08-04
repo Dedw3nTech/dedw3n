@@ -82,7 +82,7 @@ export default function NetworkPartnerships() {
             <div className="relative lg:ml-8">
               <div className="relative overflow-hidden rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
                 <img 
-                  src="/attached_assets/IMG_5271_1753734097243.PNG"
+                  src="/attached_assets/IMG_5271_1754329447591.PNG"
                   alt="Professional customer service representative providing network partnership support"
                   className="w-full h-auto object-cover"
                 />
