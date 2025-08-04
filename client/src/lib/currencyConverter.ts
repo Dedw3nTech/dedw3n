@@ -306,15 +306,32 @@ export function formatCurrency(
   currencyCode: CurrencyCode,
   includeCode: boolean = false
 ): string {
-  const currencyLocales: Record<CurrencyCode, string> = {
+  const currencyLocales: Partial<Record<CurrencyCode, string>> = {
     GBP: "en-GB",
-    EUR: "de-DE",
+    EUR: "de-DE", 
     USD: "en-US",
     CNY: "zh-CN",
     INR: "hi-IN",
     BRL: "pt-BR",
     JMD: "en-JM",
     AUD: "en-AU",
+    JPY: "ja-JP",
+    KRW: "ko-KR",
+    SGD: "en-SG",
+    HKD: "zh-HK",
+    THB: "th-TH",
+    CAD: "en-CA",
+    CHF: "de-CH",
+    SEK: "sv-SE",
+    NOK: "nb-NO",
+    DKK: "da-DK",
+    PLN: "pl-PL",
+    RUB: "ru-RU",
+    TRY: "tr-TR",
+    ZAR: "en-ZA",
+    AED: "ar-AE",
+    SAR: "ar-SA",
+    ILS: "he-IL",
   };
   
   const locale = currencyLocales[currencyCode] || "en-GB";
@@ -376,7 +393,7 @@ export function getFormattedExchangeRate(
   toCurrency: CurrencyCode
 ): string {
   const rate = getExchangeRate(fromCurrency, toCurrency);
-  const symbols = {
+  const symbols: Partial<Record<CurrencyCode, string>> = {
     GBP: '£',
     EUR: '€',
     USD: '$',
@@ -387,5 +404,8 @@ export function getFormattedExchangeRate(
     AUD: 'A$',
   };
 
-  return `1 ${symbols[fromCurrency]} = ${rate.toFixed(4)} ${symbols[toCurrency]}`;
+  const fromSymbol = symbols[fromCurrency] || fromCurrency;
+  const toSymbol = symbols[toCurrency] || toCurrency;
+  
+  return `1 ${fromSymbol} = ${rate.toFixed(4)} ${toSymbol}`;
 }

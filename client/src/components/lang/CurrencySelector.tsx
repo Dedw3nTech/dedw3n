@@ -161,7 +161,7 @@ export function CurrencySelector() {
   const filteredRegionGroups = useMemo(() => {
     if (!searchTerm) return regionGroups;
     
-    const filtered: typeof regionGroups = {};
+    const filtered: Record<string, CurrencyCode[]> = {};
     
     Object.entries(regionGroups).forEach(([region, currencies]) => {
       const matchedCurrencies = currencies.filter(code => {
@@ -174,7 +174,7 @@ export function CurrencySelector() {
       });
       
       if (matchedCurrencies.length > 0) {
-        filtered[region as keyof typeof regionGroups] = matchedCurrencies;
+        filtered[region] = matchedCurrencies;
       }
     });
     
