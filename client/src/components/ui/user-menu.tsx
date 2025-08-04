@@ -10,7 +10,7 @@ import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
-import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, Shield, LogOut, ChevronDown } from "lucide-react";
+import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, Shield, LogOut, ChevronDown, Users } from "lucide-react";
 import { performUnifiedLogout } from "@/utils/unified-logout-system";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
@@ -31,6 +31,7 @@ export default function UserMenu() {
     "Notifications",
     "Dating Dashboard",
     "Vendor Dashboard",
+    "Affiliate Partnership",
     "Admin Centre",
     "Log Out",
     "Log in",
@@ -48,10 +49,11 @@ export default function UserMenu() {
     notifications: translatedTexts[3] || "Notifications",
     datingDashboard: translatedTexts[4] || "Dating Dashboard",
     vendorDashboard: translatedTexts[5] || "Vendor Dashboard",
-    adminCentre: translatedTexts[6] || "Admin Centre",
-    logout: translatedTexts[7] || "Log Out",
-    login: translatedTexts[8] || "Log in",
-    loggingOut: translatedTexts[9] || "Logging out..."
+    affiliatePartnership: translatedTexts[6] || "Affiliate Partnership",
+    adminCentre: translatedTexts[7] || "Admin Centre",
+    logout: translatedTexts[8] || "Log Out",
+    login: translatedTexts[9] || "Log in",
+    loggingOut: translatedTexts[10] || "Logging out..."
   }), [translatedTexts]);
 
   // Fetch unread message count
@@ -231,6 +233,15 @@ export default function UserMenu() {
               <Store className="h-4 w-4 text-gray-500" />
               {translatedLabels.vendorDashboard}
             </button>
+            
+            <Link 
+              href="/affiliate-partnership" 
+              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <Users className="h-4 w-4 text-gray-500" />
+              {translatedLabels.affiliatePartnership}
+            </Link>
             
             {/* Admin Centre - Only visible to admin users */}
             {user?.role === 'admin' && (

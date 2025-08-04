@@ -14143,6 +14143,113 @@ This is a test email from the Dedw3n marketplace system.
     }
   });
 
+  // Affiliate Partnership API Routes
+  app.get('/api/affiliate-partnership/profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const partner = await storage.getAffiliatePartnerByUserId(userId);
+      res.json(partner || null);
+    } catch (error) {
+      console.error('Error getting affiliate partner profile:', error);
+      res.status(500).json({ message: 'Failed to get affiliate partner profile' });
+    }
+  });
+
+  app.post('/api/affiliate-partnership/apply', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Check if user already has a partnership
+      const existingPartner = await storage.getAffiliatePartnerByUserId(userId);
+      if (existingPartner) {
+        return res.status(400).json({ message: 'User already has an affiliate partnership' });
+      }
+
+      // Generate unique referral code
+      const referralCode = `REF${userId}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      const partnerData = {
+        userId,
+        referralCode,
+        commissionRate: req.body.commissionRate || 5.0
+      };
+      
+      const newPartner = await storage.createAffiliatePartner(partnerData);
+      res.status(201).json(newPartner);
+    } catch (error) {
+      console.error('Error creating affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to create affiliate partnership' });
+    }
+  });
+
+  app.put('/api/affiliate-partnership/profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const partner = await storage.getAffiliatePartnerByUserId(userId);
+      
+      if (!partner) {
+        return res.status(404).json({ message: 'Affiliate partnership not found' });
+      }
+
+      const updatedPartner = await storage.updateAffiliatePartner(partner.id, req.body);
+      res.json(updatedPartner);
+    } catch (error) {
+      console.error('Error updating affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to update affiliate partnership' });
+    }
+  });
+
+  app.get('/api/affiliate-partnership/referrals', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const partner = await storage.getAffiliatePartnerByUserId(userId);
+      
+      if (!partner) {
+        return res.status(404).json({ message: 'Affiliate partnership not found' });
+      }
+
+      const referrals = await storage.getAffiliateReferrals(partner.id);
+      res.json(referrals);
+    } catch (error) {
+      console.error('Error getting affiliate referrals:', error);
+      res.status(500).json({ message: 'Failed to get affiliate referrals' });
+    }
+  });
+
+  app.get('/api/affiliate-partnership/earnings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const partner = await storage.getAffiliatePartnerByUserId(userId);
+      
+      if (!partner) {
+        return res.status(404).json({ message: 'Affiliate partnership not found' });
+      }
+
+      const earnings = await storage.getAffiliateEarnings(partner.id);
+      res.json(earnings);
+    } catch (error) {
+      console.error('Error getting affiliate earnings:', error);
+      res.status(500).json({ message: 'Failed to get affiliate earnings' });
+    }
+  });
+
+  app.get('/api/affiliate-partnership/referral-link', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const partner = await storage.getAffiliatePartnerByUserId(userId);
+      
+      if (!partner) {
+        return res.status(404).json({ message: 'Affiliate partnership not found' });
+      }
+
+      const referralLink = await storage.generateReferralLink(partner.id);
+      res.json({ referralLink });
+    } catch (error) {
+      console.error('Error generating referral link:', error);
+      res.status(500).json({ message: 'Failed to generate referral link' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({

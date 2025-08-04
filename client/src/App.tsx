@@ -130,6 +130,7 @@ import LogoutSuccess from "@/pages/logout-success";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminControlCenter from "@/pages/admin-control-center";
 import UnifiedAdminDashboard from "@/pages/unified-admin-dashboard";
+import AffiliatePartnership from "@/pages/affiliate-partnership";
 import AIInsightsPage from "@/pages/ai-insights";
 import SocialInsightsPage from "@/pages/social-insights";
 import ApiTestPage from "@/pages/api-test";
@@ -420,6 +421,7 @@ function Router() {
       <ProtectedRoute path="/unified-admin-dashboard" component={UnifiedAdminDashboard} />
       <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/admin-control-center" component={AdminControlCenter} />
+      <ProtectedRoute path="/affiliate-partnership" component={AffiliatePartnership} />
       
 
       <Route component={NotFoundPage} />

@@ -18,7 +18,7 @@ import {
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
   chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
-  datingProfiles, storeUsers,
+  datingProfiles, storeUsers, affiliatePartners, vendorAffiliatePartners,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -33,7 +33,8 @@ import {
   type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
   type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
   type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
-  type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser
+  type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser,
+  type AffiliatePartner, type InsertAffiliatePartner, type VendorAffiliatePartner, type InsertVendorAffiliatePartner
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
@@ -275,6 +276,14 @@ export interface IStorage {
   addGiftToDatingProfile(userId: number, productId: number): Promise<boolean>;
   removeGiftFromDatingProfile(userId: number, productId: number): Promise<boolean>;
   getDatingProfileGifts(userId: number): Promise<Product[]>;
+
+  // Affiliate partnership operations
+  getAffiliatePartnerByUserId(userId: number): Promise<any | undefined>;
+  createAffiliatePartner(partnerData: any): Promise<any>;
+  updateAffiliatePartner(id: number, updates: any): Promise<any | undefined>;
+  getAffiliateReferrals(affiliateId: number): Promise<any[]>;
+  getAffiliateEarnings(affiliateId: number): Promise<any[]>;
+  generateReferralLink(affiliateId: number): Promise<string>;
 }
 
 // Database storage implementation
@@ -5058,6 +5067,143 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating gift:', error);
       throw new Error('Failed to create gift');
+    }
+  }
+
+  // Affiliate partnership operations implementation
+  async getAffiliatePartnerByUserId(userId: number): Promise<any | undefined> {
+    try {
+      // For now, use the user information to simulate affiliate partner data
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // Check if there's an existing affiliate partner record
+      const existingPartners = await db
+        .select()
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.email, user.email || ''));
+      
+      if (existingPartners.length > 0) {
+        return {
+          ...existingPartners[0],
+          userId: userId
+        };
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error getting affiliate partner:', error);
+      return undefined;
+    }
+  }
+
+  async createAffiliatePartner(partnerData: any): Promise<any> {
+    try {
+      const user = await this.getUser(partnerData.userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const [newPartner] = await db
+        .insert(affiliatePartners)
+        .values({
+          name: user.name || user.username,
+          email: user.email || `${user.username}@example.com`,
+          partnerCode: partnerData.referralCode,
+          commissionRate: (partnerData.commissionRate || 5.0).toString(),
+          status: 'active',
+          isVerified: false,
+          specialization: 'general',
+          region: 'global',
+          languages: ['en']
+        })
+        .returning();
+      return {
+        ...newPartner,
+        userId: partnerData.userId
+      };
+    } catch (error) {
+      console.error('Error creating affiliate partner:', error);
+      throw new Error('Failed to create affiliate partner');
+    }
+  }
+
+  async updateAffiliatePartner(id: number, updates: any): Promise<any | undefined> {
+    try {
+      const [updatedPartner] = await db
+        .update(affiliatePartners)
+        .set(updates)
+        .where(eq(affiliatePartners.id, id))
+        .returning();
+      return updatedPartner;
+    } catch (error) {
+      console.error('Error updating affiliate partner:', error);
+      return undefined;
+    }
+  }
+
+  async getAffiliateReferrals(affiliateId: number): Promise<any[]> {
+    try {
+      // For now, return vendor assignments as referrals
+      const assignments = await db
+        .select({
+          id: vendorAffiliatePartners.id,
+          vendorId: vendorAffiliatePartners.vendorId,
+          assignedAt: vendorAffiliatePartners.assignedAt,
+          status: vendorAffiliatePartners.status,
+          notes: vendorAffiliatePartners.notes
+        })
+        .from(vendorAffiliatePartners)
+        .where(eq(vendorAffiliatePartners.affiliatePartnerId, affiliateId))
+        .orderBy(desc(vendorAffiliatePartners.assignedAt));
+      
+      return assignments;
+    } catch (error) {
+      console.error('Error getting affiliate referrals:', error);
+      return [];
+    }
+  }
+
+  async getAffiliateEarnings(affiliateId: number): Promise<any[]> {
+    try {
+      // For now, return calculated earnings based on partner record
+      const partner = await db
+        .select()
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.id, affiliateId));
+      
+      if (partner.length === 0) return [];
+      
+      return [{
+        id: 1,
+        affiliateId: affiliateId,
+        amount: partner[0].totalCommissionEarned || '0',
+        type: 'commission',
+        description: 'Total commission earned',
+        createdAt: new Date()
+      }];
+    } catch (error) {
+      console.error('Error getting affiliate earnings:', error);
+      return [];
+    }
+  }
+
+  async generateReferralLink(affiliateId: number): Promise<string> {
+    try {
+      const partner = await db
+        .select()
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.id, affiliateId));
+      
+      if (partner.length === 0) {
+        throw new Error('Affiliate partner not found');
+      }
+      
+      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:3000';
+      return `https://${domain}?ref=${partner[0].partnerCode}`;
+    } catch (error) {
+      console.error('Error generating referral link:', error);
+      throw new Error('Failed to generate referral link');
     }
   }
 

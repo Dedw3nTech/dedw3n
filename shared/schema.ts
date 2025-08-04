@@ -234,6 +234,12 @@ export const returnReasonEnum = pgEnum('return_reason', ['defective', 'wrong_ite
 // Define store user role enum
 export const storeUserRoleEnum = pgEnum('store_user_role', ['marketer', 'merchandiser', 'manager']);
 
+// Define affiliate partnership status enum
+export const affiliateStatusEnum = pgEnum('affiliate_status', ['active', 'pending', 'suspended', 'terminated']);
+
+// Define affiliate tier enum  
+export const affiliateTierEnum = pgEnum('affiliate_tier', ['bronze', 'silver', 'gold', 'platinum', 'diamond']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -1023,6 +1029,8 @@ export const insertCreatorEarningSchema = createInsertSchema(creatorEarnings)
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true, updatedAt: true });
+
+
   
 export const insertFriendRequestSchema = createInsertSchema(friendRequests)
   .omit({ id: true, status: true, createdAt: true, updatedAt: true });
