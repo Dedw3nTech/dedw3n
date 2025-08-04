@@ -119,7 +119,9 @@ export default function AdvertisementManagement() {
     queryFn: () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value.toString());
+        if (value && value !== 'all' && value !== 'all_placements') {
+          params.append(key, value.toString());
+        }
       });
       return apiRequest(`/api/admin/advertisements?${params.toString()}`);
     },
@@ -288,7 +290,7 @@ export default function AdvertisementManagement() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="paused">Paused</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
@@ -304,7 +306,7 @@ export default function AdvertisementManagement() {
                 <SelectValue placeholder="Placement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Placements</SelectItem>
+                <SelectItem value="all_placements">All Placements</SelectItem>
                 <SelectItem value="marketplace">Marketplace</SelectItem>
                 <SelectItem value="community">Community</SelectItem>
                 <SelectItem value="dating">Dating</SelectItem>
