@@ -7,7 +7,7 @@ import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/cargo-ship-sailing-through-ocean_1753734478144.jpg';
 const businessWomanImage = '/attached_assets/side-view-women-working-outdoors_1753734596681.jpg';
-const activeWomanImage = '/attached_assets/heavy-machinery-quarry (2)_1753734670414.jpg';
+const activeWomanImage = '/attached_assets/Copy of spend more time enjoying life_1754329506719.png';
 
 export default function NetworkPartnerships() {
   // Set document title on mount
