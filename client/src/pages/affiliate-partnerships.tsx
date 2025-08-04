@@ -337,8 +337,6 @@ export default function AffiliatePartnerships() {
             </Button>
             <a 
               href="/resources"
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-block"
             >
               <Button 
