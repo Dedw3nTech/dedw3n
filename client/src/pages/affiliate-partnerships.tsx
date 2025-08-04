@@ -219,17 +219,6 @@ export default function AffiliatePartnerships() {
               
               {/* Overlay gradient for better visual appeal */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent rounded-2xl"></div>
-              
-              {/* Text overlay positioned next to the image */}
-              <div className="absolute inset-0 flex items-center justify-end pr-8">
-                <div className="bg-black/70 backdrop-blur-sm rounded-xl p-6 max-w-md">
-                  <p className="text-lg text-gray-200">
-                    Join us in finding new people and  creating innovative solutions that shape the future of digital commerce and social interaction.
-                  </p>
-                </div>
-              </div>
-              
-
             </div>
             
             {/* Smaller images stacked vertically in single column */}
