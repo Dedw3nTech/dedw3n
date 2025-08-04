@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight, Truck, Globe, Package } from 'lucide-react';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/cargo-ship-sailing-through-ocean_1753734478144.jpg';
 const businessWomanImage = '/attached_assets/side-view-women-working-outdoors_1753734596681.jpg';
@@ -14,6 +15,42 @@ export default function NetworkPartnerships() {
     document.title = "Network Partnership - Dedw3n";
   }, []);
 
+  // Master Translation batch for Network Partnerships page
+  const networkTexts = useMemo(() => [
+    "Network Partnership",
+    "Join our Network Partnership, designed to connect transportation, logistics, export and import companies, manufacturers, farmers, recycling companies and miners.",
+    "We provide a dynamic supply chain that links developed and emerging markets, facilitating seamless business connections and offering support in identifying new global supply chain partners.",
+    "Join Network",
+    "Network Benefits",
+    "Connect with verified partners across global supply chains and unlock new business opportunities.",
+    "Global Reach",
+    "Connect with partners in developed and emerging markets worldwide",
+    "Supply Chain Solutions",
+    "Access comprehensive logistics and transportation networks",
+    "Verified Partners",
+    "Work with pre-screened manufacturers, farmers, and exporters",
+    "Growth Opportunities",
+    "Identify new markets and expand your business reach",
+    "Export/Import Support",
+    "Streamlined processes for international trade operations",
+    "Premium Support",
+    "Dedicated account management and business development assistance"
+  ], []);
+
+  const { translations, isLoading } = useMasterBatchTranslation(networkTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = networkTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Hero Section */}
@@ -24,11 +61,11 @@ export default function NetworkPartnerships() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                  Network Partnership
+                  {t("Network Partnership")}
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">Join our Network Partnership, designed to connect transportation, logistics, export and import companies, manufacturers, farmers, recycling companies and miners.</p>
+                <p className="text-xl text-gray-600 leading-relaxed">{t("Join our Network Partnership, designed to connect transportation, logistics, export and import companies, manufacturers, farmers, recycling companies and miners.")}</p>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  We provide a dynamic supply chain that links developed and emerging markets, facilitating seamless business connections and offering support in identifying new global supply chain partners.
+                  {t("We provide a dynamic supply chain that links developed and emerging markets, facilitating seamless business connections and offering support in identifying new global supply chain partners.")}
                 </p>
               </div>
               
@@ -36,7 +73,7 @@ export default function NetworkPartnerships() {
                 className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200 hover:scale-105"
                 size="lg"
               >
-                Join Network
+                {t("Join Network")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
@@ -65,9 +102,9 @@ export default function NetworkPartnerships() {
       {/* Benefits Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Network Benefits</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("Network Benefits")}</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Connect with verified partners across global supply chains and unlock new business opportunities.
+            {t("Connect with verified partners across global supply chains and unlock new business opportunities.")}
           </p>
         </div>
 
@@ -75,33 +112,33 @@ export default function NetworkPartnerships() {
           {[
             {
               icon: Globe,
-              title: "Global Reach",
-              description: "Connect with partners in developed and emerging markets worldwide"
+              title: t("Global Reach"),
+              description: t("Connect with partners in developed and emerging markets worldwide")
             },
             {
               icon: Truck,
-              title: "Supply Chain Solutions",
-              description: "Access comprehensive logistics and transportation networks"
+              title: t("Supply Chain Solutions"),
+              description: t("Access comprehensive logistics and transportation networks")
             },
             {
               icon: Users,
-              title: "Verified Partners",
-              description: "Work with pre-screened manufacturers, farmers, and exporters"
+              title: t("Verified Partners"),
+              description: t("Work with pre-screened manufacturers, farmers, and exporters")
             },
             {
               icon: TrendingUp,
-              title: "Growth Opportunities",
-              description: "Identify new markets and expand your business reach"
+              title: t("Growth Opportunities"),
+              description: t("Identify new markets and expand your business reach")
             },
             {
               icon: Package,
-              title: "Export/Import Support",
-              description: "Streamlined processes for international trade operations"
+              title: t("Export/Import Support"),
+              description: t("Streamlined processes for international trade operations")
             },
             {
               icon: Award,
-              title: "Premium Support",
-              description: "Dedicated account management and business development assistance"
+              title: t("Premium Support"),
+              description: t("Dedicated account management and business development assistance")
             }
           ].map((benefit, index) => (
             <Card key={index} className="p-6 hover:shadow-lg transition-shadow duration-200 border-0 bg-white/80 backdrop-blur-sm">

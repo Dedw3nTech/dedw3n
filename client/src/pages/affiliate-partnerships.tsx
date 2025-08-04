@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, PoundSterling, Users, TrendingUp, Award, ArrowRight } from 'lucide-react';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 // Use server-served static asset paths for production compatibility
 const professionalImage = '/attached_assets/affiliate partnership 2_1753733691630.png';
 const businessWomanImage = '/attached_assets/affiliate partnership 1_1753733741393.png';
@@ -15,6 +16,55 @@ export default function AffiliatePartnerships() {
     document.title = "Affiliate Partnership - Dedw3n";
   }, []);
 
+  // Master Translation batch for Affiliate Partnerships page
+  const affiliateTexts = useMemo(() => [
+    "Become a Dedw3n Affiliate",
+    "Earn up to 30% commission for life by referring new merchants to Dedw3n.",
+    "Apply now",
+    "This month",
+    "Referrals",
+    "Conversions",
+    "Why Partner with Dedw3n?",
+    "Join thousands of successful affiliates earning consistent income by promoting our platform.",
+    "High Commission Rates",
+    "Earn up to 30% commission on all successful referrals with lifetime recurring revenue.",
+    "Marketing Support",
+    "Access professional marketing materials, banners, and promotional content.",
+    "Real-time Analytics",
+    "Track your performance with detailed analytics and transparent reporting.",
+    "Dedicated Support",
+    "Get personalized assistance from our affiliate success team.",
+    "Fast Payments",
+    "Receive payments on time every month through your preferred payment method.",
+    "No Hidden Fees",
+    "Our transparent commission structure means you keep everything you earn.",
+    "How It Works",
+    "Getting started is simple and takes just a few minutes.",
+    "Apply",
+    "Submit your application and get approved quickly.",
+    "Promote", 
+    "Share your unique referral links and start earning.",
+    "Earn",
+    "Get paid for every successful merchant you refer.",
+    "Ready to Start Earning?",
+    "Join our affiliate program today and start earning commission on every referral.",
+    "Apply to Become an Affiliate"
+  ], []);
+
+  const { translations, isLoading } = useMasterBatchTranslation(affiliateTexts, 'instant');
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading translations...</div>;
+  }
+  
+  const t = (text: string): string => {
+    if (Array.isArray(translations)) {
+      const index = affiliateTexts.indexOf(text);
+      return index !== -1 ? translations[index] || text : text;
+    }
+    return text;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Hero Section */}
@@ -25,10 +75,10 @@ export default function AffiliatePartnerships() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                  Become a Dedw3n Affiliate
+                  {t("Become a Dedw3n Affiliate")}
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Earn up to 30% commission for life by referring new merchants to Dedw3n.
+                  {t("Earn up to 30% commission for life by referring new merchants to Dedw3n.")}
                 </p>
               </div>
               
@@ -36,7 +86,7 @@ export default function AffiliatePartnerships() {
                 className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200 hover:scale-105"
                 size="lg"
               >
-                Apply now
+                {t("Apply now")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
@@ -48,7 +98,7 @@ export default function AffiliatePartnerships() {
                   <PoundSterling className="h-8 w-8 text-green-600" />
                   <div className="text-right">
                     <div className="text-2xl font-bold text-gray-900">£2,847</div>
-                    <div className="text-sm text-gray-500">This month</div>
+                    <div className="text-sm text-gray-500">{t("This month")}</div>
                   </div>
                 </div>
                 
@@ -67,11 +117,11 @@ export default function AffiliatePartnerships() {
                 <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <div className="font-semibold text-gray-900">47</div>
-                    <div className="text-gray-500">Referrals</div>
+                    <div className="text-gray-500">{t("Referrals")}</div>
                   </div>
                   <div>
                     <div className="font-semibold text-gray-900">23</div>
-                    <div className="text-gray-500">Conversions</div>
+                    <div className="text-gray-500">{t("Conversions")}</div>
                   </div>
                 </div>
               </div>
@@ -91,9 +141,9 @@ export default function AffiliatePartnerships() {
       {/* Benefits Section */}
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Partnership Benefits</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("Why Partner with Dedw3n?")}</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Join our partner network and unlock exclusive benefits designed to help you grow your income.
+            {t("Join thousands of successful affiliates earning consistent income by promoting our platform.")}
           </p>
         </div>
 
@@ -101,38 +151,38 @@ export default function AffiliatePartnerships() {
           {[
             {
               icon: PoundSterling,
-              title: "Competitive Commissions",
-              description: "Earn up to 25% commission on every successful referral with transparent tracking.",
+              title: t("High Commission Rates"),
+              description: t("Earn up to 30% commission on all successful referrals with lifetime recurring revenue."),
               color: "bg-green-100 text-green-600"
             },
             {
               icon: Users,
-              title: "Dedicated Support",
-              description: "Get personalized support from our partnership team to maximize your success.",
+              title: t("Marketing Support"),
+              description: t("Access professional marketing materials, banners, and promotional content."),
               color: "bg-blue-100 text-blue-600"
             },
             {
               icon: TrendingUp,
-              title: "Life Time Earnings",
-              description: "Keep earning monthly commissions for life.",
+              title: t("Real-time Analytics"),
+              description: t("Track your performance with detailed analytics and transparent reporting."),
               color: "bg-purple-100 text-purple-600"
             },
             {
               icon: Award,
-              title: "Marketing Materials",
-              description: "Access professional marketing assets and promotional materials for your campaigns.",
+              title: t("Dedicated Support"),
+              description: t("Get personalized assistance from our affiliate success team."),
               color: "bg-orange-100 text-orange-600"
             },
             {
               icon: CheckCircle,
-              title: "Monthly Payouts",
-              description: "Receive timely payments every month with multiple payout options available.",
+              title: t("Fast Payments"),
+              description: t("Receive payments on time every month through your preferred payment method."),
               color: "bg-emerald-100 text-emerald-600"
             },
             {
               icon: ArrowRight,
-              title: "Flexible Terms",
-              description: "Enjoy customizable partnership agreements that suit your business needs.",
+              title: t("No Hidden Fees"),
+              description: t("Our transparent commission structure means you keep everything you earn."),
               color: "bg-indigo-100 text-indigo-600"
             }
           ].map((benefit, index) => (
@@ -230,9 +280,9 @@ export default function AffiliatePartnerships() {
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Partnership Opportunities</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("How It Works")}</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose the partnership type that best fits your business model and audience.
+              {t("Getting started is simple and takes just a few minutes.")}
             </p>
           </div>
 
@@ -284,18 +334,17 @@ export default function AffiliatePartnerships() {
       <div className="bg-black py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            Ready to Start Earning?
+            {t("Ready to Start Earning?")}
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of partners who are already earning with Dedw3n. 
-            Apply now and start your partnership journey today.
+            {t("Join our affiliate program today and start earning commission on every referral.")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200 hover:scale-105"
               size="lg"
             >
-              Apply Now
+              {t("Apply to Become an Affiliate")}
             </Button>
             <Link href="/resources">
               <Button 
