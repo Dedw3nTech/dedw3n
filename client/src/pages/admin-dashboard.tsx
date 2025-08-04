@@ -77,6 +77,8 @@ import ProductManagerDashboard from "@/components/admin/ProductManagerDashboard"
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { LogoConfirmationDialog } from "@/components/ui/logo-confirmation-dialog";
+import { useLogoConfirmation } from "@/hooks/use-logo-confirmation";
 
 // Master Translation mega-batch for Admin Dashboard (50+ texts)
 const adminTexts = [
@@ -113,6 +115,7 @@ type AdminStats = {
 // Affiliate Partnership Management Component
 const AffiliatePartnershipManagement = () => {
   const { toast } = useToast();
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useLogoConfirmation();
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
@@ -131,9 +134,19 @@ const AffiliatePartnershipManagement = () => {
     },
   });
 
-  const approvePartner = async (partnerId: number) => {
+  const approvePartner = async (partner: any) => {
+    const confirmed = await confirm({
+      title: 'Approve Affiliate Partner',
+      message: `Are you sure you want to approve ${partner.name} as an affiliate partner? They will receive an email notification and can start earning commissions.`,
+      type: 'success',
+      confirmText: 'Approve Partner',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
+
     try {
-      const response = await fetch(`/api/admin/affiliate-partners/${partnerId}/approve`, {
+      const response = await fetch(`/api/admin/affiliate-partners/${partner.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -158,14 +171,22 @@ const AffiliatePartnershipManagement = () => {
     }
   };
 
-  const declinePartner = async () => {
-    if (!selectedPartner) return;
+  const declinePartner = async (partner: any) => {
+    const confirmed = await confirm({
+      title: 'Decline Affiliate Partner',
+      message: `Are you sure you want to decline ${partner.name}'s affiliate partnership application? They will receive an email notification.`,
+      type: 'danger',
+      confirmText: 'Decline Partner',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
 
     try {
-      const response = await fetch(`/api/admin/affiliate-partners/${selectedPartner.id}/decline`, {
+      const response = await fetch(`/api/admin/affiliate-partners/${partner.id}/decline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: declineReason }),
+        body: JSON.stringify({ reason: 'Application declined by admin review' }),
       });
 
       if (!response.ok) {
@@ -178,9 +199,6 @@ const AffiliatePartnershipManagement = () => {
         variant: "default",
       });
 
-      setShowDeclineDialog(false);
-      setDeclineReason("");
-      setSelectedPartner(null);
       refetch();
     } catch (error) {
       toast({
@@ -287,7 +305,7 @@ const AffiliatePartnershipManagement = () => {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => approvePartner(partner.id)}
+                          onClick={() => approvePartner(partner)}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
@@ -296,10 +314,7 @@ const AffiliatePartnershipManagement = () => {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => {
-                            setSelectedPartner(partner);
-                            setShowDeclineDialog(true);
-                          }}
+                          onClick={() => declinePartner(partner)}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Decline
@@ -313,42 +328,18 @@ const AffiliatePartnershipManagement = () => {
           </div>
         )}
 
-        {/* Decline Dialog */}
-        {showDeclineDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>Decline Affiliate Partnership</CardTitle>
-                <CardDescription>
-                  Provide a reason for declining {selectedPartner?.name}'s application
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Optional: Provide a reason for the decline..."
-                  value={declineReason}
-                  onChange={(e) => setDeclineReason(e.target.value)}
-                  rows={3}
-                />
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowDeclineDialog(false);
-                      setDeclineReason("");
-                      setSelectedPartner(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="destructive" onClick={declinePartner}>
-                    Decline Partner
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Logo Confirmation Dialog */}
+        <LogoConfirmationDialog
+          isOpen={isOpen}
+          onClose={handleCancel}
+          onConfirm={handleConfirm}
+          title={config.title}
+          message={config.message}
+          type={config.type}
+          confirmText={config.confirmText}
+          cancelText={config.cancelText}
+          showLogo={config.showLogo}
+        />
       </CardContent>
     </Card>
   );
