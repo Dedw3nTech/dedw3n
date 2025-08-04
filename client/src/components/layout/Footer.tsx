@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useMemo } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useOfflineMode } from "@/hooks/use-offline-mode";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { WeightUnitSelector } from "@/components/ui/weight-unit-selector";
 import { DimensionUnitSelector } from "@/components/ui/dimension-unit-selector";
@@ -22,6 +23,8 @@ function ScrollToTopLink({ href, children, className }: { href: string; children
 }
 
 function FooterContent() {
+  const { toggleOfflineMode, isOffline } = useOfflineMode();
+  
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
     "All rights reserved.",
@@ -33,6 +36,7 @@ function FooterContent() {
     "Community Guidelines",
     "Contact Us",
     "FAQ",
+    "Offline Mode",
     "Catalogue Rules",
     "Tips & Tricks",
 
@@ -52,7 +56,7 @@ function FooterContent() {
   // Extract individual translations from array using Master Translation System
   const [
     allRightsReservedText, networkPartnershipsText, affiliatePartnershipsText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
-    communityGuidelinesText, contactUsText, faqText, catalogueRulesText, tipsTricksText,
+    communityGuidelinesText, contactUsText, faqText, offlineModeText, catalogueRulesText, tipsTricksText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
   ] = translations || footerTexts;
@@ -77,6 +81,17 @@ function FooterContent() {
               <ScrollToTopLink href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</ScrollToTopLink>
               <ScrollToTopLink href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</ScrollToTopLink>
               <ScrollToTopLink href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</ScrollToTopLink>
+              <button 
+                onClick={toggleOfflineMode} 
+                className={`text-xs transition-colors duration-200 ${
+                  isOffline 
+                    ? 'text-green-600 hover:text-green-700 font-medium' 
+                    : 'text-gray-600 hover:text-primary'
+                }`}
+                title={isOffline ? 'Offline Mode Active - Click to disable' : 'Click to enable offline mode'}
+              >
+                {isOffline ? '🔒 ' : ''}{offlineModeText} {isOffline ? '(Active)' : ''}
+              </button>
             </div>
           </div>
           
