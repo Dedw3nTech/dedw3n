@@ -313,8 +313,6 @@ export default function NetworkPartnerships() {
             </Button>
             <a 
               href="/network-partnership-resources"
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-block"
             >
               <Button 
