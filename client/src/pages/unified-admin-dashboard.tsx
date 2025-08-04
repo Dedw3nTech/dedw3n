@@ -4,6 +4,8 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { useToast } from '@/hooks/use-toast';
+import { LogoConfirmationDialog } from '@/components/ui/logo-confirmation-dialog';
+import { useLogoConfirmation } from '@/hooks/use-logo-confirmation';
 import { useLocation, Link } from 'wouter';
 
 // UI Components
@@ -2927,6 +2929,7 @@ function AffiliatePartnerCell({ vendorId }: { vendorId: number }) {
 // Affiliate Partner Management Component
 function AffiliatePartnerManagement() {
   const { toast } = useToast();
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useLogoConfirmation();
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -3145,8 +3148,16 @@ function AffiliatePartnerManagement() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this affiliate partner?')) {
+                          onClick={async () => {
+                            const confirmed = await confirm({
+                              title: 'Delete Affiliate Partner',
+                              message: `Are you sure you want to delete "${partner.name}"? This action cannot be undone and will permanently remove all partnership data.`,
+                              type: 'danger',
+                              confirmText: 'Delete Partner',
+                              cancelText: 'Cancel'
+                            });
+                            
+                            if (confirmed) {
                               deletePartnerMutation.mutate(partner.id);
                             }
                           }}
@@ -3183,6 +3194,19 @@ function AffiliatePartnerManagement() {
             isLoading={updatePartnerMutation.isPending}
           />
         )}
+
+        {/* Logo Confirmation Dialog */}
+        <LogoConfirmationDialog
+          isOpen={isOpen}
+          onClose={handleCancel}
+          onConfirm={handleConfirm}
+          title={config.title}
+          message={config.message}
+          type={config.type}
+          confirmText={config.confirmText}
+          cancelText={config.cancelText}
+          showLogo={config.showLogo}
+        />
       </CardContent>
     </Card>
   );
