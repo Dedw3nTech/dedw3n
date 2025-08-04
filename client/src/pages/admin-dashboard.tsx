@@ -110,6 +110,250 @@ type AdminStats = {
   reportCount?: number;
 };
 
+// Affiliate Partnership Management Component
+const AffiliatePartnershipManagement = () => {
+  const { toast } = useToast();
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [declineReason, setDeclineReason] = useState("");
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+
+  const { data: partners = [], refetch } = useQuery({
+    queryKey: ['/api/admin/affiliate-partners', filter],
+    queryFn: async () => {
+      const params = filter === 'pending' ? '?status=pending' : '';
+      const response = await fetch(`/api/admin/affiliate-partners${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch affiliate partners');
+      }
+      return response.json();
+    },
+  });
+
+  const approvePartner = async (partnerId: number) => {
+    try {
+      const response = await fetch(`/api/admin/affiliate-partners/${partnerId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to approve partner');
+      }
+
+      toast({
+        title: "Partner Approved",
+        description: "The affiliate partner has been approved and notified.",
+        variant: "default",
+      });
+
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve affiliate partner",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const declinePartner = async () => {
+    if (!selectedPartner) return;
+
+    try {
+      const response = await fetch(`/api/admin/affiliate-partners/${selectedPartner.id}/decline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: declineReason }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to decline partner');
+      }
+
+      toast({
+        title: "Partner Declined",
+        description: "The affiliate partner has been declined and notified.",
+        variant: "default",
+      });
+
+      setShowDeclineDialog(false);
+      setDeclineReason("");
+      setSelectedPartner(null);
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to decline affiliate partner",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredPartners = partners.filter((partner: any) => {
+    const matchesSearch = partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         partner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (partner.company && partner.company.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch;
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>;
+      case 'approved':
+        return <Badge variant="default">Approved</Badge>;
+      case 'declined':
+        return <Badge variant="destructive">Declined</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <UserCog className="h-5 w-5" />
+          Affiliate Partnership Management
+        </CardTitle>
+        <CardDescription>Review and manage affiliate partnership applications</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search partners..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Partners</SelectItem>
+              <SelectItem value="pending">Pending Review</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredPartners.length === 0 ? (
+          <div className="text-center py-8">
+            <UserCog className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No affiliate partners found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredPartners.map((partner: any) => (
+              <Card key={partner.id} className="border-l-4 border-l-blue-500">
+                <CardContent className="pt-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{partner.name}</h3>
+                        {getStatusBadge(partner.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{partner.email}</p>
+                      {partner.company && (
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Company:</strong> {partner.company}
+                        </p>
+                      )}
+                      {partner.specialization && (
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Specialization:</strong> {partner.specialization}
+                        </p>
+                      )}
+                      {partner.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          <strong>Description:</strong> {partner.description}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                        <span>Partner Code: {partner.partnerCode}</span>
+                        <span>Commission: {partner.commissionRate}%</span>
+                        <span>Applied: {new Date(partner.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    
+                    {partner.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => approvePartner(partner.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedPartner(partner);
+                            setShowDeclineDialog(true);
+                          }}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Decline
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Decline Dialog */}
+        {showDeclineDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Decline Affiliate Partnership</CardTitle>
+                <CardDescription>
+                  Provide a reason for declining {selectedPartner?.name}'s application
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  placeholder="Optional: Provide a reason for the decline..."
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeclineDialog(false);
+                      setDeclineReason("");
+                      setSelectedPartner(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={declinePartner}>
+                    Decline Partner
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // Placeholder components for admin dashboard features
 const UserModeration = () => (
   <Card>
@@ -349,11 +593,12 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">{t("Users")}</TabsTrigger>
             <TabsTrigger value="products">{t("Products")}</TabsTrigger>
             <TabsTrigger value="orders">{t("Orders")}</TabsTrigger>
+            <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
             <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>
           </TabsList>
@@ -425,6 +670,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="orders">
             <OrderManagement />
+          </TabsContent>
+
+          <TabsContent value="affiliates">
+            <AffiliatePartnershipManagement />
           </TabsContent>
 
           <TabsContent value="reports">

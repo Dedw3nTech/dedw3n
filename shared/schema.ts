@@ -52,6 +52,36 @@ export interface AdminVendorRequest {
   };
 }
 
+export interface AdminAffiliatePartner {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  website?: string;
+  partnerCode: string;
+  description?: string;
+  specialization?: string;
+  region?: string;
+  languages?: string[];
+  status: string;
+  isVerified: boolean;
+  verificationDate?: Date;
+  commissionRate: string;
+  totalReferrals: number;
+  totalCommissionEarned: string;
+  assignedVendors?: number[];
+  createdAt: Date;
+  updatedAt: Date;
+  user?: {
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+}
+
 export interface AdminStats {
   totalUsers: number;
   totalVendors: number;
@@ -59,6 +89,7 @@ export interface AdminStats {
   totalOrders: number;
   pendingReports: number;
   pendingVendorRequests: number;
+  pendingAffiliateRequests: number;
   activeUsers24h: number;
   totalRevenue: number;
   userCount?: number;

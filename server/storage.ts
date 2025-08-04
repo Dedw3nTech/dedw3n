@@ -5107,15 +5107,19 @@ export class DatabaseStorage implements IStorage {
       const [newPartner] = await db
         .insert(affiliatePartners)
         .values({
-          name: user.name || user.username,
-          email: user.email || `${user.username}@example.com`,
+          name: partnerData.partnerName || user.name || user.username,
+          email: partnerData.contactEmail || user.email || `${user.username}@example.com`,
+          phone: partnerData.contactPhone,
+          company: partnerData.businessName,
+          website: partnerData.website,
           partnerCode: partnerData.referralCode,
-          commissionRate: (partnerData.commissionRate || 5.0).toString(),
-          status: 'active',
-          isVerified: false,
-          specialization: 'general',
+          description: partnerData.description,
+          specialization: partnerData.specialization || 'general',
           region: 'global',
-          languages: ['en']
+          languages: ['en'],
+          commissionRate: (partnerData.commissionRate || 5.0).toString(),
+          status: 'pending', // Start as pending for admin approval
+          isVerified: false
         })
         .returning();
       return {
@@ -5125,6 +5129,64 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating affiliate partner:', error);
       throw new Error('Failed to create affiliate partner');
+    }
+  }
+
+  async getAllAffiliatePartners(): Promise<any[]> {
+    try {
+      const partners = await db
+        .select()
+        .from(affiliatePartners)
+        .orderBy(desc(affiliatePartners.createdAt));
+      return partners;
+    } catch (error) {
+      console.error('Error getting all affiliate partners:', error);
+      return [];
+    }
+  }
+
+  async getPendingAffiliatePartners(): Promise<any[]> {
+    try {
+      const partners = await db
+        .select()
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.status, 'pending'))
+        .orderBy(desc(affiliatePartners.createdAt));
+      return partners;
+    } catch (error) {
+      console.error('Error getting pending affiliate partners:', error);
+      return [];
+    }
+  }
+
+  async updateAffiliatePartnerStatus(partnerId: number, status: string, adminId: number): Promise<boolean> {
+    try {
+      await db
+        .update(affiliatePartners)
+        .set({ 
+          status: status,
+          isVerified: status === 'approved',
+          verificationDate: status === 'approved' ? new Date() : null,
+          updatedAt: new Date()
+        })
+        .where(eq(affiliatePartners.id, partnerId));
+      return true;
+    } catch (error) {
+      console.error('Error updating affiliate partner status:', error);
+      return false;
+    }
+  }
+
+  async getAffiliatePartnerById(partnerId: number): Promise<any | null> {
+    try {
+      const [partner] = await db
+        .select()
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.id, partnerId));
+      return partner || null;
+    } catch (error) {
+      console.error('Error getting affiliate partner by ID:', error);
+      return null;
     }
   }
 

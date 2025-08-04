@@ -14294,6 +14294,195 @@ Application submitted on ${new Date().toLocaleString()}
     }
   });
 
+  // Admin Affiliate Partnership Management Routes
+  app.get('/api/admin/affiliate-partners', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const status = req.query.status as string;
+      let partners;
+      
+      if (status === 'pending') {
+        partners = await storage.getPendingAffiliatePartners();
+      } else {
+        partners = await storage.getAllAffiliatePartners();
+      }
+
+      res.json(partners);
+    } catch (error) {
+      console.error('Error getting affiliate partners for admin:', error);
+      res.status(500).json({ message: 'Failed to get affiliate partners' });
+    }
+  });
+
+  app.post('/api/admin/affiliate-partners/:id/approve', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const partnerId = parseInt(req.params.id);
+      const success = await storage.updateAffiliatePartnerStatus(partnerId, 'approved', user.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Affiliate partner not found' });
+      }
+
+      // Get updated partner info for email notification
+      const partner = await storage.getAffiliatePartnerById(partnerId);
+      
+      if (partner) {
+        // Send approval email to partner
+        try {
+          const emailSubject = 'Affiliate Partnership Approved - Welcome to Dedw3n!';
+          const emailHtml = `
+            <h2>Congratulations! Your Affiliate Partnership has been Approved</h2>
+            <p>Dear ${partner.name},</p>
+            
+            <p>We're excited to inform you that your affiliate partnership application has been approved!</p>
+            
+            <h3>Your Partnership Details:</h3>
+            <ul>
+              <li><strong>Partner Code:</strong> ${partner.partnerCode}</li>
+              <li><strong>Commission Rate:</strong> ${partner.commissionRate}%</li>
+              <li><strong>Status:</strong> Active</li>
+            </ul>
+            
+            <p>You can now start referring customers and earning commissions. Access your affiliate dashboard to track your performance and referrals.</p>
+            
+            <p>Welcome to the Dedw3n affiliate family!</p>
+            
+            <p>Best regards,<br>The Dedw3n Team</p>
+          `;
+
+          const emailText = `
+Congratulations! Your Affiliate Partnership has been Approved
+
+Dear ${partner.name},
+
+We're excited to inform you that your affiliate partnership application has been approved!
+
+Your Partnership Details:
+- Partner Code: ${partner.partnerCode}
+- Commission Rate: ${partner.commissionRate}%
+- Status: Active
+
+You can now start referring customers and earning commissions. Access your affiliate dashboard to track your performance and referrals.
+
+Welcome to the Dedw3n affiliate family!
+
+Best regards,
+The Dedw3n Team
+          `;
+
+          await sendEmail({
+            from: 'system@dedw3n.com',
+            to: partner.email,
+            subject: emailSubject,
+            html: emailHtml,
+            text: emailText
+          });
+
+          console.log('[AFFILIATE] Approval email sent to:', partner.email);
+        } catch (emailError) {
+          console.error('[AFFILIATE] Failed to send approval email:', emailError);
+        }
+      }
+
+      res.json({ message: 'Affiliate partner approved successfully' });
+    } catch (error) {
+      console.error('Error approving affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to approve affiliate partner' });
+    }
+  });
+
+  app.post('/api/admin/affiliate-partners/:id/decline', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const partnerId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      const success = await storage.updateAffiliatePartnerStatus(partnerId, 'declined', user.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Affiliate partner not found' });
+      }
+
+      // Get partner info for email notification
+      const partner = await storage.getAffiliatePartnerById(partnerId);
+      
+      if (partner) {
+        // Send decline email to partner
+        try {
+          const emailSubject = 'Update on Your Affiliate Partnership Application - Dedw3n';
+          const emailHtml = `
+            <h2>Update on Your Affiliate Partnership Application</h2>
+            <p>Dear ${partner.name},</p>
+            
+            <p>Thank you for your interest in becoming a Dedw3n affiliate partner.</p>
+            
+            <p>After careful review, we're unable to approve your application at this time.</p>
+            
+            ${reason ? `
+            <h3>Reason:</h3>
+            <p>${reason}</p>
+            ` : ''}
+            
+            <p>We encourage you to continue exploring other opportunities with Dedw3n. Feel free to reapply in the future if your circumstances change.</p>
+            
+            <p>Thank you for your understanding.</p>
+            
+            <p>Best regards,<br>The Dedw3n Team</p>
+          `;
+
+          const emailText = `
+Update on Your Affiliate Partnership Application
+
+Dear ${partner.name},
+
+Thank you for your interest in becoming a Dedw3n affiliate partner.
+
+After careful review, we're unable to approve your application at this time.
+
+${reason ? `Reason: ${reason}` : ''}
+
+We encourage you to continue exploring other opportunities with Dedw3n. Feel free to reapply in the future if your circumstances change.
+
+Thank you for your understanding.
+
+Best regards,
+The Dedw3n Team
+          `;
+
+          await sendEmail({
+            from: 'system@dedw3n.com',
+            to: partner.email,
+            subject: emailSubject,
+            html: emailHtml,
+            text: emailText
+          });
+
+          console.log('[AFFILIATE] Decline email sent to:', partner.email);
+        } catch (emailError) {
+          console.error('[AFFILIATE] Failed to send decline email:', emailError);
+        }
+      }
+
+      res.json({ message: 'Affiliate partner declined successfully' });
+    } catch (error) {
+      console.error('Error declining affiliate partner:', error);
+      res.status(500).json({ message: 'Failed to decline affiliate partner' });
+    }
+  });
+
   app.get('/api/affiliate-partnership/earnings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;

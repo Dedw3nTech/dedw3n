@@ -225,6 +225,13 @@ export function registerAdminRoutes(app: Express) {
       const pendingReports = 0;
       const pendingVendorRequests = 0;
 
+      // Get pending affiliate partnership requests
+      const pendingAffiliateResult = await db
+        .select({ count: count() })
+        .from(affiliatePartners)
+        .where(eq(affiliatePartners.status, 'pending'));
+      const pendingAffiliateRequests = pendingAffiliateResult[0]?.count || 0;
+
       const stats = {
         totalUsers,
         totalDatingProfiles,
@@ -239,6 +246,7 @@ export function registerAdminRoutes(app: Express) {
         shippedOrders,
         pendingReports,
         pendingVendorRequests,
+        pendingAffiliateRequests,
         activeUsers24h
       };
 
