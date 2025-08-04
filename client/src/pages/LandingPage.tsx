@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function LandingPage() {
-  const heroImagePath = "/attached_assets/spend more time enjoying life (Website)_1754112546594.png";
+  const heroImagePath = "/attached_assets/spend more time enjoying life (Website) (1)_1754323555347.png";
   
   return (
     <div className="min-h-screen">

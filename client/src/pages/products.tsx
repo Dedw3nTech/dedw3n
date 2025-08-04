@@ -1923,7 +1923,7 @@ export default function Products() {
                     {formatPrice(selectedShareProduct.price)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {byText} {selectedShareProduct.vendorName || 'Vendor'}
+                    Sold by {selectedShareProduct.vendorName || 'Vendor'}
                   </p>
                 </div>
               </div>
