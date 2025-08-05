@@ -373,22 +373,6 @@ export default function VendorDetailPage() {
               
               <Separator />
               
-              {isOwner && (
-                <>
-                  <div>
-                    <h3 className="font-medium mb-2">{t("vendors.analytics")}</h3>
-                    <Button 
-                      onClick={() => setLocation(`/vendor-analytics?vendorId=${vendor.id}`)}
-                      className="w-full"
-                    >
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      {t("vendors.view_analytics")}
-                    </Button>
-                  </div>
-                  <Separator />
-                </>
-              )}
-              
               <div>
                 <h3 className="font-medium mb-2">{t("vendors.contact")}</h3>
                 <Button variant="outline" className="w-full">
